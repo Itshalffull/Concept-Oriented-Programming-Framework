@@ -1,0 +1,196 @@
+@version(1)
+widget tool-invocation {
+
+  purpose {
+    Collapsible card displaying an LLM tool call execution. Shows the
+    tool name, serialized arguments, execution status, result output,
+    and timing information. Supports expand/collapse to reveal full
+    argument and result payloads. Flags destructive or approval-required
+    tools with warning indicators.
+  }
+
+  requires @1 {
+    fields {
+      toolName: String;
+      arguments: String;
+      result: option String;
+      status: String;
+      duration: option Int;
+    }
+    actions {
+      retry: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Collapsible card wrapper }
+    header:         container  { Tool name, status icon, and duration in collapsed view }
+    toolIcon:       container  { Icon representing the tool type }
+    toolName:       text       { Tool function name }
+    statusIcon:     container  { Status indicator (pending, running, success, error) }
+    durationLabel:  text       { Execution time in milliseconds }
+    body:           container  { Expandable section with arguments and result }
+    argumentsBlock: container  { Formatted JSON display of tool arguments }
+    resultBlock:    container  { Formatted output from tool execution }
+    warningBadge:   container  { Badge for destructive or approval-required tools }
+    retryButton:    action     { Retry failed tool invocation }
+  }
+
+  states {
+    collapsed [initial] {
+      on EXPAND -> expanded;
+      on HOVER -> hoveredCollapsed;
+    }
+
+    hoveredCollapsed {
+      on LEAVE -> collapsed;
+      on EXPAND -> expanded;
+    }
+
+    expanded {
+      on COLLAPSE -> collapsed;
+    }
+
+    execution [parallel] {
+      pending [initial] {
+        on INVOKE -> running;
+      }
+      running {
+        on SUCCESS -> succeeded;
+        on FAILURE -> failed;
+        entry [showSpinner];
+        exit [hideSpinner];
+      }
+      succeeded {
+        on RESET -> pending;
+      }
+      failed {
+        on RETRY -> running;
+        on RESET -> pending;
+      }
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> EXPAND;
+      Escape -> COLLAPSE;
+      r -> RETRY;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat("Tool call: ", $toolName);
+        aria-expanded: if state == "expanded" then "true" else "false";
+      };
+      header -> {
+        role: "button";
+        aria-label: concat($toolName, " — ", $status);
+      };
+      argumentsBlock -> {
+        role: "code";
+        aria-label: "Tool arguments";
+      };
+      resultBlock -> {
+        role: "code";
+        aria-label: "Tool result";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry tool call";
+      };
+    }
+  }
+
+  props {
+    showArguments: Bool = true
+    showResult: Bool = true
+    defaultExpanded: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "ToolBinding";
+    }
+    bind {
+      toolName: name;
+      arguments: input_schema;
+      result: output_schema;
+      status: handler;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "article";
+      aria-expanded: if state == "expanded" then "true" else "false";
+      data-status: $status;
+      data-state: state;
+    }
+    header -> {
+      data-part: "header";
+      role: "button";
+      onClick: if state == "expanded" then send(COLLAPSE) else send(EXPAND);
+      tabindex: "0";
+    }
+    toolIcon -> {
+      data-part: "tool-icon";
+      aria-hidden: "true";
+    }
+    toolName -> {
+      data-part: "tool-name";
+      text: $toolName;
+    }
+    statusIcon -> {
+      data-part: "status-icon";
+      data-status: $status;
+    }
+    durationLabel -> {
+      data-part: "duration";
+      text: if $duration then concat($duration, "ms") else "";
+      data-visible: if $duration then "true" else "false";
+    }
+    body -> {
+      data-part: "body";
+      data-visible: if state == "expanded" then "true" else "false";
+    }
+    argumentsBlock -> {
+      data-part: "arguments";
+      data-visible: if ?showArguments then "true" else "false";
+    }
+    resultBlock -> {
+      data-part: "result";
+      data-visible: if ?showResult and $result then "true" else "false";
+    }
+    warningBadge -> {
+      data-part: "warning-badge";
+      data-visible: "false";
+    }
+    retryButton -> {
+      data-part: "retry-button";
+      data-visible: if state.execution == "failed" then "true" else "false";
+      onClick: send(RETRY);
+    }
+  }
+
+  compose {
+    argumentsBlock: widget("code-block", { language: "json", readOnly: true });
+    resultBlock: widget("code-block", { language: "json", readOnly: true });
+    warningBadge: widget("badge", { variant: "warning" });
+  }
+
+  invariant {
+    "Header must be clickable to toggle expand/collapse";
+    "Destructive tools must display a warning badge in the header";
+    "Failed invocations must show retry button and error details";
+    "Arguments and result must render as formatted JSON";
+  }
+
+}

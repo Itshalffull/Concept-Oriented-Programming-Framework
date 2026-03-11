@@ -1,0 +1,894 @@
+{
+  "uri": "urn:clef/QuadraticVoting",
+  "name": "QuadraticVoting",
+  "typeParams": [
+    {
+      "name": "QV",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "qv",
+        "paramRef": "QV"
+      },
+      "fields": [
+        {
+          "name": "creditBudget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "voter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "remaining",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "spent",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "issue",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "votesCast",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "creditsSpent",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "qv",
+        "paramRef": "QV"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "QV"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "balances",
+      "source": "set-valued",
+      "keyField": {
+        "name": "qv",
+        "paramRef": "QV"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "QV"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "creditBudget",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "QV"
+              }
+            }
+          ],
+          "prose": "A quadratic voting configuration with the given per voter \n credit budget Cost votes"
+        }
+      ]
+    },
+    {
+      "name": "allocateCredits",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "QV"
+          }
+        },
+        {
+          "name": "voter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allocated",
+          "fields": [
+            {
+              "name": "voter",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "credits",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The voter receives their credit budget for this voting round"
+        },
+        {
+          "tag": "already_allocated",
+          "fields": [
+            {
+              "name": "voter",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Credits have already been allocated to this voter"
+        }
+      ]
+    },
+    {
+      "name": "castVotes",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "QV"
+          }
+        },
+        {
+          "name": "voter",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "issue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "numberOfVotes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "cast",
+          "fields": [
+            {
+              "name": "voter",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "votesCast",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "creditsSpent",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "remaining",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The voter casts N votes at cost N Credits are deducted"
+        },
+        {
+          "tag": "insufficient_credits",
+          "fields": [
+            {
+              "name": "voter",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "needed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "available",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The voter does not have enough credits Needed votes"
+        },
+        {
+          "tag": "no_allocation",
+          "fields": [
+            {
+              "name": "voter",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The voter has not been allocated credits"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "QV"
+          }
+        },
+        {
+          "name": "issue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "winner",
+          "fields": [
+            {
+              "name": "choice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "totalVotes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "details",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Votes ( not credits ) are summed per choice Highest total wins"
+        },
+        {
+          "tag": "tie",
+          "fields": [
+            {
+              "name": "choices",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "totalVotes",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Multiple choices have equal vote totals"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, allocateCredits, castVotes behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "creditBudget",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "qv"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "allocateCredits",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "qv"
+              }
+            },
+            {
+              "name": "voter",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ],
+          "expectedVariant": "allocated",
+          "expectedOutputs": [
+            {
+              "name": "voter",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "credits",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ]
+        },
+        {
+          "action": "castVotes",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "qv"
+              }
+            },
+            {
+              "name": "voter",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "issue",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "numberOfVotes",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            }
+          ],
+          "expectedVariant": "cast",
+          "expectedOutputs": [
+            {
+              "name": "voter",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "votesCast",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            },
+            {
+              "name": "creditsSpent",
+              "value": {
+                "kind": "literal",
+                "value": 25
+              }
+            },
+            {
+              "name": "remaining",
+              "value": {
+                "kind": "literal",
+                "value": 75
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "qv",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type QuadraticVotingState {\n  \"\"\"All qvs in this concept\"\"\"\n  qvs: [ID!]!\n}\n\ntype QuadraticVotingEntry {\n  qv: ID!\n  creditBudget: Float!\n  voter: String!\n  remaining: Float!\n  spent: [JSON!]!\n}\n\nextend type Query {\n  quadraticvoting_entry(qv: ID!): QuadraticVotingEntry\n  quadraticvoting_entries: [QuadraticVotingEntry!]!\n}\n\ntype QuadraticVotingConfigurations {\n  qv: ID!\n  value: ID!\n}\n\ntype QuadraticVotingBalances {\n  qv: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/QuadraticVoting/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticVoting"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "creditBudget": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "creditBudget"
+            ]
+          }
+        }
+      },
+      "allocateCredits": {
+        "$id": "urn:clef/QuadraticVoting/allocateCredits/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticVoting"
+          },
+          "action": {
+            "const": "allocateCredits"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "voter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "voter"
+            ]
+          }
+        }
+      },
+      "castVotes": {
+        "$id": "urn:clef/QuadraticVoting/castVotes/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticVoting"
+          },
+          "action": {
+            "const": "castVotes"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "voter": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              },
+              "numberOfVotes": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "config",
+              "voter",
+              "issue",
+              "numberOfVotes"
+            ]
+          }
+        }
+      },
+      "count": {
+        "$id": "urn:clef/QuadraticVoting/count/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/QuadraticVoting"
+          },
+          "action": {
+            "const": "count"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "issue"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/QuadraticVoting/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "allocateCredits": {
+        "allocated": {
+          "$id": "urn:clef/QuadraticVoting/allocateCredits/completion/allocated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "allocateCredits"
+            },
+            "variant": {
+              "const": "allocated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voter": {
+                  "type": "string"
+                },
+                "credits": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "voter",
+                "credits"
+              ]
+            }
+          }
+        },
+        "already_allocated": {
+          "$id": "urn:clef/QuadraticVoting/allocateCredits/completion/already_allocated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "allocateCredits"
+            },
+            "variant": {
+              "const": "already_allocated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "voter"
+              ]
+            }
+          }
+        }
+      },
+      "castVotes": {
+        "cast": {
+          "$id": "urn:clef/QuadraticVoting/castVotes/completion/cast",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "castVotes"
+            },
+            "variant": {
+              "const": "cast"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voter": {
+                  "type": "string"
+                },
+                "votesCast": {
+                  "type": "integer"
+                },
+                "creditsSpent": {
+                  "type": "number"
+                },
+                "remaining": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "voter",
+                "votesCast",
+                "creditsSpent",
+                "remaining"
+              ]
+            }
+          }
+        },
+        "insufficient_credits": {
+          "$id": "urn:clef/QuadraticVoting/castVotes/completion/insufficient_credits",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "castVotes"
+            },
+            "variant": {
+              "const": "insufficient_credits"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voter": {
+                  "type": "string"
+                },
+                "needed": {
+                  "type": "number"
+                },
+                "available": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "voter",
+                "needed",
+                "available"
+              ]
+            }
+          }
+        },
+        "no_allocation": {
+          "$id": "urn:clef/QuadraticVoting/castVotes/completion/no_allocation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "castVotes"
+            },
+            "variant": {
+              "const": "no_allocation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "voter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "voter"
+              ]
+            }
+          }
+        }
+      },
+      "count": {
+        "winner": {
+          "$id": "urn:clef/QuadraticVoting/count/completion/winner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "winner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "type": "string"
+                },
+                "totalVotes": {
+                  "type": "number"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "choice",
+                "totalVotes",
+                "details"
+              ]
+            }
+          }
+        },
+        "tie": {
+          "$id": "urn:clef/QuadraticVoting/count/completion/tie",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/QuadraticVoting"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "tie"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choices": {
+                  "type": "string"
+                },
+                "totalVotes": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choices",
+                "totalVotes"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Allow participants to express intensity of preference by purchasing \n votes at quadratic cost , so casting N votes on an issue costs N \n credits from a finite budget"
+}

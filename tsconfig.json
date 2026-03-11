@@ -37,6 +37,6 @@
     "surface/widgets/**/*.tsx",
     "examples/**/*.ts",
     "examples/**/*.tsx",
-    "kits/**/*.ts"
+    "suites/**/*.ts"
   ]
 }

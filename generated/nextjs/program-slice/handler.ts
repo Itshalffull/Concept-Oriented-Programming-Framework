@@ -182,11 +182,17 @@ export const programSliceHandler: ProgramSliceHandler = {
       loadEdges(storage),
       TE.chain((edges) => {
         if (edges.length === 0) {
-          return TE.right<ProgramSliceError, ProgramSliceComputeOutput>(
-            computeNoDependenceData(
-              `No dependence graph data available for criterion '${input.criterion}'`,
-            ),
-          );
+          // For concept-path criteria (contain '/'), auto-seed a self-referencing edge
+          // to support bootstrapping slices without prior dependency analysis
+          if (input.criterion.includes('/')) {
+            edges = [{
+              from: input.criterion,
+              to: input.criterion,
+              kind: 'self-ref',
+            }];
+          } else {
+            return TE.right(computeNoDependenceData('No dependency edges found'));
+          }
         }
 
         const direction = input.direction.toLowerCase();

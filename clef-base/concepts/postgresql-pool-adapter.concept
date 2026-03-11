@@ -1,0 +1,127 @@
+@version(1)
+concept PostgresqlPoolAdapter [C] {
+
+  purpose {
+    ConceptStorage adapter for PostgreSQL with connection pooling.
+    Implements the ConceptStorage interface (connect, query, put, delete,
+    migrate) backed by a PostgreSQL connection pool. Registers with
+    PluginRegistry under content_storage_provider so the runtime can
+    resolve storage references in deployment manifests.
+    See Architecture doc Section 16.
+  }
+
+  state {
+    connections: set C
+    connection_url: C -> String
+    pool_size: C -> Int
+    ssl_enabled: C -> Bool
+    schema_prefix: C -> String
+    pool_status: C -> { idle | connecting | connected | draining | closed | error }
+    active_connections: C -> Int
+    pending_queries: C -> Int
+    migration_version: C -> Int
+    last_error: C -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action connect(url: String, pool_size: Int, ssl: Bool,
+                   schema_prefix: String) {
+      -> ok(connection: C) {
+        Establishes a connection pool to the PostgreSQL database at the
+        given URL. Validates credentials, creates the pool with the
+        specified size, and verifies connectivity with a health check.
+      }
+      -> connection_failed(url: String, reason: String) {
+        Could not connect to the PostgreSQL instance. Returns the
+        sanitized URL (credentials redacted) and failure reason.
+      }
+      -> already_connected(connection: C) {
+        A pool is already established for this URL.
+      }
+    }
+
+    action query(connection: C, sql: String, params: list String) {
+      -> ok(rows: list String) {
+        Executes a parameterized SQL query against the pool and returns
+        the result rows serialized as JSON strings.
+      }
+      -> not_connected(reason: String) {
+        No active connection pool exists.
+      }
+      -> query_error(sql: String, reason: String) {
+        The query failed. Returns the SQL statement and error detail.
+      }
+    }
+
+    action put(connection: C, table: String, key: String,
+               value: String) {
+      -> ok(key: String) {
+        Upserts a record into the specified table. If the key exists
+        the row is updated; otherwise a new row is inserted.
+      }
+      -> not_connected(reason: String) {
+        No active connection pool exists.
+      }
+      -> write_error(table: String, key: String, reason: String) {
+        The write operation failed.
+      }
+    }
+
+    action delete(connection: C, table: String, key: String) {
+      -> ok(key: String) {
+        Deletes the record with the given key from the specified table.
+      }
+      -> not_found(table: String, key: String) {
+        No record exists for the given key.
+      }
+      -> not_connected(reason: String) {
+        No active connection pool exists.
+      }
+      -> delete_error(table: String, key: String, reason: String) {
+        The delete operation failed.
+      }
+    }
+
+    action migrate(connection: C, target_version: Int) {
+      -> ok(from_version: Int, to_version: Int) {
+        Applies all pending migrations up to the target version,
+        executing each within a transaction. Records the new version
+        in the migrations table.
+      }
+      -> not_connected(reason: String) {
+        No active connection pool exists.
+      }
+      -> migration_failed(at_version: Int, reason: String) {
+        A migration step failed. All changes from this step are rolled
+        back. The database remains at the last successfully applied version.
+      }
+      -> already_at_version(current_version: Int) {
+        The database is already at or beyond the target version.
+      }
+    }
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this adapter with PluginRegistry under type
+        "content_storage_provider" and name "postgresql".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+  }
+
+  invariant {
+    after connect(url: "postgresql://localhost/test", pool_size: 5,
+                  ssl: false, schema_prefix: "clef_")
+         -> ok(connection: c)
+    then put(connection: c, table: "entities", key: "e1",
+             value: "{\"name\":\"test\"}")
+         -> ok(key: "e1")
+  }
+}

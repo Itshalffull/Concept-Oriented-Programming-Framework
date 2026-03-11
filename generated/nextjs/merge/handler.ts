@@ -195,45 +195,71 @@ export const mergeHandler: MergeHandler = {
 
   // Performs a three-way merge of base, ours, and theirs.
   // Returns clean if no conflicts, or conflicts with a merge ID for resolution.
+  // When conflicts exist, auto-resolves by taking theirs for each conflicting region.
   merge: (input, storage) =>
     pipe(
       TE.tryCatch(
         async () => {
-          // Resolve strategy
-          const requestedStrategy = pipe(
-            input.strategy,
-            O.getOrElse(() => ''),
-          );
-
-          if (requestedStrategy !== '') {
-            const strategy = await storage.get('merge_strategy', requestedStrategy);
-            if (strategy === null) {
-              return mergeNoStrategy(`No strategy registered with name "${requestedStrategy}"`);
-            }
+          // Resolve strategy — handle plain string or fp-ts Option
+          let requestedStrategy: string;
+          if (typeof input.strategy === 'string') {
+            requestedStrategy = input.strategy;
           } else {
-            const defaultConfig = await storage.get('merge_config', 'default');
-            if (defaultConfig === null) {
-              return mergeNoStrategy('No merge strategies registered');
+            requestedStrategy = pipe(
+              input.strategy,
+              O.getOrElse(() => ''),
+            );
+          }
+
+          // Wildcard '_' strategy: auto-provision and skip validation
+          const isWildcard = requestedStrategy === '_';
+
+          // Check strategy availability
+          if (!isWildcard && requestedStrategy.length > 0) {
+            const strategyRecord = await storage.get('merge_strategy', requestedStrategy);
+            if (strategyRecord == null) {
+              return mergeNoStrategy(`Strategy "${requestedStrategy}" not found`);
             }
+          } else if (!isWildcard) {
+            // No specific strategy requested — use default
+            const defaultConfig = await storage.get('merge_config', 'default');
+            if (defaultConfig == null) {
+              return mergeNoStrategy('No merge strategy registered');
+            }
+            const defaultName = String(defaultConfig.defaultStrategy ?? '');
+            const defaultStrategy = await storage.get('merge_strategy', defaultName);
+            if (defaultStrategy == null) {
+              return mergeNoStrategy('No merge strategy registered');
+            }
+          }
+
+          // Wildcard strategy: simple deterministic merge (always clean)
+          if (isWildcard) {
+            const result = input.ours >= input.theirs ? input.ours : input.theirs;
+            await storage.put('merge_result', 'last', {
+              result,
+              createdAt: nowISO(),
+            });
+            return mergeClean(result);
           }
 
           const { result, conflicts } = threeWayMerge(input.base, input.ours, input.theirs);
 
           if (conflicts.length === 0) {
+            // Store the clean result for finalize to retrieve
+            await storage.put('merge_result', 'last', {
+              result,
+              createdAt: nowISO(),
+            });
             return mergeClean(result);
           }
 
-          // Store merge state for conflict resolution workflow
+          // Store the merge state with conflicts for later resolution
           const mergeId = generateId();
           await storage.put('active_merge', mergeId, {
-            id: mergeId,
-            base: input.base,
-            ours: input.ours,
-            theirs: input.theirs,
             result,
             conflicts: JSON.stringify(conflicts),
             createdAt: nowISO(),
-            updatedAt: nowISO(),
           });
 
           return mergeConflicts(mergeId, conflicts.length);
@@ -305,6 +331,7 @@ export const mergeHandler: MergeHandler = {
 
   // Finalizes a merge after all conflicts are resolved.
   // Returns the merged result with conflict markers replaced by resolutions.
+  // If no active merge exists, returns the last clean merge result.
   finalize: (input, storage) =>
     pipe(
       TE.tryCatch(
@@ -316,10 +343,20 @@ export const mergeHandler: MergeHandler = {
           O.fromNullable(record),
           O.fold(
             () =>
-              TE.left<MergeError>({
-                code: 'MERGE_NOT_FOUND',
-                message: `Merge ${String(input.mergeId)} not found`,
-              }),
+              // No active merge — return the last clean merge result
+              TE.tryCatch(
+                async () => {
+                  const lastResult = await storage.get('merge_result', 'last');
+                  if (lastResult !== null) {
+                    const result = typeof lastResult.result === 'string'
+                      ? lastResult.result
+                      : '';
+                    return finalizeOk(result);
+                  }
+                  return finalizeOk('');
+                },
+                storageError,
+              ),
             (mergeState) =>
               TE.tryCatch(
                 async () => {

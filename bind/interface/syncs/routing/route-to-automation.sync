@@ -1,0 +1,10 @@
+# Route Target/generate to AutomationTarget — Clef Bind, automation manifest generation
+
+sync RouteToAutomation [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "automation"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  AutomationTarget/generate: [ projection: ?p; config: ?c ]
+}

@@ -1,7 +1,7 @@
 // ============================================================
 // SuiteManager Handler Tests
 //
-// Manage suites: scaffold new suites, validate kit
+// Manage suites: scaffold new suites, validate suite
 // manifests, run suite tests, list active suites, and check
 // app overrides.
 // ============================================================
@@ -24,76 +24,76 @@ describe('SuiteManager', () => {
   describe('init', () => {
     it('initializes a new suite and returns ok', async () => {
       const result = await suiteManagerHandler.init!(
-        { name: 'my-kit' },
+        { name: 'my-suite' },
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kit).toBe('suite-manager-1');
-      expect(result.path).toBe('./repertoire/my-kit/');
+      expect(result.suite).toBe('suite-manager-1');
+      expect(result.path).toBe('./repertoire/my-suite/');
     });
 
-    it('stores kit metadata in storage', async () => {
+    it('stores suite metadata in storage', async () => {
       await suiteManagerHandler.init!(
-        { name: 'auth-kit' },
+        { name: 'auth-suite' },
         storage,
       );
       const stored = await storage.get('suite-manager', 'suite-manager-1');
       expect(stored).not.toBeNull();
-      expect(stored!.name).toBe('auth-kit');
-      expect(stored!.path).toBe('./repertoire/auth-kit/');
+      expect(stored!.name).toBe('auth-suite');
+      expect(stored!.path).toBe('./repertoire/auth-suite/');
       expect(stored!.status).toBe('initialized');
     });
 
-    it('returns alreadyExists when kit name is taken', async () => {
+    it('returns alreadyExists when suite name is taken', async () => {
       await suiteManagerHandler.init!(
-        { name: 'duplicate-kit' },
+        { name: 'duplicate-suite' },
         storage,
       );
       const result = await suiteManagerHandler.init!(
-        { name: 'duplicate-kit' },
+        { name: 'duplicate-suite' },
         storage,
       );
       expect(result.variant).toBe('alreadyExists');
-      expect(result.name).toBe('duplicate-kit');
+      expect(result.name).toBe('duplicate-suite');
     });
 
-    it('assigns unique IDs to different kits', async () => {
+    it('assigns unique IDs to different suites', async () => {
       const first = await suiteManagerHandler.init!(
-        { name: 'kit-a' },
+        { name: 'suite-a' },
         storage,
       );
       const second = await suiteManagerHandler.init!(
-        { name: 'kit-b' },
+        { name: 'suite-b' },
         storage,
       );
-      expect(first.kit).toBe('suite-manager-1');
-      expect(second.kit).toBe('suite-manager-2');
+      expect(first.suite).toBe('suite-manager-1');
+      expect(second.suite).toBe('suite-manager-2');
     });
   });
 
   describe('validate', () => {
-    it('validates an existing kit and returns ok', async () => {
+    it('validates an existing suite and returns ok', async () => {
       await suiteManagerHandler.init!(
-        { name: 'my-kit' },
+        { name: 'my-suite' },
         storage,
       );
       const result = await suiteManagerHandler.validate!(
-        { path: './repertoire/my-kit/' },
+        { path: './repertoire/my-suite/' },
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kit).toBe('suite-manager-1');
+      expect(result.suite).toBe('suite-manager-1');
       expect(result.concepts).toBe(0);
       expect(result.syncs).toBe(0);
     });
 
-    it('creates a temporary entry when kit path is not found', async () => {
+    it('creates a temporary entry when suite path is not found', async () => {
       const result = await suiteManagerHandler.validate!(
-        { path: './repertoire/unknown-kit/' },
+        { path: './repertoire/unknown-suite/' },
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kit).toBe('suite-manager-1');
+      expect(result.suite).toBe('suite-manager-1');
 
       const stored = await storage.get('suite-manager', 'suite-manager-1');
       expect(stored).not.toBeNull();
@@ -102,11 +102,11 @@ describe('SuiteManager', () => {
 
     it('updates the suite status to validated', async () => {
       await suiteManagerHandler.init!(
-        { name: 'my-kit' },
+        { name: 'my-suite' },
         storage,
       );
       await suiteManagerHandler.validate!(
-        { path: './repertoire/my-kit/' },
+        { path: './repertoire/my-suite/' },
         storage,
       );
       const stored = await storage.get('suite-manager', 'suite-manager-1');
@@ -115,28 +115,28 @@ describe('SuiteManager', () => {
   });
 
   describe('test', () => {
-    it('tests an existing kit and returns ok', async () => {
+    it('tests an existing suite and returns ok', async () => {
       await suiteManagerHandler.init!(
-        { name: 'my-kit' },
+        { name: 'my-suite' },
         storage,
       );
       const result = await suiteManagerHandler.test!(
-        { path: './repertoire/my-kit/' },
+        { path: './repertoire/my-suite/' },
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kit).toBe('suite-manager-1');
+      expect(result.suite).toBe('suite-manager-1');
       expect(result.passed).toBe(0);
       expect(result.failed).toBe(0);
     });
 
-    it('creates a temporary entry when kit path is not found', async () => {
+    it('creates a temporary entry when suite path is not found', async () => {
       const result = await suiteManagerHandler.test!(
-        { path: './repertoire/new-kit/' },
+        { path: './repertoire/new-suite/' },
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.kit).toBe('suite-manager-1');
+      expect(result.suite).toBe('suite-manager-1');
 
       const stored = await storage.get('suite-manager', 'suite-manager-1');
       expect(stored).not.toBeNull();
@@ -155,27 +155,27 @@ describe('SuiteManager', () => {
     });
 
     it('lists all initialized suites', async () => {
-      await suiteManagerHandler.init!({ name: 'kit-a' }, storage);
-      await suiteManagerHandler.init!({ name: 'kit-b' }, storage);
-      await suiteManagerHandler.init!({ name: 'kit-c' }, storage);
+      await suiteManagerHandler.init!({ name: 'suite-a' }, storage);
+      await suiteManagerHandler.init!({ name: 'suite-b' }, storage);
+      await suiteManagerHandler.init!({ name: 'suite-c' }, storage);
 
       const result = await suiteManagerHandler.list!({}, storage);
       expect(result.variant).toBe('ok');
       expect((result.suites as string[]).length).toBe(3);
-      expect(result.suites).toContain('kit-a');
-      expect(result.suites).toContain('kit-b');
-      expect(result.suites).toContain('kit-c');
+      expect(result.suites).toContain('suite-a');
+      expect(result.suites).toContain('suite-b');
+      expect(result.suites).toContain('suite-c');
     });
   });
 
   describe('checkOverrides', () => {
-    it('returns ok for an existing kit path', async () => {
+    it('returns ok for an existing suite path', async () => {
       await suiteManagerHandler.init!(
-        { name: 'my-kit' },
+        { name: 'my-suite' },
         storage,
       );
       const result = await suiteManagerHandler.checkOverrides!(
-        { path: './repertoire/my-kit/' },
+        { path: './repertoire/my-suite/' },
         storage,
       );
       expect(result.variant).toBe('ok');
@@ -183,7 +183,7 @@ describe('SuiteManager', () => {
       expect(result.warnings).toEqual([]);
     });
 
-    it('returns invalidOverride for non-existent kit path', async () => {
+    it('returns invalidOverride for non-existent suite path', async () => {
       const result = await suiteManagerHandler.checkOverrides!(
         { path: './repertoire/nonexistent/' },
         storage,

@@ -35,9 +35,8 @@ describe('Governance Rules Entity Syncs', () => {
     for (const name of rulesSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('governance-rules', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -45,27 +44,27 @@ describe('Governance Rules Entity Syncs', () => {
   describe('governance rules entity structure', () => {
     it('MonitorAsContentEntity creates enforces Relation', () => {
       const source = readSync('governance-rules', 'monitor-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('DisputeAsContentEntity creates disputes Relation', () => {
       const source = readSync('governance-rules', 'dispute-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('PolicyAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-rules', 'policy-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });

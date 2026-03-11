@@ -1,7 +1,7 @@
-// Transform Plugin — value transformation implementations for the Data Integration Kit
+// Transform Plugin — value transformation implementations for the Data Integration Suite
 // Provides pluggable data value transformations: type casting, string manipulation,
 // format conversion, lookup resolution, and expression evaluation.
-// See Data Integration Kit transform.concept for the parent Transform concept definition.
+// See Data Integration Suite transform.concept for the parent Transform concept definition.
 
 // ---------------------------------------------------------------------------
 // Core types

@@ -1,0 +1,25 @@
+type AuditTrailState {
+  """All ats in this concept"""
+  ats: [ID!]!
+}
+
+type AuditTrailEntry {
+  at: ID!
+  eventType: String!
+  actor: String!
+  action: String!
+  details: String!
+  timestamp: String!
+  sourceRef: String!
+  hash: String!
+}
+
+extend type Query {
+  audittrail_entry(at: ID!): AuditTrailEntry
+  audittrail_entries: [AuditTrailEntry!]!
+}
+
+type AuditTrailEntries {
+  at: ID!
+  value: ID!
+}

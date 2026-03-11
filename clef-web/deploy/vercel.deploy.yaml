@@ -1,0 +1,119 @@
+app:
+  name: clef-web
+  version: "0.1.0"
+  uri: urn:clef:web
+
+runtimes:
+  vercel:
+    type: VercelRuntime
+    engine: true
+    transport: http
+    storage: vercel-kv
+    secrets: vercel-env
+    config:
+      framework: nextjs
+      buildCommand: "next build"
+      outputDirectory: ".next"
+
+infrastructure:
+  storage:
+    vercel-kv:
+      type: vercel-kv
+      config:
+        url: "${KV_REST_API_URL}"
+        token: "${KV_REST_API_TOKEN}"
+
+  secrets:
+    vercel-env:
+      type: vercel-env
+      config:
+        projectId: "${VERCEL_PROJECT_ID}"
+
+concepts:
+  ContentNode:
+    spec: concepts/content-node.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-node.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  ContentStorage:
+    spec: concepts/content-storage.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-storage.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  ContentParser:
+    spec: concepts/content-parser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-parser.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  Outline:
+    spec: concepts/outline.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/outline.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  Version:
+    spec: concepts/version.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/version.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  Template:
+    spec: concepts/template.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/template.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  RegistryProxy:
+    spec: concepts/registry-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/registry-proxy.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/parse-on-create.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/outline-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/version-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+dependencies:
+  clef-registry:
+    env: CLEF_REGISTRY_URL
+    transport: http
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit

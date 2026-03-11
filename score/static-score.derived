@@ -1,0 +1,54 @@
+derived StaticScore [I] {
+
+  purpose {
+    Compose the four static Score layers — parsing, symbol resolution,
+    semantic modeling, and dependence analysis — into a unified
+    static code intelligence system that answers structural questions
+    about declared application architecture.
+  }
+
+  composes {
+    derived SpecParsing [I]
+    derived SymbolResolution [I]
+    derived StaticSemanticModel [I]
+    derived DependenceGraph [I]
+    WidgetEntity [I]
+    AnatomyPartEntity [I]
+    WidgetStateEntity [I]
+    WidgetPropEntity [I]
+    ThemeEntity [I]
+    InteractorEntity [I]
+  }
+
+  syncs {
+    required: [parse-symbol-feed, symbol-semantic-register, semantic-dependence-edge, widget-entity-semantic-link, theme-entity-semantic-link]
+  }
+
+  surface {
+    action index(file: String) {
+      matches: derivedContext "SpecParsing/parse"
+    }
+
+    action resolveSymbol(symbol: String, file: String) {
+      matches: derivedContext "SymbolResolution/resolveScope"
+    }
+
+    action analyzeImpact(changed: String) {
+      matches: derivedContext "DependenceGraph/analyzeImpact"
+    }
+
+    query conceptModel(concept: String) -> derivedContext "StaticSemanticModel/conceptActions"
+    query syncGraph() -> derivedContext "StaticSemanticModel/syncGraph"
+    query blastRadius(changed: String) -> derivedContext "DependenceGraph/blastRadius"
+    query widgetForConcept(concept: String) -> WidgetEntity/forConcept(concept: concept)
+  }
+
+  principle {
+    after index(file: f)
+    then the file is parsed, symbols extracted, semantic entities registered,
+         and dependency edges computed in sequence
+    and  analyzeImpact(changed: c)
+    then blastRadius returns every transitively affected artifact
+         across concepts, syncs, widgets, themes, and bindings
+  }
+}

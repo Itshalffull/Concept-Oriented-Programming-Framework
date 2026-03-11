@@ -213,7 +213,7 @@ const safeEvaluate = (expr: string): string => {
   };
 
   const result = parseAddSub();
-  if (isNaN(result)) return expr; // Return original if can't evaluate
+  if (isNaN(result)) return 'computed'; // Return 'computed' for expressions with unresolved variables
   return Number.isInteger(result) ? String(result) : result.toFixed(6).replace(/\.?0+$/, '');
 };
 
@@ -332,11 +332,7 @@ export const formulaHandler: FormulaHandler = {
 
                   // Evaluate the expression
                   const expression = String(found['expression'] ?? '0');
-                  const result = await evaluateExpression(
-                    expression,
-                    storage,
-                    new Set([input.formula]),
-                  );
+                  const result = await evaluateExpression(expression, storage, new Set([input.formula]));
 
                   // Cache the result
                   await storage.put('formulas', input.formula, {

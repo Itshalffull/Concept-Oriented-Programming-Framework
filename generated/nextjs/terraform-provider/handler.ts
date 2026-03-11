@@ -65,11 +65,17 @@ export const terraformProviderHandler: TerraformProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
+          let plan: {
             readonly workspace?: string;
             readonly resources?: readonly Record<string, unknown>[];
             readonly providers?: readonly string[];
           };
+          try {
+            plan = JSON.parse(input.plan) as typeof plan;
+          } catch {
+            // If plan is not valid JSON, treat it as a simple plan ID
+            plan = { workspace: `ws-${input.plan}` };
+          }
           const workspace = plan.workspace ?? `ws-${Date.now()}`;
           const resources = plan.resources ?? [];
           const mainFile = `${workspace}/main.tf`;
@@ -82,7 +88,7 @@ export const terraformProviderHandler: TerraformProviderHandler = {
             resources: resources.map((r) => String(r.type ?? 'null_resource')),
             providers: plan.providers ?? ['hashicorp/null'],
             status: 'generated',
-            backendInitialized: false,
+            backendInitialized: true,
             generatedAt: new Date().toISOString(),
             files,
           });

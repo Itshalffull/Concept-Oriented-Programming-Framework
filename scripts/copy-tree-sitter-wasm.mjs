@@ -1,4 +1,4 @@
-// Copy Tree-sitter WASM grammar files from node_modules to kits/parse/grammars/wasm/.
+// Copy Tree-sitter WASM grammar files from node_modules to suites/parse/grammars/wasm/.
 // Runs as postinstall script. Skips gracefully if tree-sitter-wasms is not installed.
 
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const WASMS_DIR = resolve(ROOT, 'node_modules', 'tree-sitter-wasms', 'out');
-const TARGET_DIR = resolve(ROOT, 'kits', 'parse', 'grammars', 'wasm');
+const TARGET_DIR = resolve(ROOT, 'suites', 'parse', 'grammars', 'wasm');
 
 const GRAMMARS = [
   'tree-sitter-typescript.wasm',

@@ -1,0 +1,14 @@
+# Route dispatch to the manifest automation provider when provider_name is "manifest"
+
+sync DispatchToManifest [eager]
+  purpose: "Delegate automation dispatch to the build-time manifest provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "manifest"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  ManifestAutomationProvider/execute: [
+    action_ref: ?ruleRef;
+    input: ?context
+  ]
+}

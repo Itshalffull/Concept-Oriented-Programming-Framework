@@ -1,0 +1,1157 @@
+{
+  "uri": "urn:clef/Adapter",
+  "name": "Adapter",
+  "typeParams": [
+    {
+      "name": "A",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "base_model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rank",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "target_modules",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "quantization",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "training_status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "merged",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "adapters",
+      "source": "set-valued",
+      "keyField": {
+        "name": "a",
+        "paramRef": "A"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "base_model_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "rank",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "target_modules",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "quantization",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Creates adapter config Rank : typically 8 -64 ( lower fewer \n params , less expressive ) Target_modules : query , value , key , \n output ( projection matrices to inject into ) Quantization : \n none , 4 bit ( QLoRA ) , 8 bit Training_status : untrained"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid rank or unknown target modules"
+        }
+      ]
+    },
+    {
+      "name": "train",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "dataset_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "learning_rate",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                },
+                "optional": false
+              },
+              {
+                "name": "epochs",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "batch_size",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            },
+            {
+              "name": "trainable_params",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "total_params",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "trainable_pct",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Trains the adapter weights Reports parameter efficiency \n Typical : trainable_pct 0.2 Training_status : trained"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Training failed"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "merged_model_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Folds adapter weights into base model weights Results in zero \n additional inference latency Sets merged true The merged model \n can be registered as a new LLMProvider"
+        },
+        {
+          "tag": "not_trained",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adapter not trained yet"
+        }
+      ]
+    },
+    {
+      "name": "swap",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "active",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "adapter",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Hot swaps adapter at inference time When active true , adapter \n weights are applied on top of frozen base model for each forward \n pass Multiple adapters can be swapped without reloading the \n base model"
+        },
+        {
+          "tag": "not_trained",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adapter not trained"
+        }
+      ]
+    },
+    {
+      "name": "compose",
+      "params": [
+        {
+          "name": "adapter_a",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "adapter_b",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "combined",
+              "type": {
+                "kind": "param",
+                "paramRef": "A"
+              }
+            }
+          ],
+          "prose": "Stacks two adapters Combined effect applied at inference \n Useful for combining domain adaptation task specialization"
+        },
+        {
+          "tag": "incompatible",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adapters target different base models or incompatible modules"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "adapter",
+          "type": {
+            "kind": "param",
+            "paramRef": "A"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "path",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Exports adapter weights Format : safetensors , peft_checkpoint"
+        },
+        {
+          "tag": "not_trained",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Nothing to export"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, train behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "domain_lora"
+              }
+            },
+            {
+              "name": "base_model_id",
+              "value": {
+                "kind": "literal",
+                "value": "llama-3"
+              }
+            },
+            {
+              "name": "rank",
+              "value": {
+                "kind": "literal",
+                "value": 16
+              }
+            },
+            {
+              "name": "target_modules",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "query"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "value"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "quantization",
+              "value": {
+                "kind": "literal",
+                "value": "4bit"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "train",
+          "inputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "dataset_ref",
+              "value": {
+                "kind": "literal",
+                "value": "ds1"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "learning_rate",
+                    "value": {
+                      "kind": "literal",
+                      "value": 0.0002
+                    }
+                  },
+                  {
+                    "name": "epochs",
+                    "value": {
+                      "kind": "literal",
+                      "value": 3
+                    }
+                  },
+                  {
+                    "name": "batch_size",
+                    "value": {
+                      "kind": "literal",
+                      "value": 4
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "adapter",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "trainable_params",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "total_params",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "trainable_pct",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AdapterState {\n  \"\"\"All as in this concept\"\"\"\n  as: [ID!]!\n}\n\ntype AdapterEntry {\n  a: ID!\n  name: String!\n  base_model_id: String!\n  rank: Int!\n  target_modules: [String!]!\n  quantization: String!\n  weights: String!\n  training_status: String!\n  merged: Boolean!\n}\n\nextend type Query {\n  adapter_entry(a: ID!): AdapterEntry\n  adapter_entries: [AdapterEntry!]!\n}\n\ntype AdapterAdapters {\n  a: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Adapter/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "base_model_id": {
+                "type": "string"
+              },
+              "rank": {
+                "type": "integer"
+              },
+              "target_modules": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "quantization": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "base_model_id",
+              "rank",
+              "target_modules",
+              "quantization"
+            ]
+          }
+        }
+      },
+      "train": {
+        "$id": "urn:clef/Adapter/train/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "train"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "dataset_ref": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "learning_rate": {
+                    "type": "number"
+                  },
+                  "epochs": {
+                    "type": "integer"
+                  },
+                  "batch_size": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "learning_rate",
+                  "epochs",
+                  "batch_size"
+                ]
+              }
+            },
+            "required": [
+              "adapter",
+              "dataset_ref",
+              "config"
+            ]
+          }
+        }
+      },
+      "merge": {
+        "$id": "urn:clef/Adapter/merge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "merge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter"
+            ]
+          }
+        }
+      },
+      "swap": {
+        "$id": "urn:clef/Adapter/swap/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "swap"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "active": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "adapter",
+              "active"
+            ]
+          }
+        }
+      },
+      "compose": {
+        "$id": "urn:clef/Adapter/compose/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "compose"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter_a": {
+                "type": "string"
+              },
+              "adapter_b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter_a",
+              "adapter_b"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/Adapter/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Adapter"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "adapter": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "adapter",
+              "format"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Adapter/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Adapter/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "train": {
+        "ok": {
+          "$id": "urn:clef/Adapter/train/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "train"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                },
+                "trainable_params": {
+                  "type": "integer"
+                },
+                "total_params": {
+                  "type": "integer"
+                },
+                "trainable_pct": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "adapter",
+                "trainable_params",
+                "total_params",
+                "trainable_pct"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Adapter/train/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "train"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "merge": {
+        "ok": {
+          "$id": "urn:clef/Adapter/merge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "merged_model_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "merged_model_id"
+              ]
+            }
+          }
+        },
+        "not_trained": {
+          "$id": "urn:clef/Adapter/merge/completion/not_trained",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "not_trained"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "swap": {
+        "ok": {
+          "$id": "urn:clef/Adapter/swap/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "swap"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "adapter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adapter"
+              ]
+            }
+          }
+        },
+        "not_trained": {
+          "$id": "urn:clef/Adapter/swap/completion/not_trained",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "swap"
+            },
+            "variant": {
+              "const": "not_trained"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compose": {
+        "ok": {
+          "$id": "urn:clef/Adapter/compose/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "combined": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "combined"
+              ]
+            }
+          }
+        },
+        "incompatible": {
+          "$id": "urn:clef/Adapter/compose/completion/incompatible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "compose"
+            },
+            "variant": {
+              "const": "incompatible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/Adapter/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        "not_trained": {
+          "$id": "urn:clef/Adapter/export/completion/not_trained",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Adapter"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "not_trained"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "LoRA QLoRA weight management for parameter efficient fine tuning \n Injects trainable low rank decomposition matrices into frozen base \n model layers Supports training ( typically 0.2 of total parameters ) , \n merging into base weights ( zero inference latency ) , hot swapping at \n inference time , and composing multiple adapters"
+}

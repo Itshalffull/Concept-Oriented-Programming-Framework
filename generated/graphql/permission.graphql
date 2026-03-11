@@ -1,0 +1,25 @@
+type PermissionState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type PermissionEntry {
+  p: ID!
+  who: String!
+  where: String!
+  what: String!
+  condition: String!
+  granted: Boolean!
+  grantedAt: String!
+  grantedBy: String!
+}
+
+extend type Query {
+  permission_entry(p: ID!): PermissionEntry
+  permission_entries: [PermissionEntry!]!
+}
+
+type PermissionGrants {
+  p: ID!
+  value: ID!
+}

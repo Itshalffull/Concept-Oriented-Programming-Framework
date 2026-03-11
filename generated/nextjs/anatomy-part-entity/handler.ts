@@ -63,10 +63,7 @@ const toError = (error: unknown): AnatomyPartEntityError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const VALID_ROLES: readonly string[] = [
-  'header', 'body', 'footer', 'sidebar', 'overlay',
-  'trigger', 'content', 'label', 'icon', 'action',
-];
+// Accept any role string — the role is application-defined.
 
 /** Generate a stable part ID from widget name and part name. */
 const makePartId = (widget: string, name: string): string =>
@@ -81,7 +78,7 @@ export const anatomyPartEntityHandler: AnatomyPartEntityHandler = {
       TE.tryCatch(
         async () => {
           const partId = makePartId(input.widget, input.name);
-          const semanticRole = VALID_ROLES.includes(input.role) ? input.role : 'content';
+          const semanticRole = input.role;
           await storage.put('anatomy_part', partId, {
             partId,
             widget: input.widget,
@@ -107,8 +104,9 @@ export const anatomyPartEntityHandler: AnatomyPartEntityHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const allParts = await storage.find('anatomy_part', { semanticRole: input.role });
-          const partIds = allParts.map((p) => String(p['partId'] ?? ''));
+          const allParts = await storage.find('anatomy_part');
+          const filtered = allParts.filter((p) => String(p['semanticRole'] ?? '') === input.role);
+          const partIds = filtered.map((p) => String(p['partId'] ?? ''));
           return findByRoleOk(JSON.stringify(partIds));
         },
         toError,
@@ -120,8 +118,9 @@ export const anatomyPartEntityHandler: AnatomyPartEntityHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const bindings = await storage.find('anatomy_binding', { field: input.field });
-          const partIds = bindings.map((b) => String(b['partId'] ?? ''));
+          const bindings = await storage.find('anatomy_binding');
+          const filtered = bindings.filter((b) => String(b['field'] ?? '') === input.field);
+          const partIds = filtered.map((b) => String(b['partId'] ?? ''));
           return findBoundToFieldOk(JSON.stringify(partIds));
         },
         toError,
@@ -133,8 +132,9 @@ export const anatomyPartEntityHandler: AnatomyPartEntityHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const bindings = await storage.find('anatomy_binding', { action: input.action });
-          const partIds = bindings.map((b) => String(b['partId'] ?? ''));
+          const bindings = await storage.find('anatomy_binding');
+          const filtered = bindings.filter((b) => String(b['action'] ?? '') === input.action);
+          const partIds = filtered.map((b) => String(b['partId'] ?? ''));
           return findBoundToActionOk(JSON.stringify(partIds));
         },
         toError,

@@ -1,0 +1,71 @@
+@version(1)
+concept DeployOrchestrator [D] {
+
+  purpose {
+    End-to-end deployment orchestrator that boots a kernel with all
+    deployment concepts, compiles routing syncs, and executes the
+    full deploy pipeline. Provider-agnostic — runtime selection is
+    driven by the deploy manifest and routed via syncs.
+  }
+
+  state {
+    runs: set D
+    manifest {
+      appName: D -> String
+      manifestPath: D -> String
+      environment: D -> String
+    }
+    tracking {
+      status: D -> String
+      deploymentUrl: D -> option String
+      startedAt: D -> DateTime
+      completedAt: D -> option DateTime
+    }
+  }
+
+  actions {
+    action deploy(manifestPath: String, environment: String) {
+      -> ok(run: D, appName: String, deploymentUrl: String, duration: Int) {
+        Full deployment pipeline completed: manifest parsed,
+        plan created, validated, runtime provisioned, and deployed.
+      }
+      -> manifestNotFound(path: String) {
+        The manifest file does not exist at the given path.
+      }
+      -> planFailed(errors: list String) {
+        Deployment plan creation failed due to manifest issues.
+      }
+      -> validationFailed(errors: list String) {
+        Pre-deployment validation found blocking issues.
+      }
+      -> deployFailed(appName: String, errors: list String) {
+        Runtime provisioning or deployment failed.
+      }
+    }
+
+    action deployAll(projectRoot: String, environment: String) {
+      -> ok(deployed: list String, urls: list String, failed: list String, configuredApps: list String) {
+        All discoverable clef-* apps deployed to their configured runtimes,
+        then cross-app dependencies configured via env vars.
+      }
+      -> noAppsFound(projectRoot: String) {
+        No clef-* directories with vercel.deploy.yaml found.
+      }
+    }
+
+    action status(run: D) {
+      -> ok(run: D, appName: String, status: String, deploymentUrl: option String) {
+        Current status of a deployment run.
+      }
+      -> notfound(run: D) {
+        Run does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after deploy(manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production")
+      -> ok(run: r, appName: "clef-web", deploymentUrl: url, duration: d)
+    then status(run: r) -> ok(run: r, appName: "clef-web", status: "deployed", deploymentUrl: url)
+  }
+}

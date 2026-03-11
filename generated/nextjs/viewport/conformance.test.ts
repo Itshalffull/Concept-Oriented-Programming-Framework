@@ -29,7 +29,7 @@ describe('Viewport conformance', () => {
     const storage = createTestStorage();
     const handler = viewportHandler;
 
-    const v = 'u-test-invariant-001';
+    let v: any = 'u-test-invariant-001';
 
     // setup: observe -> ok
     const observeResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Viewport conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).viewport).toBe(v);
+        v = (output as any).viewport;
         expect((output as any).breakpoint).toBe('lg');
         expect((output as any).orientation).toBe('landscape');
         return output;

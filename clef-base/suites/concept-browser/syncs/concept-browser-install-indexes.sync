@@ -1,0 +1,17 @@
+# Concept browser: index package content after hooks.
+# After hook syncs are generated, index the package content
+# for search and discovery in the concept browser.
+
+sync ConceptBrowserInstallIndexes [eventual]
+  purpose: "After hooks are generated, index package content for search"
+when {
+  HookGenerator/generate: [ package_id: ?package_id ]
+    => [ ok: ?hooks ]
+}
+then {
+  SearchIndex/index: [
+    entity_id: ?package_id;
+    content: ?hooks.metadata;
+    category: "package"
+  ]
+}

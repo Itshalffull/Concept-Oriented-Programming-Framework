@@ -1,0 +1,37 @@
+derived BindGeneration [P] {
+
+  purpose {
+    Compose interface enrichment with the full Bind target generation
+    pipeline to transform concept manifests into complete programmatic
+    interfaces — REST, CLI, MCP, Claude Skills, and SDKs.
+  }
+
+  composes {
+    derived InterfaceEnrichment [P]
+    Projection [P]
+  }
+
+  syncs {
+    required: [enrichment-target-route, projection-spec-emit, target-output-write]
+  }
+
+  surface {
+    action bind(manifest: String, targets: String, outputDir: String) {
+      matches: derivedContext "InterfaceEnrichment/project"
+    }
+
+    action renderDocs(concept: String, format: String) {
+      matches: derivedContext "InterfaceEnrichment/renderEnrichment"
+    }
+
+    query enriched(concept: String) -> derivedContext "InterfaceEnrichment/enriched"
+    query guide(concept: String) -> derivedContext "InterfaceEnrichment/guide"
+  }
+
+  principle {
+    after bind(manifest: m, targets: t, outputDir: o)
+    then manifests are projected, enriched, and routed to each target generator
+    and  renderDocs(concept: c, format: f)
+    then structured documentation is produced alongside generated code
+  }
+}

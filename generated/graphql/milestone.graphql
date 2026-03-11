@@ -1,0 +1,23 @@
+type MilestoneState {
+  """All is in this concept"""
+  is: [ID!]!
+}
+
+type MilestoneEntry {
+  i: ID!
+  run_ref: String!
+  name: String!
+  status: String!
+  condition_expr: String!
+  achieved_at: String!
+}
+
+extend type Query {
+  milestone_entry(i: ID!): MilestoneEntry
+  milestone_entries: [MilestoneEntry!]!
+}
+
+type MilestoneMilestones {
+  i: ID!
+  value: ID!
+}

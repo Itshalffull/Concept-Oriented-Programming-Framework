@@ -1,0 +1,28 @@
+type WeightState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type WeightEntry {
+  w: ID!
+  participant: String!
+  source: String!
+  value: Float!
+  snapshotTime: String!
+  snapshotWeights: String!
+}
+
+extend type Query {
+  weight_entry(w: ID!): WeightEntry
+  weight_entries: [WeightEntry!]!
+}
+
+type WeightWeights {
+  w: ID!
+  value: ID!
+}
+
+type WeightSnapshots {
+  w: ID!
+  value: ID!
+}

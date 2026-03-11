@@ -1,0 +1,1022 @@
+{
+  "uri": "urn:clef/ProcessVariable",
+  "name": "ProcessVariable",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "value_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "merge_strategy",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "variables",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "set",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "value_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "var",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Creates or overwrites a variable If merge_strategy is set and a value \n already exists , applies the strategy instead of overwriting"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "var",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "value_type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the current value"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No variable with this name exists in this run scope"
+        }
+      ]
+    },
+    {
+      "name": "merge",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "update",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "var",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "merged_value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Merges an update into an existing variable using the specified strategy \n For append : adds to list For sum : adds numerically For replace : overwrites"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No variable with this name exists"
+        },
+        {
+          "tag": "merge_error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Merge strategy failed ( e g , sum on non numeric data )"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Removes the variable"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No variable with this name exists"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "variables",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns all variables for a run"
+        }
+      ]
+    },
+    {
+      "name": "snapshot",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "snapshot",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns a serialized snapshot of all variables for checkpoint restore"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after set, get behaves correctly",
+      "setup": [
+        {
+          "action": "set",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "total"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "value_type",
+              "value": {
+                "kind": "literal",
+                "value": "int"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "literal",
+                "value": "run"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "var",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "get",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "total"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "var",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "value_type",
+              "value": {
+                "kind": "literal",
+                "value": "int"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ProcessVariableState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype ProcessVariableEntry {\n  v: ID!\n  run_ref: String!\n  name: String!\n  value: String!\n  value_type: String!\n  scope: String!\n  merge_strategy: String!\n}\n\nextend type Query {\n  processvariable_entry(v: ID!): ProcessVariableEntry\n  processvariable_entries: [ProcessVariableEntry!]!\n}\n\ntype ProcessVariableVariables {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "set": {
+        "$id": "urn:clef/ProcessVariable/set/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "set"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "value_type": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "name",
+              "value",
+              "value_type",
+              "scope"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/ProcessVariable/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "name"
+            ]
+          }
+        }
+      },
+      "merge": {
+        "$id": "urn:clef/ProcessVariable/merge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "merge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "update": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "name",
+              "update",
+              "strategy"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/ProcessVariable/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "name"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/ProcessVariable/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      },
+      "snapshot": {
+        "$id": "urn:clef/ProcessVariable/snapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessVariable"
+          },
+          "action": {
+            "const": "snapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "set": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/set/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "set"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "var": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "var"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "var": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "value_type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "var",
+                "value",
+                "value_type"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessVariable/get/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref",
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "merge": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/merge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "var": {
+                  "type": "string"
+                },
+                "merged_value": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "var",
+                "merged_value"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessVariable/merge/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref",
+                "name"
+              ]
+            }
+          }
+        },
+        "merge_error": {
+          "$id": "urn:clef/ProcessVariable/merge/completion/merge_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "merge"
+            },
+            "variant": {
+              "const": "merge_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref",
+                "name"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ProcessVariable/delete/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref",
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "variables": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "variables"
+              ]
+            }
+          }
+        }
+      },
+      "snapshot": {
+        "ok": {
+          "$id": "urn:clef/ProcessVariable/snapshot/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessVariable"
+            },
+            "action": {
+              "const": "snapshot"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "snapshot": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "snapshot"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Store typed , scoped data within process runs that steps can read and write \n Supports explicit merge strategies for parallel branch convergence"
+}

@@ -1,0 +1,11 @@
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, StyleSheet, type ViewStyle } from 'react-native';
+export interface TextareaProps { value?: string; defaultValue?: string; rows?: number; maxLength?: number; label: string; description?: string; error?: string; disabled?: boolean; readOnly?: boolean; placeholder?: string; size?: 'sm'|'md'|'lg'; onChange?: (value: string) => void; style?: ViewStyle; }
+export const Textarea: React.FC<TextareaProps> = ({ value: vp, defaultValue = '', rows = 3, maxLength, label, description, error, disabled = false, readOnly = false, placeholder = '', onChange, style }) => {
+  const [int, setInt] = useState(defaultValue); const value = vp ?? int;
+  const sv = useCallback((v: string) => { setInt(v); onChange?.(v); }, [onChange]);
+  const [focused, setFocused] = useState(false);
+  return (<View style={[styles.root, style]}><Text style={styles.lbl}>{label}</Text><TextInput value={value} placeholder={placeholder} placeholderTextColor="#94a3b8" editable={!disabled && !readOnly} maxLength={maxLength} multiline numberOfLines={rows} onChangeText={sv} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} accessibilityLabel={label} accessibilityState={{ disabled }} style={[styles.ta, focused && styles.foc, !!error && styles.inv, disabled && styles.dis]} textAlignVertical="top" />{description && !error && <Text style={styles.desc}>{description}</Text>}{error && <Text style={styles.err} accessibilityRole="alert">{error}</Text>}{maxLength !== undefined && <Text style={styles.cnt}>{value.length}/{maxLength}</Text>}</View>);
+};
+const styles = StyleSheet.create({ root: {}, lbl: { fontSize: 14, fontWeight: '500', color: '#1e293b', marginBottom: 4 }, ta: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, backgroundColor: '#fff', padding: 10, fontSize: 15, color: '#1e293b', minHeight: 80 }, foc: { borderColor: '#3b82f6' }, inv: { borderColor: '#ef4444' }, dis: { backgroundColor: '#f1f5f9', opacity: 0.6 }, desc: { marginTop: 4, fontSize: 12, color: '#64748b' }, err: { marginTop: 4, fontSize: 12, color: '#ef4444' }, cnt: { marginTop: 4, fontSize: 12, color: '#94a3b8', textAlign: 'right' } });
+Textarea.displayName = 'Textarea'; export default Textarea;

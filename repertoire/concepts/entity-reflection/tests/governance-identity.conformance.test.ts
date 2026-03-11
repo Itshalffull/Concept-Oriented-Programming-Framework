@@ -38,9 +38,8 @@ describe('Governance Identity Entity Syncs', () => {
     for (const name of identitySyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('governance-identity', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -48,18 +47,18 @@ describe('Governance Identity Entity Syncs', () => {
   describe('governance identity entity structure', () => {
     it('AttestationAsContentEntity creates attests_about Relation', () => {
       const source = readSync('governance-identity', 'attestation-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('RoleAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-identity', 'role-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });

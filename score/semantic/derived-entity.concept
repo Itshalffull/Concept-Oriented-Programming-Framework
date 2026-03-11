@@ -1,0 +1,96 @@
+@version(1)
+concept DerivedEntity [D] {
+
+  purpose {
+    Queryable representation of a parsed derived concept — a named
+    composition of base concepts and syncs. Enables trace rollup
+    by linking derivedContext tags to the composition hierarchy,
+    and powers queries like "what concepts does this derived concept
+    compose?" and "what syncs wire it together?"
+  }
+
+  state {
+    entities: set D
+    name: D -> String
+    symbol: D -> String
+    sourceFile: D -> String
+    purposeText: D -> String
+    composesRefs: D -> String
+    requiredSyncs: D -> String
+    surfaceActions: D -> String
+    surfaceQueries: D -> String
+    principle: D -> String
+    suite: D -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, ast: String) {
+      -> ok(entity: D) {
+        Register a parsed derived concept as a semantic entity.
+        Extracts composition hierarchy, claimed syncs, surface
+        actions/queries, and operational principle from the DerivedAST.
+      }
+      -> alreadyRegistered(existing: D) {
+        A derived entity with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(entity: D) {
+        Retrieve a derived entity by name.
+      }
+      -> notfound() {
+        No derived concept with this name exists.
+      }
+    }
+
+    action findByComposedConcept(concept: String) {
+      -> ok(entities: String) {
+        Return all derived concepts that compose the given concept.
+        Results as serialized JSON array.
+      }
+    }
+
+    action findBySync(syncName: String) {
+      -> ok(entities: String) {
+        Return all derived concepts that claim the given sync.
+        Results as serialized JSON array.
+      }
+    }
+
+    action compositionTree(entity: D) {
+      -> ok(tree: String) {
+        Build the full composition hierarchy, resolving nested
+        derived concepts into a tree. Returns serialized JSON.
+      }
+      -> notfound() {
+        Entity not found.
+      }
+    }
+
+    action traceRollup(entity: D, flowId: String) {
+      -> ok(rollup: String) {
+        Roll up a flow trace by grouping sync firings under
+        the derived concept's claimed syncs, producing a
+        summary view. Returns serialized JSON.
+      }
+      -> notfound() {
+        Entity not found.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
+    then get(name: "Trash") -> ok(entity: e)
+  }
+
+  invariant {
+    after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
+    then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> alreadyRegistered(existing: e)
+  }
+}

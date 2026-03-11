@@ -91,22 +91,15 @@ export const elementHandler: ElementHandler = {
     pipe(
       TE.right(input),
       TE.chain((inp) => {
-        if (!(VALID_KINDS as readonly string[]).includes(inp.kind)) {
-          return TE.right(
-            createInvalid(
-              `Invalid element kind '${inp.kind}'. Must be one of: ${VALID_KINDS.join(', ')}`,
-            ),
-          );
-        }
-        if (!(VALID_DATA_TYPES as readonly string[]).includes(inp.dataType)) {
-          return TE.right(
-            createInvalid(
-              `Invalid data type '${inp.dataType}'. Must be one of: ${VALID_DATA_TYPES.join(', ')}`,
-            ),
-          );
-        }
         if (inp.label.trim().length === 0) {
           return TE.right(createInvalid('Element label must not be empty'));
+        }
+        const kindBase = inp.kind.split('-')[0];
+        if (!VALID_KINDS.includes(inp.kind as any) && !VALID_KINDS.includes(kindBase as any)) {
+          return TE.right(createInvalid(`Unknown element kind: '${inp.kind}'`));
+        }
+        if (!VALID_DATA_TYPES.includes(inp.dataType.toLowerCase() as any)) {
+          return TE.right(createInvalid(`Unknown data type: '${inp.dataType}'`));
         }
 
         return TE.tryCatch(

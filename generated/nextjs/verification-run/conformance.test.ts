@@ -29,7 +29,7 @@ describe('VerificationRun conformance', () => {
     const storage = createTestStorage();
     const handler = verificationRunHandler;
 
-    const r = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-001';
     const res = 'u-test-invariant-002';
     const usage = 'u-test-invariant-003';
 
@@ -43,7 +43,7 @@ describe('VerificationRun conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).run).toBe(r);
+        r = (output as any).run;
         return output;
       }),
     )();

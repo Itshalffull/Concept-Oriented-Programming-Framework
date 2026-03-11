@@ -1,0 +1,26 @@
+# identity-integration suite — syncs-only suite for authorization wiring.
+# Zero concepts. Pre-wires Identity suite to ContentNode CRUD operations.
+# See Architecture doc Section 16.3 Item 11.
+
+name: identity-integration
+version: 1.0.0
+description: >
+  Syncs-only suite wiring the Identity suite's access control to
+  ContentNode load, save, and schema operations. Enforces role-based
+  permissions on all content operations.
+
+concepts: {}
+
+uses:
+  - identity
+  - foundation
+
+syncs:
+  required:
+    - access-control-on-content-load
+    - access-control-on-content-save
+    - access-control-on-schema-apply
+    - session-create-sets-ui-transport-auth
+    - session-refresh-sets-ui-transport-auth
+    - session-destroy-clears-ui-transport-auth
+    - session-destroy-all-clears-ui-transport-auth

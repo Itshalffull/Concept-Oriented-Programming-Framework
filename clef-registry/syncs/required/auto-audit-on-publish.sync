@@ -1,0 +1,10 @@
+// Trigger vulnerability audit after successful publication
+
+sync AutoAuditOnPublish [eventual]
+when {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+    => [ ok(module: ?m) ]
+}
+then {
+  Auditor/audit: [ lockfile_entries: ?deps ]
+}

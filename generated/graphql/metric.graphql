@@ -1,0 +1,25 @@
+type MetricState {
+  """All mes in this concept"""
+  mes: [ID!]!
+}
+
+type MetricEntry {
+  me: ID!
+  name: String!
+  value: Float!
+  unit: String!
+  source: String!
+  thresholds: [JSON!]!
+  history: [JSON!]!
+  updatedAt: String!
+}
+
+extend type Query {
+  metric_entry(me: ID!): MetricEntry
+  metric_entries: [MetricEntry!]!
+}
+
+type MetricMetrics {
+  me: ID!
+  value: ID!
+}

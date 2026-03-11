@@ -29,7 +29,7 @@ describe('Article conformance', () => {
     const storage = createTestStorage();
     const handler = articleHandler;
 
-    const a = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('Article conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).article).toBe(a);
+        a = (output as any).article;
         return output;
       }),
     )();
@@ -72,7 +72,7 @@ describe('Article conformance', () => {
     const storage = createTestStorage();
     const handler = articleHandler;
 
-    const a = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -85,7 +85,7 @@ describe('Article conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).article).toBe(a);
+        a = (output as any).article;
         return output;
       }),
     )();

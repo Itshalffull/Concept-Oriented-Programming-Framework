@@ -1,0 +1,33 @@
+@version(1)
+concept ScoreQuery [Q] {
+
+  purpose {
+    Execute arbitrary GraphQL queries against the Score index and
+    return structured results for devtools exploration.
+  }
+
+  state {
+    queries: set Q
+    graphql: Q -> String
+    result: Q -> String
+    timestamp: Q -> DateTime
+  }
+
+  actions {
+    action query(graphql: String) {
+      -> ok(id: Q, data: String) {
+        Execute the GraphQL query against the Score index and return
+        the JSON result. The query is stored for history and replay.
+      }
+      -> error(message: String) {
+        The GraphQL query is malformed or references unknown fields
+        in the Score schema.
+      }
+    }
+  }
+
+  invariant {
+    after query(graphql: "{ concepts { name } }") -> ok(id: q, data: d)
+    then query(graphql: "invalid {{{}}}") -> error(message: m)
+  }
+}

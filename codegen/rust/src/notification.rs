@@ -1,6 +1,6 @@
 // Notification Concept Implementation (Rust)
 //
-// Notification kit — registers delivery channels, manages user
+// Notification suite — registers delivery channels, manages user
 // subscriptions to event patterns, sends notifications, marks them
 // read, and retrieves unread notifications.
 

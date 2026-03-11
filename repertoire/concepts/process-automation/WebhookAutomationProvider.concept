@@ -1,0 +1,52 @@
+@version(1)
+concept WebhookAutomationProvider [WA] {
+
+  purpose {
+    Fire outgoing webhooks as automation actions. Sends HTTP requests to
+    configured webhook endpoints when automation rules trigger, delivering
+    action payloads as request bodies. Registered as an automation-provider
+    with PluginRegistry so AutomationDispatch can delegate to it by name.
+  }
+
+  state {
+    executions: set WA
+
+    action_payload: WA -> String
+    webhook_url: WA -> String
+    method: WA -> String
+    status: WA -> String
+    response: WA -> option String
+    error: WA -> option String
+    registered: option Boolean
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "webhook".
+      }
+      -> already_registered() {
+        Provider is already registered with PluginRegistry.
+      }
+    }
+
+    action execute(action_payload: String, webhook_url: String, method: String) {
+      -> ok(response: String) {
+        Sends an HTTP request to webhook_url using the specified method
+        with the action payload as the request body. Returns the response.
+      }
+      -> error(message: String) {
+        Webhook call failed due to network error, invalid URL, timeout,
+        or non-success HTTP status.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "webhook")
+    then  execute(action_payload: "{\"event\":\"deploy\"}", webhook_url: "https://hooks.example.com/deploy", method: "POST")
+          -> ok(response: r)
+  }
+}

@@ -1,0 +1,14 @@
+# Load the generated automation manifest into ManifestAutomationProvider
+# Triggered when AutomationTarget finishes generating the manifest file.
+
+sync ManifestLoadOnBuild [eager]
+  purpose: "Load automation manifest into the provider after build-time generation."
+when {
+  AutomationTarget/generate: [ projection: ?projection; config: ?config ]
+    => [ manifest: ?manifest; entry_count: ?entryCount; output_path: ?outputPath ]
+}
+then {
+  ManifestAutomationProvider/load: [
+    manifest_path: ?outputPath
+  ]
+}

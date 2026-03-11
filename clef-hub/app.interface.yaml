@@ -1,0 +1,159 @@
+# ClefHub — Interface Generation Manifest
+#
+# Package browser and user dashboard for the Clef ecosystem.
+#
+# Usage:
+#   clef interface generate --manifest clef-hub/app.interface.yaml
+
+interface:
+  name: clef-hub
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+    versioning: none
+    outputDir: ./generated/interfaces/rest
+
+  nextjs:
+    basePath: /api
+    appDir: ./frontend/app
+    functional: true
+    fpTs: true
+    outputDir: ./generated/interfaces/nextjs
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+sdk:
+  typescript:
+    packageName: "@clef/hub-client"
+    moduleSystem: esm
+    outputDir: ./generated/interfaces/sdk/typescript
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+specs:
+  openapi: true
+  asyncapi: false
+  outputDir: ./generated/interfaces/specs
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/interfaces
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+traits:
+  - name: auth
+    config:
+      scheme: bearer
+    scope: suite
+
+# ─── GROUPING ─────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+concepts:
+  AccountProxy:
+    rest:
+      path: /auth
+      actions:
+        login:
+          method: POST
+          path: /auth/login
+        authenticate:
+          method: POST
+          path: /auth/verify
+        logout:
+          method: POST
+          path: /auth/logout
+
+  RegistryProxy:
+    rest:
+      path: /packages
+      actions:
+        search:
+          method: GET
+          path: /packages/search
+        lookup:
+          method: GET
+          path: /packages/:namespace/:name/:version
+        versions:
+          method: GET
+          path: /packages/:namespace/:name/versions
+
+  ComponentManifestProxy:
+    rest:
+      path: /components
+      actions:
+        lookup:
+          method: GET
+          path: /components/:module_id/:version
+        search:
+          method: GET
+          path: /components/search
+
+  DownloadProxy:
+    rest:
+      path: /downloads
+      actions:
+        resolve:
+          method: GET
+          path: /downloads/resolve/:artifact_id/:platform
+        stats:
+          method: GET
+          path: /downloads/stats/:artifact_id
+
+  Comment:
+    traits:
+      - name: auth
+        actions: [add, edit, remove]
+    rest:
+      path: /comments
+      actions:
+        add:
+          method: POST
+          path: /comments
+        edit:
+          method: PUT
+          path: /comments/:comment
+        remove:
+          method: DELETE
+          path: /comments/:comment
+        list:
+          method: GET
+          path: /comments/:entity
+
+  Flag:
+    traits:
+      - name: auth
+        actions: [flag, resolve]
+    rest:
+      path: /flags
+      actions:
+        flag:
+          method: POST
+          path: /flags
+        resolve:
+          method: POST
+          path: /flags/:flag/resolve
+        list:
+          method: GET
+          path: /flags/:entity
+
+  Attribution:
+    rest:
+      path: /attributions
+      actions:
+        attribute:
+          method: POST
+          path: /attributions
+        remove:
+          method: DELETE
+          path: /attributions/:attribution
+        list:
+          method: GET
+          path: /attributions/:module_id

@@ -1,0 +1,26 @@
+# Concept browser: rollback to previous version.
+# When ConceptBrowser/rollback fires, deactivate the current
+# version and restore the previous version from the registry.
+
+sync ConceptBrowserRollback [eager]
+  purpose: "When ConceptBrowser/rollback fires, revert to previous version"
+when {
+  ConceptBrowser/rollback: [ package_id: ?package_id; reason: ?reason ]
+    => [ ok: ?rollback_context ]
+}
+then {
+  Registry/deactivate: [
+    package_id: ?package_id;
+    version: ?rollback_context.current_version
+  ]
+  Registry/register: [
+    package_id: ?package_id;
+    concepts: ?rollback_context.previous_concepts;
+    version: ?rollback_context.previous_version
+  ]
+  SearchIndex/index: [
+    entity_id: ?package_id;
+    content: ?rollback_context.previous_metadata;
+    category: "package"
+  ]
+}

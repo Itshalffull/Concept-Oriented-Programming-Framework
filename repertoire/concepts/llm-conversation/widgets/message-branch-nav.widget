@@ -1,0 +1,130 @@
+@version(1)
+widget message-branch-nav {
+
+  purpose {
+    Navigation control for conversation branches showing the current
+    branch position (e.g., "2 of 3"), with left/right arrows to switch
+    between branches. Includes edit button to create a new branch from
+    the current message, and save/cancel for edit mode.
+  }
+
+  requires @1 {
+    fields {
+      currentIndex: Int;
+      totalBranches: Int;
+    }
+    actions {
+      prevBranch: { };
+      nextBranch: { };
+      edit: { };
+    }
+  }
+
+  anatomy {
+    root:        container  { Compact navigation bar }
+    prevButton:  action     { Navigate to previous branch }
+    indicator:   text       { "N of M" branch position display }
+    nextButton:  action     { Navigate to next branch }
+    editButton:  action     { Create new branch by editing this message }
+  }
+
+  states {
+    viewing [initial] {
+      on PREV -> viewing;
+      on NEXT -> viewing;
+      on EDIT -> editing;
+    }
+
+    editing {
+      on SAVE -> viewing;
+      on CANCEL -> viewing;
+      entry [showEditForm];
+      exit [hideEditForm];
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      ArrowLeft -> PREV;
+      ArrowRight -> NEXT;
+      e -> EDIT;
+      Escape -> CANCEL;
+    }
+    focus {
+      root: focusable;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: concat("Branch ", $currentIndex + 1, " of ", $totalBranches);
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous branch";
+        aria-disabled: if $currentIndex <= 0 then "true" else "false";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next branch";
+        aria-disabled: if $currentIndex >= $totalBranches - 1 then "true" else "false";
+      };
+      editButton -> {
+        role: "button";
+        aria-label: "Edit and branch";
+      };
+    }
+  }
+
+  props {
+    showEdit: Bool = true
+    compact: Bool = false
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "Conversation";
+    }
+    bind {
+      currentIndex: active_branch;
+      totalBranches: branches;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "navigation";
+      data-state: state;
+    }
+    prevButton -> {
+      data-part: "prev";
+      aria-disabled: if $currentIndex <= 0 then "true" else "false";
+      onClick: send(PREV);
+    }
+    indicator -> {
+      data-part: "indicator";
+      text: concat($currentIndex + 1, " / ", $totalBranches);
+    }
+    nextButton -> {
+      data-part: "next";
+      aria-disabled: if $currentIndex >= $totalBranches - 1 then "true" else "false";
+      onClick: send(NEXT);
+    }
+    editButton -> {
+      data-part: "edit";
+      data-visible: if ?showEdit then "true" else "false";
+      onClick: send(EDIT);
+    }
+  }
+
+  invariant {
+    "Prev button disabled at first branch; next disabled at last branch";
+    "Indicator must show 1-indexed position of total branches";
+    "Edit action must fork a new branch from the current message";
+  }
+
+}

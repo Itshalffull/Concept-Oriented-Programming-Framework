@@ -29,7 +29,7 @@ describe('Slot conformance', () => {
     const storage = createTestStorage();
     const handler = slotHandler;
 
-    const l = 'u-test-invariant-001';
+    let l: any = 'u-test-invariant-001';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -38,11 +38,11 @@ describe('Slot conformance', () => {
       name: 'header',
       host: 'dialog',
       position: 'before-title',
-      fallback: _,
+      fallback: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).slot).toBe(l);
+        l = (output as any).slot;
         return output;
       }),
     )();

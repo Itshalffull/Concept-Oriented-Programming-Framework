@@ -39,7 +39,7 @@ output:
 # ─── GLOBAL TRAITS ───────────────────────────────────
 traits:
   - name: validated
-    scope: kit
+    scope: suite
 
 # ─── GROUPING ────────────────────────────────────────
 grouping:
@@ -111,7 +111,7 @@ concepts:
             manifest: { type: string, description: "Path to interface manifest" }
           examples:
             - description: Plan generation for a suite
-              command: clef-interface generator plan my-kit --manifest app.interface.yaml
+              command: clef-interface generator plan my-suite --manifest app.interface.yaml
         generate:
           command: generate
           args:
@@ -215,7 +215,7 @@ concepts:
             target: { type: string, description: "Target type to compose" }
           examples:
             - description: Compose REST surface from per-concept outputs
-              command: clef-interface api-surface compose my-kit --target rest
+              command: clef-interface api-surface compose my-suite --target rest
         entrypoint:
           command: entrypoint
           args:
@@ -280,7 +280,7 @@ concepts:
         group:
           command: group
           flags:
-            strategy: { type: string, description: "Grouping strategy (per-concept, per-kit, by-crud, by-intent)" }
+            strategy: { type: string, description: "Grouping strategy (per-concept, per-suite, by-crud, by-intent)" }
           examples:
             - description: Group concepts by CRUD role
               command: clef-interface grouping group --strategy by-crud
@@ -492,7 +492,7 @@ concepts:
       actions:
         emit:
           type: tool
-          description: "Generate a specification document covering all kit concepts"
+          description: "Generate a specification document covering all suite concepts"
         validate:
           type: tool
           description: "Validate a generated spec against format-specific rules"
@@ -702,7 +702,7 @@ concepts:
             suite: { positional: true }
           examples:
             - description: List generated skills
-              command: clef-interface claude-skills list-skills my-kit --json
+              command: clef-interface claude-skills list-skills my-suite --json
     mcp:
       actions:
         generate:
@@ -713,7 +713,7 @@ concepts:
           description: "Validate skill frontmatter, scaffold refs, and related skill names"
         listSkills:
           type: resource-template
-          uriTemplate: "clef-interface://claude-skills/skills/{kit}"
+          uriTemplate: "clef-interface://claude-skills/skills/{suite}"
 
   OpenApiTarget:
     cli:
@@ -883,7 +883,7 @@ workflows:
         - Interface manifest is valid YAML
         - At least one target is configured
         - Required provider concepts are loaded
-        - Kit concepts have valid specs
+        - Suite concepts have valid specs
       generate:
         - All projections completed successfully
         - Breaking change check passed (or --breaking set)
@@ -913,7 +913,7 @@ workflows:
       body: |
         | Action     | Command                  | Purpose                        |
         |------------|--------------------------|--------------------------------|
-        | plan       | generator plan <kit>     | Create generation plan         |
+        | plan       | generator plan <suite>     | Create generation plan         |
         | generate   | generator generate <plan>| Execute plan                   |
         | status     | generator status <plan>  | Check progress                 |
         | regenerate | generator regenerate     | Regenerate specific targets    |
@@ -1087,7 +1087,7 @@ workflows:
         - All per-concept outputs for the target are present
         - No route/command/tool name conflicts between concepts
         - Shared types are deduplicated
-        - Kit-level middleware is applied
+        - Suite-level middleware is applied
     design-principles:
       - title: Single Entrypoint
         rule: Each target produces exactly one entrypoint that consumers import
@@ -1106,7 +1106,7 @@ workflows:
       body: |
         | Action     | Command                       | Purpose                      |
         |------------|-------------------------------|------------------------------|
-        | compose    | surface compose <kit>         | Merge outputs into surface   |
+        | compose    | surface compose <suite>         | Merge outputs into surface   |
         | entrypoint | surface entrypoint <surface>  | Get entrypoint content       |
     related-workflows:
       - name: interface-pipeline
@@ -1369,8 +1369,8 @@ workflows:
         - Spec document was emitted successfully
         - Validation tools are available on PATH
     design-principles:
-      - title: Kit-Wide Documents
-        rule: Each spec format produces a single document covering the entire kit, not per-concept
+      - title: Suite-Wide Documents
+        rule: Each spec format produces a single document covering the entire suite, not per-concept
       - title: Format Validation
         rule: Generated specs are validated against their format standard before being considered complete
     references:
@@ -1506,7 +1506,7 @@ annotations:
         - label: Plan generation from a manifest
           language: bash
           code: |
-            clef-interface generator plan my-kit --manifest app.interface.yaml
+            clef-interface generator plan my-suite --manifest app.interface.yaml
     generate:
       examples:
         - label: Execute a generation plan
@@ -1561,7 +1561,7 @@ annotations:
         - label: Compose REST surface
           language: bash
           code: |
-            clef-interface api-surface compose my-kit --target rest
+            clef-interface api-surface compose my-suite --target rest
 
   Middleware:
     concept:
@@ -1595,7 +1595,7 @@ annotations:
       trigger-description: >
         Use when organizing concepts into named groups for
         interface generation. Supports structural (per-concept,
-        per-kit) and behavioral (by-crud, by-intent) strategies.
+        per-suite) and behavioral (by-crud, by-intent) strategies.
       trigger-patterns:
         - "grouping"
         - "group concepts"

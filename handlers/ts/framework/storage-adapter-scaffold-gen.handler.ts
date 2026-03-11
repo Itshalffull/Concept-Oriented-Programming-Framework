@@ -325,13 +325,14 @@ export const storageAdapterScaffoldGenHandler: ConceptHandler = {
       const adapterCode = buildStorageAdapter(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}-storage.ts`, content: adapterCode },
+        { path: `${kebab}-storage.stub.ts`, content: adapterCode },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

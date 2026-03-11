@@ -46,6 +46,29 @@ export const healthHandler: ConceptHandler = {
     return { variant: 'ok', check: checkId, roundTripMs };
   },
 
+  async checkSuite(input, storage) {
+    const suite = input.suite as string;
+    const environment = input.environment as string;
+
+    const checkId = `hk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    await storage.put(RELATION, checkId, {
+      check: checkId,
+      type: 'suite',
+      target: suite,
+      environment,
+      status: 'ok',
+      checkedAt: new Date().toISOString(),
+    });
+
+    return {
+      variant: 'ok',
+      check: checkId,
+      conceptResults: [],
+      syncResults: [],
+    };
+  },
+
   async checkKit(input, storage) {
     const kit = input.kit as string;
     const environment = input.environment as string;

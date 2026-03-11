@@ -150,12 +150,21 @@ export function validateDerivedConcept(
     }
   }
 
-  // 2. Validate syncs exist
+  // 2. Validate syncs exist (required + recommended)
   for (const syncName of derived.syncs.required) {
     if (!syncResolver(syncName)) {
       messages.push({
         severity: 'warning',
         message: `Required sync '${syncName}' not found (may be defined externally)`,
+        derivedConcept: name,
+      });
+    }
+  }
+  for (const syncName of derived.syncs.recommended || []) {
+    if (!syncResolver(syncName)) {
+      messages.push({
+        severity: 'info',
+        message: `Recommended sync '${syncName}' not found (may be defined externally)`,
         derivedConcept: name,
       });
     }
@@ -201,6 +210,43 @@ export function validateDerivedConcept(
             message: `Surface action '${action.name}' matches '${matchConcept}/${matchAction}' but action not found on concept`,
             derivedConcept: name,
           });
+        }
+      }
+    } else if (action.matches.type === 'entry') {
+      // Entry format: matches Concept/action with triggers
+      const matchConcept = action.matches.concept;
+      const matchAction = action.matches.action;
+
+      if (!composedNames.has(matchConcept)) {
+        messages.push({
+          severity: 'warning',
+          message: `Surface action '${action.name}' entry matches concept '${matchConcept}' which is not in the composes list`,
+          derivedConcept: name,
+        });
+      }
+
+      const concept = conceptResolver(matchConcept);
+      if (concept) {
+        const conceptAction = concept.actions.find(a => a.name === matchAction);
+        if (!conceptAction) {
+          messages.push({
+            severity: 'error',
+            message: `Surface action '${action.name}' entry matches '${matchConcept}/${matchAction}' but action not found on concept`,
+            derivedConcept: name,
+          });
+        }
+      }
+
+      // Validate triggers reference composed concepts/actions
+      if (action.triggers) {
+        for (const trigger of action.triggers) {
+          if (!composedNames.has(trigger.concept)) {
+            messages.push({
+              severity: 'warning',
+              message: `Surface action '${action.name}' trigger references concept '${trigger.concept}' not in composes list`,
+              derivedConcept: name,
+            });
+          }
         }
       }
     } else if (action.matches.type === 'derivedContext') {

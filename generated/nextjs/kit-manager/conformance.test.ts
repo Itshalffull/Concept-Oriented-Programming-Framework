@@ -29,8 +29,8 @@ describe('KitManager conformance', () => {
     const storage = createTestStorage();
     const handler = kitManagerHandler;
 
-    const k = 'u-test-invariant-001';
-    const k2 = 'u-test-invariant-002';
+    let k: any = 'u-test-invariant-001';
+    let k2: any = 'u-test-invariant-002';
 
     // setup: init -> ok
     const initResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('KitManager conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).kit).toBe(k);
+        k = (output as any).kit;
         expect((output as any).path).toBe('./kits/my-kit/');
         return output;
       }),
@@ -53,7 +53,7 @@ describe('KitManager conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).kit).toBe(k2);
+        k2 = (output as any).kit;
         expect((output as any).concepts).toBe(0);
         expect((output as any).syncs).toBe(0);
         return output;

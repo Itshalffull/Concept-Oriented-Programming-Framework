@@ -1,0 +1,26 @@
+type CircleState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CircleEntry {
+  c: ID!
+  name: String!
+  parent: ID!
+  children: [ID!]!
+  members: [String!]!
+  domain: String!
+  policies: [String!]!
+  repLink: String!
+  leadLink: String!
+}
+
+extend type Query {
+  circle_entry(c: ID!): CircleEntry
+  circle_entries: [CircleEntry!]!
+}
+
+type CircleCircles {
+  c: ID!
+  value: ID!
+}

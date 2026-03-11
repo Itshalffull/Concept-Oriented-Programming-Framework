@@ -1,0 +1,135 @@
+app:
+  name: clef-registry
+  version: "0.1.0"
+  uri: urn:clef:registry
+
+runtimes:
+  vercel:
+    type: VercelRuntime
+    engine: true
+    transport: http
+    storage: vercel-kv
+    secrets: vercel-env
+    config:
+      framework: nextjs
+      buildCommand: "next build"
+      outputDirectory: ".next"
+
+infrastructure:
+  storage:
+    vercel-kv:
+      type: vercel-kv
+      config:
+        url: "${KV_REST_API_URL}"
+        token: "${KV_REST_API_TOKEN}"
+
+  secrets:
+    vercel-env:
+      type: vercel-env
+      config:
+        projectId: "${VERCEL_PROJECT_ID}"
+
+concepts:
+  Registry:
+    spec: concepts/registry.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/registry.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  Publisher:
+    spec: concepts/publisher.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/publisher.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  ContentStore:
+    spec: concepts/content-store.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/content-store.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  Auditor:
+    spec: concepts/auditor.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/auditor.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  Download:
+    spec: concepts/download.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/download.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  ComponentManifest:
+    spec: concepts/component-manifest.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-manifest.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  AccountProxy:
+    spec: concepts/account-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/account-proxy.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/publish-to-registry.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/provenance-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/component-manifest-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/download-register-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auth-guard-on-publish.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/publish-gate.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/auto-audit-on-publish.sync
+    engine: engine
+    annotations: [eventual]
+
+dependencies:
+  clef-account:
+    env: CLEF_ACCOUNT_URL
+    transport: http
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit

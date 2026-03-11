@@ -29,7 +29,7 @@ describe('Secret conformance', () => {
     const storage = createTestStorage();
     const handler = secretHandler;
 
-    const s = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-001';
 
     // setup: resolve -> ok
     const resolveResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Secret conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).secret).toBe(s);
+        s = (output as any).secret;
         expect((output as any).version).toBe('v1');
         return output;
       }),

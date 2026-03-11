@@ -1,0 +1,33 @@
+@version(1)
+concept ImageFilter [Z] {
+
+  purpose {
+    Apply theme-level image treatments such as filter chains,
+    duotones, blend modes, and generated asset formulas.
+  }
+
+  state {
+    presets: set ImageFilterId
+    preset_name: ImageFilterId -> String
+    preset_config: ImageFilterId -> String
+  }
+
+  actions {
+    action register(name: String, config: String) {
+      -> ok(filterId: ImageFilterId) { Image filter preset registered. }
+    }
+
+    action apply(filterId: ImageFilterId, asset: String, context: option String) {
+      -> ok(result: String) { Image treatment applied. }
+    }
+
+    action computeDuotone(filterId: ImageFilterId, asset: String) {
+      -> ok(duotone: String) { Duotone values computed for the asset. }
+    }
+
+    action routeToProvider(filterId: ImageFilterId, provider: String, payload: String) {
+      -> ok(result: String) { Image filter request routed to a provider. }
+      -> notfound(message: String) { Provider unavailable for the preset. }
+    }
+  }
+}

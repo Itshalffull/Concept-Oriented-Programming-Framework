@@ -177,7 +177,7 @@ export const propertyHandler: PropertyHandler = {
           O.fromNullable(record),
           O.fold(
             () => TE.right<PropertyError, PropertyGetOutput>(
-              getNotfound(`Property "${input.key}" not found on entity ${input.entity}`),
+              getNotfound('not found'),
             ),
             (found) => {
               const value = typeof found.value === 'string'

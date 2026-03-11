@@ -1,0 +1,167 @@
+@version(1)
+widget trace-timeline-viewer {
+
+  purpose {
+    Horizontal timeline visualization of verification trace data showing
+    variable states across discrete time steps. Each variable occupies a
+    lane with cells showing values and change highlighting. Includes a
+    step cursor for navigation, zoom/pan controls, and playback mode
+    for stepping through counterexample traces.
+  }
+
+  requires @1 {
+    fields {
+      steps: list;
+      variables: list;
+      currentStep: Int;
+    }
+    actions {
+      stepForward: { };
+      stepBackward: { };
+      jumpToStep: { };
+    }
+  }
+
+  anatomy {
+    root:        container  { Wrapper for the timeline layout }
+    timeAxis:    container  { Horizontal axis with step numbers }
+    lanes:       container  { Vertical stack of variable lanes }
+    lane:        container  { Single variable lane with cells }
+    laneLabel:   text       { Variable name label }
+    cell:        container  { Single time-step cell showing variable value }
+    stepCursor:  container  { Vertical line indicating current step position }
+    controls:    container  { Playback controls (play, pause, step forward/back) }
+    zoomControl: container  { Zoom in/out buttons and scroll-to-fit }
+  }
+
+  states {
+    idle [initial] {
+      on PLAY -> playing;
+      on STEP_FORWARD -> idle;
+      on STEP_BACKWARD -> idle;
+      on SELECT_CELL -> cellSelected;
+      on ZOOM -> idle;
+    }
+
+    playing {
+      on PAUSE -> idle;
+      on STEP_END -> idle;
+      entry [startPlayback; animateCursor];
+      exit [stopPlayback];
+    }
+
+    cellSelected {
+      on DESELECT -> idle;
+      on SELECT_CELL -> cellSelected;
+      entry [highlightCell; showCellDetail];
+      exit [unhighlightCell; hideCellDetail];
+    }
+  }
+
+  accessibility {
+    role: grid;
+    keyboard {
+      ArrowRight -> STEP_FORWARD;
+      ArrowLeft -> STEP_BACKWARD;
+      Space -> TOGGLE_PLAY;
+      Home -> JUMP_START;
+      End -> JUMP_END;
+      ArrowUp -> FOCUS_PREV_LANE;
+      ArrowDown -> FOCUS_NEXT_LANE;
+      Enter -> SELECT_CELL;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: controls;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: "Trace timeline";
+        aria-rowcount: $variables.length;
+      };
+      lane -> {
+        role: "row";
+        aria-label: self.variableName;
+      };
+      cell -> {
+        role: "gridcell";
+        aria-label: concat(self.variableName, " at step ", self.step, ": ", self.value);
+      };
+      controls -> {
+        role: "toolbar";
+        aria-label: "Playback controls";
+      };
+    }
+  }
+
+  props {
+    playbackSpeed: Float = 1.0
+    showChangesOnly: Bool = false
+    zoom: Float = 1.0
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Evidence";
+    }
+    bind {
+      steps: solver_metadata;
+      variables: content_path;
+      currentStep: confidence_score;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "grid";
+      data-state: state;
+      data-zoom: ?zoom;
+    }
+    timeAxis -> {
+      data-part: "time-axis";
+      data-step-count: $steps.length;
+    }
+    lane -> {
+      data-part: "lane";
+      role: "row";
+      data-variable: self.variableName;
+    }
+    laneLabel -> {
+      data-part: "lane-label";
+      text: self.variableName;
+    }
+    cell -> {
+      data-part: "cell";
+      role: "gridcell";
+      data-step: self.step;
+      data-changed: if self.changed then "true" else "false";
+      text: self.value;
+      onClick: send(SELECT_CELL, { step: self.step, variable: self.variableName });
+    }
+    stepCursor -> {
+      data-part: "step-cursor";
+      data-position: $currentStep;
+    }
+    controls -> {
+      data-part: "controls";
+      role: "toolbar";
+    }
+    zoomControl -> {
+      data-part: "zoom-control";
+    }
+  }
+
+  invariant {
+    "Changed cells must be visually highlighted with a distinct color";
+    "Step cursor must track the current step position precisely";
+    "Playback must advance one step per interval based on playbackSpeed";
+    "Grid must support keyboard navigation per WAI-ARIA grid pattern";
+  }
+
+}

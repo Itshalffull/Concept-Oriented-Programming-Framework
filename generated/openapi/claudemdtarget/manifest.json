@@ -1,0 +1,682 @@
+{
+  "uri": "urn:clef/ClaudeMdTarget",
+  "name": "ClaudeMdTarget",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "projectName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "outputPath",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "includeSections",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "conventions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "keyFiles",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "path",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "testCommands",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "label",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "command",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "customSections",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "heading",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "body",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "order",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "packageAlias",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "skillSummaries",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "commands",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "documents",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "generate",
+      "params": [
+        {
+          "name": "projection",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "document",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "files",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "CLAUDE md generated with all configured sections"
+        },
+        {
+          "tag": "noProjections",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No valid concept projections found to aggregate"
+        }
+      ],
+      "description": "Aggregate all concept projections and project configuration \n into a single CLAUDE md document Parses each projection s \n ConceptManifest to extract skill summaries ( name , description , \n commands ) Merges with project config ( conventions , key files , \n test commands , custom sections ) to produce structured markdown \n sections Uses the first concept gate pattern to emit once \n across all per concept calls"
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "document",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "document",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Document contains all required sections and is well formed"
+        },
+        {
+          "tag": "missingSection",
+          "fields": [
+            {
+              "name": "document",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "section",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A configured section is missing from the document"
+        }
+      ]
+    },
+    {
+      "name": "preview",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "sections",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "estimatedLines",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Dry run listing of sections that would be generated"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after generate, validate behaves correctly",
+      "setup": [
+        {
+          "action": "generate",
+          "inputs": [
+            {
+              "name": "projection",
+              "value": {
+                "kind": "literal",
+                "value": "all-projections"
+              }
+            },
+            {
+              "name": "config",
+              "value": {
+                "kind": "literal",
+                "value": "{\"projectName\":\"Test\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "document",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "files",
+              "value": {
+                "kind": "variable",
+                "name": "f"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "document",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "document",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "f",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ClaudeMdTargetState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype ClaudeMdTargetEntry {\n  d: ID!\n  projectName: String!\n  outputPath: String!\n  includeSections: [String!]!\n  conventions: [String!]!\n  keyFiles: [JSON!]!\n  testCommands: [JSON!]!\n  customSections: [JSON!]!\n  packageAlias: String!\n  skillSummaries: [JSON!]!\n  content: String!\n}\n\nextend type Query {\n  claudemdtarget_entry(d: ID!): ClaudeMdTargetEntry\n  claudemdtarget_entries: [ClaudeMdTargetEntry!]!\n}\n\ntype ClaudeMdTargetDocuments {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "generate": {
+        "$id": "urn:clef/ClaudeMdTarget/generate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeMdTarget"
+          },
+          "action": {
+            "const": "generate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "projection": {
+                "type": "string"
+              },
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projection",
+              "config"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/ClaudeMdTarget/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeMdTarget"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "document": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "document"
+            ]
+          }
+        }
+      },
+      "preview": {
+        "$id": "urn:clef/ClaudeMdTarget/preview/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ClaudeMdTarget"
+          },
+          "action": {
+            "const": "preview"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "generate": {
+        "ok": {
+          "$id": "urn:clef/ClaudeMdTarget/generate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeMdTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "document": {
+                  "type": "string"
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "document",
+                "files"
+              ]
+            }
+          }
+        },
+        "noProjections": {
+          "$id": "urn:clef/ClaudeMdTarget/generate/completion/noProjections",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeMdTarget"
+            },
+            "action": {
+              "const": "generate"
+            },
+            "variant": {
+              "const": "noProjections"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/ClaudeMdTarget/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeMdTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "document": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "document"
+              ]
+            }
+          }
+        },
+        "missingSection": {
+          "$id": "urn:clef/ClaudeMdTarget/validate/completion/missingSection",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeMdTarget"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "missingSection"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "document": {
+                  "type": "string"
+                },
+                "section": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "document",
+                "section"
+              ]
+            }
+          }
+        }
+      },
+      "preview": {
+        "ok": {
+          "$id": "urn:clef/ClaudeMdTarget/preview/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ClaudeMdTarget"
+            },
+            "action": {
+              "const": "preview"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "sections": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "estimatedLines": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sections",
+                "estimatedLines"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Generate a single CLAUDE md project context file from all \n concept projections plus project level configuration \n Aggregates skill summaries , project structure , conventions , \n key files , and test commands into one markdown document \n for Claude Code sessions Closer to OpenApiTarget ( one \n file from all concepts ) than ClaudeSkillsTarget ( per concept \n files ) See Architecture doc Section 2.6"
+}

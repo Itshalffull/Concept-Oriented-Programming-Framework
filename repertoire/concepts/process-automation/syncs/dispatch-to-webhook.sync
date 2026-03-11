@@ -1,0 +1,15 @@
+# Route dispatch to the webhook automation provider when provider_name is "webhook"
+
+sync DispatchToWebhook [eager]
+  purpose: "Delegate automation dispatch to the outgoing webhook provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "webhook"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  WebhookAutomationProvider/execute: [
+    action_payload: ?context;
+    webhook_url: ?ruleRef;
+    method: "POST"
+  ]
+}

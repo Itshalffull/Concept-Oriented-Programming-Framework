@@ -1,0 +1,16 @@
+type WidgetGenSvelteState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenSvelteEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgensvelte_entry(p: ID!): WidgetGenSvelteEntry
+  widgetgensvelte_entries: [WidgetGenSvelteEntry!]!
+}

@@ -1,0 +1,148 @@
+# Access administration metadata for clef-base.
+
+concept: AccessCatalog
+action: registerPermission
+entries:
+  - entry: permission:admin.access
+    key: admin.access
+    label: Access administration
+    group: Administration
+    description: Open the Clef Base admin interface and administer users, roles, and permissions.
+  - entry: permission:content.manage
+    key: content.manage
+    label: Manage content
+    group: Content
+    description: Create, edit, and inspect content entities.
+  - entry: permission:schema.manage
+    key: schema.manage
+    label: Manage schemas
+    group: Structure
+    description: Create and update schemas and structural metadata.
+  - entry: permission:view.manage
+    key: view.manage
+    label: Manage views
+    group: Structure
+    description: Edit saved views, builders, and layouts.
+  - entry: permission:taxonomy.manage
+    key: taxonomy.manage
+    label: Manage taxonomy
+    group: Structure
+    description: Create and maintain vocabularies and terms.
+  - entry: permission:workflow.manage
+    key: workflow.manage
+    label: Manage workflows
+    group: Operations
+    description: Edit workflow states and transitions.
+  - entry: permission:automation.manage
+    key: automation.manage
+    label: Manage automations
+    group: Operations
+    description: Create or modify automation rules.
+  - entry: permission:theme.manage
+    key: theme.manage
+    label: Manage themes
+    group: Surface
+    description: Configure design system themes and tokens.
+  - entry: permission:display-mode.manage
+    key: display-mode.manage
+    label: Manage display modes
+    group: Surface
+    description: Adjust display modes and field rendering configuration.
+  - entry: permission:mapping.manage
+    key: mapping.manage
+    label: Manage mappings
+    group: Surface
+    description: Update component and widget mappings.
+  - entry: permission:score.view
+    key: score.view
+    label: View score panels
+    group: Platform
+    description: Open score, concept browser, and sync inspection screens.
+  - entry: permission:multiverse.manage
+    key: multiverse.manage
+    label: Manage multiverse
+    group: Platform
+    description: Inspect version spaces and override state.
+---
+concept: AccessCatalog
+action: registerRole
+entries:
+  - entry: role:admin
+    key: admin
+    label: Administrator
+    description: Full control over Clef Base configuration, content, and access.
+    permissions: '["admin.access","content.manage","schema.manage","view.manage","taxonomy.manage","workflow.manage","automation.manage","theme.manage","display-mode.manage","mapping.manage","score.view","multiverse.manage"]'
+  - entry: role:editor
+    key: editor
+    label: Editor
+    description: Content and structure editor without full access control administration.
+    permissions: '["content.manage","view.manage","taxonomy.manage","workflow.manage","automation.manage","theme.manage","display-mode.manage","mapping.manage","score.view"]'
+  - entry: role:viewer
+    key: viewer
+    label: Viewer
+    description: Read-only observer for score and administrative dashboards.
+    permissions: '["score.view"]'
+---
+concept: AccessCatalog
+action: registerResourceAction
+entries:
+  - entry: resource-action:schema:view
+    catalog: schema
+    key: view
+    label: View
+  - entry: resource-action:schema:create
+    catalog: schema
+    key: create
+    label: Create content
+  - entry: resource-action:schema:edit
+    catalog: schema
+    key: edit
+    label: Edit content
+  - entry: resource-action:schema:delete
+    catalog: schema
+    key: delete
+    label: Delete content
+  - entry: resource-action:schema:define-schema
+    catalog: schema
+    key: define-schema
+    label: Define schema
+  - entry: resource-action:schema:add-field
+    catalog: schema
+    key: add-field
+    label: Add field
+  - entry: resource-action:schema:extend-schema
+    catalog: schema
+    key: extend-schema
+    label: Extend schema
+  - entry: resource-action:schema:apply-schema
+    catalog: schema
+    key: apply-schema
+    label: Attach schema
+  - entry: resource-action:schema:remove-schema
+    catalog: schema
+    key: remove-schema
+    label: Detach schema
+  - entry: resource-action:schema:export-schema
+    catalog: schema
+    key: export-schema
+    label: Export schema
+  - entry: resource-action:node:view
+    catalog: node
+    key: view
+    label: View
+  - entry: resource-action:node:edit
+    catalog: node
+    key: edit
+    label: Edit content
+  - entry: resource-action:node:delete
+    catalog: node
+    key: delete
+    label: Delete
+  - entry: resource-action:node:change-type
+    catalog: node
+    key: change-type
+    label: Change type
+  - entry: resource-action:node:edit-metadata
+    catalog: node
+    key: edit-metadata
+    label: Edit metadata

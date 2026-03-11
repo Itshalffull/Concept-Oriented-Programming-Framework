@@ -1,0 +1,19 @@
+# Register ForceDirectedLayout with PluginRegistry as a layout provider
+
+sync RegisterForceDirectedLayout [eager]
+when {
+  ForceDirectedLayout/register: []
+    => [ name: ?name; category: ?category ]
+}
+then {
+  PluginRegistry/register: [
+    type: "layout-provider";
+    name: ?name;
+    metadata: {
+      name: ?name;
+      concept: "ForceDirectedLayout";
+      action: "apply";
+      category: ?category
+    }
+  ]
+}

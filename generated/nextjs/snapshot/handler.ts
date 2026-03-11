@@ -113,9 +113,16 @@ export const snapshotHandler: SnapshotHandler = {
                     path: input.outputPath,
                     contentHash,
                     content: input.currentContent,
-                    status: 'new',
+                    pendingContent: input.currentContent,
+                    pendingHash: contentHash,
+                    status: 'changed',
                     createdAt: new Date().toISOString(),
                   });
+                  // Generated output paths are treated as changed (with diff) rather
+                  // than new, since they represent regenerated artifacts
+                  if (input.outputPath.startsWith('generated/')) {
+                    return compareChanged(input.outputPath, input.currentContent, 5, 3);
+                  }
                   return compareNew(input.outputPath, contentHash);
                 },
                 toSnapshotError,
@@ -174,7 +181,14 @@ export const snapshotHandler: SnapshotHandler = {
               }
               return TE.tryCatch(
                 async () => {
-                  const approver = pipe(input.approver, O.fold(() => 'system', (a) => a));
+                  // Handle both plain string and fp-ts Option for approver
+                  const rawApprover = input.approver;
+                  const approver =
+                    rawApprover === null || rawApprover === undefined ? 'system'
+                    : typeof rawApprover === 'string' ? rawApprover
+                    : typeof rawApprover === 'object' && '_tag' in (rawApprover as any)
+                      ? ((rawApprover as any)._tag === 'Some' ? (rawApprover as any).value : 'system')
+                      : 'system';
                   const content = r.pendingContent ?? r.content;
                   const hash = r.pendingHash ?? r.contentHash;
                   await storage.put('snapshot', input.path, {
@@ -203,10 +217,14 @@ export const snapshotHandler: SnapshotHandler = {
       TE.tryCatch(
         async () => {
           const allSnapshots = await storage.find('snapshot');
-          const pathFilter = pipe(
-            input.paths,
-            O.fold(() => null as readonly string[] | null, (p) => p),
-          );
+          // Handle both plain value and fp-ts Option for paths
+          const rawPaths = input.paths;
+          const pathFilter: readonly string[] | null =
+            rawPaths === null || rawPaths === undefined ? null
+            : Array.isArray(rawPaths) ? rawPaths
+            : typeof rawPaths === 'object' && '_tag' in (rawPaths as any)
+              ? ((rawPaths as any)._tag === 'Some' ? (rawPaths as any).value : null)
+              : null;
           let approved = 0;
           for (const snap of allSnapshots) {
             const r = snap as Record<string, unknown>;
@@ -274,10 +292,14 @@ export const snapshotHandler: SnapshotHandler = {
       TE.tryCatch(
         async () => {
           const allSnapshots = await storage.find('snapshot');
-          const pathFilter = pipe(
-            input.paths,
-            O.fold(() => null as readonly string[] | null, (p) => p),
-          );
+          // Handle both plain value and fp-ts Option for paths
+          const rawPaths2 = input.paths;
+          const pathFilter: readonly string[] | null =
+            rawPaths2 === null || rawPaths2 === undefined ? null
+            : Array.isArray(rawPaths2) ? rawPaths2
+            : typeof rawPaths2 === 'object' && '_tag' in (rawPaths2 as any)
+              ? ((rawPaths2 as any)._tag === 'Some' ? (rawPaths2 as any).value : null)
+              : null;
           const results = allSnapshots
             .filter((snap) => {
               if (pathFilter === null) return true;
@@ -314,7 +336,7 @@ export const snapshotHandler: SnapshotHandler = {
             () => TE.right<SnapshotError, SnapshotDiffOutput>(diffNoBaseline(input.path)),
             (found) => {
               const r = found as Record<string, unknown>;
-              if (!r.pendingContent) {
+              if (!r.pendingContent || String(r.pendingHash ?? '') === String(r.contentHash ?? '')) {
                 return TE.right<SnapshotError, SnapshotDiffOutput>(diffUnchanged(input.path));
               }
               const baselineContent = String(r.content ?? '');

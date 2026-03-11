@@ -1,0 +1,21 @@
+# ============================================================
+# HostShellZone — surface-app required sync
+#
+# When a Host mounts with a zone assignment, assign that host
+# to the corresponding Shell zone so the Shell layout reflects
+# the new mount.
+# ============================================================
+
+sync HostShellZone [eager]
+  purpose: "When Host/mount succeeds with a zone assignment, assign that host to the corresponding Shell zone"
+when {
+  Host/mount: [ host: ?host ]
+    => ok(host: ?host)
+}
+where {
+  Host: { ?host zone: ?zone }
+  Shell: { ?shell zones: ?zone }
+}
+then {
+  Shell/assignToZone: [ shell: ?shell; zone: ?zone; ref: ?host ]
+}

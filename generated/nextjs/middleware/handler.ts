@@ -84,28 +84,45 @@ export const middlewareHandler: MiddlewareHandler = {
           const middlewares: string[] = [];
           const orders: number[] = [];
 
-          // Check for incompatible trait pairs
-          for (const [a, b] of INCOMPATIBLE_PAIRS) {
-            if (input.traits.includes(a) && input.traits.includes(b)) {
-              return resolveIncompatibleTraits(a, b, `Traits '${a}' and '${b}' cannot coexist in a middleware pipeline`);
-            }
-          }
+          // When traits is undefined, resolve all registered middlewares for the target
+          const traits: readonly string[] = input.traits ?? [];
 
-          // Look up implementations for each requested trait
-          for (const trait of input.traits) {
-            const key = registrationKey(trait, input.target);
-            const record = await storage.get('middleware_registrations', key);
-
-            if (!record) {
-              return resolveMissingImplementation(trait, input.target);
+          if (traits.length > 0) {
+            // Check for incompatible trait pairs
+            for (const [a, b] of INCOMPATIBLE_PAIRS) {
+              if (traits.includes(a) && traits.includes(b)) {
+                return resolveIncompatibleTraits(a, b, `Traits '${a}' and '${b}' cannot coexist in a middleware pipeline`);
+              }
             }
 
-            const data = record as Record<string, unknown>;
-            const implementation = String(data.implementation ?? '');
-            const position = String(data.position ?? 'last');
+            // Look up implementations for each requested trait
+            for (const trait of traits) {
+              const key = registrationKey(trait, input.target);
+              const record = await storage.get('middleware_registrations', key);
 
-            middlewares.push(implementation);
-            orders.push(parsePosition(position));
+              if (!record) {
+                return resolveMissingImplementation(trait, input.target);
+              }
+
+              const data = record as Record<string, unknown>;
+              const implementation = String(data.implementation ?? '');
+              const position = String(data.position ?? 'last');
+
+              middlewares.push(implementation);
+              orders.push(parsePosition(position));
+            }
+          } else {
+            // No traits specified — find all registrations for this target
+            const allRegistrations = await storage.find('middleware_registrations');
+            const targetRegistrations = allRegistrations.filter(
+              (r) => String(r.target) === input.target,
+            );
+            for (const data of targetRegistrations) {
+              const implementation = String(data.implementation ?? '');
+              const position = String(data.position ?? 'last');
+              middlewares.push(implementation);
+              orders.push(parsePosition(position));
+            }
           }
 
           // Sort middlewares by their position ordering
@@ -130,7 +147,17 @@ export const middlewareHandler: MiddlewareHandler = {
           let output = input.output;
           let injectedCount = 0;
 
-          for (const mw of input.middlewares) {
+          // When middlewares is undefined, resolve from storage for this target
+          let middlewareList: readonly string[] = input.middlewares ?? [];
+          if (middlewareList.length === 0) {
+            const allRegistrations = await storage.find('middleware_registrations');
+            const targetRegistrations = allRegistrations.filter(
+              (r) => String(r.target) === input.target,
+            );
+            middlewareList = targetRegistrations.map((r) => String(r.implementation ?? ''));
+          }
+
+          for (const mw of middlewareList) {
             // Insert middleware call at the appropriate point in the output
             const marker = `/* middleware:${mw} */`;
             output = `${marker}\n${output}`;
@@ -140,7 +167,7 @@ export const middlewareHandler: MiddlewareHandler = {
           // Store the injection result for auditing
           await storage.put('middleware_injections', `${input.target}::${new Date().toISOString()}`, {
             target: input.target,
-            middlewares: input.middlewares,
+            middlewares: [...middlewareList],
             injectedCount,
             injectedAt: new Date().toISOString(),
           });

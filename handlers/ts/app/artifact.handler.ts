@@ -1,4 +1,4 @@
-// Artifact Concept Implementation (Deploy Kit)
+// Artifact Concept Implementation (Deploy Suite)
 // Manage immutable, content-addressed build artifacts for concept deployments.
 import type { ConceptHandler } from '@clef/runtime';
 import { createHash } from 'crypto';
@@ -45,7 +45,7 @@ export const artifactHandler: ConceptHandler = {
     await storage.put('artifact', hash, {
       hash,
       suiteName: concept,
-      kitVersion: '1.0.0',
+      suiteVersion: '1.0.0',
       conceptName: concept,
       builtAt,
       inputs: JSON.stringify(inputHashes),

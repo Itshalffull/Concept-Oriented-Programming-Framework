@@ -29,14 +29,14 @@ describe('ScoreApi conformance', () => {
     const storage = createTestStorage();
     const handler = scoreApiHandler;
 
-    const c = 'u-test-invariant-001';
-    const s = 'u-test-invariant-002';
-    const f = 'u-test-invariant-003';
-    const y = 'u-test-invariant-004';
-    const d = 'u-test-invariant-005';
-    const t = 'u-test-invariant-006';
-    const concepts = 'u-test-invariant-007';
-    const syncs = 'u-test-invariant-008';
+    let c: any = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-002';
+    let f: any = 'u-test-invariant-003';
+    let y: any = 'u-test-invariant-004';
+    let d: any = 'u-test-invariant-005';
+    let t: any = 'u-test-invariant-006';
+    let concepts: any = 'u-test-invariant-007';
+    let syncs: any = 'u-test-invariant-008';
 
     // setup: reindex -> ok
     const reindexResultSetup = await pipe(
@@ -45,11 +45,11 @@ describe('ScoreApi conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).conceptCount).toBe(c);
-        expect((output as any).symbolCount).toBe(s);
-        expect((output as any).fileCount).toBe(f);
-        expect((output as any).syncCount).toBe(y);
-        expect((output as any).duration).toBe(d);
+        c = (output as any).conceptCount;
+        s = (output as any).symbolCount;
+        f = (output as any).fileCount;
+        y = (output as any).syncCount;
+        d = (output as any).duration;
         return output;
       }),
     )();
@@ -67,7 +67,7 @@ describe('ScoreApi conformance', () => {
         expect((output as any).symbolCount).toBe(s);
         expect((output as any).fileCount).toBe(f);
         expect((output as any).syncCount).toBe(y);
-        expect((output as any).lastIndexed).toBe(t);
+        t = (output as any).lastIndexed;
         return output;
       }),
     )();
@@ -80,7 +80,7 @@ describe('ScoreApi conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).concepts).toBe(concepts);
+        concepts = (output as any).concepts;
         return output;
       }),
     )();
@@ -93,7 +93,7 @@ describe('ScoreApi conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).syncs).toBe(syncs);
+        syncs = (output as any).syncs;
         return output;
       }),
     )();

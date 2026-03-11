@@ -1,0 +1,1371 @@
+{
+  "uri": "urn:clef/AgentTeam",
+  "name": "AgentTeam",
+  "typeParams": [
+    {
+      "name": "M",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "members",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "role_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "topology",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "protocol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "task_queue",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "task_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "assigned_to",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "results",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "task_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "result",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "teams",
+      "source": "set-valued",
+      "keyField": {
+        "name": "m",
+        "paramRef": "M"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "assemble",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "members",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "role_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "topology",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "protocol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "team",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Forms a team Topology : hierarchical , pipeline , peer_to_peer , \n hub_and_spoke , blackboard Protocol : contract_net , voting , \n confidence_based , round_robin"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown topology or protocol"
+        }
+      ]
+    },
+    {
+      "name": "delegate",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "task",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assignment",
+              "type": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "agent_id",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  },
+                  {
+                    "name": "task_id",
+                    "type": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    },
+                    "optional": false
+                  }
+                ]
+              }
+            }
+          ],
+          "prose": "Assigns task based on topology : \n Hierarchical : supervisor breaks down and assigns to specialists \n Pipeline : sends to first agent in chain \n Contract Net : broadcasts , collects bids via AgentRole , awards \n Hub and Spoke : routes to best fit specialist \n Blackboard : posts task to board , agents self select"
+        },
+        {
+          "tag": "no_capable_agent",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No team member can handle this task"
+        }
+      ]
+    },
+    {
+      "name": "synthesize",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "task_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "contributors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Aggregates results from all agents that worked on the task \n For pipeline : returns final agent s output \n For others : merges partial results"
+        },
+        {
+          "tag": "incomplete",
+          "fields": [
+            {
+              "name": "pending_agents",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some agents haven t completed yet"
+        }
+      ]
+    },
+    {
+      "name": "resolveConflict",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "task_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolution",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "method",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Escalates to Consensus when agents produce contradictory results \n Returns resolved answer and the method used"
+        },
+        {
+          "tag": "deadlock",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Consensus could not be reached"
+        }
+      ]
+    },
+    {
+      "name": "addMember",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "agent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "team",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Adds a member to the team"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Team not found"
+        }
+      ]
+    },
+    {
+      "name": "removeMember",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        },
+        {
+          "name": "agent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "team",
+              "type": {
+                "kind": "param",
+                "paramRef": "M"
+              }
+            }
+          ],
+          "prose": "Removes a member Reassigns their pending tasks"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Agent not in team"
+        }
+      ]
+    },
+    {
+      "name": "getStatus",
+      "params": [
+        {
+          "name": "team",
+          "type": {
+            "kind": "param",
+            "paramRef": "M"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "members",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "agent_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "role",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "current_task",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "pending_tasks",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "completed_tasks",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns team status"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after assemble, delegate behaves correctly",
+      "setup": [
+        {
+          "action": "assemble",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "research"
+              }
+            },
+            {
+              "name": "members",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "agent_id",
+                        "value": {
+                          "kind": "literal",
+                          "value": "a1"
+                        }
+                      },
+                      {
+                        "name": "role_id",
+                        "value": {
+                          "kind": "literal",
+                          "value": "researcher"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "agent_id",
+                        "value": {
+                          "kind": "literal",
+                          "value": "a2"
+                        }
+                      },
+                      {
+                        "name": "role_id",
+                        "value": {
+                          "kind": "literal",
+                          "value": "writer"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "topology",
+              "value": {
+                "kind": "literal",
+                "value": "pipeline"
+              }
+            },
+            {
+              "name": "protocol",
+              "value": {
+                "kind": "literal",
+                "value": "round_robin"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "team",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "delegate",
+          "inputs": [
+            {
+              "name": "team",
+              "value": {
+                "kind": "variable",
+                "name": "m"
+              }
+            },
+            {
+              "name": "task",
+              "value": {
+                "kind": "literal",
+                "value": "Write a report on X"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "assignment",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "m",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AgentTeamState {\n  \"\"\"All ms in this concept\"\"\"\n  ms: [ID!]!\n}\n\ntype AgentTeamEntry {\n  m: ID!\n  name: String!\n  members: [JSON!]!\n  topology: String!\n  protocol: String!\n  task_queue: [JSON!]!\n  results: [JSON!]!\n}\n\nextend type Query {\n  agentteam_entry(m: ID!): AgentTeamEntry\n  agentteam_entries: [AgentTeamEntry!]!\n}\n\ntype AgentTeamTeams {\n  m: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "assemble": {
+        "$id": "urn:clef/AgentTeam/assemble/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "assemble"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "agent_id": {
+                      "type": "string"
+                    },
+                    "role_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "agent_id",
+                    "role_id"
+                  ]
+                }
+              },
+              "topology": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "members",
+              "topology",
+              "protocol"
+            ]
+          }
+        }
+      },
+      "delegate": {
+        "$id": "urn:clef/AgentTeam/delegate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "delegate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "task": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team",
+              "task"
+            ]
+          }
+        }
+      },
+      "synthesize": {
+        "$id": "urn:clef/AgentTeam/synthesize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "synthesize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "task_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team",
+              "task_id"
+            ]
+          }
+        }
+      },
+      "resolveConflict": {
+        "$id": "urn:clef/AgentTeam/resolveConflict/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "resolveConflict"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "task_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team",
+              "task_id"
+            ]
+          }
+        }
+      },
+      "addMember": {
+        "$id": "urn:clef/AgentTeam/addMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "addMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "agent_id": {
+                "type": "string"
+              },
+              "role_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team",
+              "agent_id",
+              "role_id"
+            ]
+          }
+        }
+      },
+      "removeMember": {
+        "$id": "urn:clef/AgentTeam/removeMember/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "removeMember"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              },
+              "agent_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team",
+              "agent_id"
+            ]
+          }
+        }
+      },
+      "getStatus": {
+        "$id": "urn:clef/AgentTeam/getStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentTeam"
+          },
+          "action": {
+            "const": "getStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "team"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "assemble": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/assemble/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "assemble"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "team": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "team"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/AgentTeam/assemble/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "assemble"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delegate": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/delegate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "delegate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assignment": {
+                  "type": "object",
+                  "properties": {
+                    "agent_id": {
+                      "type": "string"
+                    },
+                    "task_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "agent_id",
+                    "task_id"
+                  ]
+                }
+              },
+              "required": [
+                "assignment"
+              ]
+            }
+          }
+        },
+        "no_capable_agent": {
+          "$id": "urn:clef/AgentTeam/delegate/completion/no_capable_agent",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "delegate"
+            },
+            "variant": {
+              "const": "no_capable_agent"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "synthesize": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/synthesize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "synthesize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "contributors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "result",
+                "contributors"
+              ]
+            }
+          }
+        },
+        "incomplete": {
+          "$id": "urn:clef/AgentTeam/synthesize/completion/incomplete",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "synthesize"
+            },
+            "variant": {
+              "const": "incomplete"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pending_agents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "pending_agents"
+              ]
+            }
+          }
+        }
+      },
+      "resolveConflict": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/resolveConflict/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "resolveConflict"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolution": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolution",
+                "method"
+              ]
+            }
+          }
+        },
+        "deadlock": {
+          "$id": "urn:clef/AgentTeam/resolveConflict/completion/deadlock",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "resolveConflict"
+            },
+            "variant": {
+              "const": "deadlock"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addMember": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/addMember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "team": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "team"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentTeam/addMember/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "addMember"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeMember": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/removeMember/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "removeMember"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "team": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "team"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AgentTeam/removeMember/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "removeMember"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getStatus": {
+        "ok": {
+          "$id": "urn:clef/AgentTeam/getStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentTeam"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "agent_id": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "current_task": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "agent_id",
+                      "role",
+                      "current_task"
+                    ]
+                  }
+                },
+                "pending_tasks": {
+                  "type": "integer"
+                },
+                "completed_tasks": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "members",
+                "pending_tasks",
+                "completed_tasks"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Multi agent group coordination Manages topology selection , task \n delegation , result synthesis , and conflict escalation Five topologies : \n hierarchical ( supervisor delegates to specialists ) , pipeline \n ( sequential processing chain ) , peer_to_peer ( decentralized ) , hub_and_spoke \n ( router without authority ) , blackboard ( shared knowledge board ) \n Delegates task agent matching to AgentRole and conflict resolution \n to Consensus",
+  "gate": true
+}

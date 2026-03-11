@@ -29,9 +29,9 @@ describe('GitOps conformance', () => {
     const storage = createTestStorage();
     const handler = gitOpsHandler;
 
-    const g = 'u-test-invariant-001';
-    const f = 'u-test-invariant-002';
-    const t = 'u-test-invariant-003';
+    let g: any = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-003';
 
     // setup: emit -> ok
     const emitResultSetup = await pipe(
@@ -43,8 +43,8 @@ describe('GitOps conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).manifest).toBe(g);
-        expect((output as any).files).toBe(f);
+        g = (output as any).manifest;
+        f = (output as any).files;
         return output;
       }),
     )();
@@ -59,7 +59,7 @@ describe('GitOps conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).manifest).toBe(g);
         expect((output as any).status).toBe('synced');
-        expect((output as any).reconciledAt).toBe(t);
+        t = (output as any).reconciledAt;
         return output;
       }),
     )();

@@ -1,0 +1,16 @@
+# Declarative runtime profiles for clef-base.
+
+concept: RuntimeProfile
+action: register
+entries:
+  - profile: runtime-profile:clef-base-admin
+    name: clef-base-admin
+    shellId: clef-base-shell
+    navigatorId: clef-base-navigator
+    transportId: clef-base-transport
+    platformAdapterId: clef-base-platform
+    platform: browser
+    router: app-router
+    baseUrl: /api/invoke
+    retryPolicy: '{"maxAttempts":3,"backoff":"exponential"}'
+    authMode: cookie

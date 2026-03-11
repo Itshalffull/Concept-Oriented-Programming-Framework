@@ -1,0 +1,93 @@
+@version(1)
+concept SyncAutomationProvider [SA] {
+
+  purpose {
+    Runtime-dynamic automation provider allowing users to define
+    custom syncs that invoke concept actions. User-authored syncs
+    go through a validation and scope-check lifecycle before
+    activation. Validated syncs are registered with SyncEngine
+    for execution.
+  }
+
+  state {
+    user_syncs: set SA
+
+    name: SA -> String
+    source_text: SA -> String
+    compiled: SA -> option String
+    status: SA -> String
+    author: SA -> String
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "sync".
+      }
+    }
+
+    action define(name: String, source_text: String, author: String) {
+      -> ok(sync_def: SA) {
+        Parses source_text as a sync definition and stores it
+        in Draft status.
+      }
+      -> parse_error(message: String) {
+        Source text is not valid sync syntax.
+      }
+      -> exists(name: String) {
+        A user sync with this name already exists.
+      }
+    }
+
+    action validate(sync_def: SA) {
+      -> ok(sync_def: SA) {
+        Sync compiles successfully and all referenced actions
+        pass the AutomationScope check. Status transitions:
+        Draft -> Validated.
+      }
+      -> scope_denied(sync_def: SA, action_ref: String, reason: String) {
+        One or more actions in the sync are blocked by the
+        active AutomationScope.
+      }
+      -> compile_error(sync_def: SA, message: String) {
+        Sync failed compilation.
+      }
+    }
+
+    action activate(sync_def: SA) {
+      -> ok(sync_def: SA) {
+        Registers the compiled sync with SyncEngine for live
+        execution. Status transitions: Validated -> Active.
+      }
+      -> not_validated(sync_def: SA) {
+        Sync must be in Validated status before activation.
+      }
+    }
+
+    action suspend(sync_def: SA) {
+      -> ok(sync_def: SA) {
+        Removes sync from SyncEngine. Status transitions:
+        Active -> Suspended.
+      }
+    }
+
+    action execute(action_ref: String, input: String) {
+      -> ok(result: String) {
+        Executes the matching active user sync against the input.
+      }
+      -> notfound(action_ref: String) {
+        No active user sync handles this action reference.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "sync")
+    then  define(name: "auto-tag", source_text: "sync AutoTag [eager] ...", author: "admin")
+          -> ok(sync_def: sd)
+    then  validate(sync_def: sd) -> ok(sync_def: sd)
+    then  activate(sync_def: sd) -> ok(sync_def: sd)
+  }
+}

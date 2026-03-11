@@ -5,25 +5,31 @@
 import { Command } from 'commander';
 
 export const syncParserCommand = new Command('sync-parser')
-  .description('Parse sync files into structured ASTs and validate 
- against concept manifests');
+  .description('Parse . sync files into structured ASTs and validate against concept manifests');
 
 syncParserCommand
   .command('parse')
-  .description('Tokenize and parse the sync source Resolve all 
- concept and action references against the provided 
- manifests Store the sync reference and its AST')
+  .description('Tokenize and parse the . sync source . Resolve all concept and action references against the provided manifests . Store the sync reference and its AST .')
   .requiredOption('--source <source>', 'Source')
   .requiredOption('--manifests <manifests>', 'Manifests')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'parse', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncParser', 'parse', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const syncParserCommandTree = {
   group: 'sync-parser',
-  description: 'Parse sync files into structured ASTs and validate 
- against concept manifests',
+  description: 'Parse . sync files into structured ASTs and validate against concept manifests',
   commands: [{ action: 'parse', command: 'parse' }],
 };

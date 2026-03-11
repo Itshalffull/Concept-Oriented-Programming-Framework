@@ -32,7 +32,7 @@ describe('LatticeMerge conformance', () => {
     const b = 'u-test-invariant-001';
     const o = 'u-test-invariant-002';
     const t = 'u-test-invariant-003';
-    const r = 'u-test-invariant-004';
+    let r: any = 'u-test-invariant-004';
 
     // setup: execute -> clean
     const executeResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('LatticeMerge conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('clean');
-        expect((output as any).result).toBe(r);
+        r = (output as any).result;
         return output;
       }),
     )();

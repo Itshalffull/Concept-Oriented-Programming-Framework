@@ -1,0 +1,36 @@
+// Sync automation provider as content entities — bridges user-defined
+// sync definitions into the entity system so they are queryable,
+// taggable, and linked to their author.
+
+# When a user sync is defined, save as content entity
+sync SyncAutomationProviderAsContentEntity [eager]
+  purpose: "Persist user-defined sync definitions as queryable content entities."
+when {
+  SyncAutomationProvider/define: [ name: ?name; source_text: ?sourceText; author: ?author ]
+    => [ sync_def: ?syncDef ]
+}
+then {
+  ContentStorage/save: [ record: ?syncDef; data: ?sourceText ]
+}
+
+# Tag with entity type
+sync SyncAutomationProviderTagEntity [eager]
+  purpose: "Tag user-defined syncs with their entity type."
+when {
+  SyncAutomationProvider/define: [ name: ?name; source_text: ?sourceText; author: ?author ]
+    => [ sync_def: ?syncDef ]
+}
+then {
+  Tag/addTag: [ entity: ?syncDef; tag: "system:user_sync" ]
+}
+
+# Link sync to its author
+sync SyncAutomationProviderAuthorRelation [eager]
+  purpose: "Link user-defined syncs to their author via Relation."
+when {
+  SyncAutomationProvider/define: [ name: ?name; source_text: ?sourceText; author: ?author ]
+    => [ sync_def: ?syncDef ]
+}
+then {
+  Relation/link: [ relation: "authored_by"; source: ?syncDef; target: ?author ]
+}

@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-automation
   version: 0.1.0
   description: "External system integration: connector calls, webhook inbox, timers"
@@ -28,12 +28,21 @@ syncs:
   integration:
     - ./syncs/connector-provider-dispatch.sync
 
+widgets:
+  - path: ./widgets/expression-toggle-input.widget
+    description: "Dual-mode input switching between fixed value and expression editor"
+
+surface:
+  entityAffordances:
+    - concept: ConnectorCall
+      editor: expression-toggle-input
+
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec, ProcessVariable]
-  - kit: process-human
+  - suite: process-human
     optional: true
     concepts: [Escalation]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry]

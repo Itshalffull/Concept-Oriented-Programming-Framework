@@ -1,0 +1,25 @@
+type BrowserActionState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type BrowserActionEntry {
+  a: ID!
+  extensionId: String!
+  badgeText: String!
+  badgeColor: String!
+  icon: String!
+  popupUrl: String!
+  enabled: Boolean!
+  contextMenuEntries: String!
+}
+
+extend type Query {
+  browseraction_entry(a: ID!): BrowserActionEntry
+  browseraction_entries: [BrowserActionEntry!]!
+}
+
+type BrowserActionActions {
+  a: ID!
+  value: ID!
+}

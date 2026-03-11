@@ -4,22 +4,35 @@
 
 import { Command } from 'commander';
 
-export const syncScaffoldGenCommand = new Command('scaffold')
-  .description('Generate synchronization rule (.sync) file.');
+export const syncScaffoldGenCommand = new Command('scaffold-sync')
+  .description('Generate synchronization rule (.sync) file with filter/guard conditions and multi-then.');
 
 syncScaffoldGenCommand
   .command('sync')
-  .description('Scaffold a .sync file with when/where/then clauses.')
+  .description('Scaffold a .sync file with when/where/then clauses, filter/guard conditions, and multiple then blocks.')
   .requiredOption('-n, --name <name>', 'PascalCase sync name')
   .requiredOption('--trigger <trigger>', 'Trigger')
+  .option('--conditions <conditions>', 'Comma-separated condition types to scaffold (query, not, filter, guard)')
   .requiredOption('--effects <effects>', 'Effects')
+  .requiredOption('--then-blocks <thenBlocks>', 'Then Blocks')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold sync --name CreateProfile --from User/create --to Profile/init  # Scaffold a sync between two concepts')
   .addHelpText('after', '  clef scaffold sync --name ValidateOrder --tier required  # Scaffold a required sync')
+  .addHelpText('after', '  clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter,guard  # Scaffold with filter and guard conditions')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncScaffoldGenCommand
@@ -27,28 +40,46 @@ syncScaffoldGenCommand
   .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('-n, --name <name>', 'PascalCase sync name')
   .requiredOption('--trigger <trigger>', 'Trigger')
+  .requiredOption('--conditions <conditions>', 'Conditions')
   .requiredOption('--effects <effects>', 'Effects')
+  .requiredOption('--then-blocks <thenBlocks>', 'Then Blocks')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 syncScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SyncScaffoldGen 
- inputKind : SyncConfig 
- outputKind : SyncSpec 
- capabilities : [ sync-spec , when-clause , where-clause , then-clause ]')
+  .description('Return static metadata for PluginRegistry . name : SyncScaffoldGen inputKind : SyncConfig outputKind : SyncSpec capabilities : [ sync-spec , when-clause , where-clause , then-clause , filter-condition , guard-condition , multi-then ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const syncScaffoldGenCommandTree = {
-  group: 'scaffold',
-  description: 'Generate synchronization rule (.sync) file.',
+  group: 'scaffold-sync',
+  description: 'Generate synchronization rule (.sync) file with filter/guard conditions and multi-then.',
   commands: [{ action: 'generate', command: 'sync' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

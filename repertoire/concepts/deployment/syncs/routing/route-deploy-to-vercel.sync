@@ -1,0 +1,11 @@
+# Route Runtime/deploy to VercelRuntime/deploy for Vercel runtimes
+
+sync RouteDeployToVercel [eager]
+  purpose: "Route deployment actions to the Vercel provider when the runtime type is vercel"
+when {
+  Runtime/deploy: [ instance: ?instance; concept: ?concept; runtimeType: "vercel"; sourceDirectory: ?sourceDir ]
+    => [ instance: ?instance; endpoint: ?endpoint ]
+}
+then {
+  VercelRuntime/deploy: [ project: ?concept; sourceDirectory: ?sourceDir ]
+}

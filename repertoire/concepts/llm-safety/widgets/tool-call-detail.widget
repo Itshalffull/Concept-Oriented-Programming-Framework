@@ -1,0 +1,104 @@
+@version(1)
+widget tool-call-detail {
+
+  purpose {
+    Detailed view of a single tool call within an LLM execution trace.
+    Shows tool name, formatted arguments panel, result section, timing
+    breakdown, token usage, error display with stack trace, and retry
+    action. Used in trace drill-down views.
+  }
+
+  requires @1 {
+    fields {
+      toolName: String;
+      arguments: String;
+      result: option String;
+      timing: option Int;
+      tokenUsage: option Int;
+      error: option String;
+    }
+    actions {
+      retry: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Detail panel wrapper }
+    header:         container  { Tool name and status }
+    toolName:       text       { Tool function name }
+    statusBadge:    container  { Execution status indicator }
+    argumentsPanel: container  { Formatted arguments display }
+    resultPanel:    container  { Formatted result display }
+    timingBar:      container  { Timing breakdown visualization }
+    tokenBadge:     container  { Token usage count }
+    errorPanel:     container  { Error message and stack trace }
+    retryButton:    action     { Retry the tool call }
+  }
+
+  states {
+    idle [initial] {
+      on EXPAND_ARGS -> idle;
+      on EXPAND_RESULT -> idle;
+      on RETRY -> retrying;
+    }
+    retrying {
+      on RETRY_COMPLETE -> idle;
+      on RETRY_ERROR -> idle;
+      entry [showSpinner];
+      exit [hideSpinner];
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard { r -> RETRY; }
+    focus { root: focusable; }
+    aria {
+      root -> { role: "article"; aria-label: concat("Tool call: ", $toolName); };
+      argumentsPanel -> { role: "code"; aria-label: "Arguments"; };
+      resultPanel -> { role: "code"; aria-label: "Result"; };
+      errorPanel -> { role: "alert"; aria-label: "Error details"; };
+      retryButton -> { role: "button"; aria-label: "Retry tool call"; };
+    }
+  }
+
+  props {
+    showTiming: Bool = true
+    showTokens: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      suite: "llm-safety";
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    toolName -> { data-part: "tool-name"; text: $toolName; }
+    statusBadge -> { data-part: "status"; }
+    argumentsPanel -> { data-part: "arguments"; }
+    resultPanel -> { data-part: "result"; data-visible: if $result then "true" else "false"; }
+    timingBar -> { data-part: "timing"; data-visible: if ?showTiming and $timing then "true" else "false"; text: concat($timing, "ms"); }
+    tokenBadge -> { data-part: "tokens"; data-visible: if ?showTokens and $tokenUsage then "true" else "false"; text: concat($tokenUsage, " tokens"); }
+    errorPanel -> { data-part: "error"; data-visible: if $error then "true" else "false"; text: $error; }
+    retryButton -> { data-part: "retry"; data-visible: if $error then "true" else "false"; onClick: send(RETRY); }
+  }
+
+  compose {
+    argumentsPanel: widget("code-block", { language: "json", readOnly: true });
+    resultPanel: widget("code-block", { language: "json", readOnly: true });
+    statusBadge: widget("badge", { variant: "dot" });
+    tokenBadge: widget("badge", { variant: "outline", size: "sm" });
+  }
+
+  invariant {
+    "Arguments and result must render as formatted, syntax-highlighted JSON";
+    "Error panel must only appear when an error exists";
+    "Retry button must only appear for failed tool calls";
+    "Timing breakdown must show request, processing, and response phases";
+  }
+
+}

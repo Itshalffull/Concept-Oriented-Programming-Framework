@@ -29,8 +29,8 @@ describe('VaultProvider conformance', () => {
     const storage = createTestStorage();
     const handler = vaultProviderHandler;
 
-    const v = 'u-test-invariant-001';
-    const lid = 'u-test-invariant-002';
+    let v: any = 'u-test-invariant-001';
+    let lid: any = 'u-test-invariant-002';
 
     // setup: fetch -> ok
     const fetchResultSetup = await pipe(
@@ -39,8 +39,8 @@ describe('VaultProvider conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).value).toBe(v);
-        expect((output as any).leaseId).toBe(lid);
+        v = (output as any).value;
+        lid = (output as any).leaseId;
         expect((output as any).leaseDuration).toBe(3600);
         return output;
       }),

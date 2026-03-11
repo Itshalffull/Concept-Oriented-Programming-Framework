@@ -1,0 +1,75 @@
+derived ClefRegistry [M] {
+
+  purpose {
+    Package registry API for the Clef ecosystem. Manages publication,
+    indexing, content-addressed storage, dependency resolution, artifact
+    distribution, component manifests, and vulnerability auditing.
+    Authenticates publishers via the AccountProxy against ClefAccount.
+  }
+
+  composes {
+    Registry [M]
+    Publisher [M]
+    ContentStore [M]
+    Auditor [M]
+    Download [M]
+    ComponentManifest [M]
+    Manifest [M]
+    Resolver [M]
+    Lockfile [M]
+    Fetcher [M]
+    FeatureFlag [M]
+    AccountProxy [M]
+  }
+
+  syncs {
+    required: [
+      publish-to-registry,
+      provenance-on-publish,
+      component-manifest-on-publish,
+      download-register-on-publish,
+      auth-guard-on-publish,
+      publish-gate,
+      auto-audit-on-publish
+    ]
+  }
+
+  surface {
+    action publish(name: String, namespace: String, version: String,
+                   kind: String, artifact_hash: String,
+                   dependencies: list { module_id: String, version_range: String },
+                   metadata: String) {
+      matches: Registry/publish
+    }
+
+    action upload(publication: M, registry_url: String) {
+      matches: Publisher/upload
+    }
+
+    action resolve(artifact_id: String, platform: String, version_range: String) {
+      matches: Download/resolve
+    }
+
+    action search(query: String) {
+      matches: Registry/search
+    }
+
+    action lookupComponent(module_id: String, version: String) {
+      matches: ComponentManifest/lookup
+    }
+
+    action searchCapability(capability: String) {
+      matches: ComponentManifest/search
+    }
+
+    query versions(name: String, namespace: String) -> Registry/versions(name: name, namespace: namespace)
+    query stats(artifact_id: String) -> Download/stats(artifact_id: artifact_id)
+  }
+
+  principle {
+    after upload(publication: p, registry_url: url)
+    then publish is triggered with module metadata
+    and  lookupComponent returns component manifest
+    and  resolve returns downloadable artifact
+  }
+}

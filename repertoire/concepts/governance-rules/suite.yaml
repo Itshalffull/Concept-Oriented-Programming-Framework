@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-rules
   version: 0.1.0
   description: "Policy encoding, compliance monitoring, sanctions, and dispute resolution"
@@ -56,9 +56,9 @@ syncs:
     - policy-cedar-evaluator
 
 uses:
-  - kit: governance-identity
+  - suite: governance-identity
     concepts:
       - name: Membership
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

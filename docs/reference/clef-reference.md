@@ -190,7 +190,7 @@ derived Trash [T] {
 
 **Derived-of-Derived:** Derived concepts can compose other derived concepts. Surface actions can match on `derivedContext` tags instead of primitive action fields. The composition graph must be a DAG.
 
-**No `@version`:** Derived concepts have no state to migrate. Kit semver covers surface changes.
+**No `@version`:** Derived concepts have no state to migrate. Suite semver covers surface changes.
 
 **Bind Integration:** A derived concept in Bind becomes a resource (REST), namespace (GraphQL), subcommand group (CLI), or tool group (MCP).
 
@@ -257,12 +257,12 @@ Each layer controls its own sync boundary. derivedContext tags propagate only th
 | DeploymentValidator | Validate deployment manifests pre-deploy |
 | DevServer | Hot-reloading development server |
 | ProjectScaffold | Generate new Clef project structure |
-| KitManager | Kit lifecycle management (install, update, dependency resolution) |
+| KitManager | Suite lifecycle management (install, update, dependency resolution) |
 | *ScaffoldGen (x10) | Scaffold generators for concepts, syncs, suites, handlers, storage/transport adapters, deploy/interface manifests, Clef Surface components/themes |
 
-*Note: Migration moved to Deploy Kit. Telemetry moved to Deploy Kit. CacheCompiler superseded by BuildCache in Generation Suite.*
+*Note: Migration moved to Deploy Suite. Telemetry moved to Deploy Suite. CacheCompiler superseded by BuildCache in Generation Suite.*
 
-### 5.3 Generation Suite (`kits/generation/`)
+### 5.3 Generation Suite (`suites/generation/`)
 
 Shared generation infrastructure for all Clef generation families. Provides input tracking, pipeline topology, incremental build caching, content-addressed file emission, and unified run reporting.
 
@@ -274,9 +274,9 @@ Shared generation infrastructure for all Clef generation families. Provides inpu
 | GenerationPlan | Orchestrate generation runs with step recording | begin, recordStep, complete |
 | Emitter | Content-addressed file emission with formatting and orphan cleanup | write, format, clean |
 
-Uses: Infrastructure Kit (PluginRegistry).
+Uses: Infrastructure Suite (PluginRegistry).
 
-### 5.4 Deploy Kit (`kits/deploy/`)
+### 5.4 Deploy Suite (`suites/deploy/`)
 
 Deployment orchestration with progressive delivery, migrations, health checks, and observability. Uses the coordination + provider pattern extensively for multi-cloud support.
 
@@ -297,7 +297,7 @@ Deployment orchestration with progressive delivery, migrations, health checks, a
 | **Builder providers (4):** | TypeScript, Rust, Swift, Solidity |
 | **Toolchain providers (4):** | TypeScript, Rust, Swift, Solidity |
 
-### 5.5 Clef Bind (`kits/interface/`)
+### 5.5 Clef Bind (`suites/interface/`)
 
 Multi-target interface generation. Generates REST APIs, GraphQL schemas, gRPC services, CLIs, MCP servers, SDKs, and spec documents from concept specs and an interface manifest.
 
@@ -318,7 +318,7 @@ Multi-target interface generation. Generates REST APIs, GraphQL schemas, gRPC se
 
 Uses: Generation Suite (Emitter — shared file emission).
 
-### 5.6 Scaffolding Kit (`kits/scaffolding/`)
+### 5.6 Scaffolding Suite (`suites/scaffolding/`)
 
 Code generation scaffolding for all artifact types. Each scaffold generator creates starter files for a specific artifact category.
 
@@ -326,7 +326,7 @@ Code generation scaffolding for all artifact types. Each scaffold generator crea
 |---------|-----------|
 | ConceptScaffoldGen | `.concept` spec files |
 | SyncScaffoldGen | `.sync` files |
-| KitScaffoldGen | Kit directory with `suite.yaml` |
+| KitScaffoldGen | Suite directory with `suite.yaml` |
 | HandlerScaffoldGen | TypeScript/Rust/Swift handler implementations |
 | StorageAdapterScaffoldGen | Storage adapter implementations |
 | TransportAdapterScaffoldGen | Transport adapter implementations |
@@ -335,7 +335,7 @@ Code generation scaffolding for all artifact types. Each scaffold generator crea
 | CoifComponentScaffoldGen | Clef Surface component specs |
 | CoifThemeScaffoldGen | Clef Surface theme definitions |
 
-### 5.7 Framework Suite (`kits/framework/`)
+### 5.7 Framework Suite (`suites/framework/`)
 
 Core framework generation. SchemaGen is the coordination concept; language generators are optional providers.
 
@@ -347,7 +347,7 @@ Core framework generation. SchemaGen is the coordination concept; language gener
 | SwiftGen | Generate Swift protocol definitions and handler skeletons (provider) |
 | SolidityGen | Generate Solidity contract interfaces and Foundry tests (provider) |
 
-### 5.8 Test Kit (`kits/test/`)
+### 5.8 Test Suite (`suites/test/`)
 
 Cross-layer testing infrastructure for concept implementations.
 
@@ -359,7 +359,7 @@ Cross-layer testing infrastructure for concept implementations.
 | TestSelection | Intelligent test selection based on change impact |
 | FlakyTest | Flaky test detection and quarantine |
 
-### 5.9 Identity Kit (`kits/identity/`)
+### 5.9 Identity Suite (`suites/identity/`)
 
 Authentication, authorization, and session management.
 
@@ -370,7 +370,7 @@ Authentication, authorization, and session management.
 | AccessControl | Resource-level access policies |
 | Session | Session lifecycle management |
 
-### 5.10 Content Kit (`kits/content/`)
+### 5.10 Content Suite (`suites/content/`)
 
 Content management with rich editing, versioning, and collaboration.
 
@@ -383,9 +383,9 @@ Content management with rich editing, versioning, and collaboration.
 | Template | Reusable content templates with variable substitution |
 | Version | Content version history tracking |
 
-*Note: Version will be superseded by TemporalVersion (Versioning Kit). SyncedContent will be superseded by Replica + ConflictResolution (Collaboration Kit). See Section 6.5.*
+*Note: Version will be superseded by TemporalVersion (Versioning Suite). SyncedContent will be superseded by Replica + ConflictResolution (Collaboration Suite). See Section 6.5.*
 
-### 5.11 Foundation Kit (`kits/foundation/`)
+### 5.11 Foundation Suite (`suites/foundation/`)
 
 Core content models and type system.
 
@@ -400,7 +400,7 @@ Core content models and type system.
 | Property | Dynamic key-value property system with typed values |
 | TypeSystem | Application-level type definitions and validation |
 
-### 5.12 Infrastructure Kit (`kits/infrastructure/`)
+### 5.12 Infrastructure Suite (`suites/infrastructure/`)
 
 Core application infrastructure.
 
@@ -413,7 +413,7 @@ Core application infrastructure.
 | PluginRegistry | Provider registration and resolution for coordination concepts |
 | Validator | Write-time constraint enforcement with field-level errors |
 
-### 5.13 Classification Kit (`kits/classification/`)
+### 5.13 Classification Suite (`suites/classification/`)
 
 Content organization and categorization.
 
@@ -424,7 +424,7 @@ Content organization and categorization.
 | Tag | Content categorization labels (tagging and folksonomy) |
 | Taxonomy | Hierarchical vocabulary with parent-child relationships |
 
-### 5.14 Automation Kit (`kits/automation/`)
+### 5.14 Automation Suite (`suites/automation/`)
 
 Automated workflows and user-configurable rules.
 
@@ -435,7 +435,7 @@ Automated workflows and user-configurable rules.
 | Queue | Queued action processing with priority and retry |
 | Workflow | Multi-step workflow orchestration with state transitions |
 
-### 5.15 Data Integration Kit (`kits/data-integration/`)
+### 5.15 Data Integration Suite (`suites/data-integration/`)
 
 ETL, data quality, provenance, and transformation.
 
@@ -454,7 +454,7 @@ ETL, data quality, provenance, and transformation.
 
 *Note: Capture will be narrowed in scope (CDC adapter role) when ChangeStream ships. Provenance keeps its identity but defers content-region attribution to Attribution concept. See Section 6.5.*
 
-### 5.16 Data Organization Kit (`kits/data-organization/`)
+### 5.16 Data Organization Suite (`suites/data-organization/`)
 
 Graph and collection data structures.
 
@@ -463,7 +463,7 @@ Graph and collection data structures.
 | Collection | Ordered/filtered content collections |
 | Graph | Typed graph overlays with nodes, edges, and traversal |
 
-### 5.17 Computation Kit (`kits/computation/`)
+### 5.17 Computation Suite (`suites/computation/`)
 
 Expression evaluation and formula processing.
 
@@ -473,7 +473,7 @@ Expression evaluation and formula processing.
 | Formula | Spreadsheet-style formula definitions and computation |
 | Token | Tokenization for expression parsing |
 
-### 5.18 Collaboration Kit (`kits/collaboration/`)
+### 5.18 Collaboration Suite (`suites/collaboration/`)
 
 Group collaboration features.
 
@@ -482,9 +482,9 @@ Group collaboration features.
 | Flag | Content flagging for review/moderation |
 | Group | User group management and membership |
 
-*Note: This suite will be significantly expanded by the new Collaboration Kit (Section 6.5) which adds CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, and PessimisticLock.*
+*Note: This suite will be significantly expanded by the new Collaboration Suite (Section 6.5) which adds CausalClock, Replica, ConflictResolution, Attribution, Signature, InlineAnnotation, and PessimisticLock.*
 
-### 5.19 Linking Kit (`kits/linking/`)
+### 5.19 Linking Suite (`suites/linking/`)
 
 Cross-entity references and relationships.
 
@@ -495,7 +495,7 @@ Cross-entity references and relationships.
 | Reference | Forward links between entities (schema-less) |
 | Relation | Typed, labeled, bidirectional relationships with cardinality |
 
-### 5.20 Presentation Kit (`kits/presentation/`)
+### 5.20 Presentation Suite (`suites/presentation/`)
 
 Display and form rendering.
 
@@ -506,7 +506,7 @@ Display and form rendering.
 | Renderer | Content rendering pipeline |
 | View | Configurable content views with field selection and ordering |
 
-### 5.21 Query/Retrieval Kit (`kits/query-retrieval/`)
+### 5.21 Query/Retrieval Suite (`suites/query-retrieval/`)
 
 Search and query execution.
 
@@ -518,14 +518,14 @@ Search and query execution.
 
 ### 5.22 Other Domain Suites
 
-| Kit | Concepts | Purpose |
+| Suite | Concepts | Purpose |
 |-----|----------|---------|
-| **Layout** (`kits/layout/`) | Component | UI component composition and layout |
-| **Media** (`kits/media/`) | FileManagement, MediaAsset | File upload, processing, and media management |
-| **Notification** (`kits/notification/`) | Notification | Multi-channel notification delivery |
-| **Web3** (`kits/web3/`) | ChainMonitor (@gate), Content, Wallet | Blockchain finality tracking, IPFS storage, signature verification |
+| **Layout** (`suites/layout/`) | Component | UI component composition and layout |
+| **Media** (`suites/media/`) | FileManagement, MediaAsset | File upload, processing, and media management |
+| **Notification** (`suites/notification/`) | Notification | Multi-channel notification delivery |
+| **Web3** (`suites/web3/`) | ChainMonitor (@gate), Content, Wallet | Blockchain finality tracking, IPFS storage, signature verification |
 
-### 5.23 Clef Surface Kits (`concept-interface/kits/`) -- Clef Surface (v0.4.0)
+### 5.23 Clef Surface Suites (`concept-interface/suites/`) -- Clef Surface (v0.4.0)
 
 Clef Surface is the interface companion to Clef. Every abstraction is a concept, every coordination is a sync, every bundle is a suite. Clef Surface generates working interfaces from concept specs — zero config gets a functional interface, progressive customization gets a beautiful one. Two-step semantic widget selection: abstract interaction types (Interactor) are classified from field metadata, then matched against widget capability declarations (Affordance) parameterized by runtime context.
 
@@ -549,7 +549,7 @@ Clef Surface is the interface companion to Clef. Every abstraction is a concept,
 **surface-spec** — Build-time parsing and generation for `.widget` and `.theme` spec files. Uses Clef generation suite infrastructure (Resource, KindSystem, BuildCache, Emitter).
 - WidgetParser, ThemeParser, WidgetGen, ThemeGen
 
-**surface-integration** — Syncs-only kit bridging Clef domain concepts to Clef Surface interface concepts. No new concepts. Includes IntentImprovesClassification and CustomizationOverridesResolver syncs.
+**surface-integration** — Syncs-only suite bridging Clef domain concepts to Clef Surface interface concepts. No new concepts. Includes IntentImprovesClassification and CustomizationOverridesResolver syncs.
 
 ---
 
@@ -557,13 +557,13 @@ Clef Surface is the interface companion to Clef. Every abstraction is a concept,
 
 ### 6.1 Suite Manifest (`suite.yaml`)
 
-Kits bundle concepts, syncs, and type parameter mappings. The `uses` section declares cross-suite dependencies (only syncs reference external concepts; concepts remain independent).
+Suites bundle concepts, syncs, and type parameter mappings. The `uses` section declares cross-suite dependencies (only syncs reference external concepts; concepts remain independent).
 
 ```yaml
-kit:
+suite:
   name: suite-name
   version: 0.1.0
-  description: "Kit purpose"
+  description: "Suite purpose"
 
 concepts:
   ConceptName:
@@ -578,7 +578,7 @@ syncs:
   integration: [...]   # load when provider present
 
 uses:
-  - kit: other-kit
+  - suite: other-suite
     optional: true     # conditional loading
     concepts:
       - name: ExternalConcept
@@ -613,15 +613,15 @@ Many suites use a coordination concept with multiple optional provider plugins. 
 | Merge (Versioning) | ThreeWay, Recursive, Lattice, Semantic | Content type + strategy |
 | ConflictResolution (Collab) | LWW, AddWins, Manual, MultiValue | Data type + domain policy |
 
-### 6.5 In-Progress Kit Additions (Separate Worktrees)
+### 6.5 In-Progress Suite Additions (Separate Worktrees)
 
 Three major design documents are being implemented on separate worktrees:
 
-#### Code Representation & Semantic Query System (`kits/code-representation-design.md`)
+#### Code Representation & Semantic Query System (`suites/code-representation-design.md`)
 
 Adds 5 new suites that make every file in a Clef project a queryable node at syntactic, symbolic, and semantic levels:
 
-**Parse Kit** (`kits/parse/`) — Universal file parsing via Tree-sitter, structural identity, and pattern matching.
+**Parse Suite** (`suites/parse/`) — Universal file parsing via Tree-sitter, structural identity, and pattern matching.
 - SyntaxTree: Lossless CST for any parsed file, wrapping Tree-sitter output
 - LanguageGrammar: Grammar definitions mapping extensions to parsers (coordination concept with ~15 grammar providers)
 - DefinitionUnit: Individual definitions (function, class, concept spec) as first-class entities
@@ -629,37 +629,37 @@ Adds 5 new suites that make every file in a Clef project a queryable node at syn
 - StructuralPattern: Reusable search/match patterns (coordination concept with Tree-sitter, ast-grep, Comby, Regex providers)
 - FileArtifact: Software-engineering metadata for project files (role, provenance, dependencies)
 
-**Symbol Kit** (`kits/symbol/`) — Cross-file identity, occurrence tracking, and scope resolution.
+**Symbol Suite** (`suites/symbol/`) — Cross-file identity, occurrence tracking, and scope resolution.
 - Symbol: Globally unique identifiers for named entities (`clef/concept/Article`, `ts/function/...`)
 - SymbolOccurrence: Where symbols appear with exact locations and semantic roles
 - ScopeGraph: Lexical scoping and name resolution model
 - SymbolRelationship: Typed semantic relationships (implements, extends, generates, tests)
 - Providers: TypeScript/Rust/Concept/Sync/Universal extractors; TypeScript/Concept/Sync scope providers
 
-**Semantic Kit** (`kits/semantic/`) — Clef-specific semantic entities as queryable nodes.
+**Semantic Suite** (`suites/semantic/`) — Clef-specific semantic entities as queryable nodes.
 - ConceptEntity: Parsed concept linked to generated artifacts and runtime behavior
 - ActionEntity: Action with full lifecycle tracing (spec → sync → implementation → interface)
 - VariantEntity: Action return variant as a first-class branching point in sync chains
 - StateField: State declaration traced through generation and storage
 - SyncEntity: Compiled sync rule as a queryable node connecting concepts
 
-**Analysis Kit** (`kits/analysis/`) — Program analysis overlays.
+**Analysis Suite** (`suites/analysis/`) — Program analysis overlays.
 - DependenceGraph: Data/control dependency edges (coordination concept with TypeScript/Rust/Concept/Sync/Datalog providers)
 - DataFlowPath: Traced data flow from source to sink (taint tracking, config propagation)
 - ProgramSlice: Minimal subgraph preserving behavior relative to a slicing criterion
 - AnalysisRule: Declarative analysis rules for custom queries, linting, architecture constraints
 
-**Discovery Kit** (`kits/discovery/`) — Search, embedding, and indexing.
+**Discovery Suite** (`suites/discovery/`) — Search, embedding, and indexing.
 - SemanticEmbedding: Vector embeddings for similarity search and NL code search (coordination concept with CodeBERT, UniXcoder, OpenAI, Voyage providers)
 - Search index providers (Trigram, SuffixArray, SymbolIndex) register with existing SearchIndex
 
 Reuses 22 existing concepts directly (ContentNode, Graph, Reference, Provenance, FieldMapping, DataQuality, etc.). Several proposed concepts collapsed into existing ones (FlowGraph/CallGraph/ImportGraph → typed Graph instances; InvariantCoverage → DataQuality; TypeBinding → FieldMapping).
 
-#### Versioning & Collaboration System (`kits/versioning-suite-design.md`)
+#### Versioning & Collaboration System (`suites/versioning-suite-design.md`)
 
 Adds 2 new suites with 18 new concepts providing version control, change tracking, concurrent editing, and compliance.
 
-**Versioning Kit** (`kits/versioning/`) — Immutable storage primitives, change representation, and history.
+**Versioning Suite** (`suites/versioning/`) — Immutable storage primitives, change representation, and history.
 - ContentHash: Content-addressed identity via cryptographic digest (deduplication, integrity)
 - Ref: Mutable human-readable names for immutable content-addressed objects (compare-and-swap)
 - DAGHistory: Directed acyclic graph of versions (branching, merging, topological traversal)
@@ -672,7 +672,7 @@ Adds 2 new suites with 18 new concepts providing version control, change trackin
 - ChangeStream: Ordered, resumable stream of atomic change events. Downstream consumer for Capture.
 - RetentionPolicy: Retention periods, legal holds, and compliance-grade disposition logging
 
-**Collaboration Kit** (expands existing `kits/collaboration/`) — Distributed collaboration and concurrent editing.
+**Collaboration Suite** (expands existing `suites/collaboration/`) — Distributed collaboration and concurrent editing.
 - CausalClock: Happens-before ordering via vector clocks (tick, merge, compare, dominates)
 - Replica: Locally-modifiable copy of shared state with peer synchronization (@gate)
 - ConflictResolution: Detect and resolve concurrent modifications (coordination concept; LWW/AddWins/Manual/MultiValue providers)
@@ -682,8 +682,8 @@ Adds 2 new suites with 18 new concepts providing version control, change trackin
 - PessimisticLock: Exclusive write access with queuing, expiration, and break-lock (@gate)
 
 **Supersession plan:**
-- Version (Content Kit) → TemporalVersion (Versioning Kit) — compatibility sync, then deprecate, then remove
-- SyncedContent (Content Kit) → Replica + ConflictResolution — facade sync, then deprecate, then remove
+- Version (Content Suite) → TemporalVersion (Versioning Suite) — compatibility sync, then deprecate, then remove
+- SyncedContent (Content Suite) → Replica + ConflictResolution — facade sync, then deprecate, then remove
 - Capture (Data Integration) → narrowed scope (CDC adapter only); ChangeStream handles downstream streaming
 - Provenance (Data Integration) → keeps identity; Attribution handles content-region authorship
 
@@ -717,7 +717,7 @@ Three-pass architectural revision of the Clef Surface interface system:
 
 **ConceptManifest** -- Language-neutral IR: uri, name, typeParams, relations (RelationSchema[]), actions (ActionSchema[]), invariants (InvariantSchema[]), graphqlSchema, jsonSchemas, capabilities, purpose, gate, category, visibility.
 
-**KitManifest** -- Kit metadata: kit info, concepts with param mappings, syncs by tier, uses declarations, dependencies.
+**KitManifest** -- Suite metadata: suite info, concepts with param mappings, syncs by tier, uses declarations, dependencies.
 
 **Wire protocol:** `ActionInvocation` (id, concept, action, input, flow, sync, timestamp) and `ActionCompletion` (+ variant, output).
 
@@ -743,7 +743,7 @@ Maintains an index from `(concept, action)` pairs to syncs. On completion: find 
 
 ### 7.5 CLI (`tools/clef-cli/`)
 
-Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `--pattern async-gate`), `trace` (with `--gates`), `deploy`, `dev`, `test`, `migrate`, `kit`, `interface`, `kinds`, `impact`.
+Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `--pattern async-gate`), `trace` (with `--gates`), `deploy`, `dev`, `test`, `migrate`, `suite`, `interface`, `kinds`, `impact`.
 
 ### 7.6 Query Modes
 
@@ -772,7 +772,7 @@ Commands: `init`, `generate`, `compile-syncs`, `compile-cache`, `check` (with `-
 8. Add `@version(1)` if the concept has persistent state.
 9. Add `@gate` if any action may complete asynchronously.
 10. Add `capabilities` if the concept requires `persistent-storage`, `crypto`, or `network`.
-11. Place in appropriate kit directory or `specs/` for framework concepts.
+11. Place in appropriate suite directory or `specs/` for framework concepts.
 12. Write syncs in separate `.sync` files to wire to other concepts.
 13. Update `suite.yaml` with the concept entry and param mapping.
 
@@ -797,7 +797,7 @@ Clef has three distinct layers for event/action routing, each at a different abs
 
 ### 10.2 Linking Concepts: Reference/Backlink vs Relation
 
-The linking kit provides three concepts at two complexity levels:
+The linking suite provides three concepts at two complexity levels:
 
 **Lightweight (schema-less):**
 - **Reference** — Forward links: `addRef(source, target)`, `removeRef`, `getRefs`
@@ -818,12 +818,12 @@ Both concepts deal with "checking correctness" but at different points in the da
 
 | Concept | Scope | When it runs | What it returns |
 |---------|-------|-------------|----------------|
-| **Validator** (`kits/infrastructure/`) | Write-time constraint enforcement | On CRUD operations, form submissions, property changes | Pass/fail with field-level error messages |
-| **DataQuality** (`kits/data-integration/`) | Pipeline-level data assessment | During ETL/integration flows | Quality scores, quarantine decisions, pipeline gate verdicts |
+| **Validator** (`suites/infrastructure/`) | Write-time constraint enforcement | On CRUD operations, form submissions, property changes | Pass/fail with field-level error messages |
+| **DataQuality** (`suites/data-integration/`) | Pipeline-level data assessment | During ETL/integration flows | Quality scores, quarantine decisions, pipeline gate verdicts |
 
 **Delegation:** DataQuality delegates rule evaluation to Validator via the `DataQualityValidation` sync. DataQuality adds pipeline-specific wrapping (scoring, gating, quarantine) while Validator handles the underlying constraint checking.
 
-**Coercion:** Validation failures can trigger Transform (`kits/data-integration/`) to attempt coercion before rejecting, via the `CoercionFallback` sync in `kits/infrastructure/syncs/`.
+**Coercion:** Validation failures can trigger Transform (`suites/data-integration/`) to attempt coercion before rejecting, via the `CoercionFallback` sync in `suites/infrastructure/syncs/`.
 
 ### 10.4 Concept Overlap Prevention Guidelines
 
@@ -877,10 +877,10 @@ See the `/derive-app` skill for the step-by-step process.
 
 ---
 
-## 11. Kit Summary
+## 11. Suite Summary
 
-**Current:** 23 suites with ~145 concepts across `kits/`, 34 framework/app specs in `specs/`, plus 7 Clef Surface suites with 29 core + ~20 adapter concepts in `concept-interface/`.
+**Current:** 23 suites with ~145 concepts across `suites/`, 34 framework/app specs in `specs/`, plus 7 Clef Surface suites with 29 core + ~20 adapter concepts in `concept-interface/`.
 
 **In-progress (worktrees):**
 - Code Representation: +5 suites, +20 coordination concepts, +~35 providers
-- Versioning & Collaboration: +1 new suite (Versioning), expansion of Collaboration kit, +18 concepts, +~12 providers, −2 superseded concepts (Version, SyncedContent)
+- Versioning & Collaboration: +1 new suite (Versioning), expansion of Collaboration suite, +18 concepts, +~12 providers, −2 superseded concepts (Version, SyncedContent)

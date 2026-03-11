@@ -178,8 +178,8 @@ export const openApiTargetHandler: OpenApiTargetHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const { projections, config } = input;
-          const parsedConfig = parseConfig(config);
+          const projections: readonly string[] = input.projections ?? [];
+          const parsedConfig = parseConfig(input.config);
 
           // Enrich projections from storage if available
           const enrichedProjections: string[] = [];
@@ -205,7 +205,7 @@ export const openApiTargetHandler: OpenApiTargetHandler = {
           // Persist the generated spec for future reference
           await storage.put('specs', specId, {
             projections: [...projections],
-            config,
+            config: input.config,
             content,
             generatedAt: new Date().toISOString(),
           });

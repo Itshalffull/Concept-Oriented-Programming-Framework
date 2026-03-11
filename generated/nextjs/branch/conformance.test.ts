@@ -31,7 +31,7 @@ describe('Branch conformance', () => {
 
     const n = 'u-test-invariant-001';
     const f = 'u-test-invariant-002';
-    const b = 'u-test-invariant-003';
+    let b: any = 'u-test-invariant-003';
     const n2 = 'u-test-invariant-004';
 
     // setup: create -> ok
@@ -42,7 +42,7 @@ describe('Branch conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).branch).toBe(b);
+        b = (output as any).branch;
         return output;
       }),
     )();
@@ -85,11 +85,10 @@ describe('Branch conformance', () => {
     const advanceResultAssert = await pipe(
       handler.advance({
       branch: b,
-      newNode: _,
+      newNode: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('protected');
-        expect((output as any).message).toBe(_);
         return output;
       }),
     )();

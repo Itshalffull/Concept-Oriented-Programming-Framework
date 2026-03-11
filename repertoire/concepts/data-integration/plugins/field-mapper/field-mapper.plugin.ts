@@ -1,7 +1,7 @@
 // Field Mapper Plugin — source path resolution implementations for the FieldMapping concept
 // Provides pluggable path syntax resolvers to extract values from raw records using
 // direct dot-notation, JSONPath, XPath, regex, template interpolation, and computed expressions.
-// See Data Integration Kit field-mapping.concept for the parent FieldMapping concept definition.
+// See Data Integration Suite field-mapping.concept for the parent FieldMapping concept definition.
 
 // ---------------------------------------------------------------------------
 // Core types

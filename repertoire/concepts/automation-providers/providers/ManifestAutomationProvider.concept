@@ -1,0 +1,71 @@
+@version(1)
+concept ManifestAutomationProvider [MA] {
+
+  purpose {
+    Build-time automation provider backed by a generated action
+    manifest. The manifest enumerates every concept action with
+    input/output JSON schemas, enabling validated dispatch without
+    runtime discovery. Loaded from automation-manifest.json produced
+    by AutomationTarget.
+  }
+
+  state {
+    entries: set MA
+
+    concept_action: MA -> String
+    input_schema: MA -> String
+    output_schema: MA -> String
+    category: MA -> String
+    manifest_version: MA -> String
+  }
+
+  actions {
+
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "automation-provider" and name "manifest".
+      }
+    }
+
+    action load(manifest_path: String) {
+      -> ok(entry_count: Int, version: String) {
+        Parses the manifest file and populates entries. Replaces
+        any previously loaded entries.
+      }
+      -> parse_error(manifest_path: String, message: String) {
+        Manifest file could not be parsed.
+      }
+    }
+
+    action execute(action_ref: String, input: String) {
+      -> ok(result: String) {
+        Validates input against the entry's input_schema, invokes
+        the concept action, and validates the output.
+      }
+      -> validation_error(action_ref: String, message: String) {
+        Input does not conform to the action's input schema.
+      }
+      -> not_in_manifest(action_ref: String) {
+        Action reference not found in the loaded manifest.
+      }
+    }
+
+    action lookup(action_ref: String) {
+      -> ok(entry: MA) {
+        Returns the manifest entry for the given action reference.
+      }
+      -> notfound(action_ref: String) {
+        Action reference not in manifest.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "manifest")
+    then  load(manifest_path: "automation-manifest.json")
+          -> ok(entry_count: n, version: v)
+    then  execute(action_ref: "Content/save", input: "{}")
+          -> ok(result: r)
+  }
+}

@@ -29,8 +29,8 @@ describe('ContentHash conformance', () => {
     const storage = createTestStorage();
     const handler = contentHashHandler;
 
-    const c = 'u-test-invariant-001';
-    const h = 'u-test-invariant-002';
+    let c: any = 'u-test-invariant-001';
+    let h: any = 'u-test-invariant-002';
 
     // setup: store -> ok
     const storeResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('ContentHash conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).hash).toBe(h);
+        h = (output as any).hash;
         return output;
       }),
     )();
@@ -52,7 +52,7 @@ describe('ContentHash conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).content).toBe(c);
+        c = (output as any).content;
         return output;
       }),
     )();
@@ -65,7 +65,7 @@ describe('ContentHash conformance', () => {
     const handler = contentHashHandler;
 
     const c = 'u-test-invariant-001';
-    const h = 'u-test-invariant-002';
+    let h: any = 'u-test-invariant-002';
 
     // setup: store -> ok
     const storeResultSetup = await pipe(
@@ -74,7 +74,7 @@ describe('ContentHash conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).hash).toBe(h);
+        h = (output as any).hash;
         return output;
       }),
     )();
@@ -100,7 +100,7 @@ describe('ContentHash conformance', () => {
     const handler = contentHashHandler;
 
     const c = 'u-test-invariant-001';
-    const h = 'u-test-invariant-002';
+    let h: any = 'u-test-invariant-002';
 
     // setup: store -> ok
     const storeResultSetup = await pipe(
@@ -109,7 +109,7 @@ describe('ContentHash conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).hash).toBe(h);
+        h = (output as any).hash;
         return output;
       }),
     )();

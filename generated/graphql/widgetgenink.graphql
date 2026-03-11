@@ -1,0 +1,16 @@
+type WidgetGenInkState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenInkEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenink_entry(p: ID!): WidgetGenInkEntry
+  widgetgenink_entries: [WidgetGenInkEntry!]!
+}

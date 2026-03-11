@@ -1,10 +1,10 @@
 # ============================================================
-# Wallet Auth Integration — Activates with auth kit
+# Wallet Auth Integration — Activates with auth suite
 #
-# Wires Wallet/verify into the auth kit's JWT flow.
+# Wires Wallet/verify into the auth suite's JWT flow.
 # Wallet signature verification as an authentication method.
 #
-# Only loads if the auth kit is also present in the app.
+# Only loads if the auth suite is also present in the app.
 # ============================================================
 
 sync WalletAuth [eager]

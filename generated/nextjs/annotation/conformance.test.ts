@@ -29,8 +29,8 @@ describe('Annotation conformance', () => {
     const storage = createTestStorage();
     const handler = annotationHandler;
 
-    const n = 'u-test-invariant-001';
-    const a = 'u-test-invariant-002';
+    let n: any = 'u-test-invariant-001';
+    let a: any = 'u-test-invariant-002';
 
     // setup: annotate -> ok
     const annotateResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Annotation conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).annotation).toBe(n);
+        n = (output as any).annotation;
         expect((output as any).keyCount).toBe(2);
         return output;
       }),
@@ -55,7 +55,7 @@ describe('Annotation conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).annotations).toBe(a);
+        a = (output as any).annotations;
         return output;
       }),
     )();

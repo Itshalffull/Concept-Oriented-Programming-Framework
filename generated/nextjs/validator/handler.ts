@@ -155,16 +155,22 @@ const applyRule = (
 };
 
 /**
- * Run all rules against a field value and collect error messages.
+ * Run rules against a field value. Stops at the first error (fail-fast)
+ * since subsequent rules may not be meaningful if a prerequisite fails.
  */
 const validateFieldValue = (
   rules: readonly string[],
   fieldName: string,
   value: unknown,
-): readonly string[] =>
-  rules
-    .map((rule) => applyRule(rule, fieldName, value))
-    .filter((msg): msg is string => msg !== null);
+): readonly string[] => {
+  for (const rule of rules) {
+    const msg = applyRule(rule, fieldName, value);
+    if (msg !== null) {
+      return [msg];
+    }
+  }
+  return [];
+};
 
 // --- Implementation ---
 
@@ -214,10 +220,13 @@ export const validatorHandler: ValidatorHandler = {
   addRule: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('constraints', { validator: input.validator }),
+        () => storage.find('constraints'),
         storageError,
       ),
-      TE.chain((constraints) => {
+      TE.chain((allConstraints) => {
+        const constraints = allConstraints.filter(
+          (c) => String(c['validator'] ?? '') === input.validator,
+        );
         if (constraints.length === 0) {
           return TE.right<ValidatorError, ValidatorAddRuleOutput>(addRuleNotfound());
         }
@@ -253,10 +262,13 @@ export const validatorHandler: ValidatorHandler = {
   validate: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('rules', { validator: input.validator }),
+        () => storage.find('rules'),
         storageError,
       ),
-      TE.map((ruleRecords) => {
+      TE.map((allRuleRecords) => {
+        const ruleRecords = allRuleRecords.filter(
+          (r) => String(r['validator'] ?? '') === input.validator,
+        );
         const data = safeParseJson(input.data);
         const allErrors: string[] = [];
 

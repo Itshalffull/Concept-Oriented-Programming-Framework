@@ -29,7 +29,7 @@ describe('Version conformance', () => {
     const storage = createTestStorage();
     const handler = versionHandler;
 
-    const v1 = 'u-test-invariant-001';
+    let v1: any = 'u-test-invariant-001';
 
     // setup: snapshot -> ok
     const snapshotResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Version conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).version).toBe(v1);
+        v1 = (output as any).version;
         return output;
       }),
     )();

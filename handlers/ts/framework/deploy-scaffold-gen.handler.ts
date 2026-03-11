@@ -143,13 +143,14 @@ export const deployScaffoldGenHandler: ConceptHandler = {
       const deployYaml = buildDeployYaml(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `deploys/${toKebab(appName)}.deploy.yaml`, content: deployYaml },
+        { path: `deploys/${toKebab(appName)}.stub.deploy.yaml`, content: deployYaml },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

@@ -1,0 +1,30 @@
+// primitives widget components -- Vue 3
+
+export { Avatar, default as AvatarDefault } from './Avatar.js';
+export type { AvatarProps } from './Avatar.js';
+export { Button, default as ButtonDefault } from './Button.js';
+export type { ButtonProps } from './Button.js';
+export { Checkbox, default as CheckboxDefault } from './Checkbox.js';
+export type { CheckboxProps } from './Checkbox.js';
+export { Chip, default as ChipDefault } from './Chip.js';
+export type { ChipProps } from './Chip.js';
+export { FocusTrap, default as FocusTrapDefault } from './FocusTrap.js';
+export type { FocusTrapProps } from './FocusTrap.js';
+export { Icon, default as IconDefault } from './Icon.js';
+export type { IconProps } from './Icon.js';
+export { Label, default as LabelDefault } from './Label.js';
+export type { LabelProps } from './Label.js';
+export { Portal, default as PortalDefault } from './Portal.js';
+export type { PortalProps } from './Portal.js';
+export { Presence, default as PresenceDefault } from './Presence.js';
+export type { PresenceProps } from './Presence.js';
+export { ScrollLock, default as ScrollLockDefault } from './ScrollLock.js';
+export type { ScrollLockProps } from './ScrollLock.js';
+export { Separator, default as SeparatorDefault } from './Separator.js';
+export type { SeparatorProps } from './Separator.js';
+export { Spinner, default as SpinnerDefault } from './Spinner.js';
+export type { SpinnerProps } from './Spinner.js';
+export { TextInput, default as TextInputDefault } from './TextInput.js';
+export type { TextInputProps } from './TextInput.js';
+export { VisuallyHidden, default as VisuallyHiddenDefault } from './VisuallyHidden.js';
+export type { VisuallyHiddenProps } from './VisuallyHidden.js';

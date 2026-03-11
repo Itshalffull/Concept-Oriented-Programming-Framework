@@ -30,6 +30,45 @@ interface ThemeConfig {
   mode?: 'light' | 'dark' | 'both';
 }
 
+function buildExpressiveThemeSpec(config: ThemeConfig): string {
+  const primaryHue = config.primaryColor || '220';
+  const secondaryHue = config.secondaryColor || '280';
+  const fontFamily = config.fontFamily || 'system-ui, -apple-system, sans-serif';
+  const baseSize = config.baseSize || 16;
+  const scale = config.scale || 1.25;
+  const radius = config.borderRadius || '0.375rem';
+
+  return [
+    '{',
+    `  "name": "${toKebab(config.name)}",`,
+    '  "colorSpace": { "algorithm": "oklch", "gamut": "srgb", "seed": { "primary": "' + primaryHue + '" } },',
+    '  "colorScheme": {',
+    '    "activeMode": "light",',
+    '    "modes": {',
+    `      "light": { "primary": "#3b82f6", "onPrimary": "#ffffff", "surface": "#ffffff", "background": "#f8fafc", "foreground": "#0f172a" },`,
+    `      "dark": { "primary": "#60a5fa", "onPrimary": "#0f172a", "surface": "#111827", "background": "#030712", "foreground": "#f8fafc" }`,
+    '    }',
+    '  },',
+    `  "density": { "mode": "comfortable", "multiplier": 1, "exempt": ["dialog", "datepicker"] },`,
+    `  "scope": { "global": { "depth": 0 }, "content": { "depth": 1 } },`,
+    `  "typeScale": { "baseSize": ${baseSize}, "ratio": ${scale}, "steps": { "body": "${baseSize}px", "heading": "${(baseSize * scale * scale).toFixed(1)}px" } },`,
+    `  "fontMetrics": { "family": "${fontFamily}", "features": { "body": ["liga", "onum"], "data": ["tnum"] } },`,
+    `  "shape": { "family": "rounded", "radius": "${radius}" },`,
+    '  "iconography": { "variant": "outlined", "gradeCompensation": -25 },',
+    '  "material": { "kind": "paper", "shadows": { "1": "0 1px 2px rgba(15, 23, 42, 0.08)", "2": "0 10px 15px rgba(15, 23, 42, 0.12)" }, "backdrop": "none" },',
+    `  "styleProfile": { "name": "${config.name}", "prompt": "Confident editorial system with restrained motion and clear hierarchy." },`,
+    '  "springPhysics": { "presets": { "snappy": { "tension": 280, "friction": 22 }, "gentle": { "tension": 160, "friction": 18 } } },',
+    '  "motionChoreography": { "sequences": { "listEnter": { "stagger": 24, "order": "forward" } } },',
+    `  "structuralMotif": { "default": "sidebar", "intents": { "navigation": "sidebar", "primaryAction": "floating-action-button", "utilityBar": "topbar" } },`,
+    `  "imageFilter": { "presets": { "editorial": { "duotone": ["#0f172a", "#94a3b8"] } } },`,
+    `  "preference": { "priority": ["accessibility", "user", "system", "brand"] },`,
+    `  "constraint": { "contrast": 4.5, "focusRing": "2px solid #2563eb", "touchTarget": 44 },`,
+    `  "tokens": { "radius.md": "${radius}", "color.secondary": "${secondaryHue}" }`,
+    '}',
+    '',
+  ].join('\n');
+}
+
 function generateColorScale(hue: string): Record<string, string> {
   // Generate a 50-950 color scale using HSL approximation
   // Real implementation would use OKLCH perceptual color space
@@ -240,11 +279,109 @@ function buildElevationConfig(): string {
   }, null, 2) + '\n';
 }
 
-function buildThemeKitYaml(config: ThemeConfig): string {
+function buildThemeSpec(config: ThemeConfig, mode: 'light' | 'dark'): string {
+  const name = `${toKebab(config.name)}-${mode}`;
+  const primaryHue = config.primaryColor || '220';
+  const baseSize = config.baseSize || 16;
+  const scale = config.scale || 1.25;
+  const fontFamily = config.fontFamily || 'system-ui, -apple-system, sans-serif';
+  const borderRadius = config.borderRadius || '0.375rem';
+  const bgL = mode === 'light' ? '0.98' : '0.12';
+  const fgL = mode === 'light' ? '0.15' : '0.95';
+
+  const lines: string[] = [];
+
+  lines.push(`@version(1)`);
+  if (mode === 'dark') {
+    lines.push(`theme ${name} extends ${toKebab(config.name)}-light {`);
+  } else {
+    lines.push(`theme ${name} {`);
+  }
+  lines.push('  purpose {');
+  lines.push(`    ${mode === 'light' ? 'Light' : 'Dark'} theme for the ${config.name} design system.`);
+  lines.push('  }');
+  lines.push('');
+
+  // Palette
+  lines.push('  palette {');
+  lines.push(`    primary: oklch(0.55 0.15 ${primaryHue})`);
+  lines.push(`    primary-light: oklch(0.80 0.08 ${primaryHue})`);
+  lines.push(`    primary-dark: oklch(0.35 0.12 ${primaryHue})`);
+  lines.push(`    background: oklch(${bgL} 0.01 ${primaryHue})`);
+  lines.push(`    foreground: oklch(${fgL} 0.01 ${primaryHue})`);
+  lines.push(`    surface: oklch(${mode === 'light' ? '0.96' : '0.18'} 0.01 ${primaryHue})`);
+  lines.push('    error: oklch(0.55 0.20 25)');
+  lines.push('    warning: oklch(0.70 0.15 85)');
+  lines.push('    success: oklch(0.60 0.15 160)');
+  lines.push('  }');
+  lines.push('');
+
+  // Typography
+  lines.push('  typography {');
+  lines.push(`    sans: "${fontFamily}"`);
+  lines.push('    serif: "Georgia, Cambria, serif"');
+  lines.push('    mono: "JetBrains Mono, Fira Code, monospace"');
+  lines.push(`    body: { size: ${baseSize}px; weight: 400; lineHeight: 1.5; family: sans }`);
+  lines.push(`    heading-1: { size: ${(baseSize * Math.pow(scale, 4)).toFixed(1)}px; weight: 700; lineHeight: 1.25; family: sans }`);
+  lines.push(`    heading-2: { size: ${(baseSize * Math.pow(scale, 3)).toFixed(1)}px; weight: 700; lineHeight: 1.25; family: sans }`);
+  lines.push(`    heading-3: { size: ${(baseSize * Math.pow(scale, 2)).toFixed(1)}px; weight: 600; lineHeight: 1.3; family: sans }`);
+  lines.push(`    caption: { size: ${(baseSize * Math.pow(scale, -1)).toFixed(1)}px; weight: 400; lineHeight: 1.5; family: sans }`);
+  lines.push('  }');
+  lines.push('');
+
+  // Spacing
+  lines.push('  spacing {');
+  lines.push('    base: 4px');
+  lines.push('    xs: 4px');
+  lines.push('    sm: 8px');
+  lines.push('    md: 16px');
+  lines.push('    lg: 24px');
+  lines.push('    xl: 32px');
+  lines.push('    2xl: 48px');
+  lines.push('  }');
+  lines.push('');
+
+  // Motion
+  lines.push('  motion {');
+  lines.push('    instant: 0ms');
+  lines.push('    fast: 100ms');
+  lines.push('    normal: 200ms');
+  lines.push('    slow: 300ms');
+  lines.push('    ease-default: cubic-bezier(0.4, 0, 0.2, 1)');
+  lines.push('    ease-in: cubic-bezier(0.4, 0, 1, 1)');
+  lines.push('    ease-out: cubic-bezier(0, 0, 0.2, 1)');
+  lines.push('  }');
+  lines.push('');
+
+  // Elevation
+  lines.push('  elevation {');
+  lines.push('    0: none');
+  lines.push('    1: 0 1px 2px 0 rgba(0, 0, 0, 0.05)');
+  lines.push('    2: 0 4px 6px -1px rgba(0, 0, 0, 0.1)');
+  lines.push('    3: 0 10px 15px -3px rgba(0, 0, 0, 0.1)');
+  lines.push('    4: 0 20px 25px -5px rgba(0, 0, 0, 0.1)');
+  lines.push('    5: 0 25px 50px -12px rgba(0, 0, 0, 0.25)');
+  lines.push('  }');
+  lines.push('');
+
+  // Radius
+  lines.push('  radius {');
+  lines.push('    sm: 0.25rem');
+  lines.push(`    md: ${borderRadius}`);
+  lines.push('    lg: 0.5rem');
+  lines.push('    full: 9999px');
+  lines.push('  }');
+  lines.push('}');
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+function buildThemeSuiteYaml(config: ThemeConfig): string {
   const kebab = toKebab(config.name);
 
   return [
-    'kit:',
+    'suite:',
     `  name: theme-${kebab}`,
     '  version: 0.1.0',
     '  description: >',
@@ -278,7 +415,7 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
       name: 'SurfaceThemeScaffoldGen',
       inputKind: 'ThemeConfig',
       outputKind: 'SurfaceTheme',
-      capabilities: JSON.stringify(['palette', 'typography', 'motion', 'elevation', 'wcag']),
+      capabilities: JSON.stringify(['palette', 'typography', 'spacing', 'motion', 'elevation', 'radius', 'extends', 'wcag']),
     };
   },
 
@@ -306,46 +443,52 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
 
       // Suite manifest
       files.push({
-        path: `theme-${kebab}/suite.yaml`,
-        content: buildThemeKitYaml(config),
+        path: `theme-${kebab}/suite.stub.yaml`,
+        content: buildThemeSuiteYaml(config),
       });
 
-      // Theme JSON files
+      files.push({
+        path: `theme-${kebab}/themes/${kebab}.stub.theme.json`,
+        content: buildExpressiveThemeSpec(config),
+      });
+
+      // Theme JSON files (light/dark mode tokens)
       if (config.mode === 'both' || config.mode === 'light') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-light.json`,
+          path: `theme-${kebab}/themes/${kebab}-light.stub.json`,
           content: buildThemeJson(config, 'light'),
         });
       }
       if (config.mode === 'both' || config.mode === 'dark') {
         files.push({
-          path: `theme-${kebab}/themes/${kebab}-dark.json`,
+          path: `theme-${kebab}/themes/${kebab}-dark.stub.json`,
           content: buildThemeJson(config, 'dark'),
         });
       }
 
       // Design system tokens
       files.push({
-        path: `theme-${kebab}/tokens/palette.json`,
+        path: `theme-${kebab}/tokens/palette.stub.json`,
         content: buildPaletteConfig(config),
       });
       files.push({
-        path: `theme-${kebab}/tokens/typography.json`,
+        path: `theme-${kebab}/tokens/typography.stub.json`,
         content: buildTypographyConfig(config),
       });
       files.push({
-        path: `theme-${kebab}/tokens/motion.json`,
+        path: `theme-${kebab}/tokens/motion.stub.json`,
         content: buildMotionConfig(),
       });
       files.push({
-        path: `theme-${kebab}/tokens/elevation.json`,
+        path: `theme-${kebab}/tokens/elevation.stub.json`,
         content: buildElevationConfig(),
       });
 
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

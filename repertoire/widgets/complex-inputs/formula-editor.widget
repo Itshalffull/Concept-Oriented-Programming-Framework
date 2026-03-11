@@ -255,6 +255,19 @@ widget formula-editor {
     }
   }
 
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "FormalProperty";
+    }
+    bind {
+      formula: property_text;
+      language: formal_language;
+      status: status;
+    }
+  }
+
   compose {
     _popover:      widget("popover", { open: state.interaction == "autocompleting", placement: "bottom-start" })
     propertyToken: widget("chip", { label: propertyToken.name, variant: "outline" })

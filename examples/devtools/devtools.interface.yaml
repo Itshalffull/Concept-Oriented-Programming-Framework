@@ -1,6 +1,6 @@
 # CLEF DevTools — Interface Generation Manifest
 #
-# Generates Claude Skills and CLI commands from
+# Generates Claude Skills, CLI commands, and an MCP server from
 # framework concept specs. Uses workflow and annotation
 # metadata to produce rich, step-based skills that
 # match the hand-written originals.
@@ -18,10 +18,47 @@ targets:
     name: clef-devtools
     grouping: per-concept
     outputDir: ./.claude/skills
+    copies:
+      - ./.codex/skills
+      - ./.gemini/skills
 
   cli:
     name: clef
     outputDir: ./cli/src
+
+  mcp:
+    name: clef-devtools
+    transport: stdio
+    outputDir: ./.claude/mcp
+    configOutputs:
+      - path: ./.mcp.json
+        format: claude-mcp-config
+      - path: ./.codex/config.toml
+        format: codex-mcp-config
+      - path: ./.gemini/settings.json
+        format: gemini-mcp-config
+    description: >
+      Clef DevTools MCP server — exposes framework concepts,
+      Score queries, and code generation tools for any
+      MCP-compatible LLM client.
+
+  project-instructions:
+    description: >
+      Generate project instruction files for AI coding assistants.
+      All three files share the same content — Clef architecture overview,
+      app creation workflow, feature addition workflow, and skill/MCP
+      usage mandates.
+    outputDir: ./
+    outputs:
+      - path: ./CLAUDE.md
+        format: markdown
+        description: "Claude Code project instructions"
+      - path: ./AGENTS.md
+        format: markdown
+        description: "OpenAI Codex CLI project instructions"
+      - path: ./GEMINI.md
+        format: markdown
+        description: "Google Gemini CLI project instructions"
 
 # ─── CONCEPT SPECS ───────────────────────────────────
 # Framework concepts that map to CLI commands and skills.
@@ -36,7 +73,12 @@ concepts:
   - specs/framework/project-scaffold.concept
   - specs/framework/dev-server.concept
   - specs/framework/suite-manager.concept
-  # (Generation and deploy kit concepts removed during restructure)
+  # Kernel lifecycle
+  - specs/framework/kernel-boot.concept
+  # Deployment orchestration concepts
+  - specs/framework/deploy-plan.concept
+  - specs/framework/vercel-runtime.concept
+  - specs/framework/deploy-orchestrator.concept
   # Scaffold generator concepts
   - specs/framework/suite-scaffold-gen.concept
   - specs/framework/deploy-scaffold-gen.concept
@@ -49,17 +91,17 @@ concepts:
   - specs/framework/surface-component-scaffold-gen.concept
   - specs/framework/surface-theme-scaffold-gen.concept
   - specs/framework/derived-scaffold-gen.concept
-  # Interface kit orchestration (bind/)
-  - bind/interface/concepts/generator.concept
+  # Interface suite orchestration (bind/)
+  - repertoire/concepts/interface-generation/concepts/generator.concept
   - bind/interface/concepts/projection.concept
-  - bind/interface/concepts/api-surface.concept
-  # (Test kit concepts removed during restructure)
-  # Symbol kit (score/)
-  - score/symbol/symbol.concept
-  - score/symbol/symbol-occurrence.concept
-  - score/symbol/scope-graph.concept
-  - score/symbol/symbol-relationship.concept
-  # Semantic kit (score/)
+  - repertoire/concepts/interface-generation/concepts/api-surface.concept
+  # (Test suite concepts removed during restructure)
+  # Symbol suite (repertoire/concepts/code-symbol/)
+  - repertoire/concepts/code-symbol/symbol.concept
+  - repertoire/concepts/code-symbol/symbol-occurrence.concept
+  - repertoire/concepts/code-symbol/scope-graph.concept
+  - repertoire/concepts/code-symbol/symbol-relationship.concept
+  # Semantic suite (score/semantic/ — Clef-specific)
   - score/semantic/concept-entity.concept
   - score/semantic/action-entity.concept
   - score/semantic/variant-entity.concept
@@ -75,14 +117,32 @@ concepts:
   - score/semantic/runtime-coverage.concept
   - score/semantic/performance-profile.concept
   - score/semantic/error-correlation.concept
-  # Analysis kit (score/)
-  - score/analysis/dependence-graph.concept
-  - score/analysis/data-flow-path.concept
-  - score/analysis/program-slice.concept
-  - score/analysis/analysis-rule.concept
-  # Discovery kit (score/)
-  - score/discovery/semantic-embedding.concept
-  # Versioning kit (repertoire/)
+  - score/semantic/derived-entity.concept
+  # Implementation entities (handler, widget impl, theme impl)
+  - score/semantic/handler-entity.concept
+  - score/semantic/widget-implementation-entity.concept
+  - score/semantic/theme-implementation-entity.concept
+  # Manifest entities (deployment, suite, interface)
+  - score/semantic/deployment-entity.concept
+  - score/semantic/suite-manifest-entity.concept
+  - score/semantic/interface-entity.concept
+  - score/semantic/deployment-health.concept
+  # Infrastructure, provenance, test, environment entities
+  - score/semantic/infrastructure-entity.concept
+  - score/semantic/generation-provenance.concept
+  - score/semantic/test-entity.concept
+  - score/semantic/environment-entity.concept
+  # Analysis suite (repertoire/concepts/code-analysis/)
+  - repertoire/concepts/code-analysis/dependence-graph.concept
+  - repertoire/concepts/code-analysis/data-flow-path.concept
+  - repertoire/concepts/code-analysis/program-slice.concept
+  - repertoire/concepts/code-analysis/analysis-rule.concept
+  # Discovery suite (repertoire/concepts/code-discovery/)
+  - repertoire/concepts/code-discovery/semantic-embedding.concept
+  # Score API suite (score/auto/)
+  - score/auto/score-api.concept
+  - score/auto/score-index.concept
+  # Versioning suite (repertoire/)
   - repertoire/concepts/versioning/branch.concept
   - repertoire/concepts/versioning/change-stream.concept
   - repertoire/concepts/versioning/content-hash.concept
@@ -94,7 +154,7 @@ concepts:
   - repertoire/concepts/versioning/retention-policy.concept
   - repertoire/concepts/versioning/schema-evolution.concept
   - repertoire/concepts/versioning/temporal-version.concept
-  # Collaboration kit (repertoire/)
+  # Collaboration suite (repertoire/)
   - repertoire/concepts/collaboration/attribution.concept
   - repertoire/concepts/collaboration/causal-clock.concept
   - repertoire/concepts/collaboration/conflict-resolution.concept
@@ -145,7 +205,29 @@ workflows:
         content: |
           # Concept Grammar Reference
 
-          Complete grammar for `.concept` specification files.
+          Complete grammar for `.concept` specification files,
+          matching the parser in `handlers/ts/framework/parser.ts`.
+
+          ## Top-Level Annotations
+
+          Zero or more annotations may appear before the `concept` keyword:
+
+          ```
+          @version(1)
+          @gate
+          @category("semantic")
+          @visibility("internal")
+          concept Name [T, U] { ... }
+          ```
+
+          | Annotation | Argument | Effect |
+          |------------|----------|--------|
+          | `@version(N)` | Integer literal | Schema version number |
+          | `@gate` | None | Marks concept as async gate (Section 16.12) |
+          | `@category("name")` | String literal | Concept category for grouping |
+          | `@visibility("level")` | String literal | Visibility: `"public"`, `"internal"`, `"framework"` |
+
+          Annotations may also appear inside the concept body (after `{`).
 
           ## Top-Level Structure
 
@@ -154,9 +236,19 @@ workflows:
             purpose { ... }
             state { ... }
             actions { ... }
-            invariants { ... }
+            invariant { ... }   // repeatable — one block per invariant
+            capabilities { ... }
           }
           ```
+
+          All sections are optional. `invariant` blocks are singular and
+          repeatable (each block defines one invariant rule).
+
+          ## Type Parameters
+
+          Declared in brackets after concept name: `concept Name [T, U]`.
+          Used throughout state and action signatures. Resolved by syncs
+          at composition time.
 
           ## Purpose Block
 
@@ -170,58 +262,134 @@ workflows:
 
           ```
           state {
-            items: set T            # Primary collection
-            name: T -> String       # Total function (every T has one)
-            email: T -> option String  # Partial (may be absent)
-            tags: T -> list String  # Multi-valued
+            items: set T                       // collection
+            name: T -> String                  // total relation
+            email: T -> option String          // partial relation
+            tags: T -> list String             // multi-valued relation
+            status: { Active | Archived }      // enum (bare identifiers)
+            level: "low" | "medium" | "high"   // enum (string literals)
+            metadata: { key: String; value: String }  // record type
+            raw: Bytes                         // binary data
+            created: DateTime                  // timestamp
+
+            // State group — nests fields under a logical group name
+            metrics {
+              count: Int
+              average: Float
+            }
           }
           ```
 
-          **Relation types:**
+          **Primitive types:** `String`, `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`.
+
+          **Type constructors:**
+
           | Syntax | Meaning | TypeScript |
           |--------|---------|-----------|
           | `set T` | Collection of T | `Map<id, T>` |
-          | `T -> V` | Total function | Required field |
-          | `T -> option V` | Partial function | Optional field |
-          | `T -> list V` | Multi-valued | Array field |
+          | `list T` | Ordered list of T | `T[]` |
+          | `option T` | Optional value | `T \| undefined` |
+
+          **Relation types (arrow):**
+
+          | Syntax | Meaning | TypeScript |
+          |--------|---------|-----------|
+          | `A -> B` | Total function (every A has a B) | Required field |
+          | `A -> option B` | Partial function (A may lack B) | Optional field |
+          | `A -> list B` | Multi-valued (A has zero or more B) | Array field |
+
+          **Composite types:**
+
+          | Syntax | Meaning |
+          |--------|---------|
+          | `{ A \| B \| C }` | Enum type (bare identifiers) |
+          | `"a" \| "b" \| "c"` | Enum type (string literals) |
+          | `{ field: Type; ... }` | Record type (inline struct) |
+
+          **State groups:** A bare identifier followed by `{ ... }` nests
+          fields under a group name. Each nested field gets a `group`
+          attribute in the AST.
 
           ## Actions Block
 
           ```
           actions {
-            action create(name: String, email: String) {
-              -> ok(item: T) { New item registered with the provided name and email. }
+            action create(name: String, email: option String) {
+              description { Optional prose describing the action overall. }
+              -> ok(item: T) { New item registered with the provided name. }
               -> duplicate(name: String) { Another item already has this name. }
             }
           }
           ```
 
           - Each action has a name, typed parameters, and one or more **variants**.
+          - An optional `description { ... }` block may appear before variants.
           - Variants use `->` arrow syntax: `-> variantName(bindings) { prose }`.
+          - Variant parameters are optional: `-> ok { Done. }` is valid.
           - At least one variant is required per action.
 
-          **Parameter types:** `String`, `Int`, `Bool`, `T` (type param), `list T`, `option T`.
+          **Parameter types:** Any type expression — primitives (`String`,
+          `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`), type params
+          (`T`), constructors (`list T`, `option T`, `set T`), records,
+          and enums.
 
-          ## Invariants Block
+          ## Invariant Block (singular, repeatable)
+
+          Each invariant is its own `invariant { ... }` block. The keyword
+          is **singular** — use multiple blocks for multiple rules.
 
           ```
-          invariants {
-            after create(name) -> ok(item) {
-              then { item in items; name(item) = name }
-            }
-            after delete(item) -> ok {
-              then { item not in items }
-            }
+          invariant {
+            after create(name: n) -> ok(item: i)
+            then i.name = n
+            and i in items
+          }
+
+          invariant {
+            when f1.module_id = f2.module_id
+            after merge(f1: a, f2: b) -> ok(result: r)
+            then r.module_id = a.module_id
           }
           ```
 
-          - `after action -> variant { then { assertions } }` — post-condition.
-          - Assertions: `field(item) = value`, `item in collection`, `item not in collection`.
+          **Structure:**
 
-          ## Type Parameters
+          1. Optional `when` guard — conditions joined by `and`:
+             `when expr op expr and expr op expr`
+          2. `after` clause — one or more action patterns joined by `and`:
+             `after actionName(param: binding, ...) -> variantName(param: binding)`
+          3. `then` chain — assertions and/or action patterns joined by
+             `and` or chained `then`:
+             `then assertion and assertion then actionPattern`
 
-          Declared in brackets after concept name: `concept Name [T, U]`.
-          Used throughout state and action signatures. Resolved by syncs at composition time.
+          **Comparison operators:** `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`
+
+          **Assertion expressions:**
+          - Variable: `x`
+          - Dot access: `x.field`
+          - Literals: `"string"`, `42`, `3.14`, `true`, `false`, `none`
+          - List literal: `[a, b, c]`
+          - Membership: `item in collection`
+
+          **Arg patterns in action patterns:**
+          - Named binding: `param: variable`
+          - Literal binding: `param: "value"`, `param: 42`
+          - Dot access: `param: var.field`
+          - Record: `param: { field: value, ... }`
+          - List: `param: [a, b]`
+          - Spread: `...`
+
+          ## Capabilities Block
+
+          ```
+          capabilities {
+            requires persistent-storage
+            requires network-access
+          }
+          ```
+
+          Each `requires` declaration names a capability. Hyphenated names
+          are supported (e.g. `persistent-storage`).
       - path: references/jackson-methodology.md
         label: "Jackson's concept design methodology"
         tier: reference
@@ -1352,7 +1520,7 @@ workflows:
         description: "Validate concept specs before deployment"
       - name: cache-build
         description: "Pre-compile artifacts for faster deployment"
-      - name: kit-lifecycle
+      - name: suite-lifecycle
         description: "Manage suites that bundle deployed concepts"
     anti-patterns:
       - title: "Missing transport for cross-runtime sync"
@@ -1415,8 +1583,8 @@ workflows:
           │   ├── user.handler.ts
           │   ├── article.handler.ts
           │   └── comment.handler.ts
-          ├── kits/                  # Reusable concept packages
-          │   └── auth-kit/
+          ├── suites/                  # Reusable concept packages
+          │   └── auth-suite/
           │       ├── suite.yaml
           │       ├── concepts/
           │       └── syncs/
@@ -1437,7 +1605,7 @@ workflows:
           | `specs/` | Concept definitions | `.concept` |
           | `syncs/` | Sync rules | `.sync` |
           | `implementations/` | Handler code | `.handler.ts` |
-          | `kits/` | Reusable packages | `suite.yaml` + subdirs |
+          | `suites/` | Reusable packages | `suite.yaml` + subdirs |
           | `generated/` | Auto-generated (gitignored) | `.ts`, `.json` |
           | `tests/` | Tests | `.test.ts` |
 
@@ -1466,38 +1634,38 @@ workflows:
         | specs/ | Concept specifications | .concept files |
         | syncs/ | Synchronization rules | .sync files |
         | implementations/ | Handler code | .handler.ts files |
-        | kits/ | Kit manifests | suite.yaml + concepts + syncs |
+        | suites/ | Suite manifests | suite.yaml + concepts + syncs |
     related-workflows:
       - name: concept-designer
         description: "Design concepts for the new project"
-      - name: kit-lifecycle
-        description: "Bundle concepts into reusable kits"
+      - name: suite-lifecycle
+        description: "Bundle concepts into reusable suites"
       - name: dev-workflow
         description: "Start the dev server for the new project"
 
-  # ─── SuiteManager: kit-lifecycle ─────────────────────
-  kit-lifecycle:
+  # ─── SuiteManager: suite-lifecycle ─────────────────────
+  suite-lifecycle:
     concept: SuiteManager
     steps:
       - action: init
-        title: "Create Kit"
+        title: "Create Suite"
         prose: "Scaffold a new suite directory with suite.yaml, concept and sync subdirectories, and example files."
       - action: validate
-        title: "Validate Kit"
+        title: "Validate Suite"
         prose: "Validate a suite manifest, its concept specs, sync definitions, and cross-suite references."
       - action: test
-        title: "Test Kit"
+        title: "Test Suite"
         prose: "Run conformance and integration tests for the suite."
       - action: list
-        title: "List Active Kits"
+        title: "List Active Suites"
         prose: "List all suites used by the current application."
       - action: checkOverrides
         title: "Check Overrides"
-        prose: "Verify that application sync overrides reference valid syncs in the target kit."
+        prose: "Verify that application sync overrides reference valid syncs in the target suite."
     checklists:
       init:
-        - "Kit name follows naming convention?"
-        - "Kit.yaml has required fields (name, version, description)?"
+        - "Suite name follows naming convention?"
+        - "Suite.yaml has required fields (name, version, description)?"
         - "Example concept spec is valid?"
       validate:
         - "All concept specs parse successfully?"
@@ -1512,26 +1680,26 @@ workflows:
         - "Override references valid syncs?"
         - "Override parameters match original sync signature?"
     design-principles:
-      - title: "Kit as Reusable Unit"
+      - title: "Suite as Reusable Unit"
         rule: "A suite bundles related concepts and syncs into a single distributable package — like an npm package for CLEF."
-      - title: "Cross-Kit Isolation"
-        rule: "Concepts in one kit never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment."
+      - title: "Cross-Suite Isolation"
+        rule: "Concepts in one suite never reference concepts in another suite directly — cross-suite integration happens through syncs and type parameter alignment."
       - title: "Required vs Recommended Syncs"
-        rule: "Kit syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
+        rule: "Suite syncs are tiered: required syncs are load-bearing, recommended syncs provide useful defaults, integration syncs wire to other suites."
     references:
       - path: references/suite-structure.md
-        label: "Kit manifest and directory structure"
+        label: "Suite manifest and directory structure"
         tier: reference
         content: |
           # Suite Manifest and Directory Structure
 
           A suite bundles related concepts and syncs into a reusable package.
 
-          ## Kit Directory
+          ## Suite Directory
 
           ```
-          my-kit/
-          ├── suite.yaml              # Kit manifest
+          my-suite/
+          ├── suite.yaml              # Suite manifest
           ├── concepts/             # Concept specs
           │   ├── user.concept
           │   └── profile.concept
@@ -1540,7 +1708,7 @@ workflows:
           ├── implementations/      # Default implementations
           │   ├── user.handler.ts
           │   └── profile.handler.ts
-          └── tests/                # Kit tests
+          └── tests/                # Suite tests
               └── conformance.test.ts
           ```
 
@@ -1580,45 +1748,45 @@ workflows:
           | `recommended` | Useful defaults | Yes |
           | `integration` | Wire to other suites | Yes |
 
-          ## Kit vs Application Syncs
+          ## Suite vs Application Syncs
 
-          Kit syncs wire concepts *within* the suite. Application syncs
+          Suite syncs wire concepts *within* the suite. Application syncs
           wire *across* suites. Applications can override recommended
           and integration syncs but not required syncs.
       - path: references/suite-publishing.md
-        label: "Publishing and versioning kits"
+        label: "Publishing and versioning suites"
         tier: reference
         content: |
-          # Publishing and Versioning Kits
+          # Publishing and Versioning Suites
 
           ## Versioning
 
-          Kits follow semantic versioning:
+          Suites follow semantic versioning:
           - **Major** — Breaking changes to concept specs or required syncs.
           - **Minor** — New concepts, new optional syncs, new actions.
           - **Patch** — Bug fixes, documentation, implementation improvements.
 
           ## Publishing Workflow
 
-          1. **Validate** — `clef suite validate ./kits/my-kit`
-          2. **Test** — `clef suite test ./kits/my-kit`
+          1. **Validate** — `clef suite validate ./suites/my-suite`
+          2. **Test** — `clef suite test ./suites/my-suite`
           3. **Version** — Update `suite.yaml` version field.
-          4. **Package** — `clef suite pack ./kits/my-kit`
-          5. **Publish** — `clef suite publish ./kits/my-kit`
+          4. **Package** — `clef suite pack ./suites/my-suite`
+          5. **Publish** — `clef suite publish ./suites/my-suite`
 
           ## Registry
 
-          Kits are published to a registry (npm-compatible):
+          Suites are published to a registry (npm-compatible):
 
           ```bash
           # Publish to default registry
-          clef suite publish ./kits/my-kit
+          clef suite publish ./suites/my-suite
 
           # Publish to custom registry
-          clef suite publish ./kits/my-kit --registry https://my-registry.com
+          clef suite publish ./suites/my-suite --registry https://my-registry.com
           ```
 
-          ## Installing Kits
+          ## Installing Suites
 
           ```bash
           clef suite add auth@1.0.0
@@ -1627,7 +1795,7 @@ workflows:
           This adds the suite to the project's `clef.config.yaml`:
 
           ```yaml
-          kits:
+          suites:
             - name: auth
               version: 1.0.0
               overrides:
@@ -1643,32 +1811,32 @@ workflows:
           3. Provide a migration sync if state schema changed.
     anti-patterns:
       - title: "Cross-suite concept reference"
-        description: "Kit A's concept imports Kit B's types directly instead of using type parameters."
+        description: "Suite A's concept imports Suite B's types directly instead of using type parameters."
         bad: |
-          # In kit-a/concepts/order.concept
+          # In suite-a/concepts/order.concept
           concept Order [O] {
             state { customer: O -> kit_b.User }  # Direct reference!
           }
         good: |
-          # In kit-a/concepts/order.concept
+          # In suite-a/concepts/order.concept
           concept Order [O, U] {
             state { customer: O -> U }  # Type parameter, wired by sync
           }
-      - title: "Monolithic kit"
-        description: "Kit bundles unrelated concepts — violates the reusable unit principle."
+      - title: "Monolithic suite"
+        description: "Suite bundles unrelated concepts — violates the reusable unit principle."
         bad: |
           # suite.yaml
           suite: { name: everything }
           concepts: [User, Article, Payment, Analytics, Email, Notification]
         good: |
-          # Split into focused kits
+          # Split into focused suites
           suite: { name: content }   # concepts: [Article, Tag, Comment]
           suite: { name: commerce }  # concepts: [Payment, Invoice, Refund]
     validation-commands:
       - label: "Validate a suite"
-        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts suite validate ./suites/my-suite"
       - label: "Run suite tests"
-        command: "npx tsx cli/src/index.ts suite test ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts suite test ./suites/my-suite"
       - label: "List active suites"
         command: "npx tsx cli/src/index.ts suite list"
     quick-reference:
@@ -1685,7 +1853,7 @@ workflows:
       - name: concept-designer
         description: "Design concepts to include in the suite"
       - name: sync-designer
-        description: "Write syncs that wire kit concepts together"
+        description: "Write syncs that wire suite concepts together"
       - name: deployment-config
         description: "Deploy suites to production runtimes"
 
@@ -1783,8 +1951,8 @@ workflows:
         description: "Debug flows generated during dev server sessions"
       - name: cache-build
         description: "Pre-compile for production after dev iteration"
-  # ─── SuiteScaffoldGen: suite-scaffold ──────────────────
-  suite-scaffold:
+  # ─── SuiteScaffoldGen: create-suite ──────────────────
+  create-suite:
     concept: SuiteScaffoldGen
     steps:
       - action: register
@@ -1796,9 +1964,12 @@ workflows:
       - action: generate
         title: "Generate Suite Manifest"
         prose: "Generate a suite.yaml manifest with concept declarations, sync tier groupings, type parameter alignment, and directory structure stubs. Sync rules then cascade: suite-scaffold-emit.sync routes files through Emitter, suite-scaffold-record-cache.sync records output in BuildCache, and suite-scaffold-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Suite Manifest"
+        prose: "Refine the generated suite.yaml: add concept specs with type parameters and `as` tags, declare syncs grouped by tier (required, recommended, integration), set dependencies with semver constraints, and add infrastructure declarations for domain suites."
     checklists:
       generate:
-        - "Kit name is kebab-case?"
+        - "Suite name is kebab-case?"
         - "Version is valid semver?"
         - "All listed concepts have matching .concept stub files?"
         - "Syncs are grouped by tier (required/recommended/integration)?"
@@ -1816,7 +1987,7 @@ workflows:
         rule: "Required syncs protect data integrity. Recommended syncs provide useful defaults. Integration syncs wire to external suites. Never promote a recommended sync to required without justification."
     references:
       - path: references/suite-manifest-schema.md
-        label: "Kit manifest (suite.yaml) schema reference"
+        label: "Suite manifest (suite.yaml) schema reference"
         tier: reference
         content: |
           # Suite Manifest Schema Reference
@@ -1827,7 +1998,7 @@ workflows:
 
           ```yaml
           suite:
-            name: my-kit           # kebab-case
+            name: my-suite           # kebab-case
             version: 0.1.0         # semver
             description: >         # Multi-line description
               What this suite provides.
@@ -1863,7 +2034,7 @@ workflows:
             integration:
               - path: ./syncs/audit-log.sync
                 name: AuditLog
-                description: "Logs changes — activated by audit kit."
+                description: "Logs changes — activated by audit suite."
           ```
 
           | Tier | Overridable | Disableable | When to Use |
@@ -1940,9 +2111,9 @@ workflows:
           enabling syncs to pass user references between them.
     validation-commands:
       - label: "Generate a suite scaffold"
-        command: "npx tsx cli/src/index.ts scaffold kit --name my-kit --concepts User,Session"
-      - label: "Validate generated kit"
-        command: "npx tsx cli/src/index.ts suite validate ./kits/my-kit"
+        command: "npx tsx cli/src/index.ts scaffold suite --name my-suite --concepts User,Session"
+      - label: "Validate generated suite"
+        command: "npx tsx cli/src/index.ts suite validate ./suites/my-suite"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -1950,18 +2121,18 @@ workflows:
       body: |
         | Input | Type | Purpose |
         |-------|------|---------|
-        | name | String | Kit name (kebab-case) |
-        | description | String | Kit purpose description |
+        | name | String | Suite name (kebab-case) |
+        | description | String | Suite purpose description |
         | concepts | list String | PascalCase concept names |
         | syncs | list {name, tier} | Sync declarations with tiers |
-        | dependencies | list String | External kit dependencies |
+        | dependencies | list String | External suite dependencies |
         | isDomain | Boolean | Include infrastructure section |
     related-workflows:
-      - name: kit-lifecycle
-        description: "Manage kit versions and dependencies after scaffolding"
-      - name: concept-scaffold
+      - name: suite-lifecycle
+        description: "Manage suite versions and dependencies after scaffolding"
+      - name: create-concept
         description: "Generate concept specs for the suite's concepts"
-      - name: sync-scaffold
+      - name: create-sync
         description: "Generate sync rules for the suite's syncs"
     anti-patterns:
       - title: "Missing type parameter alignment"
@@ -2002,8 +2173,8 @@ workflows:
               - path: ./syncs/notify.sync
                 name: Notify
 
-  # ─── DeployScaffoldGen: deploy-scaffold ────────────
-  deploy-scaffold:
+  # ─── DeployScaffoldGen: create-deployment ────────────
+  create-deployment:
     concept: DeployScaffoldGen
     steps:
       - action: register
@@ -2015,6 +2186,9 @@ workflows:
       - action: generate
         title: "Generate Deploy Manifest"
         prose: "Generate a deploy.yaml manifest with runtime configurations, infrastructure declarations, concept-to-runtime assignments, and build settings. Sync rules then cascade: deploy-scaffold-emit.sync routes files through Emitter, deploy-scaffold-record-cache.sync records output in BuildCache, and deploy-scaffold-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Deployment Manifest"
+        prose: "Refine the generated deploy.yaml: map concepts to runtimes, assign syncs to engines, configure transport adapters for cross-runtime communication, and declare runtime capabilities and resource limits."
     checklists:
       generate:
         - "App name is valid?"
@@ -2140,7 +2314,7 @@ workflows:
     related-workflows:
       - name: deployment-config
         description: "Validate and refine generated deploy manifests"
-      - name: suite-scaffold
+      - name: create-suite
         description: "Generate suites referenced by the deploy manifest"
       - name: build-orchestration
         description: "Build concepts for the declared runtimes"
@@ -2175,8 +2349,73 @@ workflows:
             storage:
               postgresql: { type: postgresql }
 
-  # ─── InterfaceScaffoldGen: interface-scaffold ──────
-  interface-scaffold:
+  # ─── DeployPlan: deploy ─────────────────────────
+  deploy:
+    concept: DeployPlan
+    steps:
+      - action: plan
+        title: "Create Deployment Plan"
+        prose: "Parse a deploy.yaml manifest, resolve environment overlays, and construct the deployment DAG. The plan is stored for inspection before execution. The ValidateBeforeExecute sync automatically triggers validation."
+      - action: validate
+        title: "Validate Deployment Plan"
+        prose: "Validate pre-deployment invariants: sync completeness, transport compatibility, storage migration safety, and dependency ordering. The ExecuteAfterValidation sync triggers artifact builds."
+      - action: execute
+        title: "Execute Deployment"
+        prose: "Execute the deployment plan. The sync engine routes Runtime/provision to the correct provider (e.g., route-to-vercel.sync routes runtimeType 'vercel' to VercelRuntime/provision). Progress is tracked in the plan's DAG."
+      - action: status
+        title: "Check Deployment Status"
+        prose: "Query the current execution status of a deployment plan, including phase, progress, active nodes, completed nodes, and failed nodes."
+      - action: rollback
+        title: "Rollback Deployment"
+        prose: "Reverse a deployment by executing compensating actions in reverse dependency order. Runtime/rollback is routed to providers via syncs."
+    checklists:
+      plan:
+        - "Manifest YAML/JSON is valid?"
+        - "All runtimes have a type defined?"
+        - "All concepts reference valid runtimes?"
+        - "No circular dependencies in the DAG?"
+      execute:
+        - "Plan has been validated?"
+        - "Environment variables set (VERCEL_TOKEN, etc.)?"
+        - "Source directories exist for each app?"
+    design-principles:
+      - title: "Sync-Driven Orchestration"
+        rule: "DeployPlan never calls runtime providers directly. It emits completions that the sync engine routes to the correct provider via routing syncs (route-to-vercel.sync, route-to-lambda.sync, etc.)."
+      - title: "Provider Agnostic"
+        rule: "The deploy plan handler contains zero provider-specific code. All provider logic lives in the provider handlers (VercelRuntime, LambdaRuntime, etc.)."
+    related-workflows:
+      - name: create-deployment
+        description: "Generate the deploy.yaml manifest that this plan reads"
+      - name: deployment-config
+        description: "Validate manifests before planning"
+
+  # ─── VercelRuntime: vercel-deploy ──────────────────
+  vercel-deploy:
+    concept: VercelRuntime
+    steps:
+      - action: provision
+        title: "Provision Vercel Project"
+        prose: "Create a Vercel project via the Vercel REST API. Requires VERCEL_TOKEN env var. The project is created with the specified framework (nextjs, etc.)."
+      - action: deploy
+        title: "Deploy to Vercel"
+        prose: "Deploy the source directory to Vercel using the Vercel CLI. The deployment URL is captured and stored for traffic management and rollback."
+      - action: rollback
+        title: "Rollback Vercel Deployment"
+        prose: "Roll back to a previous deployment by pointing the production alias to the target deployment ID."
+      - action: destroy
+        title: "Destroy Vercel Project"
+        prose: "Delete the Vercel project and all its deployments."
+    checklists:
+      provision:
+        - "VERCEL_TOKEN environment variable set?"
+        - "VERCEL_TEAM_ID set (if using team scope)?"
+        - "Project name is URL-safe?"
+      deploy:
+        - "Source directory exists and contains package.json?"
+        - "next build succeeds locally?"
+
+  # ─── InterfaceScaffoldGen: create-interface ──────
+  create-interface:
     concept: InterfaceScaffoldGen
     steps:
       - action: register
@@ -2188,6 +2427,9 @@ workflows:
       - action: generate
         title: "Generate Interface Manifest"
         prose: "Generate an interface.yaml manifest with target configurations (REST, GraphQL, gRPC, CLI, MCP, Claude Skills), SDK settings, spec outputs, and per-concept overrides. Sync rules then cascade: interface-scaffold-emit.sync routes files through Emitter, interface-scaffold-record-cache.sync records output in BuildCache, and interface-scaffold-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Interface Manifest"
+        prose: "Refine the generated interface.yaml: configure targets (CLI, REST, MCP, Claude Skills, SDK), set per-concept overrides for routing and grouping, define workflows with steps and prose, and add annotations for generation control."
     checklists:
       generate:
         - "Interface name is valid?"
@@ -2318,9 +2560,9 @@ workflows:
         | openapi | Boolean | Generate OpenAPI spec (default: true) |
         | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |
     related-workflows:
-      - name: suite-scaffold
+      - name: create-suite
         description: "Generate suites whose concepts the interface exposes"
-      - name: concept-scaffold
+      - name: create-concept
         description: "Generate concept specs for interface concepts"
       - name: deployment-config
         description: "Deploy the service that hosts the generated interface"
@@ -2340,8 +2582,8 @@ workflows:
             Article:
               rest: { basePath: /api/articles }
 
-  # ─── ConceptScaffoldGen: concept-scaffold ──────────
-  concept-scaffold:
+  # ─── ConceptScaffoldGen: create-concept ──────────
+  create-concept:
     concept: ConceptScaffoldGen
     steps:
       - action: register
@@ -2352,7 +2594,17 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Concept Spec"
-        prose: "Generate a .concept specification file with purpose block, typed state declarations, action signatures with variants, and a register() action for PluginRegistry discovery. Sync rules then cascade: concept-scaffold-emit.sync routes files through Emitter, concept-scaffold-record-cache.sync records output in BuildCache, and concept-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a .concept specification file with annotations (@version, @gate, @category, @visibility), purpose block, typed state declarations (sets, mappings, option/list wrappers, enum types, record types, state groups), action signatures with variant returns, invariants, and capabilities block."
+      - action: edit
+        title: "Edit the Concept Spec"
+        prose: >
+          Refine the generated .concept file:
+          1. Add annotations: @version(N) for versioning, @gate for async gates, @category("domain") for grouping, @visibility("public"|"internal").
+          2. Write a purpose block explaining why the concept exists (not how it works).
+          3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields.
+          4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID.
+          5. Write invariants with after/then/and chains.
+          6. Add capabilities block if the concept is a generator or plugin.
     checklists:
       generate:
         - "Concept name is PascalCase?"
@@ -2362,6 +2614,10 @@ workflows:
         - "Every action has at least one variant?"
         - "register() action is included for PluginRegistry?"
         - "Annotations (@category, @visibility) are present?"
+        - "@version annotation included if this is a versioned spec?"
+        - "State fields use enum types for fixed value sets?"
+        - "State groups organize related fields?"
+        - "Capabilities block present for generator/plugin concepts?"
         - "Variant descriptions explain outcomes, not just echo variant names?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
@@ -2389,6 +2645,8 @@ workflows:
           ## Structure
 
           ```
+          @version(1)
+          @gate
           @category("domain")
           @visibility("public")
           concept Name [T] {
@@ -2396,8 +2654,18 @@ workflows:
             state { ... }
             actions { ... }
             invariant { ... }
+            capabilities { ... }
           }
           ```
+
+          ## Annotations
+
+          | Annotation | Purpose |
+          |-----------|---------|
+          | `@version(N)` | Spec version number |
+          | `@gate` | Marks async gate concept |
+          | `@category("name")` | Grouping category |
+          | `@visibility("public")` | Visibility level |
 
           ## State Relations
 
@@ -2407,6 +2675,29 @@ workflows:
           | `T -> V` | Total function | `name: U -> String` |
           | `T -> option V` | Partial function | `email: U -> option String` |
           | `T -> list V` | Multi-valued | `tags: U -> list String` |
+          | `T -> {A \| B}` | Enum type | `status: U -> {Active \| Inactive}` |
+          | `T -> {k: V, ...}` | Record type | `meta: U -> {key: String, value: String}` |
+
+          ## State Groups
+
+          ```
+          state {
+            group credentials {
+              username: T -> String
+              password: T -> String
+            }
+          }
+          ```
+
+          ## Primitives
+
+          `String`, `Int`, `Float`, `Bool`, `Bytes`, `DateTime`, `ID`
+
+          ## Capabilities Block
+
+          ```
+          capabilities { "storage", "transport", "auth" }
+          ```
 
           ## Action Signatures
 
@@ -2462,14 +2753,18 @@ workflows:
         | typeParam | String | Type parameter letter (default: T) |
         | purpose | String | Purpose description |
         | category | String | Annotation category (domain, devtools, etc.) |
-        | stateFields | list StateField | State declarations |
+        | version | Int | @version annotation number |
+        | gate | Bool | @gate annotation for async gates |
+        | stateFields | list StateField | State declarations (with group, enum, record support) |
         | actions | list ActionDef | Action signatures with variants |
+        | capabilities | list String | Capabilities block entries |
+        | invariants | list String | Invariant steps |
     related-workflows:
       - name: concept-designer
         description: "Design concepts using Jackson's methodology before generating"
-      - name: handler-scaffold
+      - name: create-handler
         description: "Generate handler implementations for the concept"
-      - name: sync-scaffold
+      - name: create-sync
         description: "Generate sync rules connecting the concept"
     anti-patterns:
       - title: "Purpose describes implementation"
@@ -2508,8 +2803,8 @@ workflows:
             -> error(message: String) { Creation failed due to a storage or validation error. }
           }
 
-  # ─── SyncScaffoldGen: sync-scaffold ────────────────
-  sync-scaffold:
+  # ─── SyncScaffoldGen: create-sync ────────────────
+  create-sync:
     concept: SyncScaffoldGen
     steps:
       - action: register
@@ -2520,7 +2815,17 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Sync Rule"
-        prose: "Generate a .sync file with when clause (trigger pattern), optional where clause (guard conditions), and then clause (effect actions). Sync rules then cascade: sync-scaffold-emit.sync routes files through Emitter, sync-scaffold-record-cache.sync records output in BuildCache, and sync-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a .sync file with when clause (trigger pattern with variable bindings), optional where clause (bind, query, filter, guard, any, not conditions), and one or more then clauses (effect actions)."
+      - action: edit
+        title: "Edit the Sync Rule"
+        prose: >
+          Refine the generated .sync file:
+          1. Set the tier annotation: [eager], [required], or [recommended].
+          2. Write a purpose clause explaining why this sync exists (the causal chain).
+          3. Define the when clause: Concept/action with input field bindings and => variant result.
+          4. Add where-clause conditions: bind(?expr as ?local), query(Concept/action: [...] as ?result), filter(?var = "value"), guard(?condition), any(cond1; cond2), not(cond).
+          5. Define one or more then clauses with effect actions and ?variable references.
+          6. Verify all variables used in then are bound in when or where.
     checklists:
       generate:
         - "Sync name is PascalCase?"
@@ -2528,7 +2833,9 @@ workflows:
         - "When clause references a valid concept/action?"
         - "Variable bindings in where clause use ?prefix?"
         - "Then clause references a valid concept/action?"
-        - "Purpose statement explains why the sync exists?"
+        - "Purpose statement explains the causal chain?"
+        - "Where clause uses filter()/guard() for simple conditions?"
+        - "Multiple then blocks used for sequential effects?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
@@ -2586,6 +2893,8 @@ workflows:
           Guard conditions:
           - `bind(?expr as ?local)` — Extract nested values
           - `query(Concept/action: [...] as ?result)` — Query state
+          - `filter(?var = "value")` — Filter by expression
+          - `guard(?condition)` — Guard with boolean expression
           - `any(cond1; cond2)` — OR conditions
           - `not(cond)` — Negation
           - `?a = ?b` — Equality check
@@ -2625,7 +2934,7 @@ workflows:
     related-workflows:
       - name: sync-designer
         description: "Design syncs using formal patterns before generating"
-      - name: concept-scaffold
+      - name: create-concept
         description: "Generate concept specs referenced by the sync"
       - name: sync-validator
         description: "Validate compiled syncs"
@@ -2656,8 +2965,8 @@ workflows:
             AdminPanel/grant: [user: ?u]
           }
 
-  # ─── DerivedScaffoldGen: derived-scaffold ──────────
-  derived-scaffold:
+  # ─── DerivedScaffoldGen: create-derived ──────────
+  create-derived:
     concept: DerivedScaffoldGen
     steps:
       - action: register
@@ -2668,7 +2977,17 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Derived Concept"
-        prose: "Generate a .derived specification file with purpose block, composes list (with optional derived keyword for derived-of-derived), syncs boundary declaration, surface actions with matches clauses, surface queries, and operational principle. Supports both field-matching patterns (matches: Concept/action(field: value)) and derivedContext matching (matches: derivedContext \"Tag\") for hierarchical composition."
+        prose: "Generate a .derived specification file with purpose block, composes list, syncs boundary, surface actions (three match types: matches/Concept/action, entry+triggers, derivedContext), surface queries (inline arrow or block reads: form), and principle block."
+      - title: "Edit the Derived Concept"
+        prose: >
+          Open the generated .derived file and refine each section:
+          1. Write a clear purpose describing emergent behavior (not just grouping).
+          2. List composed concepts in the composes block. Use `derived` prefix for derived-of-derived.
+          3. Declare syncs boundary — required syncs are mandatory, recommended are optional.
+          4. Define surface actions with `matches:` (direct), `entry:`+`triggers:` (multi-step), or `derivedContext` (derived-of-derived).
+          5. Define surface queries: inline form `query name() -> Concept/action(args)` or block form `query name() { reads: Concept/action(arg: ?binding) }`.
+          6. Write a principle block describing the after/then/and execution chain.
+          7. Validate: no independent state, emergent purpose, DAG composition graph.
     checklists:
       generate:
         - "Derived concept name is PascalCase?"
@@ -2719,6 +3038,23 @@ workflows:
           Two kinds of matches:
           - Field matching: `matches: Concept/action(field: "value")`
           - derivedContext matching: `matches: derivedContext "DerivedName/action"`
+          - Entry + triggers: `entry: Concept/action` + `triggers: [Concept/action(arg: ?binding)]`
+
+          ## Surface Queries
+
+          Two forms:
+          - Inline: `query name(params) -> Concept/action(args)`
+          - Block: `query name(params) { reads: Concept/action(arg: ?binding) }`
+
+          ## Principle Block
+
+          ```
+          principle {
+            after surfaceAction(arg: value)
+            then Concept/action(arg: value) -> ok
+            and  OtherConcept/action(arg: value) -> ok
+          }
+          ```
 
           ## When to Use Derived Concepts
 
@@ -2746,11 +3082,11 @@ workflows:
         | surfaceQueries | list SurfaceQuery | Queries delegating to concepts |
         | principle | list String | Operational principle steps |
     related-workflows:
-      - name: concept-scaffold
+      - name: create-concept
         description: "Generate concept specs composed by the derived concept"
-      - name: sync-scaffold
+      - name: create-sync
         description: "Generate sync rules claimed by the derived concept"
-      - name: suite-scaffold
+      - name: create-suite
         description: "Bundle derived concepts into a distributable suite"
     anti-patterns:
       - title: "Derived concept with independent state"
@@ -2772,8 +3108,8 @@ workflows:
         good: |
           syncs { required: [trash-delete, trash-restore] }
 
-  # ─── HandlerScaffoldGen: handler-scaffold ──────────
-  handler-scaffold:
+  # ─── HandlerScaffoldGen: create-handler ──────────
+  create-handler:
     concept: HandlerScaffoldGen
     steps:
       - action: register
@@ -2784,7 +3120,10 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Handler Implementation"
-        prose: "Generate a TypeScript .handler.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: handler-scaffold-emit.sync routes files through Emitter, handler-scaffold-record-cache.sync records output in BuildCache, and handler-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a TypeScript .handler.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: create-handler-emit.sync routes files through Emitter, create-handler-record-cache.sync records output in BuildCache, and create-handler-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Handler Implementation"
+        prose: "Refine the generated handler: implement each action method with domain logic, extract inputs from the request with proper type casts, interact with storage using the correct relation names, and return the correct variant with all fields declared in the concept spec."
     checklists:
       generate:
         - "Handler export name follows convention (camelCase + 'Handler')?"
@@ -2894,7 +3233,7 @@ workflows:
         | outputKind | String | KindSystem output kind |
         | capabilities | list String | Generator capabilities |
     related-workflows:
-      - name: concept-scaffold
+      - name: create-concept
         description: "Generate concept specs before implementing handlers"
       - name: implementation-builder
         description: "Use SchemaGen for more advanced handler generation"
@@ -2921,8 +3260,8 @@ workflows:
             }
           }
 
-  # ─── StorageAdapterScaffoldGen: storage-adapter-scaffold ─
-  storage-adapter-scaffold:
+  # ─── StorageAdapterScaffoldGen: create-storage-adapter ─
+  create-storage-adapter:
     concept: StorageAdapterScaffoldGen
     steps:
       - action: register
@@ -2933,7 +3272,10 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Storage Adapter"
-        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods. Sync rules then cascade: storage-adapter-scaffold-emit.sync routes files through Emitter, storage-adapter-scaffold-record-cache.sync records output in BuildCache, and storage-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a ConceptStorage adapter implementation for the specified backend (SQLite, PostgreSQL, Redis, DynamoDB, or in-memory) with put, get, find, del, and delMany methods. Sync rules then cascade: create-storage-adapter-emit.sync routes files through Emitter, create-storage-adapter-record-cache.sync records output in BuildCache, and create-storage-adapter-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Storage Adapter"
+        prose: "Refine the generated adapter: implement all ConceptStorage interface methods (put, get, find, del, delMany) with backend-specific logic, configure connection pooling and initialization, and add schema migrations for SQL backends."
     checklists:
       generate:
         - "Backend is valid (sqlite, postgresql, redis, dynamodb, memory)?"
@@ -3032,7 +3374,7 @@ workflows:
     related-workflows:
       - name: deployment-config
         description: "Configure storage backends in deploy manifests"
-      - name: handler-scaffold
+      - name: create-handler
         description: "Generate handlers that use the storage adapter"
     anti-patterns:
       - title: "Missing find criteria filtering"
@@ -3052,8 +3394,8 @@ workflows:
             return results;
           }
 
-  # ─── TransportAdapterScaffoldGen: transport-adapter-scaffold ─
-  transport-adapter-scaffold:
+  # ─── TransportAdapterScaffoldGen: create-transport-adapter ─
+  create-transport-adapter:
     concept: TransportAdapterScaffoldGen
     steps:
       - action: register
@@ -3064,7 +3406,10 @@ workflows:
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Transport Adapter"
-        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods. Sync rules then cascade: transport-adapter-scaffold-emit.sync routes files through Emitter, transport-adapter-scaffold-record-cache.sync records output in BuildCache, and transport-adapter-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a transport adapter implementation for the specified protocol (HTTP, WebSocket, Worker, or in-process) with invoke, query, and health methods. Sync rules then cascade: create-transport-adapter-emit.sync routes files through Emitter, create-transport-adapter-record-cache.sync records output in BuildCache, and create-transport-adapter-observer.sync tracks the run in GenerationPlan."
+      - action: edit
+        title: "Edit the Transport Adapter"
+        prose: "Refine the generated adapter: implement send/receive for the target protocol (HTTP fetch, WebSocket messages, Worker postMessage), configure serialization and content types, add retry and timeout logic, and handle connection lifecycle (connect, reconnect, dispose)."
     checklists:
       generate:
         - "Protocol is valid (http, websocket, worker, in-process)?"
@@ -3156,7 +3501,7 @@ workflows:
     related-workflows:
       - name: deployment-config
         description: "Configure transport adapters in deploy manifests"
-      - name: storage-adapter-scaffold
+      - name: create-storage-adapter
         description: "Generate storage adapters alongside transport adapters"
     anti-patterns:
       - title: "Missing health check"
@@ -3182,19 +3527,31 @@ workflows:
             }
           }
 
-  # ─── SurfaceComponentScaffoldGen: surface-component-scaffold ─
-  surface-component-scaffold:
+  # ─── SurfaceComponentScaffoldGen: create-widget ─
+  create-widget:
     concept: SurfaceComponentScaffoldGen
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track ComponentConfig → CoifComponent transformations. Registration is also handled automatically by register-generator-kinds.sync."
+        prose: "Self-register with PluginRegistry so KindSystem can track ComponentConfig → SurfaceComponent transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Clef Surface Component"
-        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and suite manifest. Sync rules then cascade: surface-component-scaffold-emit.sync routes files through Emitter, surface-component-scaffold-record-cache.sync records output in BuildCache, and surface-component-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a complete headless component scaffold including widget specification (FSM), anatomy definition (parts contract), machine implementation, and suite manifest. Sync rules then cascade: create-widget-emit.sync routes files through Emitter, create-widget-record-cache.sync records output in BuildCache, and create-widget-observer.sync tracks the run in GenerationPlan."
+      - title: "Edit the Widget Specification"
+        prose: >
+          Open the generated .widget file and refine each section:
+          1. Write a purpose block describing what the widget does.
+          2. Define anatomy parts with semantic roles (root, trigger, content, etc.).
+          3. Design the state machine: states, events, transitions, entry/exit actions.
+          4. Add accessibility: ARIA role, keyboard bindings (Enter, Escape, Arrow keys), focus management.
+          5. Define affordance bindings: serves purpose, specificity, when conditions.
+          6. Add props with types and defaults.
+          7. Wire connect block: map anatomy parts to attribute bindings.
+          8. Add compose block for nested widgets.
+          9. Write invariants describing behavioral guarantees.
     checklists:
       generate:
         - "Component name is PascalCase?"
@@ -3203,10 +3560,17 @@ workflows:
         - "Events define all transitions?"
         - "Anatomy lists all parts and slots?"
         - "Machine implementation has spawn, send, connect, destroy actions?"
-        - "Kit manifest declares dependencies on surface-core and surface-component?"
+        - "Suite manifest declares dependencies on surface-core and surface-component?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
+        - "Has purpose block?"
+        - "State machine has an [initial] state?"
+        - "All states are reachable?"
+        - "ARIA role is specified?"
+        - "Keyboard bindings cover Enter, Escape, Arrow keys?"
+        - "Focus management (trap, roving, initial) is defined?"
+        - "Props have types and defaults?"
     design-principles:
       - title: "Behavior-Rendering Separation"
         rule: "Widget specs define behavior (states, transitions, guards). Rendering is handled by framework adapters. They agree only on part names (anatomy)."
@@ -3299,6 +3663,39 @@ workflows:
           | Tooltip | root, trigger, content, arrow | hidden, visible | Overlay |
           | Select | root, trigger, content, item, indicator | closed, open | Selection |
           | Slider | root, track, range, thumb | idle, dragging | Range |
+      - path: references/widget-grammar.md
+        label: "Widget specification grammar"
+        tier: reference
+        content: |
+          # Widget Grammar Reference
+
+          ## Top-Level Structure
+
+          ```
+          [@version(N)]
+          widget widget-name {
+            purpose { ... }
+            requires @priority { fields { ... } actions { ... } }
+            anatomy { partName: role { description } }
+            states {
+              stateName [initial] {
+                on EVENT -> targetState;
+                entry [action]; exit [action];
+              }
+            }
+            accessibility {
+              role: application;
+              keyboard { Key -> ACTION; }
+              focus { trap: true; initial: part; roving: true }
+              aria { part -> { aria-attr: value; } }
+            }
+            affordance { serves: purpose; specificity: N; when: condition; bind { field: source; } }
+            props { propName: Type (default: value) }
+            connect { partName -> { attr: value; } }
+            compose { partName: widget("name", { prop: value }) }
+            invariant { "description" }
+          }
+          ```
     validation-commands:
       - label: "Generate a Clef Surface component scaffold"
         command: "npx tsx cli/src/index.ts scaffold component --name Dialog --parts root,trigger,content --states closed,open"
@@ -3321,14 +3718,14 @@ workflows:
         |------|---------|
         | `{name}-widget.concept` | Widget FSM specification |
         | `{name}-anatomy.concept` | Parts contract definition |
-        | `suite.yaml` | Kit manifest with dependencies |
+        | `suite.yaml` | Suite manifest with dependencies |
         | `{name}-machine.handler.ts` | Machine handler implementation |
     related-workflows:
-      - name: surface-theme-scaffold
+      - name: create-theme
         description: "Generate themes to style the component"
-      - name: concept-scaffold
+      - name: create-concept
         description: "Generate concept specs for custom component concepts"
-      - name: suite-scaffold
+      - name: create-suite
         description: "Generate suite manifests for component libraries"
     anti-patterns:
       - title: "Rendering logic in widget spec"
@@ -3366,19 +3763,31 @@ workflows:
             }
           }
 
-  # ─── SurfaceThemeScaffoldGen: surface-theme-scaffold ─────
-  surface-theme-scaffold:
+  # ─── SurfaceThemeScaffoldGen: create-theme ─────
+  create-theme:
     concept: SurfaceThemeScaffoldGen
     steps:
       - action: register
         title: "Register Generator"
-        prose: "Self-register with PluginRegistry so KindSystem can track ThemeConfig → CoifTheme transformations. Registration is also handled automatically by register-generator-kinds.sync."
+        prose: "Self-register with PluginRegistry so KindSystem can track ThemeConfig → SurfaceTheme transformations. Registration is also handled automatically by register-generator-kinds.sync."
       - action: preview
         title: "Preview Changes"
         prose: "Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written."
       - action: generate
         title: "Generate Clef Surface Theme"
-        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: surface-theme-scaffold-emit.sync routes files through Emitter, surface-theme-scaffold-record-cache.sync records output in BuildCache, and surface-theme-scaffold-observer.sync tracks the run in GenerationPlan."
+        prose: "Generate a complete design system theme scaffold including palette configuration (OKLCH color scales with WCAG contrast), typography scale (modular ratio), motion definitions (with reduced-motion support), elevation scale (shadow layers), and light/dark theme manifests. Sync rules then cascade: create-theme-emit.sync routes files through Emitter, create-theme-record-cache.sync records output in BuildCache, and create-theme-observer.sync tracks the run in GenerationPlan."
+      - title: "Edit the Theme Specification"
+        prose: >
+          Open the generated .theme file and refine each section:
+          1. Write a purpose block describing the theme's design intent.
+          2. Define palette colors using oklch() for perceptual uniformity.
+          3. Set typography scale with font families, sizes (modular ratio), weights, line-heights, and tracking.
+          4. Configure spacing tokens with a consistent base multiplier.
+          5. Define motion durations and easing curves (respect prefers-reduced-motion).
+          6. Set elevation shadow scale (0-5 levels).
+          7. Define radius tokens for border rounding.
+          8. Verify all text/background pairs meet WCAG AA contrast (4.5:1).
+          9. If extending a base theme, only override changed tokens.
     checklists:
       generate:
         - "Theme name is kebab-case?"
@@ -3389,6 +3798,9 @@ workflows:
         - "Motion respects prefers-reduced-motion?"
         - "Elevation scale covers 0-5 levels?"
         - "Light and dark themes are generated (if mode=both)?"
+        - "Palette uses oklch() for perceptual uniformity?"
+        - "Spacing follows a consistent base multiplier?"
+        - "Radius tokens defined?"
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
@@ -3492,6 +3904,35 @@ workflows:
           |----------|------------|------------|
           | AA | 4.5:1 | 3:1 |
           | AAA | 7:1 | 4.5:1 |
+      - path: references/theme-grammar.md
+        label: "Theme specification grammar"
+        tier: reference
+        content: |
+          # Theme Grammar Reference
+
+          ## Top-Level Structure
+
+          ```
+          [@version(N)]
+          theme theme-name [extends base-theme] {
+            purpose { ... }
+            palette { colorName: oklch(L C H / A) }
+            typography {
+              fontVar: "Name", fallback
+              styleKey: { size: 1rem; weight: 600; lineHeight: 1.5; tracking: 0.01em; family: var }
+            }
+            spacing { key: 4px }
+            motion {
+              durationKey: 250ms
+              easingKey: cubic-bezier(0.2, 0, 0, 1)
+            }
+            elevation { key: shadow-spec }
+            radius { key: 8px }
+          }
+          ```
+
+          Color formats: `oklch()`, `hsl()`, `#RRGGBB`.
+          Extends: `theme dark extends light { ... }` — only override changed tokens.
     validation-commands:
       - label: "Generate a Clef Surface theme scaffold"
         command: "npx tsx cli/src/index.ts scaffold theme --name ocean --primary 220 --font 'Inter, sans-serif'"
@@ -3522,9 +3963,9 @@ workflows:
         | `tokens/motion.json` | Animation timing and easing |
         | `tokens/elevation.json` | Shadow scale |
     related-workflows:
-      - name: surface-component-scaffold
+      - name: create-widget
         description: "Generate components to use the theme tokens"
-      - name: suite-scaffold
+      - name: create-suite
         description: "Generate suite manifests for theme packages"
     anti-patterns:
       - title: "Hardcoded colors in components"
@@ -3547,6 +3988,55 @@ workflows:
           @media (prefers-reduced-motion: reduce) {
             .dialog { transition-duration: 0ms; }
           }
+
+  # ─── ScoreApi: score-navigator ───────────────────────
+  score-navigator:
+    concept: ScoreApi
+    steps:
+      - action: listConcepts
+        title: "Survey the Architecture"
+        prose: "List all concepts to understand the application's domain model and concept graph."
+      - action: getConcept
+        title: "Inspect a Concept"
+        prose: "Get full details of a concept — purpose, type parameters, actions, state fields, invariants."
+      - action: listSyncs
+        title: "Map the Sync Network"
+        prose: "List all syncs to understand cross-concept coordination rules."
+      - action: getFlow
+        title: "Trace Action Flows"
+        prose: "Follow the chain of effects from any starting action through syncs to downstream actions."
+      - action: search
+        title: "Search the Codebase"
+        prose: "Use natural language search across the project. Combines embeddings, text, and symbols."
+      - action: getDependencies
+        title: "Analyze Dependencies"
+        prose: "Trace dependencies and dependents to understand impact before making changes."
+    design-principles:
+      - title: "Query, Don't Grep"
+        rule: "Score provides structured queries — use them instead of raw file reading."
+      - title: "Concepts Are Independent"
+        rule: "No concept references another — all coupling is through syncs."
+      - title: "Variants Over Exceptions"
+        rule: "Every action outcome is an explicit named variant."
+    anti-patterns:
+      - title: "Bypassing Score for raw file access"
+        description: "Reading .concept files directly instead of using Score queries — misses parsing, validation, and cross-references."
+        bad: |
+          # Manually grep for concept actions
+          grep -r "action create" repertoire/
+        good: |
+          # Use Score API
+          score listConcepts
+          score getConcept --name User
+          score getFlow --from User/create
+      - title: "Assuming concept coupling"
+        description: "Looking for direct references between concepts — concepts are independent by design."
+        bad: |
+          # Wrong: searching for concept-to-concept imports
+          grep "import.*from.*User" repertoire/profile/
+        good: |
+          # Right: find syncs that connect User and Profile
+          score listSyncs --involves User,Profile
 
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
@@ -4222,15 +4712,15 @@ annotations:
       argument-template: "$ARGUMENTS"
       trigger-description: >
         Use when creating, validating, testing, or managing suites.
-        Covers the full kit lifecycle from scaffolding to publishing.
+        Covers the full suite lifecycle from scaffolding to publishing.
       intro-template: >
-        Manage kit **$ARGUMENTS** — scaffold, validate, test, and publish
+        Manage suite **$ARGUMENTS** — scaffold, validate, test, and publish
         reusable concept packages.
       companion-docs:
         - path: examples/create-a-suite.md
-          label: "Kit creation walkthrough"
+          label: "Suite creation walkthrough"
           content: |
-            # Walkthrough: Creating a Kit
+            # Walkthrough: Creating a Suite
 
             This walkthrough shows how to create, validate, and test
             a reusable suite.
@@ -4238,12 +4728,12 @@ annotations:
             ## Step 1: Scaffold
 
             ```bash
-            clef suite init auth-kit
+            clef suite init auth-suite
             ```
 
             Creates:
             ```
-            auth-kit/
+            auth-suite/
             ├── suite.yaml
             ├── concepts/
             │   └── example.concept
@@ -4256,9 +4746,9 @@ annotations:
             Move your concept specs into `concepts/`:
 
             ```bash
-            cp specs/user.concept auth-kit/concepts/
-            cp specs/password.concept auth-kit/concepts/
-            cp specs/session.concept auth-kit/concepts/
+            cp specs/user.concept auth-suite/concepts/
+            cp specs/password.concept auth-suite/concepts/
+            cp specs/session.concept auth-suite/concepts/
             ```
 
             ## Step 3: Update suite.yaml
@@ -4282,8 +4772,8 @@ annotations:
             ## Step 4: Validate and Test
 
             ```bash
-            clef suite validate ./auth-kit
-            clef suite test ./auth-kit
+            clef suite validate ./auth-suite
+            clef suite test ./auth-suite
             ```
       example-walkthroughs:
         - path: examples/create-a-suite.md
@@ -4292,17 +4782,17 @@ annotations:
       examples:
         - label: "Create a new suite"
           language: bash
-          code: "clef suite init my-kit"
+          code: "clef suite init my-suite"
     validate:
       examples:
         - label: "Validate a suite"
           language: bash
-          code: "clef suite validate ./kits/my-kit"
+          code: "clef suite validate ./suites/my-suite"
     test:
       examples:
         - label: "Test a suite"
           language: bash
-          code: "clef suite test ./kits/my-kit"
+          code: "clef suite test ./suites/my-suite"
     list:
       examples:
         - label: "List active suites"
@@ -4312,31 +4802,31 @@ annotations:
       examples:
         - label: "Check sync overrides"
           language: bash
-          code: "clef suite check-overrides ./kits/my-kit"
+          code: "clef suite check-overrides ./suites/my-suite"
   SuiteScaffoldGen:
     concept:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <suite-name>"
       trigger-description: >
-        Use when creating a new CLEF kit from scratch. Generates a suite.yaml
+        Use when creating a new CLEF suite from scratch. Generates a suite.yaml
         manifest with concept declarations, sync tier groupings, type parameter
         alignment, and directory structure stubs.
       intro-template: >
-        Scaffold a new CLEF kit named **$ARGUMENTS** with a suite.yaml manifest,
+        Scaffold a new CLEF suite named **$ARGUMENTS** with a suite.yaml manifest,
         concept spec stubs, and sync directory structure.
       companion-docs:
         - path: examples/scaffold-a-suite.md
           label: "End-to-end suite scaffolding walkthrough"
           content: |
-            # Walkthrough: Scaffolding a New Kit
+            # Walkthrough: Scaffolding a New Suite
 
-            This walkthrough creates an `auth` kit with User, Session, and
+            This walkthrough creates an `auth` suite with User, Session, and
             Password concepts.
 
             ## Step 1: Generate the Suite Scaffold
 
             ```bash
-            clef scaffold kit --name auth --concepts User,Session,Password
+            clef scaffold suite --name auth --concepts User,Session,Password
             ```
 
             Output:
@@ -4386,7 +4876,7 @@ annotations:
             ## Step 4: Validate
 
             ```bash
-            clef suite validate ./kits/auth
+            clef suite validate ./suites/auth
             ```
     register:
       examples:
@@ -4397,12 +4887,12 @@ annotations:
             // { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
     generate:
       examples:
-        - label: "Generate a basic kit"
+        - label: "Generate a basic suite"
           language: bash
-          code: "clef scaffold kit --name auth --concepts User,Session,Password"
+          code: "clef scaffold suite --name auth --concepts User,Session,Password"
         - label: "Generate a domain suite with infrastructure"
           language: bash
-          code: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
+          code: "clef scaffold suite --name web3 --concepts Token,Wallet --domain"
         - label: "Generate programmatically"
           language: typescript
           code: |
@@ -4418,7 +4908,7 @@ annotations:
             }, storage);
       references:
         - path: references/suite-manifest-schema.md
-          label: "Kit manifest schema reference"
+          label: "Suite manifest schema reference"
 
   DeployScaffoldGen:
     concept:
@@ -4603,11 +5093,14 @@ annotations:
       argument-template: "--name <ConceptName>"
       trigger-description: >
         Use when creating a new concept specification from scratch. Generates
-        a .concept file with purpose, state, actions, variants, invariants,
-        and a register() action following Jackson's methodology.
+        a .concept file with annotations (@version, @category, @visibility,
+        @gate), purpose, state (with groups, enum types, record types),
+        actions with typed variants, invariants, capabilities block, and a
+        register() action following Jackson's methodology.
       intro-template: >
-        Scaffold a concept spec for **$ARGUMENTS** with state declarations,
-        typed action signatures, and a register() action.
+        Scaffold a concept spec for **$ARGUMENTS** with annotations, state
+        declarations (groups, enums, records), typed action signatures,
+        capabilities, and a register() action.
       companion-docs:
         - path: examples/scaffold-concept.md
           label: "Concept spec scaffolding walkthrough"
@@ -4622,23 +5115,48 @@ annotations:
             clef scaffold concept --name Bookmark \
               --param B \
               --purpose "Allow users to save and organize references to items." \
-              --actions add,remove,list
+              --actions add,remove,list \
+              --version 2 \
+              --category domain
             ```
 
-            ## Step 2: Refine State Fields
+            ## Step 2: Refine Annotations and State
 
             Edit `bookmark.concept`:
 
             ```
-            state {
-              bookmarks: set B
-              owner: B -> U        # who owns it
-              item: B -> I         # what it references
-              label: B -> option String
+            @version(2)
+            @category("domain")
+            @visibility("public")
+            concept Bookmark [B] {
+              purpose {
+                Allow users to save and organize references to items.
+              }
+
+              state {
+                bookmarks: set B
+                owner: B -> U        # who owns it
+                item: B -> I         # what it references
+                label: B -> option String
+
+                group timestamps {
+                  created: B -> String
+                  updated: B -> option String
+                }
+              }
             }
             ```
 
-            ## Step 3: Refine Action Signatures
+            ## Step 3: Add Enum and Record Types
+
+            ```
+            state {
+              status: B -> enum { active, archived, deleted }
+              metadata: B -> record { tags: list String, priority: Int }
+            }
+            ```
+
+            ## Step 4: Refine Action Signatures
 
             ```
             action add(item: I, label: option String) {
@@ -4647,7 +5165,7 @@ annotations:
             }
             ```
 
-            ## Step 4: Add Invariants
+            ## Step 5: Add Invariants
 
             ```
             invariant {
@@ -4656,7 +5174,25 @@ annotations:
             }
             ```
 
-            ## Step 5: Validate
+            ## Step 6: Add Capabilities (optional)
+
+            ```
+            capabilities {
+              search
+              export
+              bulk-operations
+            }
+            ```
+
+            ## Step 7: Add Gate Annotation (optional)
+
+            For async-gated concepts:
+            ```
+            @gate
+            concept Approval [A] { ... }
+            ```
+
+            ## Step 8: Validate
 
             ```bash
             clef check specs/app/bookmark.concept
@@ -4675,6 +5211,9 @@ annotations:
         - label: "Generate with custom state"
           language: bash
           code: "clef scaffold concept --name Article --param A --category domain"
+        - label: "Generate with version and gate"
+          language: bash
+          code: "clef scaffold concept --name Approval --version 2 --gate --capabilities search,export"
       references:
         - path: references/concept-spec-guide.md
           label: "Concept specification writing guide"
@@ -4685,11 +5224,12 @@ annotations:
       argument-template: "--name <SyncName>"
       trigger-description: >
         Use when creating a new sync rule to connect concepts. Generates a
-        .sync file with when/where/then clauses from trigger and effect
-        configurations.
+        .sync file with when/where/then clauses including filter() and guard()
+        conditions, multi-then sequential blocks, query bindings, and
+        not() negation from trigger and effect configurations.
       intro-template: >
-        Scaffold a sync rule **$ARGUMENTS** with trigger patterns, guard
-        conditions, and effect actions.
+        Scaffold a sync rule **$ARGUMENTS** with trigger patterns, where-clause
+        conditions (filter/guard/query/not), and sequential then blocks.
       companion-docs:
         - path: examples/scaffold-sync.md
           label: "Sync rule scaffolding walkthrough"
@@ -4714,7 +5254,7 @@ annotations:
 
             ```
             sync CreateProfile [eager]
-              purpose { Auto-create a profile when a user registers. }
+              purpose: "Auto-create a profile when a user registers."
             when {
               User/create: [
                 name: ?name;
@@ -4729,15 +5269,41 @@ annotations:
             }
             ```
 
-            ## Step 3: Add Guard Conditions (optional)
+            ## Step 3: Add Where Conditions
+
+            The where clause supports four condition types:
 
             ```
             where {
+              # query — bind results of a concept query
+              query(Profile/find: [owner: ?u] as ?existing)
+
+              # not — negate any condition
               not(query(Profile/find: [owner: ?u] as ?existing))
+
+              # filter — pure predicate on bound variables
+              filter(?amount > 0)
+
+              # guard — side-effect-free concept query returning boolean
+              guard(Account/isActive: [id: ?u])
             }
             ```
 
-            ## Step 4: Validate
+            ## Step 4: Group Effects in Multiple Then Blocks (optional)
+
+            Multiple then blocks group related effects for readability
+            (all fire from the same trigger, no ordering implied):
+
+            ```
+            then {
+              Profile/init: [owner: ?u; displayName: ?name]
+            }
+            then {
+              Email/sendWelcome: [to: ?email; name: ?name]
+            }
+            ```
+
+            ## Step 5: Validate
 
             ```bash
             clef sync validate syncs/create-profile.sync
@@ -4756,6 +5322,9 @@ annotations:
         - label: "Generate an eager sync"
           language: bash
           code: "clef scaffold sync --name ValidateOrder --tier required --eager"
+        - label: "Generate with filter condition"
+          language: bash
+          code: "clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter"
       references:
         - path: references/sync-rule-guide.md
           label: "Sync rule writing guide"
@@ -4990,11 +5559,13 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <ComponentName>"
       trigger-description: >
-        Use when creating a new Clef Surface headless component. Generates a complete
-        component scaffold including widget specification (FSM), anatomy
-        definition (parts contract), machine implementation, and suite manifest.
+        Use when creating a new Clef Surface headless component. Generates a
+        .widget spec (anatomy, states with transitions, accessibility, affordance,
+        props, connect, compose, invariant), anatomy definition, machine
+        implementation, and suite manifest.
       intro-template: >
-        Scaffold a Clef Surface headless component **$ARGUMENTS** with widget FSM,
+        Scaffold a Clef Surface headless component **$ARGUMENTS** with .widget spec
+        (anatomy, FSM states, accessibility, affordance, props, connect, compose),
         anatomy parts, machine implementation, and suite manifest.
       companion-docs:
         - path: examples/scaffold-surface-component.md
@@ -5010,41 +5581,91 @@ annotations:
             clef scaffold component --name Dialog \
               --parts root,trigger,backdrop,content,title,closeTrigger \
               --states closed,open \
-              --events open,close,escape
+              --events open,close,escape \
+              --role dialog
             ```
 
             Output:
             ```
-            Created surface-dialog/dialog-widget.concept
-            Created surface-dialog/dialog-anatomy.concept
-            Created surface-dialog/suite.yaml
-            Created surface-dialog/dialog-machine.handler.ts
+            Created surface-dialog/dialog.stub.widget
+            Created surface-dialog/dialog-anatomy.stub.concept
+            Created surface-dialog/suite.stub.yaml
+            Created surface-dialog/dialog-machine.stub.handler.ts
             ```
 
-            ## Step 2: Add Accessibility
+            ## Step 2: Refine the Widget Spec
 
-            Edit `dialog-widget.concept`:
+            Edit `dialog.stub.widget`:
 
             ```
-            accessibility {
-              role: "dialog"
-              aria-modal: true
-              aria-labelledby: titleId
-              aria-describedby: descriptionId
+            widget dialog {
+              purpose {
+                A modal dialog that overlays content and
+                traps focus until dismissed.
+              }
+
+              anatomy {
+                root: container { The outermost wrapper. }
+                trigger: interactive { Opens the dialog. }
+                backdrop: container { Overlay behind dialog. }
+                content: container { The dialog content area. }
+                title: container { Dialog title for aria-labelledby. }
+                closeTrigger: interactive { Closes the dialog. }
+              }
+
+              states {
+                closed [initial] {
+                  on open -> open;
+                }
+                open {
+                  on close -> closed;
+                  on escape -> closed;
+                }
+              }
+
+              accessibility {
+                role: dialog;
+                keyboard {
+                  Escape -> CLOSE;
+                  Tab -> FOCUS_NEXT;
+                }
+                focus {
+                  trap: true; initial: content; roving: false
+                }
+              }
+
+              affordance {
+                hover: trigger -> visual-highlight;
+                press: closeTrigger -> dismiss;
+              }
+
+              props {
+                open: Bool (default: false)
+                modal: Bool (default: true)
+                closeOnEsc: Bool (default: true)
+                disabled: Bool (default: false)
+              }
+
+              connect {
+                root -> { data-part: "root"; data-state: context.state; }
+                backdrop -> { data-part: "backdrop"; aria-hidden: "true"; }
+                content -> { data-part: "content"; role: "dialog"; aria-modal: "true"; }
+              }
+
+              compose {
+                FocusTrap -> content;
+              }
+
+              invariant {
+                when open: focus must be trapped inside content;
+              }
             }
             ```
 
             ## Step 3: Customize the Machine
 
             Add guards and transition side effects in
-            `dialog-machine.handler.ts`:
-
-            ```typescript
-            // Add escape key handler
-            if (event === 'escape' && machine.config?.closeOnEsc !== false) {
-              // ... transition to closed
-            }
-            ```
+            `dialog-machine.stub.handler.ts`.
 
             ## Step 4: Register with Widget Catalog
 
@@ -5085,12 +5706,16 @@ annotations:
       tool-permissions: [Read, Write, Bash]
       argument-template: "--name <theme-name>"
       trigger-description: >
-        Use when creating a new Clef Surface design system theme. Generates palette
-        configuration, typography scale, motion definitions, elevation scale,
-        and light/dark theme manifests with WCAG accessibility compliance.
+        Use when creating a new Clef Surface design system theme. Generates a
+        .theme spec file with @version annotation, palette (oklch color scales),
+        typography (modular ratio, fonts, weights, line-heights, tracking),
+        spacing (base multiplier), motion (durations, easing, reduced-motion),
+        elevation (shadow layers), radius tokens, and extends support for
+        theme variants. Follows WCAG accessibility guidelines for contrast.
       intro-template: >
-        Scaffold a Clef Surface design system theme **$ARGUMENTS** with palette tokens,
-        typography scale, motion transitions, and elevation shadows.
+        Scaffold a Clef Surface design system theme **$ARGUMENTS** with oklch palette,
+        typography scale, spacing tokens, motion definitions, elevation shadows,
+        and radius tokens in .theme format.
       companion-docs:
         - path: examples/scaffold-surface-theme.md
           label: "Clef Surface theme scaffolding walkthrough"
@@ -5111,53 +5736,91 @@ annotations:
 
             Output:
             ```
-            Created theme-ocean/suite.yaml
-            Created theme-ocean/themes/ocean-light.json
-            Created theme-ocean/themes/ocean-dark.json
-            Created theme-ocean/tokens/palette.json
-            Created theme-ocean/tokens/typography.json
-            Created theme-ocean/tokens/motion.json
-            Created theme-ocean/tokens/elevation.json
+            Created theme-ocean/ocean.stub.theme
+            Created theme-ocean/suite.stub.yaml
             ```
 
-            ## Step 2: Customize Colors
+            ## Step 2: Refine the Theme Spec
 
-            Edit `tokens/palette.json` to adjust semantic roles:
+            Edit `ocean.stub.theme`:
 
-            ```json
-            {
-              "primary": {
-                "roles": {
-                  "default": "500",
-                  "hover": "600",
-                  "active": "700"
-                }
+            ```
+            @version(1)
+            theme ocean {
+              purpose {
+                A cool, ocean-inspired design system with blue tones.
+              }
+
+              palette {
+                primary: oklch(0.60 0.15 220);
+                secondary: oklch(0.55 0.12 180);
+                neutral: oklch(0.50 0.01 220);
+                success: oklch(0.65 0.20 145);
+                warning: oklch(0.75 0.15 85);
+                error: oklch(0.55 0.22 27);
+              }
+
+              typography {
+                family: "Inter, sans-serif";
+                base: 16px;
+                scale: 1.25;
+                weights: [300, 400, 500, 600, 700];
+                line-heights: [1.2, 1.4, 1.6];
+                tracking: [-0.02em, 0, 0.02em, 0.05em];
+              }
+
+              spacing {
+                base: 4px;
+              }
+
+              motion {
+                duration-fast: 100ms;
+                duration-normal: 200ms;
+                duration-slow: 400ms;
+                easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+                easing-in: cubic-bezier(0.4, 0, 1, 1);
+                easing-out: cubic-bezier(0, 0, 0.2, 1);
+                reduced-motion: duration 0ms;
+              }
+
+              elevation {
+                level-1: 0 1px 2px oklch(0 0 0 / 0.05);
+                level-2: 0 2px 4px oklch(0 0 0 / 0.10);
+                level-3: 0 4px 8px oklch(0 0 0 / 0.15);
+              }
+
+              radius {
+                sm: 0.25rem;
+                md: 0.375rem;
+                lg: 0.5rem;
+                full: 9999px;
               }
             }
             ```
 
-            ## Step 3: Check WCAG Contrast
+            ## Step 3: Create a Theme Variant
+
+            Use `extends` to derive a variant:
+
+            ```
+            @version(1)
+            theme ocean-compact [extends ocean] {
+              purpose {
+                Compact variant of ocean with tighter spacing.
+              }
+              spacing {
+                base: 2px;
+              }
+              typography {
+                base: 14px;
+              }
+            }
+            ```
+
+            ## Step 4: Check WCAG Contrast
 
             The palette generator ensures AA compliance (4.5:1 for
-            normal text, 3:1 for large text). Verify:
-
-            ```
-            Primary 500 on white background → 4.6:1 ✓ (AA pass)
-            Primary 500 on dark background → 7.2:1 ✓ (AAA pass)
-            ```
-
-            ## Step 4: Customize Typography
-
-            Edit `tokens/typography.json`:
-
-            ```json
-            {
-              "presets": {
-                "heading-1": { "size": "39.06px", "weight": 700 },
-                "body": { "size": "16px", "weight": 400 }
-              }
-            }
-            ```
+            normal text, 3:1 for large text).
 
             ## Token Hierarchy
 
@@ -5187,6 +5850,85 @@ annotations:
       references:
         - path: references/surface-theme-guide.md
           label: "Clef Surface design system and theme architecture"
+
+  DerivedScaffoldGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--name <DerivedName>"
+      trigger-description: >
+        Use when creating a new derived concept specification from scratch.
+        Generates a .derived file with purpose, composes, syncs boundary,
+        surface actions/queries, and operational principle.
+      intro-template: >
+        Scaffold a derived concept spec for **$ARGUMENTS** with composes block,
+        syncs boundary, surface actions/queries, and principle.
+      companion-docs:
+        - path: examples/scaffold-derived.md
+          label: "Derived concept scaffolding walkthrough"
+          content: |
+            # Walkthrough: Scaffolding a Derived Concept
+
+            This walkthrough creates a `Registration` derived concept.
+
+            ## Step 1: Generate the Scaffold
+
+            ```bash
+            clef scaffold derived --name Registration \
+              --param T \
+              --composes User,Email,Profile \
+              --syncs user-created-sends-welcome:required,profile-init:recommended
+            ```
+
+            Output:
+            ```
+            Created concepts/registration.stub.derived
+            ```
+
+            ## Step 2: Define Surface Actions
+
+            Edit `registration.derived`:
+
+            ```
+            surface {
+              action register(email: String, name: String) {
+                entry: User/create [on email: ?e]
+                triggers: [
+                  Email/sendWelcome(to: ?e),
+                  Profile/init(owner: ?e)
+                ]
+              }
+
+              query status(userId: String) -> User/get(id: ?userId)
+            }
+            ```
+
+            ## Step 3: Write the Principle
+
+            ```
+            principle {
+              after register(email: e, name: n)
+              then User/create(email: e, name: n) -> ok
+              and  Email/sendWelcome(to: e) -> ok
+              and  Profile/init(owner: e) -> ok
+            }
+            ```
+    register:
+      examples:
+        - label: "Register the derived scaffold generator"
+          language: typescript
+          code: |
+            const result = await derivedScaffoldGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a derived concept with defaults"
+          language: bash
+          code: "clef scaffold derived --name Registration"
+        - label: "Generate with composed concepts"
+          language: bash
+          code: "clef scaffold derived --name Registration --composes User,Email,Profile --syncs user-created-sends-welcome:required"
+      references:
+        - path: references/derived-grammar.md
+          label: "Derived concept grammar and composition patterns"
 
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
@@ -5228,7 +5970,7 @@ concept-overrides:
   SuiteScaffoldGen:
     cli:
       command-group: scaffold
-      subcommand: kit
+      subcommand: suite
       description: "Generate suite manifest (suite.yaml) and directory structure."
       actions:
         preview:
@@ -5239,26 +5981,26 @@ concept-overrides:
               type: string
               required: true
               short: n
-              description: "Kit name (kebab-case)"
+              description: "Suite name (kebab-case)"
             concepts:
               type: string
               required: false
               short: c
               description: "Comma-separated PascalCase concept names"
         generate:
-          command: kit
-          description: "Scaffold a new CLEF kit with suite.yaml, concept stubs, and sync directories."
+          command: suite
+          description: "Scaffold a new CLEF suite with suite.yaml, concept stubs, and sync directories."
           flags:
             name:
               type: string
               required: true
               short: n
-              description: "Kit name (kebab-case)"
+              description: "Suite name (kebab-case)"
             description:
               type: string
               required: false
               short: d
-              description: "Kit description"
+              description: "Suite description"
             concepts:
               type: string
               required: false
@@ -5271,7 +6013,7 @@ concept-overrides:
             dependencies:
               type: string
               required: false
-              description: "Comma-separated kit dependencies"
+              description: "Comma-separated suite dependencies"
             domain:
               type: boolean
               required: false
@@ -5280,14 +6022,14 @@ concept-overrides:
               type: string
               required: false
               short: o
-              description: "Output directory (default: ./kits/<name>)"
+              description: "Output directory (default: ./suites/<name>)"
           examples:
-            - description: "Scaffold a basic kit"
-              command: "clef scaffold kit --name auth --concepts User,Session,Password"
+            - description: "Scaffold a basic suite"
+              command: "clef scaffold suite --name auth --concepts User,Session,Password"
             - description: "Scaffold a domain suite with infrastructure"
-              command: "clef scaffold kit --name web3 --concepts Token,Wallet --domain"
+              command: "clef scaffold suite --name web3 --concepts Token,Wallet --domain"
             - description: "Scaffold with syncs"
-              command: "clef scaffold kit --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
+              command: "clef scaffold suite --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended"
 
   DeployScaffoldGen:
     cli:
@@ -5415,7 +6157,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: concept
-      description: "Generate concept specification (.concept) file."
+      description: "Generate concept specification (.concept) file with annotations, state groups, and capabilities."
       actions:
         preview:
           command: preview
@@ -5428,7 +6170,7 @@ concept-overrides:
               description: "PascalCase concept name"
         generate:
           command: concept
-          description: "Scaffold a .concept file with state, actions, and register()."
+          description: "Scaffold a .concept file with annotations, state (groups, enums, records), actions, capabilities, and register()."
           flags:
             name:
               type: string
@@ -5449,6 +6191,18 @@ concept-overrides:
               type: string
               required: false
               description: "Annotation category (domain, devtools, etc.)"
+            version:
+              type: number
+              required: false
+              description: "Spec version number for @version annotation"
+            gate:
+              type: boolean
+              required: false
+              description: "Add @gate annotation for async-gated concepts"
+            capabilities:
+              type: string
+              required: false
+              description: "Comma-separated capability names for capabilities block"
             actions:
               type: string
               required: false
@@ -5466,12 +6220,14 @@ concept-overrides:
               command: "clef scaffold concept --name Article --param A --category domain"
             - description: "Scaffold with purpose"
               command: "clef scaffold concept --name Bookmark --purpose 'Save and organize references.'"
+            - description: "Scaffold with version, gate, and capabilities"
+              command: "clef scaffold concept --name Approval --version 2 --gate --capabilities search,export,bulk"
 
   SyncScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: sync
-      description: "Generate synchronization rule (.sync) file."
+      description: "Generate synchronization rule (.sync) file with filter/guard conditions and multi-then."
       actions:
         preview:
           command: preview
@@ -5484,7 +6240,7 @@ concept-overrides:
               description: "PascalCase sync name"
         generate:
           command: sync
-          description: "Scaffold a .sync file with when/where/then clauses."
+          description: "Scaffold a .sync file with when/where/then clauses, filter/guard conditions, and multiple then blocks."
           flags:
             name:
               type: string
@@ -5510,6 +6266,10 @@ concept-overrides:
               required: false
               description: "Fire immediately (default: true)"
               default: "true"
+            conditions:
+              type: string
+              required: false
+              description: "Comma-separated condition types to scaffold (query, not, filter, guard)"
             output:
               type: string
               required: false
@@ -5520,6 +6280,8 @@ concept-overrides:
               command: "clef scaffold sync --name CreateProfile --from User/create --to Profile/init"
             - description: "Scaffold a required sync"
               command: "clef scaffold sync --name ValidateOrder --tier required"
+            - description: "Scaffold with filter and guard conditions"
+              command: "clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter,guard"
 
   HandlerScaffoldGen:
     cli:
@@ -5676,7 +6438,7 @@ concept-overrides:
     cli:
       command-group: scaffold
       subcommand: component
-      description: "Generate Clef Surface headless component (widget, anatomy, machine, kit)."
+      description: "Generate Clef Surface headless component (.widget, anatomy, machine, suite)."
       actions:
         preview:
           command: preview
@@ -5694,7 +6456,7 @@ concept-overrides:
               description: "Comma-separated anatomy part names"
         generate:
           command: component
-          description: "Scaffold a complete Clef Surface headless component with FSM, anatomy, and machine."
+          description: "Scaffold a .widget spec with anatomy, states, accessibility, affordance, props, connect, and compose."
           flags:
             name:
               type: string
@@ -5728,6 +6490,14 @@ concept-overrides:
               required: false
               description: "ARIA role for accessibility"
               default: "widget"
+            compose:
+              type: string
+              required: false
+              description: "Comma-separated widget names to compose into parts (e.g. FocusTrap:content)"
+            props:
+              type: string
+              required: false
+              description: "Comma-separated prop declarations (name:Type:default)"
             output:
               type: string
               required: false
@@ -5735,17 +6505,17 @@ concept-overrides:
               description: "Output directory"
           examples:
             - description: "Generate a dialog component"
-              command: "clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape"
+              command: "clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape --role dialog"
             - description: "Generate a tabs component"
               command: "clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur"
-            - description: "Generate with slots"
-              command: "clef scaffold component --name Card --parts root,header,body,footer --slots header,footer"
+            - description: "Generate with slots and compose"
+              command: "clef scaffold component --name Card --parts root,header,body,footer --slots header,footer --compose FocusTrap:body"
 
   SurfaceThemeScaffoldGen:
     cli:
       command-group: scaffold
       subcommand: theme
-      description: "Generate Clef Surface design system theme (palette, typography, motion, elevation)."
+      description: "Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius."
       actions:
         preview:
           command: preview
@@ -5758,7 +6528,7 @@ concept-overrides:
               description: "Theme name (kebab-case)"
         generate:
           command: theme
-          description: "Scaffold a complete design system theme with WCAG-compliant tokens."
+          description: "Scaffold a .theme file with oklch palette, typography, spacing, motion, elevation, and radius tokens."
           flags:
             name:
               type: string
@@ -5802,6 +6572,10 @@ concept-overrides:
               description: "Theme mode"
               choices: [light, dark, both]
               default: "both"
+            extends:
+              type: string
+              required: false
+              description: "Base theme name to extend (for theme variants)"
             output:
               type: string
               required: false
@@ -5814,5 +6588,583 @@ concept-overrides:
               command: "clef scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18"
             - description: "Generate a light-only theme"
               command: "clef scaffold theme --name print --mode light"
-            - description: "Generate a dark theme"
-              command: "clef scaffold theme --name midnight --mode dark --primary '#6366f1'"
+            - description: "Generate a theme variant"
+              command: "clef scaffold theme --name ocean-compact --extends ocean --base-size 14"
+
+  DerivedScaffoldGen:
+    cli:
+      command-group: scaffold
+      subcommand: derived
+      description: "Generate derived concept specification (.derived) scaffold."
+      actions:
+        preview:
+          command: preview
+          description: "Dry-run: compute output files without writing."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase derived concept name"
+        generate:
+          command: derived
+          description: "Scaffold a derived concept with purpose, composes, syncs, surface, and principle."
+          flags:
+            name:
+              type: string
+              required: true
+              short: n
+              description: "PascalCase derived concept name"
+            param:
+              type: string
+              required: false
+              short: p
+              description: "Type parameter name"
+              default: "T"
+            composes:
+              type: string
+              required: false
+              short: c
+              description: "Comma-separated PascalCase concept names to compose"
+            syncs:
+              type: string
+              required: false
+              short: s
+              description: "Comma-separated sync-name:tier pairs (e.g. my-sync:required)"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output directory"
+          examples:
+            - description: "Generate a basic derived concept"
+              command: "clef scaffold derived --name Registration"
+            - description: "Generate with composed concepts and syncs"
+              command: "clef scaffold derived --name Registration --composes User,Email,Profile --syncs user-welcome:required,profile-init:recommended"
+            - description: "Generate derived-of-derived"
+              command: "clef scaffold derived --name TaskBoard --composes Task,Label,Assignment"
+
+# ─── PROJECT INSTRUCTIONS CONTENT ───────────────────
+# Generated to CLAUDE.md, AGENTS.md, and GEMINI.md.
+# All three share the same markdown content.
+
+project-instructions:
+  content: |
+    # Clef — Concept-Oriented Programming Framework
+
+    ## Project Conventions
+
+    ### Naming & Comments
+    - **Never reference implementation phases or ordering** in code comments, file names, test names, or descriptions. Name and organize everything by logical function, not by what order it was implemented.
+      - Bad: "Phase 19: Async Gate Tests", "Step 3 implementation"
+      - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
+    - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
+
+    ---
+
+    ## Architecture Overview
+
+    Clef is a concept-oriented programming framework based on Daniel Jackson's
+    concept design methodology. Applications are built from independent,
+    reusable **concepts** wired together by **syncs**, composed into **derived
+    concepts**, rendered through **widgets** and **themes**, and deployed across
+    runtimes via **deployment manifests**.
+
+    ### Core Branded Terms
+
+    | Term | What It Is | Directory |
+    |------|-----------|-----------|
+    | **Clef** | The framework itself | Root |
+    | **Repertoire** | Library of reusable app-level concept suites | `repertoire/` |
+    | **Suite** | A package of related concepts + syncs | Each suite has `suite.yaml` |
+    | **Score** | Code-as-data analysis/query layer | `score/` |
+    | **Surface** | UI generation — widgets, themes, layouts | `surface/`, `bind/` |
+    | **Bind** | Interface generation — skills, CLI, MCP, REST, GraphQL | `bind/` |
+
+    ### Key Architectural Layers
+
+    **Concepts** (`.concept` files in `specs/`)
+    Independent state machines following Jackson's methodology. Each concept has
+    purpose, state, actions with typed variants, and invariants. Concepts never
+    depend on each other — all wiring goes through syncs.
+    - Parser: `handlers/ts/framework/parser.ts`
+    - Kernel types: `kernel/src/types.ts` (ConceptAST, ConceptManifest)
+
+    **Syncs** (`.sync` files in `syncs/`)
+    Synchronization rules that wire concepts together through pattern matching
+    on completions. A sync has `when` (trigger), optional `where` (conditions:
+    query, not, filter, guard), and `then` (effects) clauses.
+    - Parser: `handlers/ts/framework/sync-parser.ts`
+    - Compiler: `handlers/ts/framework/sync-compiler.ts`
+
+    **Derived Concepts** (`.derived` files)
+    Named compositions of existing concepts and syncs that produce emergent
+    behavior without independent state. Support surface actions (entry/triggers,
+    derivedContext), surface queries (inline arrow and block reads: forms), and
+    operational principles.
+    - Parser: `handlers/ts/framework/derived-parser.ts`
+
+    **Widgets** (`.widget` files in `surface/`)
+    Framework-agnostic headless UI component specs. Define anatomy (parts),
+    states (FSM with transitions), accessibility (role, keyboard, focus),
+    affordance, props, connect (data attributes), compose, and invariant blocks.
+    - Parser: `handlers/ts/framework/widget-parser.ts`
+
+    **Themes** (`.theme` files in `surface/`)
+    Design system token specs. Define palette (oklch colors), typography
+    (modular ratio, fonts, weights), spacing, motion (with reduced-motion),
+    elevation, radius tokens. Support `extends` for theme variants.
+    - Parser: `handlers/ts/framework/theme-parser.ts`
+
+    **Handlers** (`.handler.ts` files in `handlers/ts/`)
+    TypeScript implementations of concept actions. Each handler implements
+    `register()` plus the concept's action methods, using `ConceptStorage`
+    for persistence.
+
+    **Suites** (`suite.yaml` manifests)
+    Packages of related concepts and syncs with required/recommended tiers,
+    type parameter alignment, and dependency declarations.
+
+    **Deployment** (`deploy.yaml` manifests)
+    Maps concepts to runtimes, assigns syncs to engines, configures storage
+    and transport adapters, and sets up infrastructure.
+
+    **Score** (code-as-data queries in `score/`)
+    Analysis and query layer providing semantic entities (concepts, actions,
+    variants, state fields, syncs, widgets, themes), symbol resolution,
+    dependence graphs, data flow paths, and program slices.
+
+    **Bind** (interface generation in `bind/`)
+    Generates external interfaces from concept specs: REST APIs, GraphQL,
+    gRPC, CLI commands, MCP servers, and AI coding assistant skills.
+
+    **Repertoire** (reusable suites in `repertoire/`)
+    Library of 17+ app-level suites: collaboration, identity, versioning,
+    web3, commerce, content, messaging, and more. Search here before
+    building new concepts.
+
+    ### Directory Structure
+
+    ```
+    specs/              # Concept specifications (.concept)
+    syncs/              # Synchronization rules (.sync)
+    handlers/ts/        # TypeScript handler implementations (.handler.ts)
+    surface/            # Widget and theme specs (.widget, .theme)
+    repertoire/         # Reusable app-level suites
+    score/              # Code-as-data analysis suites
+    bind/               # Interface generation suites
+    kernel/             # Core types (ConceptAST, ConceptManifest)
+    cli/                # CLI commands and patterns
+    codegen/            # Generated Rust, Solidity, Swift code
+    generated/          # Generated output (surface/, repertoire/, etc.)
+    tests/              # Test suites (vitest)
+    ```
+
+    ### Running Tests
+
+    ```bash
+    npx vitest run                    # Run all tests
+    npx vitest run tests/some.test.ts # Run specific test
+    ```
+
+    ---
+
+    ## MANDATORY: Always Use Skills and MCP
+
+    **When creating or modifying ANY Clef artifact, you MUST invoke the
+    corresponding skill or MCP tool.** Never hand-write concept specs, sync
+    rules, handlers, widgets, themes, derived concepts, suites, or deployment
+    manifests from scratch without using the generator.
+
+    ### Skill Reference — When to Invoke Each
+
+    | Situation | ALWAYS invoke this skill | MCP tool alternative |
+    |-----------|------------------------|---------------------|
+    | Creating a new concept spec | `/create-concept` | `ConceptScaffoldGen/generate` |
+    | Creating a sync rule | `/create-sync` | `SyncScaffoldGen/generate` |
+    | Creating a derived concept | `/create-derived-concept` | `DerivedScaffoldGen/generate` |
+    | Creating a widget spec | `/create-widget` | `SurfaceComponentScaffoldGen/generate` |
+    | Creating a theme spec | `/create-theme` | `SurfaceThemeScaffoldGen/generate` |
+    | Creating a handler implementation | `/create-implementation` | `HandlerScaffoldGen/generate` |
+    | Creating a suite | `/create-suite` | `SuiteScaffoldGen/generate` |
+    | Creating a deployment manifest | `/configure-deployment` | `DeployScaffoldGen/generate` |
+    | Creating a storage adapter | `/create-storage-adapter` | `StorageAdapterScaffoldGen/generate` |
+    | Creating a transport adapter | `/create-transport-adapter` | `TransportAdapterScaffoldGen/generate` |
+    | Decomposing a feature into concepts | `/decompose-feature` | — |
+    | Building a full app hierarchy | `/derive-app` | — |
+    | Parsing/validating a spec | `/spec-parser` | `SpecParser/parse` |
+    | Validating a sync | `/sync-parser` | `SyncParser/parse` |
+    | Compiling syncs | `/sync-compiler` | `SyncCompiler/compile` |
+    | Tracing action flows | `/flow-trace` | `FlowTrace/build` |
+    | Generating schemas | `/schema-gen` | `SchemaGen/generate` |
+    | Initializing a new project | `/project-scaffold` | `ProjectScaffold/scaffold` |
+    | Managing suites | `/suite-manager` | `SuiteManager/*` |
+    | Configuring an interface manifest | — | `InterfaceScaffoldGen/generate` |
+    | Adding a language target | `/add-language-target` | — |
+
+    ### What NOT to Do
+
+    - **NEVER** create a `.concept` file by hand without invoking `/create-concept` or the MCP tool
+    - **NEVER** create a `.sync` file by hand without invoking `/create-sync` or the MCP tool
+    - **NEVER** create a `.widget` file by hand without invoking `/create-widget` or the MCP tool
+    - **NEVER** create a `.theme` file by hand without invoking `/create-theme` or the MCP tool
+    - **NEVER** create a `.derived` file by hand without invoking `/create-derived-concept` or the MCP tool
+    - **NEVER** create a `.handler.ts` file by hand without invoking `/create-implementation` or the MCP tool
+    - **NEVER** create a `suite.yaml` by hand without invoking `/create-suite` or the MCP tool
+    - **NEVER** create a `deploy.yaml` by hand without invoking `/configure-deployment` or the MCP tool
+
+    The skills contain the full syntax reference, grammar, checklists, and
+    examples. They ensure correct file format, naming, and structure every time.
+
+    ---
+
+    ## MANDATORY: Score-First Navigation and Debugging
+
+    **When exploring the codebase, understanding how something works, finding
+    where something is located, or debugging an issue, you MUST start with
+    Score queries.** Do NOT grep files, read raw `.concept` files, or manually
+    search the codebase as a first step.
+
+    ### Navigation — Always Start with Score
+
+    | Task | Score Query | Fallback (only if Score can't answer) |
+    |------|------------|---------------------------------------|
+    | Find a concept | `ScoreApi/listConcepts` or `ScoreApi/search` | `ls specs/` |
+    | Understand a concept | `ScoreApi/getConcept --name X` | Read the `.concept` file |
+    | Find syncs connecting concepts | `ScoreApi/listSyncs --involves X,Y` | `ls syncs/` |
+    | Trace an action's effects | `ScoreApi/getFlow --from X/action` | Read sync files manually |
+    | Check dependencies | `ScoreApi/getDependencies --concept X` | Grep for references |
+    | Search by keyword | `ScoreApi/search --query "..."` | Grep across the project |
+    | Find widgets | `ScoreApi/search --query "widget X"` | `ls surface/` |
+    | Find a handler | `ScoreApi/getHandler --concept X` | Read the `.handler.ts` file |
+    | Get action source code | `ScoreApi/getActionSource --concept X --action Y` | Read handler file manually |
+    | List all handlers | `ScoreApi/listHandlers` | `ls handlers/ts/` |
+    | Find implementation gaps | `ScoreApi/implementationGaps` | Compare specs vs handlers manually |
+    | Get widget implementation | `ScoreApi/getWidgetImpl --widget X --framework react` | Read generated file |
+    | Get theme implementation | `ScoreApi/getThemeImpl --theme X --platform css` | Read generated file |
+
+    ### Debugging — Always Start with Score
+
+    When debugging an issue:
+
+    1. **Resolve the stack trace** — Use `ScoreApi/resolveStackTrace` to parse
+       the stack trace and automatically resolve each frame to handler entities,
+       concept names, action methods, and the **exact AST node** at each frame
+       (e.g., "the `await storage.put()` call inside the `if (!existing)` branch
+       of `User/create`"). This maps raw file:line:col to semantic entities and
+       precise code constructs instantly.
+
+    2. **Get the flow trace** — Use `FlowTrace/build` or `/flow-trace` to build
+       an interactive debug trace from action log records. This shows the full
+       causal chain: actions -> syncs -> completions with timing and failures.
+
+    3. **Correlate to concepts** — Use `ScoreApi/getConcept` to understand the
+       concept's state model, valid variants, and invariants. Check if the
+       error variant is expected or indicates a state violation.
+
+    4. **Read the handler source** — Use `ScoreApi/getActionSource` to get the
+       exact source code of the failing action method with line numbers. Use
+       `HandlerEntity/resolveToAstNode` to drill into the exact AST node at
+       the error site — which branch, which storage call, which return.
+
+    5. **Correlate to syncs** — Use `ScoreApi/listSyncs --involves ConceptName`
+       to find all syncs triggered by the failing action. Check if a sync's
+       where-clause is incorrectly filtering or a then-clause has wrong bindings.
+
+    6. **Analyze dependencies** — Use `ScoreApi/getDependencies` to understand
+       the full impact graph — what depends on the failing concept and what it
+       depends on.
+
+    7. **Check data flow** — Use Score's `data-flow-path` and `program-slice`
+       analysis to trace how data flows through the system.
+
+    8. **Only then read files** — If Score queries don't fully answer the
+       question, read the specific file directly. But Score should resolve
+       95%+ of debugging questions without raw file access.
+
+    ### Anti-Patterns — Never Do These
+
+    - **Never grep for concept actions** — use `ScoreApi/getConcept` instead
+    - **Never grep for cross-concept references** — concepts are independent;
+      use `ScoreApi/listSyncs` to find the sync wiring
+    - **Never read `.concept` files to understand structure** — use
+      `ScoreApi/getConcept` which provides parsed, validated, cross-referenced data
+    - **Never read handler files to find action code** — use
+      `ScoreApi/getActionSource` which gives you the exact method with line numbers
+    - **Never manually parse stack traces** — use `ScoreApi/resolveStackTrace`
+      which maps every frame to concept/action/handler entities automatically
+    - **Never manually trace sync chains** — use `FlowTrace/build` or
+      `ScoreApi/getFlow` which follow the full causal chain automatically
+
+    ---
+
+    ## Workflow: Creating a New App
+
+    ### 1. Initialize the Project
+
+    Invoke `/project-scaffold` to generate the standard directory structure,
+    example specs, and configuration files.
+
+    ```
+    /project-scaffold --name my-app
+    ```
+
+    ### 2. Search the Repertoire
+
+    Before building anything, check if reusable concepts already exist in
+    the Repertoire (`repertoire/`). The Repertoire contains 17+ suites
+    covering: collaboration, identity, versioning, web3, commerce, content,
+    messaging, moderation, notification, scheduling, search, social,
+    subscription, and more.
+
+    ```bash
+    # Browse available suites
+    ls repertoire/concepts/
+
+    # Check what a suite provides
+    cat repertoire/concepts/identity/suite.yaml
+    ```
+
+    Also search the Surface widget library for existing widgets:
+
+    ```bash
+    ls surface/
+    ```
+
+    ### 3. Research and Design New Concepts
+
+    For concepts NOT in the Repertoire:
+    1. Research existing academic and practical work on that domain
+    2. Identify the core independent concepts (Jackson's methodology:
+       each concept should be independently meaningful and motivated
+       by a specific purpose)
+    3. Invoke `/decompose-feature` to break down features into concepts and syncs
+
+    ```
+    /decompose-feature "Task management with labels, assignments, and due dates"
+    ```
+
+    ### 4. Create the Concepts
+
+    For each concept identified, invoke the skill:
+
+    ```
+    /create-concept --name Task --param T --actions create,assign,complete,archive
+    /create-concept --name Label --param L --actions create,apply,remove
+    /create-concept --name Assignment --param A --actions assign,unassign,reassign
+    ```
+
+    Then refine the generated specs — add state fields, variant details,
+    invariants, and capabilities.
+
+    ### 5. Create the Handlers
+
+    For each concept, generate the TypeScript handler:
+
+    ```
+    /create-implementation --concept Task
+    /create-implementation --concept Label
+    /create-implementation --concept Assignment
+    ```
+
+    Implement the action logic in the generated handler files.
+
+    ### 6. Create the Syncs
+
+    Wire concepts together with sync rules:
+
+    ```
+    /create-sync --name AssignOnCreate --from Task/create --to Assignment/assign
+    /create-sync --name LabelInherited --from Task/create --to Label/apply
+    ```
+
+    ### 7. Compose into Derived Concepts
+
+    Build the application as a hierarchy of derived concepts:
+
+    ```
+    /create-derived-concept --name TaskBoard --composes Task,Label,Assignment \
+      --syncs assign-on-create:required,label-inherited:recommended
+    ```
+
+    For full app hierarchies, use:
+
+    ```
+    /derive-app
+    ```
+
+    ### 8. Create the UI — Widgets and Themes
+
+    For each UI component needed:
+
+    ```
+    /create-widget --name TaskCard --parts root,header,body,footer,badge \
+      --states idle,selected,dragging
+    ```
+
+    For the design system:
+
+    ```
+    /create-theme --name my-app --primary 220 --font "Inter, sans-serif"
+    ```
+
+    ### 9. Create a Suite
+
+    Package related concepts into a suite:
+
+    ```
+    /create-suite --name task-management --concepts Task,Label,Assignment \
+      --syncs AssignOnCreate:required,LabelInherited:recommended
+    ```
+
+    ### 10. Configure Deployment
+
+    Set up the deployment manifest:
+
+    ```
+    /configure-deployment --app my-app --runtimes api:node:http:postgresql
+    ```
+
+    Create storage and transport adapters as needed:
+
+    ```
+    /create-storage-adapter --name AppStorage --backend postgresql
+    /create-transport-adapter --name ApiTransport --protocol http
+    ```
+
+    ### 11. Test and Verify
+
+    - Run conformance tests generated with handlers
+    - Use `/flow-trace` to trace action flows and debug sync chains
+    - Use `/sync-compiler` to validate sync compilation
+    - Use `/spec-parser` to validate all spec files
+
+    ```bash
+    npx vitest run
+    ```
+
+    ---
+
+    ## Workflow: Adding a Feature to an Existing App
+
+    ### 1. Understand the Current Architecture (Score-First)
+
+    Start with Score queries — do NOT read files directly:
+    - `ScoreApi/listConcepts` — survey all concepts in the app
+    - `ScoreApi/listSyncs` — map the sync network
+    - `ScoreApi/getFlow --from Concept/action` — trace existing flows
+    - `ScoreApi/getDependencies --concept X` — understand impact graph
+    - Only read raw spec files if Score queries leave unanswered questions
+
+    ### 2. Check the Repertoire
+
+    Search `repertoire/` for existing concepts that cover the needed
+    functionality. Reuse before rebuilding.
+
+    ### 3. Research the Domain
+
+    For new functionality not in the Repertoire, research academic and
+    practical work on the domain to identify proper concept boundaries.
+
+    ### 4. Decompose the Feature
+
+    ```
+    /decompose-feature "Add commenting with threads and reactions to tasks"
+    ```
+
+    ### 5. Generate New Concepts
+
+    For each new concept:
+    ```
+    /create-concept --name Comment --param C --actions create,reply,edit,delete
+    /create-concept --name Reaction --param R --actions add,remove
+    ```
+
+    ### 6. Generate Handlers
+
+    ```
+    /create-implementation --concept Comment
+    /create-implementation --concept Reaction
+    ```
+
+    ### 7. Wire with Syncs
+
+    ```
+    /create-sync --name NotifyOnComment --from Comment/create --to Notification/send
+    ```
+
+    ### 8. Create or Update Derived Concepts
+
+    ```
+    /create-derived-concept --name ThreadedComments --composes Comment,Reaction \
+      --syncs notify-on-comment:required
+    ```
+
+    ### 9. Create Widgets (if UI needed)
+
+    ```
+    /create-widget --name CommentThread --parts root,comment,reply,reactionBar
+    ```
+
+    ### 10. Update Suite and Deployment
+
+    - Add new concepts to the suite manifest via `/suite-manager`
+    - Update deployment if new runtimes/adapters are needed
+
+    ### 11. Test
+
+    ```bash
+    npx vitest run
+    ```
+
+    ---
+
+    ## Score — Code-as-Data Queries
+
+    Score provides complete semantic analysis of a Clef application
+    across every layer:
+
+    - **Spec entities**: concept-entity, action-entity, variant-entity,
+      state-field, sync-entity, widget-entity, theme-entity, derived-entity
+    - **Implementation entities**: handler-entity (handler ASTs with line
+      numbers), widget-implementation-entity, theme-implementation-entity
+    - **Manifest entities**: deployment-entity, suite-manifest-entity,
+      interface-entity (endpoints, tools, commands)
+    - **Infrastructure**: infrastructure-entity (storage/transport adapters),
+      environment-entity (config, secrets, feature flags)
+    - **Symbol resolution**: symbol, symbol-occurrence, scope-graph,
+      symbol-relationship
+    - **Analysis**: dependence-graph, data-flow-path, program-slice, analysis-rule
+    - **Discovery**: semantic-embedding for concept search
+    - **Runtime**: runtime-flow, runtime-coverage, performance-profile,
+      error-correlation
+    - **Operations**: deployment-health (runtime status, transport connectivity,
+      sync delivery, SLO compliance)
+    - **Provenance**: generation-provenance (which generator produced which file)
+    - **Testing**: test-entity (test coverage, failing tests, untested actions)
+
+    Use Score queries through the MCP server (`score-api`, `score-index`)
+    to explore and understand the codebase. Score should be the **first**
+    tool for any navigation, debugging, or understanding task.
+
+    ---
+
+    ## Bind — Interface Generation
+
+    Bind generates external interfaces from concept specs:
+
+    - **REST API** — OpenAPI spec + route handlers
+    - **GraphQL** — Schema + resolvers
+    - **gRPC** — Proto definitions + server stubs
+    - **CLI** — Command definitions + argument parsing
+    - **MCP Server** — Tool definitions for AI assistants
+    - **AI Skills** — Skill files for Claude, Codex, Gemini
+
+    Configure via interface manifests (`interface.yaml`).
+    Generate with: `InterfaceScaffoldGen/generate` or the CLI.
+
+    ---
+
+    ## Package Alias
+
+    - `@clef/kernel` — core types (ConceptAST, ConceptManifest, etc.)

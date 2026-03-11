@@ -1,0 +1,93 @@
+@version(1)
+concept SelfUpdate [U] {
+
+  purpose {
+    Binary self-update lifecycle. Checks for newer versions of a running
+    binary, downloads and atomically swaps the executable, and supports
+    rollback to the previous version on failure. Manages a state machine
+    from idle through checking, downloading, swapping, to done or failed.
+  }
+
+  state {
+    updates: set U
+    current_version: U -> String
+    platform: U -> String
+    latest_version: U -> option String
+    download_url: U -> option String
+    content_hash: U -> option String
+    binary_path: U -> option String
+    previous_binary_path: U -> option String
+    status: U -> String
+    error_message: U -> option String
+    checked_at: U -> option String
+  }
+
+  actions {
+    action check(current_version: String, platform: String) {
+      -> available(update: U, latest_version: String, download_url: String,
+                   content_hash: String, size_bytes: Int) {
+        A newer version is available. Returns the update metadata
+        needed to proceed with download and apply.
+      }
+      -> current() {
+        The running binary is already at the latest version.
+      }
+      -> error(message: String) {
+        The update check failed due to a network or server error.
+      }
+    }
+
+    action apply(update: U, binary_path: String) {
+      -> ok(previous_path: String) {
+        Downloads the new binary, verifies its content hash, and
+        atomically swaps it into place. The previous binary is
+        preserved for rollback.
+      }
+      -> hash_mismatch(expected: String, actual: String) {
+        The downloaded binary does not match the expected content hash.
+      }
+      -> permission_denied(path: String) {
+        Cannot write to the binary path due to filesystem permissions.
+      }
+      -> error(message: String) {
+        The update application failed for another reason.
+      }
+    }
+
+    action rollback(update: U) {
+      -> ok() {
+        Restores the previous binary from the backup path.
+        The status returns to idle.
+      }
+      -> no_backup() {
+        No previous binary is available to roll back to.
+      }
+      -> error(message: String) {
+        The rollback failed.
+      }
+    }
+
+    action dismiss(update: U) {
+      -> ok() {
+        Dismisses the pending update notification without applying.
+        The status returns to idle.
+      }
+      -> notfound() {
+        No pending update to dismiss.
+      }
+    }
+  }
+
+  invariant {
+    after check(current_version: "1.0.0", platform: "darwin-arm64")
+         -> available(update: u, latest_version: "1.1.0",
+                      download_url: "https://dl.clef.dev/cli/1.1.0/darwin-arm64",
+                      content_hash: "sha256:abc", size_bytes: 42000000)
+    then apply(update: u, binary_path: "/usr/local/bin/clef") -> ok(previous_path: p)
+  }
+
+  invariant {
+    after apply(update: u, binary_path: b) -> ok(previous_path: p)
+    then rollback(update: u) -> ok()
+  }
+}

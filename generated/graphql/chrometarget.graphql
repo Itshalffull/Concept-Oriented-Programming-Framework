@@ -1,0 +1,20 @@
+type ChromeTargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type ChromeTargetEntry {
+  t: ID!
+  manifestOutput: String!
+  packageOutput: String!
+}
+
+extend type Query {
+  chrometarget_entry(t: ID!): ChromeTargetEntry
+  chrometarget_entries: [ChromeTargetEntry!]!
+}
+
+type ChromeTargetTargets {
+  t: ID!
+  value: ID!
+}

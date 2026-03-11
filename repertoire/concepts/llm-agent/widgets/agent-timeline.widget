@@ -1,0 +1,169 @@
+@version(1)
+widget agent-timeline {
+
+  purpose {
+    Multi-agent communication timeline displaying messages between agents
+    with delegation indicators, message type badges (request, response,
+    observation, action), and threading. Each message shows the agent
+    name, role, timestamp, and content with tool call details when
+    applicable.
+  }
+
+  requires @1 {
+    fields {
+      entries: list;
+      agentName: String;
+      status: String;
+    }
+    actions {
+      interrupt: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Timeline wrapper }
+    header:        container  { Agent name and status display }
+    timeline:      container  { Scrollable message timeline }
+    entry:         container  { Single timeline entry }
+    agentBadge:    container  { Agent name and role badge }
+    typeBadge:     container  { Message type indicator }
+    content:       container  { Message content }
+    timestamp:     text       { Entry timestamp }
+    delegation:    container  { Delegation indicator showing handoff }
+    interruptButton: action   { Interrupt agent execution }
+  }
+
+  states {
+    idle [initial] {
+      on NEW_ENTRY -> idle;
+      on SELECT_ENTRY -> entrySelected;
+      on INTERRUPT -> interrupted;
+    }
+
+    entrySelected {
+      on DESELECT -> idle;
+      on SELECT_ENTRY -> entrySelected;
+      entry [highlightEntry];
+      exit [unhighlightEntry];
+    }
+
+    interrupted {
+      on RESUME -> idle;
+      entry [showInterruptBanner];
+    }
+
+    streaming [parallel] {
+      inactive [initial] {
+        on STREAM_START -> active;
+      }
+      active {
+        on STREAM_END -> inactive;
+        entry [scrollToBottom; showStreamingIndicator];
+        exit [hideStreamingIndicator];
+      }
+    }
+  }
+
+  accessibility {
+    role: log;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_ENTRY;
+      Escape -> DESELECT;
+      i -> INTERRUPT;
+    }
+    focus {
+      trap: false;
+      initial: timeline;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "log";
+        aria-label: concat("Agent timeline: ", $agentName);
+        aria-live: "polite";
+      };
+      entry -> {
+        role: "article";
+        aria-label: concat(self.agentName, ": ", self.type, " at ", self.timestamp);
+      };
+      interruptButton -> {
+        role: "button";
+        aria-label: "Interrupt agent";
+      };
+    }
+  }
+
+  props {
+    showDelegations: Bool = true
+    autoScroll: Bool = true
+    maxEntries: Int = 100
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "AgentLoop";
+    }
+    bind {
+      agentName: goal;
+      status: status;
+      entries: available_tools;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-agent: $agentName;
+    }
+    header -> {
+      data-part: "header";
+      data-status: $status;
+    }
+    timeline -> {
+      data-part: "timeline";
+      role: "log";
+    }
+    entry -> {
+      data-part: "entry";
+      data-type: self.type;
+      onClick: send(SELECT_ENTRY, { id: self.id });
+    }
+    agentBadge -> {
+      data-part: "agent-badge";
+      text: self.agentName;
+    }
+    typeBadge -> {
+      data-part: "type-badge";
+      text: self.type;
+    }
+    content -> {
+      data-part: "content";
+    }
+    timestamp -> {
+      data-part: "timestamp";
+      text: self.timestamp;
+    }
+    delegation -> {
+      data-part: "delegation";
+      data-visible: if ?showDelegations and self.isDelegation then "true" else "false";
+    }
+    interruptButton -> {
+      data-part: "interrupt";
+      onClick: send(INTERRUPT);
+      data-visible: if $status == "running" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "New entries must append at the bottom with auto-scroll when enabled";
+    "Delegation entries must be visually distinct from regular messages";
+    "Interrupt must immediately halt and show the interrupt banner";
+    "Timeline must handle streaming entries with progressive rendering";
+  }
+
+}

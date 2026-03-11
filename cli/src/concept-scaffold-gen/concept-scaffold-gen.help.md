@@ -4,10 +4,10 @@
 
 # clef concept-scaffold-gen — Help
 
-Scaffold a concept spec for **<source>** with state declarations, typed action signatures, and a register() action.
+Scaffold a concept spec for **<source>** with annotations, state declarations (groups, enums, records), typed action signatures, capabilities, and a register() action.
 
 
-> **When to use:** Use when creating a new concept specification from scratch. Generates a .concept file with purpose, state, actions, variants, invariants, and a register() action following Jackson's methodology.
+> **When to use:** Use when creating a new concept specification from scratch. Generates a .concept file with annotations (@version, @category, @visibility, @gate), purpose, state (with groups, enum types, record types), actions with typed variants, invariants, capabilities block, and a register() action following Jackson's methodology.
 
 
 ## Design Principles
@@ -25,6 +25,10 @@ Scaffold a concept spec for **<source>** with state declarations, typed action s
 - [ ] Every action has at least one variant?
 - [ ] register() action is included for PluginRegistry?
 - [ ] Annotations (@category, @visibility) are present?
+- [ ] @version annotation included if this is a versioned spec?
+- [ ] State fields use enum types for fixed value sets?
+- [ ] State groups organize related fields?
+- [ ] Capabilities block present for generator/plugin concepts?
 - [ ] Variant descriptions explain outcomes, not just echo variant names?
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
@@ -43,8 +47,12 @@ Scaffold a concept spec for **<source>** with state declarations, typed action s
 | typeParam | String | Type parameter letter (default: T) |
 | purpose | String | Purpose description |
 | category | String | Annotation category (domain, devtools, etc.) |
-| stateFields | list StateField | State declarations |
+| version | Int | @version annotation number |
+| gate | Bool | @gate annotation for async gates |
+| stateFields | list StateField | State declarations (with group, enum, record support) |
 | actions | list ActionDef | Action signatures with variants |
+| capabilities | list String | Capabilities block entries |
+| invariants | list String | Invariant steps |
 
 
 ## Anti-Patterns
@@ -118,7 +126,7 @@ npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,de
 ```
 *Validate generated concept:*
 ```bash
-npx tsx cli/src/index.ts check concepts/user.concept
+npx tsx cli/src/index.ts check specs/app/user.concept
 ```
 *Run scaffold generator tests:*
 ```bash
@@ -127,5 +135,5 @@ npx vitest run tests/scaffold-generators.test.ts
 ## Related Skills
 
 - /concept-designer — Design concepts using Jackson's methodology before generating
-- /handler-scaffold — Generate handler implementations for the concept
-- /sync-scaffold — Generate sync rules connecting the concept
+- /create-handler — Generate handler implementations for the concept
+- /create-sync — Generate sync rules connecting the concept

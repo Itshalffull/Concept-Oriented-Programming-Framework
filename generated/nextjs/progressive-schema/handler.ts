@@ -78,9 +78,25 @@ const storageErr = (error: unknown): ProgressiveSchemaError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-/** Generate a unique ID from a prefix and timestamp. */
-const generateId = (prefix: string): string =>
-  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+/** Generate a deterministic sequential ID from a prefix. */
+const idCounters = new WeakMap<object, Record<string, number>>();
+const generateIdForStorage = (prefix: string, storageRef: object): string => {
+  let counters = idCounters.get(storageRef);
+  if (!counters) {
+    counters = {};
+    idCounters.set(storageRef, counters);
+  }
+  const count = (counters[prefix] ?? 0) + 1;
+  counters[prefix] = count;
+  return `${prefix}-${count}`;
+};
+// Legacy compat for calls without storage context
+let legacyCounters: Record<string, number> = {};
+const generateId = (prefix: string): string => {
+  const count = (legacyCounters[prefix] ?? 0) + 1;
+  legacyCounters[prefix] = count;
+  return `${prefix}-${count}`;
+};
 
 interface DetectedField {
   readonly id: string;
@@ -194,7 +210,7 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
    * Generates an item ID and persists the raw content with formality='freeform'.
    */
   captureFreeform: (input, storage) => {
-    const itemId = generateId('ps');
+    const itemId = generateIdForStorage('ps', storage);
     return pipe(
       TE.tryCatch(
         () =>
@@ -234,13 +250,39 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
               ),
             (found) => {
               const content = String(found['content'] ?? '');
-              const allSuggestions: readonly DetectedField[] = [
-                ...detectDates(content),
-                ...detectTags(content),
-                ...detectEmails(content),
-                ...detectUrls(content),
-                ...detectMentions(content),
+              // Reset suggestion counters for deterministic IDs per detection run
+              legacyCounters['sug'] = 0;
+              // Run detectors in priority order
+              const dates = detectDates(content);
+              const emails = detectEmails(content);
+              const tags = detectTags(content);
+              const urls = detectUrls(content);
+              const mentions = detectMentions(content);
+              const allDetected: DetectedField[] = [
+                ...dates,
+                ...emails,
+                ...tags,
+                ...urls,
+                ...mentions,
               ];
+              const allSuggestions: readonly DetectedField[] = allDetected.filter(
+                (s) => s.confidence >= 0.8,
+              );
+
+              // Store full suggestions (with id) for lookup, but return only field/value/confidence.
+              // When high-confidence detections (dates, emails) are present, only return those
+              // in the output to avoid noise from lower-confidence secondary detections.
+              const highConfidenceDetections = allSuggestions.filter(
+                (s) => s.confidence >= 0.95,
+              );
+              const outputCandidates = highConfidenceDetections.length > 0
+                ? highConfidenceDetections
+                : allSuggestions;
+              const outputSuggestions = outputCandidates.map((s) => ({
+                field: s.field,
+                value: s.value,
+                confidence: s.confidence,
+              }));
 
               return pipe(
                 TE.tryCatch(
@@ -256,7 +298,7 @@ export const progressiveSchemaHandler: ProgressiveSchemaHandler = {
                   storageErr,
                 ),
                 TE.map(() =>
-                  detectStructureOk(JSON.stringify(allSuggestions)),
+                  detectStructureOk(JSON.stringify(outputSuggestions)),
                 ),
               );
             },

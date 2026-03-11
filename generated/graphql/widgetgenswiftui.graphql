@@ -1,0 +1,16 @@
+type WidgetGenSwiftUIState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenSwiftUIEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenswiftui_entry(p: ID!): WidgetGenSwiftUIEntry
+  widgetgenswiftui_entries: [WidgetGenSwiftUIEntry!]!
+}

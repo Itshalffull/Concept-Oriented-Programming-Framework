@@ -188,10 +188,11 @@ export const typographyHandler: TypographyHandler = {
           }
           const cfg = parsed as Record<string, unknown>;
 
-          // Validate required scaleStep or fontSize
-          if (cfg.scaleStep === undefined && cfg.fontSize === undefined) {
+          // Validate that the config has at least scaleStep, fontSize, scale, or weight
+          const hasSizeConfig = ('scaleStep' in cfg) || ('fontSize' in cfg) || ('scale' in cfg) || ('weight' in cfg);
+          if (!hasSizeConfig) {
             return defineStyleInvalid(
-              'Style config must include either "scaleStep" (number) or "fontSize" (number in px)',
+              'Style config must include either scaleStep or fontSize',
             );
           }
 

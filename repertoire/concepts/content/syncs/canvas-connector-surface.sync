@@ -1,0 +1,12 @@
+# When a node is added to a canvas, surface any existing References
+# between it and other nodes already on the canvas as visible connectors.
+# Connector operations are SpatialConnector's concern; Canvas just places nodes.
+
+sync CanvasConnectorSurface [eventual]
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => []
+}
+then {
+  SpatialConnector/surface: [ canvas: ?canvas; source: ?node; target: ?node ]
+}

@@ -74,14 +74,25 @@ export const testSelectionHandler: TestSelectionHandler = {
             ),
           );
         }
-        const testTypeFilter = pipe(
-          input.testType,
-          O.getOrElse(() => ''),
-        );
+        const testTypeFilter = (input.testType == null || typeof input.testType === 'undefined')
+          ? ''
+          : (typeof input.testType === 'string' ? input.testType : pipe(input.testType, O.getOrElse(() => '')));
+        const changedSources = Array.isArray(input.changedSources) ? input.changedSources : [];
+        // If no changed sources specified, return all tests as potentially affected
+        if (changedSources.length === 0) {
+          const allAffected = allMappings.map((mapping) => ({
+            testId: String(mapping.testId),
+            language: String(mapping.language),
+            testType: String(mapping.testType),
+            relevance: 1,
+            reason: 'All tests selected (no specific changed sources provided)',
+          }));
+          return TE.right(analyzeOk(allAffected));
+        }
         const affectedTests = allMappings
           .filter((mapping) => {
             const coveredSources = (mapping.coveredSources ?? []) as readonly string[];
-            const hasOverlap = input.changedSources.some((src) =>
+            const hasOverlap = changedSources.some((src: string) =>
               coveredSources.some(
                 (covered) =>
                   covered === src || src.startsWith(String(covered)),
@@ -95,19 +106,19 @@ export const testSelectionHandler: TestSelectionHandler = {
           )
           .map((mapping) => {
             const coveredSources = (mapping.coveredSources ?? []) as readonly string[];
-            const matchingSources = input.changedSources.filter((src) =>
+            const matchingSources = changedSources.filter((src: string) =>
               coveredSources.some(
                 (covered) =>
                   covered === src || src.startsWith(String(covered)),
               ),
             );
-            const relevance = matchingSources.length / Math.max(input.changedSources.length, 1);
+            const relevance = matchingSources.length / Math.max(changedSources.length, 1);
             return {
               testId: String(mapping.testId),
               language: String(mapping.language),
               testType: String(mapping.testType),
               relevance: Math.round(relevance * 100) / 100,
-              reason: `Covers ${matchingSources.length} of ${input.changedSources.length} changed sources`,
+              reason: `Covers ${matchingSources.length} of ${changedSources.length} changed sources`,
             };
           })
           .sort((a, b) => b.relevance - a.relevance);

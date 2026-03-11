@@ -29,7 +29,7 @@ describe('ConceptEntity conformance', () => {
     const storage = createTestStorage();
     const handler = conceptEntityHandler;
 
-    const e = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('ConceptEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(e);
+        e = (output as any).entity;
         return output;
       }),
     )();
@@ -65,7 +65,7 @@ describe('ConceptEntity conformance', () => {
     const storage = createTestStorage();
     const handler = conceptEntityHandler;
 
-    const e = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -76,7 +76,7 @@ describe('ConceptEntity conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(e);
+        e = (output as any).entity;
         return output;
       }),
     )();

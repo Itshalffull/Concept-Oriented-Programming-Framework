@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "clef-devtools": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "./.claude/mcp/index.ts"
+      ]
+    }
+  }
+}

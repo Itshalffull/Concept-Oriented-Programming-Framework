@@ -1,0 +1,36 @@
+derived SurfaceGeneration [G] {
+
+  purpose {
+    Compose widget and theme generation pipelines into a unified
+    Surface code generation system that transforms .widget and
+    .theme specs into complete, cross-platform UI implementations.
+  }
+
+  composes {
+    derived WidgetPipeline [G]
+    derived ThemePipeline [G]
+  }
+
+  syncs {
+    required: [theme-widget-token-bind, widget-theme-co-generate, pipeline-output-merge]
+  }
+
+  surface {
+    action generateSurface(specDir: String, target: String, outputDir: String) {
+      matches: derivedContext "WidgetPipeline/generateWidget"
+    }
+
+    action generateThemes(specDir: String, target: String, outputDir: String) {
+      matches: derivedContext "ThemePipeline/generateTheme"
+    }
+
+    query supportedTargets() -> derivedContext "WidgetPipeline/supportedTargets"
+  }
+
+  principle {
+    after generateSurface(specDir: d, target: t, outputDir: o)
+    then all .widget specs are parsed and target-specific components emitted
+    and  generateThemes(specDir: d, target: t, outputDir: o)
+    then theme tokens are resolved and injected into generated components
+  }
+}

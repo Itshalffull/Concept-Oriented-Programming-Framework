@@ -32,7 +32,7 @@ describe('Merge conformance', () => {
     const b = 'u-test-invariant-001';
     const o = 'u-test-invariant-002';
     const t = 'u-test-invariant-003';
-    const r = 'u-test-invariant-004';
+    let r: any = 'u-test-invariant-004';
 
     // setup: merge -> clean
     const mergeResultSetup = await pipe(
@@ -40,11 +40,11 @@ describe('Merge conformance', () => {
       base: b,
       ours: o,
       theirs: t,
-      strategy: _,
+      strategy: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('clean');
-        expect((output as any).result).toBe(r);
+        r = (output as any).result;
         return output;
       }),
     )();
@@ -53,7 +53,7 @@ describe('Merge conformance', () => {
     // assert: finalize -> ok
     const finalizeResultAssert = await pipe(
       handler.finalize({
-      mergeId: _,
+      mergeId: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');

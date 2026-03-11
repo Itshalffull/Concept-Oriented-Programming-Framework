@@ -1,0 +1,28 @@
+type StepRunState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type StepRunEntry {
+  s: ID!
+  run_ref: String!
+  step_key: String!
+  step_type: String!
+  status: String!
+  attempt: Int!
+  input: String!
+  output: String!
+  error: String!
+  started_at: String!
+  ended_at: String!
+}
+
+extend type Query {
+  steprun_entry(s: ID!): StepRunEntry
+  steprun_entries: [StepRunEntry!]!
+}
+
+type StepRunSteps {
+  s: ID!
+  value: ID!
+}

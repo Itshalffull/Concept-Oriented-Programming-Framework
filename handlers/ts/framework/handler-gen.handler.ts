@@ -423,15 +423,15 @@ function determineOutputPath(manifest: ConceptManifest, specPath: string): strin
     if (specPath.includes('/providers/')) {
       const providerPath = specPath.slice(specPath.indexOf('/providers/') + 1);
       const dir = providerPath.replace(/\/[^/]+\.concept$/, '');
-      return `suites/${suiteName}/handlers/ts/${dir}/${kebab}.handler.ts`;
+      return `suites/${suiteName}/handlers/ts/${dir}/${kebab}.stub.handler.ts`;
     }
-    return `suites/${suiteName}/handlers/ts/${kebab}.handler.ts`;
+    return `suites/${suiteName}/handlers/ts/${kebab}.stub.handler.ts`;
   }
   // Concept specs live in concepts/ per clef-naming-reference.md
   if (specPath.startsWith('concepts/')) {
-    return `handlers/ts/${kebab}.handler.ts`;
+    return `handlers/ts/${kebab}.stub.handler.ts`;
   }
-  return `handlers/ts/${kebab}.handler.ts`;
+  return `handlers/ts/${kebab}.stub.handler.ts`;
 }
 
 function determineRelativeKernelPath(outputPath: string): string {

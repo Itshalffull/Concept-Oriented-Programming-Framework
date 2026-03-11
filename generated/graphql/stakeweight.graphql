@@ -1,0 +1,21 @@
+type StakeWeightState {
+  """All sws in this concept"""
+  sws: [ID!]!
+}
+
+type StakeWeightEntry {
+  sw: ID!
+  stakes: [JSON!]!
+  minimumStake: Float!
+  cooldownPeriod: Float!
+}
+
+extend type Query {
+  stakeweight_entry(sw: ID!): StakeWeightEntry
+  stakeweight_entries: [StakeWeightEntry!]!
+}
+
+type StakeWeightVaults {
+  sw: ID!
+  value: ID!
+}

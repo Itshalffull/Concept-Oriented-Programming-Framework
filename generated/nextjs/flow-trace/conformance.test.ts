@@ -29,8 +29,8 @@ describe('FlowTrace conformance', () => {
     const storage = createTestStorage();
     const handler = flowTraceHandler;
 
-    const o = 'u-test-invariant-001';
-    const e = 'u-test-invariant-002';
+    let o: any = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-002';
 
     // setup: render -> ok
     const renderResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('FlowTrace conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).output).toBe(o);
+        o = (output as any).output;
         return output;
       }),
     )();
@@ -53,7 +53,7 @@ describe('FlowTrace conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         return output;
       }),
     )();

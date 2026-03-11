@@ -1,0 +1,1564 @@
+{
+  "uri": "urn:clef/LLMTrace",
+  "name": "LLMTrace",
+  "typeParams": [
+    {
+      "name": "Z",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "spans",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "parent_id",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "operation",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "start_time",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "end_time",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "DateTime"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "metadata",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "metrics",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "span_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "total_cost",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "total_tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "traces",
+      "source": "set-valued",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "startTrace",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "trace",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            }
+          ],
+          "prose": "Creates a new trace Top level container for spans"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace creation failed"
+        }
+      ]
+    },
+    {
+      "name": "startSpan",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        },
+        {
+          "name": "operation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "parent_span_id",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "span_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Opens a new span within the trace Nests under parent if provided"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace or parent span not found"
+        }
+      ]
+    },
+    {
+      "name": "endSpan",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        },
+        {
+          "name": "span_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metrics",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "cost",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "latency_ms",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "span_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Closes a span Updates total_cost and total_tokens \n Status : ok , error , timeout"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Span not found"
+        }
+      ]
+    },
+    {
+      "name": "addMetric",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        },
+        {
+          "name": "span_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Adds a custom metric to a span"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Span not found"
+        }
+      ]
+    },
+    {
+      "name": "getCost",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "per_span",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "span_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "operation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "cost",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns cost breakdown"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace not found"
+        }
+      ]
+    },
+    {
+      "name": "getTrace",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "spans",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "parent_id",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "operation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "duration_ms",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "metrics",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "key",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "value",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "Float"
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns full trace tree"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace not found"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "params": [
+        {
+          "name": "trace",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "exported",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Exports trace Format : opentelemetry , json , langsmith , langfuse"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Trace not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after startTrace, startSpan, endSpan behaves correctly",
+      "setup": [
+        {
+          "action": "startTrace",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            },
+            {
+              "name": "tags",
+              "value": {
+                "kind": "list",
+                "items": []
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "trace",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            }
+          ]
+        },
+        {
+          "action": "startSpan",
+          "inputs": [
+            {
+              "name": "trace",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            },
+            {
+              "name": "operation",
+              "value": {
+                "kind": "literal",
+                "value": "llm.generate"
+              }
+            },
+            {
+              "name": "parent_span_id",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "span_id",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "endSpan",
+          "inputs": [
+            {
+              "name": "trace",
+              "value": {
+                "kind": "variable",
+                "name": "z"
+              }
+            },
+            {
+              "name": "span_id",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "ok"
+              }
+            },
+            {
+              "name": "metrics",
+              "value": {
+                "kind": "record",
+                "fields": [
+                  {
+                    "name": "tokens",
+                    "value": {
+                      "kind": "literal",
+                      "value": 100
+                    }
+                  },
+                  {
+                    "name": "cost",
+                    "value": {
+                      "kind": "literal",
+                      "value": 0.01
+                    }
+                  },
+                  {
+                    "name": "latency_ms",
+                    "value": {
+                      "kind": "literal",
+                      "value": 500
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "span_id",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "z",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type LLMTraceState {\n  \"\"\"All zs in this concept\"\"\"\n  zs: [ID!]!\n}\n\ntype LLMTraceEntry {\n  z: ID!\n  name: String!\n  spans: [JSON!]!\n  metrics: [JSON!]!\n  tags: [JSON!]!\n  total_cost: Float!\n  total_tokens: Int!\n}\n\nextend type Query {\n  llmtrace_entry(z: ID!): LLMTraceEntry\n  llmtrace_entries: [LLMTraceEntry!]!\n}\n\ntype LLMTraceTraces {\n  z: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "startTrace": {
+        "$id": "urn:clef/LLMTrace/startTrace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "startTrace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "tags"
+            ]
+          }
+        }
+      },
+      "startSpan": {
+        "$id": "urn:clef/LLMTrace/startSpan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "startSpan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string"
+              },
+              "parent_span_id": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "trace",
+              "operation",
+              "parent_span_id"
+            ]
+          }
+        }
+      },
+      "endSpan": {
+        "$id": "urn:clef/LLMTrace/endSpan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "endSpan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              },
+              "span_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "metrics": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "tokens": {
+                        "type": "integer"
+                      },
+                      "cost": {
+                        "type": "number"
+                      },
+                      "latency_ms": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "tokens",
+                      "cost",
+                      "latency_ms"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "trace",
+              "span_id",
+              "status",
+              "metrics"
+            ]
+          }
+        }
+      },
+      "addMetric": {
+        "$id": "urn:clef/LLMTrace/addMetric/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "addMetric"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              },
+              "span_id": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "trace",
+              "span_id",
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "getCost": {
+        "$id": "urn:clef/LLMTrace/getCost/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "getCost"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "trace"
+            ]
+          }
+        }
+      },
+      "getTrace": {
+        "$id": "urn:clef/LLMTrace/getTrace/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "getTrace"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "trace"
+            ]
+          }
+        }
+      },
+      "export": {
+        "$id": "urn:clef/LLMTrace/export/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/LLMTrace"
+          },
+          "action": {
+            "const": "export"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "trace": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "trace",
+              "format"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "startTrace": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/startTrace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "startTrace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "trace": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "trace"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/LLMTrace/startTrace/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "startTrace"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "startSpan": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/startSpan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "startSpan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "span_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "span_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/startSpan/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "startSpan"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "endSpan": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/endSpan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "endSpan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "span_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "span_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/endSpan/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "endSpan"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addMetric": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/addMetric/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "addMetric"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/addMetric/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "addMetric"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getCost": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/getCost/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "getCost"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "number"
+                },
+                "per_span": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "span_id": {
+                        "type": "string"
+                      },
+                      "operation": {
+                        "type": "string"
+                      },
+                      "cost": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "span_id",
+                      "operation",
+                      "cost"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "total",
+                "per_span"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/getCost/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "getCost"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getTrace": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/getTrace/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "getTrace"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "spans": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "parent_id": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "operation": {
+                        "type": "string"
+                      },
+                      "duration_ms": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "metrics": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "parent_id",
+                      "operation",
+                      "duration_ms",
+                      "status",
+                      "metrics"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "spans"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/getTrace/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "getTrace"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "export": {
+        "ok": {
+          "$id": "urn:clef/LLMTrace/export/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "exported": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "exported"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/LLMTrace/export/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/LLMTrace"
+            },
+            "action": {
+              "const": "export"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Observability for LLM execution pipelines Captures hierarchical \n trace spans covering every LLM call , tool invocation , retrieval \n operation , and agent step Tracks latency , token usage , cost , \n and quality metrics Enables debugging , cost analysis , and \n performance optimization Compatible with OpenTelemetry export"
+}

@@ -96,8 +96,7 @@ describe('WidgetEntity handler', () => {
       if (E.isRight(result)) {
         expect(result.right.variant).toBe('ok');
         if (result.right.variant === 'ok') {
-          const entity = JSON.parse(result.right.entity);
-          expect(entity.name).toBe('MyButton');
+          expect(result.right.entity).toBe('MyButton');
         }
       }
     });

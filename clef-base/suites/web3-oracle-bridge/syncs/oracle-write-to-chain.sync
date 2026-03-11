@@ -1,0 +1,17 @@
+# Oracle bridge: Encode entity fields for chain submission.
+# When a ContentNode with a writable federated ethereum_l2 Schema is saved,
+# reverse-map the fields to ABI-encoded call data.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleWriteToChain [eager]
+when {
+  ContentStorage/saveRequested: [ node: ?node; schema: ?schema ]
+}
+where {
+  filter(?schema.associations.storage_backend == "federated")
+  filter(?schema.associations.providers.connector_protocol == "ethereum_l2")
+  filter(NOT ?schema.federation_config.read_only_remote)
+}
+then {
+  FieldMapping/reverse: [ data: ?node; mapper: "abi_decoder" ]
+}

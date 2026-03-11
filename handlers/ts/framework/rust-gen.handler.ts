@@ -145,7 +145,7 @@ function typeNeedsPrimitive(t: ResolvedType, prim: string): boolean {
 function generateTypesFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${snakeCase(conceptName)}/types.rs`,
+    `// generated: ${snakeCase(conceptName)}/types.stub.rs`,
     '',
     ...collectImports(manifest),
     '',
@@ -198,7 +198,7 @@ function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const modName = snakeCase(conceptName);
   const lines: string[] = [
-    `// generated: ${modName}/handler.rs`,
+    `// generated: ${modName}/handler.stub.rs`,
     '',
     `use async_trait::async_trait;`,
     `use crate::storage::ConceptStorage;`,
@@ -229,7 +229,7 @@ function generateAdapterFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const modName = snakeCase(conceptName);
   const lines: string[] = [
-    `// generated: ${modName}/adapter.rs`,
+    `// generated: ${modName}/adapter.stub.rs`,
     '',
     `use serde_json::Value;`,
     `use crate::transport::{`,
@@ -309,7 +309,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   const modName = snakeCase(conceptName);
 
   const lines: string[] = [
-    `// generated: ${modName}/conformance.rs`,
+    `// generated: ${modName}/conformance.stub.rs`,
     '',
     `#[cfg(test)]`,
     `mod tests {`,
@@ -484,21 +484,22 @@ export const rustGenHandler: ConceptHandler = {
     try {
       const modName = snakeCase(manifest.name);
       const files: { path: string; content: string }[] = [
-        { path: `${modName}/types.rs`, content: generateTypesFile(manifest) },
-        { path: `${modName}/handler.rs`, content: generateHandlerFile(manifest) },
-        { path: `${modName}/adapter.rs`, content: generateAdapterFile(manifest) },
+        { path: `${modName}/types.stub.rs`, content: generateTypesFile(manifest) },
+        { path: `${modName}/handler.stub.rs`, content: generateHandlerFile(manifest) },
+        { path: `${modName}/adapter.stub.rs`, content: generateAdapterFile(manifest) },
       ];
 
       // Add conformance tests if the manifest has invariants
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
-        files.push({ path: `${modName}/conformance.rs`, content: conformanceTest });
+        files.push({ path: `${modName}/conformance.stub.rs`, content: conformanceTest });
       }
 
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

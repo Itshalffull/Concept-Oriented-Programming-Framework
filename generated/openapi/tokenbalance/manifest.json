@@ -1,0 +1,498 @@
+{
+  "uri": "urn:clef/TokenBalance",
+  "name": "TokenBalance",
+  "typeParams": [
+    {
+      "name": "TB",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "tb",
+        "paramRef": "TB"
+      },
+      "fields": [
+        {
+          "name": "tokenAddress",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "snapshotBlock",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "balanceCache",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "participant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "balance",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "cachedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "tb",
+        "paramRef": "TB"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "TB"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "tokenAddress",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "TB"
+              }
+            }
+          ],
+          "prose": "A token balance weight source is configured for the given token"
+        }
+      ]
+    },
+    {
+      "name": "snapshot",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "TB"
+          }
+        },
+        {
+          "name": "blockRef",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "snapshotted",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "TB"
+              }
+            },
+            {
+              "name": "participantCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All token balances are cached at the given block reference"
+        }
+      ]
+    },
+    {
+      "name": "getWeight",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "TB"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "balance",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the participant s token balance ( from cache if snapshotted , \n live if not )"
+        },
+        {
+          "tag": "zero_balance",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant holds no tokens"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, getWeight behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "tokenAddress",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "tb"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getWeight",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "tb"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "balance",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "tb",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type TokenBalanceState {\n  \"\"\"All tbs in this concept\"\"\"\n  tbs: [ID!]!\n}\n\ntype TokenBalanceEntry {\n  tb: ID!\n  tokenAddress: String!\n  snapshotBlock: String!\n  balanceCache: [JSON!]!\n}\n\nextend type Query {\n  tokenbalance_entry(tb: ID!): TokenBalanceEntry\n  tokenbalance_entries: [TokenBalanceEntry!]!\n}\n\ntype TokenBalanceConfigurations {\n  tb: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/TokenBalance/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TokenBalance"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tokenAddress": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tokenAddress"
+            ]
+          }
+        }
+      },
+      "snapshot": {
+        "$id": "urn:clef/TokenBalance/snapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TokenBalance"
+          },
+          "action": {
+            "const": "snapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "blockRef": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "blockRef"
+            ]
+          }
+        }
+      },
+      "getWeight": {
+        "$id": "urn:clef/TokenBalance/getWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/TokenBalance"
+          },
+          "action": {
+            "const": "getWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/TokenBalance/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TokenBalance"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "snapshot": {
+        "snapshotted": {
+          "$id": "urn:clef/TokenBalance/snapshot/completion/snapshotted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TokenBalance"
+            },
+            "action": {
+              "const": "snapshot"
+            },
+            "variant": {
+              "const": "snapshotted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                },
+                "participantCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "config",
+                "participantCount"
+              ]
+            }
+          }
+        }
+      },
+      "getWeight": {
+        "weight": {
+          "$id": "urn:clef/TokenBalance/getWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TokenBalance"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "balance": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "balance"
+              ]
+            }
+          }
+        },
+        "zero_balance": {
+          "$id": "urn:clef/TokenBalance/getWeight/completion/zero_balance",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/TokenBalance"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "zero_balance"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Derive governance weight from a participant s balance of a specific \n token at a point in time , the standard model for token weighted \n governance"
+}

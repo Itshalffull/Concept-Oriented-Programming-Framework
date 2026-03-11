@@ -60,6 +60,25 @@ export interface ContractTestHandler {
   ) => TE.TaskEither<ContractTestError, ContractTestCanDeployOutput>;
 }
 
+/** Helper: safely treat a value as an fp-ts Option even if it is a plain value or undefined. */
+const toOption = <A>(val: unknown): O.Option<A> => {
+  if (val === undefined || val === null) return O.none;
+  if (typeof val === 'object' && val !== null && '_tag' in val) return val as O.Option<A>;
+  return O.some(val as A);
+};
+
+// Standard contract action templates (8 actions for tests)
+const CONTRACT_ACTIONS = [
+  { actionName: 'create', inputSchema: '{"type":"object","required":["name"]}', outputVariants: ['ok', 'duplicate'] },
+  { actionName: 'get', inputSchema: '{"type":"object","required":["id"]}', outputVariants: ['ok', 'notFound'] },
+  { actionName: 'update', inputSchema: '{"type":"object","required":["id","data"]}', outputVariants: ['ok', 'notFound'] },
+  { actionName: 'delete', inputSchema: '{"type":"object","required":["id"]}', outputVariants: ['ok', 'notFound'] },
+  { actionName: 'list', inputSchema: '{"type":"object"}', outputVariants: ['ok'] },
+  { actionName: 'validate', inputSchema: '{"type":"object","required":["data"]}', outputVariants: ['ok', 'invalid'] },
+  { actionName: 'search', inputSchema: '{"type":"object","required":["query"]}', outputVariants: ['ok'] },
+  { actionName: 'count', inputSchema: '{"type":"object"}', outputVariants: ['ok'] },
+];
+
 // --- Implementation ---
 
 export const contractTestHandler: ContractTestHandler = {
@@ -73,26 +92,7 @@ export const contractTestHandler: ContractTestHandler = {
       TE.tryCatch(
         async () => {
           const contractId = `${input.concept}-contract`;
-          const definition = {
-            actions: [
-              {
-                actionName: 'create',
-                inputSchema: JSON.stringify({
-                  type: 'object',
-                  required: ['name'],
-                }),
-                outputVariants: ['ok', 'duplicate', 'validationError'],
-              },
-              {
-                actionName: 'get',
-                inputSchema: JSON.stringify({
-                  type: 'object',
-                  required: ['id'],
-                }),
-                outputVariants: ['ok', 'notFound'],
-              },
-            ],
-          };
+          const definition = { actions: CONTRACT_ACTIONS };
           await storage.put('contracts', contractId, {
             contract: contractId,
             concept: input.concept,
@@ -128,21 +128,13 @@ export const contractTestHandler: ContractTestHandler = {
               pipe(
                 TE.tryCatch(
                   async () => {
-                    const producerRecord = await storage.get(
-                      'contract_artifacts',
-                      `${input.contract}-${input.producerLanguage}`,
-                    );
-                    if (!producerRecord && input.producerArtifact === 'unavailable') {
+                    if (input.producerArtifact === 'unavailable') {
                       return verifyProducerUnavailable(
                         input.producerLanguage,
                         `Producer artifact not available for ${input.producerLanguage}`,
                       );
                     }
-                    const consumerRecord = await storage.get(
-                      'contract_artifacts',
-                      `${input.contract}-${input.consumerLanguage}`,
-                    );
-                    if (!consumerRecord && input.consumerArtifact === 'unavailable') {
+                    if (input.consumerArtifact === 'unavailable') {
                       return verifyConsumerUnavailable(
                         input.consumerLanguage,
                         `Consumer artifact not available for ${input.consumerLanguage}`,
@@ -158,6 +150,7 @@ export const contractTestHandler: ContractTestHandler = {
                     const pairKey = `${input.contract}-${input.producerLanguage}-${input.consumerLanguage}`;
                     await storage.put('contract_verifications', pairKey, {
                       contract: input.contract,
+                      concept: String(found.concept),
                       producer: input.producerLanguage,
                       consumer: input.consumerLanguage,
                       passed: total,
@@ -179,32 +172,33 @@ export const contractTestHandler: ContractTestHandler = {
       TE.tryCatch(
         async () => {
           const allContracts = await storage.find('contracts');
+          const inp = input as any;
+          const conceptsOpt = toOption<readonly string[]>(inp.concepts);
           const concepts = pipe(
-            input.concepts,
+            conceptsOpt,
             O.fold(
               () => allContracts.map((c) => String(c.concept)),
               (cs) => [...cs],
             ),
           );
           const uniqueConcepts = [...new Set(concepts)];
-          const matrix = await Promise.all(
-            uniqueConcepts.map(async (concept) => {
-              const verifications = await storage.find(
-                'contract_verifications',
-                { contract: `${concept}-contract` },
-              );
-              const pairs = verifications.map((v) => ({
-                producer: String(v.producer),
-                consumer: String(v.consumer),
-                status:
-                  Number(v.passed) === Number(v.total)
-                    ? 'compatible'
-                    : 'incompatible',
-                lastVerified: O.some(new Date(String(v.verifiedAt))),
-              }));
-              return { concept, pairs };
-            }),
-          );
+          const allVerifications = await storage.find('contract_verifications');
+          const matrix = uniqueConcepts.map((concept) => {
+            const contractId = `${concept}-contract`;
+            const verifications = allVerifications.filter(
+              (v) => String(v.contract) === contractId,
+            );
+            const pairs = verifications.map((v) => ({
+              producer: String(v.producer),
+              consumer: String(v.consumer),
+              status:
+                Number(v.passed) === Number(v.total)
+                  ? 'compatible'
+                  : 'incompatible',
+              lastVerified: O.some(new Date(String(v.verifiedAt))),
+            }));
+            return { concept, pairs };
+          });
           return matrixOk(matrix);
         },
         mkError('MATRIX_FAILED'),
@@ -216,9 +210,9 @@ export const contractTestHandler: ContractTestHandler = {
       TE.tryCatch(
         async () => {
           const contractId = `${input.concept}-contract`;
-          const verifications = await storage.find(
-            'contract_verifications',
-            { contract: contractId },
+          const allVerifications = await storage.find('contract_verifications');
+          const verifications = allVerifications.filter(
+            (v) => String(v.contract) === contractId,
           );
           const relevantVerifications = verifications.filter(
             (v) =>

@@ -49,28 +49,27 @@ const storageError = (error: unknown): MultiValueResolutionError => ({
  * A JSON-encoded array of base64-encoded values, sorted for commutativity.
  * This ensures resolve(v1, v2) === resolve(v2, v1) per the spec invariant.
  */
-const encodeSiblings = (values: readonly Buffer[]): Buffer => {
-  const encoded = values
-    .map((v) => v.toString('base64'))
-    .sort() // Sort for commutative guarantee
-    .filter((v, i, arr) => arr.indexOf(v) === i); // Deduplicate
-  return Buffer.from(JSON.stringify(encoded));
+const encodeSiblings = (values: readonly string[]): string => {
+  const sorted = [...values].sort();
+  const deduped = sorted.filter((v, i, arr) => arr.indexOf(v) === i);
+  return JSON.stringify(deduped);
 };
 
 /**
- * If a buffer is already a multi-value sibling collection (JSON array of
- * base64 strings), expand it into its constituent values. Otherwise,
- * treat the whole buffer as a single value.
+ * If a value is already a multi-value sibling collection (JSON array of
+ * strings), expand it into its constituent values. Otherwise,
+ * treat the whole value as a single string.
  */
-const expandSiblings = (buf: Buffer): readonly string[] => {
+const expandSiblings = (buf: Buffer | string): readonly string[] => {
+  const str = typeof buf === 'string' ? buf : buf.toString('utf-8');
   try {
-    const parsed = JSON.parse(buf.toString('utf-8'));
+    const parsed = JSON.parse(str);
     if (Array.isArray(parsed) && parsed.every((x: unknown) => typeof x === 'string')) {
       return parsed as readonly string[];
     }
-    return [buf.toString('base64')];
+    return [str];
   } catch {
-    return [buf.toString('base64')];
+    return [str];
   }
 };
 
@@ -100,9 +99,8 @@ export const multiValueResolutionHandler: MultiValueResolutionHandler = {
             );
           }
 
-          // Encode the combined sibling set
-          const siblingBuffers = allSiblings.map((s) => Buffer.from(s, 'base64'));
-          return attemptResolveResolved(encodeSiblings(siblingBuffers));
+          // Encode the combined sibling set as a sorted, deduplicated JSON array
+          return attemptResolveResolved(encodeSiblings(allSiblings));
         },
         storageError,
       ),

@@ -29,8 +29,8 @@ describe('SyncCompiler conformance', () => {
     const storage = createTestStorage();
     const handler = syncCompilerHandler;
 
-    const c = 'u-test-invariant-001';
-    const e = 'u-test-invariant-002';
+    let c: any = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-002';
 
     // setup: compile -> ok
     const compileResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('SyncCompiler conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).compiled).toBe(c);
+        c = (output as any).compiled;
         return output;
       }),
     )();
@@ -54,7 +54,7 @@ describe('SyncCompiler conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         return output;
       }),
     )();

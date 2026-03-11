@@ -1,7 +1,7 @@
-// Quality Rule Plugin — data quality validation and enforcement for the Data Integration Kit.
+// Quality Rule Plugin — data quality validation and enforcement for the Data Integration Suite.
 // Provides pluggable quality rules across six dimensions: completeness, uniqueness,
 // validity, consistency, timeliness, and accuracy.
-// See Data Integration Kit quality.concept for the parent Quality concept definition.
+// See Data Integration Suite quality.concept for the parent Quality concept definition.
 
 // ---------------------------------------------------------------------------
 // Core types

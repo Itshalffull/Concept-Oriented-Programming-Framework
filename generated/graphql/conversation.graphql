@@ -1,0 +1,29 @@
+type ConversationState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type ConversationEntry {
+  c: ID!
+  messages: [JSON!]!
+  branches: [JSON!]!
+  active_branch: String!
+  context_strategy: String!
+  summary: String!
+  node_metadata: [JSON!]!
+  created_at: String!
+  updated_at: String!
+  participant_ids: [String!]!
+  tags: [String!]!
+  token_count: Int!
+}
+
+extend type Query {
+  conversation_entry(c: ID!): ConversationEntry
+  conversation_entries: [ConversationEntry!]!
+}
+
+type ConversationConversations {
+  c: ID!
+  value: ID!
+}

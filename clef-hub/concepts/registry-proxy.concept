@@ -1,0 +1,54 @@
+@version(1)
+concept RegistryProxy [T] {
+
+  purpose {
+    Forwards package search and lookup requests to the ClefRegistry
+    service for the hub package browser.
+  }
+
+  state {
+    registryUrl: T -> String
+  }
+
+  actions {
+    action search(query: String) {
+      -> ok(results: list { name: String, namespace: String, latest_version: String, description: String }) {
+        Forwards search to ClefRegistry.
+      }
+      -> empty() {
+        No results found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action lookup(name: String, namespace: String, version: String) {
+      -> ok(module: T) {
+        Returns package details from the registry.
+      }
+      -> notfound() {
+        Package not found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action versions(name: String, namespace: String) {
+      -> ok(versions: list { version: String, published_at: String, yanked: Bool }) {
+        Lists all versions of a package.
+      }
+      -> notfound() {
+        Package not found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after search(query: "auth") -> ok(results: r)
+  }
+}

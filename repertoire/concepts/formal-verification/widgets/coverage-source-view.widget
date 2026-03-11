@@ -1,0 +1,88 @@
+@version(1)
+widget coverage-source-view {
+
+  purpose {
+    Source code overlay showing formal verification coverage data.
+    Each line has a coverage gutter indicator (covered, uncovered,
+    partial) and hovering reveals the property or contract that covers
+    that line. Supports filtering by coverage status and jumping to
+    uncovered regions.
+  }
+
+  requires @1 {
+    fields {
+      sourceText: String;
+      coverageData: list;
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the source view }
+    lineNumbers:   container  { Line number gutter }
+    coverageGutter: container { Color-coded coverage indicators per line }
+    sourceText:    container  { Source code text with syntax highlighting }
+    hoverTooltip:  container  { Tooltip showing which property covers this line }
+    filterBar:     container  { Coverage status filter (all, covered, uncovered, partial) }
+    summary:       container  { Coverage percentage summary }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER_LINE -> lineHovered;
+      on FILTER -> idle;
+      on JUMP_UNCOVERED -> idle;
+    }
+    lineHovered {
+      on LEAVE -> idle;
+      entry [show hoverTooltip; highlightLine];
+      exit [hide hoverTooltip; unhighlightLine];
+    }
+  }
+
+  accessibility {
+    role: document;
+    keyboard { Control+g -> JUMP_UNCOVERED; f -> FOCUS_FILTER; }
+    focus { trap: false; initial: sourceText; }
+    aria {
+      root -> { role: "document"; aria-label: "Coverage source view"; };
+      coverageGutter -> { role: "presentation"; };
+      hoverTooltip -> { role: "tooltip"; };
+      summary -> { role: "status"; aria-live: "polite"; };
+    }
+  }
+
+  props {
+    language: String = "typescript"
+    showLineNumbers: Bool = true
+    filterStatus: option String
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when { concept: "FormalProperty"; }
+    bind { sourceText: target_symbol; coverageData: dependencies; }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    lineNumbers -> { data-part: "line-numbers"; data-visible: if ?showLineNumbers then "true" else "false"; }
+    coverageGutter -> { data-part: "coverage-gutter"; }
+    sourceText -> { data-part: "source-text"; data-language: ?language; }
+    hoverTooltip -> { data-part: "tooltip"; data-visible: if state == "lineHovered" then "true" else "false"; }
+    filterBar -> { data-part: "filter-bar"; }
+    summary -> { data-part: "summary"; }
+  }
+
+  compose {
+    sourceText: widget("code-block", { language: ?language, readOnly: true });
+  }
+
+  invariant {
+    "Coverage gutter must color-code each line (green=covered, red=uncovered, yellow=partial)";
+    "Hover must show which property or contract covers the hovered line";
+    "Jump-to-uncovered must navigate to the next uncovered line";
+    "Summary must show overall coverage percentage";
+  }
+
+}

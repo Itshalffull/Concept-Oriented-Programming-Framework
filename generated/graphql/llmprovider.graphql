@@ -1,0 +1,26 @@
+type LLMProviderState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type LLMProviderEntry {
+  p: ID!
+  provider_id: String!
+  model_id: String!
+  api_credentials: String!
+  default_config: JSON!
+  capabilities: [String!]!
+  pricing: JSON!
+  rate_limits: JSON!
+  status: String!
+}
+
+extend type Query {
+  llmprovider_entry(p: ID!): LLMProviderEntry
+  llmprovider_entries: [LLMProviderEntry!]!
+}
+
+type LLMProviderProviders {
+  p: ID!
+  value: ID!
+}

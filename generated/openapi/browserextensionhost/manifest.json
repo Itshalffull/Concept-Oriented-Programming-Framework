@@ -1,0 +1,878 @@
+{
+  "uri": "urn:clef/BrowserExtensionHost",
+  "name": "BrowserExtensionHost",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "serviceWorkerState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "contentScripts",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "tabMatches",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "extensions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "activate",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Browser extension activated Service worker started , content \n scripts scheduled for matching tabs"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Activation failed service worker registration error or \n permission issue"
+        }
+      ]
+    },
+    {
+      "name": "deactivate",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Browser extension deactivated Service worker stopped , content \n scripts removed from all tabs"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser extension with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "injectContentScript",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scriptId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "extension",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Content script injected into the specified tab"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser extension or tab found"
+        },
+        {
+          "tag": "forbidden",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Injection blocked by permission policy or URL restriction"
+        }
+      ]
+    },
+    {
+      "name": "onTabUpdate",
+      "params": [
+        {
+          "name": "tabId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "url",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "matchedExtensions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tab update processed Returns list of extensions whose content \n script URL patterns match the new tab URL"
+        }
+      ]
+    },
+    {
+      "name": "onBrowserEvent",
+      "params": [
+        {
+          "name": "eventType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handled",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "Browser event routed to the appropriate extension handlers"
+        }
+      ]
+    },
+    {
+      "name": "getStatus",
+      "params": [
+        {
+          "name": "extension",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "serviceWorkerState",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns extension lifecycle status and service worker state"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No browser extension with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after activate, getStatus behaves correctly",
+      "setup": [
+        {
+          "action": "activate",
+          "inputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getStatus",
+          "inputs": [
+            {
+              "name": "extension",
+              "value": {
+                "kind": "variable",
+                "name": "e"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "status",
+              "value": {
+                "kind": "literal",
+                "value": "active"
+              }
+            },
+            {
+              "name": "serviceWorkerState",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "e",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BrowserExtensionHostState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BrowserExtensionHostEntry {\n  b: ID!\n  status: String!\n  serviceWorkerState: String!\n  contentScripts: String!\n  tabMatches: String!\n}\n\nextend type Query {\n  browserextensionhost_entry(b: ID!): BrowserExtensionHostEntry\n  browserextensionhost_entries: [BrowserExtensionHostEntry!]!\n}\n\ntype BrowserExtensionHostExtensions {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "activate": {
+        "$id": "urn:clef/BrowserExtensionHost/activate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "activate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "deactivate": {
+        "$id": "urn:clef/BrowserExtensionHost/deactivate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "deactivate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      },
+      "injectContentScript": {
+        "$id": "urn:clef/BrowserExtensionHost/injectContentScript/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "injectContentScript"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              },
+              "tabId": {
+                "type": "string"
+              },
+              "scriptId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension",
+              "tabId",
+              "scriptId"
+            ]
+          }
+        }
+      },
+      "onTabUpdate": {
+        "$id": "urn:clef/BrowserExtensionHost/onTabUpdate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "onTabUpdate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tabId",
+              "url",
+              "status"
+            ]
+          }
+        }
+      },
+      "onBrowserEvent": {
+        "$id": "urn:clef/BrowserExtensionHost/onBrowserEvent/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "onBrowserEvent"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eventType": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eventType",
+              "data"
+            ]
+          }
+        }
+      },
+      "getStatus": {
+        "$id": "urn:clef/BrowserExtensionHost/getStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserExtensionHost"
+          },
+          "action": {
+            "const": "getStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extension"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "activate": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/activate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/BrowserExtensionHost/activate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "activate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deactivate": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/deactivate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserExtensionHost/deactivate/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "deactivate"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "injectContentScript": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/injectContentScript/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "injectContentScript"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "extension": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "extension"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserExtensionHost/injectContentScript/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "injectContentScript"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "forbidden": {
+          "$id": "urn:clef/BrowserExtensionHost/injectContentScript/completion/forbidden",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "injectContentScript"
+            },
+            "variant": {
+              "const": "forbidden"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "onTabUpdate": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/onTabUpdate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "onTabUpdate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "matchedExtensions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "matchedExtensions"
+              ]
+            }
+          }
+        }
+      },
+      "onBrowserEvent": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/onBrowserEvent/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "onBrowserEvent"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handled": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "handled"
+              ]
+            }
+          }
+        }
+      },
+      "getStatus": {
+        "ok": {
+          "$id": "urn:clef/BrowserExtensionHost/getStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "serviceWorkerState": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "serviceWorkerState"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BrowserExtensionHost/getStatus/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserExtensionHost"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Browser specific provider for ExtensionHost Manages service worker \n lifecycle , content script injection scheduling , tab URL matching , and \n browser event handling Each browser vendor has slightly different \n lifecycle semantics ; this concept normalizes them behind a single \n action surface"
+}

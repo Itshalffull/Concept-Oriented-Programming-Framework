@@ -1,4 +1,4 @@
-// Data Integration Kit - Web Markdown Capture Provider
+// Data Integration Suite - Web Markdown Capture Provider
 // HTML to Markdown conversion with Readability extraction and YAML frontmatter
 
 export const PROVIDER_ID = 'web_markdown';

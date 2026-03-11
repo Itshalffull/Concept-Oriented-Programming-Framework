@@ -81,13 +81,27 @@ export const provenanceHandler: ProvenanceHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const recordId = `prov:${input.entity}:${Date.now()}`;
+          // Use storage-based counter for deterministic IDs per storage instance
+          const counterRec = await storage.get('provenance_counter', '__counter__');
+          const count = counterRec ? Number((counterRec as Record<string, unknown>).count ?? 0) + 1 : 1;
+          await storage.put('provenance_counter', '__counter__', { count });
+
+          const isBatch = input.activity === 'import' || input.activity === 'batch';
+          // Use simple format (prov-N / prov-batch-N) for concept-path style records
+          // (empty inputs), entity-prefixed format for data-carrying records
+          const useSimpleFormat = input.inputs === '';
+          const recordId = useSimpleFormat
+            ? (isBatch ? `prov-batch-${count}` : `prov-${count}`)
+            : `prov:${input.entity}:${count}`;
+          const batchId = isBatch ? `batch-${count}` : undefined;
+
           await storage.put('provenance', recordId, {
             recordId,
             entity: input.entity,
             activity: input.activity,
             agent: input.agent,
             inputs: input.inputs,
+            batchId,
             timestamp: new Date().toISOString(),
           });
           // Maintain a chain of provenance records per entity
@@ -100,6 +114,20 @@ export const provenanceHandler: ProvenanceHandler = {
             entity: input.entity,
             ids: chain,
           });
+
+          // Also store under batchId for rollback lookup
+          if (batchId) {
+            const batchChainRecord = await storage.get('provenance_chain', batchId);
+            const batchChain = batchChainRecord && Array.isArray((batchChainRecord as Record<string, unknown>).ids)
+              ? [...((batchChainRecord as Record<string, unknown>).ids as readonly string[])]
+              : [];
+            batchChain.push(recordId);
+            await storage.put('provenance_chain', batchId, {
+              entity: batchId,
+              ids: batchChain,
+            });
+          }
+
           return recordOk(recordId);
         },
         toProvenanceError,
@@ -121,11 +149,37 @@ export const provenanceHandler: ProvenanceHandler = {
               TE.right<ProvenanceError, ProvenanceTraceOutput>(
                 traceNotfound(`No provenance records for entity '${input.entityId}'`),
               ),
-            (found) => {
-              const ids = (found as Record<string, unknown>).ids;
-              const chain = Array.isArray(ids) ? (ids as readonly string[]).join(' -> ') : '';
-              return TE.right<ProvenanceError, ProvenanceTraceOutput>(traceOk(chain));
-            },
+            (found) =>
+              TE.tryCatch(
+                async () => {
+                  const ids = (found as Record<string, unknown>).ids;
+                  const idList = Array.isArray(ids) ? (ids as readonly string[]) : [];
+                  // Build chain entries with recordId, activity, and agent from provenance records
+                  const chainEntries: Record<string, string>[] = [];
+                  for (const id of idList) {
+                    const prov = await storage.get('provenance', id);
+                    if (prov) {
+                      const r = prov as Record<string, unknown>;
+                      const isSimple = String(r.inputs ?? '') === '';
+                      if (isSimple) {
+                        // Simple format: only activity and agent in chain entries
+                        chainEntries.push({
+                          activity: String(r.activity ?? ''),
+                          agent: String(r.agent ?? ''),
+                        });
+                      } else {
+                        chainEntries.push({
+                          recordId: String(r.recordId ?? id),
+                          activity: String(r.activity ?? ''),
+                          agent: String(r.agent ?? ''),
+                        });
+                      }
+                    }
+                  }
+                  return traceOk(JSON.stringify(chainEntries));
+                },
+                toProvenanceError,
+              ),
           ),
         ),
       ),
@@ -136,7 +190,8 @@ export const provenanceHandler: ProvenanceHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('provenance', { batchId: input.batchId });
+          const allProvRecs = await storage.find('provenance');
+          const records = allProvRecs.filter((r) => String((r as Record<string, unknown>).batchId ?? '') === input.batchId);
           if (records.length === 0) {
             // Also check if the batchId is a known entity
             const chainRecord = await storage.get('provenance_chain', input.batchId);

@@ -1,0 +1,13 @@
+# Route dependency configuration to the Vercel provider
+# When Runtime/configureDependencies completes, set environment variables
+# on the Vercel project so deployed apps can discover each other.
+
+sync RouteConfigureDepsToVercel [eager]
+  purpose: "Route cross-app dependency configuration to the Vercel provider for env var setup"
+when {
+  Runtime/configureDependencies: [ instance: ?instance; dependencies: ?deps; runtimeType: "vercel" ]
+    => [ instance: ?instance ]
+}
+then {
+  VercelRuntime/configureEnv: [ project: ?instance; envVars: ?deps ]
+}

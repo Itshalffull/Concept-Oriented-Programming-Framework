@@ -195,10 +195,10 @@ export const referenceHandler: ReferenceHandler = {
           O.fold(
             () => getRefsNotfound(input.source),
             (found) => {
-              const targets = found['targets'];
-              return getRefsOk(
-                typeof targets === 'string' ? targets : JSON.stringify([]),
-              );
+              const targets = parseTargets(found['targets']);
+              // Return single target as plain string, multiple as JSON array
+              const result = targets.length === 1 ? targets[0] : JSON.stringify(targets);
+              return getRefsOk(result);
             },
           ),
         ),

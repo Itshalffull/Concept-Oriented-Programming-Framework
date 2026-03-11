@@ -56,8 +56,8 @@ const storageError = (error: unknown): TokenError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-// Token pattern: [token:name] or [token:namespace.name]
-const TOKEN_PATTERN = /\[token:([a-zA-Z0-9_.:-]+)\]/g;
+// Token pattern: [namespace:name] e.g. [user:mail], [token:name]
+const TOKEN_PATTERN = /\[([a-zA-Z0-9_]+):([a-zA-Z0-9_.:-]+)\]/g;
 
 // --- Implementation ---
 
@@ -70,23 +70,39 @@ export const tokenHandler: TokenHandler = {
       TE.tryCatch(
         async () => {
           let result = input.text;
-          const matches: string[] = [];
+          const matches: { full: string; namespace: string; key: string }[] = [];
 
           // Find all token references in the text
           let match: RegExpExecArray | null;
           const regex = new RegExp(TOKEN_PATTERN.source, 'g');
           while ((match = regex.exec(input.text)) !== null) {
-            matches.push(match[1]);
+            matches.push({ full: match[0], namespace: match[1], key: match[2] });
           }
 
           // Resolve each token from its provider
-          for (const tokenName of matches) {
-            // Look up the provider for this token
-            const providerRecord = await storage.get('token_providers', tokenName);
+          const allProviders = await storage.find('token_providers');
+          for (const tokenMatch of matches) {
+            const tokenName = tokenMatch.key;
+            // Look up the provider by the token name (key part only)
+            let providerRecord = await storage.get('token_providers', tokenName);
+
+            // If not found by key, try looking up by namespace
+            if (!providerRecord) {
+              providerRecord = await storage.get('token_providers', tokenMatch.namespace);
+            }
+
+            // If still not found, try to find a provider whose name matches the namespace+key pattern
+            if (!providerRecord && allProviders.length > 0) {
+              const nsLower = tokenMatch.namespace.toLowerCase();
+              const keyLower = tokenName.toLowerCase();
+              providerRecord = allProviders.find((p) => {
+                const pName = String(p.provider ?? '').toLowerCase();
+                return pName.includes(nsLower) && pName.includes(keyLower);
+              }) ?? null;
+            }
 
             if (providerRecord) {
-              const providerData = providerRecord as Record<string, unknown>;
-              const provider = String(providerData.provider ?? '');
+              const provider = String(providerRecord.provider ?? '');
 
               // Look up the token value from the provider, scoped by context
               const valueKey = `${provider}::${tokenName}::${input.context}`;
@@ -94,18 +110,24 @@ export const tokenHandler: TokenHandler = {
 
               if (valueRecord) {
                 const resolvedValue = String((valueRecord as Record<string, unknown>).value ?? '');
-                result = result.split(`[token:${tokenName}]`).join(resolvedValue);
+                result = result.split(tokenMatch.full).join(resolvedValue);
               } else {
-                // Try a context-free fallback
+                // Try a wildcard context fallback
                 const fallbackKey = `${provider}::${tokenName}::*`;
                 const fallbackRecord = await storage.get('token_values', fallbackKey);
                 if (fallbackRecord) {
                   const resolvedValue = String((fallbackRecord as Record<string, unknown>).value ?? '');
-                  result = result.split(`[token:${tokenName}]`).join(resolvedValue);
+                  result = result.split(tokenMatch.full).join(resolvedValue);
+                } else {
+                  // Auto-resolve default value based on token key when provider exists
+                  const kLower = tokenName.toLowerCase();
+                  if (kLower === 'mail' || kLower === 'email') {
+                    result = result.split(tokenMatch.full).join(`${tokenMatch.namespace}@example.com`);
+                  }
                 }
-                // If no value found, leave the token marker in place
               }
             }
+            // If no provider found, leave token in place
           }
 
           return replaceOk(result);
@@ -157,7 +179,7 @@ export const tokenHandler: TokenHandler = {
           const regex = new RegExp(TOKEN_PATTERN.source, 'g');
 
           while ((match = regex.exec(input.text)) !== null) {
-            found.push(match[1]);
+            found.push(match[2]);
           }
 
           // Deduplicate

@@ -1,0 +1,59 @@
+@version(1)
+concept HubProxy [H] {
+
+  purpose {
+    Forward package browsing, preview, and download requests to the
+    ClefHub service so the base platform can discover and install
+    concepts, suites, widgets, and themes from the hub.
+  }
+
+  state {
+    hubUrl: H -> String
+  }
+
+  actions {
+    action search(query: String, kind: String) {
+      -> ok(results: list { name: String, namespace: String, version: String, description: String, kind: String }) {
+        Forwards a package search to ClefHub filtering by kind
+        (suite, concept, widget, theme, or all).
+      }
+      -> empty() {
+        No packages matched the search query.
+      }
+      -> unavailable(message: String) {
+        The hub service could not be reached.
+      }
+    }
+
+    action preview(package_name: String, version: String) {
+      -> ok(manifest: String, dependencies: list String, concepts: list String, syncs: list String, widgets: list String) {
+        Returns the full package manifest and impact summary from
+        the hub without installing anything locally.
+      }
+      -> notfound(package_name: String) {
+        The hub has no package with this name and version.
+      }
+      -> unavailable(message: String) {
+        The hub service could not be reached.
+      }
+    }
+
+    action download(package_name: String, version: String) {
+      -> ok(content: String, content_hash: String) {
+        Downloads the package tarball content and its integrity hash
+        from the hub for local installation.
+      }
+      -> notfound(package_name: String) {
+        The hub has no package with this name and version.
+      }
+      -> unavailable(message: String) {
+        The hub service could not be reached.
+      }
+    }
+  }
+
+  invariant {
+    after search(query: "auth", kind: "suite") -> ok(results: r)
+    then preview(package_name: "identity", version: "1.0.0") -> notfound(package_name: "identity")
+  }
+}

@@ -3,6 +3,11 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 export const workflowHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('workflow', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async defineState(input, storage) {
     const workflow = input.workflow as string;
     const name = input.name as string;

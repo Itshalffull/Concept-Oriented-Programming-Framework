@@ -29,9 +29,23 @@ interface CliActionMapping {
 interface CliConceptConfig {
   actions?: Record<string, CliActionMapping>;
   'command-group'?: string;
+  subcommand?: string;
   description?: string;
   examples?: Array<{ description: string; command: string }>;
 }
+
+// --- String Sanitization ---
+
+/**
+ * Sanitize a string for embedding in a single-quoted JS string literal.
+ * Collapses newlines/whitespace into single spaces and escapes single quotes.
+ */
+function sanitizeForSingleQuote(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/\s*\n\s*/g, ' ').replace(/'/g, "\\'").trim();
+}
+
+/** Alias for description strings specifically. */
+const sanitizeDescription = sanitizeForSingleQuote;
 
 // --- Option Inference ---
 
@@ -84,8 +98,13 @@ function buildTreeSubcommand(conceptCamel: string): string {
   lines.push(`  .option('--root <id>', 'Start from a specific node instead of root')`);
   lines.push(`  .option('--json', 'Output as JSON')`);
   lines.push(`  .action(async (opts) => {`);
-  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: 'getDescendants', ...opts });`);
-  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`    try {`);
+  lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'getDescendants', ...opts });`);
+  lines.push(`      console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`    } catch (err) {`);
+  lines.push(`      console.error(err instanceof Error ? err.message : err);`);
+  lines.push(`      process.exitCode = 1;`);
+  lines.push(`    }`);
   lines.push(`  });`);
   return lines.join('\n');
 }
@@ -115,6 +134,7 @@ function addHierarchicalFlags(lines: string[], actionName: string): void {
 
 function buildSubcommand(
   action: ActionSchema,
+  conceptName: string,
   conceptCamel: string,
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
@@ -136,7 +156,7 @@ function buildSubcommand(
 
   lines.push(`${conceptCamel}Command`);
   lines.push(`  .command('${commandName}')`);
-  lines.push(`  .description('${description}')`);
+  lines.push(`  .description('${sanitizeDescription(description)}')`);
 
   // Emit options for each parameter
   for (const param of action.params) {
@@ -185,7 +205,7 @@ function buildSubcommand(
   if (examples && examples.length > 0) {
     lines.push(`  .addHelpText('after', '\\nExamples:')`);
     for (const ex of examples) {
-      lines.push(`  .addHelpText('after', '  ${ex.command}  # ${ex.description}')`);
+      lines.push(`  .addHelpText('after', '  ${sanitizeForSingleQuote(ex.command)}  # ${sanitizeForSingleQuote(ex.description)}')`);
     }
   }
 
@@ -195,10 +215,21 @@ function buildSubcommand(
     lines.push(`  .addHelpText('after', '\\nSee also: ${seeAlso.join(', ')}')`);
   }
 
-  // Action handler
+  // Action handler — use invokeConcept for direct concept dispatch
+  // Wrapped in try/catch so errors are displayed before Commander can swallow them
   lines.push(`  .action(async (opts) => {`);
-  lines.push(`    const result = await globalThis.kernel.handleRequest({ method: '${action.name}', ...opts });`);
-  lines.push(`    console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`    try {`);
+  lines.push(`      const result = await globalThis.kernel.invokeConcept('urn:clef/${conceptName}', '${action.name}', opts);`);
+  lines.push(`      if (result.variant !== 'ok') {`);
+  lines.push(`        console.error(opts.json ? JSON.stringify(result) : \`Error [\${result.variant}]: \${JSON.stringify(result)}\`);`);
+  lines.push(`        process.exitCode = 1;`);
+  lines.push(`      } else {`);
+  lines.push(`        console.log(opts.json ? JSON.stringify(result) : result);`);
+  lines.push(`      }`);
+  lines.push(`    } catch (err) {`);
+  lines.push(`      console.error(err instanceof Error ? err.message : err);`);
+  lines.push(`      process.exitCode = 1;`);
+  lines.push(`    }`);
   lines.push(`  });`);
 
   return lines.join('\n');
@@ -229,15 +260,19 @@ function generateCommandFile(
   const kebab = toKebabCase(conceptName);
   const lines: string[] = [];
 
-  // Command group name from CLI config or kebab-case concept name
-  const groupName = cliConfig?.['command-group'] || kebab;
+  // Command group name from CLI config or kebab-case concept name.
+  // When both command-group and subcommand are specified (e.g., scaffold + suite),
+  // combine them to produce a unique command name (e.g., scaffold-suite).
+  const baseGroup = cliConfig?.['command-group'] || kebab;
+  const subcommand = cliConfig?.subcommand;
+  const groupName = subcommand ? `${baseGroup}-${subcommand}` : baseGroup;
   const groupDesc = cliConfig?.description || manifest.purpose || `Manage ${conceptName} resources.`;
 
   lines.push(generateFileHeader('cli', conceptName));
   lines.push(`import { Command } from 'commander';`);
   lines.push('');
   lines.push(`export const ${conceptCamel}Command = new Command('${groupName}')`);
-  lines.push(`  .description('${groupDesc}');`);
+  lines.push(`  .description('${sanitizeDescription(groupDesc)}');`);
   lines.push('');
 
   // Command-level examples
@@ -245,13 +280,13 @@ function generateCommandFile(
   if (examples && examples.length > 0) {
     lines.push(`${conceptCamel}Command.addHelpText('after', '\\nExamples:');`);
     for (const ex of examples) {
-      lines.push(`${conceptCamel}Command.addHelpText('after', '  ${ex.command}  # ${ex.description}');`);
+      lines.push(`${conceptCamel}Command.addHelpText('after', '  ${sanitizeForSingleQuote(ex.command)}  # ${sanitizeForSingleQuote(ex.description)}');`);
     }
     lines.push('');
   }
 
   for (const action of manifest.actions) {
-    lines.push(buildSubcommand(action, conceptCamel, overrides, cliConfig, hierConfig));
+    lines.push(buildSubcommand(action, conceptName, conceptCamel, overrides, cliConfig, hierConfig));
     lines.push('');
   }
 
@@ -269,7 +304,7 @@ function generateCommandFile(
 
   lines.push(`export const ${conceptCamel}CommandTree = {`);
   lines.push(`  group: '${groupName}',`);
-  lines.push(`  description: '${groupDesc}',`);
+  lines.push(`  description: '${sanitizeDescription(groupDesc)}',`);
   lines.push(`  commands: [${actionNames.join(', ')}],`);
   lines.push(`};`);
   lines.push('');

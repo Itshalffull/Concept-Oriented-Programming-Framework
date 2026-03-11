@@ -1,0 +1,33 @@
+@version(1)
+concept ContentParser [C] {
+
+  purpose {
+    Parses raw content (markdown, MDX) into structured HTML with
+    frontmatter extraction, syntax highlighting, and heading extraction.
+  }
+
+  state {
+    parsed: set C
+    source: C -> String
+    html: C -> String
+    frontmatter: C -> String
+    headings: C -> list { depth: Int, text: String, id: String }
+  }
+
+  actions {
+    action parse(source: String, format: String) {
+      -> ok(parsed: C, html: String, frontmatter: String,
+            headings: list { depth: Int, text: String, id: String }) {
+        Parses the source content into structured output.
+      }
+      -> error(message: String) {
+        Parsing failed.
+      }
+    }
+  }
+
+  invariant {
+    after parse(source: "# Hello\nWorld", format: "markdown")
+         -> ok(parsed: c, html: h, frontmatter: f, headings: heads)
+  }
+}

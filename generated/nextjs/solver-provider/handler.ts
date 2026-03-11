@@ -90,8 +90,15 @@ export const solverProviderHandler: SolverProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          await storage.put('solverprovider', input.property_ref, { property_ref: input.property_ref, formal_language: input.formal_language, kind: input.kind, timeout_ms: input.timeout_ms });
-          return dispatchOk(input.property_ref, input.property_ref);
+          // Find the best matching registered provider
+          const allProviders = await storage.find('solverprovider');
+          const registered = allProviders.filter((p) => (p as any).provider_id !== undefined);
+          // Sort by priority (lower is better)
+          registered.sort((a, b) => Number((a as any).priority ?? 99) - Number((b as any).priority ?? 99));
+          const bestProvider = registered.length > 0 ? String((registered[0] as any).provider_id) : input.property_ref;
+          const runRef = `run-${Date.now()}`;
+          await storage.put('dispatch_runs', runRef, { property_ref: input.property_ref, formal_language: input.formal_language, kind: input.kind, timeout_ms: input.timeout_ms, provider: bestProvider, run_ref: runRef });
+          return dispatchOk(bestProvider, runRef);
         },
         (error): SolverProviderError => ({
           code: 'STORAGE_ERROR',

@@ -4,25 +4,39 @@
 
 import { Command } from 'commander';
 
-export const conceptScaffoldGenCommand = new Command('scaffold')
-  .description('Generate concept specification (.concept) file.');
+export const conceptScaffoldGenCommand = new Command('scaffold-concept')
+  .description('Generate concept specification (.concept) file with annotations, state groups, and capabilities.');
 
 conceptScaffoldGenCommand
   .command('concept')
-  .description('Scaffold a .concept file with state, actions, and register().')
+  .description('Scaffold a .concept file with annotations, state (groups, enums, records), actions, capabilities, and register().')
   .requiredOption('-n, --name <name>', 'PascalCase concept name')
   .requiredOption('--type-param <typeParam>', 'Type Param')
   .option('--purpose <purpose>', 'Purpose description')
   .requiredOption('--state-fields <stateFields>', 'State Fields')
   .option('-a, --actions <actions>', 'Comma-separated action names')
+  .option('--version <version>', 'Spec version number for @version annotation')
+  .option('--gate <gate>', 'Add @gate annotation for async-gated concepts')
+  .option('--capabilities <capabilities>', 'Comma-separated capability names for capabilities block')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold concept --name User --actions create,update,delete  # Scaffold a basic concept')
   .addHelpText('after', '  clef scaffold concept --name Article --param A --category domain  # Scaffold with custom type parameter')
-  .addHelpText('after', '  clef scaffold concept --name Bookmark --purpose 'Save and organize references.'  # Scaffold with purpose')
+  .addHelpText('after', '  clef scaffold concept --name Bookmark --purpose \'Save and organize references.\'  # Scaffold with purpose')
+  .addHelpText('after', '  clef scaffold concept --name Approval --version 2 --gate --capabilities search,export,bulk  # Scaffold with version, gate, and capabilities')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConceptScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 conceptScaffoldGenCommand
@@ -33,27 +47,46 @@ conceptScaffoldGenCommand
   .requiredOption('--purpose <purpose>', 'Purpose')
   .requiredOption('--state-fields <stateFields>', 'State Fields')
   .requiredOption('--actions <actions>', 'Actions')
+  .requiredOption('--version <version>', 'Version')
+  .requiredOption('--gate <gate>', 'Gate')
+  .requiredOption('--capabilities <capabilities>', 'Capabilities')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConceptScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 conceptScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : ConceptScaffoldGen 
- inputKind : ConceptConfig 
- outputKind : ConceptSpec 
- capabilities : [ concept-spec , state-fields , actions , invariants ]')
+  .description('Return static metadata for PluginRegistry . name : ConceptScaffoldGen inputKind : ConceptConfig outputKind : ConceptSpec capabilities : [ concept-spec , state-fields , state-groups , actions , invariants , version-annotation , gate-annotation , capabilities-block , enum-types , record-types , list-option-wrappers , all-primitives ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ConceptScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const conceptScaffoldGenCommandTree = {
-  group: 'scaffold',
-  description: 'Generate concept specification (.concept) file.',
+  group: 'scaffold-concept',
+  description: 'Generate concept specification (.concept) file with annotations, state groups, and capabilities.',
   commands: [{ action: 'generate', command: 'concept' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

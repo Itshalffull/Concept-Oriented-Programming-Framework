@@ -29,7 +29,7 @@ describe('Authorization conformance', () => {
     const storage = createTestStorage();
     const handler = authorizationHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: grantPermission -> ok
     const grantPermissionResultSetup = await pipe(
@@ -54,7 +54,7 @@ describe('Authorization conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         expect((output as any).role).toBe('admin');
         return output;
       }),
@@ -81,7 +81,7 @@ describe('Authorization conformance', () => {
     const storage = createTestStorage();
     const handler = authorizationHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: grantPermission -> ok
     const grantPermissionResultSetup = await pipe(
@@ -106,7 +106,7 @@ describe('Authorization conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         expect((output as any).role).toBe('editor');
         return output;
       }),

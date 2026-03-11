@@ -108,7 +108,18 @@ export const namespaceHandler: NamespaceHandler = {
   getChildren: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('namespaces', input.node),
+        async () => {
+          // Look up node by its raw identifier or its qualified name
+          let nodeRecord = await storage.get('namespaces', input.node);
+          if (nodeRecord === null) {
+            // Try finding it by scanning all nodes
+            const allNodes = await storage.find('namespaces');
+            nodeRecord = allNodes.find(
+              (n) => (n as any).node === input.node || (n as any).qualifiedName === input.node,
+            ) ?? null;
+          }
+          return nodeRecord;
+        },
         toError,
       ),
       TE.chain((nodeRecord) =>
@@ -116,12 +127,15 @@ export const namespaceHandler: NamespaceHandler = {
           O.fromNullable(nodeRecord),
           O.fold(
             () => TE.right(getChildrenNotfound(`Namespace '${input.node}' not found`)),
-            () =>
+            (found) =>
               TE.tryCatch(
                 async () => {
-                  const allNodes = await storage.find('namespaces', { parentPath: input.node });
-                  const children = allNodes.map((n) => (n as any).qualifiedName as string);
-                  return getChildrenOk(JSON.stringify(children));
+                  const qualifiedName = (found as any).qualifiedName ?? input.node;
+                  const allNodes = await storage.find('namespaces');
+                  const children = allNodes
+                    .filter((n) => (n as any).parentPath === qualifiedName)
+                    .map((n) => (n as any).qualifiedName as string);
+                  return getChildrenOk(children.join(','));
                 },
                 toError,
               ),
@@ -193,7 +207,10 @@ export const namespaceHandler: NamespaceHandler = {
                   });
 
                   // Reparent direct children from old qualified name
-                  const children = await storage.find('namespaces', { parentPath: input.node });
+                  const allChildren = await storage.find('namespaces');
+                  const children = allChildren.filter(
+                    (c) => (c as any).parentPath === input.node,
+                  );
                   for (const child of children) {
                     const childName = (child as any).node as string;
                     const oldChildQN = (child as any).qualifiedName as string;

@@ -28,9 +28,8 @@ describe('Governance Transparency Entity Syncs', () => {
     for (const name of transparencySyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('governance-transparency', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -38,18 +37,18 @@ describe('Governance Transparency Entity Syncs', () => {
   describe('governance transparency entity structure', () => {
     it('AuditTrailAsContentEntity tags with entity type', () => {
       const source = readSync('governance-transparency', 'audit-trail-as-content-entity');
-      const result = parseSyncFile(source);
-      const tagSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Tag' && a.action === 'addTag',
+      const syncs = parseSyncFile(source);
+      const tagSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Tag' && a.action === 'addTag',
       ));
       expect(tagSync).toBeDefined();
     });
 
     it('DisclosurePolicyAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-transparency', 'disclosure-policy-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });

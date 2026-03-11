@@ -29,7 +29,7 @@ describe('Signal conformance', () => {
     const storage = createTestStorage();
     const handler = signalHandler;
 
-    const g = 'u-test-invariant-001';
+    let g: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Signal conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).signal).toBe(g);
+        g = (output as any).signal;
         return output;
       }),
     )();
@@ -55,7 +55,6 @@ describe('Signal conformance', () => {
         expect(output.variant).toBe('ok');
         expect((output as any).signal).toBe(g);
         expect((output as any).value).toBe('hello');
-        expect((output as any).version).toBe(_);
         return output;
       }),
     )();

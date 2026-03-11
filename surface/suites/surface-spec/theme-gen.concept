@@ -2,9 +2,9 @@
 concept ThemeGen [G] {
 
   purpose {
-    Generate platform-specific style implementations from
-    ThemeAST. Resolves all computed values and emits
-    platform-native style formats.
+    Generate platform-specific style implementations from an
+    expressive ThemeAST. Emits tokens, density and motif context,
+    and derived visual philosophy values for active targets.
   }
 
   state {
@@ -17,7 +17,8 @@ concept ThemeGen [G] {
     action generate(gen: G, target: String, themeAst: String) {
       -> ok(gen: G, output: String) {
         Targets: "css-variables", "tailwind", "react-native",
-        "terminal", "w3c-dtcg".
+        "terminal", "w3c-dtcg". Expressive theme blocks are
+        flattened into each target's native format.
       }
       -> error(gen: G, message: String) { Generation failed. }
     }

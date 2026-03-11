@@ -29,7 +29,7 @@ describe('Alias conformance', () => {
     const storage = createTestStorage();
     const handler = aliasHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: addAlias -> ok
     const addAliasResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Alias conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entity).toBe(x);
+        x = (output as any).entity;
         expect((output as any).name).toBe('homepage');
         return output;
       }),

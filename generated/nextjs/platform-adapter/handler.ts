@@ -64,6 +64,7 @@ const navigationMappings: Record<string, Record<string, string>> = {
   nextjs: { push: 'router.push', replace: 'router.replace', back: 'router.back', modal: 'router.push(path, { scroll: false })' },
   react: { push: 'navigate(path)', replace: 'navigate(path, { replace: true })', back: 'navigate(-1)', modal: 'openModal(path)' },
   swift: { push: 'pushViewController', replace: 'setViewControllers', back: 'popViewController', modal: 'present(vc, animated: true)' },
+  browser: { push: 'history.pushState', replace: 'history.replaceState', back: 'history.back()', modal: 'window.open' },
 };
 
 const zoneMappings: Record<string, Record<string, string>> = {
@@ -128,10 +129,22 @@ export const platformAdapterHandler: PlatformAdapterHandler = {
             (found) => {
               const platform = String(found.platform);
               const platformActions = navigationMappings[platform] ?? {};
-              const action = platformActions[input.transition];
+              // Try direct key match first, then try parsing JSON transition
+              let transitionType = input.transition;
+              if (!platformActions[transitionType]) {
+                try {
+                  const parsed = JSON.parse(input.transition);
+                  if (typeof parsed === 'object' && parsed !== null && parsed.type) {
+                    transitionType = parsed.type;
+                  }
+                } catch {
+                  // keep original
+                }
+              }
+              const action = platformActions[transitionType];
               return action
                 ? TE.right(mapNavigationOk(input.adapter, action))
-                : TE.right(mapNavigationUnsupported(`Transition '${input.transition}' not supported on platform '${platform}'`));
+                : TE.right(mapNavigationUnsupported(`Transition '${transitionType}' not supported on platform '${platform}'`));
             },
           ),
         ),

@@ -99,7 +99,7 @@
               }
             }
           ],
-          "prose": "Target : react , solid , vue , svelte , ink , \n react-native , swiftui"
+          "prose": "Delegates to the matching widget gen provider registered \n in plugin registry for the requested target"
         },
         {
           "tag": "error",
@@ -119,7 +119,7 @@
               }
             }
           ],
-          "prose": "Unsupported feature"
+          "prose": "Unsupported target or generation failure"
         }
       ]
     }
@@ -326,5 +326,5 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate framework specific widget implementations from \n WidgetAST Each target produces a complete component : \n state machine runtime , connect function , accessibility , \n keyboard handlers , and framework bindings Follows the \n M N compiler pattern : one IR , multiple output targets"
+  "purpose": "Generate framework specific widget implementations from \n WidgetAST Dispatches to registered widget gen provider \n plugins discovered via the plugin registry Each provider \n produces a complete component for its target platform \n Follows the M N compiler pattern : one IR , multiple output \n targets via pluggable providers"
 }

@@ -1,0 +1,160 @@
+# Clef Base — Content Manifest (user-facing)
+#
+# Covers all content entities and user-facing concepts:
+# content CRUD, content pages, queries, views, taxonomy navigation,
+# comments, media management, search, user profiles, and
+# application-specific domain concepts.
+#
+# See §6.2 of the Clef Base spec.
+
+interface:
+  name: clef-base-content
+  version: "0.1.0"
+  manifest_type: content
+  description: "User-facing content interface for Clef Base"
+
+auth:
+  required: false
+  default_role: anonymous
+  strategies:
+    - cookie
+    - bearer_token
+    - oauth
+    - wallet
+
+targets:
+  cli:
+    enabled: true
+    name: clef
+    description: "Clef Base content CLI for power users and automation"
+    subcommand_prefix: content
+    groups:
+      - name: node
+        description: "Content node CRUD operations"
+        actions: [list, get, create, update, delete, search]
+      - name: taxonomy
+        description: "Taxonomy term management"
+        actions: [list, get, tree, create, tag, untag]
+      - name: media
+        description: "Media asset management"
+        actions: [list, get, upload, transcode, delete]
+      - name: comment
+        description: "Comment operations"
+        actions: [list, get, create, reply, moderate, resolve]
+      - name: search
+        description: "Full-text and semantic search"
+        actions: [query, facets, suggest]
+      - name: view
+        description: "Execute saved views"
+        actions: [list, execute, export]
+
+  rest:
+    enabled: true
+    base_path: /api/content
+    spec_format: openapi
+    spec_version: "3.1.0"
+    pagination:
+      default_limit: 25
+      max_limit: 100
+    rate_limiting:
+      anonymous: "30/minute"
+      authenticated: "300/minute"
+
+  graphql:
+    enabled: true
+    path: /graphql
+    schema_namespace: content
+    introspection: true
+    max_depth: 8
+
+  mcp:
+    enabled: true
+    name: clef-base-content
+    description: "AI-assisted content operations for Clef Base"
+    tool_groups:
+      - content-crud
+      - taxonomy-navigation
+      - media-management
+      - search
+      - comment-threads
+
+  sdk:
+    enabled: true
+    languages:
+      - typescript
+      - python
+    package_prefix: "@clef-base/content"
+
+  skills:
+    enabled: true
+    targets:
+      - claude
+    workflows:
+      - name: create-content
+        description: "Create and publish content entities"
+      - name: manage-media
+        description: "Upload and manage media assets"
+      - name: search-content
+        description: "Search and query content"
+
+concepts:
+  # Content-manifest concepts — user facing
+  - name: ContentStorage
+    source: repertoire/concepts/foundation/content-storage.concept
+    operations: [list, get, create, save, delete, query]
+
+  - name: Taxonomy
+    source: repertoire/concepts/content/taxonomy.concept
+    operations: [list, get, tree, create, tag, untag, move]
+
+  - name: Comment
+    source: repertoire/concepts/content/comment.concept
+    operations: [list, get, create, reply, edit, delete, moderate, resolve, flag]
+
+  - name: MediaAsset
+    source: repertoire/concepts/content/media-asset.concept
+    operations: [list, get, upload, generateThumbnail, transcode, extractMetadata]
+
+  - name: FileManagement
+    source: repertoire/concepts/content/file-management.concept
+    operations: [upload, addUsage, removeUsage, garbageCollect]
+
+  - name: Search
+    source: repertoire/concepts/search/search.concept
+    operations: [query, facets, suggest, reindex]
+
+  - name: View
+    source: repertoire/concepts/content/view.concept
+    operations: [list, get, execute]
+
+  - name: Outline
+    source: repertoire/concepts/content/outline.concept
+    operations: [getChildren, move, reorder, indent, outdent]
+
+  - name: DailyNote
+    source: repertoire/concepts/content/daily-note.concept
+    operations: [getForDate, create, list]
+
+  - name: Alias
+    source: repertoire/concepts/content/alias.concept
+    operations: [resolve, list]
+
+  - name: Notification
+    source: repertoire/concepts/notification/notification.concept
+    operations: [list, get, markRead, markAllRead, preferences]
+
+  - name: Authentication
+    source: repertoire/concepts/identity/authentication.concept
+    operations: [login, logout, register, resetPassword]
+
+  - name: Session
+    source: repertoire/concepts/identity/session.concept
+    operations: [get, refresh, revoke]
+
+  - name: VersionSpace
+    source: repertoire/concepts/multiverse/version-space.concept
+    operations: [list, get, create, fork, merge, rebase, promote, archive]
+
+  - name: VersionContext
+    source: repertoire/concepts/multiverse/version-context.concept
+    operations: [get, enter, leave, current]

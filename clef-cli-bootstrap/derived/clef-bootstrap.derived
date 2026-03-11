@@ -1,0 +1,47 @@
+derived ClefBootstrap [U] {
+
+  purpose {
+    Minimal self-updating CLI binary. Checks for newer versions of the
+    full Clef CLI at startup, downloads updates from the registry,
+    atomically swaps the binary, and delegates all other commands to
+    the full CLI.
+  }
+
+  composes {
+    SelfUpdate [U]
+    Fetcher [U]
+    Download [U]
+  }
+
+  syncs {
+    required: [check-on-start, apply-on-update-command]
+  }
+
+  surface {
+    action checkUpdate(current_version: String, platform: String) {
+      matches: SelfUpdate/check
+    }
+
+    action applyUpdate(update: U, binary_path: String) {
+      matches: SelfUpdate/apply
+    }
+
+    action rollbackUpdate(update: U) {
+      matches: SelfUpdate/rollback
+    }
+
+    action dismissUpdate(update: U) {
+      matches: SelfUpdate/dismiss
+    }
+
+    action resolveDownload(artifact_id: String, platform: String, version_range: String) {
+      matches: Download/resolve
+    }
+  }
+
+  principle {
+    after checkUpdate(current_version: v, platform: p) returns available
+    then applyUpdate(update: u, binary_path: b) succeeds
+    and  rollbackUpdate(update: u) succeeds
+  }
+}

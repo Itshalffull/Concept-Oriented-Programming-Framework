@@ -1,0 +1,26 @@
+type ApprovalState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type ApprovalEntry {
+  a: ID!
+  step_ref: String!
+  status: String!
+  kind: String!
+  required_count: Int!
+  roles: [String!]!
+  decisions: [JSON!]!
+  requested_at: String!
+  resolved_at: String!
+}
+
+extend type Query {
+  approval_entry(a: ID!): ApprovalEntry
+  approval_entries: [ApprovalEntry!]!
+}
+
+type ApprovalApprovals {
+  a: ID!
+  value: ID!
+}

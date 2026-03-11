@@ -1,0 +1,15 @@
+# Oracle bridge: Submit encoded data as an L2 transaction.
+# When FieldMapping/reverse succeeds with ABI-encoded data,
+# submit it to the chain via Connector/write.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleSubmitTransaction [eager]
+when {
+  FieldMapping/reverse: [ data: ?node; mapper: "abi_decoder" ]
+    => [ ok: ?encoded_data ]
+}
+then {
+  Connector/write: [ data: ?encoded_data;
+                     source: ?schema.federation_config.source;
+                     contract: ?schema.federation_config.contract ]
+}

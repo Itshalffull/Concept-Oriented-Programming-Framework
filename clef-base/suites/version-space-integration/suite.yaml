@@ -1,0 +1,47 @@
+suite:
+  name: version-space-integration
+  version: 0.1.0
+  description: >
+    Integration syncs that wire the Multiverse suite's VersionSpace and
+    VersionContext to Clef Base's shared ContentNode pool and entity-lifecycle
+    system. These are Clef-Base-specific because they depend on the shared
+    ContentNode pool model.
+
+concepts: {}
+
+syncs:
+  required:
+    - path: ./syncs/version-aware-load.sync
+      description: "Intercepts ContentStorage/load and resolves through VersionContext"
+
+    - path: ./syncs/version-aware-save.sync
+      description: "Intercepts ContentStorage/save and routes to VersionSpace/write"
+
+  recommended:
+    - path: ./syncs/version-space-write-invalidates-cache.sync
+      description: "Invalidates scoped cache entries on VersionSpace/write"
+
+    - path: ./syncs/version-space-write-indexes.sync
+      description: "Indexes modified entities in SearchSpace overlay on VersionSpace/write"
+
+    - path: ./syncs/automation-version-dispatch.sync
+      description: "Routes automation actions through version-aware dispatch"
+
+uses:
+  - suite: multiverse
+    concepts:
+      - name: VersionSpace
+      - name: VersionContext
+      - name: SearchSpace
+
+  - suite: foundation
+    concepts:
+      - name: ContentStorage
+
+  - suite: infrastructure
+    concepts:
+      - name: Cache
+
+  - suite: automation-providers
+    concepts:
+      - name: AutomationDispatch

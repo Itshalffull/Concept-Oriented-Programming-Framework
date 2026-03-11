@@ -503,12 +503,12 @@ describe('CLI Generation Regression', () => {
 
   // ---- clef suite <sub> → suite-manager <sub> ----
 
-  describe('kit → SuiteManager parity', () => {
+  describe('suite → SuiteManager parity', () => {
     it('generated group "suite-manager" exists', () => {
       expect(generatedCommands.has('suite-manager')).toBe(true);
     });
 
-    it('has exactly 5 subcommands matching handmade kit subcommands', () => {
+    it('has exactly 5 subcommands matching handmade suite subcommands', () => {
       const cmd = generatedCommands.get('suite-manager')!;
       expect(cmd.subcommands.length).toBe(5);
     });
@@ -922,9 +922,9 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('clef');
     });
 
-    it('manifest lists exactly 66 concept specs', () => {
+    it('manifest lists exactly 81 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(66);
+      expect(concepts.length).toBe(81);
     });
   });
 });

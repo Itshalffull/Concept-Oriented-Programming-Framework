@@ -23,6 +23,7 @@ interface StateField {
   name: string;
   type: string;
   mapping?: boolean; // T -> Type (mapping) vs set T
+  group?: string;    // State group name (e.g., "credentials")
 }
 
 interface ActionDef {
@@ -42,6 +43,9 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   const purpose = (input.purpose as string) || `TODO: Describe the purpose of ${name}.`;
   const category = input.category as string;
   const visibility = (input.visibility as string) || 'public';
+  const version = input.version as number | undefined;
+  const gate = input.gate as boolean | undefined;
+  const capabilities = (input.capabilities as string[]) || [];
   const stateFields = (input.stateFields as StateField[]) || [
     { name: 'items', type: `set ${typeParam}` },
   ];
@@ -60,6 +64,12 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   const lines: string[] = [];
 
   // Annotations
+  if (version != null) {
+    lines.push(`@version(${version})`);
+  }
+  if (gate) {
+    lines.push('@gate');
+  }
   if (category) {
     lines.push(`@category("${category}")`);
   }
@@ -77,14 +87,44 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   lines.push('  }');
   lines.push('');
 
-  // State
-  lines.push('  state {');
+  // Capabilities
+  if (capabilities.length > 0) {
+    lines.push('  capabilities {');
+    for (const cap of capabilities) {
+      lines.push(`    "${cap}"`);
+    }
+    lines.push('  }');
+    lines.push('');
+  }
+
+  // State — collect grouped and ungrouped fields
+  const ungrouped = stateFields.filter(f => !f.group);
+  const grouped = new Map<string, StateField[]>();
   for (const field of stateFields) {
+    if (field.group) {
+      if (!grouped.has(field.group)) grouped.set(field.group, []);
+      grouped.get(field.group)!.push(field);
+    }
+  }
+
+  lines.push('  state {');
+  for (const field of ungrouped) {
     if (field.mapping) {
       lines.push(`    ${field.name}: ${typeParam} -> ${field.type}`);
     } else {
       lines.push(`    ${field.name}: ${field.type}`);
     }
+  }
+  for (const [groupName, fields] of grouped) {
+    lines.push(`    group ${groupName} {`);
+    for (const field of fields) {
+      if (field.mapping) {
+        lines.push(`      ${field.name}: ${typeParam} -> ${field.type}`);
+      } else {
+        lines.push(`      ${field.name}: ${field.type}`);
+      }
+    }
+    lines.push('    }');
   }
   lines.push('  }');
   lines.push('');
@@ -144,7 +184,11 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
       name: 'ConceptScaffoldGen',
       inputKind: 'ConceptConfig',
       outputKind: 'ConceptSpec',
-      capabilities: JSON.stringify(['concept-spec', 'state-fields', 'actions', 'invariants']),
+      capabilities: JSON.stringify([
+        'concept-spec', 'state-fields', 'state-groups', 'actions', 'invariants',
+        'version-annotation', 'gate-annotation', 'capabilities-block',
+        'enum-types', 'record-types', 'list-option-wrappers', 'all-primitives',
+      ]),
     };
   },
 
@@ -160,13 +204,14 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
       const kebab = toKebab(name);
 
       const files: { path: string; content: string }[] = [
-        { path: `concepts/${kebab}.concept`, content: conceptSpec },
+        { path: `concepts/${kebab}.stub.concept`, content: conceptSpec },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

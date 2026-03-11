@@ -1,0 +1,1539 @@
+{
+  "uri": "urn:clef/Retriever",
+  "name": "Retriever",
+  "typeParams": [
+    {
+      "name": "R",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "retriever_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "source_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "top_k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "reranker_config",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "model",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "top_n",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "score_threshold",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "retrievers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "r",
+        "paramRef": "R"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "retriever_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "source_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "top_k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "score_threshold",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "retriever",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Type : vector , multi_query , self_query , parent_document , \n ensemble , contextual_compression , recursive"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown type"
+        }
+      ]
+    },
+    {
+      "name": "retrieve",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "documents",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "metadata",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Core retrieval"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No relevant documents"
+        }
+      ]
+    },
+    {
+      "name": "multiQueryRetrieve",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "documents",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "RAG Fusion : generates multiple query variations via LLM , \n retrieves for each , deduplicates via reciprocal rank fusion"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "selfQueryRetrieve",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "documents",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "extracted_filters",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "LLM extracts structured filters from natural language \n Applies semantic metadata filtering"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "rerank",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "documents",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "reranked",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Cross encoder scoring Returns top reranker_config top_n"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Reranker unavailable"
+        }
+      ]
+    },
+    {
+      "name": "compress",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "documents",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "compressed",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "original_length",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "compressed_length",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Extracts only query relevant portions"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compression failed"
+        }
+      ]
+    },
+    {
+      "name": "setReranker",
+      "params": [
+        {
+          "name": "retriever",
+          "type": {
+            "kind": "param",
+            "paramRef": "R"
+          }
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "top_n",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "retriever",
+              "type": {
+                "kind": "param",
+                "paramRef": "R"
+              }
+            }
+          ],
+          "prose": "Configures reranking model"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown model"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, retrieve behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "retriever_type",
+              "value": {
+                "kind": "literal",
+                "value": "vector"
+              }
+            },
+            {
+              "name": "source_ids",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "idx1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "top_k",
+              "value": {
+                "kind": "literal",
+                "value": 5
+              }
+            },
+            {
+              "name": "score_threshold",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "retriever",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "retrieve",
+          "inputs": [
+            {
+              "name": "retriever",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "query",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "documents",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type RetrieverState {\n  \"\"\"All rs in this concept\"\"\"\n  rs: [ID!]!\n}\n\ntype RetrieverEntry {\n  r: ID!\n  retriever_type: String!\n  source_ids: [String!]!\n  top_k: Int!\n  reranker_config: JSON!\n  filters: String!\n  score_threshold: Float!\n}\n\nextend type Query {\n  retriever_entry(r: ID!): RetrieverEntry\n  retriever_entries: [RetrieverEntry!]!\n}\n\ntype RetrieverRetrievers {\n  r: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Retriever/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever_type": {
+                "type": "string"
+              },
+              "source_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "top_k": {
+                "type": "integer"
+              },
+              "score_threshold": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "retriever_type",
+              "source_ids",
+              "top_k",
+              "score_threshold"
+            ]
+          }
+        }
+      },
+      "retrieve": {
+        "$id": "urn:clef/Retriever/retrieve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "retrieve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "retriever",
+              "query"
+            ]
+          }
+        }
+      },
+      "multiQueryRetrieve": {
+        "$id": "urn:clef/Retriever/multiQueryRetrieve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "multiQueryRetrieve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "retriever",
+              "query"
+            ]
+          }
+        }
+      },
+      "selfQueryRetrieve": {
+        "$id": "urn:clef/Retriever/selfQueryRetrieve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "selfQueryRetrieve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "retriever",
+              "query"
+            ]
+          }
+        }
+      },
+      "rerank": {
+        "$id": "urn:clef/Retriever/rerank/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "rerank"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "content"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "retriever",
+              "query",
+              "documents"
+            ]
+          }
+        }
+      },
+      "compress": {
+        "$id": "urn:clef/Retriever/compress/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "compress"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "content"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "retriever",
+              "query",
+              "documents"
+            ]
+          }
+        }
+      },
+      "setReranker": {
+        "$id": "urn:clef/Retriever/setReranker/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Retriever"
+          },
+          "action": {
+            "const": "setReranker"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "retriever": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "top_n": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "retriever",
+              "model",
+              "top_n"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Retriever/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "retriever": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "retriever"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Retriever/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "retrieve": {
+        "ok": {
+          "$id": "urn:clef/Retriever/retrieve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "metadata": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "content",
+                      "score",
+                      "metadata"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "documents"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Retriever/retrieve/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "retrieve"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "multiQueryRetrieve": {
+        "ok": {
+          "$id": "urn:clef/Retriever/multiQueryRetrieve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "multiQueryRetrieve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "content",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "documents"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Retriever/multiQueryRetrieve/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "multiQueryRetrieve"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "selfQueryRetrieve": {
+        "ok": {
+          "$id": "urn:clef/Retriever/selfQueryRetrieve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "selfQueryRetrieve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "content",
+                      "score"
+                    ]
+                  }
+                },
+                "extracted_filters": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "documents",
+                "extracted_filters"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Retriever/selfQueryRetrieve/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "selfQueryRetrieve"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "rerank": {
+        "ok": {
+          "$id": "urn:clef/Retriever/rerank/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "rerank"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reranked": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "content",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "reranked"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Retriever/rerank/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "rerank"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compress": {
+        "ok": {
+          "$id": "urn:clef/Retriever/compress/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "compress"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "compressed": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "original_length": {
+                        "type": "integer"
+                      },
+                      "compressed_length": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "content",
+                      "original_length",
+                      "compressed_length"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "compressed"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Retriever/compress/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "compress"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setReranker": {
+        "ok": {
+          "$id": "urn:clef/Retriever/setReranker/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "setReranker"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "retriever": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "retriever"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Retriever/setReranker/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Retriever"
+            },
+            "action": {
+              "const": "setReranker"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "RAG orchestration layer Takes natural language query , finds relevant \n content , prepares for LLM consumption Multi stage pipeline : \n first stage retrieval ( fast , high recall ) then re ranking ( accurate ) \n then compression Supports multi query expansion , self query metadata \n filtering , contextual compression , and hierarchical retrieval"
+}

@@ -37,7 +37,7 @@ export const conceptEntityHandler: ConceptHandler = {
     let typeParams = '[]';
     let actionsRef = '[]';
     let stateFieldsRef = '[]';
-    let kit = '';
+    let suite = '';
 
     try {
       const parsed = JSON.parse(ast);
@@ -48,7 +48,7 @@ export const conceptEntityHandler: ConceptHandler = {
       typeParams = JSON.stringify(parsed.typeParams || []);
       actionsRef = JSON.stringify((parsed.actions || []).map((a: Record<string, unknown>) => a.name));
       stateFieldsRef = JSON.stringify((parsed.state || []).map((s: Record<string, unknown>) => s.name));
-      kit = parsed.kit || '';
+      suite = parsed.suite || '';
     } catch {
       // AST may be empty or non-JSON; store defaults
     }
@@ -65,7 +65,7 @@ export const conceptEntityHandler: ConceptHandler = {
       typeParams,
       actionsRef,
       stateFieldsRef,
-      kit,
+      suite,
     });
 
     return { variant: 'ok', entity: id };
@@ -98,10 +98,10 @@ export const conceptEntityHandler: ConceptHandler = {
     return { variant: 'ok', entities: JSON.stringify(matching) };
   },
 
-  async findByKit(input: Record<string, unknown>, storage: ConceptStorage) {
-    const kit = input.kit as string;
+  async findBySuite(input: Record<string, unknown>, storage: ConceptStorage) {
+    const suite = input.suite as string;
 
-    const results = await storage.find('concept-entity', { kit });
+    const results = await storage.find('concept-entity', { suite });
 
     return { variant: 'ok', entities: JSON.stringify(results) };
   },

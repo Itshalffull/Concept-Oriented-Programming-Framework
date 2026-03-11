@@ -1,0 +1,27 @@
+type GlickoRatingState {
+  """All gls in this concept"""
+  gls: [ID!]!
+}
+
+type GlickoRatingEntry {
+  gl: ID!
+  participant: String!
+  rating: Float!
+  deviation: Float!
+  volatility: Float!
+  lastActive: String!
+  initialRating: Float!
+  initialDeviation: Float!
+  initialVolatility: Float!
+  inactivityGrowthRate: Float!
+}
+
+extend type Query {
+  glickorating_entry(gl: ID!): GlickoRatingEntry
+  glickorating_entries: [GlickoRatingEntry!]!
+}
+
+type GlickoRatingRatings {
+  gl: ID!
+  value: ID!
+}

@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-decision
   version: 0.1.0
   description: "Proposal lifecycle, voting, and alternative decision mechanisms"
@@ -111,15 +111,32 @@ syncs:
     - counting-borda
     - counting-consent
 
+widgets:
+  - path: ./widgets/proposal-card.widget
+    description: "Compact navigation card summarizing a governance proposal"
+  - path: ./widgets/vote-result-bar.widget
+    description: "Segmented bar visualizing vote distribution across choices"
+  - path: ./widgets/deliberation-thread.widget
+    description: "Threaded discussion view for governance deliberation with argument tagging"
+
+surface:
+  entityAffordances:
+    - concept: Proposal
+      card: proposal-card
+    - concept: Vote
+      inline: vote-result-bar
+    - concept: Deliberation
+      detail: deliberation-thread
+
 uses:
-  - kit: governance-execution
+  - suite: governance-execution
     concepts:
       - name: Execution
       - name: Timelock
-  - kit: governance-rules
+  - suite: governance-rules
     optional: true
     concepts:
       - name: Dispute
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

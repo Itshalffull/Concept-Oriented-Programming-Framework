@@ -29,9 +29,9 @@ describe('EventBus conformance', () => {
     const storage = createTestStorage();
     const handler = eventBusHandler;
 
-    const sid = 'u-test-invariant-001';
+    let sid: any = 'u-test-invariant-001';
     const e = 'u-test-invariant-002';
-    const r = 'u-test-invariant-003';
+    let r: any = 'u-test-invariant-003';
 
     // setup: registerEventType -> ok
     const registerEventTypeResultSetup = await pipe(
@@ -55,7 +55,7 @@ describe('EventBus conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).subscriptionId).toBe(sid);
+        sid = (output as any).subscriptionId;
         return output;
       }),
     )();
@@ -69,7 +69,7 @@ describe('EventBus conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).results).toBe(r);
+        r = (output as any).results;
         return output;
       }),
     )();

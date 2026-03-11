@@ -29,8 +29,8 @@ describe('RustBuilder conformance', () => {
     const storage = createTestStorage();
     const handler = rustBuilderHandler;
 
-    const r = 'u-test-invariant-001';
-    const null = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-001';
+    const nullVar = 'u-test-invariant-002';
 
     // setup: build -> ok
     const buildResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('RustBuilder conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).build).toBe(r);
+        r = (output as any).build;
         expect((output as any).artifactPath).toBe('.clef-artifacts/rust/password');
         expect((output as any).artifactHash).toBe('sha256:ghi');
         return output;

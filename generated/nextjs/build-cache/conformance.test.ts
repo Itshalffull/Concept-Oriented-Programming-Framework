@@ -29,8 +29,8 @@ describe('BuildCache conformance', () => {
     const storage = createTestStorage();
     const handler = buildCacheHandler;
 
-    const e = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let e: any = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-002';
 
     // setup: record -> ok
     const recordResultSetup = await pipe(
@@ -44,7 +44,7 @@ describe('BuildCache conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).entry).toBe(e);
+        e = (output as any).entry;
         return output;
       }),
     )();
@@ -59,7 +59,7 @@ describe('BuildCache conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('unchanged');
-        expect((output as any).lastRun).toBe(t);
+        t = (output as any).lastRun;
         expect((output as any).outputRef).toBe('.clef-cache/ts/password');
         return output;
       }),
@@ -67,7 +67,7 @@ describe('BuildCache conformance', () => {
     expect(E.isRight(checkResultAssert)).toBe(true);
 
     // assert: check -> changed
-    const checkResultAssert = await pipe(
+    const checkResultAssert2 = await pipe(
       handler.check({
       stepKey: 'framework:TypeScriptGen:password',
       inputHash: 'def',
@@ -79,14 +79,13 @@ describe('BuildCache conformance', () => {
         return output;
       }),
     )();
-    expect(E.isRight(checkResultAssert)).toBe(true);
+    expect(E.isRight(checkResultAssert2)).toBe(true);
 
   });
 
   it('invariant 2: after invalidate, check behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = buildCacheHandler;
-
 
     // setup: invalidate -> ok
     const invalidateResultSetup = await pipe(

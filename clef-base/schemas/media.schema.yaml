@@ -1,0 +1,82 @@
+# Media schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: media
+version: 1
+
+entities:
+  FileManagement:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the file record"
+      filename:
+        type: String
+        required: true
+        description: "Original filename including extension"
+      mime_type:
+        type: String
+        required: true
+        description: "MIME type of the file"
+      size_bytes:
+        type: Number
+        required: true
+        description: "File size in bytes"
+      storage_path:
+        type: String
+        required: true
+        description: "Path or key in the storage backend"
+      checksum:
+        type: String
+        required: false
+        description: "Content hash for integrity verification"
+      uploaded_at:
+        type: DateTime
+        required: true
+        description: "Timestamp when the file was uploaded"
+      uploaded_by:
+        type: Reference
+        required: true
+        description: "Reference to the user who uploaded the file"
+    from:
+      concept: FileManagement
+      actions:
+        create: [id, filename, mime_type, size_bytes, storage_path, checksum, uploaded_at, uploaded_by]
+        read: [id, filename, mime_type, size_bytes, storage_path, checksum, uploaded_at, uploaded_by]
+
+  MediaAsset:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the media asset"
+      file_reference:
+        type: Reference
+        required: true
+        description: "Reference to the underlying file record"
+      mime_type:
+        type: String
+        required: true
+        description: "MIME type of the media asset"
+      alt_text:
+        type: String
+        required: false
+        description: "Accessibility alt text for the media"
+      dimensions:
+        type: JSON
+        required: false
+        description: "Width and height for image/video assets"
+      duration:
+        type: Number
+        required: false
+        description: "Duration in seconds for audio/video assets"
+      thumbnail_url:
+        type: String
+        required: false
+        description: "URL to a generated thumbnail"
+    from:
+      concept: MediaAsset
+      actions:
+        create: [id, file_reference, mime_type, alt_text, dimensions]
+        read: [id, file_reference, mime_type, alt_text, dimensions, duration, thumbnail_url]

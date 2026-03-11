@@ -29,7 +29,7 @@ describe('AnalysisRule conformance', () => {
     const storage = createTestStorage();
     const handler = analysisRuleHandler;
 
-    const u = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('AnalysisRule conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).rule).toBe(u);
+        u = (output as any).rule;
         return output;
       }),
     )();

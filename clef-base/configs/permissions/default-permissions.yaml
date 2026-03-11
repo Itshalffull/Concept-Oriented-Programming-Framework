@@ -1,0 +1,67 @@
+# Default permissions — links roles to Schema access levels.
+# Defines which role has access to which Schema operations by default.
+# Individual ContentNode access can be overridden by AccessControl entries.
+# See §6.1 of the Clef Base spec.
+
+permissions:
+  name: default-permissions
+  version: 1
+  description: "Default role-to-Schema access level mappings"
+
+role_mappings:
+  admin:
+    access_level: full
+    schemas: "*"
+    description: "Full access to all Schemas and operations"
+    operations:
+      - create
+      - read
+      - update
+      - delete
+      - publish
+      - unpublish
+      - archive
+      - configure
+
+  editor:
+    access_level: write
+    schemas: "*"
+    description: "Read and write access to all content Schemas"
+    operations:
+      - create
+      - read
+      - update
+      - delete
+      - publish
+      - unpublish
+    excluded_schemas:
+      - Role
+      - Permission
+      - DeploymentConfig
+
+  viewer:
+    access_level: read
+    schemas: "*"
+    description: "Read-only access to published content"
+    operations:
+      - read
+    filters:
+      status: published
+
+schema_overrides:
+  # Config schemas are admin-only by default
+  - schema_manifest: config
+    default_role: admin
+    description: "Config-manifest Schemas require admin access by default"
+
+  # Content schemas are accessible to editors and above
+  - schema_manifest: content
+    default_role: editor
+    description: "Content-manifest Schemas are editable by editors and above"
+
+escalation:
+  require_mfa_for:
+    - role_assignment
+    - schema_delete
+    - deployment_configure
+  audit_log: true

@@ -75,6 +75,11 @@ clef scaffold handler --concept User --actions create,update,delete
 clef scaffold handler --concept Article
 ```
 
+
+### Step 4: Edit the Handler Implementation
+
+Refine the generated handler: implement each action method with domain logic, expand error handling, and add storage operations.
+
 ## References
 
 - [Handler implementation patterns](references/handler-implementation-guide.md)

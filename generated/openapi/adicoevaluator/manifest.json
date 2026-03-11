@@ -1,0 +1,515 @@
+{
+  "uri": "urn:clef/ADICOEvaluator",
+  "name": "ADICOEvaluator",
+  "typeParams": [
+    {
+      "name": "AE",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ae",
+        "paramRef": "AE"
+      },
+      "fields": [
+        {
+          "name": "sourceText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parsedAttributes",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parsedDeontic",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parsedAim",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parsedConditions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "parsedOrElse",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "parseErrors",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "parsedRules",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ae",
+        "paramRef": "AE"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AE"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "parse",
+      "params": [
+        {
+          "name": "ruleText",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "parsed",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "AE"
+              }
+            }
+          ],
+          "prose": "The ADICO statement is parsed into its five components"
+        },
+        {
+          "tag": "parse_error",
+          "fields": [
+            {
+              "name": "text",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The text does not conform to ADICO grammar"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "rule",
+          "type": {
+            "kind": "param",
+            "paramRef": "AE"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "permitted",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "AE"
+              }
+            }
+          ],
+          "prose": "The context matches the Attributes and Conditions , and the \n Deontic is May"
+        },
+        {
+          "tag": "required",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "AE"
+              }
+            }
+          ],
+          "prose": "Deontic is Must and conditions are met"
+        },
+        {
+          "tag": "forbidden",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "AE"
+              }
+            }
+          ],
+          "prose": "Deontic is MustNot and conditions are met"
+        },
+        {
+          "tag": "not_applicable",
+          "fields": [
+            {
+              "name": "rule",
+              "type": {
+                "kind": "param",
+                "paramRef": "AE"
+              }
+            }
+          ],
+          "prose": "Attributes or Conditions do not match the context"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after parse, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "parse",
+          "inputs": [
+            {
+              "name": "ruleText",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "parsed",
+          "expectedOutputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "ae"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "ae"
+              }
+            },
+            {
+              "name": "context",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "permitted",
+          "expectedOutputs": [
+            {
+              "name": "rule",
+              "value": {
+                "kind": "variable",
+                "name": "ae"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "ae",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ADICOEvaluatorState {\n  \"\"\"All aes in this concept\"\"\"\n  aes: [ID!]!\n}\n\ntype ADICOEvaluatorEntry {\n  ae: ID!\n  sourceText: String!\n  parsedAttributes: String!\n  parsedDeontic: String!\n  parsedAim: String!\n  parsedConditions: String!\n  parsedOrElse: String!\n  parseErrors: String!\n}\n\nextend type Query {\n  adicoevaluator_entry(ae: ID!): ADICOEvaluatorEntry\n  adicoevaluator_entries: [ADICOEvaluatorEntry!]!\n}\n\ntype ADICOEvaluatorParsedRules {\n  ae: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "parse": {
+        "$id": "urn:clef/ADICOEvaluator/parse/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ADICOEvaluator"
+          },
+          "action": {
+            "const": "parse"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "ruleText": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ruleText"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/ADICOEvaluator/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ADICOEvaluator"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "context"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "parse": {
+        "parsed": {
+          "$id": "urn:clef/ADICOEvaluator/parse/completion/parsed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "parsed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        },
+        "parse_error": {
+          "$id": "urn:clef/ADICOEvaluator/parse/completion/parse_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "parse"
+            },
+            "variant": {
+              "const": "parse_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text",
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "permitted": {
+          "$id": "urn:clef/ADICOEvaluator/evaluate/completion/permitted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "permitted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        },
+        "required": {
+          "$id": "urn:clef/ADICOEvaluator/evaluate/completion/required",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "required"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        },
+        "forbidden": {
+          "$id": "urn:clef/ADICOEvaluator/evaluate/completion/forbidden",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "forbidden"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        },
+        "not_applicable": {
+          "$id": "urn:clef/ADICOEvaluator/evaluate/completion/not_applicable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ADICOEvaluator"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "not_applicable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Evaluate governance policies encoded in ADICO institutional grammar , \n parsing Attributes Deontic aIm Conditions OrElse statements into \n executable compliance checks"
+}

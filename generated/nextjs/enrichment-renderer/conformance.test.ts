@@ -29,9 +29,9 @@ describe('EnrichmentRenderer conformance', () => {
     const storage = createTestStorage();
     const handler = enrichmentRendererHandler;
 
-    const h = 'u-test-invariant-001';
-    const o = 'u-test-invariant-002';
-    const u = 'u-test-invariant-003';
+    let h: any = 'u-test-invariant-001';
+    let o: any = 'u-test-invariant-002';
+    let u: any = 'u-test-invariant-003';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -44,7 +44,7 @@ describe('EnrichmentRenderer conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).handler).toBe(h);
+        h = (output as any).handler;
         return output;
       }),
     )();
@@ -58,9 +58,9 @@ describe('EnrichmentRenderer conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).output).toBe(o);
+        o = (output as any).output;
         expect((output as any).sectionCount).toBe(1);
-        expect((output as any).unhandledKeys).toBe(u);
+        u = (output as any).unhandledKeys;
         return output;
       }),
     )();

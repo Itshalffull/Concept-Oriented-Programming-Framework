@@ -1,0 +1,36 @@
+# Result aggregation for automation provider execution.
+# Collects and consolidates results from provider workers back
+# into the originating automation rule and workflow state.
+
+# When a queue item is processed, record the result against the automation rule
+sync AggregateProviderResult [eager]
+when {
+  Queue/process: [ queue: ?queue; itemId: ?itemId; result: ?result ]
+    => []
+}
+then {
+  AutomationRule/execute: [ rule: ?queue; context: ?result ]
+}
+
+# When an aggregated execution completes, advance the workflow to reflect the outcome
+sync ResultAdvancesWorkflow [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ result: ?result ]
+}
+where {
+  Workflow: { ?rule currentState: ?state }
+}
+then {
+  Workflow/transition: [ workflow: ?rule; entity: ?context; transition: ?result ]
+}
+
+# When a workflow reaches a terminal state, update the bound control to reflect completion
+sync ResultUpdatesControl [eager]
+when {
+  Workflow/transition: [ workflow: ?workflow; entity: ?entity; transition: ?transition ]
+    => [ newState: ?newState ]
+}
+then {
+  Control/setValue: [ control: ?workflow; value: ?newState ]
+}

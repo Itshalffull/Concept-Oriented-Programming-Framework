@@ -5,19 +5,11 @@
 import { Command } from 'commander';
 
 export const flakyTestCommand = new Command('flaky-test')
-  .description('Detect , track , and quarantine unreliable tests 
- Maintain per test reliability history across all 
- languages and builders Apply quarantine policies 
- so flaky tests don t block other developers 
- Notify owners Monitor for stabilization');
+  .description('Detect , track , and quarantine unreliable tests Maintain per test reliability history across all languages and builders Apply quarantine policies so flaky tests don t block other developers Notify owners Monitor for stabilization');
 
 flakyTestCommand
   .command('record')
-  .description('Record a test result testType indicates which runner 
- produced the result ( e g , unit , e2e , integration ) 
- Updates reliability history per testId language testType 
- If the result differs from the previous result 
- ( pass to fail or fail to pass ) , increments flipCount')
+  .description('Record a test result testType indicates which runner produced the result ( e g , unit , e2e , integration ) Updates reliability history per testId language testType If the result differs from the previous result ( pass to fail or fail to pass ) , increments flipCount')
   .requiredOption('--test-id <testId>', 'Test Id')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--builder <builder>', 'Builder')
@@ -32,9 +24,7 @@ flakyTestCommand
 
 flakyTestCommand
   .command('quarantine')
-  .description('Manually quarantine a test Quarantined tests still 
- run but their failures don t block builds or deploys 
- Results are still recorded for monitoring')
+  .description('Manually quarantine a test Quarantined tests still run but their failures don t block builds or deploys Results are still recorded for monitoring')
   .requiredOption('--test-id <testId>', 'Test Id')
   .requiredOption('--reason <reason>', 'Reason')
   .requiredOption('--owner <owner>', 'Owner')
@@ -46,8 +36,7 @@ flakyTestCommand
 
 flakyTestCommand
   .command('release')
-  .description('Release a test from quarantine It will block builds 
- again if it fails Used when a flaky test is fixed')
+  .description('Release a test from quarantine It will block builds again if it fails Used when a flaky test is fixed')
   .requiredOption('--test-id <testId>', 'Test Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -57,8 +46,7 @@ flakyTestCommand
 
 flakyTestCommand
   .command('is-quarantined')
-  .description('Test is quarantined Callers should treat failures 
- as warnings , not errors')
+  .description('Test is quarantined Callers should treat failures as warnings , not errors')
   .requiredOption('--test-id <testId>', 'Test Id')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -68,10 +56,7 @@ flakyTestCommand
 
 flakyTestCommand
   .command('report')
-  .description('Return flaky test dashboard data If testType is 
- provided , only include tests of that type 
- stabilized : tests that were quarantined but have 
- been passing consistently ( candidates for release )')
+  .description('Return flaky test dashboard data If testType is provided , only include tests of that type stabilized : tests that were quarantined but have been passing consistently ( candidates for release )')
   .requiredOption('--test-type <testType>', 'Test Type')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -81,11 +66,7 @@ flakyTestCommand
 
 flakyTestCommand
   .command('set-policy')
-  .description('Update flaky detection policy 
- flipThreshold : number of flips to trigger detection ( default : 3 ) 
- flipWindow : time window for flips ( default : 7d ) 
- autoQuarantine : automatically quarantine detected flaky tests ( default : false ) 
- retryCount : number of retries before declaring failure ( default : 1 )')
+  .description('Update flaky detection policy flipThreshold : number of flips to trigger detection ( default : 3 ) flipWindow : time window for flips ( default : 7d ) autoQuarantine : automatically quarantine detected flaky tests ( default : false ) retryCount : number of retries before declaring failure ( default : 1 )')
   .requiredOption('--flip-threshold <flipThreshold>', 'Flip Threshold')
   .requiredOption('--flip-window <flipWindow>', 'Flip Window')
   .requiredOption('--auto-quarantine <autoQuarantine>', 'Auto Quarantine')
@@ -98,10 +79,6 @@ flakyTestCommand
 
 export const flakyTestCommandTree = {
   group: 'flaky-test',
-  description: 'Detect , track , and quarantine unreliable tests 
- Maintain per test reliability history across all 
- languages and builders Apply quarantine policies 
- so flaky tests don t block other developers 
- Notify owners Monitor for stabilization',
+  description: 'Detect , track , and quarantine unreliable tests Maintain per test reliability history across all languages and builders Apply quarantine policies so flaky tests don t block other developers Notify owners Monitor for stabilization',
   commands: [{ action: 'record', command: 'record' }, { action: 'quarantine', command: 'quarantine' }, { action: 'release', command: 'release' }, { action: 'isQuarantined', command: 'is-quarantined' }, { action: 'report', command: 'report' }, { action: 'setPolicy', command: 'set-policy' }],
 };

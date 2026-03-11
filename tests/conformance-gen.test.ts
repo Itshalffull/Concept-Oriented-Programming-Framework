@@ -51,7 +51,7 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     const files = result.files as { path: string; content: string }[];
 
     // Should include a conformance test file
-    const testFile = files.find(f => f.path === 'password.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'password.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
 
     const content = testFile!.content;
@@ -89,7 +89,7 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'echo.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'echo.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
     expect(testFile!.content).toContain('echoHandler.send(');
     expect(testFile!.content).toContain('"hello"');
@@ -105,7 +105,7 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'jwt.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'jwt.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
 
     const content = testFile!.content;
@@ -128,7 +128,7 @@ describe('Conformance Test Generation (Section 7.4)', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'user.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'user.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
 
     const content = testFile!.content;

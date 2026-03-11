@@ -1,0 +1,16 @@
+# Oracle bridge: Materialize decoded chain events as entities.
+# When a decoded chain event comes through FieldMapping, save it
+# as a ContentNode in local storage.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleEventToEntity [eager]
+when {
+  FieldMapping/apply: [ data: ?event_data; mapper: "abi_decoder" ]
+    => [ ok: ?mapped ]
+}
+where {
+  filter(?mapped.context.source == "chain_event")
+}
+then {
+  ContentStorage/save: [ node: ?mapped; schema: ?mapped.schema ]
+}

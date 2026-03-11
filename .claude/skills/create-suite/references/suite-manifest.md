@@ -5,7 +5,7 @@ Complete specification for `suite.yaml` — the manifest file that declares a su
 ## File Location
 
 ```
-kits/<suite-name>/suite.yaml
+suites/<suite-name>/suite.yaml
 ```
 
 ## Full Manifest Structure
@@ -13,8 +13,8 @@ kits/<suite-name>/suite.yaml
 ### Framework Suite Manifest
 
 ```yaml
-# Kit metadata
-kit:
+# Suite metadata
+suite:
   name: content-management
   version: 0.1.0
   description: >
@@ -44,21 +44,21 @@ syncs:
 
 # External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs
-# that only load when the named kit is present.
+# that only load when the named suite is present.
 uses:
-  - kit: other-suite-name
+  - suite: other-suite-name
     concepts:
       - name: ConceptName
         params:
           T: { as: shared-type-tag }
-  - kit: another-kit
+  - suite: another-suite
     optional: true
     concepts:
       - name: OptionalConcept
     syncs:
       - path: ./syncs/conditional-sync.sync
         description: >
-          Only loads if another-kit is present.
+          Only loads if another-suite is present.
 
 # Optional: other suites this suite requires
 dependencies: []
@@ -69,7 +69,7 @@ dependencies: []
 Domain suites add an `infrastructure` section and may include domain-specific top-level fields:
 
 ```yaml
-kit:
+suite:
   name: web3
   version: 0.1.0
   description: >
@@ -110,7 +110,7 @@ syncs:
         Disable if managing pinning manually.
 
 integrations:
-  - kit: auth
+  - suite: auth
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
@@ -139,7 +139,7 @@ infrastructure:
     - path: ./deploy-templates/arbitrum.deploy.yaml
     - path: ./deploy-templates/multi-chain.deploy.yaml
 
-# Domain-specific configuration (optional, kit-specific)
+# Domain-specific configuration (optional, suite-specific)
 chainConfigs:
   ethereum:
     chainId: 1
@@ -157,13 +157,13 @@ dependencies: []
 
 ## Section Details
 
-### `kit` (required)
+### `suite` (required)
 
-Kit-level metadata.
+Suite-level metadata.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Kit name, kebab-case. Used in deployment manifests. |
+| `name` | string | Yes | Suite name, kebab-case. Used in deployment manifests. |
 | `version` | string | Yes | Semver version string. |
 | `description` | string | Yes | Multi-line description. First sentence should summarize. |
 
@@ -242,13 +242,13 @@ syncs:
 
 Declares external concepts from other suites that this suite's syncs reference. The `clef suite validate` command checks that all concept references in syncs are either local concepts, declared in `uses`, or built-in (e.g., `Web`).
 
-Each entry is **required by default** — the external kit must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present (what was previously handled by a separate `integrations` section).
+Each entry is **required by default** — the external suite must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named suite is present (what was previously handled by a separate `integrations` section).
 
 **Required uses** (default):
 
 ```yaml
 uses:
-  - kit: auth
+  - suite: auth
     concepts:
       - name: User
         params:
@@ -260,7 +260,7 @@ uses:
 
 ```yaml
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: User
@@ -274,10 +274,10 @@ uses:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `kit` | string | Yes | Name of the external kit providing the concepts |
-| `optional` | boolean | No | When `true`, the entry's syncs only load if the named kit is present. Default: `false` (required). |
-| `concepts` | list | Yes | Concept entries from that kit |
-| `syncs` | list | No | Sync files that depend on the external kit. Primarily used with `optional: true`. |
+| `suite` | string | Yes | Name of the external suite providing the concepts |
+| `optional` | boolean | No | When `true`, the entry.s syncs only load if the named suite is present. Default: `false` (required). |
+| `concepts` | list | Yes | Concept entries from that suite |
+| `syncs` | list | No | Sync files that depend on the external suite. Primarily used with `optional: true`. |
 
 **Concept entry fields:**
 
@@ -290,17 +290,17 @@ uses:
 
 | Section | Purpose |
 |---------|---------|
-| `dependencies` | Kit-level version constraint |
+| `dependencies` | Suite-level version constraint |
 | `uses` | Concept-level declarations — which external concepts this suite's syncs reference |
 
-A required `uses` entry implies the external kit must be present. Consider also listing it in `dependencies` for version constraint enforcement.
+A required `uses` entry implies the external suite must be present. Consider also listing it in `dependencies` for version constraint enforcement.
 
 **Validation behavior:**
 - If a `uses` section is present, syncs referencing undeclared external concepts produce **errors**
 - If no `uses` section exists, undeclared external references produce **warnings** (backward compatibility)
 - Optional uses syncs are exempt from strict validation — they only load conditionally
 - Concepts declared in `uses` but never referenced by any sync produce a **warning**
-- A required `uses` kit not listed in `dependencies` produces a **warning**
+- A required `uses` suite not listed in `dependencies` produces a **warning**
 
 ### `infrastructure` (optional, domain suites only)
 
@@ -346,7 +346,7 @@ infrastructure:
 
 ### Domain-specific config (optional)
 
-Kits may define their own top-level configuration fields for domain-specific settings. These are not part of the standard manifest schema — they're kit-specific extensions.
+Suites may define their own top-level configuration fields for domain-specific settings. These are not part of the standard manifest schema — they're suite-specific extensions.
 
 Example: the web3 suite defines `chainConfigs` for per-chain finality settings:
 
@@ -388,9 +388,9 @@ Most suites have no dependencies. Use optional `uses` entries (conditional enhan
 Apps reference suites in their deployment manifest (`deploy.yaml`):
 
 ```yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
     overrides:
       # Replace DefaultTitleField with a custom sync
       DefaultTitleField: ./syncs/custom-title.sync
@@ -399,13 +399,13 @@ kits:
       - UpdateTimestamp
 
   - name: auth
-    path: ./kits/auth
+    path: ./suites/auth
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Kit name (matches `kit.name` in manifest) |
-| `path` | string | Yes | Relative path to kit directory |
+| `name` | string | Yes | Suite name (matches `suite.name` in manifest) |
+| `path` | string | Yes | Relative path to suite directory |
 | `overrides` | map | No | Map of sync name -> replacement sync file path |
 | `disable` | list | No | List of recommended sync names to disable |
 
@@ -428,15 +428,15 @@ The `clef suite validate` command checks:
 9. Optional uses syncs are exempt from strict reference checking (they only load conditionally)
 
 ```bash
-npx tsx cli/src/index.ts suite validate kits/<suite-name>
+npx tsx cli/src/index.ts suite validate suites/<suite-name>
 ```
 
 Output for a framework suite:
 ```
-Validating kit: kits/content-management
+Validating suite: suites/content-management
 
-  Kit: content-management
-  Uses: 2 external concept(s) from 1 kit
+  Suite: content-management
+  Uses: 2 external concept(s) from 1 suite
     [OK] User (from auth)
     [OK] JWT (from auth)
   Concepts: 4
@@ -450,14 +450,14 @@ Validating kit: kits/content-management
     ...
   Sync tiers: 3 required, 3 recommended
 
-Kit is valid.
+Suite is valid.
 ```
 
 Output for a domain suite:
 ```
-Validating kit: kits/web3
+Validating suite: suites/web3
 
-  Kit: web3
+  Suite: web3
   Concepts: 3
     [OK] ChainMonitor (chain-monitor.concept) [@gate]
     [OK] Content (content.concept)
@@ -478,5 +478,5 @@ Validating kit: kits/web3
       [OK] deploy-templates/multi-chain.deploy.yaml
   Sync tiers: 1 required, 2 recommended
 
-Kit is valid.
+Suite is valid.
 ```

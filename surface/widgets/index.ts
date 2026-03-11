@@ -13,13 +13,22 @@
 // --- Shared Module ---
 export * as shared from './shared/index.js';
 
-// --- Framework-Specific Modules ---
+// --- Framework-Specific Modules (Web) ---
 export * as react from './react/components/index.js';
 export * as vue from './vue/components/index.js';
 export * as svelte from './svelte/components/index.js';
 export * as solid from './solid/components/index.js';
 export * as vanilla from './vanilla/components/index.js';
 export * as ink from './ink/components/index.js';
+export * as nextjs from './nextjs/components/index.js';
+
+// --- Platform-Specific Modules (Mobile / Desktop / Wearable) ---
+export * as nativescript from './nativescript/components/index.js';
+export * as reactNative from './react-native/components/index.js';
+// Note: SwiftUI, AppKit, WatchKit, Compose, WearCompose, WinUI, GTK
+// are non-TypeScript providers (Swift, Kotlin, C#) and are not
+// re-exported from this TypeScript entry point. They live alongside
+// as peer directories for their respective build systems.
 
 // --- Re-export key shared types for convenience ---
 export type {
@@ -84,7 +93,12 @@ export {
 
 // --- Framework Adapter Factory ---
 
-export type FrameworkName = 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla' | 'ink';
+export type FrameworkName =
+  | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla' | 'ink'
+  | 'nextjs' | 'nativescript' | 'react-native'
+  | 'swiftui' | 'appkit' | 'watchkit'
+  | 'compose' | 'wear-compose'
+  | 'winui' | 'gtk';
 
 export interface FrameworkAdapterConfig {
   framework: FrameworkName;
@@ -128,6 +142,16 @@ export function getFrameworkCapabilities(framework: FrameworkName): {
     solid: { surfaceKind: 'browser-dom', supportsSSR: true, supportsStreaming: true },
     vanilla: { surfaceKind: 'browser-dom', supportsSSR: false, supportsStreaming: false },
     ink: { surfaceKind: 'terminal', supportsSSR: false, supportsStreaming: false },
+    nextjs: { surfaceKind: 'browser-dom', supportsSSR: true, supportsStreaming: true },
+    nativescript: { surfaceKind: 'native-mobile', supportsSSR: false, supportsStreaming: false },
+    'react-native': { surfaceKind: 'react-native', supportsSSR: false, supportsStreaming: false },
+    swiftui: { surfaceKind: 'native-apple', supportsSSR: false, supportsStreaming: false },
+    appkit: { surfaceKind: 'native-macos', supportsSSR: false, supportsStreaming: false },
+    watchkit: { surfaceKind: 'native-watchos', supportsSSR: false, supportsStreaming: false },
+    compose: { surfaceKind: 'native-android', supportsSSR: false, supportsStreaming: false },
+    'wear-compose': { surfaceKind: 'native-wearos', supportsSSR: false, supportsStreaming: false },
+    winui: { surfaceKind: 'native-windows', supportsSSR: false, supportsStreaming: false },
+    gtk: { surfaceKind: 'native-linux', supportsSSR: false, supportsStreaming: false },
   };
 
   return {
@@ -141,5 +165,11 @@ export function getFrameworkCapabilities(framework: FrameworkName): {
  * List all supported frameworks.
  */
 export function listFrameworks(): FrameworkName[] {
-  return ['react', 'vue', 'svelte', 'solid', 'vanilla', 'ink'];
+  return [
+    'react', 'vue', 'svelte', 'solid', 'vanilla', 'ink', 'nextjs',
+    'nativescript', 'react-native',
+    'swiftui', 'appkit', 'watchkit',
+    'compose', 'wear-compose',
+    'winui', 'gtk',
+  ];
 }

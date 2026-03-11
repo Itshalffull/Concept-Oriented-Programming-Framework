@@ -1,0 +1,1752 @@
+{
+  "uri": "urn:clef/EvaluationDataset",
+  "name": "EvaluationDataset",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "examples",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "rubric",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "tags",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "evaluation_history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "run_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "program",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "scores",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "metric",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "score",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "Float"
+                          },
+                          "optional": false
+                        }
+                      ]
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "drift_baseline",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "program",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "scores",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "record",
+                      "fields": [
+                        {
+                          "name": "metric",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "String"
+                          },
+                          "optional": false
+                        },
+                        {
+                          "name": "score",
+                          "type": {
+                            "kind": "primitive",
+                            "primitive": "Float"
+                          },
+                          "optional": false
+                        }
+                      ]
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "datasets",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "examples",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "input",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "expected",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "rubric",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "tags",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dataset",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Creates a golden dataset Version starts at 1"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Empty examples"
+        }
+      ]
+    },
+    {
+      "name": "addExample",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "expected",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "rubric",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "example_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "dataset",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Adds an example Increments version"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Dataset not found"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "program",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metrics",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "overall",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "per_example",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "example_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "per_metric",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "metric",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Evaluates a program ( prompt pipeline ) against the dataset \n Metrics : accuracy , SemanticF1 , answer_relevancy , groundedness , \n tool_correctness Records in evaluation_history"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluation failed"
+        }
+      ]
+    },
+    {
+      "name": "detectDrift",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "current_program",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "drifted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "drift_magnitude",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "degraded_examples",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "baseline_score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "current_score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Compares current performance against drift_baseline \n drift_magnitude is the absolute score difference \n Lists examples that degraded most"
+        },
+        {
+          "tag": "no_baseline",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No drift baseline set Call setBaseline first"
+        }
+      ]
+    },
+    {
+      "name": "setBaseline",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "program",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "dataset",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Sets the drift detection baseline to current program s scores"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Dataset not found"
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "program_a",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "program_b",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "winner",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score_a",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "score_b",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "confidence",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "per_example",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score_a",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score_b",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Statistical comparison ( paired t test or bootstrap ) \n Confidence : statistical significance of the difference"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Comparison failed"
+        }
+      ]
+    },
+    {
+      "name": "curate",
+      "params": [
+        {
+          "name": "dataset",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "filter_tags",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subset",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "input",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "expected",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Filters dataset by tags Returns subset for focused evaluation"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No examples match tags"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, evaluate behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "qa_golden"
+              }
+            },
+            {
+              "name": "examples",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "input",
+                        "value": {
+                          "kind": "literal",
+                          "value": "What is 2+2?"
+                        }
+                      },
+                      {
+                        "name": "expected",
+                        "value": {
+                          "kind": "literal",
+                          "value": "4"
+                        }
+                      },
+                      {
+                        "name": "rubric",
+                        "value": {
+                          "kind": "variable",
+                          "name": "_"
+                        }
+                      },
+                      {
+                        "name": "tags",
+                        "value": {
+                          "kind": "list",
+                          "items": [
+                            {
+                              "kind": "literal",
+                              "value": "math"
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "dataset",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "evaluate",
+          "inputs": [
+            {
+              "name": "dataset",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "program",
+              "value": {
+                "kind": "literal",
+                "value": "gpt-4o + default prompt"
+              }
+            },
+            {
+              "name": "metrics",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "accuracy"
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "overall",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "per_example",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "per_metric",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EvaluationDatasetState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype EvaluationDatasetEntry {\n  v: ID!\n  name: String!\n  examples: [JSON!]!\n  version: Int!\n  evaluation_history: [JSON!]!\n  drift_baseline: JSON!\n}\n\nextend type Query {\n  evaluationdataset_entry(v: ID!): EvaluationDatasetEntry\n  evaluationdataset_entries: [EvaluationDatasetEntry!]!\n}\n\ntype EvaluationDatasetDatasets {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/EvaluationDataset/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "input": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    },
+                    "rubric": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "input",
+                    "expected",
+                    "rubric",
+                    "tags"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "examples"
+            ]
+          }
+        }
+      },
+      "addExample": {
+        "$id": "urn:clef/EvaluationDataset/addExample/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "addExample"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              },
+              "rubric": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "dataset",
+              "input",
+              "expected",
+              "rubric",
+              "tags"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/EvaluationDataset/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "program": {
+                "type": "string"
+              },
+              "metrics": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "dataset",
+              "program",
+              "metrics"
+            ]
+          }
+        }
+      },
+      "detectDrift": {
+        "$id": "urn:clef/EvaluationDataset/detectDrift/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "detectDrift"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "current_program": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset",
+              "current_program"
+            ]
+          }
+        }
+      },
+      "setBaseline": {
+        "$id": "urn:clef/EvaluationDataset/setBaseline/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "setBaseline"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "program": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset",
+              "program"
+            ]
+          }
+        }
+      },
+      "compare": {
+        "$id": "urn:clef/EvaluationDataset/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "program_a": {
+                "type": "string"
+              },
+              "program_b": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dataset",
+              "program_a",
+              "program_b"
+            ]
+          }
+        }
+      },
+      "curate": {
+        "$id": "urn:clef/EvaluationDataset/curate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationDataset"
+          },
+          "action": {
+            "const": "curate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "filter_tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "dataset",
+              "filter_tags"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dataset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dataset"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/EvaluationDataset/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addExample": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/addExample/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "addExample"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "example_id": {
+                  "type": "string"
+                },
+                "dataset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "example_id",
+                "dataset"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/EvaluationDataset/addExample/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "addExample"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/evaluate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "overall": {
+                  "type": "number"
+                },
+                "per_example": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "example_id": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "example_id",
+                      "score"
+                    ]
+                  }
+                },
+                "per_metric": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "metric",
+                      "score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "overall",
+                "per_example",
+                "per_metric"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/EvaluationDataset/evaluate/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "detectDrift": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/detectDrift/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "detectDrift"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "drifted": {
+                  "type": "boolean"
+                },
+                "drift_magnitude": {
+                  "type": "number"
+                },
+                "degraded_examples": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "baseline_score": {
+                        "type": "number"
+                      },
+                      "current_score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "baseline_score",
+                      "current_score"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "drifted",
+                "drift_magnitude",
+                "degraded_examples"
+              ]
+            }
+          }
+        },
+        "no_baseline": {
+          "$id": "urn:clef/EvaluationDataset/detectDrift/completion/no_baseline",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "detectDrift"
+            },
+            "variant": {
+              "const": "no_baseline"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setBaseline": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/setBaseline/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "setBaseline"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "dataset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dataset"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/EvaluationDataset/setBaseline/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "setBaseline"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "compare": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/compare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "winner": {
+                  "type": "string"
+                },
+                "score_a": {
+                  "type": "number"
+                },
+                "score_b": {
+                  "type": "number"
+                },
+                "confidence": {
+                  "type": "number"
+                },
+                "per_example": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "score_a": {
+                        "type": "number"
+                      },
+                      "score_b": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "score_a",
+                      "score_b"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "winner",
+                "score_a",
+                "score_b",
+                "confidence",
+                "per_example"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/EvaluationDataset/compare/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "curate": {
+        "ok": {
+          "$id": "urn:clef/EvaluationDataset/curate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "curate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subset": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "input": {
+                        "type": "string"
+                      },
+                      "expected": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "input",
+                      "expected"
+                    ]
+                  }
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "subset",
+                "count"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/EvaluationDataset/curate/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationDataset"
+            },
+            "action": {
+              "const": "curate"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Golden datasets for continuous behavioral testing of LLM systems \n Curated collections of reference inputs and expected outcomes Detects \n prompt drift ( silent degradation when models update ) Supports \n LLM as judge evaluation , semantic scoring , and statistical comparison \n between versions"
+}

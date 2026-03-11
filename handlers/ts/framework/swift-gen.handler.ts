@@ -122,7 +122,7 @@ function typeNeedsPrimitive(t: ResolvedType, prim: string): boolean {
 function generateTypesFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${conceptName}/Types.swift`,
+    `// generated: ${conceptName}/Types.stub.swift`,
     '',
     'import Foundation',
     '',
@@ -225,7 +225,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
 function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${conceptName}/Handler.swift`,
+    `// generated: ${conceptName}/Handler.stub.swift`,
     '',
     'import Foundation',
     '',
@@ -251,7 +251,7 @@ function generateHandlerFile(manifest: ConceptManifest): string {
 function generateAdapterFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${conceptName}/Adapter.swift`,
+    `// generated: ${conceptName}/Adapter.stub.swift`,
     '',
     'import Foundation',
     '',
@@ -313,7 +313,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
 
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${conceptName}/ConformanceTests.swift`,
+    `// generated: ${conceptName}/ConformanceTests.stub.swift`,
     '',
     'import XCTest',
     '@testable import Clef',
@@ -434,21 +434,22 @@ export const swiftGenHandler: ConceptHandler = {
 
     try {
       const files: { path: string; content: string }[] = [
-        { path: `${manifest.name}/Types.swift`, content: generateTypesFile(manifest) },
-        { path: `${manifest.name}/Handler.swift`, content: generateHandlerFile(manifest) },
-        { path: `${manifest.name}/Adapter.swift`, content: generateAdapterFile(manifest) },
+        { path: `${manifest.name}/Types.stub.swift`, content: generateTypesFile(manifest) },
+        { path: `${manifest.name}/Handler.stub.swift`, content: generateHandlerFile(manifest) },
+        { path: `${manifest.name}/Adapter.stub.swift`, content: generateAdapterFile(manifest) },
       ];
 
       // Add conformance tests if the manifest has invariants
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
-        files.push({ path: `${manifest.name}/ConformanceTests.swift`, content: conformanceTest });
+        files.push({ path: `${manifest.name}/ConformanceTests.stub.swift`, content: conformanceTest });
       }
 
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

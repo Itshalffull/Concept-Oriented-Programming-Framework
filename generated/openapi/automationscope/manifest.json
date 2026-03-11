@@ -1,0 +1,909 @@
+{
+  "uri": "urn:clef/AutomationScope",
+  "name": "AutomationScope",
+  "typeParams": [
+    {
+      "name": "AS",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "as",
+        "paramRef": "AS"
+      },
+      "fields": [
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rules",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "action_pattern",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "category",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "active",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "scopes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "as",
+        "paramRef": "AS"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        },
+        {
+          "name": "mode",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            }
+          ],
+          "prose": "Sets scope mode to allowlist or denylist. Clears existing rules when mode changes."
+        },
+        {
+          "tag": "invalid_mode",
+          "fields": [
+            {
+              "name": "mode",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Mode must be allowlist or denylist."
+        }
+      ]
+    },
+    {
+      "name": "add_rule",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        },
+        {
+          "name": "action_pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            },
+            {
+              "name": "rule_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Adds a glob pattern to the scope's rule list under the given category. Duplicate patterns are ignored."
+        },
+        {
+          "tag": "not_configured",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            }
+          ],
+          "prose": "Scope has no mode set."
+        }
+      ]
+    },
+    {
+      "name": "remove_rule",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        },
+        {
+          "name": "action_pattern",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            },
+            {
+              "name": "rule_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Removes the matching pattern from the scope's rule list."
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "action_pattern",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matching rule in scope."
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        },
+        {
+          "name": "action_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "permitted",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            },
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action reference passes scope gate. In allowlist mode the action matched a rule; in denylist mode it matched none."
+        },
+        {
+          "tag": "denied",
+          "fields": [
+            {
+              "name": "scope",
+              "type": {
+                "kind": "param",
+                "paramRef": "AS"
+              }
+            },
+            {
+              "name": "action_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Action reference blocked by scope gate."
+        }
+      ]
+    },
+    {
+      "name": "list_rules",
+      "params": [
+        {
+          "name": "scope",
+          "type": {
+            "kind": "param",
+            "paramRef": "AS"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "rules",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "action_pattern",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "category",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "All rules currently in the scope."
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure allowlist, add_rule succeeds and check permits matching action",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "mode",
+              "value": {
+                "kind": "literal",
+                "value": "allowlist"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            }
+          ]
+        },
+        {
+          "action": "add_rule",
+          "inputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "action_pattern",
+              "value": {
+                "kind": "literal",
+                "value": "Content/*"
+              }
+            },
+            {
+              "name": "category",
+              "value": {
+                "kind": "literal",
+                "value": "content"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "rule_count",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "check",
+          "inputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "action_ref",
+              "value": {
+                "kind": "literal",
+                "value": "Content/save"
+              }
+            }
+          ],
+          "expectedVariant": "permitted",
+          "expectedOutputs": [
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "action_ref",
+              "value": {
+                "kind": "literal",
+                "value": "Content/save"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-scope-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AutomationScopeState {\n  \"\"\"All ass in this concept\"\"\"\n  ass: [ID!]!\n}\n\ntype AutomationScopeEntry {\n  as: ID!\n  mode: String!\n  rules: [AutomationScopeRule!]!\n  active: Boolean!\n}\n\ntype AutomationScopeRule {\n  action_pattern: String!\n  category: String!\n}\n\nextend type Query {\n  automationscope_entry(as: ID!): AutomationScopeEntry\n  automationscope_entries: [AutomationScopeEntry!]!\n}\n\ntype AutomationScopeScopes {\n  as: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/AutomationScope/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationScope"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "mode"
+            ]
+          }
+        }
+      },
+      "add_rule": {
+        "$id": "urn:clef/AutomationScope/add_rule/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationScope"
+          },
+          "action": {
+            "const": "add_rule"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "action_pattern": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "action_pattern",
+              "category"
+            ]
+          }
+        }
+      },
+      "remove_rule": {
+        "$id": "urn:clef/AutomationScope/remove_rule/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationScope"
+          },
+          "action": {
+            "const": "remove_rule"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "action_pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "action_pattern"
+            ]
+          }
+        }
+      },
+      "check": {
+        "$id": "urn:clef/AutomationScope/check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationScope"
+          },
+          "action": {
+            "const": "check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "action_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope",
+              "action_ref"
+            ]
+          }
+        }
+      },
+      "list_rules": {
+        "$id": "urn:clef/AutomationScope/list_rules/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AutomationScope"
+          },
+          "action": {
+            "const": "list_rules"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "ok": {
+          "$id": "urn:clef/AutomationScope/configure/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            }
+          }
+        },
+        "invalid_mode": {
+          "$id": "urn:clef/AutomationScope/configure/completion/invalid_mode",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "invalid_mode"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            }
+          }
+        }
+      },
+      "add_rule": {
+        "ok": {
+          "$id": "urn:clef/AutomationScope/add_rule/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "add_rule"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                },
+                "rule_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "scope",
+                "rule_count"
+              ]
+            }
+          }
+        },
+        "not_configured": {
+          "$id": "urn:clef/AutomationScope/add_rule/completion/not_configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "add_rule"
+            },
+            "variant": {
+              "const": "not_configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            }
+          }
+        }
+      },
+      "remove_rule": {
+        "ok": {
+          "$id": "urn:clef/AutomationScope/remove_rule/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "remove_rule"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                },
+                "rule_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "scope",
+                "rule_count"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/AutomationScope/remove_rule/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "remove_rule"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "action_pattern": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "action_pattern"
+              ]
+            }
+          }
+        }
+      },
+      "check": {
+        "permitted": {
+          "$id": "urn:clef/AutomationScope/check/completion/permitted",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "permitted"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                },
+                "action_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scope",
+                "action_ref"
+              ]
+            }
+          }
+        },
+        "denied": {
+          "$id": "urn:clef/AutomationScope/check/completion/denied",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "check"
+            },
+            "variant": {
+              "const": "denied"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string"
+                },
+                "action_ref": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "scope",
+                "action_ref",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "list_rules": {
+        "ok": {
+          "$id": "urn:clef/AutomationScope/list_rules/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AutomationScope"
+            },
+            "action": {
+              "const": "list_rules"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "rules": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "action_pattern": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action_pattern",
+                      "category"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "rules"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Allowlist/denylist gate controlling which concept actions the SyncAutomationProvider may invoke at runtime. Each scope holds pattern rules (glob-style action references) grouped by category. Mode determines whether matched patterns are permitted or denied."
+}

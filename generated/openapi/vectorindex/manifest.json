@@ -1,0 +1,1938 @@
+{
+  "uri": "urn:clef/VectorIndex",
+  "name": "VectorIndex",
+  "typeParams": [
+    {
+      "name": "X",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "distance_metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "index_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "embedding_model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "collections",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "document_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "index_config",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "indexes",
+      "source": "set-valued",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "distance_metric",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "index_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "backend",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "embedding_model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "index",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Distance : cosine , dot_product , euclidean \n Index type : hnsw , ivf_flat , flat \n Backend : pinecone , qdrant , chromadb , pgvector , faiss , weaviate \n Embedding_model : model ID for embed calls"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Incompatible settings"
+        }
+      ]
+    },
+    {
+      "name": "embed",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "vector",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "Float"
+                }
+              }
+            }
+          ],
+          "prose": "Generates embedding using the index s configured embedding_model \n Calls LLMProvider embed via sync"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Embedding model unavailable"
+        }
+      ]
+    },
+    {
+      "name": "embedBatch",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "texts",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "vectors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "text",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "vector",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "Float"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Batch embedding via configured model"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "completed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Some embeddings failed"
+        }
+      ]
+    },
+    {
+      "name": "add",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vector",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Inserts vector with optional JSON metadata"
+        },
+        {
+          "tag": "dimension_mismatch",
+          "fields": [
+            {
+              "name": "expected",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "got",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Vector dimensions don t match"
+        }
+      ]
+    },
+    {
+      "name": "addBatch",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "items",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "vector",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "Float"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "metadata",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Bulk insert"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "added",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some inserts failed"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "query_vector",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "metadata",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Top k similarity search with optional metadata filters"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "hybridSearch",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "query_vector",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "keyword_query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "vector_weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "metadata",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Combines vector BM25 via reciprocal rank fusion \n vector_weight 0 BM25 only , 1 vector only"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "mmrSearch",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "query_vector",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "diversity",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "score",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "metadata",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Maximal marginal relevance Diversity 0 -1"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No results"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "params": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "deleted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Removes vectors by ID"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Some IDs not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, add, search behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "dimensions",
+              "value": {
+                "kind": "literal",
+                "value": 1536
+              }
+            },
+            {
+              "name": "distance_metric",
+              "value": {
+                "kind": "literal",
+                "value": "cosine"
+              }
+            },
+            {
+              "name": "index_type",
+              "value": {
+                "kind": "literal",
+                "value": "hnsw"
+              }
+            },
+            {
+              "name": "backend",
+              "value": {
+                "kind": "literal",
+                "value": "qdrant"
+              }
+            },
+            {
+              "name": "embedding_model",
+              "value": {
+                "kind": "literal",
+                "value": "text-embedding-3-small"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            }
+          ]
+        },
+        {
+          "action": "add",
+          "inputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "id",
+              "value": {
+                "kind": "literal",
+                "value": "doc1"
+              }
+            },
+            {
+              "name": "vector",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "metadata",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": []
+        }
+      ],
+      "assertions": [
+        {
+          "action": "search",
+          "inputs": [
+            {
+              "name": "index",
+              "value": {
+                "kind": "variable",
+                "name": "x"
+              }
+            },
+            {
+              "name": "query_vector",
+              "value": {
+                "kind": "variable",
+                "name": "v"
+              }
+            },
+            {
+              "name": "k",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            },
+            {
+              "name": "filters",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "results",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "x",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "v",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VectorIndexState {\n  \"\"\"All xs in this concept\"\"\"\n  xs: [ID!]!\n}\n\ntype VectorIndexEntry {\n  x: ID!\n  dimensions: Int!\n  distance_metric: String!\n  index_type: String!\n  backend: String!\n  embedding_model: String!\n  collections: [String!]!\n  document_count: Int!\n  index_config: String!\n}\n\nextend type Query {\n  vectorindex_entry(x: ID!): VectorIndexEntry\n  vectorindex_entries: [VectorIndexEntry!]!\n}\n\ntype VectorIndexIndexes {\n  x: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/VectorIndex/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dimensions": {
+                "type": "integer"
+              },
+              "distance_metric": {
+                "type": "string"
+              },
+              "index_type": {
+                "type": "string"
+              },
+              "backend": {
+                "type": "string"
+              },
+              "embedding_model": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dimensions",
+              "distance_metric",
+              "index_type",
+              "backend",
+              "embedding_model"
+            ]
+          }
+        }
+      },
+      "embed": {
+        "$id": "urn:clef/VectorIndex/embed/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "embed"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "text"
+            ]
+          }
+        }
+      },
+      "embedBatch": {
+        "$id": "urn:clef/VectorIndex/embedBatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "embedBatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "texts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "index",
+              "texts"
+            ]
+          }
+        }
+      },
+      "add": {
+        "$id": "urn:clef/VectorIndex/add/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "add"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "vector": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "metadata": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "index",
+              "id",
+              "vector",
+              "metadata"
+            ]
+          }
+        }
+      },
+      "addBatch": {
+        "$id": "urn:clef/VectorIndex/addBatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "addBatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "vector": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "metadata": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "vector",
+                    "metadata"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "index",
+              "items"
+            ]
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:clef/VectorIndex/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "query_vector": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "k": {
+                "type": "integer"
+              },
+              "filters": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "index",
+              "query_vector",
+              "k",
+              "filters"
+            ]
+          }
+        }
+      },
+      "hybridSearch": {
+        "$id": "urn:clef/VectorIndex/hybridSearch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "hybridSearch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "query_vector": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "keyword_query": {
+                "type": "string"
+              },
+              "vector_weight": {
+                "type": "number"
+              },
+              "k": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "index",
+              "query_vector",
+              "keyword_query",
+              "vector_weight",
+              "k"
+            ]
+          }
+        }
+      },
+      "mmrSearch": {
+        "$id": "urn:clef/VectorIndex/mmrSearch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "mmrSearch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "query_vector": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "k": {
+                "type": "integer"
+              },
+              "diversity": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "index",
+              "query_vector",
+              "k",
+              "diversity"
+            ]
+          }
+        }
+      },
+      "delete": {
+        "$id": "urn:clef/VectorIndex/delete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VectorIndex"
+          },
+          "action": {
+            "const": "delete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "string"
+              },
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "index",
+              "ids"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "index"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/VectorIndex/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "embed": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/embed/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vector": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": [
+                "vector"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/VectorIndex/embed/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "embed"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "embedBatch": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/embedBatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "embedBatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "vectors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "vector": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "vector"
+                    ]
+                  }
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "vectors",
+                "count"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/VectorIndex/embedBatch/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "embedBatch"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "completed": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "completed",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      "add": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/add/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "dimension_mismatch": {
+          "$id": "urn:clef/VectorIndex/add/completion/dimension_mismatch",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "add"
+            },
+            "variant": {
+              "const": "dimension_mismatch"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "expected": {
+                  "type": "integer"
+                },
+                "got": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "expected",
+                "got"
+              ]
+            }
+          }
+        }
+      },
+      "addBatch": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/addBatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "addBatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/VectorIndex/addBatch/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "addBatch"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "added": {
+                  "type": "integer"
+                },
+                "failed": {
+                  "type": "integer"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "added",
+                "failed",
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "metadata": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "score",
+                      "metadata"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/VectorIndex/search/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "hybridSearch": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/hybridSearch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "hybridSearch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "metadata": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "score",
+                      "metadata"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/VectorIndex/hybridSearch/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "hybridSearch"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "mmrSearch": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/mmrSearch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "mmrSearch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": "number"
+                      },
+                      "metadata": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "score",
+                      "metadata"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/VectorIndex/mmrSearch/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "mmrSearch"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "delete": {
+        "ok": {
+          "$id": "urn:clef/VectorIndex/delete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "deleted": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "deleted"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/VectorIndex/delete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VectorIndex"
+            },
+            "action": {
+              "const": "delete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Stores embedding vectors with metadata and provides similarity search \n The database of the RAG stack Abstracts over backends from in process \n FAISS to managed Pinecone to pgvector Supports hybrid search combining \n vector similarity with keyword search via reciprocal rank fusion \n Manages its own embedding configuration ( model , dimensions ) since \n Embedding was absorbed here"
+}

@@ -1,0 +1,120 @@
+@version(1)
+widget circle-org-chart {
+
+  purpose {
+    Hierarchical organization chart showing governance circles as nested
+    containers with member avatars, policy badges, and jurisdiction
+    labels. Supports expand/collapse of circles, member detail on hover,
+    and jurisdiction boundary highlighting. Used for visualizing
+    sociocratic and holacratic governance structures.
+  }
+
+  requires @1 {
+    fields {
+      circles: list;
+      selectedCircleId: option String;
+    }
+    actions {
+      selectCircle: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Chart wrapper }
+    circleNode:     container  { Single circle container with label and members }
+    circleLabel:    text       { Circle name }
+    memberAvatars:  container  { Row of member avatars (truncated with +N) }
+    policyBadges:   container  { Policy tags for this circle }
+    jurisdictionTag: text      { Jurisdiction scope label }
+    children:       container  { Nested child circles }
+    detailPanel:    container  { Side panel for selected circle details }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_CIRCLE -> circleSelected;
+      on EXPAND -> idle;
+      on COLLAPSE -> idle;
+    }
+
+    circleSelected {
+      on DESELECT -> idle;
+      on SELECT_CIRCLE -> circleSelected;
+      entry [highlightCircle; show detailPanel];
+      exit [unhighlightCircle; hide detailPanel];
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowRight -> EXPAND;
+      ArrowLeft -> COLLAPSE;
+      Enter -> SELECT_CIRCLE;
+      Escape -> DESELECT;
+    }
+    focus { trap: false; initial: circleNode; roving: true; }
+    aria {
+      root -> { role: "tree"; aria-label: "Governance circles"; };
+      circleNode -> { role: "treeitem"; aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none; aria-selected: if self.isSelected then "true" else "false"; };
+      children -> { role: "group"; };
+      detailPanel -> { role: "complementary"; aria-label: "Circle details"; };
+    }
+  }
+
+  props {
+    layout: union "tree" | "nested" | "radial" = "tree"
+    showPolicies: Bool = true
+    showJurisdiction: Bool = true
+    maxAvatars: Int = 5
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Polity";
+    }
+    bind {
+      circles: circles;
+    }
+  }
+
+  affordance {
+    serves: entity-graph;
+    specificity: 20;
+    when {
+      concept: "Circle";
+    }
+    bind {
+      circles: members;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; data-layout: ?layout; }
+    circleNode -> { data-part: "circle-node"; data-selected: if self.isSelected then "true" else "false"; tabindex: if self.isFocused then "0" else "-1"; onClick: send(SELECT_CIRCLE, { id: self.id }); }
+    circleLabel -> { data-part: "circle-label"; text: self.name; }
+    memberAvatars -> { data-part: "member-avatars"; }
+    policyBadges -> { data-part: "policies"; data-visible: if ?showPolicies then "true" else "false"; }
+    jurisdictionTag -> { data-part: "jurisdiction"; text: self.jurisdiction; data-visible: if ?showJurisdiction then "true" else "false"; }
+    children -> { data-part: "children"; data-visible: if self.expanded then "true" else "false"; }
+    detailPanel -> { data-part: "detail-panel"; data-visible: if state == "circleSelected" then "true" else "false"; }
+  }
+
+  compose {
+    memberAvatars: widget("avatar", { size: "sm" });
+    policyBadges: widget("badge", { variant: "outline", size: "sm" });
+    detailPanel: widget("drawer", { placement: "right" });
+  }
+
+  invariant {
+    "Nested circles must be visually contained within parent circles";
+    "Member avatars must truncate with +N indicator beyond maxAvatars";
+    "Selected circle must highlight its boundary and all ancestors";
+    "Jurisdiction tags must be visible for each circle with policy scope";
+  }
+
+}

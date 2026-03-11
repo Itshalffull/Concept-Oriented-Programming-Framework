@@ -1,0 +1,21 @@
+type ReWOOStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ReWOOStrategyEntry {
+  s: ID!
+  planned_calls: [JSON!]!
+  execution_results: [JSON!]!
+  agent_ref: String!
+}
+
+extend type Query {
+  rewoostrategy_entry(s: ID!): ReWOOStrategyEntry
+  rewoostrategy_entries: [ReWOOStrategyEntry!]!
+}
+
+type ReWOOStrategySessions {
+  s: ID!
+  value: ID!
+}

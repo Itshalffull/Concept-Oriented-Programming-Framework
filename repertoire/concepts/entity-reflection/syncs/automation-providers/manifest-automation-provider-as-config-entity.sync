@@ -1,0 +1,24 @@
+// Manifest automation provider as config entities — bridges provider
+// registrations into the entity system for discovery and routing.
+
+# When the manifest provider registers, save as config entity
+sync ManifestAutomationProviderAsConfigEntity [eager]
+  purpose: "Persist manifest automation provider registrations as queryable config entities."
+when {
+  ManifestAutomationProvider/register: []
+    => [ provider_name: ?providerName ]
+}
+then {
+  ContentStorage/save: [ record: ?providerName; data: ?providerName ]
+}
+
+# Tag with bundle type
+sync ManifestAutomationProviderTagBundle [eager]
+  purpose: "Tag manifest automation providers with their bundle type."
+when {
+  ManifestAutomationProvider/register: []
+    => [ provider_name: ?providerName ]
+}
+then {
+  Property/set: [ entity: ?providerName; key: "config_bundle"; value: "automation_provider" ]
+}

@@ -8,7 +8,7 @@ The same principle as the deploy and Clef Binds: **the engine owns coordination 
 
 **The sync engine drives execution.** No generation suite concept sits in the execution path between triggers and generators. The sync engine connects SchemaGen → BuildCache → TypeScriptGen → Emitter → BuildCache directly. GenerationPlan is a passive observer and planner — it queries infrastructure for `--plan`/`--dry-run` and watches completions for `--status`, but never dispatches or blocks generation.
 
-**PluginRegistry is the single registration point.** Generators register once with PluginRegistry (from the infrastructure kit). KindSystem and GenerationPlan both consume that registration through syncs. No generator needs to know about KindSystem or GenerationPlan directly.
+**PluginRegistry is the single registration point.** Generators register once with PluginRegistry (from the infrastructure suite). KindSystem and GenerationPlan both consume that registration through syncs. No generator needs to know about KindSystem or GenerationPlan directly.
 
 ### Position in the Architecture
 
@@ -121,15 +121,15 @@ FileWatcher/detected ──sync──▶ Resource/upsert
 | **GenerationPlan** | Plan runs, track status, report results | Passive observer: queries for `--plan`, watches completions for `--status` |
 | **Emitter** | Content-addressed file writes, tracing, audit | Active sink: file output flows through for writes and formatting |
 
-### Relationship to Existing Kits
+### Relationship to Existing Suites
 
-**Interface kit:** Emitter moves from Clef Bind to generation suite (shared). BuildCache wraps each target provider via syncs. All Clef Bind concepts (Projection, Generator, Target, Sdk, Spec, Surface, Middleware, all 13 providers) remain unchanged. Internal sync chains stay exactly as designed.
+**Interface suite:** Emitter moves from Clef Bind to generation suite (shared). BuildCache wraps each target provider via syncs. All Clef Bind concepts (Projection, Generator, Target, Sdk, Spec, Surface, Middleware, all 13 providers) remain unchanged. Internal sync chains stay exactly as designed.
 
-**Deploy kit:** IaC and GitOps provider output pipes through shared Emitter. BuildCache wraps each provider via syncs. All deploy kit concepts remain unchanged.
+**Deploy suite:** IaC and GitOps provider output pipes through shared Emitter. BuildCache wraps each provider via syncs. All deploy suite concepts remain unchanged.
 
 **Framework pipeline:** TypeScriptGen, RustGen, etc. pipe output through shared Emitter. BuildCache wraps each generator via syncs. Existing trigger syncs (SchemaGen → TypeScriptGen) are replaced by cache-aware versions.
 
-**Infrastructure kit:** Generation kit imports PluginRegistry. Generators register as plugins. KindSystem auto-populates from registrations. GenerationPlan queries PluginRegistry for planning.
+**Infrastructure suite:** Generation suite imports PluginRegistry. Generators register as plugins. KindSystem auto-populates from registrations. GenerationPlan queries PluginRegistry for planning.
 
 ---
 
@@ -236,9 +236,9 @@ concept Resource [R] {
 |---|---|---|
 | `concept-spec` | `.concept` files | Framework pipeline, Clef Bind |
 | `sync-spec` | `.sync` files | Framework pipeline |
-| `interface-manifest` | `app.interface.yaml` | Interface kit |
-| `deploy-manifest` | `app.deploy.yaml` | Deploy kit |
-| `kit-manifest` | `suite.yaml` | All suites |
+| `interface-manifest` | `app.interface.yaml` | Interface suite |
+| `deploy-manifest` | `app.deploy.yaml` | Deploy suite |
+| `suite-manifest` | `suite.yaml` | All suites |
 | `config` | `clef.config.yaml`, env vars | All suites |
 | `static-asset` | Images, templates, static files | Auxiliary generation |
 
@@ -377,7 +377,7 @@ concept KindSystem [K] {
 }
 ```
 
-**Standard kind taxonomy (registered at kit load time):**
+**Standard kind taxonomy (registered at suite load time):**
 
 ```
 # Source kinds
@@ -893,7 +893,7 @@ then {
 }
 ```
 
-> **Note:** KindSystem/define for each kind must happen before KindSystem/connect. The standard kind taxonomy (ConceptDSL, ConceptAST, ConceptManifest, etc.) is registered at kit load time via bootstrap syncs. Generator-specific artifact kinds (TypeScriptFiles, RestRoutes, etc.) are defined in the same registration flow — the PluginRegistry metadata includes `inputKind` and `outputKind` as string names, and the sync above auto-creates edges. A companion sync ensures the kinds exist:
+> **Note:** KindSystem/define for each kind must happen before KindSystem/connect. The standard kind taxonomy (ConceptDSL, ConceptAST, ConceptManifest, etc.) is registered at suite load time via bootstrap syncs. Generator-specific artifact kinds (TypeScriptFiles, RestRoutes, etc.) are defined in the same registration flow — the PluginRegistry metadata includes `inputKind` and `outputKind` as string names, and the sync above auto-creates edges. A companion sync ensures the kinds exist:
 
 ```
 sync EnsureKindsDefined [eager]
@@ -1329,7 +1329,7 @@ then {
 
 ## Part 3: Generator Registration
 
-Each generator concept needs a lightweight `register` action that returns metadata for PluginRegistry. This is the only change to existing generator concepts. Generators never interact with KindSystem or GenerationPlan directly — PluginRegistry is the single registration point, and syncs propagate metadata to other kit concepts.
+Each generator concept needs a lightweight `register` action that returns metadata for PluginRegistry. This is the only change to existing generator concepts. Generators never interact with KindSystem or GenerationPlan directly — PluginRegistry is the single registration point, and syncs propagate metadata to other suite concepts.
 
 ### Registration action (added to each generator)
 
@@ -1423,11 +1423,11 @@ PluginRegistry/register → ok(plugin)
 
 ---
 
-## Part 4: Kit Packaging
+## Part 4: Suite Packaging
 
 ```yaml
-# kits/generation/suite.yaml
-kit:
+# suites/generation/suite.yaml
+suite:
   name: generation
   version: 0.1.0
   description: >
@@ -1517,10 +1517,10 @@ syncs:
 
   # Per-generator syncs (cache-check wrappers, output routing,
   # observer syncs, registration syncs) live in each family's
-  # kit because they name family-specific concepts.
+  # suite because they name family-specific concepts.
 
 uses:
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -1528,7 +1528,7 @@ uses:
 ### Directory structure
 
 ```
-kits/generation/
+suites/generation/
 ├── suite.yaml
 ├── resource.concept
 ├── kind-system.concept
@@ -1598,16 +1598,16 @@ CheckCacheBeforeTypeScriptGen + TypeScriptGenOnCacheMiss
 
 Everything else (SpecParser → SchemaGen chain, SchemaGen internals) is unchanged.
 
-**New syncs in kits/framework/:**
+**New syncs in suites/framework/:**
 
 ```yaml
-# kits/framework/suite.yaml (updated)
-kit:
+# suites/framework/suite.yaml (updated)
+suite:
   name: framework
   version: 0.x.0
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
       - name: BuildCache
@@ -1651,13 +1651,13 @@ syncs:
 **Internal sync chains stay exactly as designed.** The Clef Bind's Projection → Generator → Target → RestTarget → Middleware → Emitter → Surface chain is unchanged. BuildCache wraps each target provider via cache-check syncs.
 
 ```yaml
-# kits/interface/suite.yaml (updated)
-kit:
+# suites/interface/suite.yaml (updated)
+suite:
   name: interface
   version: 0.2.0
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter        # shared, no longer local
       - name: BuildCache
@@ -1699,13 +1699,13 @@ syncs:
 Same pattern. IaC and GitOps provider output pipes through shared Emitter.
 
 ```yaml
-# kits/deploy/suite.yaml (updated)
-kit:
+# suites/deploy/suite.yaml (updated)
+suite:
   name: deploy
   version: 0.x.0
 
 uses:
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Emitter
       - name: BuildCache
@@ -1959,11 +1959,11 @@ The external kernel had a fundamental problem: every concept referenced every ot
 
 | Layer | Concepts | Count |
 |---|---|---|
-| **Generation kit (new, shared)** | Resource, KindSystem, BuildCache, GenerationPlan, Emitter | **5** |
+| **Generation suite (new, shared)** | Resource, KindSystem, BuildCache, GenerationPlan, Emitter | **5** |
 | Framework generators (existing) | SpecParser, SchemaGen, TypeScriptGen, RustGen, SwiftGen, SolidityGen, CacheCompiler | 7 |
-| Interface kit (existing) | Projection, Generator, Surface, Middleware, Target, Sdk, Spec, + 13 providers | 20 |
-| Deploy kit (existing) | DeployPlan, Rollout, Migration, Health, Env, Telemetry, Artifact, Runtime, Secret, IaC, GitOps, + providers | 15+ |
-| Infrastructure kit (existing) | PluginRegistry, + others | varies |
+| Interface suite (existing) | Projection, Generator, Surface, Middleware, Target, Sdk, Spec, + 13 providers | 20 |
+| Deploy suite (existing) | DeployPlan, Rollout, Migration, Health, Env, Telemetry, Artifact, Runtime, Secret, IaC, GitOps, + providers | 15+ |
+| Infrastructure suite (existing) | PluginRegistry, + others | varies |
 | Parsers/compilers (existing) | SyncParser, SyncCompiler, ContentParser, ExpressionLanguage, Query | 5 |
 | Auxiliary (existing) | JWT, MediaAsset, Palette, Elevation, Pathauto | 5+ |
 
@@ -2016,7 +2016,7 @@ The external kernel had a fundamental problem: every concept referenced every ot
 **Goal:** Pipeline ordering, validation, and cascading invalidation are data-driven.
 
 1. Implement KindSystem concept (define, connect, route, validate, dependents, graph)
-2. Register standard kind taxonomy at kit load time
+2. Register standard kind taxonomy at suite load time
 3. Wire PluginRegistry → KindSystem via RegisterGeneratorKinds + EnsureKindsDefined syncs
 4. Wire BuildCache cascading through KindSystem/dependents
 5. Add `clef kinds` CLI commands

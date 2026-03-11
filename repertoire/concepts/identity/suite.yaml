@@ -10,6 +10,10 @@ concepts:
     spec: authorization.concept
   - name: AccessControl
     spec: access-control.concept
+  - name: AccessCatalog
+    spec: access-catalog.concept
+  - name: ResourceGrantPolicy
+    spec: resource-grant-policy.concept
   - name: Session
     spec: session.concept
 

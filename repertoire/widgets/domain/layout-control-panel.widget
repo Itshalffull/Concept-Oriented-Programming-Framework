@@ -1,0 +1,100 @@
+@version(1)
+widget layout-control-panel {
+
+  purpose {
+    Control panel for selecting and applying layout algorithms to a
+    canvas. Provides algorithm selector, direction options, spacing
+    controls, and apply button.
+  }
+
+  anatomy {
+    root:               container  { Panel containing layout controls }
+    algorithm-selector: input      { Dropdown or segmented control for algorithm choice }
+    direction-selector: input      { Direction toggle: top-down, left-right, etc. }
+    spacing-slider:     input      { Slider for node spacing }
+    apply-button:       action     { Button to apply the selected layout }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_ALGORITHM -> configured;
+    }
+
+    configured {
+      on APPLY -> applying;
+      on SELECT_ALGORITHM -> configured;
+      entry [enable apply-button];
+    }
+
+    applying {
+      on COMPLETE -> idle;
+      on ERROR -> configured;
+      entry [disable apply-button; show spinner];
+      exit [hide spinner; enable apply-button];
+    }
+  }
+
+  accessibility {
+    role: form;
+    modal: false;
+    keyboard {
+      Enter -> APPLY;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: algorithm-selector;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Layout controls";
+      };
+      algorithm-selector -> {
+        role: "listbox";
+        aria-label: "Layout algorithm";
+      };
+      apply-button -> {
+        role: "button";
+        aria-label: "Apply layout";
+        aria-disabled: if state == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    algorithms: list { name: String, label: String } = []
+    selectedAlgorithm: option String
+    direction: union "top-to-bottom" | "left-to-right" | "bottom-to-top" | "right-to-left" = "top-to-bottom"
+    spacingX: Float = 80.0
+    spacingY: Float = 100.0
+    canvasId: String
+  }
+
+  connect {
+    root -> {
+      data-part: "layout-control";
+      data-canvas: ?canvasId;
+    }
+    algorithm-selector -> {
+      data-part: "algorithm-selector";
+      value: ?selectedAlgorithm;
+      onChange: send(SELECT_ALGORITHM, { algorithm: self.value });
+    }
+    direction-selector -> {
+      data-part: "direction-selector";
+      value: ?direction;
+      onChange: send(SET_DIRECTION, { direction: self.value });
+    }
+    spacing-slider -> {
+      data-part: "spacing-slider";
+      value: ?spacingX;
+      onInput: send(SET_SPACING, { spacing: self.value });
+    }
+    apply-button -> {
+      data-part: "apply-button";
+      onClick: send(APPLY, { algorithm: ?selectedAlgorithm, direction: ?direction, spacing_x: ?spacingX, spacing_y: ?spacingY });
+    }
+  }
+}

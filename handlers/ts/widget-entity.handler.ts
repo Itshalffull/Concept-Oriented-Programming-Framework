@@ -7,7 +7,7 @@
 // and composition references as a traversable structure.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, WidgetManifest } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
@@ -29,34 +29,47 @@ export const widgetEntityHandler: ConceptHandler = {
     const id = nextId();
     const symbol = `clef/widget/${name}`;
 
-    // Extract metadata from AST
-    let purposeText = '';
-    let version = 0;
-    let category = '';
-    let anatomyParts = '[]';
-    let states = '[]';
-    let props = '[]';
-    let slots = '[]';
-    let composedWidgets = '[]';
-    let affordances = '[]';
-    let accessibilityRole = '';
-    let hasFocusTrap = 'false';
-    let keyboardBindings = '[]';
+    // Build typed WidgetManifest from parsed AST
+    const manifest: WidgetManifest = {
+      name,
+      purpose: '',
+      anatomy: [],
+      states: [],
+      props: [],
+      slots: [],
+      accessibility: { role: '', keyboard: [], focus: {} },
+      composedWidgets: [],
+    };
 
     try {
       const parsed = JSON.parse(ast);
-      purposeText = parsed.purpose || '';
-      version = parsed.version || 0;
-      category = parsed.category || '';
-      anatomyParts = JSON.stringify(parsed.anatomy || []);
-      states = JSON.stringify(parsed.states || []);
-      props = JSON.stringify(parsed.props || []);
-      slots = JSON.stringify(parsed.slots || []);
-      composedWidgets = JSON.stringify(parsed.compose || parsed.composedWidgets || []);
-      affordances = JSON.stringify(parsed.affordances || []);
-      accessibilityRole = parsed.accessibility?.role || '';
-      hasFocusTrap = parsed.accessibility?.focusTrap ? 'true' : 'false';
-      keyboardBindings = JSON.stringify(parsed.accessibility?.keyboard || parsed.keyboardBindings || []);
+      manifest.purpose = parsed.purpose || '';
+      manifest.version = parsed.version || undefined;
+      manifest.category = parsed.category || undefined;
+      manifest.anatomy = parsed.anatomy || [];
+      manifest.states = parsed.states || [];
+      manifest.props = parsed.props || [];
+      manifest.slots = parsed.slots || [];
+      manifest.composedWidgets = parsed.compose || parsed.composedWidgets || [];
+      if (parsed.affordances?.[0] || parsed.affordance) {
+        const aff = parsed.affordance || parsed.affordances?.[0];
+        manifest.affordance = {
+          serves: aff?.serves || aff?.interactor || '',
+          specificity: aff?.specificity,
+          when: aff?.when,
+          binds: aff?.binds || aff?.bind || [],
+        };
+      }
+      manifest.accessibility = {
+        role: parsed.accessibility?.role || '',
+        keyboard: parsed.accessibility?.keyboard || parsed.keyboardBindings || [],
+        focus: {
+          trap: parsed.accessibility?.focusTrap,
+          initial: parsed.accessibility?.focus?.initial,
+          roving: parsed.accessibility?.focus?.roving,
+        },
+        ariaAttrs: parsed.accessibility?.ariaAttrs,
+      };
     } catch {
       // AST may be empty or non-JSON; store defaults
     }
@@ -67,18 +80,28 @@ export const widgetEntityHandler: ConceptHandler = {
       symbol,
       sourceFile: source,
       ast,
-      purposeText,
-      version,
-      category,
-      anatomyParts,
-      states,
-      props,
-      slots,
-      composedWidgets,
-      affordances,
-      accessibilityRole,
-      hasFocusTrap,
-      keyboardBindings,
+      manifest: JSON.stringify(manifest),
+      // Keep legacy fields for backward compatibility with existing queries
+      purposeText: manifest.purpose,
+      version: manifest.version || 0,
+      category: manifest.category || '',
+      anatomyParts: JSON.stringify(manifest.anatomy),
+      states: JSON.stringify(manifest.states),
+      props: JSON.stringify(manifest.props),
+      slots: JSON.stringify(manifest.slots),
+      composedWidgets: JSON.stringify(manifest.composedWidgets),
+      affordances: JSON.stringify(
+        (() => {
+          try {
+            const parsed = JSON.parse(ast);
+            if (Array.isArray(parsed.affordances)) return parsed.affordances;
+          } catch { /* use fallback */ }
+          return manifest.affordance ? [manifest.affordance] : [];
+        })(),
+      ),
+      accessibilityRole: manifest.accessibility.role,
+      hasFocusTrap: manifest.accessibility.focus.trap ? 'true' : 'false',
+      keyboardBindings: JSON.stringify(manifest.accessibility.keyboard),
     });
 
     return { variant: 'ok', entity: id };

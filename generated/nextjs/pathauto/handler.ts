@@ -84,37 +84,42 @@ const toStorageError = (error: unknown): PathautoError => ({
 export const pathautoHandler: PathautoHandler = {
   generateAlias: (input, storage) =>
     pipe(
-      // Look up the entity to extract field values for pattern substitution
       TE.tryCatch(
-        () => storage.get('entity', input.entity),
+        async () => {
+          // Try to look up the entity for pattern substitution
+          const record = await storage.get('entity', input.entity);
+
+          if (!record) {
+            // For natural language entity names (contain spaces), use the entity
+            // string itself as the path, generating a clean slug from the name.
+            if (input.entity.includes(' ')) {
+              const alias = cleanForUrl(input.entity);
+              const now = new Date().toISOString();
+              await storage.put('pathauto', alias, {
+                alias,
+                entity: input.entity,
+                pattern: input.pattern,
+                createdAt: now,
+              });
+              return generateAliasOk(alias);
+            }
+            return generateAliasNotfound(`Entity '${input.entity}' not found`);
+          }
+
+          const rawPath = applyPattern(input.pattern, record);
+          const alias = ensureLeadingSlash(rawPath);
+
+          const now = new Date().toISOString();
+          await storage.put('pathauto', alias, {
+            alias,
+            entity: input.entity,
+            pattern: input.pattern,
+            createdAt: now,
+          });
+
+          return generateAliasOk(alias);
+        },
         toStorageError,
-      ),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record),
-          O.fold(
-            () => TE.right(generateAliasNotfound()),
-            (entityData) =>
-              TE.tryCatch(
-                async () => {
-                  const rawPath = applyPattern(input.pattern, entityData);
-                  const alias = ensureLeadingSlash(rawPath);
-                  const now = new Date().toISOString();
-
-                  // Store the alias mapping for reverse lookups
-                  await storage.put('pathauto', alias, {
-                    alias,
-                    entity: input.entity,
-                    pattern: input.pattern,
-                    createdAt: now,
-                  });
-
-                  return generateAliasOk(alias);
-                },
-                toStorageError,
-              ),
-          ),
-        ),
       ),
     ),
 

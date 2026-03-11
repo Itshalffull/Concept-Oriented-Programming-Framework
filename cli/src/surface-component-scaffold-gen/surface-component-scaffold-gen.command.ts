@@ -4,24 +4,39 @@
 
 import { Command } from 'commander';
 
-export const surfaceComponentScaffoldGenCommand = new Command('scaffold')
-  .description('Generate Clef Surface headless component (widget, anatomy, machine, kit).');
+export const surfaceComponentScaffoldGenCommand = new Command('scaffold-component')
+  .description('Generate Clef Surface headless component (.widget, anatomy, machine, suite).');
 
 surfaceComponentScaffoldGenCommand
   .command('component')
-  .description('Scaffold a complete Clef Surface headless component with FSM, anatomy, and machine.')
+  .description('Scaffold a .widget spec with anatomy, states, accessibility, affordance, props, connect, and compose.')
   .requiredOption('-n, --name <name>', 'PascalCase component name')
   .option('-p, --parts <parts>', 'Comma-separated anatomy part names', 'root,trigger,content')
   .option('-s, --states <states>', 'Comma-separated FSM state names', 'idle,active')
   .option('-e, --events <events>', 'Comma-separated FSM event names', 'open,close')
+  .option('--role <role>', 'ARIA role for accessibility', 'widget')
+  .requiredOption('--requires <requires>', 'Requires')
+  .requiredOption('--affordance <affordance>', 'Affordance')
+  .option('--props <props>', 'Comma-separated prop declarations (name:Type:default)')
+  .option('--compose <compose>', 'Comma-separated widget names to compose into parts (e.g. FocusTrap:content)')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
-  .addHelpText('after', '  clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape  # Generate a dialog component')
+  .addHelpText('after', '  clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape --role dialog  # Generate a dialog component')
   .addHelpText('after', '  clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur  # Generate a tabs component')
-  .addHelpText('after', '  clef scaffold component --name Card --parts root,header,body,footer --slots header,footer  # Generate with slots')
+  .addHelpText('after', '  clef scaffold component --name Card --parts root,header,body,footer --slots header,footer --compose FocusTrap:body  # Generate with slots and compose')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceComponentScaffoldGenCommand
@@ -31,27 +46,48 @@ surfaceComponentScaffoldGenCommand
   .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
   .requiredOption('--states <states>', 'States')
   .requiredOption('--events <events>', 'Events')
+  .requiredOption('--role <role>', 'Role')
+  .requiredOption('--requires <requires>', 'Requires')
+  .requiredOption('--affordance <affordance>', 'Affordance')
+  .requiredOption('--props <props>', 'Props')
+  .requiredOption('--compose <compose>', 'Compose')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 surfaceComponentScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SurfaceComponentScaffoldGen 
- inputKind : ComponentConfig 
- outputKind : SurfaceComponent 
- capabilities : [ widget , anatomy , machine , slots ]')
+  .description('Return static metadata for PluginRegistry . name : SurfaceComponentScaffoldGen inputKind : ComponentConfig outputKind : SurfaceComponent capabilities : [ widget , anatomy , machine , slots , accessibility , affordance , props , compose ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const surfaceComponentScaffoldGenCommandTree = {
-  group: 'scaffold',
-  description: 'Generate Clef Surface headless component (widget, anatomy, machine, kit).',
+  group: 'scaffold-component',
+  description: 'Generate Clef Surface headless component (.widget, anatomy, machine, suite).',
   commands: [{ action: 'generate', command: 'component' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

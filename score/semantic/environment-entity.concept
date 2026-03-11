@@ -1,0 +1,104 @@
+@version(1)
+concept EnvironmentEntity [E] {
+
+  purpose {
+    Queryable representation of environment configuration, secret
+    bindings, and config overrides across deployment environments.
+    Enables queries like "what config values differ between staging
+    and production?", "which secrets does the api runtime need?",
+    and "what environment variables affect User/create?"
+  }
+
+  state {
+    entries: set E
+    name: E -> String
+    environment: E -> String
+    kind: E -> String
+    value: E -> String
+    source: E -> String
+    boundRuntime: E -> String
+    boundConcept: E -> String
+    sensitive: E -> String
+    lastModified: E -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, environment: String, kind: String, value: String, source: String) {
+      -> ok(entry: E) {
+        Register a config entry. kind is one of: config, secret,
+        feature-flag, override. source is where the value comes from
+        (env-file, vault, ssm, config-map, etc.). For secrets,
+        value is a placeholder — never store actual secret values.
+      }
+      -> updated(existing: E) {
+        Updated an existing config entry.
+      }
+    }
+
+    action get(name: String, environment: String) {
+      -> ok(entry: E) {
+        Retrieve a config entry by name and environment.
+      }
+      -> notfound() {
+        No config entry with this name in this environment.
+      }
+    }
+
+    action findByEnvironment(environment: String) {
+      -> ok(entries: String) {
+        Return all config entries for an environment. Result as
+        serialized JSON array of { name, kind, value, source,
+        boundRuntime, sensitive }.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(entries: String) {
+        Return all config entries bound to a concept. Result
+        as serialized JSON array.
+      }
+    }
+
+    action findByRuntime(runtime: String) {
+      -> ok(entries: String) {
+        Return all config entries bound to a runtime. Result
+        as serialized JSON array.
+      }
+    }
+
+    action diffEnvironments(envA: String, envB: String) {
+      -> ok(differences: String) {
+        Compare config between two environments (e.g., staging
+        vs production). Result as serialized JSON array of
+        { name, kind, aValue, bValue, onlyInA, onlyInB }.
+      }
+      -> same() {
+        Environments have identical config.
+      }
+    }
+
+    action secretsAudit(environment: String) {
+      -> ok(secrets: String) {
+        Return all secrets for an environment with their source
+        and rotation status. Result as serialized JSON array of
+        { name, source, boundRuntime, lastRotated }.
+      }
+    }
+
+    action featureFlags(environment: String) {
+      -> ok(flags: String) {
+        Return all feature flags for an environment. Result as
+        serialized JSON array of { name, value, boundConcept }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "DATABASE_URL", environment: "production", kind: "secret", value: "***", source: "vault") -> ok(entry: e)
+    then get(name: "DATABASE_URL", environment: "production") -> ok(entry: e)
+  }
+}

@@ -1,0 +1,811 @@
+{
+  "uri": "urn:clef/CodeActStrategy",
+  "name": "CodeActStrategy",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "code_history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "code",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "output",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "error",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "step",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "runtime_env",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "sandbox_config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "timeout_ms",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "memory_limit_mb",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "code_runs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "final_code",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "( 1 ) Generate code to solve the problem \n ( 2 ) Execute in sandbox \n ( 3 ) Observe stdout stderr \n ( 4 ) If error or incomplete , revise code and re run \n ( 5 ) Extract final answer from output"
+        },
+        {
+          "tag": "max_iterations",
+          "fields": [
+            {
+              "name": "partial",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "code_runs",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Could not produce working code"
+        },
+        {
+          "tag": "sandbox_error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Sandbox unavailable or security violation"
+        }
+      ]
+    },
+    {
+      "name": "generateCode",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "previous_error",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "code",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Generates code If previous_error provided , fixes the issue"
+        }
+      ]
+    },
+    {
+      "name": "executeCode",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "code",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Runs code in sandbox , returns stdout"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "stderr",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "exit_code",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Code failed"
+        },
+        {
+          "tag": "timeout",
+          "fields": [],
+          "prose": "Exceeded timeout_ms"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "history",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "code",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "output",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "error",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "step",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns code execution history"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type CodeActStrategyState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype CodeActStrategyEntry {\n  s: ID!\n  code_history: [JSON!]!\n  runtime_env: String!\n  sandbox_config: JSON!\n  agent_ref: String!\n}\n\nextend type Query {\n  codeactstrategy_entry(s: ID!): CodeActStrategyEntry\n  codeactstrategy_entries: [CodeActStrategyEntry!]!\n}\n\ntype CodeActStrategySessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "execute": {
+        "$id": "urn:clef/CodeActStrategy/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CodeActStrategy"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent_ref": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "agent_ref",
+              "goal",
+              "context",
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "generateCode": {
+        "$id": "urn:clef/CodeActStrategy/generateCode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CodeActStrategy"
+          },
+          "action": {
+            "const": "generateCode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "previous_error": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "session",
+              "goal",
+              "previous_error"
+            ]
+          }
+        }
+      },
+      "executeCode": {
+        "$id": "urn:clef/CodeActStrategy/executeCode/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CodeActStrategy"
+          },
+          "action": {
+            "const": "executeCode"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session",
+              "code"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/CodeActStrategy/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CodeActStrategy"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/CodeActStrategy/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "code_runs": {
+                  "type": "integer"
+                },
+                "final_code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result",
+                "code_runs",
+                "final_code"
+              ]
+            }
+          }
+        },
+        "max_iterations": {
+          "$id": "urn:clef/CodeActStrategy/execute/completion/max_iterations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "max_iterations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "partial": {
+                  "type": "string"
+                },
+                "code_runs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "partial",
+                "code_runs"
+              ]
+            }
+          }
+        },
+        "sandbox_error": {
+          "$id": "urn:clef/CodeActStrategy/execute/completion/sandbox_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "sandbox_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "generateCode": {
+        "ok": {
+          "$id": "urn:clef/CodeActStrategy/generateCode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "generateCode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "language"
+              ]
+            }
+          }
+        }
+      },
+      "executeCode": {
+        "ok": {
+          "$id": "urn:clef/CodeActStrategy/executeCode/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "executeCode"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "output": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "output"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/CodeActStrategy/executeCode/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "executeCode"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "stderr": {
+                  "type": "string"
+                },
+                "exit_code": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "stderr",
+                "exit_code"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/CodeActStrategy/executeCode/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "executeCode"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/CodeActStrategy/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CodeActStrategy"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "history": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "output": {
+                        "type": "string"
+                      },
+                      "error": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "step": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "output",
+                      "error",
+                      "step"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "history"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "CodeAct strategy provider Agent generates executable code to solve \n problems , runs it in a sandbox , observes output , iterates Useful for \n computational tasks , data analysis , and tool composition via code \n Registers under strategy_id code_act"
+}

@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-transparency
   version: 0.1.0
   description: "Audit trails and disclosure policies for governance legitimacy"

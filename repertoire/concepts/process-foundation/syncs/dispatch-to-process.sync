@@ -1,0 +1,14 @@
+# Route dispatch to the process automation provider when provider_name is "process"
+
+sync DispatchToProcess [eager]
+  purpose: "Delegate automation dispatch to the process run provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "process"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  ProcessAutomationProvider/execute: [
+    action_payload: ?context;
+    process_spec_id: ?ruleRef
+  ]
+}

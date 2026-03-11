@@ -32,9 +32,8 @@ describe('Collaboration Entity Syncs', () => {
     for (const name of collaborationSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('collaboration', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -42,18 +41,18 @@ describe('Collaboration Entity Syncs', () => {
   describe('collaboration entity structure', () => {
     it('InlineAnnotationAsContentEntity creates annotates Relation', () => {
       const source = readSync('collaboration', 'inline-annotation-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('AliasAsContentEntity creates alias_for Relation', () => {
       const source = readSync('collaboration', 'alias-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });

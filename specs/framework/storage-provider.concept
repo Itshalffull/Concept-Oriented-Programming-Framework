@@ -1,0 +1,74 @@
+concept StorageProvider [S] {
+
+  purpose {
+    Provision and manage persistent storage backends for deployed concepts,
+    so the deployment pipeline can create storage resources, retrieve
+    connection credentials, and tear them down independent of provider.
+  }
+
+  state {
+    stores: set S
+    storeName: S -> String
+    storageType: S -> String
+    conceptName: S -> String
+    status: S -> String
+    credentials: S -> String
+    config: S -> String
+    provisionedAt: S -> DateTime
+  }
+
+  actions {
+    action provision(store: S, storeName: String, storageType: String, conceptName: String, config: String) {
+      -> ok(store: S, credentials: String) {
+        Create a new storage backend of the given type, returning
+        connection credentials the concept needs to connect.
+      }
+      -> alreadyProvisioned(store: S, credentials: String) {
+        A store with this name already exists; return its existing credentials.
+      }
+      -> provisionFailed(store: S, reason: String) {
+        The storage backend could not be created, e.g. quota exceeded,
+        invalid configuration, or provider API error.
+      }
+    }
+
+    action configure(store: S, settings: String) {
+      -> ok(store: S) {
+        Apply additional configuration to an existing store, such as
+        TTL policies, key prefixes, or access restrictions.
+      }
+      -> notfound(store: S) {
+        No provisioned store exists with this identifier.
+      }
+    }
+
+    action getCredentials(store: S) {
+      -> ok(store: S, credentials: String) {
+        Return the current connection credentials for a provisioned store.
+      }
+      -> notfound(store: S) {
+        No provisioned store exists with this identifier.
+      }
+    }
+
+    action destroy(store: S) {
+      -> ok(store: S) {
+        Tear down the storage backend and release all associated resources.
+      }
+      -> notfound(store: S) {
+        No provisioned store exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
+    then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
+  }
+
+  invariant {
+    after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
+    then destroy(store: s1) -> ok(store: s1)
+    and getCredentials(store: s1) -> notfound(store: s1)
+  }
+}

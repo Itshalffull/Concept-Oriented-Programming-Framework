@@ -1,0 +1,133 @@
+@version(1)
+concept SuiteManifestEntity [S] {
+
+  purpose {
+    Queryable representation of a parsed suite manifest (suite.yaml) —
+    the package of related concepts, syncs, type parameter alignment,
+    dependencies, and versioning. Enables queries like "what concepts
+    are in the auth suite?", "what syncs does identity depend on?",
+    "which suites compose into this app?", and cross-suite dependency
+    analysis.
+  }
+
+  state {
+    suites: set S
+    name: S -> String
+    symbol: S -> String
+    sourceFile: S -> String
+    version: S -> String
+    description: S -> String
+    concepts: S -> String
+    syncs: S -> String
+    dependencies: S -> String
+    optionalConcepts: S -> String
+    typeParamBindings: S -> String
+    infrastructure: S -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, source: String, manifest: String) {
+      -> ok(suite: S) {
+        Register a parsed suite manifest. Extracts concept list,
+        sync declarations (with tiers), dependencies, optional
+        concepts, type parameter bindings, and infrastructure
+        section from the manifest.
+      }
+      -> alreadyRegistered(existing: S) {
+        A suite with this name is already registered.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(suite: S) {
+        Retrieve a suite entity by name.
+      }
+      -> notfound() {
+        No suite with this name exists.
+      }
+    }
+
+    action listAll() {
+      -> ok(suites: String) {
+        Return all registered suites with name, version, concept
+        count, and sync count. Result as serialized JSON array.
+      }
+    }
+
+    action findByConcept(concept: String) {
+      -> ok(suites: String) {
+        Return all suites that contain the given concept.
+        Result as serialized JSON array.
+      }
+    }
+
+    action findBySync(sync: String) {
+      -> ok(suites: String) {
+        Return all suites that declare the given sync.
+        Result as serialized JSON array.
+      }
+    }
+
+    action concepts(suite: S) {
+      -> ok(concepts: String) {
+        Return all concepts in this suite with their spec paths
+        and type parameter bindings. Result as serialized JSON
+        array of { name, spec, params }.
+      }
+    }
+
+    action syncs(suite: S) {
+      -> ok(syncs: String) {
+        Return all syncs in this suite with their tiers.
+        Result as serialized JSON array of { name, tier, spec }.
+      }
+    }
+
+    action dependencyGraph() {
+      -> ok(graph: String) {
+        Return the full suite dependency graph across all
+        registered suites. Result as serialized JSON { nodes:
+        [{ name, version }], edges: [{ from, to, constraint }] }.
+      }
+    }
+
+    action transitiveDependencies(suite: S) {
+      -> ok(dependencies: String) {
+        Return all direct and transitive suite dependencies.
+        Result as serialized JSON array of { name, version,
+        depth, via }.
+      }
+    }
+
+    action validateDependencies(suite: S) {
+      -> ok(valid: String) {
+        Validate that all declared dependencies are registered
+        and version constraints are satisfied.
+      }
+      -> invalid(errors: String) {
+        Missing or incompatible dependencies. Result as serialized
+        JSON array of { dependency, constraint, actual, message }.
+      }
+    }
+
+    action crossSuiteConflicts() {
+      -> ok(noConflicts: String) {
+        No conflicting concept names or type parameter mismatches
+        across suites.
+      }
+      -> conflicts(issues: String) {
+        Conflicts found. Result as serialized JSON array of
+        { kind, suiteA, suiteB, entity, message }.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{}") -> ok(suite: s)
+    then get(name: "identity") -> ok(suite: s)
+  }
+}

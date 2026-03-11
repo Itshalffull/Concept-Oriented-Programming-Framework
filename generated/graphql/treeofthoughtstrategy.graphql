@@ -1,0 +1,22 @@
+type TreeOfThoughtStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type TreeOfThoughtStrategyEntry {
+  s: ID!
+  thought_tree: [JSON!]!
+  beam_width: Int!
+  evaluation_prompt: String!
+  agent_ref: String!
+}
+
+extend type Query {
+  treeofthoughtstrategy_entry(s: ID!): TreeOfThoughtStrategyEntry
+  treeofthoughtstrategy_entries: [TreeOfThoughtStrategyEntry!]!
+}
+
+type TreeOfThoughtStrategySessions {
+  s: ID!
+  value: ID!
+}

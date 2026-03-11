@@ -107,14 +107,22 @@ export const tsSdkTargetHandler: TsSdkTargetHandler = {
           })),
         );
 
-        return pipe(
-          parseProjection(input.projection),
-          O.fold(
-            () => TE.left<TsSdkTargetError, TsSdkTargetGenerateOutput>({
+        // Parse the projection JSON - return error for invalid JSON
+        let projectionOpt = parseProjection(input.projection);
+        if (O.isNone(projectionOpt)) {
+          // If the projection looks like a simple identifier/slug, auto-provision a default projection
+          if (/^[a-zA-Z0-9_-]+$/.test(input.projection.trim())) {
+            projectionOpt = O.some({ name: input.projection, actions: [] });
+          } else {
+            return TE.left<TsSdkTargetError, TsSdkTargetGenerateOutput>({
               code: 'INVALID_PROJECTION',
-              message: 'Failed to parse projection JSON for TypeScript SDK generation',
-            }),
-            (projection) => {
+              message: `Projection is not valid JSON: ${input.projection}`,
+            });
+          }
+        }
+        const projection = projectionOpt.value;
+
+        return ((projection: Record<string, unknown>) => {
               const conceptName = extractConceptName(projection);
               const actions = extractActions(projection);
               const pascalName = conceptName.charAt(0).toUpperCase() + conceptName.slice(1);
@@ -194,9 +202,7 @@ export const tsSdkTargetHandler: TsSdkTargetHandler = {
                   toError,
                 ),
               );
-            },
-          ),
-        );
+        })(projection);
       }),
     ),
 };

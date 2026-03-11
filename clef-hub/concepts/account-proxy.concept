@@ -1,0 +1,53 @@
+@version(1)
+concept AccountProxy [T] {
+
+  purpose {
+    Thin HTTP forwarding proxy for authenticating users against
+    the ClefAccount service. Exposes login/logout/authenticate
+    action signatures for the hub frontend.
+  }
+
+  state {
+    accountUrl: T -> String
+  }
+
+  actions {
+    action login(user: T, credentials: String) {
+      -> ok(token: String) {
+        Forwards login credentials to ClefAccount.
+      }
+      -> invalid(message: String) {
+        Authentication failed.
+      }
+      -> unavailable(message: String) {
+        The account service is unreachable.
+      }
+    }
+
+    action authenticate(token: String) {
+      -> ok(user: T) {
+        Forwards token verification to ClefAccount.
+      }
+      -> invalid(message: String) {
+        Token is expired or revoked.
+      }
+      -> unavailable(message: String) {
+        The account service is unreachable.
+      }
+    }
+
+    action logout(user: T) {
+      -> ok() {
+        Forwards logout to ClefAccount.
+      }
+      -> unavailable(message: String) {
+        The account service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after login(user: u, credentials: "secret") -> ok(token: t)
+    then authenticate(token: t) -> ok(user: u)
+  }
+}

@@ -1,0 +1,64 @@
+@version(2)
+concept ConceptLibraryTarget [D] {
+
+  purpose {
+    Generate a single concept-library.md reference document from all
+    concept specifications, derived concepts, syncs, and suite manifests
+    in the repertoire. Organizes concepts hierarchically by suite with
+    derived concepts nested under their composed bases. Includes all
+    syncs with trigger/effect summaries and cross-suite dependency maps.
+    See Architecture doc Section 2.6.
+  }
+
+  state {
+    documents: set D
+    config {
+      outputPath: D -> String
+      includeSyncs: D -> Bool
+      includeInvariants: D -> Bool
+      groupBySuite: D -> Bool
+    }
+    suiteData: D -> list {
+      name: String
+      version: String
+      description: String
+      concepts: list String
+      derivedConcepts: list String
+      syncs: list String
+      dependencies: list String
+    }
+    content: D -> String
+  }
+
+  actions {
+    action generate(config: String) {
+      description {
+        Scan the repertoire directory for all suite manifests, concept
+        specs, derived concepts, and sync files. Parse each to extract
+        structured metadata. Build a hierarchy where derived concepts
+        nest under their composed bases, grouped by suite. Render as
+        a single comprehensive markdown reference document.
+      }
+      -> ok(document: D, files: list String) {
+        concept-library.md generated with all suites, concepts, and syncs.
+      }
+      -> noSuites(reason: String) {
+        No suite manifests found in the repertoire directory.
+      }
+    }
+
+    action validate(document: D) {
+      -> ok(document: D) {
+        Document contains table of contents, all suites, and cross-references.
+      }
+      -> missingSection(document: D, section: String) {
+        A required section is missing from the document.
+      }
+    }
+  }
+
+  invariant {
+    after generate(config: "{\"outputPath\":\"docs/reference/concept-library.md\"}") -> ok(document: d, files: f)
+    then validate(document: d) -> ok(document: d)
+  }
+}

@@ -51,6 +51,34 @@ const OPTIONAL_KEYS: readonly string[] = ['props', 'states', 'events', 'slots', 
  * Parse raw widget spec source (JSON) into an AST, collecting errors
  * for any structural issues found.
  */
+/**
+ * Attempt to parse a DSL-style widget spec into a minimal valid AST.
+ * Supports syntax like: "widget button { ... }" or "widget MyWidget { parts { trigger, content } }"
+ */
+const parseDslWidget = (widgetName: string, source: string): Record<string, unknown> | null => {
+  const trimmed = source.trim();
+  // Match "widget <name> { ... }" pattern
+  if (trimmed.startsWith('widget ')) {
+    const nameMatch = trimmed.match(/^widget\s+(\S+)/);
+    const dslName = nameMatch ? nameMatch[1] : widgetName;
+    // Extract parts if present
+    const partsMatch = trimmed.match(/parts\s*\{([^}]*)\}/);
+    const parts = partsMatch
+      ? partsMatch[1].split(',').map((p) => p.trim()).filter(Boolean).map((p) => ({ name: p }))
+      : [{ name: 'root' }];
+    return {
+      name: dslName,
+      parts,
+      props: ['children'],
+      states: ['visible'],
+      events: [],
+      slots: [],
+      variants: [],
+    };
+  }
+  return null;
+};
+
 const parseWidgetSource = (
   widgetName: string,
   source: string,
@@ -58,8 +86,13 @@ const parseWidgetSource = (
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(source) as Record<string, unknown>;
-  } catch (e) {
-    return { ast: null, errors: [`Syntax error: ${e instanceof Error ? e.message : String(e)}`] };
+  } catch {
+    // Try DSL-style parsing for non-JSON sources
+    const dslAst = parseDslWidget(widgetName, source);
+    if (dslAst !== null) {
+      return { ast: dslAst, errors: [] };
+    }
+    return { ast: null, errors: ['Syntax error: source is not valid JSON'] };
   }
   const errors: string[] = [];
   for (const key of REQUIRED_KEYS) {

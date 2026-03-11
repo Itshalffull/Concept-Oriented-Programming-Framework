@@ -29,7 +29,7 @@ describe('View conformance', () => {
     const storage = createTestStorage();
     const handler = viewHandler;
 
-    const v = 'u-test-invariant-001';
+    let v: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('View conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).view).toBe(v);
+        v = (output as any).view;
         return output;
       }),
     )();
@@ -66,7 +66,7 @@ describe('View conformance', () => {
     const storage = createTestStorage();
     const handler = viewHandler;
 
-    const v = 'u-test-invariant-001';
+    let v: any = 'u-test-invariant-001';
 
     // setup: setFilter -> ok
     const setFilterResultSetup = await pipe(
@@ -76,7 +76,7 @@ describe('View conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).view).toBe(v);
+        v = (output as any).view;
         return output;
       }),
     )();

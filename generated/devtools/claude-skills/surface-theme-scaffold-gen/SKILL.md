@@ -65,6 +65,9 @@ Generate a complete Clef Surface theme scaffold with palette tokens ,
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Palette uses oklch() for perceptual uniformity?
+- [ ] Spacing follows a consistent base multiplier?
+- [ ] Radius tokens defined?
 
 **Examples:**
 *Generate a theme with defaults*
@@ -80,9 +83,15 @@ clef scaffold theme --name brand --primary '#3b82f6' --font 'Inter, sans-serif' 
 clef scaffold theme --name print --mode light
 ```
 
+
+### Step 4: Edit the Theme Specification
+
+Refine the generated theme spec: tune palette colors, typography scale, spacing tokens, motion settings, and radius values.
+
 ## References
 
-- [Clef Surface design system and theme architecture](references/surface-theme-guide.md)
+- [Clef Surface design system and theme architecture](references/surface-theme-guide.md)- [Theme specification grammar](references/theme-grammar.md)
+
 ## Supporting Materials
 
 - [Clef Surface theme scaffolding walkthrough](examples/scaffold-surface-theme.md)

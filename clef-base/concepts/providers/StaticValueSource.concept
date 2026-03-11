@@ -1,0 +1,50 @@
+@version(1)
+concept StaticValueSource [SV] {
+
+  purpose {
+    SlotSource provider that returns a hardcoded static value.
+    Registers with PluginRegistry under slot_source_provider and
+    resolves by returning the configured value directly, without
+    any external lookups. Useful for labels, placeholder text,
+    and default content. See Architecture doc Section 16.
+  }
+
+  state {
+    registrations: set SV
+    value: SV -> String
+    content_type: SV -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Registers this provider with PluginRegistry under type
+        "slot_source_provider" and name "static_value".
+      }
+      -> already_registered() {
+        Provider is already registered with the PluginRegistry.
+      }
+    }
+
+    action resolve(value: String, content_type: String, context: String) {
+      -> ok(data: String) {
+        Returns the static value directly, optionally tagged
+        with its content type for downstream rendering.
+      }
+      -> error(message: String) {
+        The static value configuration is invalid.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "static_value")
+    then  resolve(value: "Hello World", content_type: "text/plain",
+                  context: "{}")
+          -> ok(data: "Hello World")
+  }
+}

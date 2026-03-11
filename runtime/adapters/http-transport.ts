@@ -19,22 +19,9 @@ import type {
   ConceptQuery,
   ActionInvocation,
   ActionCompletion,
+  LiteFilter,
+  ConceptStateSnapshot,
 } from '../types.js';
-
-// --- Lite Filter (Section 4.3) ---
-
-export interface LiteFilter {
-  field: string;
-  op: 'eq' | 'gt' | 'gte' | 'lt' | 'lte' | 'ne';
-  value: unknown;
-}
-
-// --- State Snapshot (Section 4.3) ---
-
-export interface ConceptStateSnapshot {
-  asOf: string;
-  relations: Record<string, Record<string, unknown>[]>;
-}
 
 // --- HTTP Fetch Function type ---
 

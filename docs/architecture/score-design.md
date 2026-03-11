@@ -65,7 +65,7 @@ Data flows upward: file changes trigger parse, parse feeds symbol extraction, sy
 
 These existing concepts are used as-is in the new system's pipelines and storage:
 
-| Concept | Kit | Role in new system |
+| Concept | Suite | Role in new system |
 |---------|-----|--------------------|
 | ContentNode | Foundation | Base file representation — every project file is a ContentNode |
 | ContentParser | Foundation | Parsing dispatch — extended with new grammar-aware parsers |
@@ -78,7 +78,7 @@ These existing concepts are used as-is in the new system's pipelines and storage
 | Provenance | Data Integration | Lineage tracking from spec → generated artifact |
 | Transform | Data Integration | Reshaping parsed ASTs into semantic entities |
 | Enricher | Data Integration | Adding resolved types, cross-references, metadata |
-| FieldMapping | Data Integration | Type parameter binding resolution across kit compositions |
+| FieldMapping | Data Integration | Type parameter binding resolution across suite compositions |
 | DataQuality | Data Integration | Invariant coverage validation, dead-variant detection |
 | ProgressiveSchema | Data Integration | Schema discovery as new specs are parsed |
 | Connector | Data Integration | Integration with external tools (Language Servers, SCIP indexes) |
@@ -92,7 +92,7 @@ These existing concepts are used as-is in the new system's pipelines and storage
 
 ### 3.2 Concepts extended (additive changes)
 
-| Concept | Kit | Extension |
+| Concept | Suite | Extension |
 |---------|-----|-----------|
 | ContentParser | Foundation | New parser providers dispatch through LanguageGrammar rather than hardcoded format detection |
 | Schema | Classification | New schema definitions for concept-spec-metadata, sync-spec-metadata, action-signature, variant-signature — used to validate and structure semantic entities |
@@ -104,7 +104,7 @@ These existing concepts are used as-is in the new system's pipelines and storage
 
 | Proposed concept | Superseded by | Reasoning |
 |------------------|---------------|-----------|
-| TypeBinding | FieldMapping | Type param mapping is field mapping where source is concept type param, target is kit shared type |
+| TypeBinding | FieldMapping | Type param mapping is field mapping where source is concept type param, target is suite shared type |
 | InvariantCoverage | DataQuality | Invariant coverage is a data quality rule where the "data" is the sync graph |
 | FlowGraph | Graph (typed instance) | Static flow graph is a directed graph populated by traversing SyncEntity chains |
 | ProjectMap | Graph (typed instance) | Project-wide entity graph is a Graph combining ImportGraph + SymbolRelationship edges |
@@ -127,11 +127,11 @@ Since CallGraph, ImportGraph, FlowGraph, ProjectMap, and DependenceGraph all col
 
 ---
 
-## 4. New Kits and Concepts
+## 4. New Suites and Concepts
 
-### 4.1 Parse Kit (`kits/parse/`)
+### 4.1 Parse Suite (`suites/parse/`)
 
-Extends Foundation Kit. Handles universal file parsing, structural identity, and pattern matching.
+Extends Foundation Suite. Handles universal file parsing, structural identity, and pattern matching.
 
 #### SyntaxTree [T]
 
@@ -361,9 +361,9 @@ capabilities:
   requires persistent-storage
 ```
 
-### 4.2 Symbol Kit (`kits/symbol/`)
+### 4.2 Symbol Suite (`suites/symbol/`)
 
-Extends Linking Kit. Handles cross-file identity, occurrence tracking, scope resolution, and typed semantic relationships.
+Extends Linking Suite. Handles cross-file identity, occurrence tracking, scope resolution, and typed semantic relationships.
 
 #### Symbol [S]
 
@@ -379,7 +379,7 @@ state:
   visibility: S -> String         // "public", "private", "internal", "module"
   deprecated: S -> option String  // deprecation message if deprecated
   defining_file: S -> ContentNode-ref
-  namespace: S -> option String   // Namespace-ref for Classification Kit integration
+  namespace: S -> option String   // Namespace-ref for Classification Suite integration
 
 actions:
   register(symbol_string: String, kind: String, display_name: String, defining_file: ContentNode-ref)
@@ -528,9 +528,9 @@ capabilities:
   requires persistent-storage
 ```
 
-Interoperates with existing Linking Kit: SymbolRelationship extends the vocabulary of Reference/Relation with program-analysis-specific edge types. A sync should maintain bidirectional Backlink entries for every SymbolRelationship.
+Interoperates with existing Linking Suite: SymbolRelationship extends the vocabulary of Reference/Relation with program-analysis-specific edge types. A sync should maintain bidirectional Backlink entries for every SymbolRelationship.
 
-### 4.3 Semantic Kit (`kits/semantic/`)
+### 4.3 Semantic Suite (`suites/semantic/`)
 
 New suite. Clef-specific semantic entities representing the application's declared structure.
 
@@ -551,7 +551,7 @@ state:
   type_params: E -> list { name: String, binding: option String }  // binding via FieldMapping
   actions_ref: E -> list ActionEntity-ref
   state_fields_ref: E -> list StateField-ref
-  kit: E -> option String
+  suite: E -> option String
 
 actions:
   register(name: String, source: FileArtifact-ref, ast: Bytes)
@@ -565,7 +565,7 @@ actions:
   find_by_capability(capability: String)
     -> ok(entities: list E)
 
-  find_by_kit(kit: String)
+  find_by_kit(suite: String)
     -> ok(entities: list E)
 
   generated_artifacts(entity: E)
@@ -733,7 +733,7 @@ capabilities:
   requires persistent-storage
 ```
 
-### 4.4 Analysis Kit (`kits/analysis/`)
+### 4.4 Analysis Suite (`suites/analysis/`)
 
 New suite. Program analysis overlays computed from parse + symbol layers.
 
@@ -880,9 +880,9 @@ capabilities:
 | GraphTraversalAnalysisProvider | Graph reachability | Queries against Graph overlays |
 | PatternMatchAnalysisProvider | Structural patterns | Delegates to StructuralPattern |
 
-### 4.5 Discovery Kit (`kits/discovery/`)
+### 4.5 Discovery Suite (`suites/discovery/`)
 
-Extends Query/Retrieval Kit. Search, embedding, and indexing.
+Extends Query/Retrieval Suite. Search, embedding, and indexing.
 
 #### SemanticEmbedding [B]
 
@@ -1219,10 +1219,10 @@ then {
 
 ## 6. Suite Manifests
 
-### 6.1 Parse Kit
+### 6.1 Parse Suite
 
 ```yaml
-kit:
+suite:
   name: parse
   version: 0.1.0
   description: "Universal file parsing, structural identity, and pattern matching"
@@ -1297,23 +1297,23 @@ syncs:
   integration: []
 
 uses:
-  - kit: foundation
+  - suite: foundation
     concepts:
       - name: ContentNode
       - name: ContentParser
       - name: ContentStorage
-  - kit: generation
+  - suite: generation
     concepts:
       - name: Resource
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
 
-### 6.2 Symbol Kit
+### 6.2 Symbol Suite
 
 ```yaml
-kit:
+suite:
   name: symbol
   version: 0.1.0
   description: "Cross-file identity, occurrence tracking, scope resolution, and semantic relationships"
@@ -1374,28 +1374,28 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: LanguageGrammar
       - name: FileArtifact
-  - kit: linking
+  - suite: linking
     concepts:
       - name: Reference
       - name: Relation
       - name: Backlink
-  - kit: classification
+  - suite: classification
     concepts:
       - name: Namespace
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
 
-### 6.3 Semantic Kit
+### 6.3 Semantic Suite
 
 ```yaml
-kit:
+suite:
   name: semantic
   version: 0.1.0
   description: "Clef-specific semantic entities — concepts, actions, variants, syncs, state fields"
@@ -1435,35 +1435,35 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
       - name: SymbolRelationship
-  - kit: data-integration
+  - suite: data-integration
     concepts:
       - name: Transform
       - name: Enricher
       - name: FieldMapping
       - name: DataQuality
       - name: Provenance
-  - kit: data-organization
+  - suite: data-organization
     concepts:
       - name: Graph
-  - kit: generation
+  - suite: generation
     concepts:
       - name: GenerationPlan
       - name: Emitter
 ```
 
-### 6.4 Analysis Kit
+### 6.4 Analysis Suite
 
 ```yaml
-kit:
+suite:
   name: analysis
   version: 0.1.0
   description: "Program analysis overlays — dependence, data flow, slicing, custom rules"
@@ -1521,33 +1521,33 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: SyntaxTree
       - name: FileArtifact
       - name: StructuralPattern
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
       - name: SymbolOccurrence
       - name: ScopeGraph
-  - kit: semantic
+  - suite: semantic
     concepts:
       - name: ConceptEntity
       - name: ActionEntity
       - name: SyncEntity
-  - kit: data-organization
+  - suite: data-organization
     concepts:
       - name: Graph
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
 
-### 6.5 Discovery Kit
+### 6.5 Discovery Suite
 
 ```yaml
-kit:
+suite:
   name: discovery
   version: 0.1.0
   description: "Search, embedding, and indexing across all project entities"
@@ -1588,18 +1588,18 @@ syncs:
   integration: []
 
 uses:
-  - kit: parse
+  - suite: parse
     concepts:
       - name: DefinitionUnit
       - name: ContentDigest
-  - kit: symbol
+  - suite: symbol
     concepts:
       - name: Symbol
-  - kit: query-retrieval
+  - suite: query-retrieval
     concepts:
       - name: SearchIndex
       - name: Query
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry
 ```
@@ -1672,7 +1672,7 @@ clef check
   --pattern orphan-state-fields    # state fields with no sync read/write
   --pattern missing-error-handling # actions with error variants but no sync on them
   --pattern circular-sync-chains   # sync chains that loop
-  --pattern unused-type-params     # type params never mapped in any kit
+  --pattern unused-type-params     # type params never mapped in any suite
   --pattern invariant-coverage     # invariants without test or runtime validation
 
 clef trace
@@ -1769,7 +1769,7 @@ This design adds:
 - **5 new suites** (Parse, Symbol, Semantic, Analysis, Discovery)
 - **~18 new syncs** across all suites
 
-Updated library count: 54 existing + 20 new coordination + ~35 providers = **~109 concepts, 20 kits**
+Updated library count: 54 existing + 20 new coordination + ~35 providers = **~109 concepts, 20 suites**
 
 Concept library version: **v0.5.0** (from v0.4.0)
 
@@ -1782,7 +1782,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 **Goal**: Every file in a Clef project has a lossless syntax tree.
 
 **Deliverables**:
-1. Parse Kit with SyntaxTree, LanguageGrammar, FileArtifact concepts
+1. Parse Suite with SyntaxTree, LanguageGrammar, FileArtifact concepts
 2. Tree-sitter WASM integration for TypeScript, JSON, YAML
 3. Custom Tree-sitter grammars for `.concept` and `.sync` file formats
 4. ParseOnChangeSync and FileArtifactRegistrationSync
@@ -1790,7 +1790,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 6. `clef inspect tree <file>` CLI command
 7. Conformance tests for all three concepts
 
-**Dependencies**: Foundation Kit (ContentNode, ContentParser, ContentStorage), Generation Suite (Resource), Infrastructure Kit (PluginRegistry)
+**Dependencies**: Foundation Suite (ContentNode, ContentParser, ContentStorage), Generation Suite (Resource), Infrastructure Suite (PluginRegistry)
 
 **Validation**: Parse every file in the RealWorld benchmark project; verify round-trip fidelity (tree → text matches source); verify incremental reparse on edit.
 
@@ -1799,7 +1799,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 **Goal**: Every named entity in the project has a globally unique Symbol with tracked occurrences.
 
 **Deliverables**:
-1. Symbol Kit with Symbol, SymbolOccurrence, SymbolRelationship concepts
+1. Symbol Suite with Symbol, SymbolOccurrence, SymbolRelationship concepts
 2. ConceptSpecSymbolExtractor and SyncSpecSymbolExtractor providers
 3. UniversalTreeSitterExtractor fallback provider
 4. TypeScriptSymbolExtractor provider (primary language)
@@ -1808,7 +1808,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 7. `clef symbols` CLI commands (list, resolve, references)
 8. Namespace scheme registration for Clef symbol strings
 
-**Dependencies**: Phase 1 (SyntaxTree, LanguageGrammar, FileArtifact), Linking Kit (Reference, Relation, Backlink), Classification Kit (Namespace)
+**Dependencies**: Phase 1 (SyntaxTree, LanguageGrammar, FileArtifact), Linking Suite (Reference, Relation, Backlink), Classification Suite (Namespace)
 
 **Validation**: For the RealWorld benchmark, verify every concept name, action name, variant tag, state field, and sync name has a Symbol; verify cross-file references from syncs to concepts resolve correctly; verify `clef symbols references User/register` returns all sync when-patterns that reference it.
 
@@ -1817,7 +1817,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 **Goal**: Clef-specific semantic structure is queryable as first-class entities.
 
 **Deliverables**:
-1. Semantic Kit with ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity concepts
+1. Semantic Suite with ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity concepts
 2. SpecSemanticSync and SyncSemanticSync
 3. FlowGraph population via Graph (static sync chain graph)
 4. GenerationProvenanceSync using Provenance
@@ -1827,7 +1827,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 8. `clef query flow`, `clef query dead-variants` CLI commands
 9. `clef check --pattern dead-variants`, `--pattern missing-error-handling`
 
-**Dependencies**: Phase 2 (Symbol, SymbolOccurrence, SymbolRelationship), Data Integration Kit (Transform, Enricher, FieldMapping, DataQuality, Provenance), Data Organization Kit (Graph), Generation Suite (GenerationPlan, Emitter)
+**Dependencies**: Phase 2 (Symbol, SymbolOccurrence, SymbolRelationship), Data Integration Suite (Transform, Enricher, FieldMapping, DataQuality, Provenance), Data Organization Suite (Graph), Generation Suite (GenerationPlan, Emitter)
 
 **Validation**: For the RealWorld benchmark, verify the complete registration flow (`User/register → Password/set → JWT/generate`) is captured in the flow graph; verify `clef query flow User/register` returns the full chain; verify `clef query dead-variants` correctly identifies any unmatched variants; verify `clef query generated-from specs/app/user.concept` returns all generated handler files.
 
@@ -1853,7 +1853,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 **Goal**: Computed analysis graphs enable impact analysis, slicing, and data flow tracing.
 
 **Deliverables**:
-1. Analysis Kit with DependenceGraph, DataFlowPath, ProgramSlice, AnalysisRule concepts
+1. Analysis Suite with DependenceGraph, DataFlowPath, ProgramSlice, AnalysisRule concepts
 2. ConceptDependenceProvider and SyncDependenceProvider
 3. DependenceComputeSync
 4. InvariantValidationSync using DataQuality
@@ -1861,7 +1861,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 6. `clef check --pattern circular-sync-chains`, `--pattern invariant-coverage`
 7. Built-in analysis rules for common Clef patterns
 
-**Dependencies**: Phases 1-4, Data Integration Kit (DataQuality)
+**Dependencies**: Phases 1-4, Data Integration Suite (DataQuality)
 
 **Validation**: Forward slice from a concept state field change; backward slice from a runtime error to contributing config values; verify circular sync chain detection on intentionally circular test case.
 
@@ -1870,7 +1870,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 **Goal**: Text, structural, and semantic search across the entire project.
 
 **Deliverables**:
-1. Discovery Kit with SemanticEmbedding concept
+1. Discovery Suite with SemanticEmbedding concept
 2. StructuralPattern concept and providers (AstGrepProvider, CombyProvider, TreeSitterQueryProvider)
 3. TrigramIndexProvider and SymbolIndexProvider for SearchIndex
 4. SearchIndexSync, EmbeddingSync
@@ -1878,7 +1878,7 @@ Concept library version: **v0.5.0** (from v0.4.0)
 6. MCP tools for all search capabilities
 7. Claude Skills for code navigation, impact analysis, code search, spec writing
 
-**Dependencies**: Phases 1-5, Query/Retrieval Kit (SearchIndex, Query)
+**Dependencies**: Phases 1-5, Query/Retrieval Suite (SearchIndex, Query)
 
 **Validation**: Structural search for all functions matching a pattern; natural language search "find actions that handle authentication"; text search with trigram pre-filtering performance benchmarks.
 
@@ -1911,6 +1911,6 @@ This design corresponds to architecture doc section additions covering:
 - Section X.4: Analysis Layer — dependence graphs, slicing, data flow
 - Section X.5: Discovery Layer — search and embedding
 - Section X.6: Provider patterns for language extensibility
-- Section X.7: Data Integration Kit reuse patterns (Transform, Enricher, FieldMapping, DataQuality, Provenance)
+- Section X.7: Data Integration Suite reuse patterns (Transform, Enricher, FieldMapping, DataQuality, Provenance)
 
 Architecture doc version: **0.25.0** after Phase 7 completion (from current 0.18.0, with phases 0.19.0 through 0.25.0 mapped to implementation phases above).

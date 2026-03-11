@@ -1,0 +1,10 @@
+# HasTags schema entity config (mixin)
+schema: has-tags
+version: 1
+display_name: "Has Tags"
+icon: "tags"
+fields:
+  tags:
+    type: "list Reference"
+    required: false
+    description: "List of tag references applied to this entity"

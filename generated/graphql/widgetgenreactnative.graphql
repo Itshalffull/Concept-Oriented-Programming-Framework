@@ -1,0 +1,16 @@
+type WidgetGenReactNativeState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenReactNativeEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenreactnative_entry(p: ID!): WidgetGenReactNativeEntry
+  widgetgenreactnative_entries: [WidgetGenReactNativeEntry!]!
+}

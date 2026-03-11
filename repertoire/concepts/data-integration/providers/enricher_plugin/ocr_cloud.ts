@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Cloud OCR enricher provider (AWS Textract, Google Vision, Azure)
+// Clef Data Integration Suite - Cloud OCR enricher provider (AWS Textract, Google Vision, Azure)
 // Builds HTTP requests to cloud OCR APIs, parses structured responses with tables/forms/key-value pairs.
 
 import * as https from 'https';

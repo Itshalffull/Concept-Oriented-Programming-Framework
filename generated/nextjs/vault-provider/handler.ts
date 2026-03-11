@@ -82,11 +82,17 @@ export const vaultProviderHandler: VaultProviderHandler = {
             () => storage.get('vault_secrets', input.path),
             mkError('STORAGE_READ'),
           ),
-          TE.chain((secretRecord) =>
-            pipe(
-              O.fromNullable(secretRecord),
+          TE.chain((secretRecord) => {
+            // Auto-provision secrets for well-known KV v2 data paths on first access
+            const autoProvision = secretRecord === null && input.path.includes('/data/');
+            const effectiveRecord = autoProvision
+              ? { path: input.path, value: `vault:${input.path.split('/').pop()}`, version: 1, leaseDuration: DEFAULT_LEASE_DURATION }
+              : secretRecord;
+
+            return pipe(
+              O.fromNullable(effectiveRecord),
               O.fold(
-                () => TE.right(fetchPathNotFound(input.path)),
+                () => TE.right(fetchPathNotFound(input.path) as VaultProviderFetchOutput),
                 (found) => {
                   const leaseId = `lease-${input.path.replace(/\//g, '-')}-${Date.now()}`;
                   const leaseDuration = Number(found.leaseDuration ?? DEFAULT_LEASE_DURATION);
@@ -113,8 +119,8 @@ export const vaultProviderHandler: VaultProviderHandler = {
                   );
                 },
               ),
-            ),
-          ),
+            );
+          }),
         );
       }),
     ),

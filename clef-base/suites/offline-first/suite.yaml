@@ -1,0 +1,25 @@
+# offline-first suite — syncs-only suite for mobile and desktop offline-first patterns.
+# Zero concepts. Wires Replica + SyncPair + ConflictResolution for local-first data.
+# See Architecture doc Section 16.3 Item 8c.
+
+name: offline-first
+version: 1.0.0
+description: >
+  Syncs-only suite enabling offline-first operation for mobile and desktop
+  targets. Coordinates Replica (local state), SyncPair (bidirectional sync),
+  and ConflictResolution (conflict handling) with the SQLite storage adapter.
+
+concepts: {}
+
+uses:
+  - collaboration
+  - infrastructure
+
+syncs:
+  required:
+    - replica-initializes-from-remote
+    - replica-syncs-on-connection
+    - replica-resolves-conflicts-on-sync
+  recommended:
+    - replica-queues-writes-when-offline
+    - replica-applies-remote-changes

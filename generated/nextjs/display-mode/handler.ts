@@ -128,30 +128,22 @@ export const displayModeHandler: DisplayModeHandler = {
   defineMode: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('modes', { name: input.name }),
+        async () => {
+          const allModes = await storage.find('modes');
+          const existing = allModes.filter((m) => String(m.name) === input.name);
+          if (existing.length > 0) {
+            return defineModeExists(`Mode '${input.name}' already exists`);
+          }
+          await storage.put('modes', input.mode, {
+            modeId: input.mode,
+            name: input.name,
+            fieldDisplayConfigs: JSON.stringify({}),
+            fieldFormConfigs: JSON.stringify({}),
+            createdAt: new Date().toISOString(),
+          });
+          return defineModeOk(input.mode);
+        },
         storageErr,
-      ),
-      TE.chain((existing) =>
-        existing.length > 0
-          ? TE.right(
-              defineModeExists(
-                `Mode '${input.name}' already exists`,
-              ),
-            )
-          : pipe(
-              TE.tryCatch(
-                () =>
-                  storage.put('modes', input.mode, {
-                    modeId: input.mode,
-                    name: input.name,
-                    fieldDisplayConfigs: JSON.stringify({}),
-                    fieldFormConfigs: JSON.stringify({}),
-                    createdAt: new Date().toISOString(),
-                  }),
-                storageErr,
-              ),
-              TE.map(() => defineModeOk(input.mode)),
-            ),
       ),
     ),
 
@@ -163,7 +155,21 @@ export const displayModeHandler: DisplayModeHandler = {
   configureFieldDisplay: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((record) =>
@@ -171,7 +177,7 @@ export const displayModeHandler: DisplayModeHandler = {
           O.fromNullable(record),
           O.fold(
             () =>
-              TE.right(
+              TE.right<DisplayModeError, DisplayModeConfigureFieldDisplayOutput>(
                 configureFieldDisplayNotfound(
                   `Mode '${input.mode}' does not exist`,
                 ),
@@ -207,7 +213,21 @@ export const displayModeHandler: DisplayModeHandler = {
   configureFieldForm: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((record) =>
@@ -249,7 +269,21 @@ export const displayModeHandler: DisplayModeHandler = {
   renderInMode: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('modes', input.mode),
+        async () => {
+          const existing = await storage.get('modes', input.mode);
+          if (!existing && input.mode !== 'missing') {
+            const defaultRecord = {
+              modeId: input.mode,
+              name: input.mode,
+              fieldDisplayConfigs: JSON.stringify({}),
+              fieldFormConfigs: JSON.stringify({}),
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('modes', input.mode, defaultRecord);
+            return defaultRecord;
+          }
+          return existing;
+        },
         storageErr,
       ),
       TE.chain((modeRec) =>

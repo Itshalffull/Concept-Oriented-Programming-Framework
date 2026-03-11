@@ -52,7 +52,8 @@
       "Skill(decompose-feature)",
       "Skill(decompose-feature:*)",
       "Bash(git diff:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

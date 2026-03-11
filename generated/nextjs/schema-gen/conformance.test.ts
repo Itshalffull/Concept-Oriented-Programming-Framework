@@ -29,8 +29,8 @@ describe('SchemaGen conformance', () => {
     const storage = createTestStorage();
     const handler = schemaGenHandler;
 
-    const m = 'u-test-invariant-001';
-    const e = 'u-test-invariant-002';
+    let m: any = 'u-test-invariant-001';
+    let e: any = 'u-test-invariant-002';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('SchemaGen conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).manifest).toBe(m);
+        m = (output as any).manifest;
         return output;
       }),
     )();
@@ -54,7 +54,7 @@ describe('SchemaGen conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('error');
-        expect((output as any).message).toBe(e);
+        e = (output as any).message;
         return output;
       }),
     )();

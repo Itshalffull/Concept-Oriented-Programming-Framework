@@ -1,6 +1,6 @@
 // Group Concept Implementation (Rust)
 //
-// Collaboration kit — creates groups, manages membership with roles,
+// Collaboration suite — creates groups, manages membership with roles,
 // associates content with groups, and checks group-level access.
 
 use crate::storage::{ConceptStorage, StorageResult};

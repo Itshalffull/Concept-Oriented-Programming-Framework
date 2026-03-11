@@ -1,0 +1,929 @@
+{
+  "uri": "urn:clef/ReWOOStrategy",
+  "name": "ReWOOStrategy",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "planned_calls",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "step_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "tool_name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "arguments",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "depends_on",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "execution_results",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "step_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "result",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "planned_calls",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "executed_calls",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "( 1 ) Plan generate ALL tool calls with dependency ordering \n Tool arguments can reference results of earlier steps via \n placeholders ( step_id ) \n ( 2 ) Execute run all tool calls in dependency order , substituting \n placeholders with actual results \n ( 3 ) Synthesize combine all results into final answer with \n a single LLM call"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Planning or execution failed"
+        }
+      ]
+    },
+    {
+      "name": "planCalls",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "calls",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "tool_name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "arguments",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "depends_on",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Generates the full execution plan in one LLM call"
+        }
+      ]
+    },
+    {
+      "name": "executeBatch",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "result",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Executes all planned calls in dependency order"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "completed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "failed_step",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "error",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Some calls failed"
+        }
+      ]
+    },
+    {
+      "name": "synthesize",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Single LLM call to combine all results into final answer"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "planned",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "tool_name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "results",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "result",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns plan and execution state"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ReWOOStrategyState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype ReWOOStrategyEntry {\n  s: ID!\n  planned_calls: [JSON!]!\n  execution_results: [JSON!]!\n  agent_ref: String!\n}\n\nextend type Query {\n  rewoostrategy_entry(s: ID!): ReWOOStrategyEntry\n  rewoostrategy_entries: [ReWOOStrategyEntry!]!\n}\n\ntype ReWOOStrategySessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "execute": {
+        "$id": "urn:clef/ReWOOStrategy/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReWOOStrategy"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent_ref": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "agent_ref",
+              "goal",
+              "context",
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "planCalls": {
+        "$id": "urn:clef/ReWOOStrategy/planCalls/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReWOOStrategy"
+          },
+          "action": {
+            "const": "planCalls"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "session",
+              "goal",
+              "available_tools"
+            ]
+          }
+        }
+      },
+      "executeBatch": {
+        "$id": "urn:clef/ReWOOStrategy/executeBatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReWOOStrategy"
+          },
+          "action": {
+            "const": "executeBatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      },
+      "synthesize": {
+        "$id": "urn:clef/ReWOOStrategy/synthesize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReWOOStrategy"
+          },
+          "action": {
+            "const": "synthesize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session",
+              "goal"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/ReWOOStrategy/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ReWOOStrategy"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/ReWOOStrategy/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "planned_calls": {
+                  "type": "integer"
+                },
+                "executed_calls": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "result",
+                "planned_calls",
+                "executed_calls"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/ReWOOStrategy/execute/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "planCalls": {
+        "ok": {
+          "$id": "urn:clef/ReWOOStrategy/planCalls/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "planCalls"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "calls": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "tool_name": {
+                        "type": "string"
+                      },
+                      "arguments": {
+                        "type": "string"
+                      },
+                      "depends_on": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "tool_name",
+                      "arguments",
+                      "depends_on"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "calls"
+              ]
+            }
+          }
+        }
+      },
+      "executeBatch": {
+        "ok": {
+          "$id": "urn:clef/ReWOOStrategy/executeBatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "executeBatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "result": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "result"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "results"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/ReWOOStrategy/executeBatch/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "executeBatch"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "completed": {
+                  "type": "integer"
+                },
+                "failed_step": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "completed",
+                "failed_step",
+                "error"
+              ]
+            }
+          }
+        }
+      },
+      "synthesize": {
+        "ok": {
+          "$id": "urn:clef/ReWOOStrategy/synthesize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "synthesize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/ReWOOStrategy/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ReWOOStrategy"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "planned": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "tool_name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "tool_name",
+                      "status"
+                    ]
+                  }
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "result": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "result"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "planned",
+                "results"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "ReWOO ( Reasoning Without Observation ) strategy provider Plans ALL \n tool calls upfront before executing any , then batch executes and \n synthesizes Avoids interleaving reasoning with tool results , reducing \n total LLM calls Good for predictable multi tool tasks where tool \n results don t influence which tools to call next \n Registers under strategy_id rewoo"
+}

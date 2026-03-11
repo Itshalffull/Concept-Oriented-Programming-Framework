@@ -1,4 +1,4 @@
-// Data Integration Kit - Email Forward Capture Provider
+// Data Integration Suite - Email Forward Capture Provider
 // Parses forwarded email via RFC 2822 headers and MIME multipart decoding
 
 export const PROVIDER_ID = 'email_forward';

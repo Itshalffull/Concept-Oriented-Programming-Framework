@@ -1,0 +1,1370 @@
+{
+  "uri": "urn:clef/ToolBinding",
+  "name": "ToolBinding",
+  "typeParams": [
+    {
+      "name": "T",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "input_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "output_schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "handler",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "annotations",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "audience",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "destructive",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              },
+              {
+                "name": "idempotent",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              },
+              {
+                "name": "open_world",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "retry_policy",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "max_retries",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "backoff_ms",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        },
+        {
+          "name": "requires_approval",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tools",
+      "source": "set-valued",
+      "keyField": {
+        "name": "t",
+        "paramRef": "T"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input_schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "output_schema",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "handler",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "annotations",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "audience",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                },
+                "optional": false
+              },
+              {
+                "name": "destructive",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              },
+              {
+                "name": "idempotent",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              },
+              {
+                "name": "open_world",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Bool"
+                },
+                "optional": false
+              }
+            ]
+          }
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "requires_approval",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            }
+          ],
+          "prose": "Registers a tool Annotations follow MCP spec"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid schema or missing fields"
+        }
+      ]
+    },
+    {
+      "name": "invoke",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "arguments",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "execution_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Validates arguments , executes handler , returns result"
+        },
+        {
+          "tag": "validation_error",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Arguments don t match input_schema"
+        },
+        {
+          "tag": "timeout",
+          "fields": [
+            {
+              "name": "elapsed_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Execution exceeded timeout"
+        },
+        {
+          "tag": "execution_error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Handler threw an error"
+        },
+        {
+          "tag": "approval_required",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "T"
+              }
+            },
+            {
+              "name": "arguments",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "requires_approval true Emits approval request via sync"
+        }
+      ]
+    },
+    {
+      "name": "toProviderFormat",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "T"
+          }
+        },
+        {
+          "name": "provider",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "formatted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Serializes for : openai , anthropic , mcp , generic"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tool not found"
+        }
+      ]
+    },
+    {
+      "name": "discover",
+      "params": [
+        {
+          "name": "filter",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "audience",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "destructive",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "Bool"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tools",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "input_schema",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "annotations",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Lists available tools , optionally filtered"
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "query",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "k",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tools",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "relevance",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Semantic search for large tool sets"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matches"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after define, invoke behaves correctly",
+      "setup": [
+        {
+          "action": "define",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "search"
+              }
+            },
+            {
+              "name": "description",
+              "value": {
+                "kind": "literal",
+                "value": "Search the web"
+              }
+            },
+            {
+              "name": "input_schema",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "output_schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "handler",
+              "value": {
+                "kind": "variable",
+                "name": "h"
+              }
+            },
+            {
+              "name": "annotations",
+              "value": {
+                "kind": "variable",
+                "name": "a"
+              }
+            },
+            {
+              "name": "timeout_ms",
+              "value": {
+                "kind": "literal",
+                "value": 5000
+              }
+            },
+            {
+              "name": "requires_approval",
+              "value": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "tool",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "invoke",
+          "inputs": [
+            {
+              "name": "tool",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "arguments",
+              "value": {
+                "kind": "literal",
+                "value": "{\"query\": \"test\"}"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "result",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "execution_ms",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "h",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "a",
+          "testValue": "u-test-invariant-003"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-004"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ToolBindingState {\n  \"\"\"All ts in this concept\"\"\"\n  ts: [ID!]!\n}\n\ntype ToolBindingEntry {\n  t: ID!\n  name: String!\n  description: String!\n  input_schema: String!\n  output_schema: String!\n  handler: String!\n  annotations: JSON!\n  timeout_ms: Int!\n  retry_policy: JSON!\n  requires_approval: Boolean!\n}\n\nextend type Query {\n  toolbinding_entry(t: ID!): ToolBindingEntry\n  toolbinding_entries: [ToolBindingEntry!]!\n}\n\ntype ToolBindingTools {\n  t: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/ToolBinding/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolBinding"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "input_schema": {
+                "type": "string"
+              },
+              "output_schema": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "handler": {
+                "type": "string"
+              },
+              "annotations": {
+                "type": "object",
+                "properties": {
+                  "audience": {
+                    "type": "string"
+                  },
+                  "destructive": {
+                    "type": "boolean"
+                  },
+                  "idempotent": {
+                    "type": "boolean"
+                  },
+                  "open_world": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "audience",
+                  "destructive",
+                  "idempotent",
+                  "open_world"
+                ]
+              },
+              "timeout_ms": {
+                "type": "integer"
+              },
+              "requires_approval": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "input_schema",
+              "output_schema",
+              "handler",
+              "annotations",
+              "timeout_ms",
+              "requires_approval"
+            ]
+          }
+        }
+      },
+      "invoke": {
+        "$id": "urn:clef/ToolBinding/invoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolBinding"
+          },
+          "action": {
+            "const": "invoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "arguments": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "arguments"
+            ]
+          }
+        }
+      },
+      "toProviderFormat": {
+        "$id": "urn:clef/ToolBinding/toProviderFormat/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolBinding"
+          },
+          "action": {
+            "const": "toProviderFormat"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "provider"
+            ]
+          }
+        }
+      },
+      "discover": {
+        "$id": "urn:clef/ToolBinding/discover/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolBinding"
+          },
+          "action": {
+            "const": "discover"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "audience": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "destructive": {
+                        "oneOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "audience",
+                      "destructive"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "filter"
+            ]
+          }
+        }
+      },
+      "search": {
+        "$id": "urn:clef/ToolBinding/search/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolBinding"
+          },
+          "action": {
+            "const": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "k": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "query",
+              "k"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/ToolBinding/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ToolBinding/define/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "invoke": {
+        "ok": {
+          "$id": "urn:clef/ToolBinding/invoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "execution_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "result",
+                "execution_ms"
+              ]
+            }
+          }
+        },
+        "validation_error": {
+          "$id": "urn:clef/ToolBinding/invoke/completion/validation_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "validation_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "$id": "urn:clef/ToolBinding/invoke/completion/timeout",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "timeout"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "elapsed_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "elapsed_ms"
+              ]
+            }
+          }
+        },
+        "execution_error": {
+          "$id": "urn:clef/ToolBinding/invoke/completion/execution_error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "execution_error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "approval_required": {
+          "$id": "urn:clef/ToolBinding/invoke/completion/approval_required",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "approval_required"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "arguments": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool",
+                "arguments"
+              ]
+            }
+          }
+        }
+      },
+      "toProviderFormat": {
+        "ok": {
+          "$id": "urn:clef/ToolBinding/toProviderFormat/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "toProviderFormat"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "formatted": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "formatted"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ToolBinding/toProviderFormat/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "toProviderFormat"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "discover": {
+        "ok": {
+          "$id": "urn:clef/ToolBinding/discover/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "discover"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "input_schema": {
+                        "type": "string"
+                      },
+                      "annotations": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "description",
+                      "input_schema",
+                      "annotations"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "tools"
+              ]
+            }
+          }
+        }
+      },
+      "search": {
+        "ok": {
+          "$id": "urn:clef/ToolBinding/search/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "relevance": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "description",
+                      "relevance"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "tools"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/ToolBinding/search/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolBinding"
+            },
+            "action": {
+              "const": "search"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Callable tools functions that LLMs can invoke Unifies OpenAI function \n calling , Anthropic tool use , and MCP tool primitive Full lifecycle : \n schema definition , provider format translation , argument validation , \n execution , result formatting , error handling Supports dynamic tool \n selection for large tool sets and safety annotations per MCP spec"
+}

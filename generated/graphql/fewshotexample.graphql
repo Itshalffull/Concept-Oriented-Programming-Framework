@@ -1,0 +1,23 @@
+type FewShotExampleState {
+  """All fs in this concept"""
+  fs: [ID!]!
+}
+
+type FewShotExampleEntry {
+  f: ID!
+  examples: [JSON!]!
+  selection_strategy: String!
+  k: Int!
+  diversity_weight: Float!
+  quality_scores: [JSON!]!
+}
+
+extend type Query {
+  fewshotexample_entry(f: ID!): FewShotExampleEntry
+  fewshotexample_entries: [FewShotExampleEntry!]!
+}
+
+type FewShotExamplePools {
+  f: ID!
+  value: ID!
+}

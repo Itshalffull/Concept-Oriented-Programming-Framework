@@ -1,0 +1,16 @@
+# Component mapping: register MenuSource as a slot source provider.
+# On startup, registers MenuSource with PluginRegistry so it
+# can be dispatched by SlotSource/resolve.
+
+sync MenuSourceRegistration [eager]
+  purpose: "Register MenuSource as a slot_source_provider with PluginRegistry on startup"
+when {
+  MenuSource/register: [] => [ ok: _ ]
+}
+then {
+  PluginRegistry/register: [
+    category: "slot_source_provider";
+    provider_id: "menu-source";
+    handler: "MenuSource"
+  ]
+}

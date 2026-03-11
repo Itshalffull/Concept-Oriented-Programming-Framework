@@ -133,20 +133,43 @@ export function createDynamoDBStorage(
       const table = tableName(config, relation);
       const dbKey = buildKey(config, relation, key);
 
-      // Check for conflicts if onConflict callback is set
-      if (storage.onConflict) {
-        const existing = await client.get({
-          TableName: table,
-          Key: dbKey,
-        });
+      let item: Record<string, unknown> = {
+        ...dbKey,
+        ...value,
+        _lastWrittenAt: now,
+      };
 
-        if (existing.Item) {
+      if (config.ttlAttribute) {
+        item._ttl = Math.floor(Date.now() / 1000) + 86400 * 30; // 30 days default
+      }
+
+      if (storage.onConflict) {
+        let attempts = 0;
+        while (attempts < 3) {
+          attempts++;
+          const existing = await client.get({ TableName: table, Key: dbKey });
+
+          if (!existing.Item) {
+            try {
+              await client.put({
+                TableName: table,
+                Item: item,
+                ConditionExpression: 'attribute_not_exists(pk)',
+              });
+              return;
+            } catch (e: any) {
+              if (e.name === 'ConditionalCheckFailedException') continue;
+              throw e;
+            }
+          }
+
+          const existingLastWrittenAt = (existing.Item._lastWrittenAt as string) ?? now;
           const info: ConflictInfo = {
             relation,
             key,
             existing: {
               fields: extractFields(existing.Item),
-              writtenAt: (existing.Item._lastWrittenAt as string) ?? now,
+              writtenAt: existingLastWrittenAt,
             },
             incoming: {
               fields: { ...value },
@@ -161,29 +184,34 @@ export function createDynamoDBStorage(
             case 'accept-incoming':
               break;
             case 'merge':
-              await client.put({
-                TableName: table,
-                Item: {
-                  ...dbKey,
-                  ...resolution.merged,
-                  _lastWrittenAt: now,
-                },
-              });
-              return;
-            case 'escalate':
+              item = {
+                ...dbKey,
+                ...resolution.merged,
+                _lastWrittenAt: now,
+              };
+              if (config.ttlAttribute) {
+                item._ttl = Math.floor(Date.now() / 1000) + 86400 * 30;
+              }
               break;
+            case 'escalate':
+              throw new Error('Conflict escalated');
+          }
+
+          try {
+            await client.put({
+              TableName: table,
+              Item: item,
+              ConditionExpression: '#lw = :expectedLastWrittenAt',
+              ExpressionAttributeNames: { '#lw': '_lastWrittenAt' },
+              ExpressionAttributeValues: { ':expectedLastWrittenAt': existingLastWrittenAt },
+            });
+            return;
+          } catch (e: any) {
+            if (e.name === 'ConditionalCheckFailedException') continue;
+            throw e;
           }
         }
-      }
-
-      const item: Record<string, unknown> = {
-        ...dbKey,
-        ...value,
-        _lastWrittenAt: now,
-      };
-
-      if (config.ttlAttribute) {
-        item._ttl = Math.floor(Date.now() / 1000) + 86400 * 30; // 30 days default
+        throw new Error('Max retries exceeded resolving conflict');
       }
 
       await client.put({
@@ -258,15 +286,17 @@ export function createDynamoDBStorage(
         filterExpression = filters.join(' AND ');
       }
 
-      // Use a query with a dummy key condition (table-per-relation
-      // still uses pk as the entry key, so we scan via query on a GSI
-      // or fall back to full table query)
+      // Table-per-relation: scan all entries. Use query with a broad
+      // key condition on the relation-index GSI, or fall back to a
+      // filter-only approach when no GSI is available.
+      expressionNames['#pk'] = 'pk';
+      expressionValues[':pk_exists'] = '';
       const result = await client.query({
         TableName: table,
-        KeyConditionExpression: 'pk = pk',  // Will be handled by scan fallback
+        KeyConditionExpression: '#pk > :pk_exists',
         FilterExpression: filterExpression,
-        ExpressionAttributeNames: Object.keys(expressionNames).length > 0 ? expressionNames : undefined,
-        ExpressionAttributeValues: Object.keys(expressionValues).length > 0 ? expressionValues : undefined,
+        ExpressionAttributeNames: expressionNames,
+        ExpressionAttributeValues: expressionValues,
       });
 
       return (result.Items || []).map(extractFields);
@@ -283,26 +313,81 @@ export function createDynamoDBStorage(
     },
 
     async delMany(relation, criteria) {
-      // First, find matching entries
-      const matches = await storage.find(relation, criteria);
-
-      if (matches.length === 0) return 0;
-
       const table = tableName(config, relation);
+      let rawMatches: Record<string, unknown>[] = [];
 
-      // DynamoDB BatchWriteItem supports up to 25 items per batch
+      if (isSingleTable) {
+        const expressionNames: Record<string, string> = { '#pk': 'pk' };
+        const expressionValues: Record<string, unknown> = { ':pk': relation };
+        let filterExpression: string | undefined;
+
+        if (criteria && Object.keys(criteria).length > 0) {
+          const filters: string[] = [];
+          let idx = 0;
+          for (const [field, val] of Object.entries(criteria)) {
+            const nameAlias = `#f${idx}`;
+            const valAlias = `:v${idx}`;
+            expressionNames[nameAlias] = field;
+            expressionValues[valAlias] = val;
+            filters.push(`${nameAlias} = ${valAlias}`);
+            idx++;
+          }
+          filterExpression = filters.join(' AND ');
+        }
+
+        const result = await client.query({
+          TableName: table,
+          KeyConditionExpression: '#pk = :pk',
+          FilterExpression: filterExpression,
+          ExpressionAttributeNames: expressionNames,
+          ExpressionAttributeValues: expressionValues,
+        });
+        rawMatches = result.Items || [];
+      } else {
+        const expressionNames: Record<string, string> = {};
+        const expressionValues: Record<string, unknown> = {};
+        let filterExpression: string | undefined;
+
+        if (criteria && Object.keys(criteria).length > 0) {
+          const filters: string[] = [];
+          let idx = 0;
+          for (const [field, val] of Object.entries(criteria)) {
+            const nameAlias = `#f${idx}`;
+            const valAlias = `:v${idx}`;
+            expressionNames[nameAlias] = field;
+            expressionValues[valAlias] = val;
+            filters.push(`${nameAlias} = ${valAlias}`);
+            idx++;
+          }
+          filterExpression = filters.join(' AND ');
+        }
+
+        expressionNames['#pk'] = 'pk';
+        expressionValues[':pk_exists'] = '';
+        const result = await client.query({
+          TableName: table,
+          KeyConditionExpression: '#pk > :pk_exists',
+          FilterExpression: filterExpression,
+          ExpressionAttributeNames: expressionNames,
+          ExpressionAttributeValues: expressionValues,
+        });
+        rawMatches = result.Items || [];
+      }
+
+      if (rawMatches.length === 0) return 0;
+
       const batchSize = 25;
-      for (let i = 0; i < matches.length; i += batchSize) {
-        const batch = matches.slice(i, i + batchSize);
+      for (let i = 0; i < rawMatches.length; i += batchSize) {
+        const batch = rawMatches.slice(i, i + batchSize);
         const deleteRequests = batch.map(item => {
-          // Reconstruct the key from the item — need a key field
-          // In single-table design, we need the sk value.
-          // The key is typically a field like 'id' or the first field.
-          const entryKey = (item.id as string) || Object.values(item)[0] as string;
+          let itemKey: Record<string, unknown>;
+          if (isSingleTable) {
+            itemKey = { pk: item.pk, sk: item.sk };
+          } else {
+            itemKey = { pk: item.pk };
+          }
           return {
-            DeleteRequest: {
-              Key: buildKey(config, relation, entryKey),
-            },
+            DeleteRequest: { Key: itemKey },
           };
         });
 
@@ -311,7 +396,7 @@ export function createDynamoDBStorage(
         });
       }
 
-      return matches.length;
+      return rawMatches.length;
     },
 
     async getMeta(relation, key) {

@@ -1,0 +1,74 @@
+# Versioning schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: versioning
+version: 1
+
+entities:
+  Branch:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the branch"
+      name:
+        type: String
+        required: true
+        description: "Display name of the branch"
+      base_ref:
+        type: Reference
+        required: true
+        description: "Reference to the parent branch or commit this was forked from"
+      head_ref:
+        type: Reference
+        required: true
+        description: "Reference to the latest version on this branch"
+      status:
+        type: String
+        required: true
+        description: "Branch status (active, merged, archived)"
+      created_at:
+        type: DateTime
+        required: true
+        description: "Timestamp when the branch was created"
+    from:
+      concept: Branch
+      actions:
+        create: [id, name, base_ref, head_ref, status, created_at]
+        read: [id, name, base_ref, head_ref, status, created_at]
+
+  TemporalVersion:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the version"
+      content_ref:
+        type: Reference
+        required: true
+        description: "Reference to the content node being versioned"
+      branch_ref:
+        type: Reference
+        required: false
+        description: "Reference to the branch this version belongs to"
+      version_number:
+        type: Number
+        required: true
+        description: "Sequential version number within the branch"
+      snapshot:
+        type: JSON
+        required: true
+        description: "Serialized snapshot of the content at this version"
+      created_at:
+        type: DateTime
+        required: true
+        description: "Timestamp when this version was captured"
+      author:
+        type: Reference
+        required: true
+        description: "Reference to the user who created this version"
+    from:
+      concept: TemporalVersion
+      actions:
+        create: [id, content_ref, branch_ref, version_number, snapshot, created_at, author]
+        read: [id, content_ref, branch_ref, version_number, snapshot, created_at, author]

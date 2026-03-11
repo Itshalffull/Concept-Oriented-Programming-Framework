@@ -1,0 +1,10 @@
+# Backlink reindexing on save for content with [[links]].
+# Parses content for wikilinks and updates the backlink index.
+
+sync SaveReindexesBacklinks [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  Backlink/reindex: [ source_id: ?id ]
+}

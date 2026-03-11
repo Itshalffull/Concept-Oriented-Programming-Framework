@@ -1,4 +1,4 @@
-kit:
+suite:
   name: governance-resources
   version: 0.1.0
   description: "Treasury management, reputation, metrics, objectives, and token economics"
@@ -68,13 +68,13 @@ syncs:
     - reputation-peer-allocation
 
 uses:
-  - kit: governance-structure
+  - suite: governance-structure
     concepts:
       - name: Weight
-  - kit: governance-decision
+  - suite: governance-decision
     optional: true
     concepts:
       - name: Proposal
-  - kit: infrastructure
+  - suite: infrastructure
     concepts:
       - name: PluginRegistry

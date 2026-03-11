@@ -6,7 +6,7 @@
 // app gets ScoreApi registered automatically.
 //
 // This handler delegates to the ScoreIndex for materialized data
-// and to the underlying Score kit concepts for complex queries
+// and to the underlying Score suite concepts for complex queries
 // (dependence graph traversal, data flow analysis, embeddings).
 
 import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
@@ -186,7 +186,7 @@ export const scoreApiHandler: ConceptHandler = {
 
     // Pattern matching delegates to the SyntaxTree concept via
     // StructuralPattern. This stub returns the interface contract;
-    // the actual tree-sitter query execution happens in the parse kit.
+    // the actual tree-sitter query execution happens in the parse suite.
     return {
       variant: 'ok',
       matches: [],

@@ -1,0 +1,42 @@
+# RouteConfig schema entity config
+schema: route-config
+version: 1
+display_name: "Route Config"
+icon: "globe"
+fields:
+  id:
+    type: String
+    required: true
+    description: "Unique identifier for the route configuration"
+  route_path:
+    type: String
+    required: true
+    description: "URL path pattern for this route"
+  rendering_strategy:
+    type: String
+    required: true
+    description: "Rendering mode (spa, static, hydrated, server, in_browser)"
+  cache_strategy:
+    type: String
+    required: false
+    description: "Cache strategy identifier"
+  cache_ttl:
+    type: Number
+    required: false
+    description: "Cache time-to-live in seconds"
+  revalidate_interval:
+    type: Number
+    required: false
+    description: "Interval in seconds for incremental static regeneration"
+  middleware:
+    type: "list String"
+    required: false
+    description: "List of middleware identifiers to apply to this route"
+  layout:
+    type: Reference
+    required: false
+    description: "Reference to the layout template for this route"
+  access_control:
+    type: Reference
+    required: false
+    description: "Reference to the access control policy for this route"

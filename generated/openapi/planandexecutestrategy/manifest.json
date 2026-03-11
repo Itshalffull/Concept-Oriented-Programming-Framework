@@ -1,0 +1,881 @@
+{
+  "uri": "urn:clef/PlanAndExecuteStrategy",
+  "name": "PlanAndExecuteStrategy",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "step_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "description",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "result",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "executor_model",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "agent_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "available_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "max_iterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "result",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "tool_calls",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "plan_history",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "plan_version",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "steps",
+                      "type": {
+                        "kind": "list",
+                        "inner": {
+                          "kind": "record",
+                          "fields": [
+                            {
+                              "name": "description",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            },
+                            {
+                              "name": "status",
+                              "type": {
+                                "kind": "primitive",
+                                "primitive": "String"
+                              },
+                              "optional": false
+                            }
+                          ]
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "( 1 ) Plan generate ordered steps for the goal \n ( 2 ) Execute run each step , potentially with a cheaper executor model \n ( 3 ) Replan after each step , evaluate whether the remaining plan \n still makes sense given results so far May add , remove , or \n reorder remaining steps \n ( 4 ) Synthesize combine step results into final answer"
+        },
+        {
+          "tag": "max_iterations",
+          "fields": [
+            {
+              "name": "partial",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "completed_steps",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Hit limit mid plan"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Execution failed"
+        }
+      ]
+    },
+    {
+      "name": "plan",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "goal",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "steps",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Generates initial plan"
+        }
+      ]
+    },
+    {
+      "name": "replan",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "completed",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "remaining",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "updated_plan",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Revises plan based on execution so far"
+        },
+        {
+          "tag": "no_change",
+          "fields": [],
+          "prose": "Plan still valid"
+        }
+      ]
+    },
+    {
+      "name": "getState",
+      "params": [
+        {
+          "name": "session",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "step_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "description",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "status",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "result",
+                      "type": {
+                        "kind": "option",
+                        "inner": {
+                          "kind": "primitive",
+                          "primitive": "String"
+                        }
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Returns current plan state"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type PlanAndExecuteStrategyState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype PlanAndExecuteStrategyEntry {\n  s: ID!\n  plan: [JSON!]!\n  executor_model: String!\n  agent_ref: String!\n}\n\nextend type Query {\n  planandexecutestrategy_entry(s: ID!): PlanAndExecuteStrategyEntry\n  planandexecutestrategy_entries: [PlanAndExecuteStrategyEntry!]!\n}\n\ntype PlanAndExecuteStrategySessions {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "execute": {
+        "$id": "urn:clef/PlanAndExecuteStrategy/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlanAndExecuteStrategy"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "agent_ref": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string"
+              },
+              "available_tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "max_iterations": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "agent_ref",
+              "goal",
+              "context",
+              "available_tools",
+              "max_iterations"
+            ]
+          }
+        }
+      },
+      "plan": {
+        "$id": "urn:clef/PlanAndExecuteStrategy/plan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlanAndExecuteStrategy"
+          },
+          "action": {
+            "const": "plan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session",
+              "goal"
+            ]
+          }
+        }
+      },
+      "replan": {
+        "$id": "urn:clef/PlanAndExecuteStrategy/replan/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlanAndExecuteStrategy"
+          },
+          "action": {
+            "const": "replan"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "completed": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "remaining": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "session",
+              "completed",
+              "remaining"
+            ]
+          }
+        }
+      },
+      "getState": {
+        "$id": "urn:clef/PlanAndExecuteStrategy/getState/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PlanAndExecuteStrategy"
+          },
+          "action": {
+            "const": "getState"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "session": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "session"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "integer"
+                },
+                "tool_calls": {
+                  "type": "integer"
+                },
+                "plan_history": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "plan_version": {
+                        "type": "integer"
+                      },
+                      "steps": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "description": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "description",
+                            "status"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "plan_version",
+                      "steps"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "result",
+                "steps",
+                "tool_calls",
+                "plan_history"
+              ]
+            }
+          }
+        },
+        "max_iterations": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/execute/completion/max_iterations",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "max_iterations"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "partial": {
+                  "type": "string"
+                },
+                "completed_steps": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "partial",
+                "completed_steps"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/execute/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "plan": {
+        "ok": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/plan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "plan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "description"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "steps"
+              ]
+            }
+          }
+        }
+      },
+      "replan": {
+        "ok": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/replan/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "replan"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "updated_plan": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "description"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "updated_plan"
+              ]
+            }
+          }
+        },
+        "no_change": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/replan/completion/no_change",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "replan"
+            },
+            "variant": {
+              "const": "no_change"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getState": {
+        "ok": {
+          "$id": "urn:clef/PlanAndExecuteStrategy/getState/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PlanAndExecuteStrategy"
+            },
+            "action": {
+              "const": "getState"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "step_id": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "result": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "step_id",
+                      "description",
+                      "status",
+                      "result"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Plan and Execute strategy provider Generates an upfront multi step \n plan , then executes each step ( potentially with a cheaper model ) , \n replanning after each step if needed More robust than ReAct for \n complex multi step tasks Registers under strategy_id plan_and_execute"
+}

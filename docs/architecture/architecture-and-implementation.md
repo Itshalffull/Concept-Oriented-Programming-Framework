@@ -1813,15 +1813,15 @@ When multiple runtimes have `engine: true`, the system forms an engine hierarchy
 
 Some concepts are naturally designed to work together — they form a coherent system only when connected by syncs. A **suite** is a package of concepts, their standard syncs, and a type parameter mapping that declares how the concepts relate to each other.
 
-Kits are a packaging convention, not a language construct. The framework does not have first-class knowledge of suites — it loads the specs and syncs like any others. The suite manifest is metadata for humans, LLMs, package managers, and the compiler's validation tooling. A language construct may be added in the future once real usage patterns emerge.
+Suites are a packaging convention, not a language construct. The framework does not have first-class knowledge of suites — it loads the specs and syncs like any others. The suite manifest is metadata for humans, LLMs, package managers, and the compiler's validation tooling. A language construct may be added in the future once real usage patterns emerge.
 
 ### 9.1 Suite Manifest Format
 
-A suite is a directory with a `suite.yaml` manifest. Kits bundle concepts, syncs, implementations, and optionally **infrastructure** — transport adapters, storage backends, and deploy templates that the suite's concepts require.
+A suite is a directory with a `suite.yaml` manifest. Suites bundle concepts, syncs, implementations, and optionally **infrastructure** — transport adapters, storage backends, and deploy templates that the suite's concepts require.
 
 ```yaml
-# kits/content-management/suite.yaml
-kit:
+# suites/content-management/suite.yaml
+suite:
   name: content-management
   version: 0.1.0
   description: >
@@ -1900,9 +1900,9 @@ syncs:
 
 # External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs
-# that only load when the named kit is present.
+# that only load when the named suite is present.
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: JWT
@@ -1929,15 +1929,15 @@ uses:
 #     - path: ./deploy-templates/mainnet.deploy.yaml
 ```
 
-Kits that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most suites (auth, content-management) only need concepts and syncs.
+Suites that introduce a new deployment target — a new chain, a new edge runtime, a new device class — bundle the pre-conceptual infrastructure alongside their concepts. The infrastructure section is optional; most suites (auth, content-management) only need concepts and syncs.
 
-**The `uses` section** declares external concepts from other suites that this suite's syncs reference. Required by default — the named kit must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named kit is present. The `clef suite validate` command checks that every concept referenced in a sync is either a local concept, declared in `uses`, or a built-in like `Web`. Optional uses syncs are exempt from strict validation since they only load conditionally. Concepts remain fully independent per Design Principle 2; only syncs create cross-suite references, and `uses` makes those references explicit for the compiler.
+**The `uses` section** declares external concepts from other suites that this suite's syncs reference. Required by default — the named suite must be present for this suite to function. Set `optional: true` for conditional entries whose syncs only load when the named suite is present. The `clef suite validate` command checks that every concept referenced in a sync is either a local concept, declared in `uses`, or a built-in like `Web`. Optional uses syncs are exempt from strict validation since they only load conditionally. Concepts remain fully independent per Design Principle 2; only syncs create cross-suite references, and `uses` makes those references explicit for the compiler.
 
 **Example: web3 suite manifest**
 
 ```yaml
-# kits/web3/suite.yaml
-kit:
+# suites/web3/suite.yaml
+suite:
   name: web3
   version: 0.1.0
   description: >
@@ -1986,7 +1986,7 @@ syncs:
         pinning manually.
 
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: JWT
@@ -2063,7 +2063,7 @@ This validation is **advisory, not enforcing**. At runtime, all type parameters 
 
 ### 9.3 Sync Tiers
 
-Kit syncs are divided into two tiers:
+Suite syncs are divided into two tiers:
 
 **Required syncs** enforce structural invariants that the suite's concepts depend on. If removed, concept state becomes inconsistent — orphaned records, dangling references, unpopulated fields. These are loaded automatically when the suite is used, and the compiler emits an error if an app attempts to disable them.
 
@@ -2073,7 +2073,7 @@ Required syncs should be kept to a minimum — only syncs where removal causes d
 
 ```yaml
 # In the app's deploy.yaml
-kits:
+suites:
   - name: content-management
     version: 0.1.0
     overrides:
@@ -2089,7 +2089,7 @@ kits:
 - **At compile time:** The compiler warns if a required sync is missing from the final sync set. It errors if an app explicitly disables a required sync.
 - **At runtime:** The engine has no concept of tiers — all syncs are evaluated equally. The distinction is purely a compile-time and packaging concern.
 
-### 9.4 Kit Syncs — The Content Management Example
+### 9.4 Suite Syncs — The Content Management Example
 
 Here are the key syncs for the content management suite:
 
@@ -2174,9 +2174,9 @@ sync DefaultTitleField [recommended] {
 }
 ```
 
-### 9.5 Using a Kit in an App
+### 9.5 Using a Suite in an App
 
-An app references suites in its deployment manifest. The compiler resolves kit paths, loads all concept specs and syncs, applies overrides and disables, validates type parameter alignment, and produces the final set of specs and syncs for compilation.
+An app references suites in its deployment manifest. The compiler resolves suite paths, loads all concept specs and syncs, applies overrides and disables, validates type parameter alignment, and produces the final set of specs and syncs for compilation.
 
 ```yaml
 # app.deploy.yaml
@@ -2184,18 +2184,18 @@ app:
   name: my-cms
   version: 1.0.0
 
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management  # or a registry reference
+    path: ./suites/content-management  # or a registry reference
     overrides:
       DefaultTitleField: ./syncs/my-custom-title.sync
     disable:
       - UpdateTimestamp
 
   - name: auth
-    path: ./kits/auth
+    path: ./suites/auth
 
-# App-specific concepts (not from any kit)
+# App-specific concepts (not from any suite)
 concepts:
   Theme:
     spec: ./specs/theme.concept
@@ -2214,12 +2214,12 @@ syncs:
     engine: server
 ```
 
-### 9.6 Kit Directory Structure
+### 9.6 Suite Directory Structure
 
 **Framework suites** (concepts + syncs only):
 
 ```
-kits/
+suites/
 ├── auth/
 │   ├── suite.yaml
 │   ├── user.concept
@@ -2253,7 +2253,7 @@ kits/
 Domain suites that introduce new deployment targets bundle pre-conceptual code (transport adapters, storage backends, deploy templates) alongside their concepts. The infrastructure section groups code that is below the concept abstraction but domain-specific — it doesn't belong in the framework kernel because it's useless outside the suite's domain.
 
 ```
-kits/
+suites/
 ├── web3/
 │   ├── suite.yaml
 │   ├── chain-monitor.concept          # async gate: finality, reorgs
@@ -2317,7 +2317,7 @@ kits/
 
 The `infrastructure/` directory is reserved for pre-conceptual code per Section 10.3. It contains only transport adapters, storage backends, and deploy templates — never concepts, syncs, or implementations. The suite installer copies infrastructure into the appropriate kernel extension paths; the `clef suite validate` command verifies that infrastructure code implements the correct interfaces (`ConceptTransport`, `ConceptStorage`).
 
-### 9.7 Kit Design Guidelines
+### 9.7 Suite Design Guidelines
 
 **Keep required syncs minimal.** A sync is required only if removing it causes data corruption — orphaned records, dangling references, violated uniqueness constraints. Behavioral preferences (notifications, defaults, formatting) are always recommended.
 
@@ -3158,7 +3158,7 @@ clef/
 ├── deploy/
 │   └── app.deploy.yaml
 │
-├── kits/                       # Concept suites (bundled concepts + syncs)
+├── suites/                       # Concept suites (bundled concepts + syncs)
 │   ├── auth/                   # Auth suite
 │   │   ├── suite.yaml
 │   │   ├── user.concept
@@ -3203,7 +3203,7 @@ clef/
         │   │   ├── generate.ts
         │   │   ├── test.ts
         │   │   ├── deploy.ts
-        │   │   ├── kit.ts          # suite init, validate, test, list
+        │   │   ├── suite.ts          # suite init, validate, test, list
         │   │   ├── trace.ts        # clef trace <flow-id> (Section 16.1)
         │   │   └── migrate.ts      # clef migrate (Section 16.5)
         │   ├── patterns/           # Convention validators for clef check --pattern
@@ -3249,10 +3249,10 @@ clef dev
 # Deploy according to manifest
 clef deploy --manifest deploy/app.deploy.yaml
 
-# Kit management
-clef suite init my-kit                    # scaffold a new suite directory
-clef suite validate ./kits/content-mgmt   # validate suite manifest, type alignment, sync tiers
-clef suite test ./kits/content-mgmt       # run suite's conformance + integration tests
+# Suite management
+clef suite init my-suite                    # scaffold a new suite directory
+clef suite validate ./suites/content-mgmt   # validate suite manifest, type alignment, sync tiers
+clef suite test ./suites/content-mgmt       # run suite's conformance + integration tests
 clef suite list                           # show suites used by the current app
 clef suite check-overrides                # verify app overrides reference valid sync names
 
@@ -3309,7 +3309,7 @@ clef migrate --all                      # run all pending migrations
 - [x] Implement all RealWorld syncs
 - [x] Pass the RealWorld Postman test suite
 - [x] Document design rules and compare with conventional implementations
-- [x] Package the auth-related concepts (User, Password, JWT) as a first kit
+- [x] Package the auth-related concepts (User, Password, JWT) as a first suite
 
 ### Phase 5: Suites (Weeks 12-13) ✅ Complete
 
@@ -3317,7 +3317,7 @@ clef migrate --all                      # run all pending migrations
 - [x] Implement type parameter alignment validation (advisory warnings)
 - [x] Implement sync tier enforcement (required vs recommended, compile-time checks)
 - [x] Implement override and disable mechanics in the deployment manifest
-- [x] Build a content-management kit (Entity, Field, Relation, Node) as the reference suite
+- [x] Build a content-management suite (Entity, Field, Relation, Node) as the reference suite
 - [x] Build an auth suite (User, Password, JWT, Session) extracted from Phase 4
 - [x] Add `clef suite init`, `clef suite validate`, `clef suite test` CLI commands
 - [x] Test: app using two suites together with overrides and integration syncs
@@ -3654,7 +3654,7 @@ Folds into the distribution architecture (Phase 9 design). Edge concepts follow 
   - [ ] Pre-compiled `.clef-cache/` artifacts minimize cold start (no parsing at runtime)
   - [ ] Server-side engine coordinates all cross-concept syncs
 
-### Phase 22: Web3 Kit (Weeks 55-60)
+### Phase 22: Web3 Suite (Weeks 55-60)
 
 Implement the web3 domain suite. All domain logic lives in concepts + syncs — zero engine extensions. See Section 16.11 for the engine/concept boundary principle.
 
@@ -4818,7 +4818,7 @@ That's 200+ lines of blockchain-specific code in the engine — code that helps 
 
 ### 16.12 Async Gate Convention
 
-Kits that include gating concepts should follow a consistent pattern so the framework tooling can recognize and annotate them. This is a convention, not a language construct — the engine doesn't know about async gates. But the CLI can validate the pattern and the trace renderer can annotate gating steps specially.
+Suites that include gating concepts should follow a consistent pattern so the framework tooling can recognize and annotate them. This is a convention, not a language construct — the engine doesn't know about async gates. But the CLI can validate the pattern and the trace renderer can annotate gating steps specially.
 
 **Convention: an async gate concept has:**
 

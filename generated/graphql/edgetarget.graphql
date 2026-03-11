@@ -1,0 +1,21 @@
+type EdgeTargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type EdgeTargetEntry {
+  t: ID!
+  manifestOutput: String!
+  packageOutput: String!
+  sideloadPolicy: String!
+}
+
+extend type Query {
+  edgetarget_entry(t: ID!): EdgeTargetEntry
+  edgetarget_entries: [EdgeTargetEntry!]!
+}
+
+type EdgeTargetTargets {
+  t: ID!
+  value: ID!
+}

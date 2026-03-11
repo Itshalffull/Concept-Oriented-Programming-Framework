@@ -1,6 +1,6 @@
 // Enricher Concept Implementation (Rust)
 //
-// Data integration kit — AI/API metadata augmentation with confidence scoring.
+// Data integration suite — AI/API metadata augmentation with confidence scoring.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

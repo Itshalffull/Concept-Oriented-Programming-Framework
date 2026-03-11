@@ -1,0 +1,74 @@
+@version(1)
+concept KernelBoot [K] {
+
+  purpose {
+    Bootstrap a Clef kernel instance by discovering concept handlers,
+    compiling routing syncs, and exposing the kernel for action dispatch.
+    Provides the runtime foundation that all CLI commands, API endpoints,
+    and MCP tools require before they can invoke concept actions.
+  }
+
+  state {
+    instances: set K
+    lifecycle {
+      status: K -> String
+      registeredConcepts: K -> list String
+      compiledSyncs: K -> list String
+      bootedAt: K -> DateTime
+    }
+    config {
+      manifestPath: K -> option String
+      projectRoot: K -> String
+      handlerPaths: K -> list String
+      syncPaths: K -> list String
+    }
+  }
+
+  actions {
+    action boot(projectRoot: String, manifestPath: option String) {
+      -> ok(kernel: K, concepts: list String, syncs: list String) {
+        Kernel booted: all concept handlers registered, routing syncs
+        compiled, and kernel instance ready for action dispatch.
+      }
+      -> noHandlers(projectRoot: String) {
+        No concept handler modules found under the project root.
+      }
+      -> syncCompilationFailed(errors: list String) {
+        One or more sync files failed to compile. The kernel is still
+        usable but sync-driven routing will be incomplete.
+      }
+    }
+
+    action status(kernel: K) {
+      -> ok(kernel: K, status: String, concepts: list String, syncs: list String) {
+        Current kernel state including registered concepts and compiled syncs.
+      }
+      -> notfound(kernel: K) {
+        No kernel instance exists with this identifier.
+      }
+    }
+
+    action shutdown(kernel: K) {
+      -> ok(kernel: K) {
+        Kernel instance torn down and all registrations cleared.
+      }
+      -> notfound(kernel: K) {
+        No kernel instance exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
+      -> ok(kernel: k, concepts: cs, syncs: ss)
+    then status(kernel: k)
+      -> ok(kernel: k, status: "running", concepts: cs, syncs: ss)
+  }
+
+  invariant {
+    after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
+      -> ok(kernel: k, concepts: cs, syncs: ss)
+    then shutdown(kernel: k) -> ok(kernel: k)
+    and status(kernel: k) -> notfound(kernel: k)
+  }
+}

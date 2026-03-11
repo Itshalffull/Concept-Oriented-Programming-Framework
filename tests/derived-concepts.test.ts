@@ -1010,8 +1010,8 @@ describe('Premade Derived Concept Parsing', () => {
 
   const allDerivedFiles = searchDirs.flatMap(findDerivedFiles);
 
-  it('finds all 33 premade derived concept files', () => {
-    expect(allDerivedFiles.length).toBe(33);
+  it('finds all 50 premade derived concept files', () => {
+    expect(allDerivedFiles.length).toBe(50);
   });
 
   it.each(allDerivedFiles.map(f => [relative(projectRoot, f), f]))(

@@ -1,4 +1,4 @@
-// Env Concept Implementation (Deploy Kit)
+// Env Concept Implementation (Deploy Suite)
 // Manage deployment environments with composable configuration.
 import type { ConceptHandler } from '@clef/runtime';
 
@@ -41,8 +41,8 @@ export const envHandler: ConceptHandler = {
     // Merge: current overrides take precedence over base
     resolved = { ...resolved, ...currentOverrides };
 
-    // Include kit versions and secret references
-    resolved.kitVersions = existing.kitVersions ? JSON.parse(existing.kitVersions as string) : [];
+    // Include suite versions and secret references
+    resolved.suiteVersions = existing.suiteVersions ? JSON.parse(existing.suiteVersions as string) : [];
     resolved.secrets = existing.secrets ? JSON.parse(existing.secrets as string) : [];
 
     return {
@@ -68,36 +68,36 @@ export const envHandler: ConceptHandler = {
     }
 
     // Find the suite version in source environment
-    const sourceKitVersions: Array<{ kit: string; version: string }> =
-      sourceEnv.kitVersions ? JSON.parse(sourceEnv.kitVersions as string) : [];
-    const kitEntry = sourceKitVersions.find(k => k.kit === suiteName);
+    const sourceSuiteVersions: Array<{ suite: string; version: string }> =
+      sourceEnv.suiteVersions ? JSON.parse(sourceEnv.suiteVersions as string) : [];
+    const suiteEntry = sourceSuiteVersions.find(k => k.suite === suiteName);
 
-    if (!kitEntry) {
+    if (!suiteEntry) {
       return { variant: 'notValidated', fromEnv, suiteName };
     }
 
-    // Update target environment's kit versions
-    const targetKitVersions: Array<{ kit: string; version: string }> =
-      targetEnv.kitVersions ? JSON.parse(targetEnv.kitVersions as string) : [];
-    const existingIndex = targetKitVersions.findIndex(k => k.kit === suiteName);
+    // Update target environment's suite versions
+    const targetSuiteVersions: Array<{ suite: string; version: string }> =
+      targetEnv.suiteVersions ? JSON.parse(targetEnv.suiteVersions as string) : [];
+    const existingIndex = targetSuiteVersions.findIndex(k => k.suite === suiteName);
 
     if (existingIndex >= 0) {
-      targetKitVersions[existingIndex].version = kitEntry.version;
+      targetSuiteVersions[existingIndex].version = suiteEntry.version;
     } else {
-      targetKitVersions.push({ kit: suiteName, version: kitEntry.version });
+      targetSuiteVersions.push({ suite: suiteName, version: suiteEntry.version });
     }
 
     const now = new Date().toISOString();
 
     await storage.put('environment', toEnv, {
       ...targetEnv,
-      kitVersions: JSON.stringify(targetKitVersions),
+      suiteVersions: JSON.stringify(targetSuiteVersions),
       lastPromotedAt: now,
       promotedFrom: fromEnv,
       promotedBy: 'system',
     });
 
-    return { variant: 'ok', toEnv, version: kitEntry.version };
+    return { variant: 'ok', toEnv, version: suiteEntry.version };
   },
 
   async diff(input, storage) {

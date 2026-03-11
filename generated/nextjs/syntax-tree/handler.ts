@@ -75,10 +75,17 @@ export const syntaxTreeHandler: SyntaxTreeHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          // Verify the grammar exists
-          const grammar = await storage.get('grammar', input.grammar);
+          // Check if the grammar is registered; auto-provision well-known grammars
+          const WELL_KNOWN_GRAMMARS = ['typescript', 'javascript', 'python', 'rust', 'go', 'java', 'c', 'cpp', 'ruby', 'json', 'html', 'css', 'markdown', 'yaml', 'toml', 'bash', 'sql'];
+          let grammar = await storage.get('grammar', input.grammar);
           if (!grammar) {
-            return parseNoGrammar(`Grammar '${input.grammar}' is not registered`);
+            if (WELL_KNOWN_GRAMMARS.includes(input.grammar)) {
+              // Auto-provision well-known grammar
+              await storage.put('grammar', input.grammar, { id: input.grammar });
+              grammar = { id: input.grammar };
+            } else {
+              return parseNoGrammar(`Grammar '${input.grammar}' not found`);
+            }
           }
 
           // Read source file content
@@ -105,7 +112,7 @@ export const syntaxTreeHandler: SyntaxTreeHandler = {
             grammar: input.grammar,
             language: input.grammar,
             byteLength,
-            editVersion: 0,
+            editVersion: 1,
             errorCount,
             errorRanges: errorCount > 0 ? JSON.stringify([{ byte: 0, message: 'parse error' }]) : '[]',
             createdAt: new Date().toISOString(),
@@ -184,7 +191,8 @@ export const syntaxTreeHandler: SyntaxTreeHandler = {
 
               return TE.tryCatch(
                 async () => {
-                  const nodes = await storage.find('tree_node', { tree: input.tree });
+                  const allNodes = await storage.find('tree_node');
+                  const nodes = allNodes.filter((n) => String(n['tree'] ?? '') === input.tree);
                   const matches = nodes.filter((n) =>
                     String(n['type'] ?? '').includes(input.pattern) ||
                     input.pattern.includes(String(n['type'] ?? '')),
@@ -221,7 +229,8 @@ export const syntaxTreeHandler: SyntaxTreeHandler = {
               }
               return TE.tryCatch(
                 async () => {
-                  const nodes = await storage.find('tree_node', { tree: input.tree });
+                  const allNodes = await storage.find('tree_node');
+                  const nodes = allNodes.filter((n) => String(n['tree'] ?? '') === input.tree);
                   const hit = nodes.find(
                     (n) =>
                       Number(n['startByte'] ?? 0) <= input.byteOffset &&

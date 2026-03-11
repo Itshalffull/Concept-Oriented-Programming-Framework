@@ -1,0 +1,11 @@
+# Abort rollout on health failure — Architecture doc Section 2.3
+# Suite health check reports failure, abort the rollout.
+
+sync RollbackOnFailure [eager]
+when {
+  Health/checkKit: [ suite: ?suite ]
+    => [ check: ?h; healthy: ?healthy; failed: ?failedConcepts ]
+}
+then {
+  Rollout/abort: [ rollout: ?r ]
+}

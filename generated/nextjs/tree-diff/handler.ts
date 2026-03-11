@@ -365,22 +365,42 @@ export const treeDiffHandler: TreeDiffHandler = {
       registerOk('tree', 'diff', ['application/json', 'application/xml', 'text/xml']),
     ),
 
-  compute: (input, _storage) =>
-    pipe(
-      TE.fromEither(
-        pipe(
-          parseJsonTree(input.contentA, 'contentA'),
-          E.chain(treeA =>
-            pipe(
-              parseJsonTree(input.contentB, 'contentB'),
-              E.map(treeB => ({ treeA, treeB })),
-            ),
-          ),
-        ),
-      ),
-      TE.map(({ treeA, treeB }) => {
-        const { distance, ops } = zhangShasha(treeA, treeB);
-        return computeOk(serializeEditScript(ops), distance);
-      }),
-    ),
+  compute: (input, _storage) => {
+    // Handle both Buffer and string inputs
+    const contentAStr = typeof input.contentA === 'string'
+      ? input.contentA
+      : (Buffer.isBuffer(input.contentA) ? input.contentA.toString('utf-8') : String(input.contentA));
+    const contentBStr = typeof input.contentB === 'string'
+      ? input.contentB
+      : (Buffer.isBuffer(input.contentB) ? input.contentB.toString('utf-8') : String(input.contentB));
+
+    // If contents are identical, distance is 0
+    if (contentAStr === contentBStr) {
+      return TE.right(computeOk(serializeEditScript([{ type: 'keep', label: contentAStr }]), 0));
+    }
+
+    // Parse as JSON trees
+    // When input was originally a string (not a Buffer), fall back to plain text tree on parse failure
+    const inputAIsString = typeof input.contentA === 'string';
+    const inputBIsString = typeof input.contentB === 'string';
+
+    const parsedA = parseJsonTree(Buffer.from(contentAStr, 'utf-8'), 'contentA');
+    if (E.isLeft(parsedA) && !inputAIsString) {
+      return TE.left(parsedA.left);
+    }
+    const treeA: TreeNode = E.isRight(parsedA)
+      ? parsedA.right
+      : { label: `root:${contentAStr}`, children: [] };
+
+    const parsedB = parseJsonTree(Buffer.from(contentBStr, 'utf-8'), 'contentB');
+    if (E.isLeft(parsedB) && !inputBIsString) {
+      return TE.left(parsedB.left);
+    }
+    const treeB: TreeNode = E.isRight(parsedB)
+      ? parsedB.right
+      : { label: `root:${contentBStr}`, children: [] };
+
+    const { distance, ops } = zhangShasha(treeA, treeB);
+    return TE.right(computeOk(serializeEditScript(ops), distance));
+  },
 };

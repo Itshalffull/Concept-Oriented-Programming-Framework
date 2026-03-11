@@ -1,0 +1,28 @@
+type ClaudeMdTargetState {
+  """All ds in this concept"""
+  ds: [ID!]!
+}
+
+type ClaudeMdTargetEntry {
+  d: ID!
+  projectName: String!
+  outputPath: String!
+  includeSections: [String!]!
+  conventions: [String!]!
+  keyFiles: [JSON!]!
+  testCommands: [JSON!]!
+  customSections: [JSON!]!
+  packageAlias: String!
+  skillSummaries: [JSON!]!
+  content: String!
+}
+
+extend type Query {
+  claudemdtarget_entry(d: ID!): ClaudeMdTargetEntry
+  claudemdtarget_entries: [ClaudeMdTargetEntry!]!
+}
+
+type ClaudeMdTargetDocuments {
+  d: ID!
+  value: ID!
+}

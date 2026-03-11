@@ -1,0 +1,465 @@
+{
+  "uri": "urn:clef/Milestone",
+  "name": "Milestone",
+  "typeParams": [
+    {
+      "name": "I",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "condition_expr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "achieved_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "milestones",
+      "source": "set-valued",
+      "keyField": {
+        "name": "i",
+        "paramRef": "I"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "define",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "condition_expr",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "milestone",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Creates a milestone definition for a run in pending status"
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "params": [
+        {
+          "name": "milestone",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "achieved",
+          "fields": [
+            {
+              "name": "milestone",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Condition evaluates to true Transitions to achieved"
+        },
+        {
+          "tag": "not_yet",
+          "fields": [
+            {
+              "name": "milestone",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Condition evaluates to false Remains pending"
+        },
+        {
+          "tag": "already_achieved",
+          "fields": [
+            {
+              "name": "milestone",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Milestone was already achieved"
+        }
+      ]
+    },
+    {
+      "name": "revoke",
+      "params": [
+        {
+          "name": "milestone",
+          "type": {
+            "kind": "param",
+            "paramRef": "I"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "milestone",
+              "type": {
+                "kind": "param",
+                "paramRef": "I"
+              }
+            }
+          ],
+          "prose": "Reverts milestone from achieved to pending For conditions that \n can become untrue ( e g , inventory drops below threshold )"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type MilestoneState {\n  \"\"\"All is in this concept\"\"\"\n  is: [ID!]!\n}\n\ntype MilestoneEntry {\n  i: ID!\n  run_ref: String!\n  name: String!\n  status: String!\n  condition_expr: String!\n  achieved_at: String!\n}\n\nextend type Query {\n  milestone_entry(i: ID!): MilestoneEntry\n  milestone_entries: [MilestoneEntry!]!\n}\n\ntype MilestoneMilestones {\n  i: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "define": {
+        "$id": "urn:clef/Milestone/define/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Milestone"
+          },
+          "action": {
+            "const": "define"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "condition_expr": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "name",
+              "condition_expr"
+            ]
+          }
+        }
+      },
+      "evaluate": {
+        "$id": "urn:clef/Milestone/evaluate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Milestone"
+          },
+          "action": {
+            "const": "evaluate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "milestone": {
+                "type": "string"
+              },
+              "context": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "milestone",
+              "context"
+            ]
+          }
+        }
+      },
+      "revoke": {
+        "$id": "urn:clef/Milestone/revoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Milestone"
+          },
+          "action": {
+            "const": "revoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "milestone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "milestone"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "define": {
+        "ok": {
+          "$id": "urn:clef/Milestone/define/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Milestone"
+            },
+            "action": {
+              "const": "define"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "milestone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "milestone"
+              ]
+            }
+          }
+        }
+      },
+      "evaluate": {
+        "achieved": {
+          "$id": "urn:clef/Milestone/evaluate/completion/achieved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Milestone"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "achieved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "milestone": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "milestone",
+                "name",
+                "run_ref"
+              ]
+            }
+          }
+        },
+        "not_yet": {
+          "$id": "urn:clef/Milestone/evaluate/completion/not_yet",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Milestone"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "not_yet"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "milestone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "milestone"
+              ]
+            }
+          }
+        },
+        "already_achieved": {
+          "$id": "urn:clef/Milestone/evaluate/completion/already_achieved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Milestone"
+            },
+            "action": {
+              "const": "evaluate"
+            },
+            "variant": {
+              "const": "already_achieved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "milestone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "milestone"
+              ]
+            }
+          }
+        }
+      },
+      "revoke": {
+        "ok": {
+          "$id": "urn:clef/Milestone/revoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Milestone"
+            },
+            "action": {
+              "const": "revoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "milestone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "milestone"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track achievement of significant process goals declaratively , \n without prescribing which specific steps cause achievement"
+}

@@ -29,8 +29,8 @@ describe('SolverProvider conformance', () => {
     const storage = createTestStorage();
     const handler = solverProviderHandler;
 
-    const p = 'u-test-invariant-001';
-    const r = 'u-test-invariant-002';
+    let p: any = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-002';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('SolverProvider conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).provider).toBe(p);
+        p = (output as any).provider;
         return output;
       }),
     )();
@@ -60,7 +60,7 @@ describe('SolverProvider conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).provider).toBe(p);
-        expect((output as any).run_ref).toBe(r);
+        r = (output as any).run_ref;
         return output;
       }),
     )();

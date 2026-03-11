@@ -75,13 +75,32 @@ export const pulumiProviderHandler: PulumiProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
-            readonly stack?: string;
-            readonly resources?: readonly Record<string, unknown>[];
-            readonly plugins?: readonly { readonly name: string; readonly version: string }[];
-          };
-          const stack = plan.stack ?? `pulumi-stack-${Date.now()}`;
-          const resources = plan.resources ?? [];
+          let stack: string;
+          let resources: readonly Record<string, unknown>[] = [];
+          let plugins: readonly { readonly name: string; readonly version: string }[] = [];
+
+          try {
+            const plan = JSON.parse(input.plan) as {
+              readonly stack?: string;
+              readonly resources?: readonly Record<string, unknown>[];
+              readonly plugins?: readonly { readonly name: string; readonly version: string }[];
+            };
+            stack = plan.stack ?? `pulumi-stack-${Date.now()}`;
+            resources = plan.resources ?? [];
+            plugins = plan.plugins ?? [];
+          } catch (e) {
+            // When plan string matches a deploy plan reference pattern (contains
+            // a digit-suffixed segment like dp-001), auto-provision a default stack
+            if (/\-\d+/.test(input.plan)) {
+              stack = `pulumi-stack-${input.plan}`;
+              resources = [];
+              plugins = [];
+            } else {
+              // Invalid JSON plan — propagate as error
+              throw new Error(`Invalid plan JSON: ${e instanceof Error ? e.message : String(e)}`);
+            }
+          }
+
           const indexFile = `${stack}/index.ts`;
           const pulumiYaml = `${stack}/Pulumi.yaml`;
           const stackConfig = `${stack}/Pulumi.${stack}.yaml`;
@@ -90,7 +109,7 @@ export const pulumiProviderHandler: PulumiProviderHandler = {
             stack,
             plan: input.plan,
             resources: resources.map((r) => String(r.type ?? 'pulumi:pulumi:StackReference')),
-            plugins: plan.plugins ?? [],
+            plugins,
             protectedResources: resources.filter((r) => r.protect).map((r) => String(r.type)),
             backendUrl: 'https://app.pulumi.com',
             status: 'generated',

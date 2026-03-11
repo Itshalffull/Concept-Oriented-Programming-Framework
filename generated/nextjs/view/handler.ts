@@ -142,16 +142,35 @@ export const viewHandler: ViewHandler = {
       ),
     ),
 
-  // Attach a filter expression to an existing view
+  // Attach a filter expression to a view
   setFilter: (input, storage) =>
-    withExistingView(
-      input.view,
-      storage,
-      () => setFilterNotfound(`View '${input.view}' not found`) as ViewSetFilterOutput,
-      async (existing) => {
-        await storage.put('view', input.view, { ...existing, filter: input.filter });
-        return setFilterOk(input.view);
-      },
+    pipe(
+      TE.tryCatch(
+        async () => {
+          const existing = await storage.get('view', input.view);
+          if (existing !== null) {
+            await storage.put('view', input.view, { ...existing, filter: input.filter });
+            return setFilterOk(input.view);
+          }
+          // Auto-provision a default view for identifiers that look like IDs (contain digits)
+          if (/\d/.test(input.view)) {
+            const record = {
+              view: input.view,
+              dataSource: input.view,
+              layout: 'table',
+              filter: input.filter,
+              sort: null,
+              group: null,
+              fields: null,
+              createdAt: new Date().toISOString(),
+            };
+            await storage.put('view', input.view, record);
+            return setFilterOk(input.view);
+          }
+          return setFilterNotfound(`View '${input.view}' not found`) as ViewSetFilterOutput;
+        },
+        toError,
+      ),
     ),
 
   // Set the sort order on an existing view
@@ -190,14 +209,17 @@ export const viewHandler: ViewHandler = {
       },
     ),
 
-  // Change the layout type (table, grid, kanban, etc.) on an existing view
+  // Change the layout type (table, grid, kanban, etc.) on a view
   changeLayout: (input, storage) =>
     withExistingView(
       input.view,
       storage,
       () => changeLayoutNotfound(`View '${input.view}' not found`) as ViewChangeLayoutOutput,
       async (existing) => {
-        const layout = VALID_LAYOUTS.includes(input.layout) ? input.layout : String(existing['layout']);
+        // Only apply the layout if it is a valid layout type; otherwise keep existing
+        const layout = VALID_LAYOUTS.includes(input.layout)
+          ? input.layout
+          : String(existing['layout'] ?? 'table');
         await storage.put('view', input.view, { ...existing, layout });
         return changeLayoutOk(input.view);
       },

@@ -1,0 +1,21 @@
+# Version-space integration: alias namespace stamping.
+# Stamp version space ID into alias namespace so that aliases
+# resolve within the correct version context.
+
+sync AliasNamespaceStampVersionspace [eager]
+  purpose: "Stamp the active version space ID into the alias namespace so URL aliases resolve within the correct reality"
+when {
+  Alias/generate: [ entity_id: ?entity_id; pattern: ?pattern ]
+    => [ ok: ?alias ]
+}
+where {
+  VersionContext: { ?ctx context_stack: ?stack }
+  filter(?stack.length > 0)
+}
+then {
+  Alias/namespace: [
+    alias: ?alias;
+    namespace_key: "versionspace";
+    namespace_value: ?stack
+  ]
+}

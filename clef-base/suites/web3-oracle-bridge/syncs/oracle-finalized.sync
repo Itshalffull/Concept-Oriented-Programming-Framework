@@ -1,0 +1,14 @@
+# Oracle bridge: Record provenance when a transaction is finalized.
+# When ChainMonitor confirms finality, record the chain confirmation
+# in provenance for audit trail.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleFinalized [eager]
+when {
+  ChainMonitor/awaitFinality: [ tx_hash: ?tx_hash ]
+    => [ finalized: ?block ]
+}
+then {
+  Provenance/record: [ entity: ?tx_hash; activity: "chain_finalized";
+                       metadata: ?block ]
+}

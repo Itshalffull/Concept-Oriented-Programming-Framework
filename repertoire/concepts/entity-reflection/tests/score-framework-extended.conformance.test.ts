@@ -37,9 +37,8 @@ describe('Score Extended Entity Syncs', () => {
     for (const name of scoreExtendedSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('score-extended', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -47,9 +46,9 @@ describe('Score Extended Entity Syncs', () => {
   describe('score extended entity structure', () => {
     it('ErrorCorrelationAsContentEntity uses Tag.addTag("system:error")', () => {
       const source = readSync('score-extended', 'error-correlation-as-content-entity');
-      const result = parseSyncFile(source);
-      const tagSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Tag' && a.action === 'addTag',
+      const syncs = parseSyncFile(source);
+      const tagSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Tag' && a.action === 'addTag',
       ));
       expect(tagSync).toBeDefined();
     });
@@ -67,9 +66,8 @@ describe('Framework Extended Entity Syncs', () => {
     for (const name of frameworkExtendedSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('framework-extended', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });

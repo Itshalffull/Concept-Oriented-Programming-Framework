@@ -1,0 +1,20 @@
+# Interactor type seeds for the diagramming suite.
+# Registers three new interaction types used by diagramming widgets.
+
+concept: Interactor
+action: define
+entries:
+  - interactor: spatial-canvas
+    name: spatial-canvas
+    category: container
+    properties: '{"dataType":"canvas","zoom_range":[0.1,5.0],"grid":true,"snap":true,"background":"dots"}'
+
+  - interactor: connector-draw
+    name: connector-draw
+    category: input
+    properties: '{"dataType":"connector","mode":"local","show_ports":true,"route_style":"bezier"}'
+
+  - interactor: node-palette
+    name: node-palette
+    category: input
+    properties: '{"dataType":"palette","notation_id":null,"orientation":"vertical"}'

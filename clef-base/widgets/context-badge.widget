@@ -1,0 +1,135 @@
+@version(1)
+widget context-badge {
+
+  purpose {
+    Compact floating badge showing the active version space context on mobile
+    and watch platforms. Displays the deepest space name with a color tint.
+    Tapping expands to the full context stack as a bottom sheet (mobile)
+    or scrollable list (watch). Serves the context-stack interactor type
+    (Section 5.10.2).
+  }
+
+  anatomy {
+    root:              container  { Floating badge container }
+    label:             text       { Deepest space name }
+    colorTint:         container  { Color background indicating space status }
+    expandTrigger:     action     { Tap target to expand the full stack }
+    sheet:             container  { Bottom sheet or scrollable list for full stack }
+    sheetHeader:       container  { Sheet header with title and close button }
+    sheetClose:        action     { Close button for the expanded sheet }
+    stackList:         container  { List of all context entries in the stack }
+    stackItem:         container  { Individual context entry in the expanded list }
+    stackItemLabel:    text       { Space name within a stack item }
+    stackItemAction:   action     { Action button (leave/switch) on a stack item }
+  }
+
+  states {
+    badge [initial] {
+      on TAP -> expanded;
+    }
+    expanded {
+      on CLOSE -> badge;
+      on DISMISS_SPACE -> badge;
+    }
+  }
+
+  affordance {
+    serves: context-stack;
+    specificity: 10;
+    when: platform "mobile" | "watch";
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+    keyboard {
+      Enter         -> TAP;
+      Escape        -> CLOSE;
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: expandTrigger;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-label: concat("Version space: ", self.deepestName);
+        aria-live: "polite";
+      };
+      expandTrigger -> {
+        aria-label: "View version space stack";
+        aria-expanded: if state.display == "expanded" then "true" else "false";
+      };
+      sheet -> {
+        role: "dialog";
+        aria-label: "Version space stack";
+        aria-modal: "true";
+      };
+      stackList -> {
+        role: "list";
+      };
+      stackItem -> {
+        role: "listitem";
+      };
+    }
+  }
+
+  props {
+    stack: list ContextEntry = []
+    statusColor: String = "accent"
+    onDismiss: option Function
+    onSwitch: option Function
+  }
+
+  connect {
+    root -> {
+      data-state: if state.display == "badge" then "collapsed" else "expanded";
+      data-depth: ?stack.length;
+      data-status: ?statusColor;
+      data-part: "root";
+    }
+
+    label -> {
+      text: self.deepestName;
+      data-part: "label";
+    }
+
+    colorTint -> {
+      data-color: ?statusColor;
+      data-part: "color-tint";
+    }
+
+    expandTrigger -> {
+      onClick: send(TAP);
+      aria-label: "View version space stack";
+      data-part: "expand-trigger";
+    }
+
+    sheet -> {
+      hidden: if state.display == "badge" then true else false;
+      data-part: "sheet";
+    }
+
+    sheetClose -> {
+      onClick: send(CLOSE);
+      aria-label: "Close";
+      data-part: "sheet-close";
+    }
+
+    stackItem -> {
+      data-space-id: self.spaceId;
+      data-part: "stack-item";
+    }
+  }
+
+  invariant {
+    "Badge always shows the deepest (most specific) space name";
+    "Color tint reflects the space status: active (accent), proposed (amber), archived (gray)";
+    "Tapping the badge opens the full stack as a bottom sheet on mobile";
+    "Dismissing a space from the sheet collapses back to badge view";
+  }
+
+}

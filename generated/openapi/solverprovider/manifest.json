@@ -1,0 +1,1129 @@
+{
+  "uri": "urn:clef/SolverProvider",
+  "name": "SolverProvider",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "provider_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "supported_languages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "supported_kinds",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "providers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "provider_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "supported_languages",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "supported_kinds",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Registers solver Also registers with PluginRegistry under \n category solver priority : lower preferred when multiple \n providers match"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "provider_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider already registered"
+        }
+      ]
+    },
+    {
+      "name": "dispatch",
+      "params": [
+        {
+          "name": "property_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "formal_language",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "kind",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Selects provider with matching language kind and lowest priority \n number Creates VerificationRun Returns provider and run ref"
+        },
+        {
+          "tag": "no_provider",
+          "fields": [
+            {
+              "name": "formal_language",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "kind",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No registered provider supports this combination"
+        }
+      ]
+    },
+    {
+      "name": "dispatch_batch",
+      "params": [
+        {
+          "name": "properties",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assignments",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "property_ref",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "provider",
+                      "type": {
+                        "kind": "param",
+                        "paramRef": "S"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Groups properties by language kind and dispatches to optimal \n providers Creates a single VerificationRun with all properties"
+        },
+        {
+          "tag": "partial",
+          "fields": [
+            {
+              "name": "assigned",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "unassigned",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Some properties have no matching provider"
+        }
+      ]
+    },
+    {
+      "name": "health_check",
+      "params": [
+        {
+          "name": "provider",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "latency_ms",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Checks provider availability and response time"
+        },
+        {
+          "tag": "unavailable",
+          "fields": [
+            {
+              "name": "provider",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider not responding"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "params": [],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "providers",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "param",
+                  "paramRef": "S"
+                }
+              }
+            }
+          ],
+          "prose": "All registered providers with capabilities"
+        }
+      ]
+    },
+    {
+      "name": "unregister",
+      "params": [
+        {
+          "name": "provider_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [],
+          "prose": "Removes provider from registry"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "provider_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider not registered"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, dispatch behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "provider_id",
+              "value": {
+                "kind": "literal",
+                "value": "z3"
+              }
+            },
+            {
+              "name": "supported_languages",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "smtlib"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "supported_kinds",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "invariant"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "precondition"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "postcondition"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "safety"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "capabilities",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "smt"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "quantifiers"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "theories"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 1
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "dispatch",
+          "inputs": [
+            {
+              "name": "property_ref",
+              "value": {
+                "kind": "literal",
+                "value": "prop-1"
+              }
+            },
+            {
+              "name": "formal_language",
+              "value": {
+                "kind": "literal",
+                "value": "smtlib"
+              }
+            },
+            {
+              "name": "kind",
+              "value": {
+                "kind": "literal",
+                "value": "invariant"
+              }
+            },
+            {
+              "name": "timeout_ms",
+              "value": {
+                "kind": "literal",
+                "value": 5000
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "provider",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type SolverProviderState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype SolverProviderEntry {\n  s: ID!\n  provider_id: String!\n  supported_languages: [String!]!\n  supported_kinds: [String!]!\n  capabilities: [String!]!\n  status: String!\n  priority: Int!\n}\n\nextend type Query {\n  solverprovider_entry(s: ID!): SolverProviderEntry\n  solverprovider_entries: [SolverProviderEntry!]!\n}\n\ntype SolverProviderProviders {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/SolverProvider/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider_id": {
+                "type": "string"
+              },
+              "supported_languages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "supported_kinds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "provider_id",
+              "supported_languages",
+              "supported_kinds",
+              "capabilities",
+              "priority"
+            ]
+          }
+        }
+      },
+      "dispatch": {
+        "$id": "urn:clef/SolverProvider/dispatch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "dispatch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "property_ref": {
+                "type": "string"
+              },
+              "formal_language": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "property_ref",
+              "formal_language",
+              "kind",
+              "timeout_ms"
+            ]
+          }
+        }
+      },
+      "dispatch_batch": {
+        "$id": "urn:clef/SolverProvider/dispatch_batch/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "dispatch_batch"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "properties",
+              "timeout_ms"
+            ]
+          }
+        }
+      },
+      "health_check": {
+        "$id": "urn:clef/SolverProvider/health_check/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "health_check"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        }
+      },
+      "list": {
+        "$id": "urn:clef/SolverProvider/list/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "list"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "unregister": {
+        "$id": "urn:clef/SolverProvider/unregister/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/SolverProvider"
+          },
+          "action": {
+            "const": "unregister"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "provider_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/SolverProvider/register/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_id"
+              ]
+            }
+          }
+        }
+      },
+      "dispatch": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/dispatch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "run_ref"
+              ]
+            }
+          }
+        },
+        "no_provider": {
+          "$id": "urn:clef/SolverProvider/dispatch/completion/no_provider",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "dispatch"
+            },
+            "variant": {
+              "const": "no_provider"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "formal_language": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "formal_language",
+                "kind"
+              ]
+            }
+          }
+        }
+      },
+      "dispatch_batch": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/dispatch_batch/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "dispatch_batch"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assignments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "property_ref": {
+                        "type": "string"
+                      },
+                      "provider": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "property_ref",
+                      "provider"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "assignments"
+              ]
+            }
+          }
+        },
+        "partial": {
+          "$id": "urn:clef/SolverProvider/dispatch_batch/completion/partial",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "dispatch_batch"
+            },
+            "variant": {
+              "const": "partial"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assigned": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "unassigned": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "assigned",
+                "unassigned"
+              ]
+            }
+          }
+        }
+      },
+      "health_check": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/health_check/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "health_check"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "latency_ms": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "provider",
+                "status",
+                "latency_ms"
+              ]
+            }
+          }
+        },
+        "unavailable": {
+          "$id": "urn:clef/SolverProvider/health_check/completion/unavailable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "health_check"
+            },
+            "variant": {
+              "const": "unavailable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "list": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/list/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "list"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "providers": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "providers"
+              ]
+            }
+          }
+        }
+      },
+      "unregister": {
+        "ok": {
+          "$id": "urn:clef/SolverProvider/unregister/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "unregister"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/SolverProvider/unregister/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/SolverProvider"
+            },
+            "action": {
+              "const": "unregister"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "provider_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider_id"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Coordination concept dispatching verification requests to \n registered solver backends Routes based on formal language , \n property kind , and solver capabilities Follows the same \n coordination provider pattern as ModelRouter in LLM kits"
+}

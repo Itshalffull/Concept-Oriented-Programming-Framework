@@ -1,0 +1,26 @@
+type AutomationScopeState {
+  """All ass in this concept"""
+  ass: [ID!]!
+}
+
+type AutomationScopeEntry {
+  as: ID!
+  mode: String!
+  rules: [AutomationScopeRule!]!
+  active: Boolean!
+}
+
+type AutomationScopeRule {
+  action_pattern: String!
+  category: String!
+}
+
+extend type Query {
+  automationscope_entry(as: ID!): AutomationScopeEntry
+  automationscope_entries: [AutomationScopeEntry!]!
+}
+
+type AutomationScopeScopes {
+  as: ID!
+  value: ID!
+}

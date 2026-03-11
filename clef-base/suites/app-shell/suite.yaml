@@ -1,0 +1,62 @@
+# app-shell suite — top-level application shell composition.
+# Aggregates surface integration, identity, entity lifecycle, and
+# version space integration suites into the root application shell.
+# See Architecture doc Section 16.
+
+suite:
+  name: app-shell
+  version: 0.1.0
+  description: >
+    Top-level application shell suite. Composes surface integration,
+    identity integration, entity lifecycle, version space integration,
+    and hono routing into a unified application shell. Provides the
+    root composition point for Clef Base deployments.
+
+concepts: {}
+
+syncs:
+  required:
+    - path: syncs/destination-catalog-registers-navigator.sync
+      description: "Register app destinations with the shell navigator as the destination catalog is seeded"
+
+uses:
+  - suite: ui-app
+    description: "Navigation, host lifecycle, shell zones, transport bootstrap, and platform adaptation"
+
+  - suite: surface-integration
+    description: "Widget rendering, triple-zone layout, Score graph panels"
+
+  - suite: identity-integration
+    description: "Access control enforcement on content and schema operations"
+
+  - suite: entity-lifecycle
+    description: "Cross-cutting lifecycle behaviors for persistent entities"
+
+  - suite: version-space-integration
+    description: "Version-aware load/save, search space layering, alias namespacing"
+
+  - suite: hono-routing
+    description: "Hono HTTP routing for concept action handlers"
+
+  - suite: offline-first
+    description: "Offline-first replica synchronization"
+
+config:
+  roles:
+    - configs/roles/admin.yaml
+    - configs/roles/editor.yaml
+    - configs/roles/viewer.yaml
+
+  permissions:
+    - configs/permissions/default-permissions.yaml
+
+  display_modes:
+    - configs/display-modes/entity-page.yaml
+    - configs/display-modes/score-graph.yaml
+
+  layouts:
+    - layouts/triple-zone-layout.uischema
+    - layouts/score-impact-panel.uischema
+    - layouts/score-trace-panel.uischema
+    - layouts/merge-resolution-panel.uischema
+    - layouts/version-comparison-panel.uischema

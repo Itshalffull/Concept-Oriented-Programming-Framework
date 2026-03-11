@@ -1,0 +1,21 @@
+type ExtensionMessagingState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type ExtensionMessagingEntry {
+  e: ID!
+  channelName: String!
+  schema: String!
+  subscribers: String!
+}
+
+extend type Query {
+  extensionmessaging_entry(e: ID!): ExtensionMessagingEntry
+  extensionmessaging_entries: [ExtensionMessagingEntry!]!
+}
+
+type ExtensionMessagingChannels {
+  e: ID!
+  value: ID!
+}

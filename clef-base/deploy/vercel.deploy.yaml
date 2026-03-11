@@ -1,0 +1,186 @@
+app:
+  name: clef-base
+  version: "0.1.0"
+  uri: urn:clef:base
+
+runtimes:
+  vercel:
+    type: VercelRuntime
+    engine: true
+    transport: http
+    storage: vercel-kv
+    secrets: vercel-env
+    config:
+      framework: nextjs
+      buildCommand: "next build"
+      outputDirectory: ".next"
+
+infrastructure:
+  storage:
+    vercel-kv:
+      type: vercel-kv
+      config:
+        url: "${KV_REST_API_URL}"
+        token: "${KV_REST_API_TOKEN}"
+
+  secrets:
+    vercel-env:
+      type: vercel-env
+      config:
+        projectId: "${VERCEL_PROJECT_ID}"
+
+concepts:
+  ComponentMapping:
+    spec: concepts/component-mapping.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/component-mapping.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  ConceptBrowser:
+    spec: concepts/concept-browser.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/concept-browser.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+        queryMode: lite
+
+  SlotSource:
+    spec: concepts/slot-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/slot-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  BlockEmbedSource:
+    spec: concepts/block-embed-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/block-embed-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  EntityFieldSource:
+    spec: concepts/entity-field-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/entity-field-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  EntityReferenceDisplaySource:
+    spec: concepts/entity-reference-display-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/entity-reference-display-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  FormulaSource:
+    spec: concepts/formula-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/formula-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  MenuSource:
+    spec: concepts/menu-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/menu-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  StaticValueSource:
+    spec: concepts/static-value-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/static-value-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  ViewEmbedSource:
+    spec: concepts/view-embed-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/view-embed-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  WidgetEmbedSource:
+    spec: concepts/widget-embed-source.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/widget-embed-source.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+  HubProxy:
+    spec: concepts/hub-proxy.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/hub-proxy.handler.ts
+        runtime: vercel
+        storage: memory
+        queryMode: lite
+
+syncs:
+  # AppShell required syncs (entity-lifecycle suite)
+  - path: suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/save-indexes-search.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/save-generates-alias.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/save-tracks-provenance.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/save-reindexes-backlinks.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/delete-cascades.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: suites/entity-lifecycle/syncs/date-fields-reference-daily-notes.sync
+    engine: engine
+    annotations: [eager]
+
+  # Hub integration syncs
+  - path: syncs/required/browse-via-hub.sync
+    engine: engine
+    annotations: [eager]
+
+dependencies:
+  clef-hub:
+    env: CLEF_HUB_URL
+    transport: http
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit

@@ -29,8 +29,8 @@ describe('Authentication conformance', () => {
     const storage = createTestStorage();
     const handler = authenticationHandler;
 
-    const x = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let x: any = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-002';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -55,7 +55,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -67,8 +67,8 @@ describe('Authentication conformance', () => {
     const storage = createTestStorage();
     const handler = authenticationHandler;
 
-    const x = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let x: any = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-002';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -79,7 +79,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -93,7 +93,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -118,8 +118,8 @@ describe('Authentication conformance', () => {
     const storage = createTestStorage();
     const handler = authenticationHandler;
 
-    const x = 'u-test-invariant-001';
-    const m = 'u-test-invariant-002';
+    let x: any = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-002';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -130,7 +130,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -145,7 +145,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('exists');
-        expect((output as any).message).toBe(m);
+        m = (output as any).message;
         return output;
       }),
     )();
@@ -157,8 +157,8 @@ describe('Authentication conformance', () => {
     const storage = createTestStorage();
     const handler = authenticationHandler;
 
-    const x = 'u-test-invariant-001';
-    const m = 'u-test-invariant-002';
+    let x: any = 'u-test-invariant-001';
+    let m: any = 'u-test-invariant-002';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -169,7 +169,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -183,7 +183,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();
@@ -197,7 +197,7 @@ describe('Authentication conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('invalid');
-        expect((output as any).message).toBe(m);
+        m = (output as any).message;
         return output;
       }),
     )();

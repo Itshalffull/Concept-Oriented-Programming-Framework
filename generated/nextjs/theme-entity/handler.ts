@@ -150,7 +150,7 @@ export const themeEntityHandler: ThemeEntityHandler = {
           O.fromNullable(record),
           O.fold(
             () => TE.right(getNotfound()),
-            (found) => TE.right(getOk(JSON.stringify(found))),
+            (found) => TE.right(getOk(String(found.name ?? input.name))),
           ),
         ),
       ),
@@ -287,7 +287,8 @@ export const themeEntityHandler: ThemeEntityHandler = {
       TE.tryCatch(
         async () => {
           // Find all widget bindings that reference the changed token
-          const bindings = await storage.find('widgetBinding', { theme: input.theme });
+          const allBindings = await storage.find('widgetBinding');
+          const bindings = allBindings.filter((b) => String(b.theme ?? '') === input.theme);
           const affected = bindings
             .filter((b: Record<string, unknown>) => {
               const tokens: readonly string[] = (b as any).tokens ?? [];
@@ -305,7 +306,8 @@ export const themeEntityHandler: ThemeEntityHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const outputs = await storage.find('generatedOutput', { theme: input.theme });
+          const allOutputs = await storage.find('generatedOutput');
+          const outputs = allOutputs.filter((o) => String(o.theme ?? '') === input.theme);
           const outputList = outputs.map((o: Record<string, unknown>) => ({
             target: (o as any).target ?? '',
             path: (o as any).path ?? '',

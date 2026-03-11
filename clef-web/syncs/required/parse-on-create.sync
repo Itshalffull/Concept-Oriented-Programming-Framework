@@ -1,0 +1,10 @@
+// Parse markdown content when a new content node is created
+
+sync ParseOnCreate [eager]
+when {
+  ContentNode/create: [ node: ?n; type: ?t; content: ?c; slug: ?s; title: ?title; createdBy: ?u ]
+    => [ ok(node: ?n) ]
+}
+then {
+  ContentParser/parse: [ source: ?c; format: "markdown" ]
+}

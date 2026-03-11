@@ -786,20 +786,59 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push(`    const handler = ${toCamelCase(conceptName)}Handler;`);
     lines.push('');
 
-    // Free variable declarations
-    for (const fv of inv.freeVariables) {
-      lines.push(`    const ${fv.name} = '${fv.testValue}';`);
+    // Determine which free variables are captured (assigned) in setup steps
+    const capturedVars = new Set<string>();
+    for (const step of inv.setup) {
+      for (const output of step.expectedOutputs) {
+        if (output.value.kind === 'variable') {
+          capturedVars.add(output.value.name);
+        }
+      }
     }
-    lines.push('');
+    // Also mark variables that appear as outputs in assertion steps but were NOT
+    // captured in setup — these are unconstrained and will be assigned in the assert phase
+    const assertOnlyVars = new Set<string>();
+    for (const step of inv.assertions) {
+      for (const output of step.expectedOutputs) {
+        if (output.value.kind === 'variable' && !capturedVars.has(output.value.name)) {
+          assertOnlyVars.add(output.value.name);
+        }
+      }
+    }
+
+    // Free variable declarations: use 'let' for captured/assigned variables, 'const' otherwise
+    for (const fv of inv.freeVariables) {
+      const safeName = sanitizeVarName(fv.name);
+      const safeValue = escapeStringLiteral(fv.testValue);
+      if (capturedVars.has(fv.name) || assertOnlyVars.has(fv.name)) {
+        lines.push(`    let ${safeName}: any = '${safeValue}';`);
+      } else {
+        lines.push(`    const ${safeName} = '${safeValue}';`);
+      }
+    }
+    if (inv.freeVariables.length > 0) {
+      lines.push('');
+    }
+
+    // Track action name counts for unique result variable names
+    const actionNameCounts = new Map<string, number>();
 
     // Setup steps (AFTER clause)
     for (const step of inv.setup) {
-      lines.push(generateStepCode(step, conceptName, 'setup'));
+      const key = `${step.action}Setup`;
+      const count = (actionNameCounts.get(key) ?? 0) + 1;
+      actionNameCounts.set(key, count);
+      const suffix = count > 1 ? String(count) : '';
+      lines.push(generateStepCode(step, conceptName, 'setup', suffix));
     }
 
     // Assertion steps (THEN clause)
     for (const step of inv.assertions) {
-      lines.push(generateStepCode(step, conceptName, 'assert'));
+      const key = `${step.action}Assert`;
+      const count = (actionNameCounts.get(key) ?? 0) + 1;
+      actionNameCounts.set(key, count);
+      const suffix = count > 1 ? String(count) : '';
+      lines.push(generateStepCode(step, conceptName, 'assert', suffix, capturedVars));
     }
 
     lines.push(`  });`);
@@ -811,10 +850,34 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   return lines.join('\n');
 }
 
+const JS_RESERVED = new Set([
+  'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch',
+  'char', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do',
+  'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final',
+  'finally', 'float', 'for', 'function', 'goto', 'if', 'implements', 'import',
+  'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new', 'null',
+  'package', 'private', 'protected', 'public', 'return', 'short', 'static',
+  'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient',
+  'true', 'try', 'typeof', 'undefined', 'var', 'void', 'volatile', 'while',
+  'with', 'yield',
+]);
+
+function sanitizeVarName(name: string): string {
+  if (JS_RESERVED.has(name)) return `${name}Var`;
+  if (name === '_') return '_unused';
+  return name;
+}
+
+function escapeStringLiteral(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+}
+
 function generateStepCode(
   step: InvariantStep,
   conceptName: string,
   phase: 'setup' | 'assert',
+  suffix: string = '',
+  capturedVars?: Set<string>,
 ): string {
   const lines: string[] = [];
 
@@ -822,39 +885,60 @@ function generateStepCode(
   const inputFields = step.inputs.map(input => {
     if (input.value.kind === 'literal') {
       const v = input.value.value;
-      if (typeof v === 'string') return `      ${input.name}: '${v}',`;
+      if (typeof v === 'string') return `      ${input.name}: '${escapeStringLiteral(v)}',`;
       return `      ${input.name}: ${v},`;
     } else {
-      return `      ${input.name}: ${input.value.name},`;
+      const ref = input.value.name;
+      if (ref === '_' || ref === 'undefined') return `      ${input.name}: '_',`;
+      return `      ${input.name}: ${sanitizeVarName(ref)},`;
     }
   });
 
+  const resultVarName = `${step.action}Result${phase === 'assert' ? 'Assert' : 'Setup'}${suffix}`;
+
   lines.push(`    // ${phase}: ${step.action} -> ${step.expectedVariant}`);
-  lines.push(`    const ${step.action}Result${phase === 'assert' ? 'Assert' : 'Setup'} = await pipe(`);
+  lines.push(`    const ${resultVarName} = await pipe(`);
   lines.push(`      handler.${step.action}({`);
   lines.push(inputFields.join('\n'));
   lines.push(`      }, storage),`);
   lines.push(`      TE.map((output) => {`);
-  lines.push(`        expect(output.variant).toBe('${step.expectedVariant}');`);
+  lines.push(`        expect(output.variant).toBe('${escapeStringLiteral(step.expectedVariant)}');`);
 
-  // Assert expected output values
+  // Handle expected output values
   for (const output of step.expectedOutputs) {
+    // Skip wildcards and complex types
+    if (output.value.kind === 'variable' && (output.value.name === '_' || output.value.name === 'undefined')) {
+      continue; // wildcard — don't assert or capture
+    }
+    if (output.value.kind === 'record' || output.value.kind === 'list') {
+      continue; // complex types — skip
+    }
     if (output.value.kind === 'literal') {
+      // Literal values are always asserted
       const v = output.value.value;
       if (typeof v === 'string') {
-        lines.push(`        expect((output as any).${output.name}).toBe('${v}');`);
+        lines.push(`        expect((output as any).${output.name}).toBe('${escapeStringLiteral(v)}');`);
       } else {
         lines.push(`        expect((output as any).${output.name}).toBe(${v});`);
       }
-    } else {
-      lines.push(`        expect((output as any).${output.name}).toBe(${output.value.name});`);
+    } else if (output.value.kind === 'variable') {
+      if (phase === 'setup') {
+        // In setup steps, variable outputs are captured (assigned)
+        lines.push(`        ${sanitizeVarName(output.value.name)} = (output as any).${output.name};`);
+      } else if (capturedVars && capturedVars.has(output.value.name)) {
+        // In assertion steps, only assert variables that were previously captured in setup
+        lines.push(`        expect((output as any).${output.name}).toBe(${sanitizeVarName(output.value.name)});`);
+      } else {
+        // Variable not captured in setup — just capture it (unconstrained variable)
+        lines.push(`        ${sanitizeVarName(output.value.name)} = (output as any).${output.name};`);
+      }
     }
   }
 
   lines.push(`        return output;`);
   lines.push(`      }),`);
   lines.push(`    )();`);
-  lines.push(`    expect(E.isRight(${step.action}Result${phase === 'assert' ? 'Assert' : 'Setup'})).toBe(true);`);
+  lines.push(`    expect(E.isRight(${resultVarName})).toBe(true);`);
   lines.push('');
 
   return lines.join('\n');
@@ -875,20 +959,21 @@ export const nextjsGenHandler: ConceptHandler = {
       const lowerName = toKebabCase(manifest.name);
 
       const files: { path: string; content: string }[] = [
-        { path: `${lowerName}/types.ts`, content: generateTypesFile(manifest) },
-        { path: `${lowerName}/handler.ts`, content: generateHandlerFile(manifest) },
-        { path: `${lowerName}/route.ts`, content: generateRouteFile(manifest) },
+        { path: `${lowerName}/types.stub.ts`, content: generateTypesFile(manifest) },
+        { path: `${lowerName}/handler.stub.ts`, content: generateHandlerFile(manifest) },
+        { path: `${lowerName}/route.stub.ts`, content: generateRouteFile(manifest) },
       ];
 
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
-        files.push({ path: `${lowerName}/conformance.test.ts`, content: conformanceTest });
+        files.push({ path: `${lowerName}/conformance.stub.test.ts`, content: conformanceTest });
       }
 
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

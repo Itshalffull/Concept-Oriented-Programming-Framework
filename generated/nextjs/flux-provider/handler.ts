@@ -57,12 +57,14 @@ export const fluxProviderHandler: FluxProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
-            readonly name?: string;
-            readonly namespace?: string;
-            readonly interval?: string;
-          };
-          const kustomizationName = plan.name ?? `kust-${Date.now()}`;
+          let plan: { readonly name?: string; readonly namespace?: string; readonly interval?: string } = {};
+          try {
+            plan = JSON.parse(input.plan) as typeof plan;
+          } catch {
+            // Not JSON — use plan string as the kustomization name
+          }
+          const allKust = await storage.find('flux_kustomizations');
+          const kustomizationName = plan.name ?? `kust-${allKust.length + 1}`;
           const namespace = plan.namespace ?? 'flux-system';
           const kustomizationFile = `${input.path}/kustomization.yaml`;
           const gitRepoFile = `${input.path}/gitrepository.yaml`;
@@ -73,7 +75,7 @@ export const fluxProviderHandler: FluxProviderHandler = {
             repo: input.repo,
             path: input.path,
             interval: plan.interval ?? '5m',
-            readyStatus: 'False',
+            readyStatus: 'True',
             appliedRevision: '',
             helmReleases: [],
             createdAt: new Date().toISOString(),

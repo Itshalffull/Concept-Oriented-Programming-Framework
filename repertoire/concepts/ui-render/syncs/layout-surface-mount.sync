@@ -1,0 +1,21 @@
+# ============================================================
+# LayoutSurfaceMount — surface-render recommended sync
+#
+# When a layout is successfully configured, mount the resulting
+# layout tree to the rendering surface. This is the final step
+# in the rendering pipeline — the configured layout gets mounted
+# to the actual rendering surface.
+# ============================================================
+
+sync LayoutSurfaceMount [eager]
+  purpose: "Mount a configured layout tree to the rendering surface as the final step in the rendering pipeline"
+when {
+  Layout/configure: [ layout: ?layout ]
+    => ok(layout: ?layout)
+}
+where {
+  Surface: { ?surface status: "ready" }
+}
+then {
+  Surface/mount: [ surface: ?surface; tree: ?layout; zone: null ]
+}

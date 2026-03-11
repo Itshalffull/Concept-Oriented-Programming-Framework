@@ -71,7 +71,7 @@ export const fileArtifactHandler: FileArtifactHandler = {
   register: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('fileartifact', input.node),
+        () => storage.get('fileartifact_by_node', input.node),
         toFileArtifactError,
       ),
       TE.chain((existing) =>
@@ -82,14 +82,17 @@ export const fileArtifactHandler: FileArtifactHandler = {
               TE.tryCatch(
                 async () => {
                   const artifactId = `fa:${input.node}`;
-                  await storage.put('fileartifact', input.node, {
+                  const record = {
                     artifact: artifactId,
                     node: input.node,
                     role: input.role,
                     language: input.language,
                     encoding: 'utf-8',
                     registeredAt: new Date().toISOString(),
-                  });
+                  };
+                  // Store by both node path and artifact ID for lookups
+                  await storage.put('fileartifact_by_node', input.node, record);
+                  await storage.put('fileartifact', artifactId, record);
                   return registerOk(artifactId);
                 },
                 toFileArtifactError,
@@ -106,10 +109,17 @@ export const fileArtifactHandler: FileArtifactHandler = {
     ),
 
   // Attach provenance metadata (spec + generator) to an existing artifact.
+  // Looks up by node path first, then by artifact ID.
   setProvenance: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('fileartifact', input.artifact),
+        async () => {
+          // Try lookup by node path first, then by artifact ID
+          const byNode = await storage.get('fileartifact_by_node', input.artifact);
+          if (byNode) return byNode;
+          const byId = await storage.get('fileartifact', input.artifact);
+          return byId;
+        },
         toFileArtifactError,
       ),
       TE.chain((record) =>
@@ -120,11 +130,16 @@ export const fileArtifactHandler: FileArtifactHandler = {
             (existing) =>
               TE.tryCatch(
                 async () => {
-                  await storage.put('fileartifact', input.artifact, {
+                  const updated = {
                     ...existing,
                     spec: input.spec,
                     generator: input.generator,
-                  });
+                  };
+                  const artifactId = String((existing as Record<string, unknown>).artifact ?? input.artifact);
+                  const node = String((existing as Record<string, unknown>).node ?? input.artifact);
+                  // Update both storage locations
+                  await storage.put('fileartifact', artifactId, updated);
+                  await storage.put('fileartifact_by_node', node, updated);
                   return setProvenanceOk();
                 },
                 toFileArtifactError,
@@ -139,7 +154,8 @@ export const fileArtifactHandler: FileArtifactHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('fileartifact', { role: input.role });
+          const allRecords = await storage.find('fileartifact');
+          const records = allRecords.filter((r) => String((r as Record<string, unknown>).role ?? '') === input.role);
           const artifactIds = records
             .map((r) => String((r as Record<string, unknown>).artifact ?? ''))
             .filter((id) => id.length > 0);
@@ -154,7 +170,8 @@ export const fileArtifactHandler: FileArtifactHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('fileartifact', { spec: input.spec });
+          const allRecords = await storage.find('fileartifact');
+          const records = allRecords.filter((r) => String((r as Record<string, unknown>).spec ?? '') === input.spec);
           const artifactIds = records
             .map((r) => String((r as Record<string, unknown>).artifact ?? ''))
             .filter((id) => id.length > 0);
@@ -167,11 +184,17 @@ export const fileArtifactHandler: FileArtifactHandler = {
       ),
     ),
 
-  // Get full metadata for a single file artifact by its ID.
+  // Get full metadata for a single file artifact by its ID or node path.
   get: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('fileartifact', input.artifact),
+        async () => {
+          // Try lookup by node path first, then by artifact ID
+          const byNode = await storage.get('fileartifact_by_node', input.artifact);
+          if (byNode) return byNode;
+          const byId = await storage.get('fileartifact', input.artifact);
+          return byId;
+        },
         toFileArtifactError,
       ),
       TE.chain((record) =>

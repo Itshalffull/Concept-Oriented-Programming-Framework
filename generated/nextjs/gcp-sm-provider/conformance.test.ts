@@ -29,10 +29,10 @@ describe('GcpSmProvider conformance', () => {
     const storage = createTestStorage();
     const handler = gcpSmProviderHandler;
 
-    const v = 'u-test-invariant-001';
-    const vid = 'u-test-invariant-002';
-    const pid = 'u-test-invariant-003';
-    const nv = 'u-test-invariant-004';
+    let v: any = 'u-test-invariant-001';
+    let vid: any = 'u-test-invariant-002';
+    let pid: any = 'u-test-invariant-003';
+    let nv: any = 'u-test-invariant-004';
 
     // setup: fetch -> ok
     const fetchResultSetup = await pipe(
@@ -42,9 +42,9 @@ describe('GcpSmProvider conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).value).toBe(v);
-        expect((output as any).versionId).toBe(vid);
-        expect((output as any).projectId).toBe(pid);
+        v = (output as any).value;
+        vid = (output as any).versionId;
+        pid = (output as any).projectId;
         return output;
       }),
     )();
@@ -58,7 +58,7 @@ describe('GcpSmProvider conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).secretId).toBe('db-password');
-        expect((output as any).newVersionId).toBe(nv);
+        nv = (output as any).newVersionId;
         return output;
       }),
     )();

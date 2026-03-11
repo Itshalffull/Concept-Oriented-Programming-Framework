@@ -57,7 +57,7 @@ export interface WidgetHandler {
 // --- Domain helpers ---
 
 const WIDGET_NAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/;
-const VALID_CATEGORIES = ['display', 'input', 'layout', 'navigation', 'feedback', 'data', 'composite'] as const;
+const VALID_CATEGORIES = ['display', 'input', 'layout', 'navigation', 'feedback', 'data', 'composite', 'overlay', 'container', 'media', 'utility'] as const;
 
 const mkStorageError = (error: unknown): WidgetError => ({
   code: 'STORAGE_ERROR',
@@ -147,18 +147,19 @@ export const widgetHandler: WidgetHandler = {
   list: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () =>
-          pipe(
-            input.category,
-            O.fold(
-              () => storage.find('widgets'),
-              (cat) => storage.find('widgets', { category: cat }),
-            ),
-          ),
+        () => storage.find('widgets'),
         mkStorageError,
       ),
       TE.map((records) => {
-        const widgetIds = records.map((r) => String(r['widget'] ?? ''));
+        // Filter by category if provided (handle both fp-ts Option and plain string)
+        const catRaw = input.category;
+        const catFilter = (catRaw == null || catRaw === undefined)
+          ? ''
+          : (typeof catRaw === 'string' ? catRaw : pipe(catRaw, O.getOrElse(() => '')));
+        const filtered = catFilter === ''
+          ? records
+          : records.filter((r) => String(r['category'] ?? '') === catFilter);
+        const widgetIds = filtered.map((r) => String(r['widget'] ?? ''));
         return listOk(JSON.stringify(widgetIds));
       }),
     ),

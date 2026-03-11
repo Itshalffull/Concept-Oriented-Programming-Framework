@@ -31,19 +31,19 @@ describe('MultiValueResolution conformance', () => {
 
     const a = 'u-test-invariant-001';
     const b = 'u-test-invariant-002';
-    const r = 'u-test-invariant-003';
+    let r: any = 'u-test-invariant-003';
 
     // setup: attemptResolve -> resolved
     const attemptResolveResultSetup = await pipe(
       handler.attemptResolve({
-      base: _,
+      base: '_',
       v1: a,
       v2: b,
-      context: _,
+      context: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('resolved');
-        expect((output as any).result).toBe(r);
+        r = (output as any).result;
         return output;
       }),
     )();
@@ -52,10 +52,10 @@ describe('MultiValueResolution conformance', () => {
     // assert: attemptResolve -> resolved
     const attemptResolveResultAssert = await pipe(
       handler.attemptResolve({
-      base: _,
+      base: '_',
       v1: b,
       v2: a,
-      context: _,
+      context: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('resolved');

@@ -1,0 +1,494 @@
+{
+  "uri": "urn:clef/CondorcetSchulze",
+  "name": "CondorcetSchulze",
+  "typeParams": [
+    {
+      "name": "CS",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "cs",
+        "paramRef": "CS"
+      },
+      "fields": [
+        {
+          "name": "pairwiseMatrix",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "strongestPaths",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "smithSet",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "cs",
+        "paramRef": "CS"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "CS"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "CS"
+              }
+            }
+          ],
+          "prose": "A Condorcet Schulze configuration is created"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "CS"
+          }
+        },
+        {
+          "name": "rankedBallots",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "weights",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "condorcet_winner",
+          "fields": [
+            {
+              "name": "choice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "pairwiseRecord",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A Condorcet winner exists one candidate beats all others head to head"
+        },
+        {
+          "tag": "schulze_winner",
+          "fields": [
+            {
+              "name": "choice",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "strongestPaths",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No Condorcet winner exists Schulze method resolves cycles by \n computing widest paths in the pairwise graph"
+        },
+        {
+          "tag": "unresolvable",
+          "fields": [
+            {
+              "name": "smithSet",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The Smith set contains candidates that Schulze cannot further \n distinguish Rare with real ballots"
+        }
+      ]
+    },
+    {
+      "name": "getPairwiseMatrix",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "CS"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "matrix",
+          "fields": [
+            {
+              "name": "data",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the full pairwise comparison matrix from the last count"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, count behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "cs"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "count",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "cs"
+              }
+            },
+            {
+              "name": "rankedBallots",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "weights",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "condorcet_winner",
+          "expectedOutputs": [
+            {
+              "name": "choice",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "pairwiseRecord",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "cs",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type CondorcetSchulzeState {\n  \"\"\"All css in this concept\"\"\"\n  css: [ID!]!\n}\n\ntype CondorcetSchulzeEntry {\n  cs: ID!\n  pairwiseMatrix: String!\n  strongestPaths: String!\n  smithSet: String!\n}\n\nextend type Query {\n  condorcetschulze_entry(cs: ID!): CondorcetSchulzeEntry\n  condorcetschulze_entries: [CondorcetSchulzeEntry!]!\n}\n\ntype CondorcetSchulzeConfigurations {\n  cs: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/CondorcetSchulze/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CondorcetSchulze"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "count": {
+        "$id": "urn:clef/CondorcetSchulze/count/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CondorcetSchulze"
+          },
+          "action": {
+            "const": "count"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "rankedBallots": {
+                "type": "string"
+              },
+              "weights": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "rankedBallots",
+              "weights"
+            ]
+          }
+        }
+      },
+      "getPairwiseMatrix": {
+        "$id": "urn:clef/CondorcetSchulze/getPairwiseMatrix/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CondorcetSchulze"
+          },
+          "action": {
+            "const": "getPairwiseMatrix"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/CondorcetSchulze/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CondorcetSchulze"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "count": {
+        "condorcet_winner": {
+          "$id": "urn:clef/CondorcetSchulze/count/completion/condorcet_winner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CondorcetSchulze"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "condorcet_winner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "type": "string"
+                },
+                "pairwiseRecord": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "choice",
+                "pairwiseRecord"
+              ]
+            }
+          }
+        },
+        "schulze_winner": {
+          "$id": "urn:clef/CondorcetSchulze/count/completion/schulze_winner",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CondorcetSchulze"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "schulze_winner"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "type": "string"
+                },
+                "strongestPaths": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "choice",
+                "strongestPaths"
+              ]
+            }
+          }
+        },
+        "unresolvable": {
+          "$id": "urn:clef/CondorcetSchulze/count/completion/unresolvable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CondorcetSchulze"
+            },
+            "action": {
+              "const": "count"
+            },
+            "variant": {
+              "const": "unresolvable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "smithSet": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "smithSet"
+              ]
+            }
+          }
+        }
+      },
+      "getPairwiseMatrix": {
+        "matrix": {
+          "$id": "urn:clef/CondorcetSchulze/getPairwiseMatrix/completion/matrix",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CondorcetSchulze"
+            },
+            "action": {
+              "const": "getPairwiseMatrix"
+            },
+            "variant": {
+              "const": "matrix"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "data"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Find the candidate who would win every pairwise comparison , using the \n Schulze method to resolve cycles in the pairwise preference graph"
+}

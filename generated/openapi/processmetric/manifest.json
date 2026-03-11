@@ -1,0 +1,467 @@
+{
+  "uri": "urn:clef/ProcessMetric",
+  "name": "ProcessMetric",
+  "typeParams": [
+    {
+      "name": "Q",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "spec_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "metric_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "metric_value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "recorded_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "metrics",
+      "source": "set-valued",
+      "keyField": {
+        "name": "q",
+        "paramRef": "Q"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Q"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "record",
+      "params": [
+        {
+          "name": "metric_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metric_value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "dimensions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "metric",
+              "type": {
+                "kind": "param",
+                "paramRef": "Q"
+              }
+            }
+          ],
+          "prose": "Records a metric data point"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "metric_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "from",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "metrics",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns metrics in the given time range"
+        }
+      ]
+    },
+    {
+      "name": "aggregate",
+      "params": [
+        {
+          "name": "metric_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "aggregation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "from",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        },
+        {
+          "name": "to",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "sample_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Computes aggregate ( avg , sum , min , max , p50 , p95 , p99 ) over time range"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ProcessMetricState {\n  \"\"\"All qs in this concept\"\"\"\n  qs: [ID!]!\n}\n\ntype ProcessMetricEntry {\n  q: ID!\n  spec_ref: String!\n  run_ref: String!\n  metric_name: String!\n  metric_value: Float!\n  dimensions: [JSON!]!\n  recorded_at: String!\n}\n\nextend type Query {\n  processmetric_entry(q: ID!): ProcessMetricEntry\n  processmetric_entries: [ProcessMetricEntry!]!\n}\n\ntype ProcessMetricMetrics {\n  q: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "record": {
+        "$id": "urn:clef/ProcessMetric/record/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessMetric"
+          },
+          "action": {
+            "const": "record"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number"
+              },
+              "dimensions": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "metric_name",
+              "metric_value",
+              "dimensions"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/ProcessMetric/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessMetric"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric_name": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "metric_name",
+              "from",
+              "to"
+            ]
+          }
+        }
+      },
+      "aggregate": {
+        "$id": "urn:clef/ProcessMetric/aggregate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ProcessMetric"
+          },
+          "action": {
+            "const": "aggregate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "metric_name": {
+                "type": "string"
+              },
+              "aggregation": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "metric_name",
+              "aggregation",
+              "from",
+              "to"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "record": {
+        "ok": {
+          "$id": "urn:clef/ProcessMetric/record/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessMetric"
+            },
+            "action": {
+              "const": "record"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metric": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "metric"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/ProcessMetric/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessMetric"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "metrics": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "metrics",
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "aggregate": {
+        "ok": {
+          "$id": "urn:clef/ProcessMetric/aggregate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ProcessMetric"
+            },
+            "action": {
+              "const": "aggregate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "sample_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "value",
+                "sample_count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Aggregate and expose process level performance metrics \n for dashboards , SLA monitoring , and process mining"
+}

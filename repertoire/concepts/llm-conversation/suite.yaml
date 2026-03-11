@@ -22,6 +22,28 @@ syncs:
     - path: ./syncs/conversation-collection-provider.sync
       description: "Conversation sets register with Collection for search and filtering"
 
+widgets:
+  - path: ./widgets/chat-message.widget
+    description: "Role-differentiated message container for LLM conversations"
+  - path: ./widgets/stream-text.widget
+    description: "Token-by-token streaming text renderer with cursor animation"
+  - path: ./widgets/prompt-input.widget
+    description: "Auto-expanding textarea for composing LLM prompts"
+  - path: ./widgets/message-branch-nav.widget
+    description: "Branch navigation control for multiversal conversations"
+  - path: ./widgets/conversation-sidebar.widget
+    description: "Sidebar listing conversation history with search and grouping"
+  - path: ./widgets/inline-citation.widget
+    description: "Numbered inline citation with hover preview for RAG responses"
+  - path: ./widgets/artifact-panel.widget
+    description: "Side panel for generated artifacts with version history"
+
+surface:
+  entityAffordances:
+    - concept: Conversation
+      detail: chat-message
+      editor: prompt-input
+
 uses:
   - suite: llm-core
     concepts:

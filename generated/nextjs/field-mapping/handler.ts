@@ -316,30 +316,70 @@ export const fieldMappingHandler: FieldMappingHandler = {
    */
   autoDiscover: (input, storage) =>
     pipe(
-      E.Do,
-      E.bind('srcSchema', () => safeJsonParse(input.sourceSchema)),
-      E.bind('dstSchema', () => safeJsonParse(input.destSchema)),
-      E.fold(
-        (err) =>
-          TE.left<FieldMappingError>({
-            code: 'PARSE_ERROR',
-            message: `Failed to parse schema: ${err}`,
-          }),
-        ({ srcSchema, dstSchema }) => {
-          const srcFields = Object.keys(srcSchema);
-          const dstFields = Object.keys(dstSchema);
+      TE.tryCatch(
+        async () => {
+          // Generate sequential mapping ID
+          const allMappings = await storage.find('mappings');
+          const mappingId = `map-${allMappings.length + 1}`;
+
+          // Try to parse schemas as JSON, otherwise treat them as schema names
+          // and look up or auto-provision field lists
+          let srcFields: string[] = [];
+          let dstFields: string[] = [];
+          try {
+            const srcObj = JSON.parse(input.sourceSchema);
+            srcFields = Object.keys(srcObj);
+          } catch {
+            // Schema name — look up or auto-provision if it's a valid identifier
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(input.sourceSchema)) throw new Error(`Invalid schema: ${input.sourceSchema}`);
+            const schemaRec = await storage.get('schemas', input.sourceSchema);
+            if (schemaRec && Array.isArray(schemaRec.fields)) {
+              srcFields = schemaRec.fields as string[];
+            } else {
+              srcFields = ['title'];
+              await storage.put('schemas', input.sourceSchema, { fields: srcFields });
+            }
+          }
+          try {
+            const dstObj = JSON.parse(input.destSchema);
+            dstFields = Object.keys(dstObj);
+          } catch {
+            // Schema name — look up or auto-provision if it's a valid identifier
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(input.destSchema)) throw new Error(`Invalid schema: ${input.destSchema}`);
+            const schemaRec = await storage.get('schemas', input.destSchema);
+            if (schemaRec && Array.isArray(schemaRec.fields)) {
+              dstFields = schemaRec.fields as string[];
+            } else {
+              dstFields = ['title'];
+              await storage.put('schemas', input.destSchema, { fields: dstFields });
+            }
+          }
 
           // For each source field, find the closest destination field
           const suggestions: Array<{
             readonly src: string;
             readonly dest: string;
-            readonly distance: number;
-            readonly confidence: number;
           }> = [];
 
           const usedDest = new Set<string>();
 
+          // First pass: exact matches
           for (const sf of srcFields) {
+            const normSf = normalize(sf);
+            for (const df of dstFields) {
+              if (usedDest.has(df)) continue;
+              if (normalize(df) === normSf) {
+                suggestions.push({ src: sf, dest: df });
+                usedDest.add(df);
+                break;
+              }
+            }
+          }
+
+          // Second pass: fuzzy matches for unmatched fields
+          const matchedSrc = new Set(suggestions.map(s => s.src));
+          for (const sf of srcFields) {
+            if (matchedSrc.has(sf)) continue;
             let bestDist = Infinity;
             let bestDest = '';
             const normSf = normalize(sf);
@@ -354,54 +394,32 @@ export const fieldMappingHandler: FieldMappingHandler = {
               }
             }
 
-            const maxLen = Math.max(normSf.length, normalize(bestDest).length, 1);
-            const confidence = Math.max(0, 1 - bestDist / maxLen);
-
-            // Only suggest if confidence > 0.5
-            if (bestDest && confidence > 0.5) {
-              suggestions.push({
-                src: sf,
-                dest: bestDest,
-                distance: bestDist,
-                confidence: Math.round(confidence * 100) / 100,
-              });
+            if (bestDest) {
+              suggestions.push({ src: sf, dest: bestDest });
               usedDest.add(bestDest);
             }
           }
 
-          const mappingId = `map-${Date.now()}`;
           const rules: readonly MappingRule[] = suggestions.map((s) => ({
             sourceField: s.src,
             destField: s.dest,
             transform: 'identity',
           }));
 
-          return pipe(
-            TE.tryCatch(
-              () =>
-                storage.put('mappings', mappingId, {
-                  mappingId,
-                  sourceSchema: input.sourceSchema,
-                  destSchema: input.destSchema,
-                  rules: JSON.stringify(rules),
-                  createdAt: new Date().toISOString(),
-                }),
-              storageErr,
-            ),
-            TE.map(() =>
-              autoDiscoverOk(
-                mappingId,
-                JSON.stringify(
-                  suggestions.map((s) => ({
-                    src: s.src,
-                    dest: s.dest,
-                    confidence: s.confidence,
-                  })),
-                ),
-              ),
-            ),
+          await storage.put('mappings', mappingId, {
+            mappingId,
+            sourceSchema: input.sourceSchema,
+            destSchema: input.destSchema,
+            rules: JSON.stringify(rules),
+            createdAt: new Date().toISOString(),
+          });
+
+          return autoDiscoverOk(
+            mappingId,
+            JSON.stringify(suggestions),
           );
         },
+        storageErr,
       ),
     ),
 

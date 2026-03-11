@@ -202,7 +202,7 @@ See the `/derive-app` skill for the full pattern of building an app as a hierarc
 
 No `@version` on `.derived` files — derived concepts have no state to migrate.
 
-- **In a kit:** Kit semver covers breaking changes to surface declarations
+- **In a suite:** Suite semver covers breaking changes to surface declarations
 - **App-level:** `clef check` validates all references at compile time
 
 ## Bind Integration

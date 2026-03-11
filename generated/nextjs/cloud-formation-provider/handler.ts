@@ -66,11 +66,13 @@ export const cloudFormationProviderHandler: CloudFormationProviderHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const plan = JSON.parse(input.plan) as {
-            readonly stackName?: string;
-            readonly resources?: readonly Record<string, unknown>[];
-          };
-          const stackName = plan.stackName ?? `stack-${Date.now()}`;
+          let plan: { readonly stackName?: string; readonly resources?: readonly Record<string, unknown>[] } = {};
+          try {
+            plan = JSON.parse(input.plan);
+          } catch {
+            // Plan is a plain string identifier, not JSON
+          }
+          const stackName = plan.stackName ?? input.plan ?? `stack-${Date.now()}`;
           const resources = plan.resources ?? [];
           const templateFile = `${stackName}/template.yaml`;
           const paramFile = `${stackName}/parameters.json`;

@@ -1,0 +1,20 @@
+type ApprovalCountingState {
+  """All acs in this concept"""
+  acs: [ID!]!
+}
+
+type ApprovalCountingEntry {
+  ac: ID!
+  maxApprovals: Int!
+  winnerCount: Int!
+}
+
+extend type Query {
+  approvalcounting_entry(ac: ID!): ApprovalCountingEntry
+  approvalcounting_entries: [ApprovalCountingEntry!]!
+}
+
+type ApprovalCountingConfigurations {
+  ac: ID!
+  value: ID!
+}

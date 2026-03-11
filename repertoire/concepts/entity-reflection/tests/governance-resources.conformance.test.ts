@@ -37,9 +37,8 @@ describe('Governance Resources Entity Syncs', () => {
     for (const name of resourcesSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('governance-resources', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -47,18 +46,18 @@ describe('Governance Resources Entity Syncs', () => {
   describe('governance resources entity structure', () => {
     it('MetricAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-resources', 'metric-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });
 
     it('BondingCurveAsConfigEntity tags with config_bundle', () => {
       const source = readSync('governance-resources', 'bonding-curve-as-config-entity');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });

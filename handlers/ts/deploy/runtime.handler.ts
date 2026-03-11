@@ -119,6 +119,65 @@ export const runtimeHandler: ConceptHandler = {
     return { variant: 'ok', instance };
   },
 
+  async updateEndpoint(input, storage) {
+    const instance = input.instance as string;
+    const endpoint = input.endpoint as string;
+    const deploymentId = input.deploymentId as string | undefined;
+
+    const record = await storage.get(RELATION, instance);
+    if (!record) {
+      return { variant: 'notfound', instance };
+    }
+
+    await storage.put(RELATION, instance, {
+      ...record,
+      endpoint,
+      ...(deploymentId ? { deploymentId } : {}),
+      endpointUpdatedAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok', instance, endpoint };
+  },
+
+  async getEndpoint(input, storage) {
+    const instance = input.instance as string;
+
+    const record = await storage.get(RELATION, instance);
+    if (!record) {
+      return { variant: 'notfound', instance };
+    }
+
+    return {
+      variant: 'ok',
+      instance,
+      endpoint: record.endpoint as string,
+      status: record.status as string,
+    };
+  },
+
+  async configureDependencies(input, storage) {
+    const instance = input.instance as string;
+    const dependencies = input.dependencies as string;
+
+    const record = await storage.get(RELATION, instance);
+    if (!record) {
+      return { variant: 'notfound', instance };
+    }
+
+    // Parse dependencies and count them — actual env var configuration
+    // is delegated to the provider via sync routing
+    const deps: Record<string, { env: string; url: string }> = JSON.parse(dependencies);
+    const count = Object.keys(deps).length;
+
+    await storage.put(RELATION, instance, {
+      ...record,
+      dependencies,
+      dependenciesConfiguredAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok', instance, configured: count };
+  },
+
   async healthCheck(input, storage) {
     const instance = input.instance as string;
 

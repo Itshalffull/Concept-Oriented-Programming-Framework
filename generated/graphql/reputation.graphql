@@ -1,0 +1,24 @@
+type ReputationState {
+  """All rps in this concept"""
+  rps: [ID!]!
+}
+
+type ReputationEntry {
+  rp: ID!
+  participant: String!
+  score: Float!
+  algorithm: String!
+  history: [JSON!]!
+  decayRate: Float!
+  lastDecay: String!
+}
+
+extend type Query {
+  reputation_entry(rp: ID!): ReputationEntry
+  reputation_entries: [ReputationEntry!]!
+}
+
+type ReputationScores {
+  rp: ID!
+  value: ID!
+}

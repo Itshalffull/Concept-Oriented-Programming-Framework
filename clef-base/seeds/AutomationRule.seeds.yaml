@@ -1,0 +1,17 @@
+# Automation rule definitions for clef-base.
+
+concept: AutomationRule
+action: define
+entries:
+  - rule: auto-tag-on-create
+    trigger: ContentNode/create
+    conditions: '[]'
+    actions: '[{"type":"log","message":"Auto-apply taxonomy tags based on content type"}]'
+  - rule: notify-on-publish
+    trigger: Workflow/transition
+    conditions: '[]'
+    actions: '[{"type":"log","message":"Send notification when content moves to published state"}]'
+  - rule: cache-invalidate-on-save
+    trigger: ContentStorage/save
+    conditions: '[]'
+    actions: '[{"type":"log","message":"Invalidate cache entries when content is saved"}]'

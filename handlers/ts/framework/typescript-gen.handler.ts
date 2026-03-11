@@ -73,7 +73,7 @@ function capitalize(s: string): string {
 function generateTypesFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lines: string[] = [
-    `// generated: ${conceptName.toLowerCase()}.types.ts`,
+    `// generated: ${conceptName.toLowerCase()}.types.stub.ts`,
     '',
   ];
 
@@ -114,7 +114,7 @@ function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lowerName = conceptName.toLowerCase();
   const lines: string[] = [
-    `// generated: ${lowerName}.handler.ts`,
+    `// generated: ${lowerName}.handler.stub.ts`,
     `import type { ConceptStorage } from "@clef/runtime";`,
     `import type * as T from "./${lowerName}.types";`,
     '',
@@ -138,7 +138,7 @@ function generateAdapterFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
   const lowerName = conceptName.toLowerCase();
   const lines: string[] = [
-    `// generated: ${lowerName}.adapter.ts`,
+    `// generated: ${lowerName}.adapter.stub.ts`,
     `import type {`,
     `  ActionInvocation, ActionCompletion,`,
     `  ConceptTransport, ConceptQuery`,
@@ -153,10 +153,20 @@ function generateAdapterFile(manifest: ConceptManifest): string {
     `  return {`,
     `    queryMode: "lite",`,
     `    async invoke(invocation: ActionInvocation): Promise<ActionCompletion> {`,
-    `      const result = await (handler as any)[invocation.action](`,
-    `        invocation.input,`,
-    `        storage`,
-    `      );`,
+    `      let result: { variant: string; [key: string]: unknown };`,
+    `      switch (invocation.action) {`,
+  ];
+
+  for (const action of manifest.actions) {
+    lines.push(`        case "${action.name}":`);
+    lines.push(`          result = await handler.${action.name}(invocation.input, storage);`);
+    lines.push(`          break;`);
+  }
+
+  lines.push(
+    `        default:`,
+    `          throw new Error(\`Unknown action: \${invocation.action}\`);`,
+    `      }`,
     `      const { variant, ...output } = result;`,
     `      return {`,
     `        id: invocation.id,`,
@@ -177,7 +187,7 @@ function generateAdapterFile(manifest: ConceptManifest): string {
     `    },`,
     `  };`,
     `}`,
-  ];
+  );
 
   return lines.join('\n');
 }
@@ -194,7 +204,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   const handlerVar = `${lowerName}Handler`;
 
   const lines: string[] = [
-    `// generated: ${lowerName}.conformance.test.ts`,
+    `// generated: ${lowerName}.conformance.stub.test.ts`,
     `import { describe, it, expect } from "vitest";`,
     `import { createInMemoryStorage } from "@clef/runtime";`,
     `import { ${handlerVar} } from "./${lowerName}.impl";`,
@@ -333,21 +343,22 @@ export const typescriptGenHandler: ConceptHandler = {
     try {
       const lowerName = manifest.name.toLowerCase();
       const files: { path: string; content: string }[] = [
-        { path: `${lowerName}.types.ts`, content: generateTypesFile(manifest) },
-        { path: `${lowerName}.handler.ts`, content: generateHandlerFile(manifest) },
-        { path: `${lowerName}.adapter.ts`, content: generateAdapterFile(manifest) },
+        { path: `${lowerName}.types.stub.ts`, content: generateTypesFile(manifest) },
+        { path: `${lowerName}.handler.stub.ts`, content: generateHandlerFile(manifest) },
+        { path: `${lowerName}.adapter.stub.ts`, content: generateAdapterFile(manifest) },
       ];
 
       // Add conformance tests if the manifest has invariants (Section 7.4)
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
-        files.push({ path: `${lowerName}.conformance.test.ts`, content: conformanceTest });
+        files.push({ path: `${lowerName}.conformance.stub.test.ts`, content: conformanceTest });
       }
 
       return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

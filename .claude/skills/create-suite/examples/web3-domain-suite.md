@@ -2,7 +2,7 @@
 
 A complete walkthrough of the web3 domain suite (ChainMonitor, Contract, Content, Wallet) — a domain suite that bundles infrastructure alongside concepts.
 
-## Kit Purpose
+## Suite Purpose
 
 > Blockchain integration for Clef. Chain monitoring with finality-aware gating, IPFS content storage with pinning, and wallet-based authentication via signature verification.
 
@@ -17,7 +17,7 @@ The web3 suite needs:
 
 None of this infrastructure exists in the framework kernel — it's domain-specific. Without it, the suite's concepts can't function. That makes this a **domain suite**.
 
-## Step 1: Identify the Kit Boundary
+## Step 1: Identify the Suite Boundary
 
 Four concepts belong together:
 
@@ -34,7 +34,7 @@ Four concepts belong together:
 - Remove Content -> No IPFS content management, but chain concepts still work. Borderline — but IPFS is a primary use case for web3 apps.
 - Remove Wallet -> No signature verification for chain transactions. Yes.
 
-## Step 2: Determine Kit Type
+## Step 2: Determine Suite Type
 
 Does this suite introduce a new deployment target? **Yes** — blockchain networks and IPFS are deployment targets that the framework kernel knows nothing about.
 
@@ -228,7 +228,7 @@ Three pre-configured deployment manifests:
 ## Step 7: Full Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: web3
   version: 0.1.0
   description: >
@@ -279,7 +279,7 @@ syncs:
         pinning manually.
 
 integrations:
-  - kit: auth
+  - suite: auth
     syncs:
       - path: ./syncs/wallet-auth.sync
         description: >
@@ -349,9 +349,9 @@ dependencies: []
 
 ```yaml
 # deploy.yaml
-kits:
+suites:
   - name: web3
-    path: ./kits/web3
+    path: ./suites/web3
 ```
 
 1 required + 2 recommended syncs load. Infrastructure (evm transport, ipfs storage) available for deployment. Integration syncs ignored (no auth suite).
@@ -359,11 +359,11 @@ kits:
 ### With auth suite integration
 
 ```yaml
-kits:
+suites:
   - name: web3
-    path: ./kits/web3
+    path: ./suites/web3
   - name: auth
-    path: ./kits/auth
+    path: ./suites/auth
 ```
 
 All 3 suite syncs + 1 integration sync (WalletAuth) load. Users can authenticate via wallet signature.
@@ -371,9 +371,9 @@ All 3 suite syncs + 1 integration sync (WalletAuth) load. Users can authenticate
 ### Multi-chain with custom reorg handling
 
 ```yaml
-kits:
+suites:
   - name: web3
-    path: ./kits/web3
+    path: ./suites/web3
     overrides:
       ReorgCompensation: ./syncs/custom-reorg-handler.sync
     disable:
@@ -386,13 +386,13 @@ kits:
 
 ```bash
 # Start with a template, then customize
-cp kits/web3/infrastructure/deploy-templates/multi-chain.deploy.yaml deploy.yaml
+cp suites/web3/infrastructure/deploy-templates/multi-chain.deploy.yaml deploy.yaml
 ```
 
 ## Directory Structure
 
 ```
-kits/web3/
+suites/web3/
 ├── suite.yaml
 ├── chain-monitor.concept              # @gate — async finality
 ├── contract.concept

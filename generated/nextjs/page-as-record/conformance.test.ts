@@ -29,7 +29,7 @@ describe('PageAsRecord conformance', () => {
     const storage = createTestStorage();
     const handler = pageAsRecordHandler;
 
-    const p = 'u-test-invariant-001';
+    let p: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('PageAsRecord conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).page).toBe(p);
+        p = (output as any).page;
         return output;
       }),
     )();
@@ -54,7 +54,7 @@ describe('PageAsRecord conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).page).toBe(p);
+        p = (output as any).page;
         return output;
       }),
     )();

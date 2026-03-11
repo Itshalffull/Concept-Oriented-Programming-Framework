@@ -1,0 +1,724 @@
+{
+  "uri": "urn:clef/EloRating",
+  "name": "EloRating",
+  "typeParams": [
+    {
+      "name": "EL",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "el",
+        "paramRef": "EL"
+      },
+      "fields": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "rating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "gamesPlayed",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "kFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "initialRating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "kFactorDecay",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "ratings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "el",
+        "paramRef": "EL"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "EL"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "kFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "initialRating",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "kFactorDecay",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "EL"
+              }
+            }
+          ],
+          "prose": "K factor controls update magnitude InitialRating for new \n participants KFactorDecay optionally reduces K as games increase"
+        }
+      ]
+    },
+    {
+      "name": "recordOutcome",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "EL"
+          }
+        },
+        {
+          "name": "winner",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "loser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "winnerNewRating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "loserNewRating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "winnerDelta",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "loserDelta",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Expected scores computed from rating difference Actual outcome \n ( 1 for winner , 0 for loser ) drives update : \n newRating oldRating K ( actual expected )"
+        }
+      ]
+    },
+    {
+      "name": "recordDraw",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "EL"
+          }
+        },
+        {
+          "name": "participantA",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "participantB",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "updated",
+          "fields": [
+            {
+              "name": "aNewRating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "bNewRating",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Both participants scored 0.5 Updates apply symmetrically"
+        }
+      ]
+    },
+    {
+      "name": "getRating",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "EL"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "rating",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "gamesPlayed",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns current Elo rating"
+        },
+        {
+          "tag": "unrated",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No rating exists Would receive initialRating"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, recordOutcome behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "kFactor",
+              "value": {
+                "kind": "literal",
+                "value": 32
+              }
+            },
+            {
+              "name": "initialRating",
+              "value": {
+                "kind": "literal",
+                "value": 1500
+              }
+            },
+            {
+              "name": "kFactorDecay",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "el"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "recordOutcome",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "el"
+              }
+            },
+            {
+              "name": "winner",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "loser",
+              "value": {
+                "kind": "variable",
+                "name": "l"
+              }
+            }
+          ],
+          "expectedVariant": "updated",
+          "expectedOutputs": [
+            {
+              "name": "winnerNewRating",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "loserNewRating",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "winnerDelta",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "loserDelta",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "el",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "l",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type EloRatingState {\n  \"\"\"All els in this concept\"\"\"\n  els: [ID!]!\n}\n\ntype EloRatingEntry {\n  el: ID!\n  participant: String!\n  rating: Float!\n  gamesPlayed: Int!\n  kFactor: Float!\n  initialRating: Float!\n  kFactorDecay: String!\n}\n\nextend type Query {\n  elorating_entry(el: ID!): EloRatingEntry\n  elorating_entries: [EloRatingEntry!]!\n}\n\ntype EloRatingRatings {\n  el: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/EloRating/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EloRating"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "kFactor": {
+                "type": "number"
+              },
+              "initialRating": {
+                "type": "number"
+              },
+              "kFactorDecay": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kFactor",
+              "initialRating",
+              "kFactorDecay"
+            ]
+          }
+        }
+      },
+      "recordOutcome": {
+        "$id": "urn:clef/EloRating/recordOutcome/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EloRating"
+          },
+          "action": {
+            "const": "recordOutcome"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "winner": {
+                "type": "string"
+              },
+              "loser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "winner",
+              "loser"
+            ]
+          }
+        }
+      },
+      "recordDraw": {
+        "$id": "urn:clef/EloRating/recordDraw/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EloRating"
+          },
+          "action": {
+            "const": "recordDraw"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participantA": {
+                "type": "string"
+              },
+              "participantB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participantA",
+              "participantB"
+            ]
+          }
+        }
+      },
+      "getRating": {
+        "$id": "urn:clef/EloRating/getRating/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EloRating"
+          },
+          "action": {
+            "const": "getRating"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/EloRating/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EloRating"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "recordOutcome": {
+        "updated": {
+          "$id": "urn:clef/EloRating/recordOutcome/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EloRating"
+            },
+            "action": {
+              "const": "recordOutcome"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "winnerNewRating": {
+                  "type": "number"
+                },
+                "loserNewRating": {
+                  "type": "number"
+                },
+                "winnerDelta": {
+                  "type": "number"
+                },
+                "loserDelta": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "winnerNewRating",
+                "loserNewRating",
+                "winnerDelta",
+                "loserDelta"
+              ]
+            }
+          }
+        }
+      },
+      "recordDraw": {
+        "updated": {
+          "$id": "urn:clef/EloRating/recordDraw/completion/updated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EloRating"
+            },
+            "action": {
+              "const": "recordDraw"
+            },
+            "variant": {
+              "const": "updated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "aNewRating": {
+                  "type": "number"
+                },
+                "bNewRating": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "aNewRating",
+                "bNewRating"
+              ]
+            }
+          }
+        }
+      },
+      "getRating": {
+        "rating": {
+          "$id": "urn:clef/EloRating/getRating/completion/rating",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EloRating"
+            },
+            "action": {
+              "const": "getRating"
+            },
+            "variant": {
+              "const": "rating"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "gamesPlayed": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "participant",
+                "value",
+                "gamesPlayed"
+              ]
+            }
+          }
+        },
+        "unrated": {
+          "$id": "urn:clef/EloRating/getRating/completion/unrated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EloRating"
+            },
+            "action": {
+              "const": "getRating"
+            },
+            "variant": {
+              "const": "unrated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Maintain pairwise comparison based skill ratings for governance \n participants , updating ratings after interactions based on expected \n versus actual outcomes"
+}

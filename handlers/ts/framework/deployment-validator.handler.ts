@@ -124,9 +124,9 @@ export interface SyncAssignment {
   crossRuntime: boolean;
 }
 
-// --- Runtime capability table ---
+// --- Runtime Capability Registry ---
 
-const RUNTIME_CAPABILITIES: Record<string, string[]> = {
+const DEFAULT_CAPABILITIES: Record<string, string[]> = {
   node: ['crypto', 'fs', 'network', 'database', 'full-compute'],
   swift: ['crypto', 'coredata', 'network', 'ui'],
   browser: ['network', 'ui', 'localstorage'],
@@ -136,6 +136,44 @@ const RUNTIME_CAPABILITIES: Record<string, string[]> = {
   'google-cloud-function': ['crypto', 'network', 'database', 'full-compute'],
   'cloud-run': ['crypto', 'fs', 'network', 'database', 'full-compute'],
 };
+
+/**
+ * Extensible registry for runtime capabilities.
+ * Initialized with defaults; runtimes can register additional capabilities
+ * at startup or via deployment configuration.
+ */
+export class CapabilityRegistry {
+  private capabilities: Record<string, string[]>;
+
+  constructor(initial?: Record<string, string[]>) {
+    this.capabilities = { ...DEFAULT_CAPABILITIES, ...initial };
+  }
+
+  /** Register or replace capabilities for a runtime type. */
+  register(runtimeType: string, caps: string[]): void {
+    this.capabilities[runtimeType] = caps;
+  }
+
+  /** Add capabilities to an existing runtime type without replacing. */
+  extend(runtimeType: string, additionalCaps: string[]): void {
+    const existing = this.capabilities[runtimeType] || [];
+    const merged = [...new Set([...existing, ...additionalCaps])];
+    this.capabilities[runtimeType] = merged;
+  }
+
+  /** Look up capabilities for a runtime type. */
+  get(runtimeType: string): string[] {
+    return this.capabilities[runtimeType] || [];
+  }
+
+  /** Check if a runtime type has a specific capability. */
+  has(runtimeType: string, capability: string): boolean {
+    return this.get(runtimeType).includes(capability);
+  }
+}
+
+/** Shared default registry instance. */
+export const defaultCapabilityRegistry = new CapabilityRegistry();
 
 // --- Parse Deployment Manifest ---
 
@@ -236,6 +274,7 @@ export function validateDeploymentManifest(
   registeredConcepts: string[],
   syncConceptRefs: Record<string, string[]>,
   conceptCapabilities: Record<string, string[]>,
+  registry: CapabilityRegistry = defaultCapabilityRegistry,
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -263,7 +302,7 @@ export function validateDeploymentManifest(
         continue;
       }
 
-      const runtimeCaps = RUNTIME_CAPABILITIES[runtime.type] || [];
+      const runtimeCaps = registry.get(runtime.type);
       for (const cap of requiredCaps) {
         if (!runtimeCaps.includes(cap)) {
           errors.push(
@@ -435,7 +474,8 @@ export const deploymentValidatorHandler: ConceptHandler = {
       return { variant: 'ok', manifest: manifestId };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

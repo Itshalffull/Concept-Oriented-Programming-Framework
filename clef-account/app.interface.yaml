@@ -1,0 +1,132 @@
+# ClefAccount — Interface Generation Manifest
+#
+# Auth/identity service for the Clef ecosystem.
+# All other Clef apps delegate authentication to this service
+# via proxy concepts over HTTP.
+#
+# Usage:
+#   clef interface generate --manifest clef-account/app.interface.yaml
+
+interface:
+  name: clef-account
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+    versioning: none
+    outputDir: ./generated/interfaces/rest
+
+  grpc:
+    package: clef.account.v1
+    goPackage: github.com/clef/account-proto
+    outputDir: ./generated/interfaces/grpc
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+sdk:
+  typescript:
+    packageName: "@clef/account-client"
+    moduleSystem: esm
+    outputDir: ./generated/interfaces/sdk/typescript
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+specs:
+  openapi: true
+  asyncapi: false
+  outputDir: ./generated/interfaces/specs
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/interfaces
+  formatting:
+    typescript: prettier
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+traits:
+  - name: auth
+    config:
+      scheme: bearer
+    scope: suite
+
+# ─── GROUPING ─────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+concepts:
+  Authentication:
+    rest:
+      path: /auth
+      actions:
+        register:
+          method: POST
+          path: /auth/register
+        login:
+          method: POST
+          path: /auth/login
+        logout:
+          method: POST
+          path: /auth/logout
+        authenticate:
+          method: POST
+          path: /auth/verify
+        resetPassword:
+          method: PUT
+          path: /auth/password
+
+  Authorization:
+    rest:
+      path: /authz
+      actions:
+        grantPermission:
+          method: POST
+          path: /authz/permissions
+        revokePermission:
+          method: DELETE
+          path: /authz/permissions
+        assignRole:
+          method: POST
+          path: /authz/roles
+        checkPermission:
+          method: POST
+          path: /authz/check
+
+  AccessControl:
+    rest:
+      path: /access
+      actions:
+        check:
+          method: POST
+          path: /access/check
+        addPolicy:
+          method: POST
+          path: /access/policies
+        removePolicy:
+          method: DELETE
+          path: /access/policies/:policy
+
+  Session:
+    rest:
+      path: /sessions
+      actions:
+        create:
+          method: POST
+          path: /sessions
+        validate:
+          method: POST
+          path: /sessions/validate
+        refresh:
+          method: POST
+          path: /sessions/refresh
+        destroy:
+          method: DELETE
+          path: /sessions/:session
+        destroyAll:
+          method: DELETE
+          path: /sessions/user/:userId
+        getContext:
+          method: GET
+          path: /sessions/:session/context

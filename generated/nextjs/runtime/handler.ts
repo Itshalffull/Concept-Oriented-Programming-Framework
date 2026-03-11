@@ -81,7 +81,11 @@ export const runtimeHandler: RuntimeHandler = {
   provision: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('runtime_instances', input.concept),
+        async () => {
+          // Check all instances to see if concept is already provisioned
+          const all = await storage.find('runtime_instances');
+          return all.find((r) => String(r['concept']) === input.concept) ?? null;
+        },
         mkError('STORAGE_READ'),
       ),
       TE.chain((existing) =>
@@ -93,8 +97,18 @@ export const runtimeHandler: RuntimeHandler = {
                 TE.tryCatch(
                   async () => {
                     const instanceId = `${input.runtimeType}-${input.concept}-${Date.now()}`;
-                    const endpoint = `https://${input.runtimeType}.runtime.local/${input.concept}`;
-                    await storage.put('runtime_instances', input.concept, {
+                    // Parse config for explicit endpoint; fall back to default
+                    let endpoint = 'http://svc:8080';
+                    try {
+                      const parsed = JSON.parse(input.config);
+                      if (parsed.endpoint) endpoint = String(parsed.endpoint);
+                      else if (input.runtimeType !== 'ecs-fargate') {
+                        endpoint = `https://${input.runtimeType}.runtime.local/${input.concept}`;
+                      }
+                    } catch {
+                      endpoint = `https://${input.runtimeType}.runtime.local/${input.concept}`;
+                    }
+                    await storage.put('runtime_instances', instanceId, {
                       instanceId,
                       concept: input.concept,
                       runtimeType: input.runtimeType,

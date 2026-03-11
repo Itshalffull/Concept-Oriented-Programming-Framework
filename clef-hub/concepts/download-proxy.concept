@@ -1,0 +1,42 @@
+@version(1)
+concept DownloadProxy [T] {
+
+  purpose {
+    Forwards download resolution and stats requests to ClefRegistry
+    for displaying download information on package detail pages.
+  }
+
+  state {
+    registryUrl: T -> String
+  }
+
+  actions {
+    action resolve(artifact_id: String, platform: String, version_range: String) {
+      -> ok(download_url: String, version: String, content_hash: String, size_bytes: Int) {
+        Resolves the download URL from the registry.
+      }
+      -> notfound() {
+        No matching artifact.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+
+    action stats(artifact_id: String) {
+      -> ok(total_downloads: Int, by_platform: list { platform: String, count: Int }) {
+        Returns download statistics from the registry.
+      }
+      -> notfound() {
+        No artifacts found.
+      }
+      -> unavailable(message: String) {
+        The registry service is unreachable.
+      }
+    }
+  }
+
+  invariant {
+    after stats(artifact_id: "auth-suite") -> ok(total_downloads: n, by_platform: p)
+  }
+}

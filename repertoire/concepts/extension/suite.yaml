@@ -95,6 +95,12 @@ syncs:
     - path: ./syncs/integration/route-manifest-export-browser.sync
       description: "Route ExtensionManifest export to BrowserManifestTarget when hostType is browser"
 
+    - path: ./syncs/integration/automation-provider-contribution-point.sync
+      description: "Define an automation-provider contribution point when an extension is installed"
+
+    - path: ./syncs/integration/extension-install-registers-automation-providers.sync
+      description: "Auto-register automation providers with PluginRegistry on extension install"
+
 uses:
   - suite: infrastructure
     concepts:

@@ -1,0 +1,16 @@
+type WidgetGenWinUIState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenWinUIEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenwinui_entry(p: ID!): WidgetGenWinUIEntry
+  widgetgenwinui_entries: [WidgetGenWinUIEntry!]!
+}

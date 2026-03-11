@@ -1,5 +1,5 @@
-// Deploy Kit Implementation Tests
-// Tests all 17 concept handler implementations for the deploy kit,
+// Deploy Suite Implementation Tests
+// Tests all 17 concept handler implementations for the deploy suite,
 // verifying action variants, storage behavior, and invariant contracts.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createKernel } from '../handlers/ts/framework/kernel-factory.js';
@@ -56,7 +56,7 @@ describe('DeployPlan Implementation', () => {
 
   it('plan -> ok creates a deployment plan', async () => {
     const result = await kernel.invokeConcept('urn:clef/DeployPlan', 'plan', {
-      manifest: 'my-kit', environment: 'staging',
+      manifest: 'my-suite', environment: 'staging',
     });
     expect(result.variant).toBe('ok');
     expect(result.plan).toBeDefined();
@@ -73,7 +73,7 @@ describe('DeployPlan Implementation', () => {
 
   it('validate -> ok for existing plan', async () => {
     const plan = await kernel.invokeConcept('urn:clef/DeployPlan', 'plan', {
-      manifest: 'my-kit', environment: 'staging',
+      manifest: 'my-suite', environment: 'staging',
     });
     const result = await kernel.invokeConcept('urn:clef/DeployPlan', 'validate', {
       plan: plan.plan,
@@ -83,7 +83,7 @@ describe('DeployPlan Implementation', () => {
 
   it('execute -> ok for validated plan', async () => {
     const plan = await kernel.invokeConcept('urn:clef/DeployPlan', 'plan', {
-      manifest: 'my-kit', environment: 'staging',
+      manifest: 'my-suite', environment: 'staging',
     });
     await kernel.invokeConcept('urn:clef/DeployPlan', 'validate', {
       plan: plan.plan,
@@ -98,7 +98,7 @@ describe('DeployPlan Implementation', () => {
 
   it('rollback -> ok for executed plan', async () => {
     const plan = await kernel.invokeConcept('urn:clef/DeployPlan', 'plan', {
-      manifest: 'my-kit', environment: 'staging',
+      manifest: 'my-suite', environment: 'staging',
     });
     await kernel.invokeConcept('urn:clef/DeployPlan', 'execute', {
       plan: plan.plan,
@@ -111,7 +111,7 @@ describe('DeployPlan Implementation', () => {
 
   it('status -> ok for existing plan', async () => {
     const plan = await kernel.invokeConcept('urn:clef/DeployPlan', 'plan', {
-      manifest: 'my-kit', environment: 'staging',
+      manifest: 'my-suite', environment: 'staging',
     });
     const result = await kernel.invokeConcept('urn:clef/DeployPlan', 'status', {
       plan: plan.plan,
@@ -303,7 +303,7 @@ describe('Health Implementation', () => {
 
   it('checkKit -> ok returns results arrays', async () => {
     const result = await kernel.invokeConcept('urn:clef/Health', 'checkKit', {
-      kit: 'deploy', environment: 'staging',
+      suite: 'deploy', environment: 'staging',
     });
     expect(result.variant).toBe('ok');
     expect(Array.isArray(result.conceptResults)).toBe(true);
@@ -376,7 +376,7 @@ describe('Telemetry Implementation', () => {
 
   it('deployMarker -> ok emits a marker', async () => {
     const result = await kernel.invokeConcept('urn:clef/Telemetry', 'deployMarker', {
-      kit: 'deploy', version: '1.0.0', environment: 'staging', status: 'started',
+      suite: 'deploy', version: '1.0.0', environment: 'staging', status: 'started',
     });
     expect(result.variant).toBe('ok');
     expect(result.marker).toBeDefined();

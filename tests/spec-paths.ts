@@ -2,8 +2,8 @@
 // Shared Spec Path Resolution
 //
 // Maps concept names to their spec file locations. Tag and
-// Comment were superseded by richer kit versions; Migration
-// and Telemetry by deploy kit versions. This helper ensures
+// Comment were superseded by richer suite versions; Migration
+// and Telemetry by deploy suite versions. This helper ensures
 // all tests reference the correct files.
 // ============================================================
 
@@ -16,10 +16,10 @@ const REPERTOIRE_DIR = resolve(ROOT, 'repertoire');
 
 /** Concepts whose specs moved from specs/ to repertoire/ */
 const RELOCATED_SPECS: Record<string, { dir: string; file: string }> = {
-  // specs/app → kits
+  // specs/app → suites
   tag:       { dir: resolve(REPERTOIRE_DIR, 'classification'), file: 'tag.concept' },
   comment:   { dir: resolve(REPERTOIRE_DIR, 'content'), file: 'comment.concept' },
-  // specs/framework → kits
+  // specs/framework → suites
   migration: { dir: resolve(REPERTOIRE_DIR, 'deploy', 'concepts'), file: 'migration.concept' },
   telemetry: { dir: resolve(REPERTOIRE_DIR, 'deploy', 'concepts'), file: 'telemetry.concept' },
 };

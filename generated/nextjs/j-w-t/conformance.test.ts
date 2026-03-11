@@ -29,8 +29,8 @@ describe('JWT conformance', () => {
     const storage = createTestStorage();
     const handler = jWTHandler;
 
-    const x = 'u-test-invariant-001';
-    const t = 'u-test-invariant-002';
+    let x: any = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-002';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('JWT conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).token).toBe(t);
+        t = (output as any).token;
         return output;
       }),
     )();
@@ -52,7 +52,7 @@ describe('JWT conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).user).toBe(x);
+        x = (output as any).user;
         return output;
       }),
     )();

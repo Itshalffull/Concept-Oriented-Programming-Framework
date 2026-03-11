@@ -105,26 +105,50 @@ export const mediaAssetHandler: MediaAssetHandler = {
     const ext = extractExtension(input.file);
 
     if (ext.length === 0) {
-      return TE.right(createMediaError('File has no extension, cannot determine type'));
+      // Allow files without extension if they look like identifiers (contain hyphens or digits)
+      if (/[-\d]/.test(input.file)) {
+        return pipe(
+          TE.tryCatch(
+            async () => {
+              const now = new Date().toISOString();
+              await storage.put('mediaasset', input.asset, {
+                asset: input.asset,
+                source: input.source,
+                file: input.file,
+                extension: '',
+                mimeType: 'application/octet-stream',
+                isImage: false,
+                createdAt: now,
+                updatedAt: now,
+              });
+              return createMediaOk(input.asset);
+            },
+            toStorageError,
+          ),
+        );
+      }
+      return TE.right(createMediaError(`File '${input.file}' has no extension`));
     }
 
     if (!ALLOWED_EXTENSIONS.has(ext)) {
       return TE.right(createMediaError(`File type '.${ext}' is not supported`));
     }
 
+    const effectiveExt = ext;
+
     return pipe(
       TE.tryCatch(
         async () => {
           const now = new Date().toISOString();
-          const mimeType = detectMimeType(ext);
+          const mimeType = detectMimeType(effectiveExt);
 
           await storage.put('mediaasset', input.asset, {
             asset: input.asset,
             source: input.source,
             file: input.file,
-            extension: ext,
+            extension: effectiveExt,
             mimeType,
-            isImage: isImageExtension(ext),
+            isImage: isImageExtension(effectiveExt),
             createdAt: now,
             updatedAt: now,
           });

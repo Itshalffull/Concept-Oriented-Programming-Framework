@@ -1,11 +1,12 @@
 @category("devtools")
 @visibility("public")
-concept CoifComponentScaffoldGen [W] {
+concept SurfaceComponentScaffoldGen [W] {
 
   purpose {
     Generate Clef Surface headless component scaffolds including widget
-    specifications, anatomy definitions, machine implementations,
-    and suite manifests. Follows the Zag.js/Ark UI pattern where
+    specifications with anatomy, state machines, accessibility,
+    affordance bindings, props, connect mappings, compose declarations,
+    and invariants. Follows the Zag.js/Ark UI pattern where
     behavior and rendering agree on part names.
   }
 
@@ -16,11 +17,16 @@ concept CoifComponentScaffoldGen [W] {
 
   actions {
     action generate(name: String, parts: list String, states: list String,
-                    events: list String) {
+                    events: list String, role: option String,
+                    requires: option RequiresConfig,
+                    affordance: option AffordanceConfig,
+                    props: list PropDef,
+                    compose: list String) {
       description {
         Generate a complete Clef Surface component scaffold with widget
-        concept, anatomy concept, machine implementation, and
-        suite manifest.
+        spec (.widget file including purpose, anatomy, states, accessibility,
+        affordance, props, connect, compose, and invariant blocks),
+        anatomy concept, machine implementation, and suite manifest.
       }
       -> ok(files: list File, filesGenerated: Int) {
         Component scaffold generated with widget, anatomy, and machine.
@@ -31,7 +37,11 @@ concept CoifComponentScaffoldGen [W] {
     }
 
     action preview(name: String, parts: list String, states: list String,
-                    events: list String) {
+                    events: list String, role: option String,
+                    requires: option RequiresConfig,
+                    affordance: option AffordanceConfig,
+                    props: list PropDef,
+                    compose: list String) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses
         Emitter content-addressing to classify each file as
@@ -49,10 +59,10 @@ concept CoifComponentScaffoldGen [W] {
     action register() {
       -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
         Return static metadata for PluginRegistry.
-        name: "CoifComponentScaffoldGen"
+        name: "SurfaceComponentScaffoldGen"
         inputKind: "ComponentConfig"
-        outputKind: "CoifComponent"
-        capabilities: ["widget", "anatomy", "machine", "slots"]
+        outputKind: "SurfaceComponent"
+        capabilities: ["widget", "anatomy", "machine", "slots", "accessibility", "affordance", "props", "compose"]
       }
     }
   }

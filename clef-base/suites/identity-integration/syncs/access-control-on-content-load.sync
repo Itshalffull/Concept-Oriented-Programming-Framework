@@ -1,0 +1,20 @@
+# Authorization wiring: access control on content load.
+# Before a ContentNode is returned to the caller, verify that
+# the requesting user has read permission for the node's Schema.
+
+sync AccessControlOnContentLoad [eager]
+  purpose: "Verify the user has read permission for the ContentNode's Schema before returning content"
+when {
+  ContentStorage/load: [ entity_id: ?entity_id; user: ?user ]
+    => [ ok: ?node ]
+}
+where {
+  ContentStorage: { ?node schema: ?schema }
+}
+then {
+  AccessControl/check: [
+    resource: ?schema;
+    action: "read";
+    context: ?user
+  ]
+}

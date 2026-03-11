@@ -1,6 +1,6 @@
 // DataQuality Concept Implementation (Rust)
 //
-// Data integration kit — validation gating and quarantine.
+// Data integration suite — validation gating and quarantine.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

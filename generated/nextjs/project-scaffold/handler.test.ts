@@ -39,7 +39,7 @@ describe('ProjectScaffold handler', () => {
         expect(result.right.variant).toBe('ok');
         if (result.right.variant === 'ok') {
           expect(result.right.project).toBe('my-app');
-          expect(result.right.path).toBe('projects/my-app');
+          expect(result.right.path).toBe('./my-app/');
         }
       }
     });

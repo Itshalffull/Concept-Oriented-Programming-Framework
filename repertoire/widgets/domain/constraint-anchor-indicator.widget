@@ -1,0 +1,95 @@
+@version(1)
+widget constraint-anchor-indicator {
+
+  purpose {
+    Visual overlay for ConstraintAnchor constraints on the canvas.
+    Shows pin icons for pinned items, alignment lines for aligned
+    groups, and separation arrows for gap constraints.
+  }
+
+  anatomy {
+    root:              container  { Overlay group for constraint visuals }
+    pin-icon:          indicator  { Pin/lock icon at pinned item position }
+    alignment-line:    indicator  { Horizontal or vertical line through aligned items }
+    separation-arrows: indicator  { Double-headed arrow showing minimum gap }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on SELECT -> selected;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on SELECT -> selected;
+      entry [highlight constraint visual];
+      exit [unhighlight];
+    }
+
+    selected {
+      on DESELECT -> idle;
+      on DELETE -> deleted;
+      entry [show constraint details; highlight targets];
+      exit [hide details; unhighlight targets];
+    }
+
+    deleted {
+      entry [remove self; announce "Constraint removed"];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Delete -> DELETE;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: concat(?anchorType, " constraint on ", ?targetCount, " items");
+      };
+    }
+  }
+
+  props {
+    anchorId: String
+    anchorType: union "pin" | "align_h" | "align_v" | "separate" | "group_bounds" | "flow_direction"
+    targetItems: list String = []
+    targetCount: Int = 0
+    parameters: option { x: option Float, y: option Float, gap: option Float, axis: option String, direction: option String }
+  }
+
+  connect {
+    root -> {
+      data-part: "constraint";
+      data-anchor-id: ?anchorId;
+      data-type: ?anchorType;
+      data-state: state;
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+      onClick: send(SELECT);
+      onKeyDown-Delete: send(DELETE);
+    }
+    pin-icon -> {
+      data-part: "pin-icon";
+      data-visible: if ?anchorType == "pin" then "true" else "false";
+    }
+    alignment-line -> {
+      data-part: "alignment-line";
+      data-visible: if ?anchorType == "align_h" or ?anchorType == "align_v" then "true" else "false";
+      data-axis: if ?anchorType == "align_h" then "horizontal" else "vertical";
+    }
+    separation-arrows -> {
+      data-part: "separation-arrows";
+      data-visible: if ?anchorType == "separate" then "true" else "false";
+    }
+  }
+}

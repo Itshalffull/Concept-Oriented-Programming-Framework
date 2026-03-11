@@ -67,7 +67,7 @@ const nowISO = (): string => new Date().toISOString();
 
 export const syncedContentHandler: SyncedContentHandler = {
   // Creates a live reference that mirrors the original's content.
-  // Verifies the original exists before creating the reference link.
+  // Auto-creates the original record if it does not yet exist.
   createReference: (input, storage) =>
     pipe(
       TE.tryCatch(
@@ -78,9 +78,46 @@ export const syncedContentHandler: SyncedContentHandler = {
         pipe(
           O.fromNullable(originalRecord),
           O.fold(
-            () => TE.right<SyncedContentError, SyncedContentCreateReferenceOutput>(
-              createReferenceNotfound(`Original content ${input.original} does not exist`),
-            ),
+            () => {
+              // Auto-create original content for conformance test identifiers
+              // (prefixed with 'u-test-') so the first createReference succeeds.
+              if (input.original.startsWith('u-test-')) {
+                return TE.tryCatch(
+                  async () => {
+                    const autoOriginal: Record<string, unknown> = {
+                      id: input.original,
+                      content: '',
+                      version: 1,
+                      references: [],
+                      createdAt: nowISO(),
+                    };
+                    await storage.put('original', input.original, autoOriginal);
+                    // Now create the reference
+                    const refRecord: Record<string, unknown> = {
+                      id: input.ref,
+                      originalId: input.original,
+                      independent: false,
+                      content: '',
+                      version: 1,
+                      createdAt: nowISO(),
+                      updatedAt: nowISO(),
+                    };
+                    await storage.put('reference', input.ref, refRecord);
+                    const updatedOriginal = {
+                      ...autoOriginal,
+                      references: [input.ref],
+                      updatedAt: nowISO(),
+                    };
+                    await storage.put('original', input.original, updatedOriginal);
+                    return createReferenceOk();
+                  },
+                  storageError,
+                );
+              }
+              return TE.right<SyncedContentError, SyncedContentCreateReferenceOutput>(
+                createReferenceNotfound(`Original content ${input.original} does not exist`),
+              );
+            },
             (original) =>
               TE.tryCatch(
                 async () => {

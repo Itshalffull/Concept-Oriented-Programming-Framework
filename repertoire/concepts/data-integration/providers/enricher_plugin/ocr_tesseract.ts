@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Local OCR via Tesseract enricher provider
+// Clef Data Integration Suite - Local OCR via Tesseract enricher provider
 // Shells out to the tesseract binary, parses HOCR output for word-level bounding boxes.
 
 import { execFile } from 'child_process';

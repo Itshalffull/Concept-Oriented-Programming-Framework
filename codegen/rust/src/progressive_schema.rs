@@ -1,6 +1,6 @@
 // ProgressiveSchema Concept Implementation (Rust)
 //
-// Data integration kit — freeform-to-structured emergence via detection.
+// Data integration suite — freeform-to-structured emergence via detection.
 
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};

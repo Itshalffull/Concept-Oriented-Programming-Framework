@@ -1,0 +1,32 @@
+type LLMCallState {
+  """All ms in this concept"""
+  ms: [ID!]!
+}
+
+type LLMCallEntry {
+  m: ID!
+  step_ref: String!
+  model: String!
+  system_prompt: String!
+  user_prompt: String!
+  tools: [String!]!
+  output_schema: String!
+  status: String!
+  raw_output: String!
+  validated_output: String!
+  validation_errors: String!
+  attempt_count: Int!
+  max_attempts: Int!
+  input_tokens: Int!
+  output_tokens: Int!
+}
+
+extend type Query {
+  llmcall_entry(m: ID!): LLMCallEntry
+  llmcall_entries: [LLMCallEntry!]!
+}
+
+type LLMCallCalls {
+  m: ID!
+  value: ID!
+}

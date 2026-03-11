@@ -1,0 +1,17 @@
+# Web3: publish frontend assets to IPFS.
+# When a deployment build completes, pin the static frontend
+# bundle to IPFS and record the content hash.
+
+sync IpfsPublishFrontend [eventual] [idempotent]
+  purpose: "Pin the built static frontend bundle to IPFS and record the content hash for ENS resolution"
+when {
+  DeployPlan/execute: [ target: "web3"; artifact: ?artifact ]
+    => [ ok: ?build_path ]
+}
+then {
+  ContentStorage/save: [
+    entity_id: ?artifact;
+    fields: [ ipfs_cid: ?build_path; pinned: true ];
+    schema: "deployment"
+  ]
+}

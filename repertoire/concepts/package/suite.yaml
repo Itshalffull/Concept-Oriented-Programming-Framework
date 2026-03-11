@@ -37,6 +37,11 @@ concepts:
     params:
       F: { as: flag, description: "Compile-time feature toggle" }
 
+  ComponentManifest:
+    spec: ./core/component-manifest.concept
+    params:
+      C: { as: component, description: "Module capability manifest" }
+
   # --- Distribution concepts ---
 
   Fetcher:
@@ -63,6 +68,16 @@ concepts:
     spec: ./distribution/auditor.concept
     params:
       A: { as: audit, description: "Vulnerability audit" }
+
+  Download:
+    spec: ./distribution/download.concept
+    params:
+      D: { as: download, description: "Platform artifact distribution" }
+
+  SelfUpdate:
+    spec: ./distribution/self-update.concept
+    params:
+      U: { as: update, description: "Binary self-update lifecycle" }
 
 syncs:
   required:
@@ -100,6 +115,23 @@ syncs:
   integration:
     - path: ./syncs/integration/garbage-collect-on-clean.sync
       description: "Cleaned installation generations trigger ContentStore garbage collection"
+
+widgets:
+  - path: ./widgets/dependency-tree.widget
+    description: "Interactive dependency tree viewer for package manifests"
+  - path: ./widgets/audit-report.widget
+    description: "Security audit report panel with severity breakdown and remediation"
+  - path: ./widgets/registry-search.widget
+    description: "Search interface for the package registry with type-ahead suggestions"
+
+surface:
+  entityAffordances:
+    - concept: Manifest
+      detail: dependency-tree
+    - concept: Auditor
+      detail: audit-report
+    - concept: Registry
+      card: registry-search
 
 uses:
   - suite: infrastructure

@@ -1,0 +1,32 @@
+@version(1)
+concept FeatureFlag [F] {
+
+  purpose {
+    Compile-time feature toggles. Manages feature flags that control
+    optional functionality in packages. Supports unification across
+    the dependency graph.
+  }
+
+  state {
+    flags: set F
+    module_id: F -> String
+    name: F -> String
+    enabled: F -> Bool
+    dependencies: F -> list String
+  }
+
+  actions {
+    action unify(module_id: String, requested_features: list String) {
+      -> ok(resolved: list { name: String, enabled: Bool }) {
+        Resolves and unifies feature flags for the module.
+      }
+      -> conflict(message: String) {
+        Feature flag requirements conflict.
+      }
+    }
+  }
+
+  invariant {
+    after unify(module_id: "auth", requested_features: ["oauth"]) -> ok(resolved: r)
+  }
+}

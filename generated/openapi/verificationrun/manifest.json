@@ -1,0 +1,1075 @@
+{
+  "uri": "urn:clef/VerificationRun",
+  "name": "VerificationRun",
+  "typeParams": [
+    {
+      "name": "V",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "properties_checked",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "solver_used",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "started_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "ended_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "results",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "property_ref",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "evidence_ref",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "duration_ms",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "resource_usage",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "total_time_ms",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "peak_memory_mb",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "solver_calls",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "v",
+        "paramRef": "V"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "target_symbol",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "properties",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "solver",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "timeout_ms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Creates run in running status \n solver : specific provider id or auto for SolverProvider dispatch"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid solver or properties not found"
+        }
+      ]
+    },
+    {
+      "name": "complete",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "results",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "resource_usage",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "proved",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "refuted",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "unknown",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Transitions to completed Records results and resources"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Run does not exist"
+        }
+      ]
+    },
+    {
+      "name": "timeout",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "partial_results",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "completed_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "remaining_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Transitions to timeout Records partial results"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            }
+          ],
+          "prose": "Transitions to cancelled"
+        }
+      ]
+    },
+    {
+      "name": "get_status",
+      "params": [
+        {
+          "name": "run",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "run",
+              "type": {
+                "kind": "param",
+                "paramRef": "V"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "progress",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Current status and completion percentage"
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "params": [
+        {
+          "name": "run1",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        },
+        {
+          "name": "run2",
+          "type": {
+            "kind": "param",
+            "paramRef": "V"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "regressions",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "improvements",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "unchanged",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            }
+          ],
+          "prose": "Compares two runs on the same target Identifies properties \n that changed status between runs"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after start, complete behaves correctly",
+      "setup": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "target_symbol",
+              "value": {
+                "kind": "literal",
+                "value": "clef/concept/Password"
+              }
+            },
+            {
+              "name": "properties",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "literal",
+                    "value": "p1"
+                  },
+                  {
+                    "kind": "literal",
+                    "value": "p2"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "solver",
+              "value": {
+                "kind": "literal",
+                "value": "z3"
+              }
+            },
+            {
+              "name": "timeout_ms",
+              "value": {
+                "kind": "literal",
+                "value": 10000
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "complete",
+          "inputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "results",
+              "value": {
+                "kind": "variable",
+                "name": "res"
+              }
+            },
+            {
+              "name": "resource_usage",
+              "value": {
+                "kind": "variable",
+                "name": "usage"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "run",
+              "value": {
+                "kind": "variable",
+                "name": "r"
+              }
+            },
+            {
+              "name": "proved",
+              "value": {
+                "kind": "literal",
+                "value": 2
+              }
+            },
+            {
+              "name": "refuted",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            },
+            {
+              "name": "unknown",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "r",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "res",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "usage",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VerificationRunState {\n  \"\"\"All vs in this concept\"\"\"\n  vs: [ID!]!\n}\n\ntype VerificationRunEntry {\n  v: ID!\n  target_symbol: String!\n  properties_checked: [String!]!\n  solver_used: String!\n  timeout_ms: Int!\n  status: String!\n  started_at: String!\n  ended_at: String!\n  results: [JSON!]!\n  resource_usage: JSON!\n}\n\nextend type Query {\n  verificationrun_entry(v: ID!): VerificationRunEntry\n  verificationrun_entries: [VerificationRunEntry!]!\n}\n\ntype VerificationRunRuns {\n  v: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "start": {
+        "$id": "urn:clef/VerificationRun/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "target_symbol": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "solver": {
+                "type": "string"
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "target_symbol",
+              "properties",
+              "solver",
+              "timeout_ms"
+            ]
+          }
+        }
+      },
+      "complete": {
+        "$id": "urn:clef/VerificationRun/complete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "complete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "results": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "resource_usage": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "run",
+              "results",
+              "resource_usage"
+            ]
+          }
+        }
+      },
+      "timeout": {
+        "$id": "urn:clef/VerificationRun/timeout/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "timeout"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              },
+              "partial_results": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "run",
+              "partial_results"
+            ]
+          }
+        }
+      },
+      "cancel": {
+        "$id": "urn:clef/VerificationRun/cancel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "cancel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "get_status": {
+        "$id": "urn:clef/VerificationRun/get_status/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "get_status"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run"
+            ]
+          }
+        }
+      },
+      "compare": {
+        "$id": "urn:clef/VerificationRun/compare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VerificationRun"
+          },
+          "action": {
+            "const": "compare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run1": {
+                "type": "string"
+              },
+              "run2": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run1",
+              "run2"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "start": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/VerificationRun/start/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "complete": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/complete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "proved": {
+                  "type": "integer"
+                },
+                "refuted": {
+                  "type": "integer"
+                },
+                "unknown": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "run",
+                "proved",
+                "refuted",
+                "unknown"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/VerificationRun/complete/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "timeout": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/timeout/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "timeout"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "completed_count": {
+                  "type": "integer"
+                },
+                "remaining_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "run",
+                "completed_count",
+                "remaining_count"
+              ]
+            }
+          }
+        }
+      },
+      "cancel": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/cancel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run"
+              ]
+            }
+          }
+        }
+      },
+      "get_status": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/get_status/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "get_status"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "progress": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "run",
+                "status",
+                "progress"
+              ]
+            }
+          }
+        }
+      },
+      "compare": {
+        "ok": {
+          "$id": "urn:clef/VerificationRun/compare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VerificationRun"
+            },
+            "action": {
+              "const": "compare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "regressions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "improvements": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "unchanged": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "regressions",
+                "improvements",
+                "unchanged"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Verification session lifecycle Tracks which properties are \n checked , solver used , timeout budget , per property results \n with evidence refs , and aggregate resource usage \n Supports incremental verification and run comparison",
+  "gate": true
+}

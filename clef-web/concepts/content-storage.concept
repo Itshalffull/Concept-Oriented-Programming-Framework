@@ -1,0 +1,54 @@
+@version(1)
+concept ContentStorage [R] {
+
+  purpose {
+    Persistent storage backend for content nodes. Handles serialization,
+    retrieval, and listing of stored content.
+  }
+
+  state {
+    records: set R
+    key: R -> String
+    data: R -> String
+  }
+
+  actions {
+    action save(key: String, data: String) {
+      -> ok(record: R) {
+        Persists the data under the given key.
+      }
+      -> error(message: String) {
+        Storage write failed.
+      }
+    }
+
+    action load(key: String) {
+      -> ok(record: R, data: String) {
+        Retrieves the stored data.
+      }
+      -> notfound() {
+        No data exists for this key.
+      }
+    }
+
+    action list(prefix: String) {
+      -> ok(keys: list String) {
+        Returns all keys matching the prefix.
+      }
+    }
+
+    action remove(key: String) {
+      -> ok() {
+        Removes the stored data.
+      }
+      -> notfound() {
+        No data exists for this key.
+      }
+    }
+  }
+
+  invariant {
+    after save(key: "page:home", data: "{}") -> ok(record: r)
+    then load(key: "page:home") -> ok(record: r, data: "{}")
+  }
+}

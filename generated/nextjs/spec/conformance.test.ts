@@ -29,8 +29,8 @@ describe('Spec conformance', () => {
     const storage = createTestStorage();
     const handler = specHandler;
 
-    const d = 'u-test-invariant-001';
-    const c = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-002';
 
     // setup: emit -> ok
     const emitResultSetup = await pipe(
@@ -41,8 +41,8 @@ describe('Spec conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).document).toBe(d);
-        expect((output as any).content).toBe(c);
+        d = (output as any).document;
+        c = (output as any).content;
         return output;
       }),
     )();

@@ -1,0 +1,68 @@
+@version(2)
+concept Generator [G] {
+
+  purpose {
+    Orchestrate multi-target interface generation from concept
+    projections. Plans which targets and SDK languages to generate
+    and coordinates the generation pipeline. History tracking is
+    handled by GenerationPlan; file output by Emitter.
+  }
+
+  state {
+    plans: set G
+    config {
+      targets: G -> list String
+      sdkLanguages: G -> list String
+      specFormats: G -> list String
+      outputDir: G -> String
+      formatting: G -> String
+    }
+  }
+
+  actions {
+    action plan(suite: String, interfaceManifest: String) {
+      -> ok(plan: G, targets: list String, concepts: list String, estimatedFiles: Int) {
+        Parse the interface manifest. Resolve which targets,
+        SDK languages, and spec formats are configured.
+        Validate that required provider concepts are loaded.
+        Estimate output file count.
+      }
+      -> noTargetsConfigured(suite: String) {
+        Interface manifest does not configure any generation targets.
+      }
+      -> missingProvider(target: String) {
+        A configured target requires a provider concept that
+        is not loaded (e.g. rest target but RestTarget not in suite).
+      }
+      -> projectionFailed(concept: String, reason: String) {
+        One or more concept projections failed.
+      }
+    }
+
+    action generate(plan: G) {
+      -> ok(plan: G, filesGenerated: Int, filesUnchanged: Int, duration: Int) {
+        All configured targets generated successfully.
+        Unchanged files (content-addressed) were skipped.
+      }
+      -> partial(plan: G, generated: list String, failed: list String) {
+        Some targets generated, some failed.
+      }
+      -> blocked(plan: G, breakingChanges: list String) {
+        Breaking changes detected. Use --breaking flag to proceed.
+        Lists the specific changes for review.
+      }
+    }
+
+    action regenerate(plan: G, targets: list String) {
+      -> ok(plan: G, filesRegenerated: Int) {
+        Regenerate only the specified targets. Uses cached
+        projections if concept specs have not changed.
+      }
+    }
+  }
+
+  invariant {
+    after plan(suite: "test-suite", interfaceManifest: "valid-manifest") -> ok(plan: g, targets: t, concepts: c, estimatedFiles: 10)
+    then generate(plan: g) -> ok(plan: g, filesGenerated: 10, filesUnchanged: 0, duration: 500)
+  }
+}

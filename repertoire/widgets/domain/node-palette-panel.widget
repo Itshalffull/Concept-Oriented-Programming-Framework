@@ -1,0 +1,98 @@
+@version(1)
+widget node-palette-panel {
+
+  purpose {
+    Draggable palette of node types from a DiagramNotation. Users drag
+    items from the palette onto the canvas to create new nodes with
+    the appropriate Schema and type key.
+  }
+
+  anatomy {
+    root:          container  { Scrollable panel containing the palette grid }
+    palette-header: text      { Title showing active notation name }
+    search-filter: input      { Text filter for searching node types }
+    type-grid:     container  { Grid of draggable node type items }
+    type-item:     action     { Individual node type: icon + label, draggable }
+  }
+
+  states {
+    idle [initial] {
+      on SEARCH -> filtering;
+      on DRAG_START -> dragging;
+    }
+
+    filtering {
+      on CLEAR -> idle;
+      on DRAG_START -> dragging;
+      entry [focus search-filter];
+    }
+
+    dragging {
+      on DROP -> idle;
+      on CANCEL -> idle;
+      entry [create drag preview];
+      exit [remove drag preview];
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> DRAG_START;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: search-filter;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "Node palette";
+        aria-orientation: "vertical";
+      };
+      type-item -> {
+        role: "button";
+        aria-label: concat("Add ", ?label, " node");
+        aria-roledescription: "draggable";
+      };
+    }
+  }
+
+  props {
+    notationId: String
+    notationName: String = ""
+    types: list { type_key: String, label: String, shape: String,
+      default_fill: option String, icon: option String }
+    orientation: union "horizontal" | "vertical" = "vertical"
+    searchQuery: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "node-palette";
+      data-notation: ?notationId;
+      data-orientation: ?orientation;
+    }
+    search-filter -> {
+      data-part: "search-filter";
+      value: ?searchQuery;
+      onInput: send(SEARCH, { query: self.value });
+    }
+    type-item -> {
+      data-part: "type-item";
+      data-type-key: self.type_key;
+      draggable: "true";
+      onDragStart: send(DRAG_START, { type_key: self.type_key });
+    }
+  }
+
+  invariant {
+    "Palette must update when notation changes";
+    "Drag preview must match the node type's shape and fill color";
+    "Search must filter types by label substring match";
+  }
+}

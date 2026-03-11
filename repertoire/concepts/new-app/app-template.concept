@@ -78,6 +78,6 @@ concept AppTemplate [T] {
   invariant {
     after customize(template: t, add: [], remove: ["required-module"],
                     features: []) -> invalid(errors: e)
-    Removing a required module from a template always yields invalid.
+    // Removing a required module from a template always yields invalid.
   }
 }

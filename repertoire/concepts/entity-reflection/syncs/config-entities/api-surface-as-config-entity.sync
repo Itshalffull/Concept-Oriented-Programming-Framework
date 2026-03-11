@@ -4,7 +4,7 @@
 sync ApiSurfaceAsConfigEntity [eager]
   purpose { Persist API surface compositions as queryable config entities. }
 when {
-  ApiSurface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+  ApiSurface/compose: [ suite: ?suite; target: ?target; outputs: ?outputs ]
     => ok(surface: ?surface; entrypoint: ?entrypoint; conceptCount: ?count)
 }
 then {
@@ -15,7 +15,7 @@ then {
 sync ApiSurfaceTagBundle [eager]
   purpose { Tag API surfaces with their bundle type. }
 when {
-  ApiSurface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+  ApiSurface/compose: [ suite: ?suite; target: ?target; outputs: ?outputs ]
     => ok(surface: ?surface; entrypoint: ?entrypoint; conceptCount: ?count)
 }
 then {

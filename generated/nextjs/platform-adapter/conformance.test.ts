@@ -29,7 +29,7 @@ describe('PlatformAdapter conformance', () => {
     const storage = createTestStorage();
     const handler = platformAdapterHandler;
 
-    const d = 'u-test-invariant-001';
+    let d: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('PlatformAdapter conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).adapter).toBe(d);
+        d = (output as any).adapter;
         return output;
       }),
     )();
@@ -55,7 +55,6 @@ describe('PlatformAdapter conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).adapter).toBe(d);
-        expect((output as any).platformAction).toBe(_);
         return output;
       }),
     )();

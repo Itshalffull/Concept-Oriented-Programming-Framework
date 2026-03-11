@@ -1,0 +1,868 @@
+{
+  "uri": "urn:clef/PageRankReputation",
+  "name": "PageRankReputation",
+  "typeParams": [
+    {
+      "name": "PR",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "pr",
+        "paramRef": "PR"
+      },
+      "fields": [
+        {
+          "name": "edges",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "source",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "target",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "weight",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "scores",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "participant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "score",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "dampingFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxIterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "convergenceThreshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "preTrusted",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "graphs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "pr",
+        "paramRef": "PR"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "PR"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "dampingFactor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "maxIterations",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "convergenceThreshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "preTrusted",
+          "type": {
+            "kind": "set",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "PR"
+              }
+            }
+          ],
+          "prose": "Standard damping factor is 0.85 PreTrusted nodes serve as \n trust anchors to prevent manipulation by isolated clusters"
+        }
+      ]
+    },
+    {
+      "name": "addEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "PR"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "weight",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "added",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "PR"
+              }
+            }
+          ],
+          "prose": "A directed edge is added to the contribution graph"
+        }
+      ]
+    },
+    {
+      "name": "removeEdge",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "PR"
+          }
+        },
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "removed",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "PR"
+              }
+            }
+          ],
+          "prose": "The edge is removed"
+        }
+      ]
+    },
+    {
+      "name": "compute",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "PR"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "computed",
+          "fields": [
+            {
+              "name": "graph",
+              "type": {
+                "kind": "param",
+                "paramRef": "PR"
+              }
+            },
+            {
+              "name": "iterations",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "converged",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            }
+          ],
+          "prose": "PageRank is computed over the current graph Scores are stored \n for each participant Teleport probability distributes to \n preTrusted nodes rather than uniformly"
+        }
+      ]
+    },
+    {
+      "name": "getScore",
+      "params": [
+        {
+          "name": "graph",
+          "type": {
+            "kind": "param",
+            "paramRef": "PR"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "score",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "rank",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the participant s PageRank score and ordinal rank"
+        },
+        {
+          "tag": "not_in_graph",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant has no edges in the graph"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, addEdge, compute behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "dampingFactor",
+              "value": {
+                "kind": "literal",
+                "value": 0.85
+              }
+            },
+            {
+              "name": "maxIterations",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "convergenceThreshold",
+              "value": {
+                "kind": "literal",
+                "value": 0.0001
+              }
+            },
+            {
+              "name": "preTrusted",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "pr"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "addEdge",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "pr"
+              }
+            },
+            {
+              "name": "source",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "weight",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "added",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "pr"
+              }
+            }
+          ]
+        },
+        {
+          "action": "compute",
+          "inputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "pr"
+              }
+            }
+          ],
+          "expectedVariant": "computed",
+          "expectedOutputs": [
+            {
+              "name": "graph",
+              "value": {
+                "kind": "variable",
+                "name": "pr"
+              }
+            },
+            {
+              "name": "iterations",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "converged",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "pr",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PageRankReputationState {\n  \"\"\"All prs in this concept\"\"\"\n  prs: [ID!]!\n}\n\ntype PageRankReputationEntry {\n  pr: ID!\n  edges: [JSON!]!\n  scores: [JSON!]!\n  dampingFactor: Float!\n  maxIterations: Int!\n  convergenceThreshold: Float!\n  preTrusted: [String!]!\n}\n\nextend type Query {\n  pagerankreputation_entry(pr: ID!): PageRankReputationEntry\n  pagerankreputation_entries: [PageRankReputationEntry!]!\n}\n\ntype PageRankReputationGraphs {\n  pr: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/PageRankReputation/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PageRankReputation"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "dampingFactor": {
+                "type": "number"
+              },
+              "maxIterations": {
+                "type": "integer"
+              },
+              "convergenceThreshold": {
+                "type": "number"
+              },
+              "preTrusted": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "dampingFactor",
+              "maxIterations",
+              "convergenceThreshold",
+              "preTrusted"
+            ]
+          }
+        }
+      },
+      "addEdge": {
+        "$id": "urn:clef/PageRankReputation/addEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PageRankReputation"
+          },
+          "action": {
+            "const": "addEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "target",
+              "weight"
+            ]
+          }
+        }
+      },
+      "removeEdge": {
+        "$id": "urn:clef/PageRankReputation/removeEdge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PageRankReputation"
+          },
+          "action": {
+            "const": "removeEdge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "source",
+              "target"
+            ]
+          }
+        }
+      },
+      "compute": {
+        "$id": "urn:clef/PageRankReputation/compute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PageRankReputation"
+          },
+          "action": {
+            "const": "compute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph"
+            ]
+          }
+        }
+      },
+      "getScore": {
+        "$id": "urn:clef/PageRankReputation/getScore/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PageRankReputation"
+          },
+          "action": {
+            "const": "getScore"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "graph": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "graph",
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/PageRankReputation/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        }
+      },
+      "addEdge": {
+        "added": {
+          "$id": "urn:clef/PageRankReputation/addEdge/completion/added",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "addEdge"
+            },
+            "variant": {
+              "const": "added"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        }
+      },
+      "removeEdge": {
+        "removed": {
+          "$id": "urn:clef/PageRankReputation/removeEdge/completion/removed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "removeEdge"
+            },
+            "variant": {
+              "const": "removed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "graph"
+              ]
+            }
+          }
+        }
+      },
+      "compute": {
+        "computed": {
+          "$id": "urn:clef/PageRankReputation/compute/completion/computed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "compute"
+            },
+            "variant": {
+              "const": "computed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "graph": {
+                  "type": "string"
+                },
+                "iterations": {
+                  "type": "integer"
+                },
+                "converged": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "graph",
+                "iterations",
+                "converged"
+              ]
+            }
+          }
+        }
+      },
+      "getScore": {
+        "score": {
+          "$id": "urn:clef/PageRankReputation/getScore/completion/score",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "getScore"
+            },
+            "variant": {
+              "const": "score"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "rank": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "participant",
+                "value",
+                "rank"
+              ]
+            }
+          }
+        },
+        "not_in_graph": {
+          "$id": "urn:clef/PageRankReputation/getScore/completion/not_in_graph",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PageRankReputation"
+            },
+            "action": {
+              "const": "getScore"
+            },
+            "variant": {
+              "const": "not_in_graph"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Compute reputation by applying PageRank to a directed contribution \n graph , where endorsements and interactions propagate trust through \n the network"
+}

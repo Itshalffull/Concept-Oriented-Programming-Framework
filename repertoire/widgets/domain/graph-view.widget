@@ -277,6 +277,33 @@ widget graph-view {
     filterSplitter: widget("splitter", { orientation: "horizontal" });
   }
 
+  affordance {
+    serves: entity-graph;
+    specificity: 20;
+    when {
+      concept: "Contract";
+    }
+    bind {
+      nodeLabel: name;
+      sourceNode: source_concept;
+      targetNode: target_concept;
+      nodeStatus: compatibility_status;
+    }
+  }
+
+  affordance {
+    serves: entity-graph;
+    specificity: 20;
+    when {
+      concept: "Delegation";
+    }
+    bind {
+      sourceNode: delegator;
+      targetNode: delegatee;
+      edgeWeight: graph.effectiveWeight;
+    }
+  }
+
   invariant {
     "Local view must display only the selected node and its direct neighbors";
     "Search highlighting must be additive with type filters";

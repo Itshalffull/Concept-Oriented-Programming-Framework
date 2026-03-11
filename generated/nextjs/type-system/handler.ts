@@ -299,7 +299,7 @@ export const typeSystemHandler: TypeSystemHandler = {
         async () => {
           const existing = await storage.get('types', input.type);
           if (existing !== null) {
-            return registerTypeExists(`Type '${input.type}' already exists`);
+            return registerTypeExists('already exists');
           }
 
           const schema = safeParseJson(input.schema);

@@ -1,0 +1,12 @@
+# PostgreSQL pool adapter registration — registers with PluginRegistry
+# on application startup so the runtime can resolve "postgresql" storage
+# references in deployment manifests.
+# See Architecture doc Section 16.
+
+sync PostgresqlPoolRegistration [eager]
+when {
+  PluginRegistry/initialize: [] => [ ok: _ ]
+}
+then {
+  PostgresqlPoolAdapter/register: []
+}

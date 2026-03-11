@@ -1,0 +1,19 @@
+# URL alias generation on save.
+# Fires for each Schema that has a Pathauto pattern configured.
+# A ContentNode with Schema "Article" and Schema "TaxonomyTerm"
+# could generate two aliases from two different patterns.
+# See §2.1.2 of the Clef Base spec.
+
+sync SaveGeneratesAlias [eventual]
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+  Pathauto: { ?pattern schema_name: ?schema }
+  filter(?schema in ?schemas)
+}
+then {
+  Pathauto/generateAlias: [ schema: ?schema; entity_id: ?id;
+                            namespace: null ]
+}

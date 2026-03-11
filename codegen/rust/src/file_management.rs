@@ -1,6 +1,6 @@
 // FileManagement Concept Implementation (Rust)
 //
-// Media kit — uploads files with metadata, tracks file usage by entities,
+// Media suite — uploads files with metadata, tracks file usage by entities,
 // removes usage references, and garbage-collects unused files.
 
 use crate::storage::{ConceptStorage, StorageResult};

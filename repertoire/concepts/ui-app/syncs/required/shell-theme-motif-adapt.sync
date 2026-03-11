@@ -1,0 +1,20 @@
+# ============================================================
+# ShellThemeMotifAdapt — ui-app required sync
+#
+# When a structural motif resolves to a shell-aware zone layout,
+# adapt the app shell so theme structure and shell structure stay
+# aligned, just as layout structure already does.
+# ============================================================
+
+sync ShellThemeMotifAdapt [eager]
+  purpose: "Adapt the application shell from a resolved structural motif so theme-driven structure reaches both layout and shell containers"
+when {
+  StructuralMotif/resolve: [ scope: ?scope; intent: ?intent ]
+    => ok(paradigm: ?paradigm, layoutConfig: ?layoutConfig)
+}
+where {
+  Shell: { ?shell status: ?status }
+}
+then {
+  Shell/adapt: [ shell: ?shell; config: ?layoutConfig ]
+}

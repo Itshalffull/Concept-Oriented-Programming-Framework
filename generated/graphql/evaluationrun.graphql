@@ -1,0 +1,27 @@
+type EvaluationRunState {
+  """All ns in this concept"""
+  ns: [ID!]!
+}
+
+type EvaluationRunEntry {
+  n: ID!
+  step_ref: String!
+  evaluator_type: String!
+  status: String!
+  input: String!
+  score: Float!
+  threshold: Float!
+  metrics: [JSON!]!
+  feedback: String!
+  evaluated_at: String!
+}
+
+extend type Query {
+  evaluationrun_entry(n: ID!): EvaluationRunEntry
+  evaluationrun_entries: [EvaluationRunEntry!]!
+}
+
+type EvaluationRunRuns {
+  n: ID!
+  value: ID!
+}

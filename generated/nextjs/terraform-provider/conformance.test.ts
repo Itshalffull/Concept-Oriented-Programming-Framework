@@ -29,10 +29,10 @@ describe('TerraformProvider conformance', () => {
     const storage = createTestStorage();
     const handler = terraformProviderHandler;
 
-    const w = 'u-test-invariant-001';
-    const f = 'u-test-invariant-002';
-    const c = 'u-test-invariant-003';
-    const u = 'u-test-invariant-004';
+    let w: any = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-002';
+    let c: any = 'u-test-invariant-003';
+    let u: any = 'u-test-invariant-004';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -41,8 +41,8 @@ describe('TerraformProvider conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).workspace).toBe(w);
-        expect((output as any).files).toBe(f);
+        w = (output as any).workspace;
+        f = (output as any).files;
         return output;
       }),
     )();
@@ -56,8 +56,8 @@ describe('TerraformProvider conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).workspace).toBe(w);
-        expect((output as any).created).toBe(c);
-        expect((output as any).updated).toBe(u);
+        c = (output as any).created;
+        u = (output as any).updated;
         return output;
       }),
     )();

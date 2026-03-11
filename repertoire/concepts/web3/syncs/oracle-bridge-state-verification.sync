@@ -1,0 +1,77 @@
+# ============================================================
+# Oracle Bridge State Verification — Required Sync
+#
+# Verifies cross-chain state through oracle attestation.
+# When a cross-chain action requires proof of state on a remote
+# chain, the oracle bridge fetches a storage proof, verifies it
+# against the known block root, and attests to the result.
+#
+# This is a PATTERN sync — apps clone and customize it for
+# their specific state verification needs (token balances,
+# contract storage slots, Merkle proofs, etc.)
+# ============================================================
+
+# Step 1: Request state verification when finality is confirmed
+sync OracleStateRequest [eager]
+when {
+  ChainMonitor/awaitFinality: [ txHash: ?tx ]
+    => ok(chain: ?chain; block: ?block; confirmations: ?confs)
+}
+then {
+  Contract/call: [
+    method: "getStorageProof";
+    args: {
+      chainId: ?chain;
+      blockNumber: ?block;
+      txHash: ?tx
+    }
+  ]
+}
+
+# Step 2: Verify the storage proof against the block root
+sync OracleStateVerify [eager]
+when {
+  Contract/call: [ method: "getStorageProof" ]
+    => ok(txHash: ?tx; result: ?proof)
+}
+then {
+  Contract/execute: [
+    method: "verifyStorageProof";
+    args: {
+      proof: ?proof;
+      txHash: ?tx
+    }
+  ]
+}
+
+# Step 3: Log successful state attestation
+sync OracleStateAttested [eager]
+when {
+  Contract/execute: [ method: "verifyStorageProof" ]
+    => ok(txHash: ?tx)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_state_verified";
+      txHash: ?tx;
+      status: "attested"
+    }
+  ]
+}
+
+# Step 4: Handle invalid proof — state could not be verified
+sync OracleStateInvalid [eager]
+when {
+  Contract/execute: [ method: "verifyStorageProof" ]
+    => error(message: ?msg)
+}
+then {
+  ActionLog/append: [
+    record: {
+      type: "oracle_state_verification_failed";
+      error: ?msg;
+      status: "rejected"
+    }
+  ]
+}

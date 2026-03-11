@@ -1,0 +1,43 @@
+# Wire ConceptBrowser to HubProxy for remote package discovery
+# When the browser searches or installs, delegate to the hub for
+# the actual registry network calls.
+
+sync SearchViaHub [eager]
+  purpose: "Forward ConceptBrowser search queries to the hub so results include remote packages"
+when {
+  ConceptBrowser/search: [ query: ?query; registry: ?registry ]
+    => [ results: ?results ]
+}
+then {
+  HubProxy/search: [ query: ?query; kind: "all" ]
+}
+
+sync PreviewViaHub [eager]
+  purpose: "Fetch package preview details from the hub before local installation"
+when {
+  ConceptBrowser/preview: [ package_name: ?pkg; version: ?version ]
+    => [ preview: ?preview ]
+}
+then {
+  HubProxy/preview: [ package_name: ?pkg; version: ?version ]
+}
+
+sync DownloadViaHub [eager]
+  purpose: "Download package content from the hub during local installation"
+when {
+  ConceptBrowser/install: [ package_name: ?pkg; version: ?version ]
+    => [ installed: ?installed ]
+}
+then {
+  HubProxy/download: [ package_name: ?pkg; version: ?version ]
+}
+
+sync SyncRegistriesViaHub [eager]
+  purpose: "Refresh the local package index from the hub when registries are synced"
+when {
+  ConceptBrowser/sync_registries: []
+    => [ updated_count: ?count ]
+}
+then {
+  HubProxy/search: [ query: ""; kind: "all" ]
+}

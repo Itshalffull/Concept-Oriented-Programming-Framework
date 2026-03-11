@@ -5,54 +5,11 @@
 import { Command } from 'commander';
 
 export const toolchainCommand = new Command('toolchain')
-  .description('Coordinate tool resolution across languages and platforms 
- Owns the resolved tool registry : what tools are available , 
- their versions , paths , and capabilities Provider agnostic 
- Builder invokes Toolchain actions , and integration syncs 
- route to the active language provider concept');
+  .description('Coordinate tool resolution across languages and platforms Owns the resolved tool registry : what tools are available , their versions , paths , and capabilities Provider agnostic Builder invokes Toolchain actions , and integration syncs route to the active language provider concept');
 
 toolchainCommand
   .command('resolve')
-  .description('Resolve a toolchain for the given language and platform 
- Returns both the tool location AND how to invoke it 
- Completion arrives after the provider concept finishes 
- actual resolution ( checking PATH , version validation , 
- download if configured ) Toolchain records the result 
- in its registry 
- If category is provided , resolves a tool for that 
- specific purpose rather than the default compiler 
- Categories : compiler ( default ) , unit-runner , 
- e2e-runner , ui-runner , visual-runner , 
- integration-runner , benchmark-runner 
- If toolName is provided , selects a specific tool within 
- the category rather than the default Multiple tools can 
- be registered for the same language category Examples : 
- toolName : jest vs vitest for TypeScript unit runner 
- toolName : playwright vs cypress for e2e runner 
- toolName : hardhat vs foundry for Solidity unit runner 
- If toolName does not match any registered tool , returns 
- notInstalled with a hint listing available alternatives 
- invocation contains everything needed to run the tool : 
- command : the executable command ( e g , npx vitest run ) 
- args : default arguments ( e g , [ --reporter , json ] ) 
- outputFormat : how to parse output ( vitest-json , 
- junit , tap , cargo-json , xcode-json , etc ) 
- configFile : expected config file if any 
- env : environment variables to set 
- Examples : 
- resolve ( typescript , linux-x86_64 ) 
- tsc , invocation : { command : npx tsc , args : [ --noEmit ] , outputFormat : tsc-json } 
- resolve ( typescript , linux-x86_64 , category : unit-runner ) 
- vitest ( default ) , invocation : { command : npx vitest run , } 
- resolve ( typescript , linux-x86_64 , category : unit-runner , toolName : jest ) 
- jest , invocation : { command : npx jest , args : [ --json ] , outputFormat : jest-json } 
- resolve ( typescript , linux-x86_64 , category : e2e-runner , toolName : cypress ) 
- cypress , invocation : { command : npx cypress run , } 
- resolve ( swift , macos-arm64 , category : unit-runner ) 
- xctest , invocation : { command : swift test , args : [ --parallel ] , outputFormat : swift-test-json } 
- Capabilities describe what the tool supports : 
- incremental , wasm-target , cross-compile , 
- remote-execution , debug-symbols , etc')
+  .description('Resolve a toolchain for the given language and platform Returns both the tool location AND how to invoke it Completion arrives after the provider concept finishes actual resolution ( checking PATH , version validation , download if configured ) Toolchain records the result in its registry If category is provided , resolves a tool for that specific purpose rather than the default compiler Categories : compiler ( default ) , unit-runner , e2e-runner , ui-runner , visual-runner , integration-runner , benchmark-runner If toolName is provided , selects a specific tool within the category rather than the default Multiple tools can be registered for the same language category Examples : toolName : jest vs vitest for TypeScript unit runner toolName : playwright vs cypress for e2e runner toolName : hardhat vs foundry for Solidity unit runner If toolName does not match any registered tool , returns notInstalled with a hint listing available alternatives invocation contains everything needed to run the tool : command : the executable command ( e g , npx vitest run ) args : default arguments ( e g , [ --reporter , json ] ) outputFormat : how to parse output ( vitest-json , junit , tap , cargo-json , xcode-json , etc ) configFile : expected config file if any env : environment variables to set Examples : resolve ( typescript , linux-x86_64 ) tsc , invocation : { command : npx tsc , args : [ --noEmit ] , outputFormat : tsc-json } resolve ( typescript , linux-x86_64 , category : unit-runner ) vitest ( default ) , invocation : { command : npx vitest run , } resolve ( typescript , linux-x86_64 , category : unit-runner , toolName : jest ) jest , invocation : { command : npx jest , args : [ --json ] , outputFormat : jest-json } resolve ( typescript , linux-x86_64 , category : e2e-runner , toolName : cypress ) cypress , invocation : { command : npx cypress run , } resolve ( swift , macos-arm64 , category : unit-runner ) xctest , invocation : { command : swift test , args : [ --parallel ] , outputFormat : swift-test-json } Capabilities describe what the tool supports : incremental , wasm-target , cross-compile , remote-execution , debug-symbols , etc')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--platform <platform>', 'Platform')
   .requiredOption('--version-constraint <versionConstraint>', 'Version Constraint')
@@ -66,9 +23,7 @@ toolchainCommand
 
 toolchainCommand
   .command('validate')
-  .description('Verify a previously resolved toolchain is still valid 
- Tool exists at recorded path , version matches , not 
- corrupted Used before build to catch environment drift')
+  .description('Verify a previously resolved toolchain is still valid Tool exists at recorded path , version matches , not corrupted Used before build to catch environment drift')
   .requiredOption('--tool <tool>', 'Tool')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -78,8 +33,7 @@ toolchainCommand
 
 toolchainCommand
   .command('list')
-  .description('List all resolved toolchains , optionally filtered by 
- language and or category Used by clef toolchain list')
+  .description('List all resolved toolchains , optionally filtered by language and or category Used by clef toolchain list')
   .requiredOption('--language <language>', 'Language')
   .requiredOption('--category <category>', 'Category')
   .option('--json', 'Output as JSON')
@@ -90,8 +44,7 @@ toolchainCommand
 
 toolchainCommand
   .command('capabilities')
-  .description('Return detailed capabilities for a resolved tool 
- Used by Builder to determine available build modes')
+  .description('Return detailed capabilities for a resolved tool Used by Builder to determine available build modes')
   .requiredOption('--tool <tool>', 'Tool')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -101,10 +54,6 @@ toolchainCommand
 
 export const toolchainCommandTree = {
   group: 'toolchain',
-  description: 'Coordinate tool resolution across languages and platforms 
- Owns the resolved tool registry : what tools are available , 
- their versions , paths , and capabilities Provider agnostic 
- Builder invokes Toolchain actions , and integration syncs 
- route to the active language provider concept',
+  description: 'Coordinate tool resolution across languages and platforms Owns the resolved tool registry : what tools are available , their versions , paths , and capabilities Provider agnostic Builder invokes Toolchain actions , and integration syncs route to the active language provider concept',
   commands: [{ action: 'resolve', command: 'resolve' }, { action: 'validate', command: 'validate' }, { action: 'list', command: 'list' }, { action: 'capabilities', command: 'capabilities' }],
 };

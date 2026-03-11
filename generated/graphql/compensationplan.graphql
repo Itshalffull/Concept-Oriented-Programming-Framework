@@ -1,0 +1,22 @@
+type CompensationPlanState {
+  """All xs in this concept"""
+  xs: [ID!]!
+}
+
+type CompensationPlanEntry {
+  x: ID!
+  run_ref: String!
+  status: String!
+  compensations: [JSON!]!
+  current_index: Int!
+}
+
+extend type Query {
+  compensationplan_entry(x: ID!): CompensationPlanEntry
+  compensationplan_entries: [CompensationPlanEntry!]!
+}
+
+type CompensationPlanPlans {
+  x: ID!
+  value: ID!
+}

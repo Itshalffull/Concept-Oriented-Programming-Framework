@@ -29,8 +29,8 @@ describe('ContentDigest conformance', () => {
     const storage = createTestStorage();
     const handler = contentDigestHandler;
 
-    const d = 'u-test-invariant-001';
-    const u = 'u-test-invariant-002';
+    let d: any = 'u-test-invariant-001';
+    let u: any = 'u-test-invariant-002';
 
     // setup: compute -> ok
     const computeResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('ContentDigest conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).digest).toBe(d);
+        d = (output as any).digest;
         return output;
       }),
     )();
@@ -53,7 +53,7 @@ describe('ContentDigest conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).units).toBe(u);
+        u = (output as any).units;
         return output;
       }),
     )();

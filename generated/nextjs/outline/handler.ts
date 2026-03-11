@@ -170,10 +170,11 @@ export const outlineHandler: OutlineHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const parentId = pipe(
-                    input.parent,
-                    O.getOrElse(() => '__root__'),
-                  );
+                  const parentId = input.parent === undefined || input.parent === null
+                    ? '__root__'
+                    : typeof input.parent === 'string'
+                      ? input.parent
+                      : pipe(input.parent, O.getOrElse(() => '__root__'));
 
                   // Determine order among siblings
                   const siblingChildren = await loadChildren(storage, parentId);

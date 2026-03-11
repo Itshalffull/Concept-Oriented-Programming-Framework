@@ -1,0 +1,185 @@
+@version(1)
+widget proof-session-tree {
+
+  purpose {
+    Hierarchical tree view displaying proof obligations organized by
+    verification session. Each tree node shows a verification status
+    badge, property label, and progress indicator. Supports
+    expand/collapse, keyboard navigation, and selection to drill into
+    individual proof details.
+  }
+
+  requires @1 {
+    fields {
+      items: collection;
+      itemStatus: enum;
+      itemLabel: String;
+      itemChildren: option collection;
+      progress: option Float;
+    }
+    actions {
+      select: { }
+      expand: { }
+      collapse: { }
+    }
+  }
+
+  anatomy {
+    root:           container  { Outer tree container }
+    treeItem:       container  { Single tree node with expand control, badge, and label }
+    expandTrigger:  action     { Toggle button for expanding or collapsing child nodes }
+    statusBadge:    widget     { Inline verification status badge for the tree item }
+    itemLabel:      text       { Property name or session label }
+    progressBar:    widget     { Optional progress indicator for partially completed verifications }
+    children:       container  { Nested child tree items }
+  }
+
+  states {
+    tree {
+      idle [initial] {
+        on SELECT -> selected;
+        on EXPAND -> idle;
+        on COLLAPSE -> idle;
+      }
+      selected {
+        on DESELECT -> idle;
+        on SELECT -> selected;
+        entry [highlightNode; emitSelect];
+        exit  [unhighlightNode];
+      }
+    }
+
+    loading [parallel] {
+      ready [initial] {
+        on LOAD_CHILDREN -> fetching;
+      }
+      fetching {
+        on LOAD_COMPLETE -> ready;
+        on LOAD_ERROR -> ready;
+        entry [showSkeleton];
+        exit  [hideSkeleton];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      ArrowRight -> EXPAND;
+      ArrowLeft -> COLLAPSE;
+      Enter -> SELECT;
+      Home -> FOCUS_FIRST;
+      End -> FOCUS_LAST;
+    }
+    focus {
+      trap: false;
+      initial: treeItem;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "tree";
+        aria-label: "Proof session tree";
+      };
+      treeItem -> {
+        role: "treeitem";
+        aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none;
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-level: self.depth;
+        aria-setsize: self.siblingCount;
+        aria-posinset: self.position;
+      };
+      expandTrigger -> {
+        role: "button";
+        aria-label: if self.expanded then "Collapse" else "Expand";
+      };
+      children -> {
+        role: "group";
+      };
+    }
+  }
+
+  props {
+    items: list { id: String, label: String, status: String, children: list String, progress: option Float }
+    selectedId: option String
+    expandedIds: list String = []
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "VerificationRun";
+    }
+    bind {
+      items: results;
+      itemLabel: target_symbol;
+      itemStatus: status;
+    }
+  }
+
+  connect {
+    root -> {
+      role: "tree";
+      aria-label: "Proof session tree";
+      data-part: "root";
+      data-count: ?items.length;
+    }
+    treeItem -> {
+      role: "treeitem";
+      aria-expanded: if self.hasChildren then if self.expanded then "true" else "false" else none;
+      aria-selected: if self.id == ?selectedId then "true" else "false";
+      aria-level: self.depth;
+      data-part: "tree-item";
+      data-status: self.status;
+      data-selected: if self.id == ?selectedId then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { id: self.id });
+      onKeyDown-Enter: send(SELECT, { id: self.id });
+      onKeyDown-ArrowRight: send(EXPAND, { id: self.id });
+      onKeyDown-ArrowLeft: send(COLLAPSE, { id: self.id });
+    }
+    expandTrigger -> {
+      data-part: "expand-trigger";
+      role: "button";
+      aria-label: if self.expanded then "Collapse" else "Expand";
+      onClick: if self.expanded then send(COLLAPSE, { id: self.id }) else send(EXPAND, { id: self.id });
+      data-expanded: if self.expanded then "true" else "false";
+      data-visible: if self.hasChildren then "true" else "false";
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: self.status;
+    }
+    itemLabel -> {
+      data-part: "item-label";
+      text: self.label;
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+      data-visible: if self.progress then "true" else "false";
+      data-value: self.progress;
+    }
+    children -> {
+      data-part: "children";
+      role: "group";
+      data-visible: if self.expanded then "true" else "false";
+    }
+  }
+
+  compose {
+    statusBadge: widget("verification-status-badge", { status: self.status, size: "sm" });
+    progressBar: widget("progress-bar", { value: self.progress, size: "sm" });
+  }
+
+  invariant {
+    "Tree must support arbitrary nesting depth for proof obligation hierarchies";
+    "Arrow key navigation must follow WAI-ARIA TreeView pattern";
+    "Expanding a node with unloaded children must trigger a fetch";
+    "Status badges must reflect the aggregate status of child nodes when collapsed";
+    "Selected node must be visually highlighted and announced to screen readers";
+  }
+
+}

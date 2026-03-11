@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const storageAdapterScaffoldGenCommand = new Command('scaffold')
+export const storageAdapterScaffoldGenCommand = new Command('scaffold-storage')
   .description('Generate ConceptStorage adapter for a persistence backend.');
 
 storageAdapterScaffoldGenCommand
@@ -18,8 +18,18 @@ storageAdapterScaffoldGenCommand
   .addHelpText('after', '  clef scaffold storage --name CacheStorage --backend redis  # Generate a Redis adapter')
   .addHelpText('after', '  clef scaffold storage --name TestStorage --backend memory  # Generate an in-memory adapter for tests')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StorageAdapterScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 storageAdapterScaffoldGenCommand
@@ -29,25 +39,41 @@ storageAdapterScaffoldGenCommand
   .option('-b, --backend <value>', 'Backend type (sqlite|postgresql|redis|dynamodb|memory)')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StorageAdapterScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 storageAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : StorageAdapterScaffoldGen 
- inputKind : StorageConfig 
- outputKind : StorageAdapter 
- capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]')
+  .description('Return static metadata for PluginRegistry . name : StorageAdapterScaffoldGen inputKind : StorageConfig outputKind : StorageAdapter capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/StorageAdapterScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const storageAdapterScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-storage',
   description: 'Generate ConceptStorage adapter for a persistence backend.',
   commands: [{ action: 'generate', command: 'storage' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

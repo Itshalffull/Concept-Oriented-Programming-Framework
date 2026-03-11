@@ -167,7 +167,7 @@ describe('Language Target Integration — Conformance Test Generation', () => {
         const files = result.files as { path: string; content: string }[];
 
         const hasConformance = files.some(f =>
-          f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.sol'),
+          f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.stub.sol'),
         );
         expect(
           hasConformance,
@@ -193,7 +193,7 @@ describe('Language Target Integration — Conformance Test Generation', () => {
           const files = result.files as { path: string; content: string }[];
 
           const hasConformance = files.some(f =>
-            f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.sol'),
+            f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.stub.sol'),
           );
           expect(
             hasConformance,
@@ -222,10 +222,10 @@ describe('Language Target Integration — File Structure', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
     expect(files).toHaveLength(4);
-    expect(files.find(f => f.path.endsWith('.types.ts'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('.handler.ts'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('.adapter.ts'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('.conformance.test.ts'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.types.stub.ts'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.handler.stub.ts'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.adapter.stub.ts'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.conformance.stub.test.ts'))).toBeDefined();
   });
 
   it('RustGen produces types, handler, adapter, and conformance for Password', async () => {
@@ -240,10 +240,10 @@ describe('Language Target Integration — File Structure', () => {
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
     expect(files).toHaveLength(4);
-    expect(files.find(f => f.path.endsWith('types.rs'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('handler.rs'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('adapter.rs'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('conformance.rs'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('types.stub.rs'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('handler.stub.rs'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('adapter.stub.rs'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('conformance.stub.rs'))).toBeDefined();
   });
 
   it('SolidityGen produces contract and test harness for Password', async () => {
@@ -257,8 +257,8 @@ describe('Language Target Integration — File Structure', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files.find(f => f.path.endsWith('.sol') && !f.path.endsWith('.t.sol'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('.t.sol'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.stub.sol') && !f.path.endsWith('.t.stub.sol'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('.t.stub.sol'))).toBeDefined();
   });
 
   it('SwiftGen produces Types, Handler, Adapter, and ConformanceTests for Password', async () => {
@@ -272,10 +272,10 @@ describe('Language Target Integration — File Structure', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files.find(f => f.path.endsWith('Types.swift'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('Handler.swift'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('Adapter.swift'))).toBeDefined();
-    expect(files.find(f => f.path.endsWith('ConformanceTests.swift'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('Types.stub.swift'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('Handler.stub.swift'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('Adapter.stub.swift'))).toBeDefined();
+    expect(files.find(f => f.path.endsWith('ConformanceTests.stub.swift'))).toBeDefined();
   });
 });
 
@@ -299,7 +299,7 @@ describe('Language Target Integration — Language Idioms', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const types = files.find(f => f.path.endsWith('.types.ts'))!;
+    const types = files.find(f => f.path.endsWith('.types.stub.ts'))!;
 
     expect(types.content).toContain('export interface');
     expect(types.content).toContain('variant:');
@@ -313,7 +313,7 @@ describe('Language Target Integration — Language Idioms', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const types = files.find(f => f.path.endsWith('types.rs'))!;
+    const types = files.find(f => f.path.endsWith('types.stub.rs'))!;
 
     expect(types.content).toContain('pub struct');
     expect(types.content).toContain('pub enum');
@@ -329,7 +329,7 @@ describe('Language Target Integration — Language Idioms', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const contract = files.find(f => f.path.endsWith('.sol') && !f.path.endsWith('.t.sol'))!;
+    const contract = files.find(f => f.path.endsWith('.stub.sol') && !f.path.endsWith('.t.stub.sol'))!;
 
     expect(contract.content).toContain('pragma solidity');
     expect(contract.content).toContain('contract');
@@ -344,7 +344,7 @@ describe('Language Target Integration — Language Idioms', () => {
       storage,
     );
     const files = result.files as { path: string; content: string }[];
-    const types = files.find(f => f.path.endsWith('Types.swift'))!;
+    const types = files.find(f => f.path.endsWith('Types.stub.swift'))!;
 
     expect(types.content).toContain('struct');
     expect(types.content).toContain('Codable');

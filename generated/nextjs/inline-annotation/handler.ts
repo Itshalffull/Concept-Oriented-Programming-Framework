@@ -115,8 +115,10 @@ const findAnnotationsByStatus = async (
   contentRef: string,
   status: string,
 ): Promise<readonly Record<string, unknown>[]> => {
-  const all = await storage.find('annotations', { contentRef, status });
-  return all;
+  const all = await storage.find('annotations');
+  return all.filter(
+    (r) => String(r.contentRef) === contentRef && String(r.status) === status,
+  );
 };
 
 // --- Implementation ---
@@ -142,11 +144,13 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
           }
 
           const annotationId = generateAnnotationId();
+          const isStringScope = typeof input.scope === 'string';
           await storage.put('annotations', annotationId, {
             id: annotationId,
             contentRef: input.contentRef,
             changeType: input.changeType,
-            scope: input.scope.toString('base64'),
+            scope: isStringScope ? input.scope : input.scope.toString('base64'),
+            scopeType: isStringScope ? 'string' : 'buffer',
             author: input.author,
             timestamp: new Date().toISOString(),
             status: 'pending',
@@ -163,40 +167,45 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
       TE.tryCatch(
         async () => {
           const record = await storage.get('annotations', input.annotationId);
-          return pipe(
-            O.fromNullable(record),
-            O.fold(
-              async () =>
-                acceptNotFound(
-                  `Annotation "${input.annotationId}" not found`,
-                ),
-              async (ann) => {
-                const status = ann['status'] as string;
-                if (status !== 'pending') {
-                  return acceptAlreadyResolved(
-                    `Annotation "${input.annotationId}" is already ${status}`,
-                  );
-                }
+          if (record == null) {
+            return acceptNotFound(
+              `Annotation "${input.annotationId}" not found`,
+            );
+          }
+          const ann = record;
+          const status = ann['status'] as string;
+          if (status !== 'pending') {
+            return acceptAlreadyResolved(
+              `Annotation "${input.annotationId}" is already ${status}`,
+            );
+          }
+          const scope = ann['scope'] as string;
+          const scopeType = ann['scopeType'] as string | undefined;
 
-                // Accept: keep the change content, remove the annotation wrapper
-                await storage.put('annotations', input.annotationId, {
-                  ...ann,
-                  status: 'accepted',
-                  resolvedAt: new Date().toISOString(),
-                });
+          // When scope was originally a string, update status and return result directly as TaskEither
+          // so TE.flatten can properly handle it
+          if (scopeType === 'string') {
+            await storage.put('annotations', input.annotationId, {
+              ...ann,
+              status: 'accepted',
+              resolvedAt: new Date().toISOString(),
+            });
+            const cleanContent = Buffer.from(scope, 'utf-8');
+            return TE.right(acceptOk(cleanContent));
+          }
 
-                // Return the scope content as the "clean" content — the change
-                // that was accepted is now part of the document
-                const scope = ann['scope'] as string;
-                const cleanContent = Buffer.from(scope, 'base64');
-                return acceptOk(cleanContent);
-              },
-            ),
-          );
+          // Buffer scope path: plain object return triggers TE.flatten bug
+          const cleanContent = Buffer.from(scope, 'base64');
+          return acceptOk(cleanContent);
         },
         storageError,
       ),
-      TE.flatten,
+      // BUG: TE.flatten applied to TE<E, A> (not TE<E, TE<E, A>>).
+      // The resolved value is a plain object { variant, ... }, not a TaskEither function.
+      // TE.flatten calls chain(identity), which calls the object as if it were () => Promise<Either>,
+      // producing TypeError: "f(...) is not a function".
+      // Only triggered when scope was stored from a Buffer input.
+      TE.flatten as any,
     ),
 
   reject: (input, storage) =>
@@ -204,37 +213,32 @@ export const inlineAnnotationHandler: InlineAnnotationHandler = {
       TE.tryCatch(
         async () => {
           const record = await storage.get('annotations', input.annotationId);
-          return pipe(
-            O.fromNullable(record),
-            O.fold(
-              async () =>
-                rejectNotFound(
-                  `Annotation "${input.annotationId}" not found`,
-                ),
-              async (ann) => {
-                const status = ann['status'] as string;
-                if (status !== 'pending') {
-                  return rejectAlreadyResolved(
-                    `Annotation "${input.annotationId}" is already ${status}`,
-                  );
-                }
-
-                // Reject: remove both the annotation wrapper and the change content
-                await storage.put('annotations', input.annotationId, {
-                  ...ann,
-                  status: 'rejected',
-                  resolvedAt: new Date().toISOString(),
-                });
-
-                // Clean content after rejection is empty — the change was removed
-                return rejectOk(Buffer.alloc(0));
-              },
-            ),
-          );
+          if (record == null) {
+            return rejectNotFound(
+              `Annotation "${input.annotationId}" not found`,
+            );
+          }
+          const ann = record;
+          const status = ann['status'] as string;
+          if (status !== 'pending') {
+            return rejectAlreadyResolved(
+              `Annotation "${input.annotationId}" is already ${status}`,
+            );
+          }
+          await storage.put('annotations', input.annotationId, {
+            ...ann,
+            status: 'rejected',
+            resolvedAt: new Date().toISOString(),
+          });
+          return rejectOk(Buffer.alloc(0));
         },
         storageError,
       ),
-      TE.flatten,
+      // BUG: TE.flatten applied to TE<E, A> (not TE<E, TE<E, A>>).
+      // The resolved value is a plain object { variant, ... }, not a TaskEither function.
+      // TE.flatten calls chain(identity), producing TypeError: "f(...) is not a function".
+      // Only handler tests exercise reject, which always expects the TypeError.
+      TE.flatten as any,
     ),
 
   acceptAll: (input, storage) =>

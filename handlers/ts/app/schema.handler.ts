@@ -2,6 +2,11 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 export const schemaHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('schema', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async defineSchema(input, storage) {
     const schema = input.schema as string;
     const fields = input.fields as string;

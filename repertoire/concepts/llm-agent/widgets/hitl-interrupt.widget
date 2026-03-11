@@ -1,0 +1,141 @@
+@version(1)
+widget hitl-interrupt {
+
+  purpose {
+    Human-in-the-loop interrupt banner for agent execution. Displays
+    the interrupt reason, current state editor (JSON or form), approval
+    buttons (approve, reject, modify), fork option, and context injection
+    input. Appears when a tool requires human approval or when the agent
+    requests guidance.
+  }
+
+  requires @1 {
+    fields {
+      reason: String;
+      state: String;
+      status: String;
+    }
+    actions {
+      approve: { };
+      reject: { };
+      modify: { };
+      fork: { };
+    }
+  }
+
+  anatomy {
+    root:           container  { Banner wrapper with warning styling }
+    header:         container  { Interrupt reason and status }
+    reasonText:     text       { Description of why approval is needed }
+    stateEditor:    container  { JSON or form editor for current state }
+    contextInput:   widget     { Text input for injecting additional context }
+    actionBar:      container  { Approve, Reject, Modify, Fork buttons }
+    approveButton:  action     { Approve and continue execution }
+    rejectButton:   action     { Reject and halt execution }
+    modifyButton:   action     { Approve with modifications }
+    forkButton:     action     { Fork execution from this point }
+  }
+
+  states {
+    pending [initial] {
+      on APPROVE -> approving;
+      on REJECT -> rejecting;
+      on MODIFY -> editing;
+      on FORK -> forking;
+    }
+
+    editing {
+      on SAVE -> pending;
+      on CANCEL -> pending;
+      entry [enableStateEditor];
+      exit [disableStateEditor];
+    }
+
+    approving {
+      on COMPLETE -> resolved;
+      on ERROR -> pending;
+      entry [showSpinner];
+    }
+
+    rejecting {
+      on COMPLETE -> resolved;
+      entry [showSpinner];
+    }
+
+    forking {
+      on COMPLETE -> resolved;
+      entry [showForkConfirmation];
+    }
+
+    resolved {
+      entry [showResolutionBadge];
+    }
+  }
+
+  accessibility {
+    role: alertdialog;
+    keyboard {
+      Enter -> APPROVE;
+      Escape -> REJECT;
+      e -> MODIFY;
+      f -> FORK;
+    }
+    focus {
+      trap: true;
+      initial: approveButton;
+    }
+    aria {
+      root -> {
+        role: "alertdialog";
+        aria-label: "Agent requires approval";
+        aria-describedby: reasonText;
+      };
+      approveButton -> { role: "button"; aria-label: "Approve"; };
+      rejectButton -> { role: "button"; aria-label: "Reject"; };
+      modifyButton -> { role: "button"; aria-label: "Modify and approve"; };
+      forkButton -> { role: "button"; aria-label: "Fork execution"; };
+    }
+  }
+
+  props {
+    showFork: Bool = true
+    showStateEditor: Bool = true
+    editorMode: union "json" | "form" = "json"
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 22;
+    when {
+      concept: "AgentLoop";
+    }
+    bind {
+      status: status;
+      reason: goal;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; role: "alertdialog"; }
+    reasonText -> { data-part: "reason"; text: $reason; }
+    stateEditor -> { data-part: "state-editor"; data-visible: if ?showStateEditor then "true" else "false"; data-mode: ?editorMode; }
+    contextInput -> { data-part: "context-input"; }
+    approveButton -> { data-part: "approve"; onClick: send(APPROVE); }
+    rejectButton -> { data-part: "reject"; onClick: send(REJECT); }
+    modifyButton -> { data-part: "modify"; onClick: send(MODIFY); }
+    forkButton -> { data-part: "fork"; data-visible: if ?showFork then "true" else "false"; onClick: send(FORK); }
+  }
+
+  compose {
+    stateEditor: widget("code-block", { language: "json" });
+    contextInput: widget("textarea", { placeholder: "Add context..." });
+  }
+
+  invariant {
+    "Focus must be trapped within the interrupt banner until resolved";
+    "Approve must immediately resume agent execution";
+    "Reject must halt agent and show rejection confirmation";
+    "State editor must validate JSON before allowing approval with modifications";
+  }
+
+}

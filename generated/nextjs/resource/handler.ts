@@ -85,12 +85,18 @@ export const resourceHandler: ResourceHandler = {
             () =>
               TE.tryCatch(
                 async () => {
+                  const lm = typeof input.lastModified === 'object' && input.lastModified !== null && '_tag' in (input.lastModified as any)
+                    ? pipe(input.lastModified, O.getOrElse(() => new Date()))
+                    : (input.lastModified instanceof Date ? input.lastModified : new Date());
+                  const sz = typeof input.size === 'object' && input.size !== null && '_tag' in (input.size as any)
+                    ? pipe(input.size, O.getOrElse(() => 0))
+                    : (typeof input.size === 'number' ? input.size : 0);
                   await storage.put('resource', input.locator, {
                     locator: input.locator,
                     kind: input.kind,
                     digest: input.digest,
-                    lastModified: pipe(input.lastModified, O.getOrElse(() => new Date())).toISOString(),
-                    size: pipe(input.size, O.getOrElse(() => 0)),
+                    lastModified: (lm instanceof Date ? lm : new Date()).toISOString(),
+                    size: sz,
                     createdAt: new Date().toISOString(),
                   });
                   return upsertCreated(input.locator);
@@ -105,12 +111,18 @@ export const resourceHandler: ResourceHandler = {
               }
               return TE.tryCatch(
                 async () => {
+                  const lm2 = typeof input.lastModified === 'object' && input.lastModified !== null && '_tag' in (input.lastModified as any)
+                    ? pipe(input.lastModified, O.getOrElse(() => new Date()))
+                    : (input.lastModified instanceof Date ? input.lastModified : new Date());
+                  const sz2 = typeof input.size === 'object' && input.size !== null && '_tag' in (input.size as any)
+                    ? pipe(input.size, O.getOrElse(() => (found.size as number) ?? 0))
+                    : (typeof input.size === 'number' ? input.size : (found.size as number) ?? 0);
                   await storage.put('resource', input.locator, {
                     ...found,
                     digest: input.digest,
                     kind: input.kind,
-                    lastModified: pipe(input.lastModified, O.getOrElse(() => new Date())).toISOString(),
-                    size: pipe(input.size, O.getOrElse(() => (found.size as number) ?? 0)),
+                    lastModified: (lm2 instanceof Date ? lm2 : new Date()).toISOString(),
+                    size: sz2,
                     updatedAt: new Date().toISOString(),
                   });
                   return upsertChanged(input.locator, previousDigest);
@@ -154,13 +166,12 @@ export const resourceHandler: ResourceHandler = {
       TE.tryCatch(
         async () => {
           const all = await storage.find('resource');
-          const filtered = pipe(
-            input.kind,
-            O.fold(
-              () => all,
-              (kindFilter) => all.filter((r) => r.kind === kindFilter),
-            ),
-          );
+          const kindVal = (input as any).kind;
+          const filtered = (typeof kindVal === 'string')
+            ? all.filter((r) => r.kind === kindVal)
+            : (typeof kindVal === 'object' && kindVal !== null && '_tag' in kindVal)
+              ? pipe(kindVal, O.fold(() => all, (kf: string) => all.filter((r) => r.kind === kf)))
+              : all;
           const resources = filtered.map((r) => ({
             locator: (r.locator as string) ?? '',
             kind: (r.kind as string) ?? '',

@@ -1,4 +1,4 @@
-# kits/scaffolding/suite.yaml
+# suites/scaffolding/suite.yaml
 suite:
   name: scaffolding
   version: 0.1.0
@@ -14,7 +14,7 @@ concepts:
   SuiteScaffoldGen:
     spec: ../../specs/framework/suite-scaffold-gen.concept
     params:
-      K: { as: kit-config-ref, description: "Reference to a suite configuration" }
+      K: { as: suite-config-ref, description: "Reference to a suite configuration" }
 
   DeployScaffoldGen:
     spec: ../../specs/framework/deploy-scaffold-gen.concept
@@ -104,7 +104,7 @@ syncs:
   recommended: []
 
 uses:
-  - suite: generation
+  - suite: codegen
     concepts:
       - name: KindSystem
         params:

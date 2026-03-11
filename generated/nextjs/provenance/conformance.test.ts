@@ -29,7 +29,6 @@ describe('Provenance conformance', () => {
     const storage = createTestStorage();
     const handler = provenanceHandler;
 
-
     // setup: record -> ok
     const recordResultSetup = await pipe(
       handler.record({
@@ -64,7 +63,6 @@ describe('Provenance conformance', () => {
   it('invariant 2: after record, rollback behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = provenanceHandler;
-
 
     // setup: record -> ok
     const recordResultSetup = await pipe(

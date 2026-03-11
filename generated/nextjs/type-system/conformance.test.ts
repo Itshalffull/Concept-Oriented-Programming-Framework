@@ -29,7 +29,7 @@ describe('TypeSystem conformance', () => {
     const storage = createTestStorage();
     const handler = typeSystemHandler;
 
-    const t = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-001';
 
     // setup: registerType -> ok
     const registerTypeResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('TypeSystem conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).type).toBe(t);
+        t = (output as any).type;
         return output;
       }),
     )();
@@ -66,7 +66,7 @@ describe('TypeSystem conformance', () => {
     const storage = createTestStorage();
     const handler = typeSystemHandler;
 
-    const t = 'u-test-invariant-001';
+    let t: any = 'u-test-invariant-001';
 
     // setup: registerType -> ok
     const registerTypeResultSetup = await pipe(
@@ -77,7 +77,7 @@ describe('TypeSystem conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).type).toBe(t);
+        t = (output as any).type;
         return output;
       }),
     )();

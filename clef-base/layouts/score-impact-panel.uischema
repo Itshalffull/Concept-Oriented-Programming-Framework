@@ -1,0 +1,54 @@
+# Score dependency impact graph panel — layout for visualizing concept
+# dependency graphs and impact analysis results.
+# See §5.10.4 of the Clef Base spec.
+
+uischema: score-impact-panel
+version: 1
+description: "Score dependency impact graph panel"
+
+layout: vertical
+children:
+  - element: header
+    interactor: display-text
+    props:
+      value: $panel_title
+      variant: heading
+
+  - element: concept-selector
+    interactor: single-choice
+    props:
+      options: $available_concepts
+      default: $selected_concept
+
+  - element: depth-control
+    interactor: range-slider
+    props:
+      min: 1
+      max: 5
+      default: 2
+      label: "Traversal depth"
+
+  - element: impact-graph
+    interactor: graph-view
+    props:
+      root: $selected_concept
+      depth: $traversal_depth
+      graph_data: $dependency_graph
+      layout: force-directed
+      node_color_by: concept_type
+      edge_label: relationship
+
+  - element: impact-summary
+    interactor: display-text
+    props:
+      value: $impact_summary
+      variant: body
+
+  - layout: horizontal
+    children:
+      - element: export-svg
+        interactor: action-secondary
+        props: { label: "Export SVG" }
+      - element: export-json
+        interactor: action-secondary
+        props: { label: "Export JSON" }

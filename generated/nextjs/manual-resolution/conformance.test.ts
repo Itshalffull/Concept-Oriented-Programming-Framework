@@ -29,18 +29,16 @@ describe('ManualResolution conformance', () => {
     const storage = createTestStorage();
     const handler = manualResolutionHandler;
 
-
     // setup: attemptResolve -> cannotResolve
     const attemptResolveResultSetup = await pipe(
       handler.attemptResolve({
-      base: _,
-      v1: _,
-      v2: _,
-      context: _,
+      base: '_',
+      v1: '_',
+      v2: '_',
+      context: '_',
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('cannotResolve');
-        expect((output as any).reason).toBe(_);
         return output;
       }),
     )();

@@ -109,44 +109,35 @@ export const projectScaffoldHandler: ProjectScaffoldHandler = {
       TE.tryCatch(
         async () => {
           const { name } = input;
-
-          // Check if a project with this name already exists
           const existing = await storage.get('projects', name);
 
-          return pipe(
-            O.fromNullable(existing),
-            O.fold(
-              async () => {
-                const projectPath = `projects/${name}`;
+          if (existing) {
+            return scaffoldAlreadyExists(name);
+          }
 
-                // Build the directory manifest
-                const directories = PROJECT_DIRECTORIES.map((dir) => `${projectPath}/${dir}`);
+          const projectPath = `./${name}/`;
+          const storagePath = `projects/${name}`;
 
-                // Build the file manifest with the project name interpolated
-                const files = ROOT_FILES.map((f) => ({
-                  path: `${projectPath}/${f.name}`,
-                  content:
-                    f.name === 'package.json'
-                      ? f.content.replace('"name": ""', `"name": "@clef/${name}"`)
-                      : f.name === 'suite.yaml'
-                        ? f.content.replace('name: ""', `name: "${name}"`)
-                        : f.content,
-                }));
+          const directories = PROJECT_DIRECTORIES.map((dir) => `${storagePath}/${dir}`);
+          const files = ROOT_FILES.map((f) => ({
+            path: `${storagePath}/${f.name}`,
+            content:
+              f.name === 'package.json'
+                ? f.content.replace('"name": ""', `"name": "@clef/${name}"`)
+                : f.name === 'suite.yaml'
+                  ? f.content.replace('name: ""', `name: "${name}"`)
+                  : f.content,
+          }));
 
-                // Persist the project record
-                await storage.put('projects', name, {
-                  name,
-                  path: projectPath,
-                  directories,
-                  files: files.map((f) => f.path),
-                  createdAt: new Date().toISOString(),
-                });
+          await storage.put('projects', name, {
+            name,
+            path: storagePath,
+            directories,
+            files: files.map((f) => f.path),
+            createdAt: new Date().toISOString(),
+          });
 
-                return scaffoldOk(name, projectPath);
-              },
-              async (_existingProject) => scaffoldAlreadyExists(name),
-            ),
-          );
+          return scaffoldOk(name, projectPath);
         },
         storageError,
       ),

@@ -1,0 +1,115 @@
+@version(1)
+concept SeedData [S] {
+
+  purpose {
+    Discover and apply declarative seed data from per-concept YAML files.
+    Each concept can ship a `.seeds.yaml` file declaring initial entries
+    to be created on first load, keeping seed data co-located with the
+    concept that owns it rather than centralized in application boot code.
+  }
+
+  state {
+    seeds: set S
+    source_path: S -> String
+    concept_uri: S -> String
+    action_name: S -> String
+    entries: S -> list String
+    applied: S -> Bool
+    applied_at: S -> option DateTime
+    entry_count: S -> Int
+    error_log: S -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action discover(base_path: String) {
+      -> ok(found: list { seed: S, concept_uri: String, source_path: String, entry_count: Int }) {
+        Recursively scan base_path for files matching *.seeds.yaml,
+        parse each file, and register a seed record per concept/action
+        pair found. Returns all discovered seed manifests.
+      }
+      -> error(message: String) {
+        The base_path does not exist or is not readable.
+      }
+    }
+
+    action register(source_path: String, concept_uri: String,
+                    action_name: String, entries: list String) {
+      -> ok(seed: S) {
+        Manually register a seed data set without file discovery.
+        Each entry is a JSON-serialized record of action input fields.
+      }
+      -> duplicate(message: String) {
+        A seed with this source_path is already registered.
+      }
+    }
+
+    action apply(seed: S) {
+      -> ok(seed: S, applied_count: Int) {
+        Invoke the concept action once per entry in the seed set.
+        Marks the seed as applied with a timestamp. Entries that
+        fail are logged but do not halt the remaining entries.
+      }
+      -> already_applied(seed: S) {
+        This seed set has already been applied.
+      }
+      -> notfound(message: String) {
+        No seed record exists with this identifier.
+      }
+    }
+
+    action applyAll() {
+      -> ok(applied_count: Int, skipped_count: Int, error_count: Int) {
+        Apply all registered seeds that have not yet been applied.
+        Returns counts of applied, skipped (already applied), and
+        errored seed sets.
+      }
+    }
+
+    action status() {
+      -> ok(seeds: list {
+        seed: S, concept_uri: String, source_path: String,
+        entry_count: Int, applied: Bool, applied_at: option DateTime,
+        errors: list String
+      }) {
+        Return the current state of all registered seed sets.
+      }
+    }
+
+    action reset(seed: S) {
+      -> ok(seed: S) {
+        Mark a seed as unapplied so it can be re-applied.
+        Does not undo previously created data.
+      }
+      -> notfound(message: String) {
+        No seed record exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after register(source_path: "/test/interactor.seeds.yaml",
+                   concept_uri: "urn:clef/Interactor",
+                   action_name: "define",
+                   entries: ["{ \"name\": \"spatial-canvas\" }"])
+      -> ok(seed: s)
+    then status()
+      -> ok(seeds: ss)
+    and  ss includes { seed: s, applied: false }
+  }
+
+  invariant {
+    after register(source_path: "/test/schema.seeds.yaml",
+                   concept_uri: "urn:clef/Schema",
+                   action_name: "defineSchema",
+                   entries: ["{ \"schema\": \"Shape\" }"])
+      -> ok(seed: s)
+    then apply(seed: s)
+      -> ok(seed: s, applied_count: 1)
+    then apply(seed: s)
+      -> already_applied(seed: s)
+  }
+}

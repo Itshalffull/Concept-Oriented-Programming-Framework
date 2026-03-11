@@ -29,7 +29,7 @@ describe('ContentNode conformance', () => {
     const storage = createTestStorage();
     const handler = contentNodeHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('ContentNode conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).node).toBe(x);
+        x = (output as any).node;
         return output;
       }),
     )();
@@ -69,7 +69,7 @@ describe('ContentNode conformance', () => {
     const storage = createTestStorage();
     const handler = contentNodeHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -81,7 +81,7 @@ describe('ContentNode conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).node).toBe(x);
+        x = (output as any).node;
         return output;
       }),
     )();

@@ -1,0 +1,686 @@
+{
+  "uri": "urn:clef/Polity",
+  "name": "Polity",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "constitutionalRules",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "operationalLayer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "policyLayer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "constitutionalLayer",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "amendedAt",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "polities",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "establish",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "purpose",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "values",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "scope",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "established",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "A new governance domain is created with the given charter attributes \n All three governance layers are initialized"
+        }
+      ]
+    },
+    {
+      "name": "amend",
+      "params": [
+        {
+          "name": "polity",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "field",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "newValue",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "amended",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "field",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The specified charter field is updated AmendedAt timestamp is set \n Constitutional layer changes require constitutional layer procedures"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "The polity does not exist"
+        },
+        {
+          "tag": "protected",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "field",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The field is protected by constitutional rules and cannot be amended \n through this action"
+        }
+      ]
+    },
+    {
+      "name": "dissolve",
+      "params": [
+        {
+          "name": "polity",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "dissolved",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "The governance domain is dissolved All downstream concepts should \n be notified via sync"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "polity",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "The polity does not exist"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after establish, amend behaves correctly",
+      "setup": [
+        {
+          "action": "establish",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "purpose",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "values",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "scope",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "established",
+          "expectedOutputs": [
+            {
+              "name": "polity",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "amend",
+          "inputs": [
+            {
+              "name": "polity",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "purpose"
+              }
+            },
+            {
+              "name": "newValue",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "amended",
+          "expectedOutputs": [
+            {
+              "name": "polity",
+              "value": {
+                "kind": "variable",
+                "name": "g"
+              }
+            },
+            {
+              "name": "field",
+              "value": {
+                "kind": "literal",
+                "value": "purpose"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "g",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PolityState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype PolityEntry {\n  g: ID!\n  name: String!\n  purpose: String!\n  values: [String!]!\n  scope: [String!]!\n  constitutionalRules: [String!]!\n  operationalLayer: String!\n  policyLayer: String!\n  constitutionalLayer: String!\n  createdAt: String!\n  amendedAt: String!\n}\n\nextend type Query {\n  polity_entry(g: ID!): PolityEntry\n  polity_entries: [PolityEntry!]!\n}\n\ntype PolityPolities {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "establish": {
+        "$id": "urn:clef/Polity/establish/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Polity"
+          },
+          "action": {
+            "const": "establish"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "scope": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "purpose",
+              "values",
+              "scope"
+            ]
+          }
+        }
+      },
+      "amend": {
+        "$id": "urn:clef/Polity/amend/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Polity"
+          },
+          "action": {
+            "const": "amend"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "polity": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "newValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "polity",
+              "field",
+              "newValue"
+            ]
+          }
+        }
+      },
+      "dissolve": {
+        "$id": "urn:clef/Polity/dissolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Polity"
+          },
+          "action": {
+            "const": "dissolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "polity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "polity"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "establish": {
+        "established": {
+          "$id": "urn:clef/Polity/establish/completion/established",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "establish"
+            },
+            "variant": {
+              "const": "established"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity"
+              ]
+            }
+          }
+        }
+      },
+      "amend": {
+        "amended": {
+          "$id": "urn:clef/Polity/amend/completion/amended",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "amend"
+            },
+            "variant": {
+              "const": "amended"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity",
+                "field"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Polity/amend/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "amend"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity"
+              ]
+            }
+          }
+        },
+        "protected": {
+          "$id": "urn:clef/Polity/amend/completion/protected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "amend"
+            },
+            "variant": {
+              "const": "protected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity",
+                "field"
+              ]
+            }
+          }
+        }
+      },
+      "dissolve": {
+        "dissolved": {
+          "$id": "urn:clef/Polity/dissolve/completion/dissolved",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "dissolved"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Polity/dissolve/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Polity"
+            },
+            "action": {
+              "const": "dissolve"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "polity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "polity"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Define a governance domain with its foundational purpose , values , \n scope of authority , and constitutional layer configuration"
+}

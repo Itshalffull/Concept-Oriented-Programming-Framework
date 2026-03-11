@@ -1,0 +1,74 @@
+@version(1)
+concept AutomationScope [AS] {
+
+  purpose {
+    Allowlist/denylist gate controlling which concept actions the
+    SyncAutomationProvider may invoke at runtime. Each scope holds
+    pattern rules (glob-style action references) grouped by category.
+    Mode determines whether matched patterns are permitted or denied.
+  }
+
+  state {
+    scopes: set AS
+
+    mode: AS -> String
+    rules: AS -> list { action_pattern: String, category: String }
+    active: AS -> Bool
+  }
+
+  actions {
+
+    action configure(scope: AS, mode: String) {
+      -> ok(scope: AS) {
+        Sets scope mode to "allowlist" or "denylist". Clears existing
+        rules when mode changes.
+      }
+      -> invalid_mode(mode: String) {
+        Mode must be "allowlist" or "denylist".
+      }
+    }
+
+    action add_rule(scope: AS, action_pattern: String, category: String) {
+      -> ok(scope: AS, rule_count: Int) {
+        Adds a glob pattern to the scope's rule list under the given
+        category. Duplicate patterns are ignored.
+      }
+      -> not_configured(scope: AS) {
+        Scope has no mode set.
+      }
+    }
+
+    action remove_rule(scope: AS, action_pattern: String) {
+      -> ok(scope: AS, rule_count: Int) {
+        Removes the matching pattern from the scope's rule list.
+      }
+      -> notfound(action_pattern: String) {
+        No matching rule in scope.
+      }
+    }
+
+    action check(scope: AS, action_ref: String) {
+      -> permitted(scope: AS, action_ref: String) {
+        Action reference passes scope gate. In allowlist mode the
+        action matched a rule; in denylist mode it matched none.
+      }
+      -> denied(scope: AS, action_ref: String, reason: String) {
+        Action reference blocked by scope gate.
+      }
+    }
+
+    action list_rules(scope: AS) {
+      -> ok(rules: list { action_pattern: String, category: String }) {
+        All rules currently in the scope.
+      }
+    }
+  }
+
+  invariant {
+    after configure(scope: s, mode: "allowlist") -> ok(scope: s)
+    then  add_rule(scope: s, action_pattern: "Content/*", category: "content")
+          -> ok(scope: s, rule_count: 1)
+    then  check(scope: s, action_ref: "Content/save")
+          -> permitted(scope: s, action_ref: "Content/save")
+  }
+}

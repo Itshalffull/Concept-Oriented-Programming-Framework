@@ -1,0 +1,22 @@
+type CountingMethodState {
+  """All cs in this concept"""
+  cs: [ID!]!
+}
+
+type CountingMethodEntry {
+  c: ID!
+  name: String!
+  provider: String!
+  parameters: String!
+  description: String!
+}
+
+extend type Query {
+  countingmethod_entry(c: ID!): CountingMethodEntry
+  countingmethod_entries: [CountingMethodEntry!]!
+}
+
+type CountingMethodMethods {
+  c: ID!
+  value: ID!
+}

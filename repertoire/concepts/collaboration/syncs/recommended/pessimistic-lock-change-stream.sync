@@ -1,5 +1,5 @@
 # Lock/unlock events feed ChangeStream for audit trail.
-# Cross-kit sync — collaboration uses versioning's ChangeStream.
+# Cross-suite sync — collaboration uses versioning's ChangeStream.
 
 sync LockAcquiredToStream [eager]
 when {

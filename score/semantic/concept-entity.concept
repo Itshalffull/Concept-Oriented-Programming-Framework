@@ -20,7 +20,7 @@ concept ConceptEntity [E] {
     typeParams: E -> String
     actionsRef: E -> String
     stateFieldsRef: E -> String
-    kit: E -> String
+    suite: E -> String
   }
 
   capabilities {
@@ -55,9 +55,9 @@ concept ConceptEntity [E] {
       }
     }
 
-    action findByKit(kit: String) {
+    action findBySuite(suite: String) {
       -> ok(entities: String) {
-        Return all concepts belonging to the given kit.
+        Return all concepts belonging to the given suite.
         Results as serialized JSON array.
       }
     }

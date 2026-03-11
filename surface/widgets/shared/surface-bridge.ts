@@ -95,9 +95,36 @@ export function createMachine(spec: WidgetSpec, initialContext?: Record<string, 
     if (!transition) return;
 
     const target = typeof transition === 'string' ? transition : transition.target;
+    
+    if (typeof transition !== 'string' && transition.guard) {
+      // Very basic guard evaluation: checks if truthy in context
+      if (!current.context[transition.guard]) return;
+    }
+
+    const nextContext = { ...current.context, ...event };
+
+    if (stateDef.exit) {
+      for (const action of stateDef.exit) {
+        nextContext[`_action_${action}`] = Date.now();
+      }
+    }
+
+    if (typeof transition !== 'string' && transition.actions) {
+      for (const action of transition.actions) {
+        nextContext[`_action_${action}`] = Date.now();
+      }
+    }
+
+    const targetDef = spec.machineSpec.states[target];
+    if (targetDef?.entry) {
+      for (const action of targetDef.entry) {
+        nextContext[`_action_${action}`] = Date.now();
+      }
+    }
+
     stateSignal.set({
       current: target,
-      context: { ...current.context, ...event },
+      context: nextContext,
     });
   }
 

@@ -66,8 +66,8 @@ const derivePropId = (widget: string, name: string): string =>
   `${widget}::${name}`;
 
 const isValidTypeExpr = (typeExpr: string): boolean => {
-  const baseType = typeExpr.split('<')[0].split('|')[0].trim();
-  return (VALID_TYPE_EXPRS as readonly string[]).includes(baseType) || typeExpr.includes('|');
+  const baseType = typeExpr.split('<')[0].split('|')[0].trim().toLowerCase();
+  return (VALID_TYPE_EXPRS as readonly string[]).includes(baseType) || typeExpr.includes('|') || baseType === 'bool' || baseType === 'int' || baseType === 'float' || baseType === 'str';
 };
 
 // --- Implementation ---

@@ -102,7 +102,7 @@ concepts:
         storage: firestore
         queryMode: lite
   Comment:
-    spec: kits/content/comment.concept
+    spec: suites/content/comment.concept
     implementations:
       - language: typescript
         path: handlers/ts/app/comment.impl.ts
@@ -110,7 +110,7 @@ concepts:
         storage: firestore
         queryMode: lite
   Tag:
-    spec: kits/classification/tag.concept
+    spec: suites/classification/tag.concept
     implementations:
       - language: typescript
         path: handlers/ts/app/tag.impl.ts

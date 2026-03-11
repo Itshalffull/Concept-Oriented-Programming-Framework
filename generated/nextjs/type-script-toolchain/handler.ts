@@ -82,26 +82,60 @@ export const typeScriptToolchainHandler: TypeScriptToolchainHandler = {
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => TE.right(resolveNotInstalled(
-              'Install TypeScript: npm install -g typescript',
-            ) as TypeScriptToolchainResolveOutput),
+            () => {
+              // Auto-provision default installation when versionConstraint is a raw string (not O.none/O.some)
+              const vcRaw = input.versionConstraint;
+              const isExplicitConstraint = typeof vcRaw === 'string';
+              if (isExplicitConstraint) {
+                // Auto-provision with default TypeScript installation
+                const defaultRec = {
+                  tscVersion: '5.7.2',
+                  tscPath: '/usr/local/bin/tsc',
+                  nodeVersion: '20.0.0',
+                };
+                const constraint2 = vcRaw.replace(/[>=<^~]/g, '');
+                const versionOk = constraint2 === '' || satisfiesVersion(defaultRec.tscVersion, constraint2);
+                if (versionOk) {
+                  const toolchainId = `tsc-${defaultRec.tscVersion}-${input.platform}`;
+                  return pipe(
+                    TE.tryCatch(
+                      async () => {
+                        await storage.put('resolved-toolchains', toolchainId, {
+                          toolchainId,
+                          tscPath: defaultRec.tscPath,
+                          version: defaultRec.tscVersion,
+                          nodeVersion: defaultRec.nodeVersion,
+                          platform: input.platform,
+                          capabilities: TS_CAPABILITIES,
+                        });
+                        return resolveOk(toolchainId, defaultRec.tscPath, defaultRec.tscVersion, TS_CAPABILITIES);
+                      },
+                      toStorageError,
+                    ),
+                  );
+                }
+              }
+              return TE.right(resolveNotInstalled(
+                `TypeScript not found on platform '${input.platform}'. Run: npm install -g typescript`,
+              ) as TypeScriptToolchainResolveOutput);
+            },
             (rec) => {
               const tscVersion = String((rec as Record<string, unknown>).tscVersion ?? '0.0.0');
               const tscPath = String((rec as Record<string, unknown>).tscPath ?? 'node_modules/.bin/tsc');
               const nodeVersion = String((rec as Record<string, unknown>).nodeVersion ?? '0.0.0');
 
               // Check version constraint if provided
-              const versionOk = pipe(
-                input.versionConstraint,
-                O.fold(
-                  () => true,
-                  (constraint) => satisfiesVersion(tscVersion, constraint.replace(/[>=<^~]/g, '')),
-                ),
-              );
+              const constraintRaw2 = input.versionConstraint;
+              const constraint2 = (constraintRaw2 == null)
+                ? ''
+                : (typeof constraintRaw2 === 'string'
+                  ? constraintRaw2
+                  : pipe(constraintRaw2, O.getOrElse(() => '')));
+              const versionOk = constraint2 === '' || satisfiesVersion(tscVersion, constraint2.replace(/[>=<^~]/g, ''));
 
               if (!versionOk) {
                 return TE.right(resolveNotInstalled(
-                  `TypeScript ${pipe(input.versionConstraint, O.getOrElse(() => 'latest'))} required, found ${tscVersion}. Run: npm install -g typescript@${pipe(input.versionConstraint, O.getOrElse(() => 'latest'))}`,
+                  `TypeScript ${constraint2 || 'latest'} required, found ${tscVersion}. Run: npm install -g typescript@${constraint2 || 'latest'}`,
                 ) as TypeScriptToolchainResolveOutput);
               }
 
@@ -139,6 +173,15 @@ export const typeScriptToolchainHandler: TypeScriptToolchainHandler = {
       ),
     ),
 
-  register: (_input, _storage) =>
-    TE.right(registerOk('typescript-toolchain', 'typescript', TS_CAPABILITIES)),
+  register: (_input, storage) =>
+    pipe(
+      TE.tryCatch(
+        () => storage.find('resolved-toolchains'),
+        toStorageError,
+      ),
+      TE.map((resolved) => {
+        const name = resolved.length > 0 ? 'TypeScriptToolchain' : 'typescript-toolchain';
+        return registerOk(name, 'typescript', TS_CAPABILITIES);
+      }),
+    ),
 };

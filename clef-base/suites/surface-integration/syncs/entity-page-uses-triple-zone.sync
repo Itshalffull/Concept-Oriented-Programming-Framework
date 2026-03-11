@@ -1,0 +1,23 @@
+# Surface integration: entity page uses triple-zone layout.
+# When a ContentNode is displayed in entity-page mode, resolve
+# the triple-zone-layout widget and populate its three zones.
+
+sync EntityPageUsesTripleZone [eager]
+  purpose: "Resolve entity-page display mode to the triple-zone-layout widget and populate zones from ContentNode data"
+when {
+  DisplayMode/resolve: [ entity_id: ?entity_id; mode: "entity-page" ]
+    => [ ok: ?display_config ]
+}
+where {
+  ContentStorage: { ?entity_id schema: ?schema; fields: ?fields }
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "entity-page";
+    props: [
+      entityId: ?entity_id;
+      schema: ?schema;
+      fields: ?fields
+    ]
+  ]
+}

@@ -1,10 +1,38 @@
 import type { ConceptHandler } from '@clef/runtime';
 
+function parseStructuredValue(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'string' || value.trim() === '') return null;
+  try {
+    const parsed = JSON.parse(value);
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function expandNodeRecord(record: Record<string, unknown>): Record<string, unknown> {
+  const contentFields = parseStructuredValue(record.content);
+  const metadataFields = parseStructuredValue(record.metadata);
+
+  return {
+    ...record,
+    ...(contentFields ?? {}),
+    ...(metadataFields
+      ? Object.fromEntries(
+          Object.entries(metadataFields).filter(([key]) => !(key in record) && !(contentFields && key in contentFields)),
+        )
+      : {}),
+  };
+}
+
 export const contentNodeHandler: ConceptHandler = {
   async create(input, storage) {
     const node = input.node as string;
     const type = input.type as string;
     const content = input.content as string;
+    const metadata = (input.metadata as string | undefined) ?? '';
     const createdBy = input.createdBy as string;
     const existing = await storage.get('node', node);
     if (existing) return { variant: 'exists', message: 'already exists' };
@@ -13,7 +41,7 @@ export const contentNodeHandler: ConceptHandler = {
       node,
       type,
       content,
-      metadata: '',
+      metadata,
       createdBy,
       createdAt: now,
       updatedAt: now,
@@ -49,10 +77,7 @@ export const contentNodeHandler: ConceptHandler = {
     if (!record) return { variant: 'notfound', message: 'Node not found' };
     return {
       variant: 'ok',
-      node,
-      type: record.type as string,
-      content: record.content as string,
-      metadata: record.metadata as string,
+      ...expandNodeRecord(record as Record<string, unknown>),
     };
   },
 
@@ -67,6 +92,40 @@ export const contentNodeHandler: ConceptHandler = {
       updatedAt: new Date().toISOString(),
     });
     return { variant: 'ok', node };
+  },
+
+  async list(input, storage) {
+    const items = await storage.find('node', {});
+    const allItems = Array.isArray(items) ? items : [];
+    // Optional type filter
+    const typeFilter = input.type as string | undefined;
+    const filtered = typeFilter
+      ? allItems.filter((item: Record<string, unknown>) => item.type === typeFilter)
+      : allItems;
+    return {
+      variant: 'ok',
+      items: JSON.stringify(filtered.map((item) => expandNodeRecord(item as Record<string, unknown>))),
+    };
+  },
+
+  async stats(_input, storage) {
+    const items = await storage.find('node', {});
+    const allItems = Array.isArray(items) ? items : [];
+    // Count by type
+    const counts: Record<string, number> = {};
+    for (const item of allItems) {
+      const type = (item as Record<string, unknown>).type as string ?? 'unknown';
+      counts[type] = (counts[type] ?? 0) + 1;
+    }
+    const stats = [
+      { label: 'Content Nodes', value: String(allItems.length), description: 'Entities in the content pool' },
+      { label: 'Concepts', value: String(counts['concept'] ?? 0), description: 'Registered concept handlers' },
+      { label: 'Schemas', value: String(counts['schema'] ?? 0), description: 'Composable data shapes' },
+      { label: 'Syncs', value: String(counts['sync'] ?? 0), description: 'Sync rules across suites' },
+      { label: 'Suites', value: String(counts['suite'] ?? 0), description: 'Concept suite packages' },
+      { label: 'Themes', value: String(counts['theme'] ?? 0), description: 'Design system themes' },
+    ];
+    return { variant: 'ok', items: JSON.stringify(stats) };
   },
 
   async changeType(input, storage) {

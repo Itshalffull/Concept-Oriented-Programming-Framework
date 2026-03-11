@@ -1,4 +1,4 @@
-// Clef Data Integration Kit - Audio/video transcription enricher provider via Whisper
+// Clef Data Integration Suite - Audio/video transcription enricher provider via Whisper
 // Sends audio to Whisper API or runs locally, parses timestamped segments.
 
 import * as https from 'https';

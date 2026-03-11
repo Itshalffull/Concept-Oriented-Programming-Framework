@@ -1,0 +1,20 @@
+# Composition rules for the Comment suite.
+# At install time, ConceptBrowser generates sync files from these rules.
+# Each rule becomes a standard sync: when Schema X is applied, also apply Schema Y.
+
+compositions:
+  - when: Article
+    apply: [Commentable]
+    default: true
+
+  - when: Page
+    apply: [Commentable]
+    default: true
+
+  - when: Media
+    apply: [Commentable]
+    default: true
+
+  - when: DailyNote
+    apply: [Commentable]
+    default: false

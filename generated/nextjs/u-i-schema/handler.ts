@@ -61,16 +61,46 @@ const toError = (error: unknown): UISchemaError => ({
 });
 
 /** Parse a JSON concept spec and derive field-to-control mappings. */
+/** Parse a Clef DSL concept spec and extract field names with inferred types. */
+const parseDslConceptSpec = (source: string): Record<string, { type: string }> => {
+  const fields: Record<string, { type: string }> = {};
+  // Match field declarations like "name: T -> String" or "age: Number"
+  const fieldPattern = /(\w+)\s*:\s*(?:\w+\s*->\s*)?(\w+)/g;
+  // Look inside state { ... } blocks
+  const stateMatch = source.match(/state\s*\{([^}]*)\}/);
+  const body = stateMatch ? stateMatch[1] : source;
+  let m: RegExpExecArray | null;
+  while ((m = fieldPattern.exec(body)) !== null) {
+    const name = m[1];
+    const typeName = m[2].toLowerCase();
+    fields[name] = { type: typeName === 'string' ? 'string' : typeName === 'number' || typeName === 'integer' || typeName === 'int' ? 'number' : typeName === 'boolean' || typeName === 'bool' ? 'boolean' : 'string' };
+  }
+  return fields;
+};
+
 const deriveUISchemaFromSpec = (
   schemaName: string,
   conceptSpec: string,
 ): UISchemaInspectOutput => {
   try {
-    const parsed = JSON.parse(conceptSpec) as Record<string, unknown>;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(conceptSpec) as Record<string, unknown>;
+    } catch {
+      // Not JSON — try parsing as a Clef DSL concept spec
+      if (conceptSpec.trim().startsWith('concept ') || conceptSpec.trim().startsWith('state ') || /^\w+\s*\[/.test(conceptSpec.trim())) {
+        const dslFields = parseDslConceptSpec(conceptSpec);
+        parsed = { fields: dslFields };
+      } else if (conceptSpec.trim() === '' || conceptSpec.trim() === '_') {
+        parsed = {};
+      } else {
+        return inspectParseError(`Failed to parse concept spec for schema '${schemaName}'`);
+      }
+    }
     const fields = (parsed['fields'] ?? parsed['properties'] ?? {}) as Record<string, unknown>;
     const controls: Record<string, string> = {};
     for (const [fieldName, fieldDef] of Object.entries(fields)) {
-      const def = fieldDef as Record<string, unknown>;
+      const def = typeof fieldDef === 'object' && fieldDef !== null ? fieldDef as Record<string, unknown> : { type: 'string' };
       const fieldType = String(def['type'] ?? 'string');
       controls[fieldName] = mapFieldTypeToControl(fieldType);
     }
@@ -111,11 +141,21 @@ export const uISchemaHandler: UISchemaHandler = {
         async () => {
           const result = deriveUISchemaFromSpec(input.schema, input.conceptSpec);
           if (result.variant === 'ok') {
-            await storage.put('uischema', input.schema, {
+            // result.schema contains the JSON UI schema string
+            const uiSchemaJson = result.schema;
+            const record = {
               schema: input.schema,
-              uiSchema: result.schema,
+              uiSchema: uiSchemaJson,
               conceptSpec: input.conceptSpec,
-            });
+            };
+            await storage.put('uischema', input.schema, record);
+            // Also store under the JSON key so callers who received the JSON
+            // string from inspectOk can look up elements by that key.
+            if (uiSchemaJson !== input.schema) {
+              await storage.put('uischema', uiSchemaJson, record);
+            }
+            // Return the JSON UI schema string
+            return inspectOk(uiSchemaJson);
           }
           return result;
         },

@@ -1,0 +1,23 @@
+type ManifestAutomationProviderState {
+  """All mas in this concept"""
+  mas: [ID!]!
+}
+
+type ManifestAutomationProviderEntry {
+  ma: ID!
+  concept_action: String!
+  input_schema: String!
+  output_schema: String!
+  category: String!
+  manifest_version: String!
+}
+
+extend type Query {
+  manifestautomationprovider_entry(ma: ID!): ManifestAutomationProviderEntry
+  manifestautomationprovider_entries: [ManifestAutomationProviderEntry!]!
+}
+
+type ManifestAutomationProviderEntries {
+  ma: ID!
+  value: ID!
+}

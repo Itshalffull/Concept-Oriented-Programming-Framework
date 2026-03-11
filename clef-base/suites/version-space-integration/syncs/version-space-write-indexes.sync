@@ -1,0 +1,10 @@
+# Indexes modified or created entities in the version space's
+# SearchSpace overlay. Ensures version-space-local search works.
+
+sync VersionSpaceWriteIndexes [eventual]
+when {
+  VersionSpace/write: [ space: ?space; entity_id: ?id ] => [ ok: _ ]
+}
+then {
+  SearchSpace/index: [ scope_id: ?space; provider: "text"; entity_id: ?id; data: "" ]
+}

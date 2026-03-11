@@ -1,0 +1,30 @@
+@version(1)
+concept Auditor [A] {
+
+  purpose {
+    Vulnerability auditing for published packages. Scans dependencies
+    against known vulnerability databases and produces audit reports.
+  }
+
+  state {
+    audits: set A
+    lockfile_entries: A -> list String
+    vulnerabilities: A -> list { id: String, severity: String, module: String, range: String }
+    status: A -> String
+  }
+
+  actions {
+    action audit(lockfile_entries: list String) {
+      -> ok(audit: A, vulnerabilities: list { id: String, severity: String, module: String, range: String }) {
+        Scans the lockfile entries and returns any known vulnerabilities.
+      }
+      -> error(message: String) {
+        The audit scan failed.
+      }
+    }
+  }
+
+  invariant {
+    after audit(lockfile_entries: ["auth-suite@1.0.0"]) -> ok(audit: a, vulnerabilities: v)
+  }
+}

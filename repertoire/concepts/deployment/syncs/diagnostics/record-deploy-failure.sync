@@ -1,0 +1,18 @@
+# Record deployment failures in ErrorCorrelation for Score diagnostics
+# When any provider deploy fails, capture the error with full context
+# so Score can correlate build failures to concepts, handlers, and syncs.
+
+sync RecordVercelDeployFailure [eager]
+  purpose: "Capture Vercel deploy build failures in ErrorCorrelation for Score-driven diagnostics and root cause analysis"
+when {
+  VercelRuntime/deploy: [ project: ?project; sourceDirectory: ?sourceDir ]
+    => [ errors: ?errors ]
+}
+then {
+  ErrorCorrelation/record: [
+    flowId: ?project;
+    errorKind: "deploy:buildFailed";
+    message: ?errors;
+    rawEvent: ?errors
+  ]
+}

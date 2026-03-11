@@ -1,4 +1,4 @@
-# kits/formal-verification-solvers/suite.yaml
+# suites/formal-verification-solvers/suite.yaml
 suite:
   name: formal-verification-solvers
   version: 0.1.0

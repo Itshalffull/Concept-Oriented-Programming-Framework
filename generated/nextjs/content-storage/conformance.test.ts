@@ -29,7 +29,7 @@ describe('ContentStorage conformance', () => {
     const storage = createTestStorage();
     const handler = contentStorageHandler;
 
-    const r = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-001';
 
     // setup: save -> ok
     const saveResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('ContentStorage conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).record).toBe(r);
+        r = (output as any).record;
         return output;
       }),
     )();
@@ -65,7 +65,7 @@ describe('ContentStorage conformance', () => {
     const storage = createTestStorage();
     const handler = contentStorageHandler;
 
-    const r = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-001';
 
     // setup: save -> ok
     const saveResultSetup = await pipe(
@@ -75,7 +75,7 @@ describe('ContentStorage conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).record).toBe(r);
+        r = (output as any).record;
         return output;
       }),
     )();
@@ -88,7 +88,7 @@ describe('ContentStorage conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).record).toBe(r);
+        r = (output as any).record;
         return output;
       }),
     )();

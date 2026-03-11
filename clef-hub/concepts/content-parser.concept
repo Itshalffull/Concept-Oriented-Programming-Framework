@@ -1,0 +1,29 @@
+@version(1)
+concept ContentParser [C] {
+
+  purpose {
+    Parses package readmes and documentation markdown into HTML
+    for display on the hub.
+  }
+
+  state {
+    parsed: set C
+    source: C -> String
+    html: C -> String
+  }
+
+  actions {
+    action parse(source: String, format: String) {
+      -> ok(parsed: C, html: String) {
+        Parses the source content into HTML.
+      }
+      -> error(message: String) {
+        Parsing failed.
+      }
+    }
+  }
+
+  invariant {
+    after parse(source: "# Hello", format: "markdown") -> ok(parsed: c, html: h)
+  }
+}

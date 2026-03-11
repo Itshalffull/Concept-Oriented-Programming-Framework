@@ -241,9 +241,9 @@ Everything else is a **domain concern** that belongs in concepts:
 
 **The rule**: if you find yourself wanting a new engine annotation to change sync evaluation behavior, write a concept instead and put it in a sync chain. The engine stays at ~584 LOC forever.
 
-## Common Gate Concepts by Kit
+## Common Gate Concepts by Suite
 
-| Kit | Gate Concept | Gate Action | ok variant | Non-ok variants |
+| Suite | Gate Concept | Gate Action | ok variant | Non-ok variants |
 |-----|-------------|-------------|-----------|-----------------|
 | web3 | ChainMonitor | awaitFinality | ok(chain, block, confirmations) | reorged(txHash, depth), timeout(txHash) |
 | iot | FreshnessGate | check | ok(data, age) | stale(lastSeen, threshold), unreachable(device) |

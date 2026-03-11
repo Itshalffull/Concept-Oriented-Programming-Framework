@@ -9,15 +9,23 @@ export const syncCompilerCommand = new Command('sync-compiler')
 
 syncCompilerCommand
   .command('compile')
-  .description('Transform the parsed sync AST into a CompiledSync 
- object that the engine can register and evaluate 
- Resolve where clause queries into query plans')
+  .description('Transform the parsed sync AST into a CompiledSync object that the engine can register and evaluate . Resolve where clause queries into query plans .')
   .requiredOption('--sync <sync>', 'Sync')
   .requiredOption('--ast <ast>', 'Ast')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'compile', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/SyncCompiler', 'compile', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const syncCompilerCommandTree = {

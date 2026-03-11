@@ -1,0 +1,16 @@
+# Score UI integration: render Score graphs via graph widgets.
+# When the admin navigates to a Score view, resolve the appropriate
+# graph widget (impact panel or trace panel) via WidgetResolver.
+
+sync ScoreGraphRendersViaGraphWidget [eager]
+  purpose: "Resolve Score graph displays to the appropriate score-impact-panel or score-trace-panel widget via WidgetResolver"
+when {
+  DisplayMode/resolve: [ entity_id: ?entity_id; mode: "score-graph" ]
+    => [ ok: ?display_config ]
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "score-graph";
+    props: [ entityId: ?entity_id; config: ?display_config ]
+  ]
+}

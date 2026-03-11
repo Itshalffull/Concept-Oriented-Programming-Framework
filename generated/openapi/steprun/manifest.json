@@ -1,0 +1,1189 @@
+{
+  "uri": "urn:clef/StepRun",
+  "name": "StepRun",
+  "typeParams": [
+    {
+      "name": "S",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "step_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "step_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "attempt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "started_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "ended_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "steps",
+      "source": "set-valued",
+      "keyField": {
+        "name": "s",
+        "paramRef": "S"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "step_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "step_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a step run in active status Records start timestamp \n Increments attempt counter if a step with same run_ref step_key already \n exists in failed status ( retry scenario )"
+        },
+        {
+          "tag": "already_active",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "A step run for this run_ref step_key is already active"
+        }
+      ]
+    },
+    {
+      "name": "complete",
+      "params": [
+        {
+          "name": "step",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Transitions step from active to completed Records end timestamp and output"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Step is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "fail",
+      "params": [
+        {
+          "name": "step",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions step from active to failed Records end timestamp and error"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Step is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "params": [
+        {
+          "name": "step",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Transitions step from active or pending to cancelled"
+        },
+        {
+          "tag": "not_cancellable",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Step is in a terminal status"
+        }
+      ]
+    },
+    {
+      "name": "skip",
+      "params": [
+        {
+          "name": "step",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Transitions step from pending to skipped Used when conditional \n routing determines this step should not execute"
+        },
+        {
+          "tag": "not_pending",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "Step is not in pending status"
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "params": [
+        {
+          "name": "step",
+          "type": {
+            "kind": "param",
+            "paramRef": "S"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "step_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "attempt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns step state"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "step",
+              "type": {
+                "kind": "param",
+                "paramRef": "S"
+              }
+            }
+          ],
+          "prose": "No step run with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after start, complete behaves correctly",
+      "setup": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "step_key",
+              "value": {
+                "kind": "literal",
+                "value": "kyc"
+              }
+            },
+            {
+              "name": "step_type",
+              "value": {
+                "kind": "literal",
+                "value": "automation"
+              }
+            },
+            {
+              "name": "input",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "step",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "step_key",
+              "value": {
+                "kind": "literal",
+                "value": "kyc"
+              }
+            },
+            {
+              "name": "step_type",
+              "value": {
+                "kind": "literal",
+                "value": "automation"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "complete",
+          "inputs": [
+            {
+              "name": "step",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "step",
+              "value": {
+                "kind": "variable",
+                "name": "s"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "step_key",
+              "value": {
+                "kind": "literal",
+                "value": "kyc"
+              }
+            },
+            {
+              "name": "output",
+              "value": {
+                "kind": "variable",
+                "name": "o"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "s",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "o",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StepRunState {\n  \"\"\"All ss in this concept\"\"\"\n  ss: [ID!]!\n}\n\ntype StepRunEntry {\n  s: ID!\n  run_ref: String!\n  step_key: String!\n  step_type: String!\n  status: String!\n  attempt: Int!\n  input: String!\n  output: String!\n  error: String!\n  started_at: String!\n  ended_at: String!\n}\n\nextend type Query {\n  steprun_entry(s: ID!): StepRunEntry\n  steprun_entries: [StepRunEntry!]!\n}\n\ntype StepRunSteps {\n  s: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "start": {
+        "$id": "urn:clef/StepRun/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "step_key": {
+                "type": "string"
+              },
+              "step_type": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "run_ref",
+              "step_key",
+              "step_type",
+              "input"
+            ]
+          }
+        }
+      },
+      "complete": {
+        "$id": "urn:clef/StepRun/complete/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "complete"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "step",
+              "output"
+            ]
+          }
+        }
+      },
+      "fail": {
+        "$id": "urn:clef/StepRun/fail/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "fail"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "step",
+              "error"
+            ]
+          }
+        }
+      },
+      "cancel": {
+        "$id": "urn:clef/StepRun/cancel/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "cancel"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "step"
+            ]
+          }
+        }
+      },
+      "skip": {
+        "$id": "urn:clef/StepRun/skip/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "skip"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "step"
+            ]
+          }
+        }
+      },
+      "get": {
+        "$id": "urn:clef/StepRun/get/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StepRun"
+          },
+          "action": {
+            "const": "get"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "step"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "start": {
+        "ok": {
+          "$id": "urn:clef/StepRun/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_key": {
+                  "type": "string"
+                },
+                "step_type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step",
+                "run_ref",
+                "step_key",
+                "step_type"
+              ]
+            }
+          }
+        },
+        "already_active": {
+          "$id": "urn:clef/StepRun/start/completion/already_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "already_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "complete": {
+        "ok": {
+          "$id": "urn:clef/StepRun/complete/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_key": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "step",
+                "run_ref",
+                "step_key",
+                "output"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/StepRun/complete/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "complete"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "fail": {
+        "error": {
+          "$id": "urn:clef/StepRun/fail/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "fail"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_key": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step",
+                "run_ref",
+                "step_key",
+                "message"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/StepRun/fail/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "fail"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "cancel": {
+        "ok": {
+          "$id": "urn:clef/StepRun/cancel/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        },
+        "not_cancellable": {
+          "$id": "urn:clef/StepRun/cancel/completion/not_cancellable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "variant": {
+              "const": "not_cancellable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "skip": {
+        "ok": {
+          "$id": "urn:clef/StepRun/skip/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "skip"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        },
+        "not_pending": {
+          "$id": "urn:clef/StepRun/skip/completion/not_pending",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "skip"
+            },
+            "variant": {
+              "const": "not_pending"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      },
+      "get": {
+        "ok": {
+          "$id": "urn:clef/StepRun/get/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "step_key": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "attempt": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "step",
+                "run_ref",
+                "step_key",
+                "status",
+                "attempt"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/StepRun/get/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StepRun"
+            },
+            "action": {
+              "const": "get"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track per step execution state within a process run , including \n step type dispatch , attempt counting , and input output capture",
+  "gate": true
+}

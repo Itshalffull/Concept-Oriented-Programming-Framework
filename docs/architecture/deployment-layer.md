@@ -12,7 +12,7 @@ For cross-cutting concerns that span multiple providers (runtimes, secrets, IaC)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          Clef Deploy Kit                                │
+│                          Clef Deploy Suite                                │
 │                                                                         │
 │  Orchestration Concepts:                                                │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐     │
@@ -432,15 +432,15 @@ concept Health [H] {
       }
     }
 
-    action checkKit(kit: String, environment: String) {
+    action checkKit(suite: String, environment: String) {
       -> ok(check: H, conceptResults: list String, syncResults: list String) {
         All concepts healthy, all syncs connected.
       }
       -> degraded(check: H, healthy: list String, degraded: list String) {
-        Kit functional but some components below threshold.
+        Suite functional but some components below threshold.
       }
       -> failed(check: H, healthy: list String, failed: list String) {
-        Kit non-functional. Critical components unreachable.
+        Suite non-functional. Critical components unreachable.
       }
     }
 
@@ -470,7 +470,7 @@ concept Env [E] {
     Manage deployment environments with composable configuration.
     Base environment defines defaults; overlays for dev, staging,
     production override specific values. Promotion moves a
-    validated kit version reference from one environment to another
+    validated suite version reference from one environment to another
     without rebuilding.
   }
 
@@ -480,7 +480,7 @@ concept Env [E] {
       name: E -> String
       base: E -> option E
       overrides: E -> String
-      kitVersions: E -> list { kit: String, version: String }
+      kitVersions: E -> list { suite: String, version: String }
       secrets: E -> list { name: String, provider: String, ref: String }
     }
     promotion {
@@ -506,7 +506,7 @@ concept Env [E] {
 
     action promote(fromEnv: E, toEnv: E, suiteName: String) {
       -> ok(toEnv: E, version: String) {
-        Copy kit version reference from source to target
+        Copy suite version reference from source to target
         environment. Does not redeploy — a separate
         DeployPlan/execute handles that.
       }
@@ -566,10 +566,10 @@ concept Telemetry [T] {
       }
     }
 
-    action deployMarker(kit: String, version: String, environment: String, status: String) {
+    action deployMarker(suite: String, version: String, environment: String, status: String) {
       -> ok(marker: T) {
         Emit a deployment event to the observability backend.
-        Includes kit name, version, environment, start/end time,
+        Includes suite name, version, environment, start/end time,
         changed concepts, and deployment strategy.
       }
       -> backendUnavailable(endpoint: String) {
@@ -783,14 +783,14 @@ sync HealthCheckAfterStep [eager] {
       => ok[ rollout: ?r; newWeight: ?w ]
   }
   then {
-    Health/checkKit: [ kit: ?kit; environment: ?env ]
+    Health/checkKit: [ suite: ?suite; environment: ?env ]
   }
 }
 
 # Health OK → advance rollout
 sync AdvanceOnHealthy [eager] {
   when {
-    Health/checkKit: [ kit: ?kit ]
+    Health/checkKit: [ suite: ?suite ]
       => ok[ check: ?h ]
     Rollout/advance: [ rollout: ?r ]
       => ok[ rollout: ?r ]
@@ -825,7 +825,7 @@ sync PauseOnBadMetrics [eager] {
 # Health failed → abort rollout and rollback
 sync RollbackOnFailure [eager] {
   when {
-    Health/checkKit: [ kit: ?kit ]
+    Health/checkKit: [ suite: ?suite ]
       => failed[ check: ?h; failed: ?failedConcepts ]
   }
   then {
@@ -856,7 +856,7 @@ sync MarkerOnDeployStart [eventual] {
   }
   then {
     Telemetry/deployMarker: [
-      kit: ?kit; version: ?version;
+      suite: ?suite; version: ?version;
       environment: ?env; status: "started" ]
   }
 }
@@ -869,7 +869,7 @@ sync MarkerOnDeployComplete [eventual] {
   }
   then {
     Telemetry/deployMarker: [
-      kit: ?kit; version: ?version;
+      suite: ?suite; version: ?version;
       environment: ?env; status: "completed" ]
   }
 }
@@ -882,7 +882,7 @@ sync MarkerOnRollback [eventual] {
   }
   then {
     Telemetry/deployMarker: [
-      kit: ?kit; version: ?version;
+      suite: ?suite; version: ?version;
       environment: ?env; status: "rolledback" ]
   }
 }
@@ -895,7 +895,7 @@ sync MarkerOnRollback [eventual] {
 # Promotion requested → resolve target environment
 sync ResolveBeforePromote [eager] {
   when {
-    Env/promote: [ fromEnv: ?from; toEnv: ?to; suiteName: ?kit ]
+    Env/promote: [ fromEnv: ?from; toEnv: ?to; suiteName: ?suite ]
       => ok[ toEnv: ?to; version: ?version ]
   }
   then {
@@ -919,7 +919,7 @@ sync PlanAfterPromotion [eager] {
 
 ## Part 3: Coordination and Provider Concepts
 
-Three cross-cutting concerns — runtimes, secrets, and infrastructure-as-code — follow the **coordination + provider pattern**. The coordination concept owns shared state and the stable interface that the rest of the deploy kit talks to. Provider concepts own provider-specific state, actions, and variants. Integration syncs route from coordination to the active provider based on manifest configuration.
+Three cross-cutting concerns — runtimes, secrets, and infrastructure-as-code — follow the **coordination + provider pattern**. The coordination concept owns shared state and the stable interface that the rest of the deploy suite talks to. Provider concepts own provider-specific state, actions, and variants. Integration syncs route from coordination to the active provider based on manifest configuration.
 
 ```
 ┌─────────────────────┐     integration sync     ┌─────────────────────┐
@@ -1047,7 +1047,7 @@ concept Runtime [I] {
 
 ### 3.2 Runtime Provider Concepts
 
-Each provider concept has its own sovereign state and provider-specific variants. These are never referenced outside the deploy kit — only reached through integration syncs from Runtime.
+Each provider concept has its own sovereign state and provider-specific variants. These are never referenced outside the deploy suite — only reached through integration syncs from Runtime.
 
 #### LambdaRuntime
 
@@ -1892,9 +1892,9 @@ app:
   version: 2.1.0
 
 # ─── EXISTING ───────────────────────────────────────
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
     overrides:
       DefaultTitleField: ./syncs/custom-title.sync
 
@@ -2002,13 +2002,13 @@ migrations:
 
 ---
 
-## Part 5: Kit Packaging — The Deploy Kit
+## Part 5: Suite Packaging — The Deploy Suite
 
-All deployment concepts, syncs, and infrastructure ship as a Clef kit. Apps include it like any other kit.
+All deployment concepts, syncs, and infrastructure ship as a Clef suite. Apps include it like any other suite.
 
 ```yaml
-# suite.yaml for the deploy kit
-kit:
+# suite.yaml for the deploy suite
+suite:
   name: deploy
   version: 0.1.0
   description: >
@@ -2270,17 +2270,17 @@ clef migrate contract <migration-id>             # manual contraction
 
 # Environments
 clef env resolve staging
-clef env promote staging production --kit content-management
+clef env promote staging production --suite content-management
 clef env diff staging production
 
 # Health
-clef health check --kit content-management --env production
+clef health check --suite content-management --env production
 clef health check --concept User --env staging
 clef health invariant User articleCreation --env production
 
 # Artifacts
-clef artifact build ./kits/content-management
-clef artifact list --kit content-management --last 5
+clef artifact build ./suites/content-management
+clef artifact list --suite content-management --last 5
 clef artifact gc --older-than 30d --keep 3
 
 # IaC
@@ -2308,12 +2308,12 @@ clef deploy plan ./app.deploy.yaml --env production
 
 # Output:
 # Deploy Plan dp-2026-02-20-001
-# ├─ Kit: content-management v0.4.0
+# ├─ Suite: content-management v0.4.0
 # │  ├─ Migration: Entity v1→v2 (expand + migrate)
 # │  ├─ Deploy: Entity, Field, Relation, Node (parallel)
 # │  ├─ Syncs: 2 required, 4 recommended
 # │  └─ Rollout: canary (5% → 25% → 50% → 100%)
-# ├─ Kit: auth v0.2.0 (no changes)
+# ├─ Suite: auth v0.2.0 (no changes)
 # ├─ Health gates: 4 concept checks, 6 sync checks
 # ├─ Telemetry: OTEL → Datadog, deploy markers enabled
 # └─ Estimated duration: 45 min (including canary bake time)

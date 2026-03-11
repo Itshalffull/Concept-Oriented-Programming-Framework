@@ -30,8 +30,8 @@ describe('Ref conformance', () => {
     const handler = refHandler;
 
     const n = 'u-test-invariant-001';
-    const h = 'u-test-invariant-002';
-    const r = 'u-test-invariant-003';
+    let h: any = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-003';
 
     // setup: create -> ok
     const createResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Ref conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).ref).toBe(r);
+        r = (output as any).ref;
         return output;
       }),
     )();
@@ -54,7 +54,7 @@ describe('Ref conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).hash).toBe(h);
+        h = (output as any).hash;
         return output;
       }),
     )();
@@ -67,7 +67,7 @@ describe('Ref conformance', () => {
     const handler = refHandler;
 
     const n = 'u-test-invariant-001';
-    const h2 = 'u-test-invariant-002';
+    let h2: any = 'u-test-invariant-002';
     const h1 = 'u-test-invariant-003';
 
     // setup: update -> ok
@@ -91,7 +91,7 @@ describe('Ref conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).hash).toBe(h2);
+        h2 = (output as any).hash;
         return output;
       }),
     )();

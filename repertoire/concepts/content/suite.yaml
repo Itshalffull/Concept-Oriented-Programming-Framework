@@ -1,7 +1,7 @@
 # Content Suite Manifest
 name: content
-version: 0.1.0
-description: "Rich content authoring — daily notes, comments, synced content, templates, canvases, and version tracking."
+version: 0.2.0
+description: "Rich content authoring — daily notes, comments, synced content, templates, canvases, spatial layout, and version tracking."
 
 concepts:
   - name: DailyNote
@@ -16,6 +16,26 @@ concepts:
     spec: canvas.concept
   - name: Version
     spec: version.concept
+  - name: SpatialConnector
+    spec: spatial-connector.concept
+  - name: Frame
+    spec: frame.concept
+  - name: Shape
+    spec: shape.concept
+  - name: SpatialLayout
+    spec: spatial-layout.concept
+  - name: ForceDirectedLayout
+    spec: providers/force-directed-layout.concept
+    optional: true
+  - name: HierarchicalLayout
+    spec: providers/hierarchical-layout.concept
+    optional: true
+  - name: GridLayout
+    spec: providers/grid-layout.concept
+    optional: true
+  - name: CircularLayout
+    spec: providers/circular-layout.concept
+    optional: true
 
 syncs:
   - name: content-versioning
@@ -24,5 +44,39 @@ syncs:
   - name: comment-threading
     file: syncs/comment-threading.sync
     tier: recommended
+  - name: canvas-connections
+    file: syncs/canvas-connections.sync
+    tier: required
+  - name: canvas-file-embed
+    file: syncs/canvas-file-embed.sync
+    tier: recommended
+  - name: canvas-connector-surface
+    file: syncs/canvas-connector-surface.sync
+    tier: recommended
+  - name: connector-promote-creates-reference
+    file: syncs/connector-promote-creates-reference.sync
+    tier: required
+  - name: frame-containment-check
+    file: syncs/frame-containment-check.sync
+    tier: recommended
+  - name: spatial-layout-dispatch
+    file: syncs/spatial-layout-dispatch.sync
+    tier: required
+  - name: force-directed-layout-registration
+    file: syncs/force-directed-layout-registration.sync
+    tier: integration
+  - name: hierarchical-layout-registration
+    file: syncs/hierarchical-layout-registration.sync
+    tier: integration
+  - name: grid-layout-registration
+    file: syncs/grid-layout-registration.sync
+    tier: integration
+  - name: circular-layout-registration
+    file: syncs/circular-layout-registration.sync
+    tier: integration
 
-dependencies: []
+dependencies:
+  - name: linking
+    concepts: [Reference]
+  - name: infrastructure
+    concepts: [PluginRegistry]

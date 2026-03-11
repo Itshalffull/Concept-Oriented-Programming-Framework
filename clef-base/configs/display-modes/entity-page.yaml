@@ -1,0 +1,48 @@
+# Entity page display mode — default display mode for ContentNodes.
+# Resolves to the triple-zone-layout and populates all three zones
+# (fieldset, canvas-embed, entity-list) from ContentNode data.
+# See §5.10.4 of the Clef Base spec.
+
+display_mode:
+  name: entity-page
+  version: 1
+  description: "Default display mode for ContentNode entity pages"
+  default: true
+
+target_schemas:
+  - "*"
+
+layout: triple-zone-layout
+
+zone_mapping:
+  fieldset:
+    source: entity_fields
+    widget: fieldset-widget
+    props:
+      show_labels: true
+      editable: false
+      group_by: field_group
+
+  canvas:
+    source: canvas_content
+    widget: canvas-embed
+    props:
+      editable: false
+      render_blocks: true
+
+  related:
+    source: related_entities
+    widget: entity-list
+    providers:
+      - type: SemanticEmbedding
+        limit: 10
+      - type: Backlink
+      - type: Reference
+    props:
+      display_mode: teaser
+      group_by: source_type
+      show_empty: false
+
+permissions:
+  view: viewer
+  edit: editor

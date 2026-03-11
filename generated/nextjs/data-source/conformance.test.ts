@@ -29,7 +29,6 @@ describe('DataSource conformance', () => {
     const storage = createTestStorage();
     const handler = dataSourceHandler;
 
-
     // setup: register -> ok
     const registerResultSetup = await pipe(
       handler.register({

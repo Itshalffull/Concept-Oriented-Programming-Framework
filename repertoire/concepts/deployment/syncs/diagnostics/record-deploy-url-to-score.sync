@@ -1,0 +1,17 @@
+# Feed deployed endpoint URLs into Score's deployment entity index
+# so Score queries can resolve concept names to live deployment URLs.
+# Passes a JSON-encoded snapshot with the endpoint URL as a runtime status
+# entry, matching the DeploymentHealth/record expected format.
+
+sync RecordDeployUrlToScore [eager]
+  purpose: "Update Score's deployment entity with the live endpoint URL after a successful deploy"
+when {
+  Runtime/updateEndpoint: [ instance: ?instance; endpoint: ?url ]
+    => [ instance: ?instance; endpoint: ?url ]
+}
+then {
+  DeploymentEntity/updateUrl: [
+    deployment: ?instance;
+    url: ?url
+  ]
+}

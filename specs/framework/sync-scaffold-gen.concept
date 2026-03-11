@@ -14,10 +14,13 @@ concept SyncScaffoldGen [S] {
   }
 
   actions {
-    action generate(name: String, trigger: Trigger, effects: list Effect) {
+    action generate(name: String, trigger: Trigger, conditions: list Condition, effects: list Effect, thenBlocks: list list Effect) {
       description {
         Generate a well-formed .sync file with when/where/then
         clauses from the provided trigger and effect configurations.
+        Supports condition types: bind, query, any, not, compare,
+        filter (filter by expression), and guard (boolean guard).
+        Supports multiple then blocks for grouping effects (no ordering implied).
       }
       -> ok(files: list File, filesGenerated: Int) {
         Sync rule scaffold generated.
@@ -27,7 +30,7 @@ concept SyncScaffoldGen [S] {
       }
     }
 
-    action preview(name: String, trigger: Trigger, effects: list Effect) {
+    action preview(name: String, trigger: Trigger, conditions: list Condition, effects: list Effect, thenBlocks: list list Effect) {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing. Uses
         Emitter content-addressing to classify each file as
@@ -48,7 +51,7 @@ concept SyncScaffoldGen [S] {
         name: "SyncScaffoldGen"
         inputKind: "SyncConfig"
         outputKind: "SyncSpec"
-        capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause"]
+        capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause", "filter-condition", "guard-condition", "multi-then"]
       }
     }
   }

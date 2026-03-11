@@ -86,14 +86,9 @@ const TEMPLATE_TSCONFIG = `{
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "sourceMap": true,
-    "paths": {
-      "@clef/runtime": ["./runtime/index.ts"],
-      "@clef/runtime/*": ["./runtime/*"]
-    }
+    "sourceMap": true
   },
   "include": [
-    "runtime/**/*.ts",
     "handlers/**/*.ts",
     "tests/**/*.ts",
     "cli/**/*.ts"
@@ -198,6 +193,9 @@ export async function initCommand(
           test: 'vitest run',
           'test:watch': 'vitest',
         },
+        dependencies: {
+          '@clef/runtime': '^0.1.0',
+        },
         devDependencies: {
           typescript: '^5.4.0',
           vitest: '^1.6.0',
@@ -212,14 +210,8 @@ export async function initCommand(
   writeFileSync(
     join(projectDir, 'vitest.config.ts'),
     `import { defineConfig } from 'vitest/config';
-import path from 'path';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@clef/runtime': path.resolve(__dirname, './runtime/index.ts'),
-    },
-  },
   test: {
     include: ['tests/**/*.test.ts'],
     globals: true,

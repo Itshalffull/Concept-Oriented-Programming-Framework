@@ -1,0 +1,132 @@
+@version(1)
+widget verification-status-badge {
+
+  purpose {
+    Compact status indicator for formal verification outcomes. Renders
+    an icon and label reflecting the verification status of a property
+    or run (proved, refuted, unknown, timeout, running). Includes an
+    optional tooltip with timing and solver details.
+  }
+
+  requires @1 {
+    fields {
+      status: enum;
+      label: String;
+      duration: option Int;
+      solver: option String;
+    }
+    actions { }
+  }
+
+  anatomy {
+    root:    container  { Outer badge wrapper with status-colored background }
+    icon:    container  { Status icon (checkmark, cross, question, clock, spinner) }
+    label:   text       { Human-readable status text }
+    tooltip: container  { Hover detail showing duration and solver info }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on STATUS_CHANGE -> animating;
+    }
+    hovered {
+      on LEAVE -> idle;
+      entry [show tooltip];
+      exit  [hide tooltip];
+    }
+    animating {
+      on ANIMATION_END -> idle;
+      entry [animateTransition];
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard { }
+    focus {
+      trap: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Verification status: ", $label);
+      };
+      tooltip -> {
+        role: "tooltip";
+        aria-hidden: if state != "hovered" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    status: union "proved" | "refuted" | "unknown" | "timeout" | "running" = "unknown"
+    label: String = "Unknown"
+    duration: option Int
+    solver: option String
+    size: union "sm" | "md" | "lg" = "md"
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      concept: "FormalProperty";
+    }
+    bind {
+      status: status;
+      label: kind;
+    }
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      concept: "VerificationRun";
+    }
+    bind {
+      status: status;
+      label: target_symbol;
+      solver: solver_used;
+    }
+  }
+
+  connect {
+    root -> {
+      role: "status";
+      aria-live: "polite";
+      aria-label: concat("Verification status: ", ?label);
+      data-status: ?status;
+      data-size: ?size;
+      data-part: "root";
+    }
+    icon -> {
+      data-part: "icon";
+      data-status: ?status;
+      aria-hidden: "true";
+    }
+    label -> {
+      data-part: "label";
+      text: ?label;
+    }
+    tooltip -> {
+      data-part: "tooltip";
+      role: "tooltip";
+      data-visible: if state == "hovered" then "true" else "false";
+      aria-hidden: if state != "hovered" then "true" else "false";
+    }
+  }
+
+  compose {
+    tooltip: widget("tooltip", { content: concat(?solver, " — ", ?duration, "ms") });
+  }
+
+  invariant {
+    "Status icon must visually distinguish all five states with unique icons and colors";
+    "Running status must display an animated spinner icon";
+    "Tooltip must only appear on hover or focus and include solver and duration when available";
+  }
+
+}

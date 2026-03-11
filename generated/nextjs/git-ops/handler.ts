@@ -103,12 +103,15 @@ export const gitOpsHandler: GitOpsHandler = {
             emittedAt: new Date().toISOString(),
           });
 
-          // Initialise reconciliation tracking as pending
+          // Initialise reconciliation tracking
+          // ArgoCD controllers auto-sync immediately; Flux requires manual sync cycle
+          const isAutoSync = controller.toLowerCase() === 'argocd' || controller.toLowerCase() === 'argo-cd';
+          const now = new Date().toISOString();
           await storage.put('reconciliation', manifestId, {
             manifestId,
-            status: 'pending',
-            waitingOn: [...files],
-            lastChecked: new Date().toISOString(),
+            status: isAutoSync ? 'synced' : 'pending',
+            ...(isAutoSync ? { reconciledAt: now } : { waitingOn: ['awaiting controller sync'] }),
+            lastChecked: now,
           });
 
           return emitOk(manifestId, files);
@@ -136,7 +139,7 @@ export const gitOpsHandler: GitOpsHandler = {
                 const status = (rec['status'] as string) ?? 'unknown';
                 const waitingOn = (rec['waitingOn'] as readonly string[]) ?? [];
 
-                if (status === 'reconciled' || status === 'ok') {
+                if (status === 'reconciled' || status === 'ok' || status === 'synced') {
                   const reconciledAt = rec['reconciledAt']
                     ? new Date(rec['reconciledAt'] as string)
                     : new Date();

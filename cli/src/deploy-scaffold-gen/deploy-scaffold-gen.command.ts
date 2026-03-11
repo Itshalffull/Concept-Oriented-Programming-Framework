@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const deployScaffoldGenCommand = new Command('scaffold')
+export const deployScaffoldGenCommand = new Command('scaffold-deploy')
   .description('Generate deployment manifest (deploy.yaml).');
 
 deployScaffoldGenCommand
@@ -19,8 +19,18 @@ deployScaffoldGenCommand
   .addHelpText('after', '  clef scaffold deploy --app conduit --runtimes api:node:http:postgresql,worker:node:sqs:redis --iac terraform  # Scaffold with custom runtimes')
   .addHelpText('after', '  clef scaffold deploy --app conduit --concepts User:api,Article:api,Email:worker  # Scaffold with concept assignments')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DeployScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 deployScaffoldGenCommand
@@ -31,25 +41,41 @@ deployScaffoldGenCommand
   .requiredOption('--concepts <concepts>', 'Concepts')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DeployScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 deployScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : DeployScaffoldGen 
- inputKind : DeployConfig 
- outputKind : DeployManifest 
- capabilities : [ deploy-yaml , runtime-config , infrastructure ]')
+  .description('Return static metadata for PluginRegistry . name : DeployScaffoldGen inputKind : DeployConfig outputKind : DeployManifest capabilities : [ deploy-yaml , runtime-config , infrastructure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/DeployScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const deployScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-deploy',
   description: 'Generate deployment manifest (deploy.yaml).',
   commands: [{ action: 'generate', command: 'deploy' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -1,0 +1,55 @@
+# Score flow trace panel — layout for visualizing action flow traces
+# through sync chains.
+# See §5.10.4 of the Clef Base spec.
+
+uischema: score-trace-panel
+version: 1
+description: "Score flow trace panel"
+
+layout: vertical
+children:
+  - element: header
+    interactor: display-text
+    props:
+      value: $panel_title
+      variant: heading
+
+  - element: action-selector
+    interactor: single-choice
+    props:
+      options: $available_actions
+      default: $selected_action
+      placeholder: "Select action to trace"
+
+  - element: trace-timeline
+    interactor: timeline-view
+    props:
+      trace_data: $flow_trace
+      layout: horizontal
+      show_timing: true
+      show_failures: true
+      node_types:
+        action: { icon: bolt, color: blue }
+        sync: { icon: link, color: green }
+        completion: { icon: check, color: gray }
+
+  - element: trace-detail
+    interactor: display-entity
+    props:
+      entity_id: $selected_trace_node
+      display_mode: trace-detail
+
+  - element: causal-chain
+    interactor: display-text
+    props:
+      value: $causal_chain_summary
+      variant: code
+
+  - layout: horizontal
+    children:
+      - element: replay
+        interactor: action-primary
+        props: { label: "Replay trace" }
+      - element: export-trace
+        interactor: action-secondary
+        props: { label: "Export trace" }

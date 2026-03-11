@@ -1,0 +1,36 @@
+derived ConceptMapEditor [T] {
+
+  purpose {
+    Canvas with concept-map notation requiring labeled edges and
+    force-directed layout. Supports Novak-style propositions as
+    semantic References between concepts.
+  }
+
+  composes {
+    Canvas [T]
+    DiagramNotation [T]
+    SpatialLayout [T]
+    Reference [T]
+  }
+
+  syncs {
+    required: [concept-map-setup, concept-map-force-layout, concept-map-requires-edge-labels]
+  }
+
+  surface {
+    action create(name: String) {
+      matches: Canvas/create + DiagramNotation/applyToCanvas(notation: "concept-map")
+    }
+
+    action autoLayout() {
+      matches: Canvas/applyLayout(algorithm: "force-directed")
+    }
+
+    query getPropositions() -> Reference/getRefs filtered by canvas scope
+  }
+
+  principle {
+    after drawing connector with label "causes"
+    then getPropositions() includes proposition
+  }
+}

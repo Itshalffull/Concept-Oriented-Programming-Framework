@@ -1,0 +1,31 @@
+@version(1)
+concept Resolver [R] {
+
+  purpose {
+    Dependency resolution using PubGrub-based solving. Takes constraints
+    from a manifest and produces a resolution graph of exact versions.
+  }
+
+  state {
+    resolutions: set R
+    constraints: R -> list { module_id: String, version_range: String }
+    resolved: R -> list { module_id: String, version: String }
+  }
+
+  actions {
+    action resolve(constraints: list { module_id: String, version_range: String },
+                   policy: String, locked_versions: list { module_id: String, version: String }) {
+      -> ok(resolution: R) {
+        Produces a resolution graph satisfying all constraints.
+      }
+      -> conflict(message: String) {
+        No satisfying resolution exists.
+      }
+    }
+  }
+
+  invariant {
+    after resolve(constraints: [{ module_id: "auth", version_range: "^1.0.0" }],
+                  policy: "default", locked_versions: []) -> ok(resolution: r)
+  }
+}

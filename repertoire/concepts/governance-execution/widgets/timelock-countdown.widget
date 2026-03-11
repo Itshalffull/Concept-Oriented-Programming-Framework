@@ -1,0 +1,174 @@
+@version(1)
+widget timelock-countdown {
+
+  purpose {
+    Countdown timer for governance timelock periods. Shows the current
+    phase label, remaining time in days/hours/minutes/seconds, a progress
+    bar indicating elapsed time, and action buttons that activate when
+    the timelock expires. Supports challenge actions during the delay
+    period and visual urgency escalation as deadline approaches.
+  }
+
+  requires @1 {
+    fields {
+      phase: String;
+      deadline: DateTime;
+      elapsed: Float;
+      total: Float;
+    }
+    actions {
+      execute: { };
+      challenge: { };
+    }
+  }
+
+  anatomy {
+    root:            container  { Wrapper for the countdown display }
+    phaseLabel:      text       { Current phase name (e.g., "Timelock delay", "Ready to execute") }
+    countdownText:   text       { Remaining time in human-readable format }
+    targetDate:      text       { Absolute target date and time }
+    progressBar:     container  { Visual progress of elapsed time }
+    executeButton:   action     { Execute action (enabled when timelock expires) }
+    challengeButton: action     { Challenge action (enabled during delay period) }
+  }
+
+  states {
+    running [initial] {
+      on TICK -> running;
+      on WARNING_THRESHOLD -> warning;
+      on EXPIRE -> expired;
+      on PAUSE -> paused;
+      entry [startCountdown];
+    }
+
+    warning {
+      on TICK -> warning;
+      on CRITICAL_THRESHOLD -> critical;
+      on EXPIRE -> expired;
+      entry [applyWarningStyle];
+    }
+
+    critical {
+      on TICK -> critical;
+      on EXPIRE -> expired;
+      entry [applyCriticalStyle; pulseCountdown];
+    }
+
+    expired {
+      on EXECUTE -> executing;
+      on RESET -> running;
+      entry [enableExecute; stopCountdown];
+    }
+
+    executing {
+      on EXECUTE_COMPLETE -> completed;
+      on EXECUTE_ERROR -> expired;
+      entry [showExecutingSpinner];
+      exit [hideExecutingSpinner];
+    }
+
+    completed {
+      entry [showCompleteBadge];
+    }
+
+    paused {
+      on RESUME -> running;
+      entry [pauseCountdown];
+    }
+  }
+
+  accessibility {
+    role: timer;
+    keyboard {
+      Enter -> EXECUTE;
+      c -> CHALLENGE;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "timer";
+        aria-label: concat($phase, ": ", self.remainingText);
+        aria-live: "polite";
+      };
+      executeButton -> {
+        role: "button";
+        aria-label: "Execute proposal";
+        aria-disabled: if state != "expired" then "true" else "false";
+      };
+      challengeButton -> {
+        role: "button";
+        aria-label: "Challenge execution";
+        aria-disabled: if state == "expired" or state == "completed" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    showChallenge: Bool = true
+    warningThreshold: Float = 0.8
+    criticalThreshold: Float = 0.95
+    variant: union "phase-based" | "simple" = "phase-based"
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "Execution";
+    }
+    bind {
+      phase: status;
+      deadline: executedAt;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "timer";
+      data-state: state;
+      data-variant: ?variant;
+    }
+    phaseLabel -> {
+      data-part: "phase-label";
+      text: $phase;
+    }
+    countdownText -> {
+      data-part: "countdown-text";
+      data-urgency: state;
+    }
+    targetDate -> {
+      data-part: "target-date";
+      text: $deadline;
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+      data-progress: $elapsed / $total;
+    }
+    executeButton -> {
+      data-part: "execute-button";
+      aria-disabled: if state != "expired" then "true" else "false";
+      onClick: send(EXECUTE);
+    }
+    challengeButton -> {
+      data-part: "challenge-button";
+      data-visible: if ?showChallenge then "true" else "false";
+      aria-disabled: if state == "expired" or state == "completed" then "true" else "false";
+      onClick: send(CHALLENGE);
+    }
+  }
+
+  compose {
+    progressBar: widget("progress-bar", { value: $elapsed, max: $total });
+  }
+
+  invariant {
+    "Countdown must update every second during running, warning, and critical states";
+    "Execute button must only be enabled after timelock expiration";
+    "Visual urgency must escalate through running -> warning -> critical";
+    "Challenge button must be disabled after expiration";
+  }
+
+}

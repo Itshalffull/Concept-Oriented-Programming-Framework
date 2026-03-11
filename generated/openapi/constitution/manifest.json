@@ -1,0 +1,1294 @@
+{
+  "uri": "urn:clef/Constitution",
+  "name": "Constitution",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "principles",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "text",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "category",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "priority",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "revision_config",
+          "type": {
+            "kind": "record",
+            "fields": [
+              {
+                "name": "max_revisions",
+                "type": {
+                  "kind": "primitive",
+                  "primitive": "Int"
+                },
+                "optional": false
+              },
+              {
+                "name": "critique_model",
+                "type": {
+                  "kind": "option",
+                  "inner": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  }
+                },
+                "optional": false
+              }
+            ]
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "constitutions",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "principles",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "text",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "category",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "priority",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "constitution",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Categories : ethical , stylistic , safety , business_logic , \n factual_grounding"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No principles provided"
+        }
+      ]
+    },
+    {
+      "name": "critique",
+      "params": [
+        {
+          "name": "constitution",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "response",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "prompt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "critique",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "violations",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "principle_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "explanation",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "severity",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Evaluates response against principles"
+        },
+        {
+          "tag": "compliant",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Response satisfies all principles"
+        }
+      ]
+    },
+    {
+      "name": "revise",
+      "params": [
+        {
+          "name": "constitution",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "response",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "critique",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "revised",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "changes",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "principle_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "original",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "revised",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Generates revised response addressing critique"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Revision failed"
+        }
+      ]
+    },
+    {
+      "name": "critiqueAndRevise",
+      "params": [
+        {
+          "name": "constitution",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "response",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "prompt",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "final",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "rounds",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "history",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "critique",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "revision",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Full Critique Revision loop up to max_revisions"
+        },
+        {
+          "tag": "max_revisions",
+          "fields": [
+            {
+              "name": "best",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "rounds",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Could not achieve full compliance"
+        }
+      ]
+    },
+    {
+      "name": "addPrinciple",
+      "params": [
+        {
+          "name": "constitution",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "text",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "principle_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Adds a principle"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Constitution not found"
+        }
+      ]
+    },
+    {
+      "name": "removePrinciple",
+      "params": [
+        {
+          "name": "constitution",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "principle_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "constitution",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Removes a principle"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Principle not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, critique behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "safety"
+              }
+            },
+            {
+              "name": "principles",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "text",
+                        "value": {
+                          "kind": "literal",
+                          "value": "Never generate harmful content"
+                        }
+                      },
+                      {
+                        "name": "category",
+                        "value": {
+                          "kind": "literal",
+                          "value": "safety"
+                        }
+                      },
+                      {
+                        "name": "priority",
+                        "value": {
+                          "kind": "literal",
+                          "value": 1
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "constitution",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "critique",
+          "inputs": [
+            {
+              "name": "constitution",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            },
+            {
+              "name": "response",
+              "value": {
+                "kind": "literal",
+                "value": "safe response"
+              }
+            },
+            {
+              "name": "prompt",
+              "value": {
+                "kind": "literal",
+                "value": "test"
+              }
+            }
+          ],
+          "expectedVariant": "compliant",
+          "expectedOutputs": [
+            {
+              "name": "message",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ConstitutionState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype ConstitutionEntry {\n  w: ID!\n  name: String!\n  principles: [JSON!]!\n  revision_config: JSON!\n}\n\nextend type Query {\n  constitution_entry(w: ID!): ConstitutionEntry\n  constitution_entries: [ConstitutionEntry!]!\n}\n\ntype ConstitutionConstitutions {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Constitution/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "principles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "category",
+                    "priority"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "principles"
+            ]
+          }
+        }
+      },
+      "critique": {
+        "$id": "urn:clef/Constitution/critique/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "critique"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "constitution": {
+                "type": "string"
+              },
+              "response": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "constitution",
+              "response",
+              "prompt"
+            ]
+          }
+        }
+      },
+      "revise": {
+        "$id": "urn:clef/Constitution/revise/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "revise"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "constitution": {
+                "type": "string"
+              },
+              "response": {
+                "type": "string"
+              },
+              "critique": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "constitution",
+              "response",
+              "critique"
+            ]
+          }
+        }
+      },
+      "critiqueAndRevise": {
+        "$id": "urn:clef/Constitution/critiqueAndRevise/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "critiqueAndRevise"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "constitution": {
+                "type": "string"
+              },
+              "response": {
+                "type": "string"
+              },
+              "prompt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "constitution",
+              "response",
+              "prompt"
+            ]
+          }
+        }
+      },
+      "addPrinciple": {
+        "$id": "urn:clef/Constitution/addPrinciple/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "addPrinciple"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "constitution": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "constitution",
+              "text",
+              "category",
+              "priority"
+            ]
+          }
+        }
+      },
+      "removePrinciple": {
+        "$id": "urn:clef/Constitution/removePrinciple/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Constitution"
+          },
+          "action": {
+            "const": "removePrinciple"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "constitution": {
+                "type": "string"
+              },
+              "principle_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "constitution",
+              "principle_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Constitution/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "constitution": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "constitution"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Constitution/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "critique": {
+        "ok": {
+          "$id": "urn:clef/Constitution/critique/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "critique"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "critique": {
+                  "type": "string"
+                },
+                "violations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "principle_id": {
+                        "type": "string"
+                      },
+                      "explanation": {
+                        "type": "string"
+                      },
+                      "severity": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "principle_id",
+                      "explanation",
+                      "severity"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "critique",
+                "violations"
+              ]
+            }
+          }
+        },
+        "compliant": {
+          "$id": "urn:clef/Constitution/critique/completion/compliant",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "critique"
+            },
+            "variant": {
+              "const": "compliant"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "revise": {
+        "ok": {
+          "$id": "urn:clef/Constitution/revise/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "revise"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "revised": {
+                  "type": "string"
+                },
+                "changes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "principle_id": {
+                        "type": "string"
+                      },
+                      "original": {
+                        "type": "string"
+                      },
+                      "revised": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "principle_id",
+                      "original",
+                      "revised"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "revised",
+                "changes"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/Constitution/revise/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "revise"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "critiqueAndRevise": {
+        "ok": {
+          "$id": "urn:clef/Constitution/critiqueAndRevise/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "critiqueAndRevise"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "final": {
+                  "type": "string"
+                },
+                "rounds": {
+                  "type": "integer"
+                },
+                "history": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "critique": {
+                        "type": "string"
+                      },
+                      "revision": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "critique",
+                      "revision"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "final",
+                "rounds",
+                "history"
+              ]
+            }
+          }
+        },
+        "max_revisions": {
+          "$id": "urn:clef/Constitution/critiqueAndRevise/completion/max_revisions",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "critiqueAndRevise"
+            },
+            "variant": {
+              "const": "max_revisions"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "best": {
+                  "type": "string"
+                },
+                "rounds": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "best",
+                "rounds"
+              ]
+            }
+          }
+        }
+      },
+      "addPrinciple": {
+        "ok": {
+          "$id": "urn:clef/Constitution/addPrinciple/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "addPrinciple"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "principle_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "principle_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Constitution/addPrinciple/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "addPrinciple"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removePrinciple": {
+        "ok": {
+          "$id": "urn:clef/Constitution/removePrinciple/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "removePrinciple"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "constitution": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "constitution"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Constitution/removePrinciple/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Constitution"
+            },
+            "action": {
+              "const": "removePrinciple"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Formalized list of ethical , stylistic , or business logic axioms used \n during Critique Revision loops to align model behavior Enables \n Constitutional AI ( CAI ) and RLAIF Model critiques its own output \n against principles , then revises Transparent , scalable rule sets \n replacing subjective human ratings"
+}

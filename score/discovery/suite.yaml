@@ -1,65 +1,22 @@
 suite:
-  name: discovery
+  name: score-discovery
   version: 0.1.0
   description: >
-    Search, embedding, and indexing across all project entities.
-    Provides vector similarity search, trigram text search,
-    and symbol-aware indexing for natural language code queries.
+    Re-exports the general-purpose code-discovery suite for use
+    within the Score system. All discovery concepts, providers,
+    and syncs now live in repertoire/concepts/code-discovery/.
 
-concepts:
-  SemanticEmbedding:
-    spec: ./semantic-embedding.concept
-    params:
-      B: { as: embedding-id, description: "Embedding identifier" }
-
-  # Embedding model providers
-  CodeBERTEmbeddingProvider:
-    spec: ./providers/embedding/codebert.concept
-    optional: true
-  OpenAIEmbeddingProvider:
-    spec: ./providers/embedding/openai.concept
-    optional: true
-  VoyageCodeEmbeddingProvider:
-    spec: ./providers/embedding/voyage.concept
-    optional: true
-
-  # Search index providers (register with SearchIndex)
-  TrigramIndexProvider:
-    spec: ./providers/search/trigram.concept
-    optional: true
-  SuffixArrayIndexProvider:
-    spec: ./providers/search/suffix-array.concept
-    optional: true
-  SymbolIndexProvider:
-    spec: ./providers/search/symbol-index.concept
-    optional: true
+concepts: {}
 
 syncs:
   required: []
-
-  recommended:
-    - path: ./syncs/embedding.sync
-      name: EmbeddingSync
-      description: >
-        Compute embeddings for extracted definition units
-        when content digests change.
-
+  recommended: []
   integration: []
 
 uses:
-  - suite: parse
+  - suite: code-discovery
     concepts:
-      - name: DefinitionUnit
-      - name: ContentDigest
-  - suite: symbol
-    concepts:
-      - name: Symbol
-  - suite: query-retrieval
-    concepts:
-      - name: SearchIndex
-      - name: Query
-  - suite: infrastructure
-    concepts:
-      - name: PluginRegistry
+      - name: SemanticEmbedding
 
-dependencies: []
+dependencies:
+  - suite: code-discovery

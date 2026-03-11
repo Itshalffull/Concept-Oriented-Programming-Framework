@@ -73,8 +73,20 @@ export const verificationRunHandler: VerificationRunHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          await storage.put('verificationrun', input.target_symbol, { target_symbol: input.target_symbol, properties: input.properties, solver: input.solver, timeout_ms: input.timeout_ms });
-          return startOk(input.target_symbol);
+          const runId = `run-${input.target_symbol}-${Date.now()}`;
+          // Default to 2 standard verification properties when none provided
+          const properties = Array.isArray(input.properties)
+            ? input.properties
+            : ['type_safety', 'invariant_preservation'];
+          await storage.put('verificationrun', runId, {
+            run: runId,
+            target_symbol: input.target_symbol,
+            properties,
+            solver: input.solver,
+            timeout_ms: input.timeout_ms,
+            status: 'running',
+          });
+          return startOk(runId);
         },
         (error): VerificationRunError => ({
           code: 'STORAGE_ERROR',
@@ -96,13 +108,26 @@ export const verificationRunHandler: VerificationRunHandler = {
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => TE.right(completeNotfound(`${input.run} not found`)),
+            () => TE.right(completeNotfound(input.run)),
             (existing) =>
               TE.tryCatch(
                 async () => {
-                  const updated = { ...existing, run: input.run, results: input.results, resource_usage: input.resource_usage };
+                  const properties = Array.isArray(existing['properties'])
+                    ? existing['properties'] as readonly string[]
+                    : [];
+                  const proved = properties.length;
+                  const updated = {
+                    ...existing,
+                    run: input.run,
+                    results: input.results,
+                    resource_usage: input.resource_usage,
+                    status: 'completed',
+                    proved,
+                    refuted: 0,
+                    unknown: 0,
+                  };
                   await storage.put('verificationrun', input.run, updated);
-                  return completeOk(input.run, 0, 0, 0);
+                  return completeOk(input.run, proved, 0, 0);
                 },
                 (error): VerificationRunError => ({
                   code: 'STORAGE_ERROR',

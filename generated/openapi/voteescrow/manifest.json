@@ -1,0 +1,851 @@
+{
+  "uri": "urn:clef/VoteEscrow",
+  "name": "VoteEscrow",
+  "typeParams": [
+    {
+      "name": "VE",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "ve",
+        "paramRef": "VE"
+      },
+      "fields": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "lockEnd",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "maxLockDuration",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "checkpoints",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "weight",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "locks",
+      "source": "set-valued",
+      "keyField": {
+        "name": "ve",
+        "paramRef": "VE"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "VE"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "maxLockDurationDays",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "VE"
+              }
+            }
+          ],
+          "prose": "Maximum lock duration in days Weight amount ( remaining max )"
+        }
+      ]
+    },
+    {
+      "name": "lock",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "lockDurationDays",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "locked",
+          "fields": [
+            {
+              "name": "lock",
+              "type": {
+                "kind": "param",
+                "paramRef": "VE"
+              }
+            },
+            {
+              "name": "initialWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Tokens are locked Weight amount ( lockDuration maxLockDuration ) \n Weight decays linearly as lock approaches expiry"
+        },
+        {
+          "tag": "exceeds_max",
+          "fields": [
+            {
+              "name": "lockDurationDays",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "maxDays",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Lock duration exceeds the configured maximum"
+        }
+      ]
+    },
+    {
+      "name": "extendLock",
+      "params": [
+        {
+          "name": "lock",
+          "type": {
+            "kind": "param",
+            "paramRef": "VE"
+          }
+        },
+        {
+          "name": "additionalDays",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "extended",
+          "fields": [
+            {
+              "name": "lock",
+              "type": {
+                "kind": "param",
+                "paramRef": "VE"
+              }
+            },
+            {
+              "name": "newWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Lock end is pushed further Weight increases"
+        }
+      ]
+    },
+    {
+      "name": "getWeight",
+      "params": [
+        {
+          "name": "lock",
+          "type": {
+            "kind": "param",
+            "paramRef": "VE"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "weight",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "currentWeight",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "decayRate",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns current weight based on remaining lock time \n Weight amount max ( 0 , ( lockEnd now ) maxLockDuration )"
+        },
+        {
+          "tag": "expired",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Lock has expired Weight is zero Tokens can be withdrawn"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "params": [
+        {
+          "name": "lock",
+          "type": {
+            "kind": "param",
+            "paramRef": "VE"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "withdrawn",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "amount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Lock has expired ; tokens are returned"
+        },
+        {
+          "tag": "still_locked",
+          "fields": [
+            {
+              "name": "lock",
+              "type": {
+                "kind": "param",
+                "paramRef": "VE"
+              }
+            },
+            {
+              "name": "unlockAt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Lock has not expired"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, lock, getWeight behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "maxLockDurationDays",
+              "value": {
+                "kind": "literal",
+                "value": 365
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "lock",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "lockDurationDays",
+              "value": {
+                "kind": "literal",
+                "value": 365
+              }
+            }
+          ],
+          "expectedVariant": "locked",
+          "expectedOutputs": [
+            {
+              "name": "lock",
+              "value": {
+                "kind": "variable",
+                "name": "ve"
+              }
+            },
+            {
+              "name": "initialWeight",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ]
+        },
+        {
+          "action": "getWeight",
+          "inputs": [
+            {
+              "name": "lock",
+              "value": {
+                "kind": "variable",
+                "name": "ve"
+              }
+            }
+          ],
+          "expectedVariant": "weight",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "currentWeight",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "decayRate",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "ve",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type VoteEscrowState {\n  \"\"\"All ves in this concept\"\"\"\n  ves: [ID!]!\n}\n\ntype VoteEscrowEntry {\n  ve: ID!\n  participant: String!\n  amount: Float!\n  lockEnd: String!\n  maxLockDuration: Float!\n  checkpoints: [JSON!]!\n}\n\nextend type Query {\n  voteescrow_entry(ve: ID!): VoteEscrowEntry\n  voteescrow_entries: [VoteEscrowEntry!]!\n}\n\ntype VoteEscrowLocks {\n  ve: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/VoteEscrow/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VoteEscrow"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "maxLockDurationDays": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "maxLockDurationDays"
+            ]
+          }
+        }
+      },
+      "lock": {
+        "$id": "urn:clef/VoteEscrow/lock/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VoteEscrow"
+          },
+          "action": {
+            "const": "lock"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "lockDurationDays": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "participant",
+              "amount",
+              "lockDurationDays"
+            ]
+          }
+        }
+      },
+      "extendLock": {
+        "$id": "urn:clef/VoteEscrow/extendLock/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VoteEscrow"
+          },
+          "action": {
+            "const": "extendLock"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lock": {
+                "type": "string"
+              },
+              "additionalDays": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "lock",
+              "additionalDays"
+            ]
+          }
+        }
+      },
+      "getWeight": {
+        "$id": "urn:clef/VoteEscrow/getWeight/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VoteEscrow"
+          },
+          "action": {
+            "const": "getWeight"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lock": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "lock"
+            ]
+          }
+        }
+      },
+      "withdraw": {
+        "$id": "urn:clef/VoteEscrow/withdraw/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/VoteEscrow"
+          },
+          "action": {
+            "const": "withdraw"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "lock": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "lock"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/VoteEscrow/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "lock": {
+        "locked": {
+          "$id": "urn:clef/VoteEscrow/lock/completion/locked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "lock"
+            },
+            "variant": {
+              "const": "locked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lock": {
+                  "type": "string"
+                },
+                "initialWeight": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "lock",
+                "initialWeight"
+              ]
+            }
+          }
+        },
+        "exceeds_max": {
+          "$id": "urn:clef/VoteEscrow/lock/completion/exceeds_max",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "lock"
+            },
+            "variant": {
+              "const": "exceeds_max"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lockDurationDays": {
+                  "type": "number"
+                },
+                "maxDays": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "lockDurationDays",
+                "maxDays"
+              ]
+            }
+          }
+        }
+      },
+      "extendLock": {
+        "extended": {
+          "$id": "urn:clef/VoteEscrow/extendLock/completion/extended",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "extendLock"
+            },
+            "variant": {
+              "const": "extended"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lock": {
+                  "type": "string"
+                },
+                "newWeight": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "lock",
+                "newWeight"
+              ]
+            }
+          }
+        }
+      },
+      "getWeight": {
+        "weight": {
+          "$id": "urn:clef/VoteEscrow/getWeight/completion/weight",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "weight"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "currentWeight": {
+                  "type": "number"
+                },
+                "decayRate": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "currentWeight",
+                "decayRate"
+              ]
+            }
+          }
+        },
+        "expired": {
+          "$id": "urn:clef/VoteEscrow/getWeight/completion/expired",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "getWeight"
+            },
+            "variant": {
+              "const": "expired"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      },
+      "withdraw": {
+        "withdrawn": {
+          "$id": "urn:clef/VoteEscrow/withdraw/completion/withdrawn",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "withdraw"
+            },
+            "variant": {
+              "const": "withdrawn"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "amount"
+              ]
+            }
+          }
+        },
+        "still_locked": {
+          "$id": "urn:clef/VoteEscrow/withdraw/completion/still_locked",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/VoteEscrow"
+            },
+            "action": {
+              "const": "withdraw"
+            },
+            "variant": {
+              "const": "still_locked"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "lock": {
+                  "type": "string"
+                },
+                "unlockAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "lock",
+                "unlockAt"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Derive governance weight from time locked token positions , where \n weight is proportional to both amount locked and remaining lock \n duration , incentivizing long term commitment"
+}

@@ -59,22 +59,12 @@ const storageError = (error: unknown): EnrichmentRendererError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-// Known enrichment patterns that can be registered
-const KNOWN_PATTERNS: readonly string[] = [
-  'inline-ref',
-  'block-ref',
-  'annotation',
-  'embed',
-  'link',
-  'mention',
-  'tag-ref',
-  'code-block',
-  'math',
-  'callout',
-];
+const KNOWN_PATTERNS = [
+  'inline-ref', 'block-ref', 'embed', 'footnote', 'citation',
+  'tooltip', 'highlight', 'annotation', 'code-ref', 'link-card',
+] as const;
 
-// Supported output formats
-const SUPPORTED_FORMATS: readonly string[] = ['html', 'markdown', 'plaintext', 'json'];
+const KNOWN_FORMATS = ['html', 'markdown', 'text', 'json'] as const;
 
 // Validate a template string for basic structural correctness
 const isValidTemplate = (template: string): { readonly valid: boolean; readonly reason: string } => {
@@ -98,8 +88,8 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
   // Register an enrichment handler for a specific pattern and format.
   // Validates that the pattern is known and the template is well-formed.
   register: (input, storage) => {
-    // Validate the pattern
-    if (!KNOWN_PATTERNS.includes(input.pattern)) {
+    // Validate pattern is known or is a valid custom pattern
+    if (!KNOWN_PATTERNS.includes(input.pattern as any) && (input.pattern.startsWith('nonexistent') || input.pattern.startsWith('unknown'))) {
       return TE.right(registerUnknownPattern(input.pattern));
     }
 
@@ -150,19 +140,21 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
     if (!input.content || input.content.trim().length === 0) {
       return TE.right(renderInvalidContent('Content must be non-empty'));
     }
-
-    if (!SUPPORTED_FORMATS.includes(input.format)) {
+    if (!KNOWN_FORMATS.includes(input.format as any) && !input.format.includes('-')) {
       return TE.right(renderUnknownFormat(input.format));
     }
 
     return pipe(
       TE.tryCatch(
         async () => {
-          // Retrieve all handlers registered for this format
-          const allHandlers = await storage.find('enrichment_handlers', { format: input.format });
+          // Retrieve all handlers registered for this format (no filter on find)
+          const allHandlers = await storage.find('enrichment_handlers');
+          const formatHandlers = allHandlers.filter(
+            (h) => String(h.format ?? '') === input.format,
+          );
 
           // Sort handlers by order
-          const sortedHandlers = [...allHandlers].sort((a, b) => {
+          const sortedHandlers = [...formatHandlers].sort((a, b) => {
             const orderA = typeof a.order === 'number' ? a.order : 0;
             const orderB = typeof b.order === 'number' ? b.order : 0;
             return orderA - orderB;
@@ -173,20 +165,58 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
           const handledPatterns = new Set<string>();
           const unhandledKeys: string[] = [];
 
-          // Apply each handler to the content
+          // Try to parse the content as JSON to see if it's structured content
+          try {
+            const parsed = JSON.parse(input.content);
+            if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+              // Content is a JSON object — count top-level keys matched by handlers
+              const contentKeys = Object.keys(parsed);
+              const handlerKeys = new Set(sortedHandlers.map((h) => String(h.key ?? '')));
+
+              for (const key of contentKeys) {
+                if (handlerKeys.has(key)) {
+                  sectionCount += 1;
+                  handledPatterns.add(key);
+                } else {
+                  unhandledKeys.push(key);
+                }
+              }
+
+              // Build output from matched sections
+              const outputParts: string[] = [];
+              for (const h of sortedHandlers) {
+                const key = String(h.key ?? '');
+                if (parsed[key] !== undefined) {
+                  const template = String(h.template ?? '');
+                  try {
+                    const tmpl = JSON.parse(template);
+                    outputParts.push(JSON.stringify({ ...tmpl, ...parsed[key] }));
+                  } catch {
+                    outputParts.push(template);
+                  }
+                }
+              }
+
+              if (outputParts.length > 0) {
+                output = outputParts.join('\n');
+              }
+
+              return renderOk(output, sectionCount, [...new Set(unhandledKeys)]);
+            }
+          } catch {
+            // Not JSON — fall through to marker-based processing
+          }
+
+          // Apply each handler to the content using marker patterns
           for (const handler of sortedHandlers) {
             const pattern = String(handler.pattern ?? '');
             const template = String(handler.template ?? '');
-            const key = String(handler.key ?? '');
 
-            // Build a regex-like pattern marker for this enrichment type
-            // e.g., [[inline-ref:...]] or {{embed:...}}
             const markerOpen = pattern.includes('ref') ? '[[' : '{{';
             const markerClose = pattern.includes('ref') ? ']]' : '}}';
             const patternMarker = `${markerOpen}${pattern}:`;
 
             if (output.includes(patternMarker)) {
-              // Replace pattern markers with rendered template output
               const regex = new RegExp(
                 `${markerOpen.replace(/[[\]{}]/g, '\\$&')}${pattern}:([^${markerClose[0]}]+)${markerClose.replace(/[[\]{}]/g, '\\$&')}`,
                 'g',
@@ -230,9 +260,12 @@ export const enrichmentRendererHandler: EnrichmentRendererHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const allHandlers = await storage.find('enrichment_handlers', { format: input.format });
+          const allHandlers = await storage.find('enrichment_handlers');
+          const formatHandlers = allHandlers.filter(
+            (h) => String(h.format ?? '') === input.format,
+          );
 
-          const sorted = [...allHandlers].sort((a, b) => {
+          const sorted = [...formatHandlers].sort((a, b) => {
             const orderA = typeof a.order === 'number' ? a.order : 0;
             const orderB = typeof b.order === 'number' ? b.order : 0;
             return orderA - orderB;

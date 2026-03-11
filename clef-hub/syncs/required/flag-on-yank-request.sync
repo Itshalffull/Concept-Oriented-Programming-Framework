@@ -1,0 +1,10 @@
+// Record a Flag when a user requests a package yank
+
+sync FlagOnYankRequest [eager]
+when {
+  DownloadProxy/resolve: [ artifact_id: ?aid; platform: ?p; version_range: ?v ]
+    => [ ok(download_url: ?url; version: ?ver; content_hash: ?hash; size_bytes: ?size) ]
+}
+then {
+  Flag/flag: [ entity: ?aid; flagType: "yank-request"; reporter: ?reporter; reason: ?reason ]
+}

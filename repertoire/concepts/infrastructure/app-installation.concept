@@ -1,0 +1,40 @@
+@version(1)
+concept AppInstallation [I] {
+
+  purpose {
+    Manage the set of suites, packages, or installation units that are
+    active in an application runtime so shells and tooling can inspect
+    what capabilities are present without relying on bootstrap code.
+  }
+
+  state {
+    installations: set I
+    name: I -> String
+    version: I -> String
+    status: I -> String
+    registry: I -> String
+    description: I -> option String
+    concepts: I -> Int
+    syncs: I -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(installation: I, name: String, version: String, status: String,
+                    registry: String, description: option String, concepts: Int, syncs: Int) {
+      -> ok(installation: I) { Store or update an application installation record. }
+    }
+
+    action list(status: option String) {
+      -> ok(installations: list {
+        installation: I, name: String, version: String, status: String,
+        registry: String, description: option String, concepts: Int, syncs: Int
+      }) {
+        Return all installation records, optionally filtered by status.
+      }
+    }
+  }
+}

@@ -1,0 +1,620 @@
+{
+  "uri": "urn:clef/Checkpoint",
+  "name": "Checkpoint",
+  "typeParams": [
+    {
+      "name": "Z",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        },
+        {
+          "name": "run_state",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "variables_snapshot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "token_snapshot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "event_cursor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "label",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "checkpoints",
+      "source": "set-valued",
+      "keyField": {
+        "name": "z",
+        "paramRef": "Z"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "capture",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "run_state",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "variables_snapshot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "token_snapshot",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "event_cursor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "checkpoint",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            },
+            {
+              "name": "timestamp",
+              "type": {
+                "kind": "primitive",
+                "primitive": "DateTime"
+              }
+            }
+          ],
+          "prose": "Creates a snapshot Delegates actual storage to provider"
+        }
+      ]
+    },
+    {
+      "name": "restore",
+      "params": [
+        {
+          "name": "checkpoint",
+          "type": {
+            "kind": "param",
+            "paramRef": "Z"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "checkpoint",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            },
+            {
+              "name": "run_state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "variables_snapshot",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "token_snapshot",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            },
+            {
+              "name": "event_cursor",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Retrieves a checkpoint s full state for replay recovery"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "checkpoint",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            }
+          ],
+          "prose": "No checkpoint with this identifier exists"
+        }
+      ]
+    },
+    {
+      "name": "find_latest",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "checkpoint",
+              "type": {
+                "kind": "param",
+                "paramRef": "Z"
+              }
+            }
+          ],
+          "prose": "Returns the most recent checkpoint for a run"
+        },
+        {
+          "tag": "none",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No checkpoints exist for this run"
+        }
+      ]
+    },
+    {
+      "name": "prune",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "keep_count",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "pruned",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Removes old checkpoints , keeping only the most recent keep_count"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type CheckpointState {\n  \"\"\"All zs in this concept\"\"\"\n  zs: [ID!]!\n}\n\ntype CheckpointEntry {\n  z: ID!\n  run_ref: String!\n  timestamp: String!\n  run_state: String!\n  variables_snapshot: String!\n  token_snapshot: String!\n  event_cursor: Int!\n  label: String!\n}\n\nextend type Query {\n  checkpoint_entry(z: ID!): CheckpointEntry\n  checkpoint_entries: [CheckpointEntry!]!\n}\n\ntype CheckpointCheckpoints {\n  z: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "capture": {
+        "$id": "urn:clef/Checkpoint/capture/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Checkpoint"
+          },
+          "action": {
+            "const": "capture"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "run_state": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "variables_snapshot": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "token_snapshot": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "event_cursor": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "run_ref",
+              "run_state",
+              "variables_snapshot",
+              "token_snapshot",
+              "event_cursor"
+            ]
+          }
+        }
+      },
+      "restore": {
+        "$id": "urn:clef/Checkpoint/restore/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Checkpoint"
+          },
+          "action": {
+            "const": "restore"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "checkpoint": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "checkpoint"
+            ]
+          }
+        }
+      },
+      "find_latest": {
+        "$id": "urn:clef/Checkpoint/find_latest/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Checkpoint"
+          },
+          "action": {
+            "const": "find_latest"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      },
+      "prune": {
+        "$id": "urn:clef/Checkpoint/prune/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Checkpoint"
+          },
+          "action": {
+            "const": "prune"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "keep_count": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "run_ref",
+              "keep_count"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "capture": {
+        "ok": {
+          "$id": "urn:clef/Checkpoint/capture/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "capture"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "checkpoint": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "checkpoint",
+                "timestamp"
+              ]
+            }
+          }
+        }
+      },
+      "restore": {
+        "ok": {
+          "$id": "urn:clef/Checkpoint/restore/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "restore"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "checkpoint": {
+                  "type": "string"
+                },
+                "run_state": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "variables_snapshot": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "token_snapshot": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                },
+                "event_cursor": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "checkpoint",
+                "run_state",
+                "variables_snapshot",
+                "token_snapshot",
+                "event_cursor"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Checkpoint/restore/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "restore"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "checkpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "checkpoint"
+              ]
+            }
+          }
+        }
+      },
+      "find_latest": {
+        "ok": {
+          "$id": "urn:clef/Checkpoint/find_latest/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "find_latest"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "checkpoint": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "checkpoint"
+              ]
+            }
+          }
+        },
+        "none": {
+          "$id": "urn:clef/Checkpoint/find_latest/completion/none",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "find_latest"
+            },
+            "variant": {
+              "const": "none"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref"
+              ]
+            }
+          }
+        }
+      },
+      "prune": {
+        "ok": {
+          "$id": "urn:clef/Checkpoint/prune/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Checkpoint"
+            },
+            "action": {
+              "const": "prune"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "pruned": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "pruned"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Capture and restore complete process state snapshots for recovery , \n time travel debugging , and audit Storage is delegated to providers"
+}

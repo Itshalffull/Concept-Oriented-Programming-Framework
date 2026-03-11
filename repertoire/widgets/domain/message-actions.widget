@@ -1,0 +1,100 @@
+@version(1)
+widget message-actions {
+
+  purpose {
+    Hover-revealed toolbar for chat message actions including thumbs
+    up/down feedback, copy to clipboard, regenerate response, edit
+    message, share, and more actions overflow menu. Appears on hover
+    or focus of the parent message.
+  }
+
+  requires @1 {
+    fields {
+      messageId: String;
+    }
+    actions {
+      copy: { };
+      regenerate: { };
+      edit: { };
+      feedback: { };
+    }
+  }
+
+  anatomy {
+    root:         container  { Floating toolbar wrapper }
+    thumbsUp:     action     { Positive feedback button }
+    thumbsDown:   action     { Negative feedback button }
+    copyButton:   action     { Copy message content }
+    regenerate:   action     { Regenerate this response }
+    editButton:   action     { Edit this message }
+    shareButton:  action     { Share this message }
+    moreButton:   action     { Overflow menu for additional actions }
+  }
+
+  states {
+    hidden [initial] {
+      on SHOW -> visible;
+    }
+    visible {
+      on HIDE -> hidden;
+      on COPY -> copied;
+      entry [positionToolbar];
+    }
+    copied {
+      on COPY_TIMEOUT -> visible;
+      entry [showCopiedFeedback];
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    keyboard {
+      c -> COPY;
+      r -> REGENERATE;
+      e -> EDIT;
+    }
+    focus { trap: false; roving: true; }
+    aria {
+      root -> { role: "toolbar"; aria-label: "Message actions"; };
+      thumbsUp -> { role: "button"; aria-label: "Helpful"; };
+      thumbsDown -> { role: "button"; aria-label: "Not helpful"; };
+      copyButton -> { role: "button"; aria-label: "Copy message"; };
+      regenerate -> { role: "button"; aria-label: "Regenerate response"; };
+      editButton -> { role: "button"; aria-label: "Edit message"; };
+    }
+  }
+
+  props {
+    showFeedback: Bool = true
+    showRegenerate: Bool = true
+    showEdit: Bool = true
+    showShare: Bool = true
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 16;
+    when {
+      suite: "llm-conversation";
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; role: "toolbar"; data-state: state; }
+    thumbsUp -> { data-part: "thumbs-up"; data-visible: if ?showFeedback then "true" else "false"; onClick: send(FEEDBACK, { type: "positive" }); }
+    thumbsDown -> { data-part: "thumbs-down"; data-visible: if ?showFeedback then "true" else "false"; onClick: send(FEEDBACK, { type: "negative" }); }
+    copyButton -> { data-part: "copy"; onClick: send(COPY); }
+    regenerate -> { data-part: "regenerate"; data-visible: if ?showRegenerate then "true" else "false"; onClick: send(REGENERATE); }
+    editButton -> { data-part: "edit"; data-visible: if ?showEdit then "true" else "false"; onClick: send(EDIT); }
+    shareButton -> { data-part: "share"; data-visible: if ?showShare then "true" else "false"; }
+    moreButton -> { data-part: "more"; }
+  }
+
+  invariant {
+    "Toolbar must appear on hover/focus and disappear on blur/leave";
+    "Copy must show confirmation feedback for 2 seconds";
+    "Regenerate must only appear for assistant messages";
+    "Edit must only appear for user messages";
+  }
+
+}

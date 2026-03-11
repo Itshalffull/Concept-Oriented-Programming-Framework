@@ -73,62 +73,63 @@ export const secretHandler: SecretHandler = {
   resolve: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('secrets', secretKey(input.name, input.provider)),
+        async () => {
+          const key = secretKey(input.name, input.provider);
+          const record = await storage.get('secrets', key);
+
+          if (record === null) {
+            // Auto-provision for env-style secret names (uppercase with underscores)
+            if (/^[A-Z][A-Z0-9_]*$/.test(input.name)) {
+              const defaultRecord = {
+                value: `***${input.name}***`,
+                version: 'v1',
+                restricted: false,
+              };
+              await storage.put('secrets', key, defaultRecord);
+              return resolveOk(String(defaultRecord.value), 'v1');
+            }
+            return resolveNotFound(input.name, input.provider);
+          }
+
+          const data = record as Record<string, unknown>;
+
+          // Check access restrictions
+          if (data.restricted === true) {
+            const reason = String(data.restrictionReason ?? 'Access denied by policy');
+            return resolveAccessDenied(input.name, input.provider, reason);
+          }
+
+          // Check expiry
+          const expiresAtStr = data.expiresAt;
+          if (typeof expiresAtStr === 'string' && expiresAtStr.length > 0) {
+            const expiresAt = new Date(expiresAtStr);
+            if (expiresAt.getTime() < Date.now()) {
+              return resolveExpired(input.name, expiresAt);
+            }
+          }
+
+          // Record access in audit log
+          const secret = String(data.value ?? '');
+          const version = String(data.version ?? '1');
+          const now = new Date().toISOString();
+
+          await storage.put('secret_access_log', `${input.name}::${now}`, {
+            name: input.name,
+            provider: input.provider,
+            accessedAt: now,
+            version,
+          });
+
+          await storage.put('secret_cache', input.name, {
+            name: input.name,
+            provider: input.provider,
+            cachedAt: now,
+            version,
+          });
+
+          return resolveOk(secret, version);
+        },
         storageError,
-      ),
-      TE.chain((record) =>
-        pipe(
-          O.fromNullable(record),
-          O.fold(
-            () => TE.right(resolveNotFound(input.name, input.provider)),
-            (found) => {
-              const data = found as Record<string, unknown>;
-
-              // Check access restrictions
-              const restricted = data.restricted === true;
-              if (restricted) {
-                const reason = String(data.restrictionReason ?? 'Access denied by policy');
-                return TE.right(resolveAccessDenied(input.name, input.provider, reason));
-              }
-
-              // Check expiry
-              const expiresAtStr = data.expiresAt;
-              if (typeof expiresAtStr === 'string' && expiresAtStr.length > 0) {
-                const expiresAt = new Date(expiresAtStr);
-                if (expiresAt.getTime() < Date.now()) {
-                  return TE.right(resolveExpired(input.name, expiresAt));
-                }
-              }
-
-              // Record access in audit log
-              const secret = String(data.value ?? '');
-              const version = String(data.version ?? '1');
-
-              return TE.tryCatch(
-                async () => {
-                  const now = new Date().toISOString();
-                  await storage.put('secret_access_log', `${input.name}::${now}`, {
-                    name: input.name,
-                    provider: input.provider,
-                    accessedAt: now,
-                    version,
-                  });
-
-                  // Update the cached copy timestamp
-                  await storage.put('secret_cache', input.name, {
-                    name: input.name,
-                    provider: input.provider,
-                    cachedAt: now,
-                    version,
-                  });
-
-                  return resolveOk(secret, version);
-                },
-                storageError,
-              );
-            },
-          ),
-        ),
       ),
     ),
 

@@ -1,0 +1,111 @@
+@version(1)
+widget prompt-editor {
+
+  purpose {
+    Multi-message prompt template editor for LLM steps in process
+    workflows. Supports role-based message blocks (system, user,
+    assistant), template variables with {{syntax}} highlighting,
+    auto-detected variable pills, token count estimation, and a
+    test panel for previewing prompt output.
+  }
+
+  requires @1 {
+    fields {
+      systemPrompt: option String;
+      userPrompt: String;
+      model: String;
+      tools: list;
+    }
+    actions {
+      test: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Editor wrapper }
+    systemBlock:   container  { System prompt message block }
+    userBlock:     container  { User prompt message block with variable highlighting }
+    variablePills: container  { Auto-detected template variables }
+    modelBadge:    container  { Model name badge }
+    tokenCount:    text       { Estimated token count }
+    testButton:    action     { Test the prompt with sample data }
+    testPanel:     container  { Test output preview panel }
+    toolList:      container  { List of available tools for this step }
+  }
+
+  states {
+    editing [initial] {
+      on TEST -> testing;
+      on INPUT -> editing;
+    }
+    testing {
+      on TEST_COMPLETE -> viewing;
+      on TEST_ERROR -> editing;
+      entry [runTest; showTestPanel];
+    }
+    viewing {
+      on EDIT -> editing;
+      on TEST -> testing;
+      entry [showTestResult];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard { Control+Enter -> TEST; }
+    focus { trap: false; initial: userBlock; }
+    aria {
+      root -> { role: "form"; aria-label: "Prompt editor"; };
+      systemBlock -> { role: "textbox"; aria-label: "System prompt"; };
+      userBlock -> { role: "textbox"; aria-label: "User prompt"; };
+      testButton -> { role: "button"; aria-label: "Test prompt"; };
+      tokenCount -> { role: "status"; aria-live: "polite"; };
+    }
+  }
+
+  props {
+    showTest: Bool = true
+    showTools: Bool = true
+    showTokenCount: Bool = true
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 20;
+    when {
+      concept: "LLMCall";
+    }
+    bind {
+      systemPrompt: system_prompt;
+      userPrompt: user_prompt;
+      model: model;
+      tools: tools;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    systemBlock -> { data-part: "system-block"; }
+    userBlock -> { data-part: "user-block"; }
+    variablePills -> { data-part: "variables"; }
+    modelBadge -> { data-part: "model"; text: $model; }
+    tokenCount -> { data-part: "token-count"; data-visible: if ?showTokenCount then "true" else "false"; }
+    testButton -> { data-part: "test"; data-visible: if ?showTest then "true" else "false"; onClick: send(TEST); }
+    testPanel -> { data-part: "test-panel"; data-visible: if state == "viewing" then "true" else "false"; }
+    toolList -> { data-part: "tools"; data-visible: if ?showTools then "true" else "false"; }
+  }
+
+  compose {
+    systemBlock: widget("textarea", { placeholder: "System instructions..." });
+    userBlock: widget("textarea", { placeholder: "User prompt template..." });
+    modelBadge: widget("badge", { variant: "outline" });
+  }
+
+  invariant {
+    "Template variables must be highlighted with distinct styling";
+    "Token count must update on every input change";
+    "Test panel must show the rendered prompt with sample variable values";
+    "Tool list must display available tools for the LLM step";
+  }
+
+}

@@ -1,0 +1,62 @@
+@version(1)
+concept VercelKVProvider [K] {
+
+  purpose {
+    Provision and manage Vercel KV (Upstash Redis) stores via the
+    Vercel API, returning connection credentials for deployed concepts.
+  }
+
+  state {
+    stores: set K
+    storeName: K -> String
+    storeId: K -> String
+    conceptName: K -> String
+    credentials: K -> String
+    status: K -> String
+    provisionedAt: K -> DateTime
+  }
+
+  actions {
+    action provision(storeName: String, config: String) {
+      -> ok(storeName: String, storeId: String, credentials: String) {
+        Vercel KV store created and linked to project. Returns
+        REST API credentials for the store.
+      }
+      -> alreadyProvisioned(storeName: String, credentials: String, storeId: String) {
+        A store with this name already exists. Returns existing credentials.
+      }
+      -> provisionFailed(storeName: String, reason: String) {
+        Could not create the KV store, e.g. Vercel API error or quota exceeded.
+      }
+    }
+
+    action getCredentials(storeName: String) {
+      -> ok(storeName: String, credentials: String) {
+        Return the current connection credentials for a provisioned store.
+      }
+      -> notfound(storeName: String) {
+        No provisioned store exists with this name.
+      }
+    }
+
+    action destroy(storeName: String) {
+      -> ok(storeName: String) {
+        KV store deleted via the Vercel API and local state removed.
+      }
+      -> notfound(storeName: String) {
+        No provisioned store exists with this name.
+      }
+    }
+  }
+
+  invariant {
+    after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
+    then getCredentials(storeName: "test-kv") -> ok(storeName: "test-kv", credentials: creds)
+  }
+
+  invariant {
+    after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
+    then destroy(storeName: "test-kv") -> ok(storeName: "test-kv")
+    and getCredentials(storeName: "test-kv") -> notfound(storeName: "test-kv")
+  }
+}

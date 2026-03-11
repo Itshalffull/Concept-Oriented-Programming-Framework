@@ -1,0 +1,26 @@
+type VectorIndexState {
+  """All xs in this concept"""
+  xs: [ID!]!
+}
+
+type VectorIndexEntry {
+  x: ID!
+  dimensions: Int!
+  distance_metric: String!
+  index_type: String!
+  backend: String!
+  embedding_model: String!
+  collections: [String!]!
+  document_count: Int!
+  index_config: String!
+}
+
+extend type Query {
+  vectorindex_entry(x: ID!): VectorIndexEntry
+  vectorindex_entries: [VectorIndexEntry!]!
+}
+
+type VectorIndexIndexes {
+  x: ID!
+  value: ID!
+}

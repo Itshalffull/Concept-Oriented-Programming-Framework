@@ -1,0 +1,47 @@
+@version(1)
+concept Attribution [A] {
+
+  purpose {
+    Tracks authorship and contribution attribution for packages.
+    Records who contributed what to each published module.
+  }
+
+  state {
+    attributions: set A
+    module_id: A -> String
+    contributor: A -> String
+    role: A -> String
+    addedAt: A -> String
+  }
+
+  actions {
+    action attribute(module_id: String, contributor: String, role: String) {
+      -> ok(attribution: A) {
+        Records a contribution attribution.
+      }
+      -> exists() {
+        This contributor is already attributed for this module.
+      }
+    }
+
+    action remove(attribution: A) {
+      -> ok() {
+        Removes the attribution.
+      }
+      -> notfound() {
+        The attribution does not exist.
+      }
+    }
+
+    action list(module_id: String) {
+      -> ok(attributions: list { contributor: String, role: String, addedAt: String }) {
+        Lists all attributions for the module.
+      }
+    }
+  }
+
+  invariant {
+    after attribute(module_id: "auth-suite", contributor: "alice", role: "author") -> ok(attribution: a)
+    then list(module_id: "auth-suite") -> ok(attributions: as)
+  }
+}

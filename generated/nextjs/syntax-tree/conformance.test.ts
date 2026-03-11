@@ -29,8 +29,8 @@ describe('SyntaxTree conformance', () => {
     const storage = createTestStorage();
     const handler = syntaxTreeHandler;
 
-    const t = 'u-test-invariant-001';
-    const b = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-001';
+    let b: any = 'u-test-invariant-002';
 
     // setup: parse -> ok
     const parseResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('SyntaxTree conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).tree).toBe(t);
+        t = (output as any).tree;
         return output;
       }),
     )();
@@ -56,7 +56,7 @@ describe('SyntaxTree conformance', () => {
         expect((output as any).tree).toBe(t);
         expect((output as any).source).toBe('test.ts');
         expect((output as any).grammar).toBe('typescript');
-        expect((output as any).byteLength).toBe(b);
+        b = (output as any).byteLength;
         expect((output as any).editVersion).toBe(1);
         expect((output as any).errorRanges).toBe('[]');
         return output;

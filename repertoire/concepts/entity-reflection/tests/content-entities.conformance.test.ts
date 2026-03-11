@@ -39,9 +39,8 @@ describe('Wave 3: Content Entity Syncs', () => {
     for (const name of contentSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('content-entities', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -49,61 +48,61 @@ describe('Wave 3: Content Entity Syncs', () => {
   describe('content entity structure', () => {
     it('WorkflowDefinitionAsEntity triggers on Workflow/defineState', () => {
       const source = readSync('content-entities', 'workflow-definition-as-entity');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('Workflow');
-      expect(mainSync.whenPatterns[0].action).toBe('defineState');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/Workflow');
+      expect(mainSync.when[0].action).toBe('defineState');
     });
 
     it('WorkflowStateAsContentAttribute tracks transitions via Property/set', () => {
       const source = readSync('content-entities', 'workflow-state-as-content-attribute');
-      const result = parseSyncFile(source);
-      const propertySync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Property' && a.action === 'set',
+      const syncs = parseSyncFile(source);
+      const propertySync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Property' && a.action === 'set',
       ));
       expect(propertySync).toBeDefined();
     });
 
     it('AutomationRuleAsEntity creates triggered_by_concept Relation', () => {
       const source = readSync('content-entities', 'automation-rule-as-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('ViewAsEntity creates queries Relation to data source', () => {
       const source = readSync('content-entities', 'view-as-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('GroupMembershipAsRelation triggers on Group/addMember', () => {
       const source = readSync('content-entities', 'group-membership-as-relation');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('Group');
-      expect(mainSync.whenPatterns[0].action).toBe('addMember');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/Group');
+      expect(mainSync.when[0].action).toBe('addMember');
     });
 
     it('FlagAsRelation triggers on Flag/flag', () => {
       const source = readSync('content-entities', 'flag-as-relation');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('Flag');
-      expect(mainSync.whenPatterns[0].action).toBe('flag');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/Flag');
+      expect(mainSync.when[0].action).toBe('flag');
     });
 
     it('AgentMemoryAsContentEntity triggers on AgentMemory/remember', () => {
       const source = readSync('content-entities', 'agent-memory-as-content-entity');
-      const result = parseSyncFile(source);
-      const mainSync = result.syncs[0];
-      expect(mainSync.whenPatterns[0].concept).toBe('AgentMemory');
-      expect(mainSync.whenPatterns[0].action).toBe('remember');
+      const syncs = parseSyncFile(source);
+      const mainSync = syncs[0];
+      expect(mainSync.when[0].concept).toBe('urn:clef/AgentMemory');
+      expect(mainSync.when[0].action).toBe('remember');
     });
   });
 
@@ -123,9 +122,9 @@ describe('Wave 3: Content Entity Syncs', () => {
     for (const name of taggedSyncs) {
       it(`${name} applies Tag/addTag`, () => {
         const source = readSync('content-entities', name);
-        const result = parseSyncFile(source);
-        const tagSync = result.syncs.find(s => s.thenActions.some(
-          a => a.concept === 'Tag' && a.action === 'addTag',
+        const syncs = parseSyncFile(source);
+        const tagSync = syncs.find(s => s.then.some(
+          a => a.concept === 'urn:clef/Tag' && a.action === 'addTag',
         ));
         expect(tagSync, `${name} should have a Tag/addTag sync`).toBeDefined();
       });

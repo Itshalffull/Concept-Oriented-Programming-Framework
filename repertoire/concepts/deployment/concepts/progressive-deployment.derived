@@ -1,0 +1,46 @@
+derived ProgressiveDeployment [T] {
+
+  purpose {
+    Orchestrate progressive rollouts with health-gated advancement,
+    telemetry-driven analysis, and automated rollback on failure.
+  }
+
+  composes {
+    DeployPlan [T]
+    Rollout [T]
+    Health [T]
+    Telemetry [T]
+  }
+
+  syncs {
+    required: [plan-rollout-begin, rollout-health-gate, health-telemetry-analyze, rollout-rollback]
+  }
+
+  surface {
+    action deploy(manifest: String, environment: String) {
+      matches: DeployPlan/plan
+    }
+
+    action advance(rollout: T) {
+      matches: Rollout/advance
+    }
+
+    action checkHealth(suite: String, environment: String) {
+      matches: Health/checkKit
+    }
+
+    action abort(rollout: T) {
+      matches: Rollout/abort
+    }
+
+    query rolloutStatus(rollout: T) -> Rollout/status(rollout: rollout)
+    query analysis(concept: String, window: Int, criteria: String) -> Telemetry/analyze(concept: concept, window: window, criteria: criteria)
+  }
+
+  principle {
+    after deploy(manifest: m, environment: e)
+    then advance proceeds only when checkHealth succeeds
+    and  checkHealth(suite: k, environment: e) returns degraded
+    then abort triggers automatic rollback
+  }
+}

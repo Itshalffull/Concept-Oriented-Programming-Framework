@@ -104,7 +104,7 @@ export function createInMemoryStorage(): ConceptStorage {
 
     async find(relation, criteria?) {
       const rel = getRelation(relation);
-      const entries = Array.from(rel.values()).map(e => e.fields);
+      const entries = Array.from(rel.entries()).map(([key, e]) => ({ ...e.fields, _key: key }));
 
       if (!criteria || Object.keys(criteria).length === 0) {
         return entries.map(e => ({ ...e }));

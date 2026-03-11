@@ -1,0 +1,24 @@
+type EloRatingState {
+  """All els in this concept"""
+  els: [ID!]!
+}
+
+type EloRatingEntry {
+  el: ID!
+  participant: String!
+  rating: Float!
+  gamesPlayed: Int!
+  kFactor: Float!
+  initialRating: Float!
+  kFactorDecay: String!
+}
+
+extend type Query {
+  elorating_entry(el: ID!): EloRatingEntry
+  elorating_entries: [EloRatingEntry!]!
+}
+
+type EloRatingRatings {
+  el: ID!
+  value: ID!
+}

@@ -68,7 +68,7 @@ describe('ChainMonitor conformance', () => {
     const storage = createTestStorage();
     const handler = chainMonitorHandler;
 
-    const tx = 'u-test-invariant-001';
+    let tx: any = 'u-test-invariant-001';
 
     // setup: awaitFinality -> reorged
     const awaitFinalityResultSetup = await pipe(
@@ -78,7 +78,7 @@ describe('ChainMonitor conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('reorged');
-        expect((output as any).txHash).toBe(tx);
+        tx = (output as any).txHash;
         expect((output as any).depth).toBe(3);
         return output;
       }),

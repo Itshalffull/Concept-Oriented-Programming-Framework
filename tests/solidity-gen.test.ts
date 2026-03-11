@@ -70,7 +70,7 @@ describe('SolidityGen Type Mapping', () => {
     expect(files.length).toBeGreaterThanOrEqual(1); // At least the .sol file
 
     // Check contract file
-    const contractFile = files.find(f => f.path.endsWith('.sol') && !f.path.endsWith('.t.sol'));
+    const contractFile = files.find(f => f.path.endsWith('.stub.sol') && !f.path.endsWith('.t.stub.sol'));
     expect(contractFile).toBeDefined();
     expect(contractFile!.content).toContain('contract Password');
     expect(contractFile!.content).toContain('pragma solidity');
@@ -93,7 +93,7 @@ describe('SolidityGen Type Mapping', () => {
     const files = result.files as { path: string; content: string }[];
 
     if (manifest.invariants.length > 0) {
-      const testFile = files.find(f => f.path.endsWith('.t.sol'));
+      const testFile = files.find(f => f.path.endsWith('.t.stub.sol'));
       expect(testFile).toBeDefined();
       expect(testFile!.content).toContain('forge-std/Test.sol');
       expect(testFile!.content).toContain('is Test');
@@ -114,7 +114,7 @@ describe('SolidityGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const contractFile = files.find(f => f.path.endsWith('.sol') && !f.path.endsWith('.t.sol'));
+    const contractFile = files.find(f => f.path.endsWith('.stub.sol') && !f.path.endsWith('.t.stub.sol'));
     expect(contractFile).toBeDefined();
 
     // Solidity-specific type assertions
@@ -138,7 +138,7 @@ describe('SolidityGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path.endsWith('.t.sol'));
+    const testFile = files.find(f => f.path.endsWith('.t.stub.sol'));
 
     if (manifest.invariants.length === 0) {
       expect(testFile).toBeUndefined();

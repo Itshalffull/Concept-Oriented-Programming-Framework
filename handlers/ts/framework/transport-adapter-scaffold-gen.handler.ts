@@ -263,13 +263,14 @@ export const transportAdapterScaffoldGenHandler: ConceptHandler = {
       const adapterCode = buildTransportAdapter(input);
 
       const files: { path: string; content: string }[] = [
-        { path: `${kebab}-transport.ts`, content: adapterCode },
+        { path: `${kebab}-transport.stub.ts`, content: adapterCode },
       ];
 
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

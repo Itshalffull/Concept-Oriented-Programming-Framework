@@ -65,6 +65,7 @@ export interface ProcessRunHandler {
   readonly suspend: (input: ProcessRunSuspendInput, storage: ProcessRunStorage) => TE.TaskEither<ProcessRunError, ProcessRunSuspendOutput>;
   readonly resume: (input: ProcessRunResumeInput, storage: ProcessRunStorage) => TE.TaskEither<ProcessRunError, ProcessRunResumeOutput>;
   readonly getStatus: (input: ProcessRunGetStatusInput, storage: ProcessRunStorage) => TE.TaskEither<ProcessRunError, ProcessRunGetStatusOutput>;
+  readonly get_status: (input: ProcessRunGetStatusInput, storage: ProcessRunStorage) => TE.TaskEither<ProcessRunError, ProcessRunGetStatusOutput>;
 }
 
 const storageError = (error: unknown): ProcessRunError => ({
@@ -75,10 +76,15 @@ const storageError = (error: unknown): ProcessRunError => ({
 const TERMINAL_STATES = new Set(['completed', 'failed', 'cancelled']);
 
 export const processRunHandler: ProcessRunHandler = {
-  start: (input, storage) =>
-    pipe(
+  start: (input, storage) => {
+    // Support both field naming conventions: spec_ref/input or spec_id/input_data
+    const specRef = (input as any).spec_ref ?? (input as any).spec_id ?? '';
+    const inputData = (input as any).input ?? (input as any).input_data ?? '';
+    const runRef = (input as any).run_ref ?? `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    return pipe(
       TE.tryCatch(
-        () => storage.get('process_runs', input.run_ref),
+        () => storage.get('process_runs', runRef),
         storageError,
       ),
       TE.chain((existing) =>
@@ -88,23 +94,28 @@ export const processRunHandler: ProcessRunHandler = {
             () =>
               TE.tryCatch(async () => {
                 const now = new Date().toISOString();
-                await storage.put('process_runs', input.run_ref, {
-                  run_ref: input.run_ref,
-                  spec_id: input.spec_id,
+                const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                await storage.put('process_runs', runId, {
+                  run: runId,
+                  run_ref: runId,
+                  spec_ref: specRef,
+                  spec_id: specRef,
                   status: 'running',
                   parent_run_ref: null,
-                  input_data: input.input_data,
+                  input: inputData,
+                  input_data: inputData,
                   output_data: null,
                   started_at: now,
                   updated_at: now,
                 });
-                return startOk(input.run_ref, 'running') as ProcessRunStartOutput;
+                return { variant: 'ok' as const, run: runId, spec_ref: specRef, status: 'running' } as any as ProcessRunStartOutput;
               }, storageError),
-            () => TE.right(startAlreadyExists(input.run_ref) as ProcessRunStartOutput),
+            () => TE.right(startAlreadyExists(runRef) as ProcessRunStartOutput),
           ),
         ),
       ),
-    ),
+    );
+  },
 
   startChild: (input, storage) =>
     pipe(
@@ -143,36 +154,41 @@ export const processRunHandler: ProcessRunHandler = {
       ),
     ),
 
-  complete: (input, storage) =>
-    pipe(
+  complete: (input, storage) => {
+    const runId = (input as any).run ?? (input as any).run_ref ?? '';
+    const outputData = (input as any).output ?? (input as any).output_data ?? '';
+
+    return pipe(
       TE.tryCatch(
-        () => storage.get('process_runs', input.run_ref),
+        () => storage.get('process_runs', runId),
         storageError,
       ),
       TE.chain((record) =>
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => TE.right(completeNotFound(input.run_ref) as ProcessRunCompleteOutput),
-            (run) => {
-              if (run.status !== 'running') {
-                return TE.right(completeInvalidTransition(input.run_ref, run.status as string) as ProcessRunCompleteOutput);
+            () => TE.right(completeNotFound(runId) as ProcessRunCompleteOutput),
+            (rec) => {
+              if (rec.status !== 'running') {
+                return TE.right(completeInvalidTransition(runId, rec.status as string) as ProcessRunCompleteOutput);
               }
               return TE.tryCatch(async () => {
-                await storage.put('process_runs', input.run_ref, {
-                  ...run,
+                await storage.put('process_runs', runId, {
+                  ...rec,
                   status: 'completed',
-                  output_data: input.output_data,
+                  output: outputData,
+                  output_data: outputData,
                   completed_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 });
-                return completeOk(input.run_ref, 'completed') as ProcessRunCompleteOutput;
+                return { variant: 'ok' as const, run: runId, status: 'completed' } as any as ProcessRunCompleteOutput;
               }, storageError);
             },
           ),
         ),
       ),
-    ),
+    );
+  },
 
   fail: (input, storage) =>
     pipe(
@@ -299,28 +315,51 @@ export const processRunHandler: ProcessRunHandler = {
       ),
     ),
 
-  getStatus: (input, storage) =>
-    pipe(
+  getStatus: (input, storage) => {
+    const runId = (input as any).run ?? (input as any).run_ref ?? '';
+    return pipe(
       TE.tryCatch(
-        () => storage.get('process_runs', input.run_ref),
+        () => storage.get('process_runs', runId),
         storageError,
       ),
       TE.map((record) =>
         pipe(
           O.fromNullable(record),
           O.fold(
-            () => getStatusNotFound(input.run_ref),
-            (run) =>
-              getStatusOk(
-                run.run_ref as string,
-                run.spec_id as string,
-                run.status as string,
-                (run.parent_run_ref as string | null) ?? null,
-                run.input_data as string,
-                (run.output_data as string | null) ?? null,
-              ),
+            () => getStatusNotFound(runId),
+            (rec) => ({
+              variant: 'ok' as const,
+              run: runId,
+              spec_ref: String(rec.spec_ref ?? rec.spec_id ?? ''),
+              status: String(rec.status ?? ''),
+            } as any),
           ),
         ),
       ),
-    ),
+    );
+  },
+
+  get_status: (input, storage) => {
+    const runId = (input as any).run ?? (input as any).run_ref ?? '';
+    return pipe(
+      TE.tryCatch(
+        () => storage.get('process_runs', runId),
+        storageError,
+      ),
+      TE.map((record) =>
+        pipe(
+          O.fromNullable(record),
+          O.fold(
+            () => getStatusNotFound(runId),
+            (rec) => ({
+              variant: 'ok' as const,
+              run: runId,
+              spec_ref: String(rec.spec_ref ?? rec.spec_id ?? ''),
+              status: String(rec.status ?? ''),
+            } as any),
+          ),
+        ),
+      ),
+    );
+  },
 };

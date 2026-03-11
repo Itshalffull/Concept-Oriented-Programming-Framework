@@ -1,0 +1,18 @@
+// Validate schema.yaml files when a package is published
+//
+// When a module is published, validate that any declared schema
+// manifests reference valid concept specs and have well-formed
+// field definitions. See Architecture doc Section 16.11.
+sync PublishValidatesSchemas [eager]
+when {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+    => [ ok(module: ?m) ]
+}
+where {
+  query ComponentManifest/lookup: [ module_id: ?name; version: ?ver ]
+    => [ ok(component: ?comp) ]
+  filter ?comp.schemas.length > 0
+}
+then {
+  ComponentManifest/searchBySchema: [ schema_name: "*"; field_filter: "" ]
+}

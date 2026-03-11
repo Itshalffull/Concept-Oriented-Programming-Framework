@@ -1,0 +1,10 @@
+// Forward login credentials to AccountProxy
+
+sync AuthOnLogin [eager]
+when {
+  AccountProxy/login: [ user: ?user; credentials: ?creds ]
+    => [ ok(token: ?token) ]
+}
+then {
+  Session/create: [ session: ?user; userId: ?user; token: ?token ]
+}

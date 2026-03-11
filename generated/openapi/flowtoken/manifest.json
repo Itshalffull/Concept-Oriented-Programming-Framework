@@ -1,0 +1,772 @@
+{
+  "uri": "urn:clef/FlowToken",
+  "name": "FlowToken",
+  "typeParams": [
+    {
+      "name": "K",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "branch_id",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": {
+            "kind": "primitive",
+            "primitive": "DateTime"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tokens",
+      "source": "set-valued",
+      "keyField": {
+        "name": "k",
+        "paramRef": "K"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "emit",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "branch_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "position",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates an active token at the specified position \n Multiple tokens at different positions in the same run represent parallelism"
+        }
+      ]
+    },
+    {
+      "name": "consume",
+      "params": [
+        {
+          "name": "token",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            },
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "position",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Transitions token from active to consumed A consumed token has been \n processed by the step at its position"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Token is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "kill",
+      "params": [
+        {
+          "name": "token",
+          "type": {
+            "kind": "param",
+            "paramRef": "K"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Transitions token from active to dead Used for dead path elimination \n when a cancellation region or discriminator pattern fires"
+        },
+        {
+          "tag": "not_active",
+          "fields": [
+            {
+              "name": "token",
+              "type": {
+                "kind": "param",
+                "paramRef": "K"
+              }
+            }
+          ],
+          "prose": "Token is not in active status"
+        }
+      ]
+    },
+    {
+      "name": "count_active",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns the number of active tokens at the given position for the given run \n Used by join syncs to determine if all parallel branches have arrived"
+        }
+      ]
+    },
+    {
+      "name": "list_active",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns all active tokens for a run Used for snapshot checkpoint"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after emit, consume, count_active behaves correctly",
+      "setup": [
+        {
+          "action": "emit",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "step_a"
+              }
+            },
+            {
+              "name": "branch_id",
+              "value": {
+                "kind": "literal",
+                "value": "b1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "step_a"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "consume",
+          "inputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "token",
+              "value": {
+                "kind": "variable",
+                "name": "t1"
+              }
+            },
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "step_a"
+              }
+            }
+          ]
+        },
+        {
+          "action": "count_active",
+          "inputs": [
+            {
+              "name": "run_ref",
+              "value": {
+                "kind": "literal",
+                "value": "r1"
+              }
+            },
+            {
+              "name": "position",
+              "value": {
+                "kind": "literal",
+                "value": "step_a"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "count",
+              "value": {
+                "kind": "literal",
+                "value": 0
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "t1",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type FlowTokenState {\n  \"\"\"All ks in this concept\"\"\"\n  ks: [ID!]!\n}\n\ntype FlowTokenEntry {\n  k: ID!\n  run_ref: String!\n  position: String!\n  status: String!\n  branch_id: String!\n  created_at: String!\n}\n\nextend type Query {\n  flowtoken_entry(k: ID!): FlowTokenEntry\n  flowtoken_entries: [FlowTokenEntry!]!\n}\n\ntype FlowTokenTokens {\n  k: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "emit": {
+        "$id": "urn:clef/FlowToken/emit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowToken"
+          },
+          "action": {
+            "const": "emit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string"
+              },
+              "branch_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "position",
+              "branch_id"
+            ]
+          }
+        }
+      },
+      "consume": {
+        "$id": "urn:clef/FlowToken/consume/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowToken"
+          },
+          "action": {
+            "const": "consume"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        }
+      },
+      "kill": {
+        "$id": "urn:clef/FlowToken/kill/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowToken"
+          },
+          "action": {
+            "const": "kill"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        }
+      },
+      "count_active": {
+        "$id": "urn:clef/FlowToken/count_active/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowToken"
+          },
+          "action": {
+            "const": "count_active"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "position": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "position"
+            ]
+          }
+        }
+      },
+      "list_active": {
+        "$id": "urn:clef/FlowToken/list_active/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/FlowToken"
+          },
+          "action": {
+            "const": "list_active"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "emit": {
+        "ok": {
+          "$id": "urn:clef/FlowToken/emit/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "emit"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token",
+                "run_ref",
+                "position"
+              ]
+            }
+          }
+        }
+      },
+      "consume": {
+        "ok": {
+          "$id": "urn:clef/FlowToken/consume/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "consume"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "run_ref": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token",
+                "run_ref",
+                "position"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/FlowToken/consume/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "consume"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        }
+      },
+      "kill": {
+        "ok": {
+          "$id": "urn:clef/FlowToken/kill/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "kill"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        },
+        "not_active": {
+          "$id": "urn:clef/FlowToken/kill/completion/not_active",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "kill"
+            },
+            "variant": {
+              "const": "not_active"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "token"
+              ]
+            }
+          }
+        }
+      },
+      "count_active": {
+        "ok": {
+          "$id": "urn:clef/FlowToken/count_active/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "count_active"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "count"
+              ]
+            }
+          }
+        }
+      },
+      "list_active": {
+        "ok": {
+          "$id": "urn:clef/FlowToken/list_active/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/FlowToken"
+            },
+            "action": {
+              "const": "list_active"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tokens": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "tokens"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track active control flow positions within a process run to enable \n parallel branching ( fork ) , synchronization ( join ) , and dead path elimination"
+}

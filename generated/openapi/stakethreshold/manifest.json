@@ -1,0 +1,750 @@
+{
+  "uri": "urn:clef/StakeThreshold",
+  "name": "StakeThreshold",
+  "typeParams": [
+    {
+      "name": "ST",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "st",
+        "paramRef": "ST"
+      },
+      "fields": [
+        {
+          "name": "minimumStake",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "slashOnViolation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          },
+          "optional": false
+        },
+        {
+          "name": "deposits",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "participant",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "amount",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "depositedAt",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "configurations",
+      "source": "set-valued",
+      "keyField": {
+        "name": "st",
+        "paramRef": "ST"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "ST"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "configure",
+      "params": [
+        {
+          "name": "minimumStake",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "slashOnViolation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "configured",
+          "fields": [
+            {
+              "name": "config",
+              "type": {
+                "kind": "param",
+                "paramRef": "ST"
+              }
+            }
+          ],
+          "prose": "Sets the minimum stake for participation and whether detected \n sybil accounts forfeit their deposit"
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "ST"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "deposited",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "The participant has met the stake threshold and is eligible"
+        },
+        {
+          "tag": "insufficient",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "deposited",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "required",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The deposit does not meet the minimum"
+        }
+      ]
+    },
+    {
+      "name": "checkEligibility",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "ST"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "eligible",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "stakedAmount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The participant has an active deposit meeting the threshold"
+        },
+        {
+          "tag": "ineligible",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No sufficient deposit exists"
+        }
+      ]
+    },
+    {
+      "name": "slash",
+      "params": [
+        {
+          "name": "config",
+          "type": {
+            "kind": "param",
+            "paramRef": "ST"
+          }
+        },
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "slashed",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "forfeitedAmount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The participant s deposit is forfeited"
+        },
+        {
+          "tag": "slashing_disabled",
+          "fields": [],
+          "prose": "SlashOnViolation is false"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after configure, deposit, checkEligibility behaves correctly",
+      "setup": [
+        {
+          "action": "configure",
+          "inputs": [
+            {
+              "name": "minimumStake",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "slashOnViolation",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          ],
+          "expectedVariant": "configured",
+          "expectedOutputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "st"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "deposit",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "st"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ],
+          "expectedVariant": "deposited",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "checkEligibility",
+          "inputs": [
+            {
+              "name": "config",
+              "value": {
+                "kind": "variable",
+                "name": "st"
+              }
+            },
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "eligible",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "stakedAmount",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "st",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type StakeThresholdState {\n  \"\"\"All sts in this concept\"\"\"\n  sts: [ID!]!\n}\n\ntype StakeThresholdEntry {\n  st: ID!\n  minimumStake: Float!\n  slashOnViolation: Boolean!\n  deposits: [JSON!]!\n}\n\nextend type Query {\n  stakethreshold_entry(st: ID!): StakeThresholdEntry\n  stakethreshold_entries: [StakeThresholdEntry!]!\n}\n\ntype StakeThresholdConfigurations {\n  st: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "configure": {
+        "$id": "urn:clef/StakeThreshold/configure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeThreshold"
+          },
+          "action": {
+            "const": "configure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "minimumStake": {
+                "type": "number"
+              },
+              "slashOnViolation": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "minimumStake",
+              "slashOnViolation"
+            ]
+          }
+        }
+      },
+      "deposit": {
+        "$id": "urn:clef/StakeThreshold/deposit/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeThreshold"
+          },
+          "action": {
+            "const": "deposit"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "config",
+              "participant",
+              "amount"
+            ]
+          }
+        }
+      },
+      "checkEligibility": {
+        "$id": "urn:clef/StakeThreshold/checkEligibility/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeThreshold"
+          },
+          "action": {
+            "const": "checkEligibility"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant"
+            ]
+          }
+        }
+      },
+      "slash": {
+        "$id": "urn:clef/StakeThreshold/slash/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/StakeThreshold"
+          },
+          "action": {
+            "const": "slash"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "config": {
+                "type": "string"
+              },
+              "participant": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "participant",
+              "reason"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "configure": {
+        "configured": {
+          "$id": "urn:clef/StakeThreshold/configure/completion/configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "configure"
+            },
+            "variant": {
+              "const": "configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "config": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            }
+          }
+        }
+      },
+      "deposit": {
+        "deposited": {
+          "$id": "urn:clef/StakeThreshold/deposit/completion/deposited",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "deposit"
+            },
+            "variant": {
+              "const": "deposited"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        },
+        "insufficient": {
+          "$id": "urn:clef/StakeThreshold/deposit/completion/insufficient",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "deposit"
+            },
+            "variant": {
+              "const": "insufficient"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "deposited": {
+                  "type": "number"
+                },
+                "required": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "deposited",
+                "required"
+              ]
+            }
+          }
+        }
+      },
+      "checkEligibility": {
+        "eligible": {
+          "$id": "urn:clef/StakeThreshold/checkEligibility/completion/eligible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "checkEligibility"
+            },
+            "variant": {
+              "const": "eligible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "stakedAmount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "stakedAmount"
+              ]
+            }
+          }
+        },
+        "ineligible": {
+          "$id": "urn:clef/StakeThreshold/checkEligibility/completion/ineligible",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "checkEligibility"
+            },
+            "variant": {
+              "const": "ineligible"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      },
+      "slash": {
+        "slashed": {
+          "$id": "urn:clef/StakeThreshold/slash/completion/slashed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "slash"
+            },
+            "variant": {
+              "const": "slashed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "forfeitedAmount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "forfeitedAmount"
+              ]
+            }
+          }
+        },
+        "slashing_disabled": {
+          "$id": "urn:clef/StakeThreshold/slash/completion/slashing_disabled",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/StakeThreshold"
+            },
+            "action": {
+              "const": "slash"
+            },
+            "variant": {
+              "const": "slashing_disabled"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Deter sybil attacks by requiring a minimum capital deposit to \n participate in governance , making identity duplication costly"
+}

@@ -1,0 +1,20 @@
+# ============================================================
+# ViewportTriggersLayout — surface-render recommended sync
+#
+# When a viewport breakpoint changes, reconfigure any responsive
+# layouts that have rules for the new breakpoint. This drives
+# the responsive design cascade.
+# ============================================================
+
+sync ViewportTriggersLayout [eager]
+when {
+  Viewport/observe: [ viewport: ?vp ]
+    => ok(viewport: ?vp; breakpoint: ?bp)
+}
+where {
+  Layout: { ?layout responsive: ?rules }
+  filter(contains(?rules, ?bp))
+}
+then {
+  Layout/configure: [ layout: ?layout; config: ?rules ]
+}

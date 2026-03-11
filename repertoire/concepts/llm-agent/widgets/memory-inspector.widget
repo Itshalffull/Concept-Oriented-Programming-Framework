@@ -1,0 +1,125 @@
+@version(1)
+widget memory-inspector {
+
+  purpose {
+    Inspector panel for viewing and managing agent memory state.
+    Displays working memory as a key-value list, episodic memories
+    as a timeline, and semantic memories as searchable entries.
+    Includes a context window visualization showing token allocation.
+  }
+
+  requires @1 {
+    fields {
+      memoryType: String;
+      entries: list;
+      workingMemory: list;
+    }
+    actions {
+      forget: { };
+      search: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Inspector panel wrapper }
+    tabs:          widget     { Memory type tabs (Working, Episodic, Semantic, Procedural) }
+    workingView:   container  { Key-value list of working memory entries }
+    entryItem:     container  { Single memory entry }
+    entryLabel:    text       { Entry label or key }
+    entryContent:  text       { Entry content or value }
+    entryMeta:     text       { Timestamp and metadata }
+    searchBar:     widget     { Search input for filtering entries }
+    contextBar:    container  { Context window token allocation visualization }
+    deleteButton:  action     { Delete/forget a memory entry }
+  }
+
+  states {
+    viewing [initial] {
+      on SWITCH_TAB -> viewing;
+      on SEARCH -> searching;
+      on SELECT_ENTRY -> entrySelected;
+    }
+
+    searching {
+      on CLEAR -> viewing;
+      on SELECT_ENTRY -> entrySelected;
+      entry [filterEntries];
+    }
+
+    entrySelected {
+      on DESELECT -> viewing;
+      on DELETE -> deleting;
+      entry [showEntryDetail];
+      exit [hideEntryDetail];
+    }
+
+    deleting {
+      on CONFIRM -> viewing;
+      on CANCEL -> entrySelected;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_ENTRY;
+      Delete -> DELETE;
+      Control+f -> FOCUS_SEARCH;
+      Escape -> DESELECT;
+    }
+    focus { trap: false; initial: tabs; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Memory inspector"; };
+      tabs -> { role: "tablist"; aria-label: "Memory types"; };
+      workingView -> { role: "list"; aria-label: "Memory entries"; };
+      entryItem -> { role: "listitem"; aria-label: concat(self.label, ": ", self.content); };
+      contextBar -> { role: "img"; aria-label: "Context window allocation"; };
+    }
+  }
+
+  props {
+    activeTab: union "working" | "episodic" | "semantic" | "procedural" = "working"
+    showContext: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "AgentMemory";
+    }
+    bind {
+      memoryType: memory_type;
+      entries: content;
+      workingMemory: working_memory;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    tabs -> { data-part: "tabs"; data-active: ?activeTab; }
+    workingView -> { data-part: "working-view"; role: "list"; }
+    entryItem -> { data-part: "entry"; data-type: self.type; onClick: send(SELECT_ENTRY, { id: self.id }); }
+    entryLabel -> { data-part: "entry-label"; text: self.label; }
+    entryContent -> { data-part: "entry-content"; text: self.content; }
+    entryMeta -> { data-part: "entry-meta"; text: self.timestamp; }
+    searchBar -> { data-part: "search"; }
+    contextBar -> { data-part: "context-bar"; data-visible: if ?showContext then "true" else "false"; }
+    deleteButton -> { data-part: "delete"; onClick: send(DELETE); }
+  }
+
+  compose {
+    tabs: widget("tabs", { orientation: "horizontal" });
+    searchBar: widget("text-input", { placeholder: "Search memories..." });
+  }
+
+  invariant {
+    "Working memory view must show current key-value pairs with token counts";
+    "Episodic view must display entries as a chronological timeline";
+    "Context bar must visualize token allocation across memory types";
+    "Delete must require confirmation before forgetting a memory entry";
+  }
+
+}

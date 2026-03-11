@@ -1,0 +1,39 @@
+@version(1)
+concept Lockfile [L] {
+
+  purpose {
+    Serialized resolution graph. Persists the exact resolved versions
+    for reproducible builds. Tracks manifest hash for staleness detection.
+  }
+
+  state {
+    lockfiles: set L
+    resolution_data: L -> String
+    manifest_hash: L -> String
+  }
+
+  actions {
+    action write(resolution_data: String, manifest_hash: String) {
+      -> ok(lockfile: L) {
+        Writes the resolution data to a lockfile.
+      }
+      -> error(message: String) {
+        Lockfile write failed.
+      }
+    }
+
+    action read(lockfile: L) {
+      -> ok(resolution_data: String, manifest_hash: String) {
+        Reads the lockfile contents.
+      }
+      -> notfound() {
+        No lockfile exists.
+      }
+    }
+  }
+
+  invariant {
+    after write(resolution_data: "{}", manifest_hash: "sha256:abc") -> ok(lockfile: l)
+    then read(lockfile: l) -> ok(resolution_data: "{}", manifest_hash: "sha256:abc")
+  }
+}

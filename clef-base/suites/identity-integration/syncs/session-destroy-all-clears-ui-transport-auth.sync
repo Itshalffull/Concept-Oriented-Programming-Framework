@@ -1,0 +1,13 @@
+# Identity to ui-app transport wiring.
+# When all sessions for a user are revoked, clear the shell
+# transport auth state as well.
+
+sync SessionDestroyAllClearsUiTransportAuth [eager]
+  purpose: "When all sessions for a user are destroyed, clear the ui-app transport auth state to remove any remaining session token from the shell runtime"
+when {
+  Session/destroyAll: [ userId: ?user ]
+    => [ userId: ?user ]
+}
+then {
+  Transport/clearAuth: [ transport: "clef-base-transport" ]
+}

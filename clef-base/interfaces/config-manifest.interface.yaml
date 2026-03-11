@@ -1,0 +1,182 @@
+# Clef Base — Config Manifest (developer-facing)
+#
+# Covers all config entities and developer-facing concepts:
+# content type definitions, field configurations, schema management,
+# view builder, workflow definitions, automation rule management,
+# theme settings, deployment configuration, concept registry,
+# suite management, bind target configuration, and Score graph navigation.
+#
+# See §6.1 of the Clef Base spec.
+
+interface:
+  name: clef-base-config
+  version: "0.1.0"
+  manifest_type: config
+  description: "Developer-facing administration interface for Clef Base"
+
+auth:
+  required: true
+  default_role: admin
+  strategies:
+    - cookie
+    - api_key
+    - oauth
+
+targets:
+  cli:
+    enabled: true
+    name: clef
+    description: "Clef Base administration CLI"
+    subcommand_prefix: config
+    groups:
+      - name: content-type
+        description: "Manage content type Schemas"
+        actions: [list, get, create, update, delete, export, import]
+      - name: field
+        description: "Manage Schema fields and properties"
+        actions: [list, add, update, remove, reorder]
+      - name: schema
+        description: "Schema management — create, compose, inspect"
+        actions: [list, get, create, update, delete, compose, decompose]
+      - name: view
+        description: "View builder — define and manage Views"
+        actions: [list, get, create, update, delete, export, preview]
+      - name: workflow
+        description: "Workflow definitions and state machines"
+        actions: [list, get, create, update, delete, export, import]
+      - name: automation
+        description: "Automation rule management"
+        actions: [list, get, create, update, delete, enable, disable, test]
+      - name: theme
+        description: "Theme settings and design tokens"
+        actions: [list, get, create, update, delete, preview]
+      - name: deployment
+        description: "Deployment configuration"
+        actions: [list, get, configure, validate, deploy, status]
+      - name: concept
+        description: "Concept registry and management"
+        actions: [list, get, install, update, remove, inspect]
+      - name: suite
+        description: "Suite management"
+        actions: [list, get, install, update, remove, inspect, validate]
+      - name: bind
+        description: "Bind target configuration"
+        actions: [list, get, configure, generate, preview]
+      - name: score
+        description: "Score graph navigation and queries"
+        actions: [concepts, syncs, flow, dependencies, search, handlers]
+
+  rest:
+    enabled: true
+    base_path: /api/admin
+    spec_format: openapi
+    spec_version: "3.1.0"
+    pagination:
+      default_limit: 50
+      max_limit: 200
+    rate_limiting:
+      default: "100/minute"
+
+  graphql:
+    enabled: true
+    path: /graphql/admin
+    schema_namespace: admin
+    introspection: true
+    max_depth: 10
+
+  mcp:
+    enabled: true
+    name: clef-base-admin
+    description: "AI-assisted administration for Clef Base"
+    tool_groups:
+      - schema-management
+      - content-type-management
+      - view-builder
+      - workflow-management
+      - automation-rules
+      - deployment-ops
+      - score-navigation
+
+  sdk:
+    enabled: true
+    languages:
+      - typescript
+      - python
+    package_prefix: "@clef-base/admin"
+
+  skills:
+    enabled: true
+    targets:
+      - claude
+      - gemini
+      - codex
+    workflows:
+      - name: manage-content-types
+        description: "Create and configure content type Schemas"
+      - name: configure-views
+        description: "Build and configure Views for entity display"
+      - name: manage-workflows
+        description: "Set up content moderation workflows"
+      - name: configure-deployment
+        description: "Configure deployment targets and infrastructure"
+
+  project_docs:
+    enabled: true
+    outputs:
+      - .claude/CLAUDE.md
+      - .gemini/GEMINI.md
+      - .codex/CODEX.md
+
+concepts:
+  # Config-manifest concepts — admin/developer facing
+  - name: Schema
+    source: repertoire/concepts/foundation/schema.concept
+    operations: [list, get, create, update, delete]
+
+  - name: Property
+    source: repertoire/concepts/foundation/property.concept
+    operations: [list, get, create, update, delete]
+
+  - name: TypeSystem
+    source: repertoire/concepts/foundation/type-system.concept
+    operations: [list, get, validate]
+
+  - name: DisplayMode
+    source: repertoire/concepts/foundation/display-mode.concept
+    operations: [list, get, create, update, delete]
+
+  - name: ComponentMapping
+    source: clef-base/concepts/component-mapping.concept
+    operations: [list, get, create, update, delete]
+
+  - name: View
+    source: repertoire/concepts/content/view.concept
+    operations: [list, get, create, update, delete, preview]
+
+  - name: Workflow
+    source: repertoire/concepts/automation/workflow.concept
+    operations: [list, get, create, update, delete]
+
+  - name: AutomationRule
+    source: repertoire/concepts/automation/automation-rule.concept
+    operations: [list, get, create, update, delete, enable, disable, test]
+
+  - name: KitManager
+    source: repertoire/concepts/extension/kit-manager.concept
+    operations: [list, get, install, update, remove]
+
+  - name: PluginRegistry
+    source: repertoire/concepts/extension/plugin-registry.concept
+    operations: [list, get, register, deregister]
+
+  - name: ConceptBrowser
+    source: clef-base/concepts/concept-browser.concept
+    operations: [search, preview, install, update, remove]
+
+  - name: AccessControl
+    source: repertoire/concepts/identity/access-control.concept
+    operations: [list, get, create, update, delete]
+
+  - name: Authorization
+    source: repertoire/concepts/identity/authorization.concept
+    operations: [list, get, configure]

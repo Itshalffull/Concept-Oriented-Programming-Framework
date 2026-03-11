@@ -1,0 +1,26 @@
+# Seeded destination declarations should immediately populate the
+# shared ui-app navigator used by the admin shell.
+
+sync DestinationCatalogRegistersNavigator [eager]
+  purpose: "When clef-base registers a destination in the catalog, mirror it into the shared navigator so routing and shell chrome stay aligned"
+when {
+  DestinationCatalog/register: [
+    destination: ?_;
+    name: ?name;
+    targetConcept: ?targetConcept;
+    targetView: ?targetView;
+    href: ?href;
+    icon: ?icon;
+    group: ?group
+  ] => [ destination: ?_registered ]
+}
+then {
+  Navigator/register: [
+    nav: "clef-base-navigator";
+    name: ?name;
+    targetConcept: ?targetConcept;
+    targetView: ?targetView;
+    paramsSchema: "";
+    meta: "{ \"href\": ?href, \"icon\": ?icon, \"group\": ?group }"
+  ]
+}

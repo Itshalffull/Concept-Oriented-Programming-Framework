@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { evidenceHandler } from '../handlers/ts/kits/formal-verification/evidence.handler.js';
+import { evidenceHandler } from '../handlers/ts/suites/formal-verification/evidence.handler.js';
 
 describe('Evidence Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

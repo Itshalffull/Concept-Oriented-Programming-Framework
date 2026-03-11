@@ -1,0 +1,19 @@
+# ============================================================
+# ShellThemeActivate — surface-app required sync
+#
+# When Shell/initialize succeeds, activate the default theme
+# so the application shell has a visual theme applied on startup.
+# ============================================================
+
+sync ShellThemeActivate [eager]
+  purpose: "Activate the default theme on shell initialization so the app starts with a visual theme applied"
+when {
+  Shell/initialize: [ shell: ?shell ]
+    => ok(shell: ?shell)
+}
+where {
+  Theme: { ?theme name: "default"; active: false }
+}
+then {
+  Theme/activate: [ theme: ?theme; priority: 0 ]
+}

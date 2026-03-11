@@ -3,7 +3,7 @@
 
 sync WriteEntrypoint [eager]
 when {
-  ApiSurface/compose: [ kit: ?kit; target: ?target ]
+  ApiSurface/compose: [ suite: ?suite; target: ?target ]
     => [ surface: ?s; entrypoint: ?entry ]
 }
 then {

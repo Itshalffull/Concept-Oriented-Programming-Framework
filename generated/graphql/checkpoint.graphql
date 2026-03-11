@@ -1,0 +1,25 @@
+type CheckpointState {
+  """All zs in this concept"""
+  zs: [ID!]!
+}
+
+type CheckpointEntry {
+  z: ID!
+  run_ref: String!
+  timestamp: String!
+  run_state: String!
+  variables_snapshot: String!
+  token_snapshot: String!
+  event_cursor: Int!
+  label: String!
+}
+
+extend type Query {
+  checkpoint_entry(z: ID!): CheckpointEntry
+  checkpoint_entries: [CheckpointEntry!]!
+}
+
+type CheckpointCheckpoints {
+  z: ID!
+  value: ID!
+}

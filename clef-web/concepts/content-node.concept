@@ -1,0 +1,75 @@
+@version(1)
+concept ContentNode [N] {
+
+  purpose {
+    Structured content unit for the Clef website. Represents pages,
+    sections, and documentation entries with type, content body,
+    and metadata.
+  }
+
+  state {
+    nodes: set N
+    type: N -> String
+    content: N -> String
+    slug: N -> String
+    title: N -> String
+    status: N -> String
+    createdBy: N -> String
+    createdAt: N -> String
+    updatedAt: N -> String
+  }
+
+  actions {
+    action create(node: N, type: String, content: String, slug: String,
+                  title: String, createdBy: String) {
+      -> ok(node: N) {
+        Creates a new content node.
+      }
+      -> exists() {
+        A node with this slug already exists.
+      }
+    }
+
+    action update(node: N, content: String) {
+      -> ok(node: N) {
+        Updates the content of an existing node.
+      }
+      -> notfound() {
+        The node does not exist.
+      }
+    }
+
+    action publish(node: N) {
+      -> ok() {
+        Marks the node as published and publicly visible.
+      }
+      -> notfound() {
+        The node does not exist.
+      }
+    }
+
+    action unpublish(node: N) {
+      -> ok() {
+        Removes the node from public visibility.
+      }
+      -> notfound() {
+        The node does not exist.
+      }
+    }
+
+    action get(slug: String) {
+      -> ok(node: N) {
+        Returns the node for the given slug.
+      }
+      -> notfound() {
+        No node exists with this slug.
+      }
+    }
+  }
+
+  invariant {
+    after create(node: n, type: "page", content: "Hello", slug: "home",
+                 title: "Home", createdBy: "admin") -> ok(node: n)
+    then get(slug: "home") -> ok(node: n)
+  }
+}

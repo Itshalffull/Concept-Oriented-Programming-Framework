@@ -1,0 +1,25 @@
+type ToolRegistryState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type ToolRegistryEntry {
+  g: ID!
+  name: String!
+  version: Int!
+  description: String!
+  schema: String!
+  status: String!
+  allowed_models: [String!]!
+  allowed_processes: [String!]!
+}
+
+extend type Query {
+  toolregistry_entry(g: ID!): ToolRegistryEntry
+  toolregistry_entries: [ToolRegistryEntry!]!
+}
+
+type ToolRegistryTools {
+  g: ID!
+  value: ID!
+}

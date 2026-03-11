@@ -182,7 +182,10 @@ export interface WidgetSpec {
   machineSpec: {
     initial: string;
     states: Record<string, {
-      on?: Record<string, string | { target: string; guard?: string }>;
+      type?: 'atomic' | 'parallel' | 'compound';
+      entry?: string[];
+      exit?: string[];
+      on?: Record<string, string | { target: string; guard?: string; actions?: string[] }>;
     }>;
   };
   a11ySpec: Record<string, unknown>;

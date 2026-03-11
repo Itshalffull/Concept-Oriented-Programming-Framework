@@ -1,0 +1,25 @@
+# Drawing composition
+# See Architecture doc Section 2.1.3
+
+composition: drawing
+version: 1
+
+source: content
+target: content
+rules:
+  - type: composite
+    fields: [canvas, frames, shapes]
+    description: "Composes Canvas, Frame, and Shape into a unified Drawing entity"
+    components:
+      canvas:
+        concept: Canvas
+        cardinality: one
+        description: "The root canvas surface for the drawing"
+      frames:
+        concept: Frame
+        cardinality: many
+        description: "Grouping frames within the canvas"
+      shapes:
+        concept: Shape
+        cardinality: many
+        description: "Individual shapes placed on the canvas or within frames"

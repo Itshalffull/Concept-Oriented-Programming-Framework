@@ -1,0 +1,14 @@
+# Default theme definitions for clef-base.
+
+concept: Theme
+action: create
+entries:
+  - theme: light
+    name: Light
+    overrides: '{"mode":"light"}'
+  - theme: dark
+    name: Dark
+    overrides: '{"mode":"dark"}'
+  - theme: high-contrast
+    name: High Contrast
+    overrides: '{"mode":"high-contrast"}'

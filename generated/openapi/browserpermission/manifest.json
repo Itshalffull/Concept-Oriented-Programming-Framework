@@ -1,0 +1,573 @@
+{
+  "uri": "urn:clef/BrowserPermission",
+  "name": "BrowserPermission",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "abstractPermission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "browserPermissions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "storeWarnings",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "mappings",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "permission",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "browserPermissions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Abstract permission mapped to the browser s specific API \n permissions Different browsers may require different sets"
+        },
+        {
+          "tag": "unsupported",
+          "fields": [
+            {
+              "name": "permission",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "browser",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No mapping exists for this permission on this browser"
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "params": [
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "valid",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bool"
+              }
+            },
+            {
+              "name": "conflicts",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Validates that the permission set is consistent and has no \n conflicts for the target browser"
+        }
+      ]
+    },
+    {
+      "name": "listAvailable",
+      "params": [
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "permissions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all available permissions for the given browser with \n descriptions and categories"
+        }
+      ]
+    },
+    {
+      "name": "getStoreWarnings",
+      "params": [
+        {
+          "name": "permissions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "browser",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "warnings",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns store review warnings for the given permission set \n Certain permissions ( e g , all_urls , webRequest ) trigger \n enhanced review in browser extension stores"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after resolve, validate behaves correctly",
+      "setup": [
+        {
+          "action": "resolve",
+          "inputs": [
+            {
+              "name": "permission",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "browser",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "browserPermissions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "validate",
+          "inputs": [
+            {
+              "name": "permissions",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "browser",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "valid",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "conflicts",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-002"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BrowserPermissionState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BrowserPermissionEntry {\n  b: ID!\n  abstractPermission: String!\n  browserPermissions: String!\n  browser: String!\n  storeWarnings: String!\n}\n\nextend type Query {\n  browserpermission_entry(b: ID!): BrowserPermissionEntry\n  browserpermission_entries: [BrowserPermissionEntry!]!\n}\n\ntype BrowserPermissionMappings {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "resolve": {
+        "$id": "urn:clef/BrowserPermission/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserPermission"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permission": {
+                "type": "string"
+              },
+              "browser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permission",
+              "browser"
+            ]
+          }
+        }
+      },
+      "validate": {
+        "$id": "urn:clef/BrowserPermission/validate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserPermission"
+          },
+          "action": {
+            "const": "validate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permissions": {
+                "type": "string"
+              },
+              "browser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permissions",
+              "browser"
+            ]
+          }
+        }
+      },
+      "listAvailable": {
+        "$id": "urn:clef/BrowserPermission/listAvailable/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserPermission"
+          },
+          "action": {
+            "const": "listAvailable"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "browser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "browser"
+            ]
+          }
+        }
+      },
+      "getStoreWarnings": {
+        "$id": "urn:clef/BrowserPermission/getStoreWarnings/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BrowserPermission"
+          },
+          "action": {
+            "const": "getStoreWarnings"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "permissions": {
+                "type": "string"
+              },
+              "browser": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "permissions",
+              "browser"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/BrowserPermission/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserPermission"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "browserPermissions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "browserPermissions"
+              ]
+            }
+          }
+        },
+        "unsupported": {
+          "$id": "urn:clef/BrowserPermission/resolve/completion/unsupported",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserPermission"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "unsupported"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permission": {
+                  "type": "string"
+                },
+                "browser": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permission",
+                "browser"
+              ]
+            }
+          }
+        }
+      },
+      "validate": {
+        "ok": {
+          "$id": "urn:clef/BrowserPermission/validate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserPermission"
+            },
+            "action": {
+              "const": "validate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "valid": {
+                  "type": "boolean"
+                },
+                "conflicts": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "valid",
+                "conflicts"
+              ]
+            }
+          }
+        }
+      },
+      "listAvailable": {
+        "ok": {
+          "$id": "urn:clef/BrowserPermission/listAvailable/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserPermission"
+            },
+            "action": {
+              "const": "listAvailable"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "permissions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "permissions"
+              ]
+            }
+          }
+        }
+      },
+      "getStoreWarnings": {
+        "ok": {
+          "$id": "urn:clef/BrowserPermission/getStoreWarnings/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BrowserPermission"
+            },
+            "action": {
+              "const": "getStoreWarnings"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "warnings": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "warnings"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Browser specific provider for ExtensionPermission Maps abstract \n permission identifiers to browser API permissions ( tabs , storage , \n activeTab , scripting , etc ) with per browser differences Validates \n permission combinations and warns about store review implications"
+}

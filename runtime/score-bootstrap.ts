@@ -8,7 +8,7 @@
 //
 // Score is lightweight — it uses in-process transport and
 // in-memory storage. The ScoreApi facade delegates to ScoreIndex
-// for materialized data and to the underlying Score kit concepts
+// for materialized data and to the underlying Score suite concepts
 // for complex queries.
 // ============================================================
 
@@ -29,27 +29,33 @@ function createScoreIndexSyncs(): CompiledSync[] {
     // Index concepts when SpecParser parses .concept files
     {
       name: 'ScoreIndexOnParseConceptSync',
-      annotation: 'eager',
-      patterns: [
+      annotations: ['eager'],
+      when: [
         {
           concept: 'urn:clef/ConceptEntity',
           action: 'register',
-          inputBindings: { name: '?name', source: '?file', ast: '?ast' },
-          outputBindings: { entity: '?entity' },
+          inputFields: [
+            { name: 'name', match: { type: 'variable', name: 'name' } },
+            { name: 'source', match: { type: 'variable', name: 'file' } },
+            { name: 'ast', match: { type: 'variable', name: 'ast' } },
+          ],
+          outputFields: [
+            { name: 'entity', match: { type: 'variable', name: 'entity' } },
+          ],
         },
       ],
-      whereClause: [],
-      thenClause: [
+      where: [],
+      then: [
         {
           concept: SCORE_INDEX_URI,
           action: 'upsertConcept',
-          bindings: {
-            name: '?name',
-            purpose: '?ast.purpose',
-            actions: '?ast.actionNames',
-            stateFields: '?ast.fieldNames',
-            file: '?file',
-          },
+          fields: [
+            { name: 'name', value: { type: 'variable', name: 'name' } },
+            { name: 'purpose', value: { type: 'variable', name: 'ast.purpose' } },
+            { name: 'actions', value: { type: 'variable', name: 'ast.actionNames' } },
+            { name: 'stateFields', value: { type: 'variable', name: 'ast.fieldNames' } },
+            { name: 'file', value: { type: 'variable', name: 'file' } },
+          ],
         },
       ],
     },
@@ -57,27 +63,32 @@ function createScoreIndexSyncs(): CompiledSync[] {
     // Index syncs when SyncParser parses .sync files
     {
       name: 'ScoreIndexOnParseSyncSync',
-      annotation: 'eager',
-      patterns: [
+      annotations: ['eager'],
+      when: [
         {
           concept: 'urn:clef/SyncEntity',
           action: 'register',
-          inputBindings: { name: '?name', source: '?file' },
-          outputBindings: { entity: '?entity' },
+          inputFields: [
+            { name: 'name', match: { type: 'variable', name: 'name' } },
+            { name: 'source', match: { type: 'variable', name: 'file' } },
+          ],
+          outputFields: [
+            { name: 'entity', match: { type: 'variable', name: 'entity' } },
+          ],
         },
       ],
-      whereClause: [],
-      thenClause: [
+      where: [],
+      then: [
         {
           concept: SCORE_INDEX_URI,
           action: 'upsertSync',
-          bindings: {
-            name: '?name',
-            annotation: '?entity.annotation',
-            triggers: '?entity.triggers',
-            effects: '?entity.effects',
-            file: '?file',
-          },
+          fields: [
+            { name: 'name', value: { type: 'variable', name: 'name' } },
+            { name: 'annotation', value: { type: 'variable', name: 'entity.annotation' } },
+            { name: 'triggers', value: { type: 'variable', name: 'entity.triggers' } },
+            { name: 'effects', value: { type: 'variable', name: 'entity.effects' } },
+            { name: 'file', value: { type: 'variable', name: 'file' } },
+          ],
         },
       ],
     },
@@ -85,27 +96,35 @@ function createScoreIndexSyncs(): CompiledSync[] {
     // Index symbols when Symbol concept extracts them
     {
       name: 'ScoreIndexOnSymbolSync',
-      annotation: 'eager',
-      patterns: [
+      annotations: ['eager'],
+      when: [
         {
           concept: 'urn:clef/Symbol',
           action: 'register',
-          inputBindings: { name: '?name', kind: '?kind', file: '?file', line: '?line', scope: '?scope' },
-          outputBindings: { symbol: '?symbol' },
+          inputFields: [
+            { name: 'name', match: { type: 'variable', name: 'name' } },
+            { name: 'kind', match: { type: 'variable', name: 'kind' } },
+            { name: 'file', match: { type: 'variable', name: 'file' } },
+            { name: 'line', match: { type: 'variable', name: 'line' } },
+            { name: 'scope', match: { type: 'variable', name: 'scope' } },
+          ],
+          outputFields: [
+            { name: 'symbol', match: { type: 'variable', name: 'symbol' } },
+          ],
         },
       ],
-      whereClause: [],
-      thenClause: [
+      where: [],
+      then: [
         {
           concept: SCORE_INDEX_URI,
           action: 'upsertSymbol',
-          bindings: {
-            name: '?name',
-            kind: '?kind',
-            file: '?file',
-            line: '?line',
-            scope: '?scope',
-          },
+          fields: [
+            { name: 'name', value: { type: 'variable', name: 'name' } },
+            { name: 'kind', value: { type: 'variable', name: 'kind' } },
+            { name: 'file', value: { type: 'variable', name: 'file' } },
+            { name: 'line', value: { type: 'variable', name: 'line' } },
+            { name: 'scope', value: { type: 'variable', name: 'scope' } },
+          ],
         },
       ],
     },
@@ -113,26 +132,32 @@ function createScoreIndexSyncs(): CompiledSync[] {
     // Index files when FileArtifact registers them
     {
       name: 'ScoreIndexOnFileSync',
-      annotation: 'eager',
-      patterns: [
+      annotations: ['eager'],
+      when: [
         {
           concept: 'urn:clef/FileArtifact',
           action: 'register',
-          inputBindings: { path: '?path', language: '?lang', role: '?role' },
-          outputBindings: { artifact: '?artifact' },
+          inputFields: [
+            { name: 'path', match: { type: 'variable', name: 'path' } },
+            { name: 'language', match: { type: 'variable', name: 'lang' } },
+            { name: 'role', match: { type: 'variable', name: 'role' } },
+          ],
+          outputFields: [
+            { name: 'artifact', match: { type: 'variable', name: 'artifact' } },
+          ],
         },
       ],
-      whereClause: [],
-      thenClause: [
+      where: [],
+      then: [
         {
           concept: SCORE_INDEX_URI,
           action: 'upsertFile',
-          bindings: {
-            path: '?path',
-            language: '?lang',
-            role: '?role',
-            definitions: '?artifact.definitions',
-          },
+          fields: [
+            { name: 'path', value: { type: 'variable', name: 'path' } },
+            { name: 'language', value: { type: 'variable', name: 'lang' } },
+            { name: 'role', value: { type: 'variable', name: 'role' } },
+            { name: 'definitions', value: { type: 'variable', name: 'artifact.definitions' } },
+          ],
         },
       ],
     },

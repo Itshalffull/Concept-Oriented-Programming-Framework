@@ -1,0 +1,11 @@
+# Invalidates scoped cache entries when entities are modified
+# within a version space. Only the space's cache is invalidated,
+# not the global cache.
+
+sync VersionSpaceWriteInvalidatesCache [eventual]
+when {
+  VersionSpace/write: [ space: ?space; entity_id: ?id ] => [ ok: _ ]
+}
+then {
+  Cache/invalidateByTags: [ tags: ?space ]
+}

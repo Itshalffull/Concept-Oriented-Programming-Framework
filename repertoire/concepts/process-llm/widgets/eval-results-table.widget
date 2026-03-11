@@ -1,0 +1,111 @@
+@version(1)
+widget eval-results-table {
+
+  purpose {
+    Results table for LLM evaluation runs showing test cases with
+    pass/fail status, model output, expected output, score, and
+    per-metric breakdowns. Supports sorting by score, filtering
+    by pass/fail, and detail expansion for individual test cases.
+  }
+
+  requires @1 {
+    fields {
+      testCases: list;
+      overallScore: Float;
+      passCount: Int;
+      failCount: Int;
+    }
+  }
+
+  anatomy {
+    root:          container  { Table wrapper }
+    summaryBar:    container  { Overall score, pass/fail counts }
+    scoreDisplay:  text       { Overall score as percentage }
+    passFailBar:   container  { Pass/fail ratio bar }
+    table:         container  { Results data table }
+    headerRow:     container  { Column headers }
+    dataRow:       container  { Single test case row }
+    statusCell:    container  { Pass/fail indicator }
+    inputCell:     container  { Test input (truncated) }
+    outputCell:    container  { Model output (truncated) }
+    expectedCell:  container  { Expected output (truncated) }
+    scoreCell:     text       { Per-case score }
+    detailPanel:   container  { Expanded test case detail }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_ROW -> rowSelected;
+      on SORT -> idle;
+      on FILTER -> idle;
+    }
+
+    rowSelected {
+      on DESELECT -> idle;
+      on SELECT_ROW -> rowSelected;
+      entry [showDetail; highlightRow];
+      exit [hideDetail];
+    }
+  }
+
+  accessibility {
+    role: table;
+    keyboard { ArrowDown -> FOCUS_NEXT_ROW; ArrowUp -> FOCUS_PREV_ROW; Enter -> SELECT_ROW; Escape -> DESELECT; }
+    focus { trap: false; initial: table; roving: true; }
+    aria {
+      root -> { role: "region"; aria-label: "Evaluation results"; };
+      table -> { role: "table"; aria-label: concat("Results: ", $passCount, " passed, ", $failCount, " failed"); };
+      dataRow -> { role: "row"; aria-selected: if self.isSelected then "true" else "false"; };
+      scoreDisplay -> { role: "status"; aria-label: concat("Overall score: ", $overallScore, "%"); };
+    }
+  }
+
+  props {
+    sortBy: String = "score"
+    sortOrder: union "asc" | "desc" = "desc"
+    filterStatus: option String
+    showExpected: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 20;
+    when {
+      concept: "EvaluationRun";
+    }
+    bind {
+      testCases: test_cases;
+      overallScore: score;
+      passCount: passed;
+      failCount: failed;
+    }
+  }
+
+  connect {
+    root -> { data-part: "root"; data-state: state; }
+    summaryBar -> { data-part: "summary"; }
+    scoreDisplay -> { data-part: "score"; text: concat($overallScore, "%"); }
+    passFailBar -> { data-part: "pass-fail-bar"; }
+    table -> { data-part: "table"; role: "table"; }
+    dataRow -> { data-part: "row"; data-status: self.status; tabindex: if self.isFocused then "0" else "-1"; onClick: send(SELECT_ROW, { id: self.id }); }
+    statusCell -> { data-part: "status"; data-pass: if self.passed then "true" else "false"; }
+    inputCell -> { data-part: "input"; text: truncate(self.input, 80); }
+    outputCell -> { data-part: "output"; text: truncate(self.output, 80); }
+    expectedCell -> { data-part: "expected"; text: truncate(self.expected, 80); data-visible: if ?showExpected then "true" else "false"; }
+    scoreCell -> { data-part: "score-cell"; text: self.score; }
+    detailPanel -> { data-part: "detail"; data-visible: if state == "rowSelected" then "true" else "false"; }
+  }
+
+  compose {
+    statusCell: widget("badge", { variant: "dot" });
+    passFailBar: widget("segmented-progress-bar", { segments: [{ status: "pass", count: $passCount }, { status: "fail", count: $failCount }] });
+  }
+
+  invariant {
+    "Pass/fail bar must show correct ratio of passed to failed cases";
+    "Row expansion must show full input, output, expected, and diff view";
+    "Sort must work on any column including score and status";
+    "Failed rows must be visually distinct from passed rows";
+  }
+
+}

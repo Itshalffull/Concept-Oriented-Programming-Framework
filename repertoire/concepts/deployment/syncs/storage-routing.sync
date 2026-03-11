@@ -1,0 +1,44 @@
+# Storage provider routing syncs
+# Route abstract StorageProvider actions to provider-specific handlers
+# based on storageType, mirroring the Runtime → VercelRuntime pattern.
+# The routing syncs themselves ARE the registration — no PluginRegistry
+# or initialize action needed. Adding a provider = adding its syncs.
+
+sync RouteStorageToVercelKV [eager]
+  purpose: "Route storage provisioning to the Vercel KV provider when storageType is vercel-kv"
+when {
+  StorageProvider/provision: [ storeName: ?name; storageType: "vercel-kv"; config: ?config ]
+    => [ store: ?name; storageType: "vercel-kv" ]
+}
+then {
+  VercelKVProvider/provision: [
+    storeName: ?name;
+    config: ?config
+  ]
+}
+
+sync PropagateVercelKVCredentials [eager]
+  purpose: "After Vercel KV provisioning completes, update the abstract StorageProvider with the real credentials"
+when {
+  VercelKVProvider/provision: [ storeName: ?name ]
+    => [ storeName: ?name; credentials: ?creds ]
+}
+then {
+  StorageProvider/updateCredentials: [
+    storeName: ?name;
+    credentials: ?creds
+  ]
+}
+
+sync SetStorageEnvVarsOnRuntime [eager]
+  purpose: "After storage credentials are stored, configure them as env vars on the associated runtime"
+when {
+  StorageProvider/updateCredentials: [ storeName: ?name ]
+    => [ store: ?name; credentials: ?creds ]
+}
+then {
+  Runtime/configureDependencies: [
+    instance: ?name;
+    dependencies: ?creds
+  ]
+}

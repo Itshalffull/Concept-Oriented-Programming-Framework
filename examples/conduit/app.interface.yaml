@@ -102,10 +102,10 @@ traits:
   - name: auth
     config:
       scheme: bearer
-    scope: kit
+    scope: suite
 
   - name: validated
-    scope: kit
+    scope: suite
 
 # ─── GROUPING ─────────────────────────────────────────
 # Controls how concepts are grouped in multi-concept

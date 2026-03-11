@@ -1,0 +1,24 @@
+type ProcessMetricState {
+  """All qs in this concept"""
+  qs: [ID!]!
+}
+
+type ProcessMetricEntry {
+  q: ID!
+  spec_ref: String!
+  run_ref: String!
+  metric_name: String!
+  metric_value: Float!
+  dimensions: [JSON!]!
+  recorded_at: String!
+}
+
+extend type Query {
+  processmetric_entry(q: ID!): ProcessMetricEntry
+  processmetric_entries: [ProcessMetricEntry!]!
+}
+
+type ProcessMetricMetrics {
+  q: ID!
+  value: ID!
+}

@@ -1,0 +1,33 @@
+# Error handling for automation execution failures.
+# Catches error variants from provider execution and routes them
+# to retry queues, disables failing rules, and updates workflow state.
+
+# When an automation rule execution fails, release the item back to the queue for retry
+sync RetryOnExecutionError [eager]
+when {
+  AutomationRule/execute: [ rule: ?rule; context: ?context ]
+    => [ message: ?message ]           # notfound variant
+}
+then {
+  Queue/release: [ queue: ?rule; itemId: ?context ]
+}
+
+# When a queue item cannot be found, disable the associated automation rule
+sync DisableRuleOnQueueError [eager]
+when {
+  Queue/process: [ queue: ?queue; itemId: ?itemId; result: ?result ]
+    => [ message: ?message ]           # notfound variant
+}
+then {
+  AutomationRule/disable: [ rule: ?queue ]
+}
+
+# When a workflow transition is forbidden, re-enqueue the item at lower priority for later retry
+sync RequeueOnForbiddenTransition [eager]
+when {
+  Workflow/transition: [ workflow: ?workflow; entity: ?entity; transition: ?transition ]
+    => [ message: ?message ]           # forbidden variant
+}
+then {
+  Queue/enqueue: [ queue: ?workflow; item: ?entity; priority: -1 ]
+}

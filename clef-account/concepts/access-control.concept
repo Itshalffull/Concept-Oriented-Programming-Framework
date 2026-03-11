@@ -1,0 +1,54 @@
+@version(1)
+concept AccessControl [A] {
+
+  purpose {
+    Evaluate three-valued access decisions (allowed, forbidden, neutral)
+    against policies. Provides cacheable access results that can be
+    combined from multiple policy sources.
+  }
+
+  state {
+    policies: set A
+    resource: A -> String
+    action: A -> String
+    effect: A -> String
+  }
+
+  actions {
+    action check(resource: String, action: String, context: String) {
+      -> allowed() {
+        Access is explicitly permitted by a matching policy.
+      }
+      -> forbidden(reason: String) {
+        Access is explicitly denied by a matching policy.
+      }
+      -> neutral() {
+        No policy matches the request. The caller should apply
+        a default decision.
+      }
+    }
+
+    action addPolicy(resource: String, action: String, effect: String, conditions: String) {
+      -> ok(policy: A) {
+        Registers a new access policy.
+      }
+      -> conflict(message: String) {
+        A conflicting policy already exists for this resource and action.
+      }
+    }
+
+    action removePolicy(policy: A) {
+      -> ok() {
+        Removes the policy. Future checks will no longer consider it.
+      }
+      -> notfound() {
+        The policy does not exist.
+      }
+    }
+  }
+
+  invariant {
+    after addPolicy(resource: "/admin", action: "read", effect: "allow", conditions: "") -> ok(policy: p)
+    then check(resource: "/admin", action: "read", context: "admin-user") -> allowed()
+  }
+}

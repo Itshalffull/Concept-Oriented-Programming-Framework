@@ -29,7 +29,6 @@ describe('Enricher conformance', () => {
     const storage = createTestStorage();
     const handler = enricherHandler;
 
-
     // setup: enrich -> ok
     const enrichResultSetup = await pipe(
       handler.enrich({

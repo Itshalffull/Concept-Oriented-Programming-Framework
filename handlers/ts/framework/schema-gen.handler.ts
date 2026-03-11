@@ -24,6 +24,7 @@ import type {
   TypeExpr,
   ActionDecl,
   ActionPattern,
+  InvariantASTStep,
   ConceptManifest,
   TypeParamInfo,
   RelationSchema,
@@ -66,6 +67,10 @@ function typeExprToResolvedType(t: TypeExpr): ResolvedType {
           optional: false,
         })),
       };
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown TypeExpr kind: ${(t as { kind: string }).kind}`);
+    }
   }
 }
 
@@ -220,12 +225,37 @@ function buildInvariantSchemas(ast: ConceptAST): InvariantSchema[] {
       };
     }
 
+    function convertASTStepToStep(step: InvariantASTStep): InvariantStep | null {
+      if (step.kind === 'action') {
+        return convertPatternToStep(step);
+      }
+      // Assertion steps (property postconditions) don't map to action steps.
+      // Collect any variables referenced in the assertion for test generation.
+      if (step.kind === 'assertion') {
+        function collectAssertionVars(expr: import('../../../runtime/types.js').AssertionExpr) {
+          if (expr.type === 'variable') collectVar(expr.name);
+          if (expr.type === 'dot_access') collectVar(expr.variable);
+          if (expr.type === 'list') for (const item of expr.items) collectAssertionVars(item);
+        }
+        collectAssertionVars(step.left);
+        collectAssertionVars(step.right);
+      }
+      return null;
+    }
+
     const setup = inv.afterPatterns.map(p => convertPatternToStep(p));
-    const assertions = inv.thenPatterns.map(p => convertPatternToStep(p));
+    const assertions = inv.thenPatterns
+      .map(p => convertASTStepToStep(p))
+      .filter((s): s is InvariantStep => s !== null);
 
     const afterNames = inv.afterPatterns.map(p => p.actionName).join(', ');
-    const thenNames = inv.thenPatterns.map(p => p.actionName).join(', ');
-    const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly`;
+    const thenNames = inv.thenPatterns
+      .map(p => p.kind === 'action' ? p.actionName : `assert(${p.kind})`)
+      .join(', ');
+    const whenDesc = inv.whenClause
+      ? ` (when ${inv.whenClause.conditions.map(c => `${c.operator}`).join(' and ')})`
+      : '';
+    const description = `invariant ${i + 1}: after ${afterNames}, ${thenNames} behaves correctly${whenDesc}`;
 
     return { description, setup, assertions, freeVariables: freeVars };
   });
@@ -257,6 +287,10 @@ function resolvedTypeToJsonSchema(t: ResolvedType): Record<string, unknown> {
         required.push(f.name);
       }
       return { type: 'object', properties, required };
+    }
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
     }
   }
 }
@@ -351,6 +385,10 @@ function resolvedTypeToGraphQL(t: ResolvedType): string {
       return 'JSON'; // fallback for map types
     case 'record':
       return 'JSON'; // inline records map to JSON scalar
+    default: {
+      const _exhaustive: never = t;
+      throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
+    }
   }
 }
 
@@ -504,7 +542,8 @@ export const schemaGenHandler: ConceptHandler = {
       return { variant: 'ok', manifest };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };

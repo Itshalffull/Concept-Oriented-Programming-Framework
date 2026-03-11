@@ -1,0 +1,58 @@
+@version(1)
+concept ResourceGrantPolicy [G] {
+
+  purpose {
+    Manage role grants for protected resources and actions, including
+    wildcard defaults and resource-specific overrides. This allows
+    applications to declare access policy as concept data instead of
+    embedding role rules in application code.
+  }
+
+  state {
+    grants: set G
+    scope: G -> String
+    resourcePattern: G -> String
+    actionName: G -> String
+    roles: G -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action setGrant(grant: G, scope: String, resourcePattern: String,
+                    actionName: String, roles: list String) {
+      -> ok(grant: G) { Store or update the grant for this scope, resource pattern, and action. }
+    }
+
+    action getGrant(scope: String, resourcePattern: String, actionName: String) {
+      -> ok(grant: G, roles: list String) { Return the exact grant for this scope, resource pattern, and action. }
+      -> notfound(message: String) { No exact grant exists for this scope, resource pattern, and action. }
+    }
+
+    action resolve(scope: String, resource: String, actionName: String) {
+      -> ok(grant: G, roles: list String, matchedPattern: String) {
+        Resolve the most specific grant for this resource and action, preferring exact resource matches and then wildcard defaults.
+      }
+      -> notfound(message: String) { No grant matches this scope, resource, and action. }
+    }
+
+    action list(scope: option String) {
+      -> ok(grants: list {
+        grant: G, scope: String, resourcePattern: String,
+        actionName: String, roles: list String
+      }) {
+        Return all grants, optionally filtered by scope.
+      }
+    }
+  }
+
+  invariant {
+    after setGrant(grant: g, scope: "schema", resourcePattern: "*",
+                   actionName: "view", roles: ["admin", "editor", "viewer"])
+      -> ok(grant: g)
+    then resolve(scope: "schema", resource: "Article", actionName: "view")
+      -> ok(grant: g, roles: ["admin", "editor", "viewer"], matchedPattern: "*")
+  }
+}

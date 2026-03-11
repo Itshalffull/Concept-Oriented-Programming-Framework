@@ -1,0 +1,22 @@
+type SafariTargetState {
+  """All ts in this concept"""
+  ts: [ID!]!
+}
+
+type SafariTargetEntry {
+  t: ID!
+  xcodeProject: String!
+  infoPlist: String!
+  entitlements: String!
+  packageOutput: String!
+}
+
+extend type Query {
+  safaritarget_entry(t: ID!): SafariTargetEntry
+  safaritarget_entries: [SafariTargetEntry!]!
+}
+
+type SafariTargetTargets {
+  t: ID!
+  value: ID!
+}

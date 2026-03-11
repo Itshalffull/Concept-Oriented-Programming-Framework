@@ -1,0 +1,609 @@
+{
+  "uri": "urn:clef/CompensationPlan",
+  "name": "CompensationPlan",
+  "typeParams": [
+    {
+      "name": "X",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "compensations",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "step_key",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "action_descriptor",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "registered_at",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "current_index",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "plans",
+      "source": "set-valued",
+      "keyField": {
+        "name": "x",
+        "paramRef": "X"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "step_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "action_descriptor",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Appends a compensating action to the plan Creates plan if none exists for this run"
+        }
+      ]
+    },
+    {
+      "name": "trigger",
+      "params": [
+        {
+          "name": "run_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Begins compensation Transitions from dormant to triggered \n Sets current_index to the last registered compensation"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No compensations registered for this run"
+        },
+        {
+          "tag": "already_triggered",
+          "fields": [
+            {
+              "name": "run_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Compensation already in progress"
+        }
+      ]
+    },
+    {
+      "name": "execute_next",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            },
+            {
+              "name": "step_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "action_descriptor",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns the next compensation to execute ( reverse order ) \n Decrements current_index"
+        },
+        {
+          "tag": "all_done",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "All compensations executed Transitions to completed"
+        }
+      ]
+    },
+    {
+      "name": "mark_compensation_failed",
+      "params": [
+        {
+          "name": "plan",
+          "type": {
+            "kind": "param",
+            "paramRef": "X"
+          }
+        },
+        {
+          "name": "step_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "plan",
+              "type": {
+                "kind": "param",
+                "paramRef": "X"
+              }
+            }
+          ],
+          "prose": "Records that a compensating action failed Transitions plan to failed \n Human intervention likely required"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type CompensationPlanState {\n  \"\"\"All xs in this concept\"\"\"\n  xs: [ID!]!\n}\n\ntype CompensationPlanEntry {\n  x: ID!\n  run_ref: String!\n  status: String!\n  compensations: [JSON!]!\n  current_index: Int!\n}\n\nextend type Query {\n  compensationplan_entry(x: ID!): CompensationPlanEntry\n  compensationplan_entries: [CompensationPlanEntry!]!\n}\n\ntype CompensationPlanPlans {\n  x: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/CompensationPlan/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CompensationPlan"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              },
+              "step_key": {
+                "type": "string"
+              },
+              "action_descriptor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref",
+              "step_key",
+              "action_descriptor"
+            ]
+          }
+        }
+      },
+      "trigger": {
+        "$id": "urn:clef/CompensationPlan/trigger/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CompensationPlan"
+          },
+          "action": {
+            "const": "trigger"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "run_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_ref"
+            ]
+          }
+        }
+      },
+      "execute_next": {
+        "$id": "urn:clef/CompensationPlan/execute_next/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CompensationPlan"
+          },
+          "action": {
+            "const": "execute_next"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          }
+        }
+      },
+      "mark_compensation_failed": {
+        "$id": "urn:clef/CompensationPlan/mark_compensation_failed/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/CompensationPlan"
+          },
+          "action": {
+            "const": "mark_compensation_failed"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "string"
+              },
+              "step_key": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "plan",
+              "step_key",
+              "error"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/CompensationPlan/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      },
+      "trigger": {
+        "ok": {
+          "$id": "urn:clef/CompensationPlan/trigger/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "trigger"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/CompensationPlan/trigger/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "trigger"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref"
+              ]
+            }
+          }
+        },
+        "already_triggered": {
+          "$id": "urn:clef/CompensationPlan/trigger/completion/already_triggered",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "trigger"
+            },
+            "variant": {
+              "const": "already_triggered"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "run_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "run_ref"
+              ]
+            }
+          }
+        }
+      },
+      "execute_next": {
+        "ok": {
+          "$id": "urn:clef/CompensationPlan/execute_next/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "execute_next"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                },
+                "step_key": {
+                  "type": "string"
+                },
+                "action_descriptor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan",
+                "step_key",
+                "action_descriptor"
+              ]
+            }
+          }
+        },
+        "all_done": {
+          "$id": "urn:clef/CompensationPlan/execute_next/completion/all_done",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "execute_next"
+            },
+            "variant": {
+              "const": "all_done"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      },
+      "mark_compensation_failed": {
+        "ok": {
+          "$id": "urn:clef/CompensationPlan/mark_compensation_failed/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/CompensationPlan"
+            },
+            "action": {
+              "const": "mark_compensation_failed"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "plan": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "plan"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track compensating actions for saga style rollback As forward steps complete , \n their undo actions are registered On failure , compensations execute in reverse order"
+}

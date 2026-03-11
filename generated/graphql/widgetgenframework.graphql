@@ -1,0 +1,16 @@
+type WidgetGenFrameworkState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenFrameworkEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenframework_entry(p: ID!): WidgetGenFrameworkEntry
+  widgetgenframework_entries: [WidgetGenFrameworkEntry!]!
+}

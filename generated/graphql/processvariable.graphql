@@ -1,0 +1,24 @@
+type ProcessVariableState {
+  """All vs in this concept"""
+  vs: [ID!]!
+}
+
+type ProcessVariableEntry {
+  v: ID!
+  run_ref: String!
+  name: String!
+  value: String!
+  value_type: String!
+  scope: String!
+  merge_strategy: String!
+}
+
+extend type Query {
+  processvariable_entry(v: ID!): ProcessVariableEntry
+  processvariable_entries: [ProcessVariableEntry!]!
+}
+
+type ProcessVariableVariables {
+  v: ID!
+  value: ID!
+}

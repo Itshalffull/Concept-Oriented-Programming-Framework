@@ -29,10 +29,10 @@ describe('Health conformance', () => {
     const storage = createTestStorage();
     const handler = healthHandler;
 
-    const h = 'u-test-invariant-001';
-    const h2 = 'u-test-invariant-002';
-    const cr = 'u-test-invariant-003';
-    const sr = 'u-test-invariant-004';
+    let h: any = 'u-test-invariant-001';
+    let h2: any = 'u-test-invariant-002';
+    let cr: any = 'u-test-invariant-003';
+    let sr: any = 'u-test-invariant-004';
 
     // setup: checkConcept -> ok
     const checkConceptResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('Health conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).check).toBe(h);
+        h = (output as any).check;
         expect((output as any).latencyMs).toBe(15);
         return output;
       }),
@@ -57,9 +57,9 @@ describe('Health conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).check).toBe(h2);
-        expect((output as any).conceptResults).toBe(cr);
-        expect((output as any).syncResults).toBe(sr);
+        h2 = (output as any).check;
+        cr = (output as any).conceptResults;
+        sr = (output as any).syncResults;
         return output;
       }),
     )();

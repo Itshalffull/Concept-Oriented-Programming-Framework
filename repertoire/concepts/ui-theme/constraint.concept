@@ -1,0 +1,34 @@
+@version(1)
+concept Constraint [K] {
+
+  purpose {
+    Make accessibility and interaction rules part of theme
+    resolution so violations can be detected and corrected early.
+  }
+
+  state {
+    rules: set ConstraintRuleId
+    rule_kind: ConstraintRuleId -> String
+    rule_config: ConstraintRuleId -> String
+  }
+
+  actions {
+    action define(ruleId: String, kind: String, config: String) {
+      -> ok(constraintId: ConstraintRuleId) { Constraint rule recorded. }
+      -> error(message: String) { Constraint definition failed. }
+    }
+
+    action validate(path: String, value: String, context: String) {
+      -> ok(valid: Bool, violations: list String) { Matching constraints evaluated for the value. }
+    }
+
+    action computeCompliantValue(path: String, value: String, violation: String) {
+      -> ok(compliantValue: String) { A compliant fallback value was computed. }
+      -> error(message: String) { No compliant value could be computed. }
+    }
+
+    action listViolations(scope: String) {
+      -> ok(violations: list String) { Violations returned for the requested scope. }
+    }
+  }
+}

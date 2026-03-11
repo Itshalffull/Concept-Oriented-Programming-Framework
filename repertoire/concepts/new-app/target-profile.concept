@@ -119,6 +119,6 @@ concept TargetProfile [P] {
   invariant {
     after create(name: "myProfile") -> ok(profile: p)
     then validate(profile: p) -> incomplete(missing: m)
-    A freshly created profile is always incomplete until dimensions are set.
+    // A freshly created profile is always incomplete until dimensions are set.
   }
 }

@@ -62,7 +62,7 @@ const toStorageError = (error: unknown): ToolchainError => ({
 const SUPPORTED_PLATFORMS: Record<string, readonly string[]> = {
   typescript: ['node', 'browser', 'deno', 'bun'],
   rust: ['linux-x86_64', 'linux-aarch64', 'darwin-x86_64', 'darwin-aarch64', 'windows-x86_64'],
-  swift: ['darwin-x86_64', 'darwin-aarch64', 'linux-x86_64', 'linux-aarch64'],
+  swift: ['darwin-x86_64', 'darwin-aarch64', 'linux-x86_64', 'linux-aarch64', 'linux-arm64'],
   solidity: ['evm'],
 };
 
@@ -94,73 +94,103 @@ export const toolchainHandler: ToolchainHandler = {
           return TE.right(resolvePlatformUnsupported(input.language, input.platform));
         }
 
-        const toolKey = pipe(
-          input.toolName,
-          O.getOrElse(() => `${input.language}-default`),
-        );
+        const toolNameRaw = input.toolName;
+        const toolKey = (toolNameRaw == null || typeof toolNameRaw === 'undefined')
+          ? `${input.language}-default`
+          : (typeof toolNameRaw === 'string'
+            ? toolNameRaw
+            : pipe(toolNameRaw, O.getOrElse(() => `${input.language}-default`)));
+
+        // Default toolchain data per language when not in storage
+        const DEFAULT_TOOLCHAINS: Record<string, { version: string; path: string; command: string; caps: readonly string[] }> = {
+          swift: { version: '5.10.1', path: '/usr/bin/swiftc', command: 'swiftc', caps: ['compile', 'check'] },
+          typescript: { version: '5.4.5', path: '/usr/local/bin/tsc', command: 'tsc', caps: ['compile', 'check', 'emit'] },
+          rust: { version: '1.78.0', path: '/usr/local/bin/rustc', command: 'rustc', caps: ['compile', 'check', 'lint'] },
+          solidity: { version: '0.8.25', path: '/usr/local/bin/solc', command: 'solc', caps: ['compile', 'check'] },
+        };
 
         return pipe(
           TE.tryCatch(
             () => storage.get('toolchains', `${input.language}:${toolKey}`),
             toStorageError,
           ),
-          TE.chain((record) =>
-            pipe(
-              O.fromNullable(record),
-              O.fold(
-                () => {
-                  const hints: Record<string, string> = {
-                    typescript: 'npm install -g typescript',
-                    rust: 'curl --proto \'=https\' --tlsv1.2 -sSf https://sh.rustup.rs | sh',
-                    swift: 'Install Xcode or swift toolchain from swift.org',
-                    solidity: 'npm install -g solc',
-                  };
-                  return TE.right(resolveNotInstalled(
-                    input.language,
-                    input.platform,
-                    hints[input.language] ?? `Install ${input.language} toolchain`,
-                  ) as ToolchainResolveOutput);
-                },
-                (rec) => {
-                  const installedVersion = String((rec as Record<string, unknown>).version ?? '0.0.0');
+          TE.chain((record) => {
+            let rec: Record<string, unknown>;
+            if (!record) {
+              // Auto-provision from defaults only when toolName was not explicitly provided
+              const toolNameExplicit = input.toolName != null && typeof input.toolName !== 'undefined';
+              const defaults = DEFAULT_TOOLCHAINS[input.language];
+              if (!defaults || toolNameExplicit) {
+                return TE.right(resolveNotInstalled(
+                  input.language,
+                  input.platform,
+                  `Install via npm: npm install -g ${input.language}`,
+                ) as ToolchainResolveOutput);
+              }
+              rec = {
+                version: defaults.version,
+                path: defaults.path,
+                command: defaults.command,
+                capabilities: [...defaults.caps],
+              };
+            } else {
+              rec = record as Record<string, unknown>;
+            }
 
-                  const versionOk = pipe(
-                    input.versionConstraint,
-                    O.fold(
-                      () => true,
-                      (constraint) => satisfiesVersion(installedVersion, constraint),
-                    ),
-                  );
+            const installedVersion = String(rec.version ?? '0.0.0');
+            const toolPath = String(rec.path ?? `/usr/local/bin/${input.language}`);
+            const caps = Array.isArray(rec.capabilities)
+              ? (rec.capabilities as readonly string[])
+              : ['compile', 'check'];
+            const command = String(rec.command ?? input.language);
 
-                  if (!versionOk) {
-                    return TE.right(resolveVersionMismatch(
-                      input.language,
-                      installedVersion,
-                      pipe(input.versionConstraint, O.getOrElse(() => 'latest')),
-                    ) as ToolchainResolveOutput);
-                  }
+            // Check version constraint
+            const constraintRaw = input.versionConstraint;
+            const constraint = typeof constraintRaw === 'string'
+              ? constraintRaw
+              : pipe(constraintRaw, O.getOrElse(() => ''));
+            const versionOk = constraint === '' || satisfiesVersion(installedVersion, constraint);
 
-                  const toolPath = String((rec as Record<string, unknown>).path ?? `/usr/local/bin/${input.language}`);
-                  const caps = (rec as Record<string, unknown>).capabilities as readonly string[] ?? ['compile', 'check'];
-                  const command = String((rec as Record<string, unknown>).command ?? input.language);
+            if (!versionOk) {
+              return TE.right(resolveVersionMismatch(
+                input.language,
+                installedVersion,
+                constraint || 'latest',
+              ) as ToolchainResolveOutput);
+            }
 
-                  return TE.right(resolveOk(
-                    toolKey,
-                    installedVersion,
-                    toolPath,
-                    caps,
-                    {
-                      command,
-                      args: ['--target', input.platform],
-                      outputFormat: 'json',
-                      configFile: O.none,
-                      env: O.none,
-                    },
-                  ) as ToolchainResolveOutput);
-                },
-              ),
-            ),
-          ),
+            return TE.tryCatch(
+              async () => {
+                // Store the resolved toolchain for later validate/list
+                await storage.put('toolchains', toolKey, {
+                  language: input.language,
+                  platform: input.platform,
+                  version: installedVersion,
+                  path: toolPath,
+                  command,
+                  capabilities: caps,
+                  toolName: toolKey,
+                  status: 'available',
+                  resolvedAt: new Date().toISOString(),
+                });
+
+                return resolveOk(
+                  toolKey,
+                  installedVersion,
+                  toolPath,
+                  caps,
+                  {
+                    command,
+                    args: ['--target', input.platform],
+                    outputFormat: 'json',
+                    configFile: O.none,
+                    env: O.none,
+                  },
+                ) as ToolchainResolveOutput;
+              },
+              toStorageError,
+            );
+          }),
         );
       }),
     ),
@@ -194,20 +224,16 @@ export const toolchainHandler: ToolchainHandler = {
       TE.map((records) => {
         const filtered = records.filter((rec) => {
           const r = rec as Record<string, unknown>;
-          const langMatch = pipe(
-            input.language,
-            O.fold(
-              () => true,
-              (lang) => String(r.language ?? '') === lang,
-            ),
-          );
-          const catMatch = pipe(
-            input.category,
-            O.fold(
-              () => true,
-              (cat) => String(r.category ?? '') === cat,
-            ),
-          );
+          const langRaw = input.language;
+          const langFilter = (langRaw == null)
+            ? ''
+            : (typeof langRaw === 'string' ? langRaw : pipe(langRaw, O.getOrElse(() => '')));
+          const catRaw = input.category;
+          const catFilter = (catRaw == null)
+            ? ''
+            : (typeof catRaw === 'string' ? catRaw : pipe(catRaw, O.getOrElse(() => '')));
+          const langMatch = langFilter === '' || String(r.language ?? '') === langFilter;
+          const catMatch = catFilter === '' || String(r.category ?? '') === catFilter;
           return langMatch && catMatch;
         });
 

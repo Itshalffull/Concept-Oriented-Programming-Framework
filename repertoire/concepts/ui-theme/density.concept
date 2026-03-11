@@ -1,0 +1,37 @@
+@version(1)
+concept Density [D] {
+
+  purpose {
+    Apply density transformations to spacing and typography while
+    preserving a curated exemption list for fragile interactions.
+  }
+
+  state {
+    active_mode: option String
+    mode_multiplier: String -> Float
+    exempt_interactor: String -> Bool
+  }
+
+  actions {
+    action set(mode: String, config: option String) {
+      -> ok(mode: String) { Density mode activated. }
+      -> error(message: String) { Density mode could not be applied. }
+    }
+
+    action get() {
+      -> ok(mode: String) { Active density mode returned. }
+    }
+
+    action getMultiplier(mode: String) {
+      -> ok(multiplier: Float) { Multiplier returned for the density mode. }
+    }
+
+    action isExempt(interactor: String) {
+      -> ok(exempt: Bool) { Exemption status returned for the interactor. }
+    }
+
+    action listExemptions() {
+      -> ok(interactors: list String) { Exempt interactor list returned. }
+    }
+  }
+}

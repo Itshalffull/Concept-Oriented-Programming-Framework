@@ -1,0 +1,767 @@
+{
+  "uri": "urn:clef/AgentHandoff",
+  "name": "AgentHandoff",
+  "typeParams": [
+    {
+      "name": "D",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "source_agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "target_agent",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "context_summary",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "transferred_tools",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "transferred_state",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "handoffs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "d",
+        "paramRef": "D"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "prepare",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handoff",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            },
+            {
+              "name": "context_package",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Summarizes source agent s context , identifies tools and state \n to transfer Creates a context package for the target"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot prepare ( source agent not found or no context )"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "params": [
+        {
+          "name": "handoff",
+          "type": {
+            "kind": "param",
+            "paramRef": "D"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handoff",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Target agent accepts Tools and state transferred \n Source agent s status set to idle"
+        },
+        {
+          "tag": "rejected",
+          "fields": [
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Target agent cannot accept ( incompatible capabilities , \n at capacity , etc )"
+        }
+      ]
+    },
+    {
+      "name": "escalate",
+      "params": [
+        {
+          "name": "source",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "handoff",
+              "type": {
+                "kind": "param",
+                "paramRef": "D"
+              }
+            }
+          ],
+          "prose": "Special case : agent admits it can t handle the task and \n escalates to a more capable agent or human"
+        },
+        {
+          "tag": "no_target",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No suitable escalation target"
+        }
+      ]
+    },
+    {
+      "name": "getHistory",
+      "params": [
+        {
+          "name": "task_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "chain",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "from",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "to",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "reason",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "timestamp",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Full handoff chain for a task"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No handoff history for this task"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after prepare, execute behaves correctly",
+      "setup": [
+        {
+          "action": "prepare",
+          "inputs": [
+            {
+              "name": "source",
+              "value": {
+                "kind": "literal",
+                "value": "agent_a"
+              }
+            },
+            {
+              "name": "target",
+              "value": {
+                "kind": "literal",
+                "value": "agent_b"
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "literal",
+                "value": "Task requires coding expertise"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "handoff",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            },
+            {
+              "name": "context_package",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "execute",
+          "inputs": [
+            {
+              "name": "handoff",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "handoff",
+              "value": {
+                "kind": "variable",
+                "name": "d"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "d",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type AgentHandoffState {\n  \"\"\"All ds in this concept\"\"\"\n  ds: [ID!]!\n}\n\ntype AgentHandoffEntry {\n  d: ID!\n  source_agent: String!\n  target_agent: String!\n  context_summary: String!\n  transferred_tools: [String!]!\n  transferred_state: String!\n  reason: String!\n  status: String!\n}\n\nextend type Query {\n  agenthandoff_entry(d: ID!): AgentHandoffEntry\n  agenthandoff_entries: [AgentHandoffEntry!]!\n}\n\ntype AgentHandoffHandoffs {\n  d: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "prepare": {
+        "$id": "urn:clef/AgentHandoff/prepare/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentHandoff"
+          },
+          "action": {
+            "const": "prepare"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "target",
+              "reason"
+            ]
+          }
+        }
+      },
+      "execute": {
+        "$id": "urn:clef/AgentHandoff/execute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentHandoff"
+          },
+          "action": {
+            "const": "execute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "handoff": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "handoff"
+            ]
+          }
+        }
+      },
+      "escalate": {
+        "$id": "urn:clef/AgentHandoff/escalate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentHandoff"
+          },
+          "action": {
+            "const": "escalate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "reason"
+            ]
+          }
+        }
+      },
+      "getHistory": {
+        "$id": "urn:clef/AgentHandoff/getHistory/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/AgentHandoff"
+          },
+          "action": {
+            "const": "getHistory"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "task_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "task_id"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "prepare": {
+        "ok": {
+          "$id": "urn:clef/AgentHandoff/prepare/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "prepare"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handoff": {
+                  "type": "string"
+                },
+                "context_package": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "handoff",
+                "context_package"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/AgentHandoff/prepare/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "prepare"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "execute": {
+        "ok": {
+          "$id": "urn:clef/AgentHandoff/execute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handoff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "handoff"
+              ]
+            }
+          }
+        },
+        "rejected": {
+          "$id": "urn:clef/AgentHandoff/execute/completion/rejected",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "execute"
+            },
+            "variant": {
+              "const": "rejected"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "escalate": {
+        "ok": {
+          "$id": "urn:clef/AgentHandoff/escalate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "escalate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "handoff": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "handoff"
+              ]
+            }
+          }
+        },
+        "no_target": {
+          "$id": "urn:clef/AgentHandoff/escalate/completion/no_target",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "escalate"
+            },
+            "variant": {
+              "const": "no_target"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getHistory": {
+        "ok": {
+          "$id": "urn:clef/AgentHandoff/getHistory/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "getHistory"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string"
+                      },
+                      "to": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "reason",
+                      "timestamp"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "chain"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/AgentHandoff/getHistory/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/AgentHandoff"
+            },
+            "action": {
+              "const": "getHistory"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Structured transfer of control between agents with context packaging \n Different from message passing ( appending to conversation ) because \n handoff involves context summarization , tool state transfer , \n responsibility transfer , and acceptance rejection protocol"
+}

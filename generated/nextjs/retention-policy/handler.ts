@@ -182,12 +182,15 @@ export const retentionPolicyHandler: RetentionPolicyHandler = {
       TE.tryCatch(
         async () => {
           // Check active holds that cover this record
-          const holds = await storage.find('hold', { active: true });
+          const allHolds = await storage.find('hold');
+          const holds = allHolds.filter((h) => (h as Record<string, unknown>).active === true);
           const activeHoldNames: string[] = [];
           for (const h of holds) {
             const r = h as Record<string, unknown>;
             const scope = String(r.scope ?? '');
-            if (scope === '*' || scope === input.record || input.record.startsWith(scope)) {
+            // Support wildcard scopes: 'matter:123/*' matches 'matter:123/doc-1'
+            const scopeBase = scope.endsWith('/*') ? scope.slice(0, -1) : scope;
+            if (scope === '*' || scope === input.record || input.record.startsWith(scopeBase)) {
               activeHoldNames.push(String(r.name ?? ''));
             }
           }
@@ -232,12 +235,14 @@ export const retentionPolicyHandler: RetentionPolicyHandler = {
       TE.tryCatch(
         async () => {
           // Check holds
-          const holds = await storage.find('hold', { active: true });
+          const allDisposeHolds = await storage.find('hold');
+          const holds = allDisposeHolds.filter((h) => (h as Record<string, unknown>).active === true);
           const activeHoldNames: string[] = [];
           for (const h of holds) {
             const r = h as Record<string, unknown>;
             const scope = String(r.scope ?? '');
-            if (scope === '*' || scope === input.record || input.record.startsWith(scope)) {
+            const scopeBase = scope.endsWith('/*') ? scope.slice(0, -1) : scope;
+            if (scope === '*' || scope === input.record || input.record.startsWith(scopeBase)) {
               activeHoldNames.push(String(r.name ?? ''));
             }
           }

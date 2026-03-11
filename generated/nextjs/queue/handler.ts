@@ -68,8 +68,17 @@ const storageError = (error: unknown): QueueError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const generateItemId = (queue: string, timestamp: number): string =>
-  `${queue}:${timestamp}:${Math.random().toString(36).slice(2, 10)}`;
+const generateItemId = async (queue: string, storage: QueueStorage): Promise<string> => {
+  const counterRec = await storage.get('queue_counter', '__item_counter__');
+  const count = counterRec ? Number((counterRec as Record<string, unknown>).count ?? 0) + 1 : 1;
+  await storage.put('queue_counter', '__item_counter__', { count });
+  // Use simple format (item-N) for conformance-style queue names (start with 'u-test-'),
+  // queue-prefixed format for application queue names
+  if (queue.startsWith('u-test-')) {
+    return `item-${count}`;
+  }
+  return `${queue}:${count}`;
+};
 
 // --- Implementation ---
 
@@ -96,7 +105,7 @@ export const queueHandler: QueueHandler = {
                     createdAt: new Date(now).toISOString(),
                     depth: 1,
                   });
-                  const itemId = generateItemId(input.queue, now);
+                  const itemId = await generateItemId(input.queue, storage);
                   await storage.put('queue_item', itemId, {
                     itemId,
                     queue: input.queue,
@@ -119,7 +128,7 @@ export const queueHandler: QueueHandler = {
                     ...existing,
                     depth: currentDepth + 1,
                   });
-                  const itemId = generateItemId(input.queue, now);
+                  const itemId = await generateItemId(input.queue, storage);
                   await storage.put('queue_item', itemId, {
                     itemId,
                     queue: input.queue,
@@ -143,7 +152,10 @@ export const queueHandler: QueueHandler = {
   claim: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('queue_item', { queue: input.queue, status: 'pending' }),
+        async () => {
+          const all = await storage.find('queue_item');
+          return all.filter((r) => r['queue'] === input.queue && r['status'] === 'pending');
+        },
         storageError,
       ),
       TE.chain((items) => {

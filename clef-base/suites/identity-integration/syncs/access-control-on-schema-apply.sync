@@ -1,0 +1,17 @@
+# Authorization wiring: access control on schema apply.
+# When a Schema is applied to a ContentNode (changing its type),
+# verify the user has admin permission for the target Schema.
+
+sync AccessControlOnSchemaApply [eager]
+  purpose: "Verify the user has admin permission before applying a Schema to a ContentNode"
+when {
+  Schema/apply: [ entity_id: ?entity_id; schema: ?schema; user: ?user ]
+    => []
+}
+then {
+  AccessControl/check: [
+    resource: ?schema;
+    action: "admin";
+    context: ?user
+  ]
+}

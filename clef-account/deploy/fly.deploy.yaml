@@ -1,0 +1,86 @@
+app:
+  name: clef-account
+  version: "0.1.0"
+  uri: urn:clef:account
+
+runtimes:
+  fly:
+    type: FlyRuntime
+    engine: true
+    transport: http
+    storage: postgres
+    secrets: fly-secrets
+    config:
+      region: "${FLY_REGION:-iad}"
+      port: "${PORT:-4001}"
+      minInstances: 1
+      maxInstances: 3
+
+infrastructure:
+  storage:
+    postgres:
+      type: postgres
+      config:
+        connectionString: "${DATABASE_URL}"
+        poolSize: 10
+        ssl: true
+
+  secrets:
+    fly-secrets:
+      type: fly-secrets
+      config:
+        app: clef-account
+
+concepts:
+  Authentication:
+    spec: ../repertoire/concepts/identity/authentication.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/authentication.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  Authorization:
+    spec: ../repertoire/concepts/identity/authorization.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/authorization.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  AccessControl:
+    spec: ../repertoire/concepts/identity/access-control.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/access-control.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+  Session:
+    spec: ../repertoire/concepts/identity/session.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/session.handler.ts
+        runtime: fly
+        storage: postgres
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/auth-session.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/permission-check.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/role-on-register.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/admin-role-bootstrap.sync
+    engine: engine
+    annotations: [eager]

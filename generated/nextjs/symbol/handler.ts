@@ -48,8 +48,10 @@ const storageError = (error: unknown): SymbolError => ({
 
 /** Derive namespace from the symbol string (everything before the last segment). */
 const deriveNamespace = (symbolString: string): string => {
-  const parts = symbolString.split('.');
-  return parts.length > 1 ? parts.slice(0, -1).join('.') : '';
+  // Support both '/' and '.' delimited symbol strings
+  const sep = symbolString.includes('/') ? '/' : '.';
+  const parts = symbolString.split(sep);
+  return parts.length > 1 ? parts.slice(0, -1).join(sep) : '';
 };
 
 /** Generate a stable unique key for a symbol by its fully-qualified name. */
@@ -129,7 +131,8 @@ export const symbolHandler: SymbolHandler = {
           const exact = await storage.get('symbol', symbolKey(input.symbolString));
           if (exact) return [exact];
           // Then search for partial matches (unqualified name)
-          const all = await storage.find('symbol', { symbolString: input.symbolString });
+          const allSymbols = await storage.find('symbol');
+          const all = allSymbols.filter((r) => String(r['symbolString']) === input.symbolString);
           return [...all];
         },
         storageError,
@@ -147,7 +150,8 @@ export const symbolHandler: SymbolHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('symbol', { kind: input.kind });
+          const allRecords = await storage.find('symbol');
+          const records = allRecords.filter((r) => String(r['kind']) === input.kind);
           const filtered = input.namespace
             ? records.filter((r) => String(r['namespace']) === input.namespace)
             : records;
@@ -162,7 +166,8 @@ export const symbolHandler: SymbolHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          const records = await storage.find('symbol', { definingFile: input.file });
+          const allByFile = await storage.find('symbol');
+          const records = allByFile.filter((r) => String(r['definingFile']) === input.file);
           const ids = records.map((r) => String(r['id']));
           return findByFileOk(JSON.stringify(ids));
         },
@@ -193,7 +198,8 @@ export const symbolHandler: SymbolHandler = {
                   }
                   const oldName = String(found['displayName']);
                   // Update occurrences by scanning for references to this symbol
-                  const occurrences = await storage.find('occurrence', { symbol: input.symbol });
+                  const allOccurrences = await storage.find('occurrence');
+                  const occurrences = allOccurrences.filter((r) => String(r['symbol']) === input.symbol);
                   const occurrencesUpdated = occurrences.length;
                   // Update the symbol record itself
                   await storage.put('symbol', input.symbol, {

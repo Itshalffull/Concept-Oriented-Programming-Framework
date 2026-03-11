@@ -1,0 +1,80 @@
+@version(1)
+concept Transport [P] {
+
+  purpose {
+    Execute data read and write requests against external
+    sources. Manages connection configuration, authentication,
+    retry policies, response caching, and an offline queue.
+  }
+
+  state {
+    kind: P -> String
+    baseUrl: P -> option String
+    auth: P -> option String
+    status: P -> String
+    retryPolicy {
+      maxAttempts: P -> Int
+      backoff: P -> String
+    }
+    cacheTTL: P -> option Int
+    pendingQueue: P -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action configure(transport: P, kind: String,
+                     baseUrl: option String,
+                     auth: option String,
+                     retryPolicy: option String) {
+      -> ok(transport: P) {
+        Initialize with connection parameters.
+        Kind: "rest", "graphql", "websocket".
+      }
+      -> invalid(message: String) { Kind unknown. }
+    }
+
+    action setAuth(transport: P, auth: String) {
+      -> ok(transport: P) {
+        Update the transport's active authentication material
+        without changing other connection settings.
+      }
+      -> notfound(message: String) { Transport not configured. }
+    }
+
+    action clearAuth(transport: P) {
+      -> ok(transport: P) {
+        Remove the transport's active authentication material.
+      }
+      -> notfound(message: String) { Transport not configured. }
+    }
+
+    action fetch(transport: P, query: String) {
+      -> ok(transport: P, data: String) { Execute read. Return data. }
+      -> cached(transport: P, data: String, age: Int) { Returned from cache. }
+      -> error(transport: P, status: Int, message: String) { Request failed. }
+    }
+
+    action mutate(transport: P, action: String, input: String) {
+      -> ok(transport: P, result: String) { Execute write. Return result. }
+      -> queued(transport: P, queuePosition: Int) { Queued for offline. }
+      -> error(transport: P, status: Int, message: String) { Write failed. }
+    }
+
+    action flushQueue(transport: P) {
+      -> ok(transport: P, flushed: Int) { Send all queued mutations. }
+      -> partial(transport: P, sent: Int, failed: Int) { Some failed. }
+    }
+  }
+
+  invariant {
+    after configure(transport: p, kind: "rest",
+      baseUrl: "https://api.example.com", auth: _, retryPolicy: _)
+      -> ok(transport: p)
+    then fetch(transport: p, query: "{ \"path\": \"/articles\" }")
+      -> ok(transport: p, data: _)
+  }
+}

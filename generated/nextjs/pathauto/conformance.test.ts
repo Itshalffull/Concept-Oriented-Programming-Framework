@@ -30,7 +30,7 @@ describe('Pathauto conformance', () => {
     const handler = pathautoHandler;
 
     const p = 'u-test-invariant-001';
-    const a = 'u-test-invariant-002';
+    let a: any = 'u-test-invariant-002';
 
     // setup: generateAlias -> ok
     const generateAliasResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Pathauto conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).alias).toBe(a);
+        a = (output as any).alias;
         return output;
       }),
     )();

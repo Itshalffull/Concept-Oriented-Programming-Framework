@@ -1,0 +1,10 @@
+# Route Target/generate to UILibraryTarget — Architecture doc: Clef Bind, Sync Section 3.3
+
+sync RouteToUILibrary [eager]
+when {
+  Target/generate: [ projection: ?p; targetType: "ui-library"; config: ?c ]
+    => [ output: ?o ]
+}
+then {
+  UILibraryTarget/generate: [ config: ?c ]
+}

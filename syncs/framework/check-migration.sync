@@ -1,4 +1,4 @@
-// Uses deploy kit Migration concept (plan action with expand/contract pattern)
+// Uses deploy suite Migration concept (plan action with expand/contract pattern)
 sync CheckMigrationOnRegister [eager]
 when {
   Registry/register: [ uri: ?uri ] => [ concept: ?c ]

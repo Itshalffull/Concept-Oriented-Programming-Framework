@@ -29,7 +29,7 @@ derived ApiEndpoint [T] {
       matches: Spec/emit
     }
 
-    action compose(kit: String, target: String) {
+    action compose(suite: String, target: String) {
       matches: ApiSurface/compose
     }
 
@@ -39,7 +39,7 @@ derived ApiEndpoint [T] {
   principle {
     after project(manifest: m, annotations: a)
     then middleware is resolved and injected into the projection
-    and  compose(kit: k, target: t)
+    and  compose(suite: k, target: t)
     then entrypoint returns the composed API surface
   }
 }

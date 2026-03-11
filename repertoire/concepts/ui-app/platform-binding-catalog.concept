@@ -1,0 +1,45 @@
+@version(1)
+concept PlatformBindingCatalog [B] {
+
+  purpose {
+    Manage reusable platform-specific binding declarations for
+    destinations and interaction patterns so one app definition can
+    be rendered consistently across browser, mobile, desktop, watch,
+    and terminal targets.
+  }
+
+  state {
+    bindings: set B
+    platform: B -> String
+    destinationPattern: B -> String
+    bindingKind: B -> String
+    payload: B -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(binding: B, platform: String, destinationPattern: String,
+                    bindingKind: String, payload: String) {
+      -> ok(binding: B) { Store or update a platform binding declaration. }
+    }
+
+    action resolve(platform: String, destination: String, bindingKind: String) {
+      -> ok(binding: B, payload: String, matchedPattern: String) {
+        Resolve the most specific binding for a platform, destination, and binding kind.
+      }
+      -> notfound(message: String) { No matching binding exists. }
+    }
+
+    action list(platform: option String) {
+      -> ok(bindings: list {
+        binding: B, platform: String, destinationPattern: String,
+        bindingKind: String, payload: String
+      }) {
+        Return all bindings, optionally filtered by platform.
+      }
+    }
+  }
+}

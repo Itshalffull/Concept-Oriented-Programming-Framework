@@ -19,7 +19,7 @@ import { parseDeploymentManifest, type BuildConfig } from '../../../handlers/ts/
 import { findFiles } from '../util.js';
 import type { CompiledSync, UsesEntry } from '../../../runtime/types.js';
 
-const KIT_YAML_TEMPLATE = `# Suite Manifest
+const SUITE_YAML_TEMPLATE = `# Suite Manifest
 name: {{NAME}}
 version: 0.1.0
 description: "{{NAME}} suite"
@@ -35,28 +35,28 @@ syncs:
 
 # External concepts from other suites that this suite's syncs reference.
 # Required uses: concepts must be available for the suite to function.
-# Optional uses: syncs only load if the named kit is present.
+# Optional uses: syncs only load if the named suite is present.
 # uses:
-#   - kit: other-suite-name
+#   - suite: other-suite-name
 #     concepts:
 #       - name: ConceptName
 #         params:
 #           T: { as: shared-type-tag }
-#   - kit: another-kit
+#   - suite: another-suite
 #     optional: true
 #     concepts:
 #       - name: OptionalConcept
 #     syncs:
 #       - path: ./syncs/optional-integration.sync
-#         description: Only loads if another-kit is present.
+#         description: Only loads if another-suite is present.
 
 dependencies: []
 `;
 
-const KIT_CONCEPT_TEMPLATE = `concept Example [U] {
+const SUITE_CONCEPT_TEMPLATE = `concept Example [U] {
 
   purpose {
-    An example concept in the {{NAME}} kit.
+    An example concept in the {{NAME}} suite.
   }
 
   state {
@@ -76,7 +76,7 @@ const KIT_CONCEPT_TEMPLATE = `concept Example [U] {
 }
 `;
 
-const KIT_SYNC_TEMPLATE = `sync ExampleFlow [eager]
+const SUITE_SYNC_TEMPLATE = `sync ExampleFlow [eager]
 when {
   Web/request: [ method: "create" ]
     => [ request: ?request; id: ?id ]
@@ -120,7 +120,7 @@ function stripUrn(conceptRef: string): string {
  * Uses line-by-line parsing to handle the nested structure:
  *
  *   uses:
- *     - kit: auth
+ *     - suite: auth
  *       optional: true
  *       concepts:
  *         - name: User
@@ -167,9 +167,9 @@ export function parseUsesSection(source: string): UsesEntry[] {
       continue;
     }
 
-    // New uses entry: `  - kit: <name>`
-    const kitMatch = trimmed.match(/^-\s*kit:\s*(.+)$/);
-    if (kitMatch) {
+    // New uses entry: `  - suite: <name>` (also accepts `- kit:` for backward compat)
+    const suiteMatch = trimmed.match(/^-\s*(?:suite|kit):\s*(.+)$/);
+    if (suiteMatch) {
       // Save previous concept and entry
       if (currentConcept && currentEntry) {
         currentEntry.concepts.push(currentConcept);
@@ -177,7 +177,7 @@ export function parseUsesSection(source: string): UsesEntry[] {
       if (currentEntry) {
         result.push(currentEntry);
       }
-      currentEntry = { kit: kitMatch[1].trim(), concepts: [] };
+      currentEntry = { suite: suiteMatch[1].trim(), concepts: [] };
       currentConcept = null;
       inConcepts = false;
       inSyncs = false;
@@ -293,7 +293,7 @@ export function parseUsesSection(source: string): UsesEntry[] {
 
 /**
  * Get sync paths from optional uses entries. These are syncs that only
- * load when the external kit is present — exempt from strict validation.
+ * load when the external suite is present — exempt from strict validation.
  * Returns a set of resolved absolute paths.
  */
 export function getOptionalSyncPaths(uses: UsesEntry[], suiteDir: string): Set<string> {
@@ -351,11 +351,29 @@ export function parseLocalConceptNames(source: string): Set<string> {
   return names;
 }
 
+/** Known-safe toolchain commands that may appear in deploy manifest testRunner fields. */
+const ALLOWED_TEST_RUNNERS = new Set([
+  'npx', 'npm', 'node', 'bun', 'deno',
+  'cargo', 'rustc',
+  'swift', 'xcodebuild',
+  'forge',
+  'go',
+  'dotnet',
+  'python', 'python3', 'pytest',
+  'java', 'gradle', 'mvn',
+]);
+
 /**
  * Check if a toolchain command is available on the system PATH.
+ * Only allows commands from the ALLOWED_TEST_RUNNERS whitelist
+ * to prevent command injection from untrusted suite manifests.
  */
 function isToolchainAvailable(testRunner: string): boolean {
   const baseCommand = testRunner.split(' ')[0];
+  if (!ALLOWED_TEST_RUNNERS.has(baseCommand)) {
+    console.warn(`  [WARN] Refusing unknown test runner "${baseCommand}" — not in allowed list`);
+    return false;
+  }
   try {
     execSync(
       process.platform === 'win32' ? `where ${baseCommand}` : `which ${baseCommand}`,
@@ -367,7 +385,7 @@ function isToolchainAvailable(testRunner: string): boolean {
   }
 }
 
-export async function kitCommand(
+export async function suiteCommand(
   positional: string[],
   flags: Record<string, string | boolean>,
 ): Promise<void> {
@@ -376,19 +394,19 @@ export async function kitCommand(
 
   switch (subcommand) {
     case 'init':
-      await kitInit(rest, flags);
+      await suiteInit(rest, flags);
       break;
     case 'validate':
-      await kitValidate(rest, flags);
+      await suiteValidate(rest, flags);
       break;
     case 'test':
-      await kitTest(rest, flags);
+      await suiteTest(rest, flags);
       break;
     case 'list':
-      await kitList(flags);
+      await suiteList(flags);
       break;
     case 'check-overrides':
-      await kitCheckOverrides(flags);
+      await suiteCheckOverrides(flags);
       break;
     default:
       console.error(`Usage: clef suite <init|validate|test|list|check-overrides> [args...]`);
@@ -396,7 +414,7 @@ export async function kitCommand(
   }
 }
 
-async function kitInit(
+async function suiteInit(
   positional: string[],
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
@@ -412,7 +430,7 @@ async function kitInit(
     process.exit(1);
   }
 
-  console.log(`Scaffolding kit: ${name}`);
+  console.log(`Scaffolding suite: ${name}`);
 
   const dirs = [
     '',
@@ -427,17 +445,17 @@ async function kitInit(
 
   writeFileSync(
     join(suiteDir, 'suite.yaml'),
-    KIT_YAML_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
+    SUITE_YAML_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
   );
 
   writeFileSync(
     join(suiteDir, 'example.concept'),
-    KIT_CONCEPT_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
+    SUITE_CONCEPT_TEMPLATE.replace(/\{\{NAME\}\}/g, name),
   );
 
   writeFileSync(
     join(suiteDir, 'syncs/example.sync'),
-    KIT_SYNC_TEMPLATE,
+    SUITE_SYNC_TEMPLATE,
   );
 
   console.log(`
@@ -455,7 +473,7 @@ Next steps:
 `);
 }
 
-async function kitValidate(
+async function suiteValidate(
   positional: string[],
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
@@ -477,7 +495,7 @@ async function kitValidate(
     process.exit(1);
   }
 
-  console.log(`Validating kit: ${suitePath}\n`);
+  console.log(`Validating suite: ${suitePath}\n`);
 
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -487,7 +505,7 @@ async function kitValidate(
   const nameMatch = manifestSource.match(/^name:\s*(.+)$/m);
   const suiteName = nameMatch ? nameMatch[1].trim() : '(unnamed)';
 
-  console.log(`  Kit: ${suiteName}`);
+  console.log(`  Suite: ${suiteName}`);
 
   // Parse uses declarations
   const uses = parseUsesSection(manifestSource);
@@ -503,15 +521,15 @@ async function kitValidate(
     const totalExternal = uses.reduce((sum, u) => sum + u.concepts.length, 0);
     const requiredUses = uses.filter(u => !u.optional);
     const optionalUses = uses.filter(u => u.optional);
-    console.log(`  Uses: ${totalExternal} external concept(s) from ${uses.length} kit(s)`);
+    console.log(`  Uses: ${totalExternal} external concept(s) from ${uses.length} suite(s)`);
     for (const entry of requiredUses) {
       for (const c of entry.concepts) {
-        console.log(`    [OK] ${c.name} (from ${entry.kit})`);
+        console.log(`    [OK] ${c.name} (from ${entry.suite})`);
       }
     }
     for (const entry of optionalUses) {
       for (const c of entry.concepts) {
-        console.log(`    [OK] ${c.name} (from ${entry.kit}, optional)`);
+        console.log(`    [OK] ${c.name} (from ${entry.suite}, optional)`);
       }
     }
   }
@@ -575,7 +593,7 @@ async function kitValidate(
         if (unknownRefs.length > 0) {
           if (isOptionalSync) {
             // Optional uses syncs get a warning, not an error —
-            // they only load when the external kit is present
+            // they only load when the external suite is present
             for (const ref of unknownRefs) {
               warnings.push(
                 `${relPath}: Optional sync "${s.name}" references "${ref}" which is not declared in uses concepts`,
@@ -628,10 +646,10 @@ async function kitValidate(
   const depsMatch = manifestSource.match(/^dependencies:\s*$/m);
   if (depsMatch && uses.length > 0) {
     for (const entry of uses) {
-      const depPattern = new RegExp(`name:\\s*${entry.kit}`, 'm');
+      const depPattern = new RegExp(`name:\\s*${entry.suite}`, 'm');
       if (!depPattern.test(manifestSource)) {
         warnings.push(
-          `Uses references kit "${entry.kit}" which is not listed in 'dependencies'`,
+          `Uses references suite "${entry.suite}" which is not listed in 'dependencies'`,
         );
       }
     }
@@ -653,7 +671,7 @@ async function kitValidate(
   console.log('\nSuite is valid.');
 }
 
-async function kitTest(
+async function suiteTest(
   positional: string[],
   flags: Record<string, string | boolean>,
 ): Promise<void> {
@@ -672,7 +690,7 @@ async function kitTest(
 
   const dryRun = Boolean(flags['dry-run']);
 
-  console.log(`Testing kit: ${suitePath}\n`);
+  console.log(`Testing suite: ${suitePath}\n`);
 
   // Find and validate all concept specs
   const conceptFiles = findFiles(suiteDir, '.concept');
@@ -772,6 +790,12 @@ async function kitTest(
       continue;
     }
 
+    // Reject test runners containing shell metacharacters
+    if (/[;&|`$(){}!<>\\]/.test(config.testRunner)) {
+      console.log(`  [SKIP] ${language} — test runner contains disallowed shell characters: ${config.testRunner}`);
+      continue;
+    }
+
     console.log(`  [RUN] ${language} — ${config.testRunner} (in ${config.testPath})`);
     try {
       const output = execSync(config.testRunner, {
@@ -809,7 +833,7 @@ async function kitTest(
   console.log('\nAll language tests passed.');
 }
 
-async function kitList(
+async function suiteList(
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
@@ -851,7 +875,7 @@ async function kitList(
   }
 }
 
-async function kitCheckOverrides(
+async function suiteCheckOverrides(
   _flags: Record<string, string | boolean>,
 ): Promise<void> {
   const projectDir = resolve(process.cwd());
@@ -866,15 +890,15 @@ async function kitCheckOverrides(
   console.log('Checking sync overrides...\n');
 
   // Collect all suite sync names
-  const kitSyncNames = new Set<string>();
-  const kitSyncFiles = findFiles(join(suitesDir), '.sync');
+  const suiteSyncNames = new Set<string>();
+  const suiteSyncFiles = findFiles(join(suitesDir), '.sync');
 
-  for (const file of kitSyncFiles) {
+  for (const file of suiteSyncFiles) {
     const source = readFileSync(file, 'utf-8');
     try {
       const syncs = parseSyncFile(source);
       for (const s of syncs) {
-        kitSyncNames.add(s.name);
+        suiteSyncNames.add(s.name);
       }
     } catch {
       // Skip unparseable
@@ -898,8 +922,7 @@ async function kitCheckOverrides(
   }
 
   // Check for overrides (app syncs that share names with suite syncs)
-  const overrides = [...appSyncNames].filter(n => kitSyncNames.has(n));
-  const invalid = overrides.length === 0 ? [] : [];
+  const overrides = [...appSyncNames].filter(n => suiteSyncNames.has(n));
 
   if (overrides.length > 0) {
     console.log('App syncs that override suite syncs:');
@@ -910,5 +933,5 @@ async function kitCheckOverrides(
     console.log('No sync overrides found.');
   }
 
-  console.log(`\n${kitSyncNames.size} suite sync(s), ${appSyncNames.size} app sync(s), ${overrides.length} override(s)`);
+  console.log(`\n${suiteSyncNames.size} suite sync(s), ${appSyncNames.size} app sync(s), ${overrides.length} override(s)`);
 }

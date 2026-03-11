@@ -1,0 +1,130 @@
+# ClefRegistry — Interface Generation Manifest
+#
+# Package registry API for the Clef ecosystem. Handles publication,
+# indexing, resolution, and artifact distribution.
+#
+# Usage:
+#   clef interface generate --manifest clef-registry/app.interface.yaml
+
+interface:
+  name: clef-registry
+  version: 0.1.0
+
+# ─── GENERATION TARGETS ──────────────────────────────
+targets:
+  rest:
+    basePath: /api
+    framework: hono
+    versioning: none
+    outputDir: ./generated/interfaces/rest
+
+  grpc:
+    package: clef.registry.v1
+    goPackage: github.com/clef/registry-proto
+    outputDir: ./generated/interfaces/grpc
+
+# ─── SDK LANGUAGES ────────────────────────────────────
+sdk:
+  typescript:
+    packageName: "@clef/registry-client"
+    moduleSystem: esm
+    outputDir: ./generated/interfaces/sdk/typescript
+
+  python:
+    packageName: clef-registry-client
+    asyncSupport: true
+    outputDir: ./generated/interfaces/sdk/python
+
+  go:
+    modulePath: github.com/clef/registry-client-go
+    outputDir: ./generated/interfaces/sdk/go
+
+# ─── SPECIFICATION DOCUMENTS ─────────────────────────
+specs:
+  openapi: true
+  asyncapi: false
+  outputDir: ./generated/interfaces/specs
+
+# ─── OUTPUT CONFIGURATION ────────────────────────────
+output:
+  dir: ./generated/interfaces
+  formatting:
+    typescript: prettier
+    python: black
+    go: gofmt
+  clean: true
+
+# ─── GLOBAL TRAITS ────────────────────────────────────
+traits:
+  - name: auth
+    config:
+      scheme: bearer
+    scope: suite
+
+# ─── GROUPING ─────────────────────────────────────────
+grouping:
+  strategy: per-concept
+
+# ─── PER-CONCEPT OVERRIDES ───────────────────────────
+concepts:
+  Registry:
+    rest:
+      path: /registry
+      actions:
+        publish:
+          method: POST
+          path: /registry/packages
+        lookup:
+          method: GET
+          path: /registry/packages/:namespace/:name/:version
+        search:
+          method: GET
+          path: /registry/search
+        versions:
+          method: GET
+          path: /registry/packages/:namespace/:name/versions
+
+  Publisher:
+    traits:
+      - name: auth
+        actions: [upload]
+    rest:
+      path: /publish
+      actions:
+        package:
+          method: POST
+          path: /publish/package
+        upload:
+          method: POST
+          path: /publish/upload
+
+  Download:
+    rest:
+      path: /downloads
+      actions:
+        register:
+          method: POST
+          path: /downloads/register
+        resolve:
+          method: GET
+          path: /downloads/resolve/:artifact_id/:platform
+        yank:
+          method: POST
+          path: /downloads/yank
+        stats:
+          method: GET
+          path: /downloads/stats/:artifact_id
+
+  ComponentManifest:
+    rest:
+      path: /components
+      actions:
+        register:
+          method: POST
+          path: /components/register
+        lookup:
+          method: GET
+          path: /components/:module_id/:version
+        search:
+          method: GET
+          path: /components/search

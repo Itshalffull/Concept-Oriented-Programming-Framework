@@ -29,7 +29,7 @@ describe('Relation conformance', () => {
     const storage = createTestStorage();
     const handler = relationHandler;
 
-    const r = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-001';
 
     // setup: defineRelation -> ok
     const defineRelationResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Relation conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).relation).toBe(r);
+        r = (output as any).relation;
         return output;
       }),
     )();

@@ -134,9 +134,10 @@ export function createPerRequestEngine(config: PerRequestEngineConfig) {
       for (const invocation of invocations) {
         if (config.firingGuard) {
           // Use the completion IDs from the match as the guard key
+          const matchedIds = invocation.matchedIds || [completion.id];
           const acquired = await config.firingGuard.tryAcquire(
-            [completion.id],
-            `${invocation.sync || 'unknown'}:${invocation.id}`,
+            matchedIds,
+            invocation.sync || 'unknown',
           );
           if (!acquired) continue;
         }

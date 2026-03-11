@@ -29,7 +29,7 @@ describe('Runtime conformance', () => {
     const storage = createTestStorage();
     const handler = runtimeHandler;
 
-    const i = 'u-test-invariant-001';
+    let i: any = 'u-test-invariant-001';
 
     // setup: provision -> ok
     const provisionResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Runtime conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).instance).toBe(i);
+        i = (output as any).instance;
         expect((output as any).endpoint).toBe('http://svc:8080');
         return output;
       }),

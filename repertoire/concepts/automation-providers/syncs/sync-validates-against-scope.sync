@@ -1,0 +1,16 @@
+# Validate user-defined syncs against the active automation scope gate
+# When a sync passes compilation, check each referenced action against
+# AutomationScope to enforce allowlist/denylist rules.
+
+sync SyncValidatesAgainstScope [eager]
+  purpose: "Enforce scope gate on user-defined sync actions during validation."
+when {
+  SyncAutomationProvider/validate: [ sync_def: ?syncDef ]
+    => [ sync_def: ?syncDef ]
+}
+then {
+  AutomationScope/check: [
+    scope: ?syncDef;
+    action_ref: ?syncDef
+  ]
+}

@@ -1,0 +1,122 @@
+@version(1)
+widget inline-citation {
+
+  purpose {
+    Numbered inline citation reference rendered as a superscript badge
+    within message text. Hovering reveals a preview tooltip with the
+    source title, URL, and relevant excerpt. Clicking navigates to the
+    source. Used for RAG-augmented responses with source attribution.
+  }
+
+  requires @1 {
+    fields {
+      index: Int;
+      title: String;
+      url: option String;
+      excerpt: option String;
+    }
+  }
+
+  anatomy {
+    root:     container  { Inline badge wrapper }
+    badge:    container  { Numbered superscript citation marker }
+    tooltip:  container  { Hover preview with source details }
+    title:    text       { Source title in tooltip }
+    excerpt:  text       { Relevant text excerpt in tooltip }
+    link:     action     { Clickable link to source }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> previewing;
+      on CLICK -> navigating;
+    }
+
+    previewing {
+      on LEAVE -> idle;
+      on CLICK -> navigating;
+      entry [show tooltip; positionTooltip];
+      exit [hide tooltip];
+    }
+
+    navigating {
+      on NAVIGATE_COMPLETE -> idle;
+      entry [openSource];
+    }
+  }
+
+  accessibility {
+    role: link;
+    keyboard {
+      Enter -> CLICK;
+      Space -> CLICK;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "link";
+        aria-label: concat("Citation ", $index, ": ", $title);
+      };
+      tooltip -> {
+        role: "tooltip";
+        aria-hidden: if state != "previewing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    size: union "sm" | "md" = "sm"
+    showPreviewOnHover: Bool = true
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      suite: "llm-rag";
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      tabindex: "0";
+      onMouseEnter: send(HOVER);
+      onMouseLeave: send(LEAVE);
+      onClick: send(CLICK);
+    }
+    badge -> {
+      data-part: "badge";
+      text: $index;
+      data-size: ?size;
+    }
+    tooltip -> {
+      data-part: "tooltip";
+      role: "tooltip";
+      data-visible: if state == "previewing" then "true" else "false";
+    }
+    title -> {
+      data-part: "title";
+      text: $title;
+    }
+    excerpt -> {
+      data-part: "excerpt";
+      text: $excerpt;
+      data-visible: if $excerpt then "true" else "false";
+    }
+    link -> {
+      data-part: "link";
+      data-url: $url;
+    }
+  }
+
+  invariant {
+    "Citation number must match the source index in the references list";
+    "Tooltip must appear on hover and focus, disappear on blur and leave";
+    "Clicking must navigate to the source URL when available";
+  }
+
+}

@@ -1,0 +1,76 @@
+derived ClefApp [T] {
+
+  purpose {
+    The root derivation of the Clef framework. Composes all four
+    major subsystems — Score (code intelligence), Surface (UI
+    generation), Bind (interface generation), and Framework (build,
+    test, deploy) — into a single coordinated application where
+    spec changes flow through indexing, generation, testing, and
+    deployment in one coherent pipeline.
+  }
+
+  composes {
+    derived ClefScore [T]
+    derived ClefSurface [T]
+    derived ClefBind [T]
+    derived ClefFramework [T]
+  }
+
+  syncs {
+    required: [
+      score-surface-widget-select,
+      score-bind-enrichment-feed,
+      framework-build-triggers-score-reindex,
+      framework-test-uses-score-coverage,
+      surface-bind-co-generate,
+      build-surface-generate,
+      build-bind-generate,
+      test-gate-deploy
+    ]
+  }
+
+  surface {
+    action generate(projectDir: String, outputDir: String, targets: String) {
+      matches: derivedContext "ClefFramework/build"
+    }
+
+    action surface(projectDir: String, target: String, outputDir: String) {
+      matches: derivedContext "ClefSurface/generate"
+    }
+
+    action bind(projectDir: String, targets: String, outputDir: String) {
+      matches: derivedContext "ClefBind/bind"
+    }
+
+    action score(queryString: String) {
+      matches: derivedContext "ClefScore/query"
+    }
+
+    action test(concept: String, handler: String) {
+      matches: derivedContext "ClefFramework/test"
+    }
+
+    action deploy(manifest: String, environment: String) {
+      matches: derivedContext "ClefFramework/deploy"
+    }
+
+    query scoreQuery(q: String) -> derivedContext "ClefScore/query"
+    query blastRadius(changed: String) -> derivedContext "ClefScore/blastRadius"
+    query coverage(concept: String) -> derivedContext "ClefScore/coverage"
+    query conformance(concept: String) -> derivedContext "ClefFramework/conformanceReport"
+    query health(environment: String) -> derivedContext "ClefFramework/health"
+    query supportedSurfaceTargets() -> derivedContext "ClefSurface/supportedTargets"
+  }
+
+  principle {
+    after generate(projectDir: d, outputDir: o, targets: t)
+    then Score reindexes changed specs, Surface generates UI components,
+         Bind generates programmatic interfaces, and the build cache
+         ensures only changed artifacts are regenerated
+    and  test(concept: c, handler: h) returns pass
+    then deploy proceeds with health-gated progressive rollout
+    and  score(queryString: q)
+    then both static structure and runtime telemetry are queryable
+         through a single unified API
+  }
+}

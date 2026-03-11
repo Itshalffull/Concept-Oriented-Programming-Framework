@@ -1,0 +1,16 @@
+# ============================================================
+# ShellTransportFetch — surface-app required sync
+#
+# When Shell/initialize succeeds, configure the Transport for
+# data fetching so Host views can fetch data through it.
+# ============================================================
+
+sync ShellTransportFetch [eager]
+  purpose: "Configure a data transport when the shell initializes so Host views have a channel to fetch data through"
+when {
+  Shell/initialize: [ shell: ?shell ]
+    => ok(shell: ?shell)
+}
+then {
+  Transport/configure: [ transport: ?shell; kind: "rest" ]
+}

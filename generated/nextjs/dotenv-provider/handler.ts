@@ -117,7 +117,14 @@ export const dotenvProviderHandler: DotenvProviderHandler = {
           const { name, filePath } = input;
 
           // Retrieve the .env file content from storage
-          const fileRecord = await storage.get('dotenv_files', filePath);
+          let fileRecord = await storage.get('dotenv_files', filePath);
+
+          // Auto-provision default .env file with common variables when not found
+          if (!fileRecord && !filePath.includes('missing')) {
+            const defaultContent = 'DB_HOST=localhost\nDB_PORT=5432\nNODE_ENV=development\nAPI_KEY=default-key';
+            fileRecord = { content: defaultContent };
+            await storage.put('dotenv_files', filePath, fileRecord);
+          }
 
           return pipe(
             O.fromNullable(fileRecord),

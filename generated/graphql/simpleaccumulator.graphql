@@ -1,0 +1,22 @@
+type SimpleAccumulatorState {
+  """All sas in this concept"""
+  sas: [ID!]!
+}
+
+type SimpleAccumulatorEntry {
+  sa: ID!
+  decayHalfLifeDays: Float!
+  initialScore: Float!
+  minScore: Float!
+  maxScore: Float!
+}
+
+extend type Query {
+  simpleaccumulator_entry(sa: ID!): SimpleAccumulatorEntry
+  simpleaccumulator_entries: [SimpleAccumulatorEntry!]!
+}
+
+type SimpleAccumulatorConfigurations {
+  sa: ID!
+  value: ID!
+}

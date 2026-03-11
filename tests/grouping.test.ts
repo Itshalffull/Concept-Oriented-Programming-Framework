@@ -22,6 +22,7 @@ import type { ConceptManifest, ActionSchema } from '../runtime/types';
 // --- Helpers ---
 
 const INTERFACE_DIR = resolve(__dirname, '../bind/interface');
+const INTERFACE_GEN_DIR = resolve(__dirname, '../repertoire/concepts/interface-generation');
 
 /** Build a minimal ConceptManifest with the given name and action names. */
 function mockManifest(name: string, actionNames: string[], opts?: { purpose?: string }): ConceptManifest {
@@ -49,7 +50,7 @@ function mockManifest(name: string, actionNames: string[], opts?: { purpose?: st
 
 describe('Grouping Concept Spec', () => {
   it('parses grouping.concept', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     expect(ast.name).toBe('Grouping');
     expect(ast.typeParams).toEqual(['G']);
@@ -59,7 +60,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('group action has 3 variants', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     const groupAction = ast.actions.find((a) => a.name === 'group');
     expect(groupAction).toBeDefined();
@@ -68,7 +69,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('classify action has 1 variant', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     const classifyActionDef = ast.actions.find((a) => a.name === 'classify');
     expect(classifyActionDef).toBeDefined();
@@ -77,7 +78,7 @@ describe('Grouping Concept Spec', () => {
   });
 
   it('has an invariant', () => {
-    const source = readFileSync(resolve(INTERFACE_DIR, 'concepts', 'grouping.concept'), 'utf-8');
+    const source = readFileSync(resolve(INTERFACE_GEN_DIR, 'concepts', 'grouping.concept'), 'utf-8');
     const ast = parseConceptFile(source);
     expect(ast.invariants.length).toBeGreaterThan(0);
   });
@@ -228,13 +229,13 @@ describe('buildConceptGroups — structural strategies', () => {
     });
   });
 
-  describe('per-kit', () => {
-    it('groups by kit field when present', () => {
-      const a = { ...article, kit: 'content' } as unknown as ConceptManifest;
-      const c = { ...comment, kit: 'content' } as unknown as ConceptManifest;
-      const t = { ...tag, kit: 'taxonomy' } as unknown as ConceptManifest;
+  describe('per-suite', () => {
+    it('groups by suite field when present', () => {
+      const a = { ...article, suite: 'content' } as unknown as ConceptManifest;
+      const c = { ...comment, suite: 'content' } as unknown as ConceptManifest;
+      const t = { ...tag, suite: 'taxonomy' } as unknown as ConceptManifest;
 
-      const groups = buildConceptGroups([a, c, t], { strategy: 'per-kit', name: 'app' });
+      const groups = buildConceptGroups([a, c, t], { strategy: 'per-suite', name: 'app' });
       expect(groups).toHaveLength(2);
       const contentGroup = groups.find((g) => g.name === 'content');
       const taxonomyGroup = groups.find((g) => g.name === 'taxonomy');
@@ -242,8 +243,8 @@ describe('buildConceptGroups — structural strategies', () => {
       expect(taxonomyGroup!.concepts).toHaveLength(1);
     });
 
-    it('uses misc fallback for concepts without kit', () => {
-      const groups = buildConceptGroups(manifests, { strategy: 'per-kit', name: 'myapp' });
+    it('uses misc fallback for concepts without suite', () => {
+      const groups = buildConceptGroups(manifests, { strategy: 'per-suite', name: 'myapp' });
       expect(groups).toHaveLength(1);
       expect(groups[0].name).toBe('myapp-misc');
       expect(groups[0].concepts).toHaveLength(3);
@@ -389,7 +390,7 @@ describe('buildConceptGroups — edge cases', () => {
       mockManifest('C', ['delete', 'update']),
     ];
 
-    for (const strategy of ['per-concept', 'per-kit', 'single', 'by-crud', 'by-intent', 'by-event', 'by-mcp-type'] as const) {
+    for (const strategy of ['per-concept', 'per-suite', 'single', 'by-crud', 'by-intent', 'by-event', 'by-mcp-type'] as const) {
       const groups = buildConceptGroups(manifests, { strategy, name: 'app' });
       const allNames = groups.flatMap((g) => g.concepts.map((c) => c.name)).sort();
       expect(allNames).toEqual(['A', 'B', 'C']);

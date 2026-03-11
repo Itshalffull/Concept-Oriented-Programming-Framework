@@ -1,0 +1,46 @@
+# Automation schema definitions
+# See Architecture doc Section 2.1.1
+
+schema: automation
+version: 1
+
+entities:
+  AutomationRule:
+    fields:
+      id:
+        type: String
+        required: true
+        description: "Unique identifier for the automation rule"
+      name:
+        type: String
+        required: true
+        description: "Display name of the automation rule"
+      description:
+        type: String
+        required: false
+        description: "Human-readable description of what this rule does"
+      trigger_type:
+        type: String
+        required: true
+        description: "Type of trigger (on_create, on_update, on_schedule, on_webhook)"
+      trigger_config:
+        type: JSON
+        required: true
+        description: "Configuration object for the trigger"
+      action_type:
+        type: String
+        required: true
+        description: "Type of action to execute (notify, update_field, run_sync, webhook)"
+      action_config:
+        type: JSON
+        required: true
+        description: "Configuration object for the action"
+      enabled:
+        type: Boolean
+        required: true
+        description: "Whether this automation rule is currently active"
+    from:
+      concept: AutomationRule
+      actions:
+        create: [id, name, description, trigger_type, trigger_config, action_type, action_config, enabled]
+        read: [id, name, description, trigger_type, trigger_config, action_type, action_config, enabled]

@@ -1,0 +1,63 @@
+app:
+  name: clef-cli-bootstrap
+  version: "0.1.0"
+  uri: urn:clef:cli-bootstrap
+
+runtimes:
+  local:
+    type: LocalRuntime
+    engine: true
+    transport: in-process
+    storage: memory
+    secrets: dotenv
+    config:
+      dotenvPath: ".env"
+
+concepts:
+  SelfUpdate:
+    spec: concepts/self-update.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/self-update.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Fetcher:
+    spec: concepts/fetcher.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/fetcher.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Download:
+    spec: concepts/download.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/download-proxy.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/check-on-start.sync
+    engine: engine
+    annotations: [eventual]
+
+  - path: syncs/required/apply-on-update-command.sync
+    engine: engine
+    annotations: [eager]
+
+build:
+  typescript:
+    compiler: bun
+    bundler: bun
+    bundleOptions:
+      compile: true
+      targets:
+        - darwin-arm64
+        - darwin-x64
+        - linux-x64
+        - win-x64

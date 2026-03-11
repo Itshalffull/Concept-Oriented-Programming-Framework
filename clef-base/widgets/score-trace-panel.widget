@@ -1,0 +1,125 @@
+@version(1)
+widget score-trace-panel {
+
+  purpose {
+    Admin-only panel displaying Score flow traces as interactive
+    navigable trees. Shows the causal chain of action invocations,
+    sync firings, and completions with timing data and failure markers.
+    See Architecture doc Section 10.1.
+  }
+
+  anatomy {
+    root:              container  { Panel wrapper }
+    header:            container  { Panel header with title and trace selector }
+    title:             text       { Panel title }
+    traceSelector:     action     { Dropdown to select a trace to display }
+    timeline:          container  { Horizontal timeline showing trace duration }
+    timelineBar:       container  { Visual bar representing elapsed time }
+    traceTree:         container  { Main tree rendering area }
+    traceNode:         container  { Individual trace node (action/sync/completion) }
+    traceNodeIcon:     container  { Node type icon }
+    traceNodeLabel:    text       { Node label (concept/action name) }
+    traceNodeDuration: text       { Node execution duration }
+    traceNodeStatus:   container  { Status indicator (ok/error/timeout) }
+    traceChildren:     container  { Container for child nodes in the tree }
+    errorDetail:       container  { Error detail panel for failed nodes }
+    errorMessage:      text       { Error message text }
+  }
+
+  states {
+    empty [initial] {
+      on LOAD_TRACE -> loaded;
+    }
+    loaded {
+      on SELECT_NODE -> inspecting;
+      on LOAD_TRACE -> loaded;
+    }
+    inspecting {
+      on DESELECT -> loaded;
+      on SELECT_NODE -> inspecting;
+    }
+  }
+
+  affordance {
+    serves: score-trace;
+    specificity: 10;
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> SELECT_NODE;
+      Escape        -> DESELECT;
+      ArrowDown     -> NEXT_SIBLING;
+      ArrowUp       -> PREV_SIBLING;
+      ArrowRight    -> EXPAND_NODE;
+      ArrowLeft     -> COLLAPSE_NODE;
+    }
+    focus {
+      trap: false;
+      initial: traceSelector;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Score flow trace";
+      };
+      traceTree -> {
+        role: "tree";
+        aria-label: "Trace tree";
+      };
+      traceNode -> {
+        role: "treeitem";
+        aria-label: concat(self.nodeType, ": ", self.nodeName);
+        aria-expanded: if self.hasChildren then "true" else "false";
+      };
+      errorDetail -> {
+        role: "alert";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    traces: list TraceEntry = []
+    selectedTraceId: option String
+    selectedNodeId: option String
+    onSelectTrace: option Function
+    onSelectNode: option Function
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state.view == "empty" then "empty"
+                  else if state.view == "loaded" then "loaded"
+                  else "inspecting";
+    }
+
+    traceNode -> {
+      data-node-id: self.nodeId;
+      data-node-type: self.nodeType;
+      data-status: self.status;
+      data-duration-ms: self.durationMs;
+      onClick: send(SELECT_NODE, { nodeId: self.nodeId });
+      data-part: "trace-node";
+    }
+
+    traceNodeStatus -> {
+      data-status: self.status;
+      data-part: "trace-node-status";
+    }
+  }
+
+  invariant {
+    "Trace tree must show the full causal chain: action -> sync -> completion";
+    "Failed nodes must be visually distinct and show error details on selection";
+    "Timeline bar must accurately represent the total trace duration";
+    "Tree navigation must support keyboard expand/collapse/sibling navigation";
+  }
+
+}

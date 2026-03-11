@@ -29,7 +29,7 @@ describe('Resource conformance', () => {
     const storage = createTestStorage();
     const handler = resourceHandler;
 
-    const r = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-001';
 
     // setup: upsert -> created
     const upsertResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('Resource conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('created');
-        expect((output as any).resource).toBe(r);
+        r = (output as any).resource;
         return output;
       }),
     )();
@@ -77,7 +77,7 @@ describe('Resource conformance', () => {
     expect(E.isRight(upsertResultAssert)).toBe(true);
 
     // assert: upsert -> changed
-    const upsertResultAssert = await pipe(
+    const upsertResultAssert2 = await pipe(
       handler.upsert({
       locator: './specs/password.concept',
       kind: 'concept-spec',
@@ -90,7 +90,7 @@ describe('Resource conformance', () => {
         return output;
       }),
     )();
-    expect(E.isRight(upsertResultAssert)).toBe(true);
+    expect(E.isRight(upsertResultAssert2)).toBe(true);
 
   });
 

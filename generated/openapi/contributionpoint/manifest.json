@@ -1,0 +1,850 @@
+{
+  "uri": "urn:clef/ContributionPoint",
+  "name": "ContributionPoint",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "pointName",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "pointType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "contributions",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "points",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "definePoint",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "pointType",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "point",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Contribution point defined and available for extensions to contribute to"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A point with the same name already exists"
+        }
+      ]
+    },
+    {
+      "name": "contribute",
+      "params": [
+        {
+          "name": "point",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "data",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "point",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Contribution registered for the point Routes to downstream \n concepts based on the point type ( widget , navigation , command , etc )"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No contribution point with the given identifier"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Contribution data does not match the point schema"
+        }
+      ]
+    },
+    {
+      "name": "retract",
+      "params": [
+        {
+          "name": "point",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "point",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "All contributions from the given extension removed from the point"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No contribution point or extension contribution found"
+        }
+      ]
+    },
+    {
+      "name": "listContributions",
+      "params": [
+        {
+          "name": "point",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "contributions",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all active contributions for the point"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No contribution point with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "listPoints",
+      "params": [
+        {
+          "name": "pointType",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "points",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns all defined contribution points , optionally filtered by type"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after definePoint, contribute, listContributions behaves correctly",
+      "setup": [
+        {
+          "action": "definePoint",
+          "inputs": [
+            {
+              "name": "name",
+              "value": {
+                "kind": "variable",
+                "name": "n"
+              }
+            },
+            {
+              "name": "pointType",
+              "value": {
+                "kind": "variable",
+                "name": "t"
+              }
+            },
+            {
+              "name": "schema",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "point",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "contribute",
+          "inputs": [
+            {
+              "name": "point",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "data",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "point",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "listContributions",
+          "inputs": [
+            {
+              "name": "point",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "contributions",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "n",
+          "testValue": "u-test-invariant-001"
+        },
+        {
+          "name": "t",
+          "testValue": "u-test-invariant-002"
+        },
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-003"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ContributionPointState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ContributionPointEntry {\n  c: ID!\n  pointName: String!\n  pointType: String!\n  schema: String!\n  contributions: String!\n}\n\nextend type Query {\n  contributionpoint_entry(c: ID!): ContributionPointEntry\n  contributionpoint_entries: [ContributionPointEntry!]!\n}\n\ntype ContributionPointPoints {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "definePoint": {
+        "$id": "urn:clef/ContributionPoint/definePoint/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContributionPoint"
+          },
+          "action": {
+            "const": "definePoint"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "pointType": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "pointType",
+              "schema"
+            ]
+          }
+        }
+      },
+      "contribute": {
+        "$id": "urn:clef/ContributionPoint/contribute/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContributionPoint"
+          },
+          "action": {
+            "const": "contribute"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "point": {
+                "type": "string"
+              },
+              "extensionId": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "point",
+              "extensionId",
+              "data"
+            ]
+          }
+        }
+      },
+      "retract": {
+        "$id": "urn:clef/ContributionPoint/retract/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContributionPoint"
+          },
+          "action": {
+            "const": "retract"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "point": {
+                "type": "string"
+              },
+              "extensionId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "point",
+              "extensionId"
+            ]
+          }
+        }
+      },
+      "listContributions": {
+        "$id": "urn:clef/ContributionPoint/listContributions/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContributionPoint"
+          },
+          "action": {
+            "const": "listContributions"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "point": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "point"
+            ]
+          }
+        }
+      },
+      "listPoints": {
+        "$id": "urn:clef/ContributionPoint/listPoints/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ContributionPoint"
+          },
+          "action": {
+            "const": "listPoints"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "pointType": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "pointType"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "definePoint": {
+        "ok": {
+          "$id": "urn:clef/ContributionPoint/definePoint/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "definePoint"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "point": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "point"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/ContributionPoint/definePoint/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "definePoint"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "contribute": {
+        "ok": {
+          "$id": "urn:clef/ContributionPoint/contribute/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "contribute"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "point": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "point"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContributionPoint/contribute/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "contribute"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/ContributionPoint/contribute/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "contribute"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "retract": {
+        "ok": {
+          "$id": "urn:clef/ContributionPoint/retract/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "retract"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "point": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "point"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContributionPoint/retract/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "retract"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listContributions": {
+        "ok": {
+          "$id": "urn:clef/ContributionPoint/listContributions/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "listContributions"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "contributions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "contributions"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/ContributionPoint/listContributions/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "listContributions"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "listPoints": {
+        "ok": {
+          "$id": "urn:clef/ContributionPoint/listPoints/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ContributionPoint"
+            },
+            "action": {
+              "const": "listPoints"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "points": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "points"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [],
+  "purpose": "Extension points that a host exposes for extensions to contribute to : \n toolbar buttons , sidebar panels , commands , widgets , navigation \n destinations Extensions register contributions ; contributions route \n to downstream concepts via type based syncs Follows the coordination \n pattern the host defines points , extensions contribute to them"
+}

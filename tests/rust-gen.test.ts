@@ -64,7 +64,7 @@ describe('RustGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const typesFile = files.find(f => f.path === 'password/types.rs')!;
+    const typesFile = files.find(f => f.path === 'password/types.stub.rs')!;
     expect(typesFile).toBeDefined();
 
     // Primitive type mappings
@@ -104,7 +104,7 @@ describe('RustGen Type Mapping', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const handlerFile = files.find(f => f.path === 'password/handler.rs')!;
+    const handlerFile = files.find(f => f.path === 'password/handler.stub.rs')!;
     expect(handlerFile).toBeDefined();
 
     // Trait definition
@@ -135,7 +135,7 @@ describe('RustGen Type Mapping', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const adapterFile = files.find(f => f.path === 'password/adapter.rs')!;
+    const adapterFile = files.find(f => f.path === 'password/adapter.stub.rs')!;
     expect(adapterFile).toBeDefined();
 
     // Adapter struct
@@ -165,7 +165,7 @@ describe('RustGen Type Mapping', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'password/conformance.rs')!;
+    const testFile = files.find(f => f.path === 'password/conformance.stub.rs')!;
     expect(testFile).toBeDefined();
 
     // Test structure
@@ -208,7 +208,7 @@ describe('RustGen Type Mapping', () => {
     const files = result.files as { path: string; content: string }[];
     // types, handler, adapter — but no conformance since no invariants
     expect(files).toHaveLength(3);
-    expect(files.find(f => f.path.endsWith('conformance.rs'))).toBeUndefined();
+    expect(files.find(f => f.path.endsWith('conformance.stub.rs'))).toBeUndefined();
   });
 
   it('handles complex types (list, option, set, map) correctly', async () => {
@@ -223,7 +223,7 @@ describe('RustGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    const typesFile = files.find(f => f.path.endsWith('types.rs'))!;
+    const typesFile = files.find(f => f.path.endsWith('types.stub.rs'))!;
     expect(typesFile).toBeDefined();
 
     // Verify the types file has struct definitions

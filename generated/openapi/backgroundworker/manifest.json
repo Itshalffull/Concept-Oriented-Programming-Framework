@@ -1,0 +1,1116 @@
+{
+  "uri": "urn:clef/BackgroundWorker",
+  "name": "BackgroundWorker",
+  "typeParams": [
+    {
+      "name": "W",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "alarms",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "persistedState",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "lastActive",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "workers",
+      "source": "set-valued",
+      "keyField": {
+        "name": "w",
+        "paramRef": "W"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "extensionId",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "scriptUrl",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Service worker registered for the extension"
+        },
+        {
+          "tag": "exists",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Worker already registered for this extension"
+        }
+      ]
+    },
+    {
+      "name": "start",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Service worker started May be a fresh start or a resumption \n after browser initiated termination"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker with the given identifier"
+        },
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Worker failed to start script error or quota exceeded"
+        }
+      ]
+    },
+    {
+      "name": "stop",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Service worker stopped Persisted state saved for later \n resumption"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "setAlarm",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "delayMs",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "periodic",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Alarm scheduled The worker will be woken when the alarm fires , \n even if it was terminated by the browser"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker with the given identifier"
+        }
+      ]
+    },
+    {
+      "name": "clearAlarm",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Alarm cancelled"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker or alarm found"
+        }
+      ]
+    },
+    {
+      "name": "onAlarm",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "worker",
+              "type": {
+                "kind": "param",
+                "paramRef": "W"
+              }
+            }
+          ],
+          "prose": "Alarm fired Worker woken if necessary Gate semantics ensure \n the completion is delivered even after worker restart"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker or alarm found"
+        }
+      ]
+    },
+    {
+      "name": "getStatus",
+      "params": [
+        {
+          "name": "worker",
+          "type": {
+            "kind": "param",
+            "paramRef": "W"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "lastActive",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Returns worker lifecycle status and last active timestamp"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No worker with the given identifier"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after register, start, getStatus behaves correctly",
+      "setup": [
+        {
+          "action": "register",
+          "inputs": [
+            {
+              "name": "extensionId",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "scriptUrl",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "worker",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "start",
+          "inputs": [
+            {
+              "name": "worker",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "worker",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ]
+        },
+        {
+          "action": "getStatus",
+          "inputs": [
+            {
+              "name": "worker",
+              "value": {
+                "kind": "variable",
+                "name": "w"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "status",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "lastActive",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "w",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BackgroundWorkerState {\n  \"\"\"All ws in this concept\"\"\"\n  ws: [ID!]!\n}\n\ntype BackgroundWorkerEntry {\n  w: ID!\n  status: String!\n  alarms: String!\n  persistedState: String!\n  lastActive: Int!\n}\n\nextend type Query {\n  backgroundworker_entry(w: ID!): BackgroundWorkerEntry\n  backgroundworker_entries: [BackgroundWorkerEntry!]!\n}\n\ntype BackgroundWorkerWorkers {\n  w: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/BackgroundWorker/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "extensionId": {
+                "type": "string"
+              },
+              "scriptUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "extensionId",
+              "scriptUrl"
+            ]
+          }
+        }
+      },
+      "start": {
+        "$id": "urn:clef/BackgroundWorker/start/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "start"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "worker"
+            ]
+          }
+        }
+      },
+      "stop": {
+        "$id": "urn:clef/BackgroundWorker/stop/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "stop"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "worker"
+            ]
+          }
+        }
+      },
+      "setAlarm": {
+        "$id": "urn:clef/BackgroundWorker/setAlarm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "setAlarm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "delayMs": {
+                "type": "integer"
+              },
+              "periodic": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "worker",
+              "name",
+              "delayMs",
+              "periodic"
+            ]
+          }
+        }
+      },
+      "clearAlarm": {
+        "$id": "urn:clef/BackgroundWorker/clearAlarm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "clearAlarm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "worker",
+              "name"
+            ]
+          }
+        }
+      },
+      "onAlarm": {
+        "$id": "urn:clef/BackgroundWorker/onAlarm/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "onAlarm"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "worker",
+              "name"
+            ]
+          }
+        }
+      },
+      "getStatus": {
+        "$id": "urn:clef/BackgroundWorker/getStatus/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/BackgroundWorker"
+          },
+          "action": {
+            "const": "getStatus"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "worker": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "worker"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "exists": {
+          "$id": "urn:clef/BackgroundWorker/register/completion/exists",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "exists"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "start": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/start/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/start/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "error": {
+          "$id": "urn:clef/BackgroundWorker/start/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "start"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "stop": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/stop/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "stop"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/stop/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "stop"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setAlarm": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/setAlarm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "setAlarm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/setAlarm/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "setAlarm"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "clearAlarm": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/clearAlarm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "clearAlarm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/clearAlarm/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "clearAlarm"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "onAlarm": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/onAlarm/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "onAlarm"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "worker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "worker"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/onAlarm/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "onAlarm"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "getStatus": {
+        "ok": {
+          "$id": "urn:clef/BackgroundWorker/getStatus/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string"
+                },
+                "lastActive": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "status",
+                "lastActive"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/BackgroundWorker/getStatus/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/BackgroundWorker"
+            },
+            "action": {
+              "const": "getStatus"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Service worker lifecycle for browser extensions Gate concept because \n the browser can terminate and restart workers at any time callers \n must handle the async resumption semantics Manages alarm scheduling , \n idle state , and persistent state across worker restarts",
+  "gate": true
+}

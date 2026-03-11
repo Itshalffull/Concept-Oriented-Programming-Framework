@@ -1,0 +1,24 @@
+// Automation dispatch as config entities — bridges dispatch routing
+// configuration into the entity system for discovery and management.
+
+# When a dispatch completes, save as config entity
+sync AutomationDispatchAsConfigEntity [eager]
+  purpose: "Persist automation dispatch records as queryable config entities."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: ?providerName; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  ContentStorage/save: [ record: ?dispatch; data: ?result ]
+}
+
+# Tag with bundle type
+sync AutomationDispatchTagBundle [eager]
+  purpose: "Tag automation dispatches with their bundle type."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: ?providerName; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  Property/set: [ entity: ?dispatch; key: "config_bundle"; value: "automation_dispatch" ]
+}

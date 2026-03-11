@@ -9,6 +9,7 @@ import type {
   DerivedSurfaceAction,
   DerivedSurfaceQuery,
   DerivedActionMatch,
+  DerivedActionTrigger,
   DerivedPrinciple,
   DerivedPrincipleStep,
   ParamDecl,
@@ -36,6 +37,7 @@ type TokenType =
   | 'RPAREN'
   | 'SLASH'
   | 'DOT'
+  | 'PIPE'
   | 'SEP'
   | 'EOF';
 
@@ -49,7 +51,8 @@ interface Token {
 const KEYWORDS = new Set([
   'derived', 'purpose', 'composes', 'syncs', 'surface',
   'action', 'query', 'principle', 'matches', 'required',
-  'after', 'then', 'and',
+  'recommended', 'after', 'then', 'and', 'entry', 'triggers',
+  'reads', 'on',
 ]);
 
 const CONTEXTUAL_KEYWORDS = new Set(['set', 'list', 'option']);
@@ -121,6 +124,7 @@ function tokenize(source: string): Token[] {
     if (ch === ']') { advance(); tokens.push({ type: 'RBRACKET', value: ']', line: l, col: c }); continue; }
     if (ch === '{') { advance(); tokens.push({ type: 'LBRACE', value: '{', line: l, col: c }); continue; }
     if (ch === '}') { advance(); tokens.push({ type: 'RBRACE', value: '}', line: l, col: c }); continue; }
+    if (ch === '|') { advance(); tokens.push({ type: 'PIPE', value: '|', line: l, col: c }); continue; }
 
     // String literal
     if (ch === '"') {
@@ -358,45 +362,46 @@ class DerivedParser {
     return entries;
   }
 
-  private parseSyncs(): { required: string[] } {
+  private parseSyncs(): { required: string[]; recommended?: string[] } {
     this.expect('KEYWORD', 'syncs');
     this.expect('LBRACE');
 
     const required: string[] = [];
+    const recommended: string[] = [];
 
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
-      // Parse "required: [sync-name, sync-name, ...]"
-      if (this.peek().type === 'KEYWORD' && this.peek().value === 'required') {
+      const tok = this.peek();
+      if (tok.type === 'KEYWORD' && (tok.value === 'required' || tok.value === 'recommended')) {
+        const tier = tok.value;
         this.advance();
         this.expect('COLON');
         this.expect('LBRACKET');
+
+        const target = tier === 'required' ? required : recommended;
 
         while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
           this.skipSeps();
           if (this.peek().type === 'RBRACKET') break;
 
-          // Sync names can be hyphenated (e.g. trash-delete)
-          let syncName = this.expectIdent().value;
-          while (this.peek().type === 'IDENT' || (this.peek().type === 'KEYWORD')) {
-            // Hyphens are dropped by tokenizer — concatenate adjacent idents
-            // Actually we need to handle this differently. Let's check for a dash pattern.
-            break;
-          }
-          required.push(syncName);
+          const syncName = this.expectIdent().value;
+          target.push(syncName);
           this.match('COMMA');
           this.skipSeps();
         }
 
         this.expect('RBRACKET');
+      } else {
+        // Skip unknown tokens to avoid infinite loops
+        this.advance();
       }
       this.skipSeps();
     }
 
     this.expect('RBRACE');
-    return { required };
+    return recommended.length > 0 ? { required, recommended } : { required };
   }
 
   private parseSurface(ast: DerivedAST): void {
@@ -429,14 +434,109 @@ class DerivedParser {
     const params = this.parseParamList(typeParams);
     this.expect('RPAREN');
     this.expect('LBRACE');
-
-    // Parse matches: declaration
     this.skipSeps();
+
+    const tok = this.peek();
+
+    // entry: / triggers: format
+    if (tok.type === 'KEYWORD' && tok.value === 'entry') {
+      this.advance();
+      this.expect('COLON');
+
+      // Parse: Concept/action matches on field: ?binding, ...
+      const concept = this.expectIdent().value;
+      this.expect('SLASH');
+      const action = this.expectIdent().value;
+
+      const fields: Record<string, string> = {};
+      // Optional "matches on field: ?binding" clause
+      if (this.peek().type === 'KEYWORD' && this.peek().value === 'matches') {
+        this.advance(); // matches
+        this.expect('KEYWORD', 'on'); // on
+        // Parse field: ?binding pairs
+        while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
+               this.peek().type !== 'EOF' && !(this.peek().type === 'KEYWORD' && this.peek().value === 'triggers')) {
+          const fieldName = this.expectIdent().value;
+          this.expect('COLON');
+          // ?binding — the ? is not a separate token, it's part of the ident
+          const bindVal = this.expectIdent().value;
+          fields[fieldName] = bindVal;
+          this.match('COMMA');
+          this.skipSeps();
+        }
+      }
+
+      const matches: DerivedActionMatch = {
+        type: 'entry',
+        concept,
+        action,
+        ...(Object.keys(fields).length > 0 ? { fields } : {}),
+      };
+
+      this.skipSeps();
+
+      // Parse triggers: [...]
+      let triggers: DerivedActionTrigger[] | undefined;
+      if (this.peek().type === 'KEYWORD' && this.peek().value === 'triggers') {
+        this.advance();
+        this.expect('COLON');
+        this.expect('LBRACKET');
+        triggers = [];
+
+        while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+          this.skipSeps();
+          if (this.peek().type === 'RBRACKET') break;
+
+          const tConcept = this.expectIdent().value;
+          this.expect('SLASH');
+          const tAction = this.expectIdent().value;
+          this.expect('LPAREN');
+
+          const tArgs: Record<string, string> = {};
+          while (this.peek().type !== 'RPAREN' && this.peek().type !== 'EOF') {
+            this.skipSeps();
+            if (this.peek().type === 'RPAREN') break;
+            const argName = this.expectIdent().value;
+            this.expect('COLON');
+            // Value: ?binding, string literal, or ident
+            let argVal: string;
+            if (this.peek().type === 'STRING_LIT') {
+              argVal = this.advance().value;
+            } else if (this.peek().type === 'INT_LIT' || this.peek().type === 'FLOAT_LIT') {
+              argVal = this.advance().value;
+            } else {
+              argVal = this.expectIdent().value;
+            }
+            tArgs[argName] = argVal;
+            this.match('COMMA');
+            this.skipSeps();
+          }
+          this.expect('RPAREN');
+
+          triggers.push({ concept: tConcept, action: tAction, args: tArgs });
+          this.match('COMMA');
+          this.skipSeps();
+        }
+
+        this.expect('RBRACKET');
+      }
+
+      this.skipSeps();
+      this.expect('RBRACE');
+
+      return { name, params, matches, ...(triggers ? { triggers } : {}) };
+    }
+
+    // Standard matches: format (supports pipe-separated alternatives: Concept/action | Concept/action)
     this.expect('KEYWORD', 'matches');
     this.expect('COLON');
-
     const matches = this.parseActionMatch();
-
+    // Consume any pipe-separated alternative matches (first match wins)
+    while (this.peek().type === 'PIPE') {
+      this.advance(); // consume |
+      this.skipSeps();
+      this.parseActionMatch(); // consume and discard alternatives
+    }
     this.skipSeps();
     this.expect('RBRACE');
 
@@ -499,9 +599,39 @@ class DerivedParser {
     this.expect('LPAREN');
     const params = this.parseParamList(typeParams);
     this.expect('RPAREN');
+
+    // Two formats:
+    // 1. -> Concept/action(arg: paramRef, ...)
+    // 2. { reads: Concept/action(arg: ?binding, ...) }
+    if (this.match('LBRACE')) {
+      this.skipSeps();
+      this.expect('KEYWORD', 'reads');
+      this.expect('COLON');
+
+      const target = this.parseQueryTarget();
+      this.skipSeps();
+      this.expect('RBRACE');
+
+      return { name, params, target };
+    }
+
     this.expect('ARROW');
 
-    // Parse Concept/action(arg: paramRef, ...)
+    // Support: -> derivedContext "Concept/action"
+    if (this.peek().type === 'IDENT' && this.peek().value === 'derivedContext') {
+      this.advance();
+      const tag = this.expect('STRING_LIT').value;
+      const slashIdx = tag.indexOf('/');
+      const concept = slashIdx >= 0 ? tag.substring(0, slashIdx) : tag;
+      const action = slashIdx >= 0 ? tag.substring(slashIdx + 1) : tag;
+      return { name, params, target: { concept, action, args: {} } };
+    }
+
+    const target = this.parseQueryTarget();
+    return { name, params, target };
+  }
+
+  private parseQueryTarget(): { concept: string; action: string; args: Record<string, string> } {
     const concept = this.expectIdent().value;
     this.expect('SLASH');
     const action = this.expectIdent().value;
@@ -513,14 +643,20 @@ class DerivedParser {
       if (this.peek().type === 'RPAREN') break;
       const argName = this.expectIdent().value;
       this.expect('COLON');
-      const argValue = this.expectIdent().value;
+      // Value: ?binding, string literal, or ident
+      let argValue: string;
+      if (this.peek().type === 'STRING_LIT') {
+        argValue = this.advance().value;
+      } else {
+        argValue = this.expectIdent().value;
+      }
       args[argName] = argValue;
       this.match('COMMA');
       this.skipSeps();
     }
     this.expect('RPAREN');
 
-    return { name, params, target: { concept, action, args } };
+    return { concept, action, args };
   }
 
   private parsePrinciple(): DerivedPrinciple {
@@ -535,6 +671,20 @@ class DerivedParser {
 
       const keyword = this.peek();
       if (keyword.type !== 'KEYWORD' || !['after', 'then', 'and'].includes(keyword.value)) {
+        // Continuation line — append to previous step's text
+        if (steps.length > 0) {
+          let contText = '';
+          while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
+                 this.peek().type !== 'EOF' &&
+                 !(this.peek().type === 'KEYWORD' && ['after', 'then', 'and'].includes(this.peek().value))) {
+            contText += this.advance().value + ' ';
+          }
+          if (contText.trim()) {
+            steps[steps.length - 1].text += ' ' + contText.trim();
+          }
+          this.skipSeps();
+          continue;
+        }
         throw new Error(`Derived parse error at line ${keyword.line}: expected 'after', 'then', or 'and' in principle, got ${keyword.value}`);
       }
 

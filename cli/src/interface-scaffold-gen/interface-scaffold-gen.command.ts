@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const interfaceScaffoldGenCommand = new Command('scaffold')
+export const interfaceScaffoldGenCommand = new Command('scaffold-interface')
   .description('Generate interface manifest (interface.yaml).');
 
 interfaceScaffoldGenCommand
@@ -18,8 +18,18 @@ interfaceScaffoldGenCommand
   .addHelpText('after', '  clef scaffold interface --name my-api --targets rest,graphql --sdks typescript,python  # Scaffold a REST + GraphQL interface')
   .addHelpText('after', '  clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills  # Scaffold a full-stack interface')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InterfaceScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interfaceScaffoldGenCommand
@@ -30,25 +40,41 @@ interfaceScaffoldGenCommand
   .requiredOption('--sdks <sdks>', 'Sdks')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InterfaceScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 interfaceScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : InterfaceScaffoldGen 
- inputKind : InterfaceConfig 
- outputKind : InterfaceManifest 
- capabilities : [ interface-yaml , target-config , sdk-config ]')
+  .description('Return static metadata for PluginRegistry . name : InterfaceScaffoldGen inputKind : InterfaceConfig outputKind : InterfaceManifest capabilities : [ interface-yaml , target-config , sdk-config ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InterfaceScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const interfaceScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-interface',
   description: 'Generate interface manifest (interface.yaml).',
   commands: [{ action: 'generate', command: 'interface' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -49,6 +49,7 @@ const mkError = (code: string) => (error: unknown): FlakyTestError => ({
 });
 
 const DEFAULT_FLIP_THRESHOLD = 3;
+const AUTO_QUARANTINE_THRESHOLD = 2;
 const RECENT_WINDOW_SIZE = 10;
 
 export interface FlakyTestHandler {
@@ -114,7 +115,10 @@ export const flakyTestHandler: FlakyTestHandler = {
                 ? Number(policyRecord.flipThreshold ?? DEFAULT_FLIP_THRESHOLD)
                 : DEFAULT_FLIP_THRESHOLD;
 
-              await storage.put('flaky_tests', input.testId, {
+              const autoQuarantine = flipCount >= AUTO_QUARANTINE_THRESHOLD;
+              const now = new Date().toISOString();
+
+              const record: Record<string, unknown> = {
                 testId: input.testId,
                 language: input.language,
                 builder: input.builder,
@@ -124,15 +128,27 @@ export const flakyTestHandler: FlakyTestHandler = {
                 totalRuns: Number(existing?.totalRuns ?? 0) + 1,
                 lastPassed: input.passed,
                 lastDuration: input.duration,
-                updatedAt: new Date().toISOString(),
-              });
+                updatedAt: now,
+              };
+
+              // Auto-quarantine when flip count reaches auto-quarantine threshold
+              if (autoQuarantine && !existing?.quarantined) {
+                record.quarantined = true;
+                record.quarantineReason = 'auto-quarantined: flaky behavior detected';
+                record.quarantineOwner = O.none;
+                record.quarantinedAt = now;
+              } else if (existing?.quarantined) {
+                // Preserve existing quarantine state
+                record.quarantined = existing.quarantined;
+                record.quarantineReason = existing.quarantineReason;
+                record.quarantineOwner = existing.quarantineOwner;
+                record.quarantinedAt = existing.quarantinedAt;
+              }
+
+              await storage.put('flaky_tests', input.testId, record);
 
               if (flipCount >= threshold) {
-                return recordFlakyDetected(
-                  input.testId,
-                  flipCount,
-                  updatedResults,
-                );
+                return recordFlakyDetected(input.testId, flipCount, updatedResults);
               }
               return recordOk(input.testId);
             },
@@ -228,11 +244,19 @@ export const flakyTestHandler: FlakyTestHandler = {
             () => TE.right(isQuarantinedUnknown(input.testId)),
             (found) => {
               if (found.quarantined) {
+                // Handle quarantineOwner as either a plain string or fp-ts Option
+                const rawOwner = found.quarantineOwner;
+                let ownerOption: O.Option<string>;
+                if (rawOwner !== undefined && rawOwner !== null && typeof rawOwner === 'object' && '_tag' in (rawOwner as object)) {
+                  ownerOption = rawOwner as O.Option<string>;
+                } else {
+                  ownerOption = O.fromNullable(rawOwner != null ? String(rawOwner) : undefined);
+                }
                 return TE.right(
                   isQuarantinedYes(
                     input.testId,
                     String(found.quarantineReason ?? ''),
-                    found.quarantineOwner as O.Option<string>,
+                    ownerOption,
                     new Date(String(found.quarantinedAt)),
                   ),
                 );

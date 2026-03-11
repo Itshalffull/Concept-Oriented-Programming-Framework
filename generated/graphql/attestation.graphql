@@ -1,0 +1,25 @@
+type AttestationState {
+  """All as in this concept"""
+  as: [ID!]!
+}
+
+type AttestationEntry {
+  a: ID!
+  schema: String!
+  attester: String!
+  recipient: String!
+  data: String!
+  createdAt: String!
+  expiry: String!
+  revoked: Boolean!
+}
+
+extend type Query {
+  attestation_entry(a: ID!): AttestationEntry
+  attestation_entries: [AttestationEntry!]!
+}
+
+type AttestationAttestations {
+  a: ID!
+  value: ID!
+}

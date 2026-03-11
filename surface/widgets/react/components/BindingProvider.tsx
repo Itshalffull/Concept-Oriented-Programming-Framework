@@ -131,11 +131,11 @@ function createDefaultInvoke(config: BindingConfig): InvokeFn {
           return { ok: false, error: 'No endpoint configured for GraphQL binding.' };
         }
         try {
-          const mutation = `mutation { ${action}(input: ${JSON.stringify(JSON.stringify(input))}) }`;
+          const mutation = `mutation ($input: JSON!) { ${action}(input: $input) }`;
           const response = await fetch(config.endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: mutation }),
+            body: JSON.stringify({ query: mutation, variables: { input } }),
           });
           const result = await response.json();
           if (result.errors?.length) {
@@ -162,14 +162,12 @@ function createDefaultInvoke(config: BindingConfig): InvokeFn {
 
       case 'coupled':
       default: {
-        // Coupled mode assumes a Clef runtime is available.
-        // In a real setup, the Clef engine is injected.
-        // For now, log and succeed.
-        console.warn(
-          `[BindingProvider] coupled invoke not wired: ${action}`,
-          input
-        );
-        return { ok: true, result: null };
+        // Coupled mode requires a Clef runtime to be injected via onInvoke.
+        // Without it, invocations cannot be dispatched.
+        return {
+          ok: false,
+          error: `[BindingProvider] Coupled mode requires an onInvoke handler. Action "${action}" was not dispatched.`,
+        };
       }
     }
   };

@@ -1,0 +1,763 @@
+{
+  "uri": "urn:clef/ConnectorCall",
+  "name": "ConnectorCall",
+  "typeParams": [
+    {
+      "name": "C",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "connector_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "operation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Bytes"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "idempotency_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "invoked_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "completed_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "calls",
+      "source": "set-valued",
+      "keyField": {
+        "name": "c",
+        "paramRef": "C"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "invoke",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "connector_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "operation",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "idempotency_key",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates a call record in invoking status Provider dispatch happens via sync"
+        },
+        {
+          "tag": "duplicate",
+          "fields": [
+            {
+              "name": "idempotency_key",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "A call with this idempotency key already exists Returns existing result"
+        }
+      ]
+    },
+    {
+      "name": "mark_success",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Provider completed successfully Records output"
+        },
+        {
+          "tag": "not_invoking",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Call is not in invoking status"
+        }
+      ]
+    },
+    {
+      "name": "mark_failure",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        },
+        {
+          "name": "error",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "error",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Provider failed Records error"
+        },
+        {
+          "tag": "not_invoking",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "Call is not in invoking status"
+        }
+      ]
+    },
+    {
+      "name": "get_result",
+      "params": [
+        {
+          "name": "call",
+          "type": {
+            "kind": "param",
+            "paramRef": "C"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "output",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns call status and output if available"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "call",
+              "type": {
+                "kind": "param",
+                "paramRef": "C"
+              }
+            }
+          ],
+          "prose": "No call with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ConnectorCallState {\n  \"\"\"All cs in this concept\"\"\"\n  cs: [ID!]!\n}\n\ntype ConnectorCallEntry {\n  c: ID!\n  step_ref: String!\n  connector_type: String!\n  operation: String!\n  input: String!\n  output: String!\n  status: String!\n  idempotency_key: String!\n  error: String!\n  invoked_at: String!\n  completed_at: String!\n}\n\nextend type Query {\n  connectorcall_entry(c: ID!): ConnectorCallEntry\n  connectorcall_entries: [ConnectorCallEntry!]!\n}\n\ntype ConnectorCallCalls {\n  c: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "invoke": {
+        "$id": "urn:clef/ConnectorCall/invoke/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConnectorCall"
+          },
+          "action": {
+            "const": "invoke"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "connector_type": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "idempotency_key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "step_ref",
+              "connector_type",
+              "operation",
+              "input",
+              "idempotency_key"
+            ]
+          }
+        }
+      },
+      "mark_success": {
+        "$id": "urn:clef/ConnectorCall/mark_success/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConnectorCall"
+          },
+          "action": {
+            "const": "mark_success"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "call",
+              "output"
+            ]
+          }
+        }
+      },
+      "mark_failure": {
+        "$id": "urn:clef/ConnectorCall/mark_failure/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConnectorCall"
+          },
+          "action": {
+            "const": "mark_failure"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call",
+              "error"
+            ]
+          }
+        }
+      },
+      "get_result": {
+        "$id": "urn:clef/ConnectorCall/get_result/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ConnectorCall"
+          },
+          "action": {
+            "const": "get_result"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "call": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "call"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "invoke": {
+        "ok": {
+          "$id": "urn:clef/ConnectorCall/invoke/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref"
+              ]
+            }
+          }
+        },
+        "duplicate": {
+          "$id": "urn:clef/ConnectorCall/invoke/completion/duplicate",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "invoke"
+            },
+            "variant": {
+              "const": "duplicate"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "idempotency_key": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "idempotency_key"
+              ]
+            }
+          }
+        }
+      },
+      "mark_success": {
+        "ok": {
+          "$id": "urn:clef/ConnectorCall/mark_success/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "mark_success"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "output"
+              ]
+            }
+          }
+        },
+        "not_invoking": {
+          "$id": "urn:clef/ConnectorCall/mark_success/completion/not_invoking",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "mark_success"
+            },
+            "variant": {
+              "const": "not_invoking"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ]
+            }
+          }
+        }
+      },
+      "mark_failure": {
+        "error": {
+          "$id": "urn:clef/ConnectorCall/mark_failure/completion/error",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "mark_failure"
+            },
+            "variant": {
+              "const": "error"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call",
+                "step_ref",
+                "message"
+              ]
+            }
+          }
+        },
+        "not_invoking": {
+          "$id": "urn:clef/ConnectorCall/mark_failure/completion/not_invoking",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "mark_failure"
+            },
+            "variant": {
+              "const": "not_invoking"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ]
+            }
+          }
+        }
+      },
+      "get_result": {
+        "ok": {
+          "$id": "urn:clef/ConnectorCall/get_result/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "get_result"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "output": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "call",
+                "status",
+                "output"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/ConnectorCall/get_result/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ConnectorCall"
+            },
+            "action": {
+              "const": "get_result"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "call"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage",
+    "network"
+  ],
+  "purpose": "Track a single outbound call to an external system within a process step , \n with idempotency keys and status lifecycle Actual I O is delegated to providers",
+  "gate": true
+}

@@ -48,7 +48,7 @@ const storageErr = (error: unknown): SurfaceError => ({
   message: error instanceof Error ? error.message : String(error),
 });
 
-const VALID_KINDS = ['dom', 'canvas', 'native', 'terminal', 'webgl'] as const;
+const VALID_KINDS = ['dom', 'canvas', 'native', 'terminal', 'webgl', 'browser-dom'] as const;
 
 /** Map of surface kinds to their compatible renderers. */
 const RENDERER_COMPAT: Record<string, readonly string[]> = {
@@ -102,7 +102,10 @@ export const surfaceHandler: SurfaceHandler = {
         }
         return TE.tryCatch(
           async () => {
-            const mountPoint = pipe(inp.mountPoint, O.getOrElse(() => 'root'));
+            const mountPoint = typeof inp.mountPoint === 'string' ? inp.mountPoint
+              : (inp.mountPoint !== null && inp.mountPoint !== undefined && typeof inp.mountPoint === 'object' && '_tag' in inp.mountPoint)
+                ? ((inp.mountPoint as any)._tag === 'Some' ? (inp.mountPoint as any).value : 'root')
+                : 'root';
             await storage.put('surface', inp.surface, {
               surface: inp.surface,
               kind: inp.kind,
@@ -208,7 +211,10 @@ export const surfaceHandler: SurfaceHandler = {
                   mountError('Cannot mount: no renderer attached to this surface'),
                 );
               }
-              const zone = pipe(input.zone, O.getOrElse(() => 'default'));
+              const zone = typeof input.zone === 'string' ? input.zone
+                : (input.zone !== null && input.zone !== undefined && typeof input.zone === 'object' && '_tag' in (input.zone as any))
+                  ? ((input.zone as any)._tag === 'Some' ? (input.zone as any).value : 'default')
+                  : 'default';
               return TE.tryCatch(
                 async () => {
                   const zones: Record<string, unknown> = { ...((existing as any).zones ?? {}) };
@@ -242,7 +248,10 @@ export const surfaceHandler: SurfaceHandler = {
             (existing) =>
               TE.tryCatch(
                 async () => {
-                  const zone = pipe(input.zone, O.getOrElse(() => 'default'));
+                  const zone = typeof input.zone === 'string' ? input.zone
+                    : (input.zone !== null && input.zone !== undefined && typeof input.zone === 'object' && '_tag' in (input.zone as any))
+                      ? ((input.zone as any)._tag === 'Some' ? (input.zone as any).value : 'default')
+                      : 'default';
                   const zones: Record<string, unknown> = { ...((existing as any).zones ?? {}) };
                   delete zones[zone];
                   const hasZones = Object.keys(zones).length > 0;

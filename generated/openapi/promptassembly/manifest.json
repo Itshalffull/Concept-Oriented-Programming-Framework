@@ -1,0 +1,1518 @@
+{
+  "uri": "urn:clef/PromptAssembly",
+  "name": "PromptAssembly",
+  "typeParams": [
+    {
+      "name": "P",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "sections",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "role",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "template_ref",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "priority",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "max_tokens",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Int"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "required",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Bool"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "assembly_strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "variables",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "output_directive",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "tokenizer_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "context_window",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "assemblies",
+      "source": "set-valued",
+      "keyField": {
+        "name": "p",
+        "paramRef": "P"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "format",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "tokenizer_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "context_window",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assembly",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Strategy : sequential , priority_weighted , adaptive \n Format : chat_messages , single_string , structured \n Tokenizer : cl100k_base , o200k_base , etc \n Context_window : max tokens for target model \n Auto creates a response_reserve section at 20 of context_window \n with highest priority"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Unknown strategy , format , or tokenizer"
+        }
+      ]
+    },
+    {
+      "name": "addSection",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "role",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "priority",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "max_tokens",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          }
+        },
+        {
+          "name": "required",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bool"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "template_ref",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assembly",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Registers a prompt section Higher priority preserved during \n budget truncation Required sections always appear"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assembly not found"
+        }
+      ]
+    },
+    {
+      "name": "setVariable",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assembly",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Sets a variable for template rendering"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assembly not found"
+        }
+      ]
+    },
+    {
+      "name": "assemble",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "prompt",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "sections_included",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "sections_truncated",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "primitive",
+                  "primitive": "String"
+                }
+              }
+            },
+            {
+              "name": "total_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "estimated_cost",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Renders all sections within context_window Pipeline : resolve \n variables , render each section , count tokens per section , \n truncate lowest priority sections first until total fits \n System instructions ( highest ) always preserved Few shot \n examples reduced first , then retrieved context compressed \n Calculates estimated cost based on token count"
+        },
+        {
+          "tag": "over_budget",
+          "fields": [
+            {
+              "name": "minimum_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "available_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Required only sections exceed context_window"
+        }
+      ]
+    },
+    {
+      "name": "toMessages",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "messages",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "role",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Assembles and converts to provider message format \n Each section becomes a message with its assigned role"
+        },
+        {
+          "tag": "over_budget",
+          "fields": [
+            {
+              "name": "minimum_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "available_tokens",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Required sections exceed budget"
+        }
+      ]
+    },
+    {
+      "name": "estimateTokens",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "total",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            },
+            {
+              "name": "per_section",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "tokens",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Int"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Predicts prompt size before assembly"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Assembly not found"
+        }
+      ]
+    },
+    {
+      "name": "removeSection",
+      "params": [
+        {
+          "name": "assembly",
+          "type": {
+            "kind": "param",
+            "paramRef": "P"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "assembly",
+              "type": {
+                "kind": "param",
+                "paramRef": "P"
+              }
+            }
+          ],
+          "prose": "Removes section by name"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Section not found"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, addSection, assemble behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "strategy",
+              "value": {
+                "kind": "literal",
+                "value": "priority_weighted"
+              }
+            },
+            {
+              "name": "format",
+              "value": {
+                "kind": "literal",
+                "value": "chat_messages"
+              }
+            },
+            {
+              "name": "tokenizer_id",
+              "value": {
+                "kind": "literal",
+                "value": "cl100k_base"
+              }
+            },
+            {
+              "name": "context_window",
+              "value": {
+                "kind": "literal",
+                "value": 128000
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "assembly",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        },
+        {
+          "action": "addSection",
+          "inputs": [
+            {
+              "name": "assembly",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "name",
+              "value": {
+                "kind": "literal",
+                "value": "system"
+              }
+            },
+            {
+              "name": "role",
+              "value": {
+                "kind": "literal",
+                "value": "system"
+              }
+            },
+            {
+              "name": "priority",
+              "value": {
+                "kind": "literal",
+                "value": 100
+              }
+            },
+            {
+              "name": "max_tokens",
+              "value": {
+                "kind": "literal",
+                "value": 500
+              }
+            },
+            {
+              "name": "required",
+              "value": {
+                "kind": "literal",
+                "value": true
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "You are helpful."
+              }
+            },
+            {
+              "name": "template_ref",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "assembly",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "assemble",
+          "inputs": [
+            {
+              "name": "assembly",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "prompt",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "sections_included",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "sections_truncated",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "total_tokens",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            },
+            {
+              "name": "estimated_cost",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type PromptAssemblyState {\n  \"\"\"All ps in this concept\"\"\"\n  ps: [ID!]!\n}\n\ntype PromptAssemblyEntry {\n  p: ID!\n  sections: [JSON!]!\n  assembly_strategy: String!\n  format: String!\n  variables: [JSON!]!\n  output_directive: String!\n  tokenizer_id: String!\n  context_window: Int!\n}\n\nextend type Query {\n  promptassembly_entry(p: ID!): PromptAssemblyEntry\n  promptassembly_entries: [PromptAssemblyEntry!]!\n}\n\ntype PromptAssemblyAssemblies {\n  p: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/PromptAssembly/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "strategy": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "tokenizer_id": {
+                "type": "string"
+              },
+              "context_window": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "strategy",
+              "format",
+              "tokenizer_id",
+              "context_window"
+            ]
+          }
+        }
+      },
+      "addSection": {
+        "$id": "urn:clef/PromptAssembly/addSection/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "addSection"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer"
+              },
+              "max_tokens": {
+                "type": "integer"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "content": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "template_ref": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "assembly",
+              "name",
+              "role",
+              "priority",
+              "max_tokens",
+              "required",
+              "content",
+              "template_ref"
+            ]
+          }
+        }
+      },
+      "setVariable": {
+        "$id": "urn:clef/PromptAssembly/setVariable/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "setVariable"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assembly",
+              "name",
+              "value"
+            ]
+          }
+        }
+      },
+      "assemble": {
+        "$id": "urn:clef/PromptAssembly/assemble/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "assemble"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assembly"
+            ]
+          }
+        }
+      },
+      "toMessages": {
+        "$id": "urn:clef/PromptAssembly/toMessages/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "toMessages"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assembly"
+            ]
+          }
+        }
+      },
+      "estimateTokens": {
+        "$id": "urn:clef/PromptAssembly/estimateTokens/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "estimateTokens"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assembly"
+            ]
+          }
+        }
+      },
+      "removeSection": {
+        "$id": "urn:clef/PromptAssembly/removeSection/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/PromptAssembly"
+          },
+          "action": {
+            "const": "removeSection"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "assembly": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "assembly",
+              "name"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/PromptAssembly/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "addSection": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/addSection/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "addSection"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PromptAssembly/addSection/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "addSection"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "setVariable": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/setVariable/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "setVariable"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PromptAssembly/setVariable/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "setVariable"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "assemble": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/assemble/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "assemble"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "prompt": {
+                  "type": "string"
+                },
+                "sections_included": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "sections_truncated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "total_tokens": {
+                  "type": "integer"
+                },
+                "estimated_cost": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "prompt",
+                "sections_included",
+                "sections_truncated",
+                "total_tokens",
+                "estimated_cost"
+              ]
+            }
+          }
+        },
+        "over_budget": {
+          "$id": "urn:clef/PromptAssembly/assemble/completion/over_budget",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "assemble"
+            },
+            "variant": {
+              "const": "over_budget"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "minimum_tokens": {
+                  "type": "integer"
+                },
+                "available_tokens": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "minimum_tokens",
+                "available_tokens"
+              ]
+            }
+          }
+        }
+      },
+      "toMessages": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/toMessages/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "toMessages"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "messages": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "content"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "messages"
+              ]
+            }
+          }
+        },
+        "over_budget": {
+          "$id": "urn:clef/PromptAssembly/toMessages/completion/over_budget",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "toMessages"
+            },
+            "variant": {
+              "const": "over_budget"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "minimum_tokens": {
+                  "type": "integer"
+                },
+                "available_tokens": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "minimum_tokens",
+                "available_tokens"
+              ]
+            }
+          }
+        }
+      },
+      "estimateTokens": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/estimateTokens/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "estimateTokens"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "total": {
+                  "type": "integer"
+                },
+                "per_section": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "tokens": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "tokens"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "total",
+                "per_section"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PromptAssembly/estimateTokens/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "estimateTokens"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "removeSection": {
+        "ok": {
+          "$id": "urn:clef/PromptAssembly/removeSection/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "removeSection"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/PromptAssembly/removeSection/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/PromptAssembly"
+            },
+            "action": {
+              "const": "removeSection"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Composes a complete LLM prompt from independent sections : system \n instructions , persona directives , few shot examples , retrieved context , \n user input , and output format directives The layout manager handles \n structural semantics , section ordering , token allocation per section , \n priority based truncation under budget pressure , and the rendering \n pipeline Absorbs token budget management : each section has a \n max_tokens allocation and priority ; when total exceeds the context \n window , lowest priority sections are truncated first"
+}

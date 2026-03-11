@@ -378,14 +378,32 @@ const parsePrimary = (state: ParseState): E.Either<string, ASTNode> => {
 
 // --- AST serialization ---
 
+/** Map operators to human-readable function names for AST serialization. */
+const opNameMap: Record<string, string> = {
+  '+': 'add',
+  '-': 'sub',
+  '*': 'mul',
+  '/': 'div',
+  '%': 'mod',
+  '==': 'eq',
+  '!=': 'neq',
+  '<': 'lt',
+  '>': 'gt',
+  '<=': 'lte',
+  '>=': 'gte',
+  '&&': 'and',
+  '||': 'or',
+  '!': 'not',
+};
+
 const serializeAST = (node: ASTNode): string => {
   switch (node.type) {
     case 'number': return String(node.value);
     case 'string': return `"${node.value}"`;
     case 'boolean': return String(node.value);
     case 'identifier': return node.name;
-    case 'binary': return `${node.op}(${serializeAST(node.left)}, ${serializeAST(node.right)})`;
-    case 'unary': return `${node.op}(${serializeAST(node.operand)})`;
+    case 'binary': return `${opNameMap[node.op] ?? node.op}(${serializeAST(node.left)}, ${serializeAST(node.right)})`;
+    case 'unary': return `${opNameMap[node.op] ?? node.op}(${serializeAST(node.operand)})`;
     case 'call': return `${node.name}(${node.args.map(serializeAST).join(', ')})`;
   }
 };

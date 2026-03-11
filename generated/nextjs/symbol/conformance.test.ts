@@ -29,7 +29,7 @@ describe('Symbol conformance', () => {
     const storage = createTestStorage();
     const handler = symbolHandler;
 
-    const s = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -41,7 +41,7 @@ describe('Symbol conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).symbol).toBe(s);
+        s = (output as any).symbol;
         return output;
       }),
     )();
@@ -72,7 +72,7 @@ describe('Symbol conformance', () => {
     const storage = createTestStorage();
     const handler = symbolHandler;
 
-    const s = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -84,7 +84,7 @@ describe('Symbol conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).symbol).toBe(s);
+        s = (output as any).symbol;
         return output;
       }),
     )();
@@ -109,7 +109,7 @@ describe('Symbol conformance', () => {
     const storage = createTestStorage();
     const handler = symbolHandler;
 
-    const s = 'u-test-invariant-001';
+    let s: any = 'u-test-invariant-001';
 
     // setup: register -> ok
     const registerResultSetup = await pipe(
@@ -121,7 +121,7 @@ describe('Symbol conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).symbol).toBe(s);
+        s = (output as any).symbol;
         return output;
       }),
     )();

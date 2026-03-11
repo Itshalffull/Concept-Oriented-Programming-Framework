@@ -202,7 +202,7 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
 
       const files: { path: string; content: string }[] = [
         {
-          path: `handlers/ts/${kebab}.handler.ts`,
+          path: `handlers/ts/${kebab}.stub.handler.ts`,
           content: handlerCode,
         },
       ];
@@ -211,7 +211,7 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
       if (input.actions) {
         const testCode = buildConformanceTest(input);
         files.push({
-          path: `tests/conformance/${kebab}.conformance.test.ts`,
+          path: `tests/conformance/${kebab}.stub.conformance.test.ts`,
           content: testCode,
         });
       }
@@ -219,7 +219,8 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
       return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 

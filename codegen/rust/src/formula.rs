@@ -1,6 +1,6 @@
 // Formula Concept Implementation (Rust)
 //
-// Computation kit — evaluates formulas, tracks dependencies,
+// Computation suite — evaluates formulas, tracks dependencies,
 // invalidates cached results, and sets expressions.
 
 use crate::storage::{ConceptStorage, StorageResult};

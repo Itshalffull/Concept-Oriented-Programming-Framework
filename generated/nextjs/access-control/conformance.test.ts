@@ -29,8 +29,8 @@ describe('AccessControl conformance', () => {
     const storage = createTestStorage();
     const handler = accessControlHandler;
 
-    const t = 'u-test-invariant-001';
-    const t2 = 'u-test-invariant-002';
+    let t: any = 'u-test-invariant-001';
+    let t2: any = 'u-test-invariant-002';
 
     // setup: check -> ok
     const checkResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('AccessControl conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).result).toBe('allowed');
-        expect((output as any).tags).toBe(t);
+        t = (output as any).tags;
         expect((output as any).maxAge).toBe(300);
         return output;
       }),
@@ -50,7 +50,7 @@ describe('AccessControl conformance', () => {
     expect(E.isRight(checkResultSetup)).toBe(true);
 
     // setup: check -> ok
-    const checkResultSetup = await pipe(
+    const checkResultSetup2 = await pipe(
       handler.check({
       resource: 'document:123',
       action: 'delete',
@@ -59,12 +59,12 @@ describe('AccessControl conformance', () => {
       TE.map((output) => {
         expect(output.variant).toBe('ok');
         expect((output as any).result).toBe('forbidden');
-        expect((output as any).tags).toBe(t2);
+        t2 = (output as any).tags;
         expect((output as any).maxAge).toBe(60);
         return output;
       }),
     )();
-    expect(E.isRight(checkResultSetup)).toBe(true);
+    expect(E.isRight(checkResultSetup2)).toBe(true);
 
     // assert: andIf -> ok
     const andIfResultAssert = await pipe(
@@ -85,7 +85,6 @@ describe('AccessControl conformance', () => {
   it('invariant 2: after orIf, andIf behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = accessControlHandler;
-
 
     // setup: orIf -> ok
     const orIfResultSetup = await pipe(
@@ -120,7 +119,6 @@ describe('AccessControl conformance', () => {
   it('invariant 3: after orIf, andIf behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = accessControlHandler;
-
 
     // setup: orIf -> ok
     const orIfResultSetup = await pipe(

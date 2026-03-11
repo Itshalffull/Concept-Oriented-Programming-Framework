@@ -425,13 +425,13 @@ describe('PART 5 — Code generation pipeline produces valid output for all lang
         expect(files.length).toBeGreaterThanOrEqual(3); // types + handler + adapter
 
         // Verify types file has correct struct names
-        const typesFile = files.find(f => f.path.includes('types.rs'));
+        const typesFile = files.find(f => f.path.includes('types.stub.rs'));
         expect(typesFile).toBeDefined();
         expect(typesFile!.content).toContain('#[derive(');
         expect(typesFile!.content).toContain('pub struct');
 
         // Verify handler has trait definition
-        const handlerFile = files.find(f => f.path.includes('handler.rs'));
+        const handlerFile = files.find(f => f.path.includes('handler.stub.rs'));
         expect(handlerFile).toBeDefined();
         expect(handlerFile!.content).toContain('#[async_trait]');
         expect(handlerFile!.content).toContain('pub trait');
@@ -452,7 +452,7 @@ describe('PART 5 — Code generation pipeline produces valid output for all lang
         const files = (result as any).files as { path: string; content: string }[];
         expect(files.length).toBeGreaterThanOrEqual(1); // at least the contract
 
-        const contractFile = files.find(f => f.path.endsWith('.sol') && !f.path.includes('.t.'));
+        const contractFile = files.find(f => f.path.endsWith('.stub.sol') && !f.path.includes('.t.'));
         expect(contractFile).toBeDefined();
         expect(contractFile!.content).toContain('pragma solidity');
         expect(contractFile!.content).toContain('contract');
@@ -473,12 +473,12 @@ describe('PART 5 — Code generation pipeline produces valid output for all lang
         const files = (result as any).files as { path: string; content: string }[];
         expect(files.length).toBeGreaterThanOrEqual(3); // Types + Handler + Adapter
 
-        const typesFile = files.find(f => f.path.includes('Types.swift'));
+        const typesFile = files.find(f => f.path.includes('Types.stub.swift'));
         expect(typesFile).toBeDefined();
         expect(typesFile!.content).toContain('struct');
         expect(typesFile!.content).toContain('Codable');
 
-        const handlerFile = files.find(f => f.path.includes('Handler.swift'));
+        const handlerFile = files.find(f => f.path.includes('Handler.stub.swift'));
         expect(handlerFile).toBeDefined();
         expect(handlerFile!.content).toContain('protocol');
       });

@@ -1,6 +1,6 @@
 // AutomationRule Concept Implementation (Rust)
 //
-// Automation kit — defines automation rules with triggers, conditions,
+// Automation suite — defines automation rules with triggers, conditions,
 // and actions; enables/disables rules; evaluates events against rules.
 
 use crate::storage::{ConceptStorage, StorageResult};

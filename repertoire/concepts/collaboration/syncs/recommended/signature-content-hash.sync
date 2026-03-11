@@ -1,5 +1,5 @@
 # Signing verifies the content hash exists in the ContentHash store.
-# Cross-kit sync — collaboration uses versioning's ContentHash.
+# Cross-suite sync — collaboration uses versioning's ContentHash.
 
 sync SignatureVerifiesHash [eager]
 when {

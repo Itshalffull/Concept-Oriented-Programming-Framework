@@ -1,0 +1,21 @@
+type AttestationSybilState {
+  """All ass in this concept"""
+  ass: [ID!]!
+}
+
+type AttestationSybilEntry {
+  as: ID!
+  requiredSchemas: [String!]!
+  trustedAttesters: [String!]!
+  verificationCache: [JSON!]!
+}
+
+extend type Query {
+  attestationsybil_entry(as: ID!): AttestationSybilEntry
+  attestationsybil_entries: [AttestationSybilEntry!]!
+}
+
+type AttestationSybilConfigurations {
+  as: ID!
+  value: ID!
+}

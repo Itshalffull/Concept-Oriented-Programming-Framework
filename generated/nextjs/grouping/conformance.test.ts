@@ -29,8 +29,8 @@ describe('Grouping conformance', () => {
     const storage = createTestStorage();
     const handler = groupingHandler;
 
-    const g = 'u-test-invariant-001';
-    const gs = 'u-test-invariant-002';
+    let g: any = 'u-test-invariant-001';
+    let gs: any = 'u-test-invariant-002';
 
     // setup: group -> ok
     const groupResultSetup = await pipe(
@@ -40,8 +40,8 @@ describe('Grouping conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).grouping).toBe(g);
-        expect((output as any).groups).toBe(gs);
+        g = (output as any).grouping;
+        gs = (output as any).groups;
         expect((output as any).groupCount).toBe(3);
         return output;
       }),

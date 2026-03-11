@@ -98,7 +98,12 @@ export const schemaHandler: SchemaHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const fields = JSON.parse(input.fields) as readonly string[];
+                  let fields: readonly string[];
+                  try {
+                    fields = JSON.parse(input.fields) as readonly string[];
+                  } catch {
+                    fields = input.fields.split(',').map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+                  }
                   await storage.put('schemas', input.schema, {
                     name: input.schema,
                     fields: JSON.stringify(fields),
@@ -257,7 +262,8 @@ export const schemaHandler: SchemaHandler = {
             () =>
               TE.tryCatch(
                 async () => {
-                  const associations = await storage.find('schema_associations', { schema: input.schema });
+                  const allAssociations = await storage.find('schema_associations');
+                  const associations = allAssociations.filter((a) => (a as any).schema === input.schema);
                   const entities = associations.map((a) => (a as any).entity as string);
                   return getAssociationsOk(JSON.stringify(entities));
                 },

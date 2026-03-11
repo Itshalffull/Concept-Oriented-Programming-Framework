@@ -1,0 +1,20 @@
+type ReactStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ReactStrategyEntry {
+  s: ID!
+  scratchpad: [JSON!]!
+  agent_ref: String!
+}
+
+extend type Query {
+  reactstrategy_entry(s: ID!): ReactStrategyEntry
+  reactstrategy_entries: [ReactStrategyEntry!]!
+}
+
+type ReactStrategySessions {
+  s: ID!
+  value: ID!
+}

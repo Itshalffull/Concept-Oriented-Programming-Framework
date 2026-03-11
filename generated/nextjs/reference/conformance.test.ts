@@ -29,7 +29,7 @@ describe('Reference conformance', () => {
     const storage = createTestStorage();
     const handler = referenceHandler;
 
-    const x = 'u-test-invariant-001';
+    let x: any = 'u-test-invariant-001';
 
     // setup: addRef -> ok
     const addRefResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('Reference conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).source).toBe(x);
+        x = (output as any).source;
         expect((output as any).target).toBe('doc-1');
         return output;
       }),

@@ -25,7 +25,7 @@ const SPECS_DIR = resolve(__dirname, '..', 'specs');
 const REPERTOIRE_DIR = resolve(__dirname, '..', 'repertoire');
 const SYNCS_DIR = resolve(__dirname, '..', 'syncs');
 
-// Tag and Comment were superseded by richer kit versions.
+// Tag and Comment were superseded by richer suite versions.
 // Map concept name → { dir, file } for reading from the correct location.
 const SPEC_LOCATIONS: Record<string, { dir: string; file: string }> = {
   profile:  { dir: resolve(SPECS_DIR, 'app'), file: 'profile.concept' },
@@ -53,7 +53,7 @@ async function generateManifest(ast: ConceptAST): Promise<ConceptManifest> {
   return result.manifest as ConceptManifest;
 }
 
-// All 6 RealWorld concept names (comment and tag now from kit versions)
+// All 6 RealWorld concept names (comment and tag now from suite versions)
 const REALWORLD_SPECS = ['profile', 'article', 'comment', 'tag', 'favorite', 'follow'];
 
 // All 5 new RealWorld sync files
@@ -142,7 +142,7 @@ describe('Self-Compilation of RealWorld Specs', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    const testFile = files.find(f => f.path === 'profile.conformance.test.ts');
+    const testFile = files.find(f => f.path === 'profile.conformance.stub.test.ts');
     expect(testFile).toBeDefined();
     expect(testFile!.content).toContain('profileHandler.update(');
     expect(testFile!.content).toContain('profileHandler.get(');

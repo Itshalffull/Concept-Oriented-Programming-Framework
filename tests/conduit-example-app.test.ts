@@ -217,7 +217,7 @@ describe('Conduit Example App — Compile All Concepts × All Language Targets',
         );
         const files = result.files as { path: string; content: string }[];
         const hasConf = files.some(f =>
-          f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.sol'),
+          f.path.toLowerCase().includes('conformance') || f.path.endsWith('.t.stub.sol'),
         );
         expect(hasConf, `${gen.name} should produce conformance for ${name}`).toBe(true);
       }

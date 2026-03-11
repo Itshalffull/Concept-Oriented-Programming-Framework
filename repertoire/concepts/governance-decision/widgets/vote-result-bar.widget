@@ -1,0 +1,141 @@
+@version(1)
+widget vote-result-bar {
+
+  purpose {
+    Horizontal segmented bar visualizing vote distribution across choices.
+    Each segment is proportionally sized and color-coded by choice, with
+    labels showing count and percentage. Supports binary (for/against),
+    multi-choice, and weighted voting displays. Optional quorum marker
+    line indicates the participation threshold.
+  }
+
+  requires @1 {
+    fields {
+      segments: list;
+      total: Float;
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the bar and labels }
+    bar:           container  { Horizontal bar divided into colored segments }
+    segment:       container  { Single vote choice segment (proportional width) }
+    segmentLabel:  text       { Label showing choice name, count, and percentage }
+    quorumMarker:  container  { Vertical line indicating quorum threshold position }
+    totalLabel:    text       { Total vote count display }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER_SEGMENT -> segmentHovered;
+      on ANIMATE_IN -> animating;
+    }
+
+    animating {
+      on ANIMATION_END -> idle;
+      entry [animateSegments];
+    }
+
+    segmentHovered {
+      on UNHOVER -> idle;
+      entry [highlightSegment; showSegmentTooltip];
+      exit [unhighlightSegment; hideSegmentTooltip];
+    }
+  }
+
+  accessibility {
+    role: img;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_SEGMENT;
+      ArrowLeft -> FOCUS_PREV_SEGMENT;
+    }
+    focus {
+      root: focusable;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: "Vote results";
+        aria-roledescription: "vote result bar";
+      };
+      segment -> {
+        role: "img";
+        aria-label: concat(self.choice, ": ", self.count, " votes (", self.percent, "%)");
+      };
+      quorumMarker -> {
+        role: "img";
+        aria-label: concat("Quorum threshold at ", self.threshold, "%");
+      };
+      totalLabel -> {
+        aria-label: concat("Total votes: ", $total);
+      };
+    }
+  }
+
+  props {
+    variant: union "binary" | "multi" | "weighted" = "binary"
+    showLabels: Bool = true
+    showQuorum: Bool = false
+    quorumThreshold: Float = 0
+    animate: Bool = true
+    size: union "sm" | "md" | "lg" = "md"
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 18;
+    when {
+      concept: "Vote";
+    }
+    bind {
+      segments: votes;
+      total: votes.length;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-variant: ?variant;
+      data-size: ?size;
+      role: "img";
+      aria-label: "Vote results";
+    }
+    bar -> {
+      data-part: "bar";
+      data-total: $total;
+    }
+    segment -> {
+      data-part: "segment";
+      data-choice: self.choice;
+      data-percent: self.percent;
+      style-width: concat(self.percent, "%");
+      data-color: self.color;
+      onMouseEnter: send(HOVER_SEGMENT, { choice: self.choice });
+      onMouseLeave: send(UNHOVER);
+    }
+    segmentLabel -> {
+      data-part: "segment-label";
+      text: concat(self.choice, " ", self.count, " (", self.percent, "%)");
+      data-visible: if ?showLabels then "true" else "false";
+    }
+    quorumMarker -> {
+      data-part: "quorum-marker";
+      data-visible: if ?showQuorum then "true" else "false";
+      style-left: concat(?quorumThreshold, "%");
+    }
+    totalLabel -> {
+      data-part: "total-label";
+      text: concat("Total: ", $total);
+    }
+  }
+
+  invariant {
+    "Segment widths must sum to 100% of the bar";
+    "Zero-vote segments must render as a thin line, not disappear entirely";
+    "Quorum marker must position at the correct percentage of total possible votes";
+    "Animations must respect prefers-reduced-motion";
+    "Hover tooltip must show exact count and percentage for the segment";
+  }
+
+}

@@ -1,0 +1,120 @@
+@version(1)
+widget canvas-properties-panel {
+
+  purpose {
+    Right sidebar panel showing properties of the selected canvas
+    element. Switches between item properties, connector properties,
+    and canvas-level properties based on selection.
+  }
+
+  anatomy {
+    root:                 container  { Panel wrapper with selection-aware content }
+    item-properties:      container  { Properties form for selected item (position, size, type, display-as) }
+    connector-properties: container  { Properties form for selected connector (style, label, kind) }
+    canvas-properties:    container  { Properties form for canvas itself (name, background, grid, notation) }
+    empty-state:          container  { "Nothing selected" placeholder }
+  }
+
+  states {
+    empty [initial] {
+      on SELECT_ITEM -> showingItem;
+      on SELECT_CONNECTOR -> showingConnector;
+      on SELECT_CANVAS -> showingCanvas;
+    }
+
+    showingItem {
+      on DESELECT -> empty;
+      on SELECT_ITEM -> showingItem;
+      on SELECT_CONNECTOR -> showingConnector;
+      entry [load item properties; show item-properties];
+      exit [hide item-properties];
+    }
+
+    showingConnector {
+      on DESELECT -> empty;
+      on SELECT_ITEM -> showingItem;
+      on SELECT_CONNECTOR -> showingConnector;
+      entry [load connector properties; show connector-properties];
+      exit [hide connector-properties];
+    }
+
+    showingCanvas {
+      on DESELECT -> empty;
+      on SELECT_ITEM -> showingItem;
+      on SELECT_CONNECTOR -> showingConnector;
+      entry [load canvas properties; show canvas-properties];
+      exit [hide canvas-properties];
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Properties panel";
+      };
+      item-properties -> {
+        role: "form";
+        aria-label: "Item properties";
+      };
+      connector-properties -> {
+        role: "form";
+        aria-label: "Connector properties";
+      };
+      canvas-properties -> {
+        role: "form";
+        aria-label: "Canvas properties";
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    selectedItemId: option String
+    selectedConnectorId: option String
+    selectionType: union "none" | "item" | "connector" | "canvas" = "none"
+  }
+
+  connect {
+    root -> {
+      data-part: "properties-panel";
+      data-canvas: ?canvasId;
+      data-selection-type: ?selectionType;
+    }
+    item-properties -> {
+      data-part: "item-properties";
+      data-visible: if ?selectionType == "item" then "true" else "false";
+      data-item-id: ?selectedItemId;
+    }
+    connector-properties -> {
+      data-part: "connector-properties";
+      data-visible: if ?selectionType == "connector" then "true" else "false";
+      data-connector-id: ?selectedConnectorId;
+    }
+    canvas-properties -> {
+      data-part: "canvas-properties";
+      data-visible: if ?selectionType == "canvas" then "true" else "false";
+    }
+    empty-state -> {
+      data-part: "empty-state";
+      data-visible: if ?selectionType == "none" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Only one properties section visible at a time";
+    "Properties must update when selection changes";
+    "Editing a property must immediately update the canvas element";
+  }
+}

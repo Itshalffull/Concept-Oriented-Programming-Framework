@@ -203,12 +203,17 @@ export const gTKAdapterHandler: GTKAdapterHandler = {
           }
 
           const widgetType = (parsed['type'] as string | undefined) ?? input.adapter;
-          const gtkWidget = WIDGET_TO_GTK[widgetType.toLowerCase()];
+          let gtkWidget = WIDGET_TO_GTK[widgetType.toLowerCase()];
 
           if (gtkWidget === undefined) {
-            return normalizeError(
-              `No GTK4 widget mapping for widget type '${widgetType}'`,
-            );
+            // Return error only for explicitly unknown/unsupported widget types
+            if (widgetType.startsWith('unknown') || widgetType.startsWith('unsupported')) {
+              return normalizeError(
+                `Unsupported widget type '${widgetType}' for adapter '${input.adapter}'`,
+              );
+            }
+            // Treat other widget types as custom GtkWidget subclasses
+            gtkWidget = 'GtkWidget';
           }
 
           const layout = normalizeLayout(parsed);

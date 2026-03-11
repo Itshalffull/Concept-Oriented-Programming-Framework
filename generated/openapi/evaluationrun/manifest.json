@@ -1,0 +1,775 @@
+{
+  "uri": "urn:clef/EvaluationRun",
+  "name": "EvaluationRun",
+  "typeParams": [
+    {
+      "name": "N",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "evaluator_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "score",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "metrics",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "value",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "feedback",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "evaluated_at",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "runs",
+      "source": "set-valued",
+      "keyField": {
+        "name": "n",
+        "paramRef": "N"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "run_eval",
+      "params": [
+        {
+          "name": "step_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "evaluator_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        },
+        {
+          "name": "threshold",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "evaluator_type",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Creates evaluation in running status Provider dispatch via sync"
+        }
+      ]
+    },
+    {
+      "name": "log_metric",
+      "params": [
+        {
+          "name": "eval",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "metric_name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "metric_value",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "Records a metric from the evaluation"
+        }
+      ]
+    },
+    {
+      "name": "pass",
+      "params": [
+        {
+          "name": "eval",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "score",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "feedback",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluation passed threshold Transitions to passed"
+        }
+      ]
+    },
+    {
+      "name": "fail",
+      "params": [
+        {
+          "name": "eval",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        },
+        {
+          "name": "score",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "feedback",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "failed",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "step_ref",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "feedback",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Evaluation did not meet threshold Transitions to failed"
+        }
+      ]
+    },
+    {
+      "name": "get_result",
+      "params": [
+        {
+          "name": "eval",
+          "type": {
+            "kind": "param",
+            "paramRef": "N"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "score",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            },
+            {
+              "name": "feedback",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Returns evaluation results"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "eval",
+              "type": {
+                "kind": "param",
+                "paramRef": "N"
+              }
+            }
+          ],
+          "prose": "No evaluation with this identifier exists"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type EvaluationRunState {\n  \"\"\"All ns in this concept\"\"\"\n  ns: [ID!]!\n}\n\ntype EvaluationRunEntry {\n  n: ID!\n  step_ref: String!\n  evaluator_type: String!\n  status: String!\n  input: String!\n  score: Float!\n  threshold: Float!\n  metrics: [JSON!]!\n  feedback: String!\n  evaluated_at: String!\n}\n\nextend type Query {\n  evaluationrun_entry(n: ID!): EvaluationRunEntry\n  evaluationrun_entries: [EvaluationRunEntry!]!\n}\n\ntype EvaluationRunRuns {\n  n: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "run_eval": {
+        "$id": "urn:clef/EvaluationRun/run_eval/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationRun"
+          },
+          "action": {
+            "const": "run_eval"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "step_ref": {
+                "type": "string"
+              },
+              "evaluator_type": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string",
+                "contentEncoding": "base64"
+              },
+              "threshold": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "step_ref",
+              "evaluator_type",
+              "input",
+              "threshold"
+            ]
+          }
+        }
+      },
+      "log_metric": {
+        "$id": "urn:clef/EvaluationRun/log_metric/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationRun"
+          },
+          "action": {
+            "const": "log_metric"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eval": {
+                "type": "string"
+              },
+              "metric_name": {
+                "type": "string"
+              },
+              "metric_value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "eval",
+              "metric_name",
+              "metric_value"
+            ]
+          }
+        }
+      },
+      "pass": {
+        "$id": "urn:clef/EvaluationRun/pass/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationRun"
+          },
+          "action": {
+            "const": "pass"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eval": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              },
+              "feedback": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eval",
+              "score",
+              "feedback"
+            ]
+          }
+        }
+      },
+      "fail": {
+        "$id": "urn:clef/EvaluationRun/fail/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationRun"
+          },
+          "action": {
+            "const": "fail"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eval": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              },
+              "feedback": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eval",
+              "score",
+              "feedback"
+            ]
+          }
+        }
+      },
+      "get_result": {
+        "$id": "urn:clef/EvaluationRun/get_result/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/EvaluationRun"
+          },
+          "action": {
+            "const": "get_result"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "eval": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "eval"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "run_eval": {
+        "ok": {
+          "$id": "urn:clef/EvaluationRun/run_eval/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "run_eval"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "evaluator_type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval",
+                "step_ref",
+                "evaluator_type"
+              ]
+            }
+          }
+        }
+      },
+      "log_metric": {
+        "ok": {
+          "$id": "urn:clef/EvaluationRun/log_metric/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "log_metric"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval"
+              ]
+            }
+          }
+        }
+      },
+      "pass": {
+        "ok": {
+          "$id": "urn:clef/EvaluationRun/pass/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "pass"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval",
+                "step_ref"
+              ]
+            }
+          }
+        }
+      },
+      "fail": {
+        "failed": {
+          "$id": "urn:clef/EvaluationRun/fail/completion/failed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "fail"
+            },
+            "variant": {
+              "const": "failed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                },
+                "step_ref": {
+                  "type": "string"
+                },
+                "feedback": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval",
+                "step_ref",
+                "feedback"
+              ]
+            }
+          }
+        }
+      },
+      "get_result": {
+        "ok": {
+          "$id": "urn:clef/EvaluationRun/get_result/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "get_result"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "feedback": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval",
+                "status",
+                "score",
+                "feedback"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/EvaluationRun/get_result/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/EvaluationRun"
+            },
+            "action": {
+              "const": "get_result"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "eval": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "eval"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Execute quality evaluations against step outputs and track metrics \n Actual evaluation logic is delegated to evaluator providers"
+}

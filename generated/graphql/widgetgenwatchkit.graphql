@@ -1,0 +1,16 @@
+type WidgetGenWatchKitState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenWatchKitEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenwatchkit_entry(p: ID!): WidgetGenWatchKitEntry
+  widgetgenwatchkit_entries: [WidgetGenWatchKitEntry!]!
+}

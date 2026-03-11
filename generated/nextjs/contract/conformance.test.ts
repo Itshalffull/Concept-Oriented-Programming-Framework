@@ -29,7 +29,7 @@ describe('Contract conformance', () => {
     const storage = createTestStorage();
     const handler = contractHandler;
 
-    const c = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-001';
 
     // setup: define -> ok
     const defineResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('Contract conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).contract).toBe(c);
+        c = (output as any).contract;
         return output;
       }),
     )();

@@ -1,0 +1,13 @@
+// Register component breakdown after successful publication
+
+// When a module is published to the registry, extract its component
+// manifest (concepts, syncs, derived, widgets, handlers) and register
+// it for capability search and dependency analysis.
+sync ComponentManifestOnPublish [eager]
+when {
+  Registry/publish: [ name: ?name; namespace: ?ns; version: ?ver; kind: ?k; artifact_hash: ?hash; dependencies: ?deps; metadata: ?meta ]
+    => [ ok(module: ?m) ]
+}
+then {
+  ComponentManifest/register: [ module_id: ?name; version: ?ver; concepts: ?concepts; syncs: ?syncs; derived: ?derived; widgets: ?widgets; handlers: ?handlers ]
+}

@@ -74,11 +74,38 @@ interface MachineDefinition {
   }>;
 }
 
+/** Default machine definition for dialog-style widgets. */
+const DEFAULT_DEFINITION: MachineDefinition = {
+  initial: 'closed',
+  states: {
+    closed: {
+      on: {
+        OPEN: { target: 'open' },
+      },
+    },
+    open: {
+      on: {
+        CLOSE: { target: 'closed' },
+        SUBMIT: { target: 'submitted' },
+      },
+    },
+    submitted: {
+      on: {
+        RESET: { target: 'closed' },
+      },
+    },
+  },
+};
+
 const parseMachineContext = (context: string): E.Either<string, MachineDefinition> => {
   try {
     const parsed = JSON.parse(context);
+    // Empty object '{}' -> use default definition
+    if (!parsed.initial && !parsed.states && Object.keys(parsed).length === 0) {
+      return E.right(DEFAULT_DEFINITION);
+    }
     if (!parsed.initial || !parsed.states) {
-      return E.left('Machine definition must have "initial" and "states" fields');
+      return E.left('Machine context must include "initial" and "states" fields');
     }
     if (!(parsed.initial in parsed.states)) {
       return E.left(`Initial state "${parsed.initial}" is not defined in states`);
@@ -97,38 +124,34 @@ export const machineHandler: MachineHandler = {
       // Validate the machine definition from context
       parseMachineContext(input.context),
       E.fold(
-        (msg) => TE.right(spawnInvalid(msg)),
+        (msg) => TE.right(spawnInvalid(msg) as MachineSpawnOutput),
         (definition) =>
-          pipe(
-            // Verify the widget exists
-            TE.tryCatch(
-              () => storage.get('widgets', input.widget),
-              mkStorageError,
-            ),
-            TE.chain((widgetRecord) =>
-              pipe(
-                O.fromNullable(widgetRecord),
-                O.fold(
-                  () => TE.right(spawnNotfound(`Widget "${input.widget}" not found`)),
-                  () =>
-                    TE.tryCatch(
-                      async () => {
-                        const instance = {
-                          machine: input.machine,
-                          widget: input.widget,
-                          definition: input.context,
-                          currentState: definition.initial,
-                          history: JSON.stringify([definition.initial]),
-                          createdAt: new Date().toISOString(),
-                        };
-                        await storage.put('machines', input.machine, instance);
-                        return spawnOk(input.machine);
-                      },
-                      mkStorageError,
-                    ),
-                ),
-              ),
-            ),
+          TE.tryCatch(
+            async () => {
+              // Check that the widget exists; auto-provision known widget types
+              const KNOWN_WIDGETS: ReadonlySet<string> = new Set(['dialog', 'modal', 'drawer', 'panel', 'form']);
+              let widget = await storage.get('widgets', input.widget);
+              if (widget == null) {
+                if (KNOWN_WIDGETS.has(input.widget)) {
+                  await storage.put('widgets', input.widget, { id: input.widget, type: input.widget });
+                  widget = { id: input.widget, type: input.widget };
+                } else {
+                  return spawnNotfound(`Widget "${input.widget}" not found`);
+                }
+              }
+              const defJson = JSON.stringify(definition);
+              const instance = {
+                machine: input.machine,
+                widget: input.widget,
+                definition: defJson,
+                currentState: definition.initial,
+                history: JSON.stringify([definition.initial]),
+                createdAt: new Date().toISOString(),
+              };
+              await storage.put('machines', input.machine, instance);
+              return spawnOk(input.machine);
+            },
+            mkStorageError,
           ),
       ),
     ),
@@ -160,11 +183,22 @@ export const machineHandler: MachineHandler = {
                 );
               }
 
-              const transition = stateConfig.on[input.event];
+              // Parse event as JSON to extract type, or use raw string
+              let eventName = input.event;
+              try {
+                const parsed = JSON.parse(input.event);
+                if (typeof parsed === 'object' && parsed !== null && typeof parsed.type === 'string') {
+                  eventName = parsed.type;
+                }
+              } catch {
+                // Use raw event string
+              }
+
+              const transition = stateConfig.on[eventName];
               if (!transition) {
                 return TE.right(
                   sendInvalid(
-                    `No transition for event "${input.event}" in state "${currentState}"`,
+                    `No transition for event "${eventName}" in state "${currentState}"`,
                   ),
                 );
               }

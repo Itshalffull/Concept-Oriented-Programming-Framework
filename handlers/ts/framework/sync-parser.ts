@@ -27,6 +27,7 @@ type TokenType =
   | 'SLASH'
   | 'QUESTION'
   | 'DOT'
+  | 'EQUALS'
   | 'SEP'
   | 'EOF';
 
@@ -95,6 +96,12 @@ function tokenize(source: string): Token[] {
     if (ch === '=' && i + 1 < source.length && source[i + 1] === '>') {
       advance(2);
       tokens.push({ type: 'FAT_ARROW', value: '=>', line: l, col: c });
+      continue;
+    }
+
+    if (ch === '=' && (i + 1 >= source.length || source[i + 1] !== '>')) {
+      advance();
+      tokens.push({ type: 'EQUALS', value: '=', line: l, col: c });
       continue;
     }
 
@@ -201,6 +208,11 @@ class SyncFileParser {
     return this.tokens[this.pos];
   }
 
+  private peekAt(offset: number): Token | null {
+    const idx = this.pos + offset;
+    return idx < this.tokens.length ? this.tokens[idx] : null;
+  }
+
   private advance(): Token {
     return this.tokens[this.pos++];
   }
@@ -229,6 +241,17 @@ class SyncFileParser {
     }
   }
 
+  /** Expect an identifier, but also accept keywords used as identifiers (e.g. "sync" as action name). */
+  private expectIdent(): Token {
+    const tok = this.peek();
+    if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+      return this.advance();
+    }
+    throw new Error(
+      `Sync parse error at line ${tok.line}:${tok.col}: expected identifier, got ${tok.type}(${tok.value})`,
+    );
+  }
+
   parseFile(): CompiledSync[] {
     const syncs: CompiledSync[] = [];
 
@@ -254,12 +277,31 @@ class SyncFileParser {
 
     this.skipSeps();
 
-    // Parse optional purpose metadata: purpose: "description string"
+    // Parse optional purpose metadata: purpose: "string" or purpose { prose }
     let purpose: string | undefined;
     if (this.peek().type === 'IDENT' && this.peek().value === 'purpose') {
       this.advance(); // consume 'purpose'
-      this.expect('COLON');
-      purpose = this.expect('STRING_LIT').value;
+      if (this.match('LBRACE')) {
+        // Brace-delimited prose: purpose { text here }
+        let prose = '';
+        let depth = 1;
+        while (depth > 0 && this.peek().type !== 'EOF') {
+          if (this.peek().type === 'LBRACE') depth++;
+          if (this.peek().type === 'RBRACE') {
+            depth--;
+            if (depth === 0) break;
+          }
+          if (prose.length > 0 || this.peek().type !== 'SEP') {
+            prose += this.peek().value + ' ';
+          }
+          this.advance();
+        }
+        this.expect('RBRACE');
+        purpose = prose.trim();
+      } else {
+        this.expect('COLON');
+        purpose = this.expect('STRING_LIT').value;
+      }
       this.skipSeps();
     }
 
@@ -276,8 +318,13 @@ class SyncFileParser {
 
     this.skipSeps();
 
-    // Parse then clause
-    const then = this.parseThenClause();
+    // Parse then clause(s) — some syncs have multiple sequential then blocks
+    let then: ThenAction[] = this.parseThenClause();
+    this.skipSeps();
+    while (this.peek().type === 'KEYWORD' && this.peek().value === 'then') {
+      then = then.concat(this.parseThenClause());
+      this.skipSeps();
+    }
 
     const result: CompiledSync = { name, annotations, when, where, then };
     if (purpose) result.purpose = purpose;
@@ -297,7 +344,7 @@ class SyncFileParser {
       // Parse ConceptAction: Concept/Action
       const concept = this.parseConceptRef();
       this.expect('SLASH');
-      const action = this.expect('IDENT').value;
+      const action = this.expectIdent().value;
 
       this.expect('COLON');
 
@@ -306,14 +353,52 @@ class SyncFileParser {
       const inputFields = this.parseFieldPatterns();
       this.expect('RBRACKET');
 
-      // Parse => output fields: => [ field: ?var; ... ]
-      // Skip any separators (newlines) between ] and =>
+      // Parse => output: various formats
+      // => [ field: ?var; ... ]
+      // => ok(field: ?var; ...)
+      // => [ ok(field: ?var; ...) ]
+      // => [ ok ]
+      // => [ variant: "ok" ]
       this.skipSeps();
       this.expect('FAT_ARROW');
       this.skipSeps();
-      this.expect('LBRACKET');
-      const outputFields = this.parseFieldPatterns();
-      this.expect('RBRACKET');
+
+      let outputFields: FieldPattern[] = [];
+      let outputVariant: string | undefined;
+
+      if (this.peek().type === 'LBRACKET') {
+        this.advance();
+        this.skipSeps();
+
+        // Check if it's [ ok ] or [ ok(...) ] — named variant inside brackets
+        if (this.peek().type === 'IDENT' && this.peek().value !== '_' &&
+            this.peekAt(1) !== null &&
+            (this.peekAt(1)!.type === 'RBRACKET' || this.peekAt(1)!.type === 'LPAREN')) {
+          outputVariant = this.advance().value;
+          if (this.match('LPAREN')) {
+            outputFields = this.parseFieldPatterns();
+            this.expect('RPAREN');
+          }
+        } else {
+          outputFields = this.parseFieldPatterns();
+        }
+        this.expect('RBRACKET');
+      } else if (this.peek().type === 'IDENT') {
+        // => ok(field: ?var; ...) — named variant without brackets
+        outputVariant = this.advance().value;
+        if (this.match('LPAREN')) {
+          outputFields = this.parseFieldPatterns();
+          this.expect('RPAREN');
+        }
+      }
+
+      // If variant was parsed, add it as a field pattern
+      if (outputVariant) {
+        outputFields.unshift({
+          name: 'variant',
+          match: { type: 'literal', value: outputVariant },
+        });
+      }
 
       patterns.push({
         concept: `urn:clef/${concept}`,
@@ -330,10 +415,10 @@ class SyncFileParser {
   }
 
   private parseConceptRef(): string {
-    let ref = this.expect('IDENT').value;
+    let ref = this.expectIdent().value;
     // Handle dotted names like Phone.Profile
     while (this.match('DOT')) {
-      ref += '.' + this.expect('IDENT').value;
+      ref += '.' + this.expectIdent().value;
     }
     return ref;
   }
@@ -341,19 +426,19 @@ class SyncFileParser {
   private parseFieldPatterns(): FieldPattern[] {
     const fields: FieldPattern[] = [];
 
-    while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+    while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'RPAREN' && this.peek().type !== 'EOF') {
       this.skipSeps();
-      if (this.peek().type === 'RBRACKET') break;
+      if (this.peek().type === 'RBRACKET' || this.peek().type === 'RPAREN') break;
 
-      const name = this.expect('IDENT').value;
+      const name = this.expectIdent().value;
       this.expect('COLON');
 
       let match: FieldPattern['match'];
 
       if (this.peek().type === 'QUESTION') {
-        // Variable: ?name
+        // Variable: ?name (name could be a keyword like ?sync, ?where, ?filter)
         this.advance();
-        const varName = this.expect('IDENT').value;
+        const varName = this.expectIdent().value;
         match = { type: 'variable', name: varName };
       } else if (this.peek().type === 'STRING_LIT') {
         match = { type: 'literal', value: this.advance().value };
@@ -366,6 +451,9 @@ class SyncFileParser {
       } else if (this.peek().type === 'IDENT' && this.peek().value === '_') {
         this.advance();
         match = { type: 'wildcard' };
+      } else if (this.peek().type === 'LBRACE') {
+        // Nested record: { key: value; ... }
+        match = { type: 'literal', value: this.parseNestedObjectBraces() };
       } else {
         throw new Error(`Sync parse error at line ${this.peek().line}: expected field value, got ${this.peek().type}(${this.peek().value})`);
       }
@@ -373,6 +461,7 @@ class SyncFileParser {
       fields.push({ name, match });
 
       this.match('SEMICOLON');
+      this.match('COMMA');
       this.skipSeps();
     }
 
@@ -393,6 +482,10 @@ class SyncFileParser {
         entries.push(this.parseBindExpr());
       } else if (this.peek().type === 'KEYWORD' && this.peek().value === 'filter') {
         entries.push(this.parseFilterExpr());
+      } else if (this.peek().type === 'IDENT' && this.peek().value === 'guard') {
+        entries.push(this.parseGuardExpr());
+      } else if (this.peek().type === 'IDENT' && this.peek().value === 'any') {
+        entries.push(this.parseAnyExpr());
       } else {
         entries.push(this.parseConceptQuery());
       }
@@ -408,10 +501,23 @@ class SyncFileParser {
     this.expect('KEYWORD', 'bind');
     this.expect('LPAREN');
 
-    // Parse expression like uuid() or some other expr
+    // Parse expression — collect tokens until we see 'as' at depth 0
     let expr = '';
-    while (this.peek().type !== 'IDENT' || this.peek().value !== 'as') {
-      expr += this.advance().value;
+    let depth = 0;
+    while (this.peek().type !== 'EOF') {
+      if (this.peek().type === 'LPAREN') depth++;
+      if (this.peek().type === 'RPAREN') {
+        if (depth === 0) break;
+        depth--;
+      }
+      if (depth === 0 && this.peek().type === 'IDENT' && this.peek().value === 'as') break;
+      const tok = this.advance();
+      // Reconstruct token text
+      if (tok.type === 'QUESTION') {
+        expr += '?';
+      } else {
+        expr += tok.value;
+      }
     }
     expr = expr.trim();
 
@@ -442,9 +548,125 @@ class SyncFileParser {
     return { type: 'filter', expr: expr.trim() };
   }
 
+  private parseGuardExpr(): WhereEntry {
+    this.advance(); // consume 'guard'
+    this.expect('LPAREN');
+
+    let expr = '';
+    let depth = 1;
+    while (depth > 0 && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'LPAREN') depth++;
+      if (this.peek().type === 'RPAREN') {
+        depth--;
+        if (depth === 0) break;
+      }
+      const tok = this.advance();
+      if (tok.type === 'QUESTION') {
+        expr += '?';
+      } else {
+        expr += tok.value;
+      }
+    }
+    this.expect('RPAREN');
+
+    return { type: 'filter', expr: `guard(${expr.trim()})` };
+  }
+
+  private parseAnyExpr(): WhereEntry {
+    this.advance(); // consume 'any'
+    this.expect('LPAREN');
+
+    let expr = '';
+    let depth = 1;
+    while (depth > 0 && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'LPAREN') depth++;
+      if (this.peek().type === 'RPAREN') {
+        depth--;
+        if (depth === 0) break;
+      }
+      const tok = this.advance();
+      if (tok.type === 'QUESTION') {
+        expr += '?';
+      } else if (tok.type === 'SEMICOLON') {
+        expr += '; ';
+      } else if (tok.type === 'EQUALS') {
+        expr += ' = ';
+      } else {
+        expr += tok.value;
+      }
+    }
+    this.expect('RPAREN');
+
+    return { type: 'filter', expr: `any(${expr.trim()})` };
+  }
+
   private parseConceptQuery(): WhereEntry {
-    // Concept: { ?var field: value }
     const concept = this.parseConceptRef();
+
+    // Check if this is Concept/action: [...] => [...] or Concept: { ... }
+    if (this.peek().type === 'SLASH') {
+      // Concept/action: [...] => [...] form
+      this.advance();
+      const action = this.expectIdent().value;
+      this.expect('COLON');
+      this.expect('LBRACKET');
+      const inputFields = this.parseFieldPatterns();
+      this.expect('RBRACKET');
+
+      this.skipSeps();
+      this.expect('FAT_ARROW');
+      this.skipSeps();
+
+      // Parse output: [ variant: "ok"; field: ?var ] or ok(field: ?var)
+      let outputFields: FieldPattern[] = [];
+      let outputVariant: string | undefined;
+
+      if (this.peek().type === 'LBRACKET') {
+        this.advance();
+        this.skipSeps();
+        if (this.peek().type === 'IDENT' && this.peek().value !== '_' &&
+            this.peekAt(1) !== null &&
+            (this.peekAt(1)!.type === 'RBRACKET' || this.peekAt(1)!.type === 'LPAREN')) {
+          outputVariant = this.advance().value;
+          if (this.match('LPAREN')) {
+            outputFields = this.parseFieldPatterns();
+            this.expect('RPAREN');
+          }
+        } else {
+          outputFields = this.parseFieldPatterns();
+        }
+        this.expect('RBRACKET');
+      } else if (this.peek().type === 'IDENT') {
+        outputVariant = this.advance().value;
+        if (this.match('LPAREN')) {
+          outputFields = this.parseFieldPatterns();
+          this.expect('RPAREN');
+        }
+      }
+
+      if (outputVariant) {
+        outputFields.unshift({
+          name: 'variant',
+          match: { type: 'literal', value: outputVariant },
+        });
+      }
+
+      // Collect bindings from output fields
+      const bindings: { variable: string; field: string }[] = [];
+      for (const f of outputFields) {
+        if (f.match.type === 'variable') {
+          bindings.push({ variable: f.match.name, field: f.name });
+        }
+      }
+
+      return {
+        type: 'query',
+        concept: `urn:clef/${concept}/${action}`,
+        bindings,
+      };
+    }
+
+    // Concept: { ?var field: value } form
     this.expect('COLON');
     this.expect('LBRACE');
 
@@ -457,16 +679,16 @@ class SyncFileParser {
       if (this.peek().type === 'QUESTION') {
         // ?var field: value pattern
         this.advance();
-        const varName = this.expect('IDENT').value;
+        const varName = this.expectIdent().value;
 
         // Next should be field: value pairs
-        while (this.peek().type === 'IDENT') {
-          const field = this.expect('IDENT').value;
+        while (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD') {
+          const field = this.expectIdent().value;
           this.expect('COLON');
 
           if (this.peek().type === 'QUESTION') {
             this.advance();
-            const valVar = this.expect('IDENT').value;
+            const valVar = this.expectIdent().value;
             bindings.push({ variable: valVar, field });
           } else {
             // literal — skip for now
@@ -479,15 +701,23 @@ class SyncFileParser {
         // The first variable is the key binding
         bindings.unshift({ variable: varName, field: '__key' });
       } else {
-        // field: value
-        const field = this.expect('IDENT').value;
+        // field: value or field: ?var as ?binding
+        const field = this.expectIdent().value;
         this.expect('COLON');
         if (this.peek().type === 'QUESTION') {
           this.advance();
-          const varName = this.expect('IDENT').value;
+          const varName = this.expectIdent().value;
           bindings.push({ variable: varName, field });
         } else {
+          // literal value — skip
           this.advance();
+        }
+        // Check for "as ?binding" pattern (works for both ?var as ?x and "literal" as ?x)
+        if (this.peek().type === 'IDENT' && this.peek().value === 'as') {
+          this.advance(); // consume 'as'
+          this.expect('QUESTION');
+          const asVar = this.expectIdent().value;
+          bindings.push({ variable: asVar, field: `${field}__as` });
         }
         this.match('SEMICOLON');
       }
@@ -513,52 +743,31 @@ class SyncFileParser {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
-      const concept = this.parseConceptRef();
+      // Handle "for each ?var in ?list { ... }" — skip as expression block
+      if (this.peek().type === 'IDENT' && this.peek().value === 'for') {
+        this.skipBraceBlock();
+        this.skipSeps();
+        continue;
+      }
+
+      // Handle ?variable/action: [...] — dynamic concept reference
+      let concept: string;
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        concept = `?${this.expectIdent().value}`;
+      } else {
+        concept = this.parseConceptRef();
+      }
       this.expect('SLASH');
-      const action = this.expect('IDENT').value;
+      const action = this.expectIdent().value;
 
       this.expect('COLON');
       this.expect('LBRACKET');
 
-      const fields: ThenField[] = [];
-      while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
-        this.skipSeps();
-        if (this.peek().type === 'RBRACKET') break;
-
-        const name = this.expect('IDENT').value;
-        this.expect('COLON');
-
-        let value: ThenField['value'];
-        if (this.peek().type === 'QUESTION') {
-          this.advance();
-          const varName = this.expect('IDENT').value;
-          value = { type: 'variable', name: varName };
-        } else if (this.peek().type === 'STRING_LIT') {
-          value = { type: 'literal', value: this.advance().value };
-        } else if (this.peek().type === 'INT_LIT') {
-          value = { type: 'literal', value: parseInt(this.advance().value, 10) };
-        } else if (this.peek().type === 'FLOAT_LIT') {
-          value = { type: 'literal', value: parseFloat(this.advance().value) };
-        } else if (this.peek().type === 'BOOL_LIT') {
-          value = { type: 'literal', value: this.advance().value === 'true' };
-        } else if (this.peek().type === 'LBRACKET') {
-          // Nested object literal: [ key: value; ... ]
-          value = { type: 'literal', value: this.parseNestedObject() };
-        } else if (this.peek().type === 'LBRACE') {
-          // Nested object literal: { key: value; ... }
-          value = { type: 'literal', value: this.parseNestedObjectBraces() };
-        } else {
-          throw new Error(`Sync parse error at line ${this.peek().line}: expected then field value, got ${this.peek().type}(${this.peek().value})`);
-        }
-
-        fields.push({ name, value });
-
-        this.match('SEMICOLON');
-        this.skipSeps();
-      }
+      const fields = this.parseThenFields();
 
       this.expect('RBRACKET');
-      actions.push({ concept: `urn:clef/${concept}`, action, fields });
+      actions.push({ concept: concept.startsWith('?') ? concept : `urn:clef/${concept}`, action, fields });
       this.skipSeps();
     }
 
@@ -566,20 +775,171 @@ class SyncFileParser {
     return actions;
   }
 
+  private parseThenFieldValue(): ThenField['value'] {
+    if (this.peek().type === 'QUESTION') {
+      this.advance();
+      const varName = this.expectIdent().value;
+      // Check for dot access: ?var.field
+      if (this.peek().type === 'DOT') {
+        return { type: 'variable', name: `${varName}.${this.advance() && this.expectIdent().value}` };
+      }
+      return { type: 'variable', name: varName };
+    }
+    if (this.peek().type === 'STRING_LIT') {
+      return { type: 'literal', value: this.advance().value };
+    }
+    if (this.peek().type === 'INT_LIT') {
+      return { type: 'literal', value: parseInt(this.advance().value, 10) };
+    }
+    if (this.peek().type === 'FLOAT_LIT') {
+      return { type: 'literal', value: parseFloat(this.advance().value) };
+    }
+    if (this.peek().type === 'BOOL_LIT') {
+      return { type: 'literal', value: this.advance().value === 'true' };
+    }
+    if (this.peek().type === 'LBRACKET') {
+      // Could be empty [] or list literal [?var, ...] or nested object [key: value; ...]
+      if (this.peekAt(1)?.type === 'RBRACKET') {
+        this.advance(); this.advance();
+        return { type: 'literal', value: [] };
+      }
+      // List literal: starts with ? (variable) or string/int/bool without colon after
+      if (this.peekAt(1)?.type === 'QUESTION' ||
+          (this.peekAt(1)?.type === 'STRING_LIT' && this.peekAt(2)?.type !== 'COLON')) {
+        return { type: 'literal', value: this.parseThenListLiteral() };
+      }
+      return { type: 'literal', value: this.parseNestedObject() };
+    }
+    if (this.peek().type === 'LBRACE') {
+      return { type: 'literal', value: this.parseNestedObjectBraces() };
+    }
+    // Handle null, none, and other ident values
+    if (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD') {
+      const val = this.peek().value;
+      // Function calls: concat(...), cond(...), length(...), etc.
+      if (this.peekAt(1)?.type === 'LPAREN') {
+        return { type: 'literal', value: this.collectExpression() };
+      }
+      this.advance();
+      if (val === 'null') return { type: 'literal', value: null };
+      if (val === 'none') return { type: 'literal', value: null };
+      return { type: 'literal', value: val };
+    }
+    throw new Error(`Sync parse error at line ${this.peek().line}: expected then field value, got ${this.peek().type}(${this.peek().value})`);
+  }
+
+  private parseThenFields(): ThenField[] {
+    const fields: ThenField[] = [];
+    while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACKET') break;
+
+      const name = this.expectIdent().value;
+      this.expect('COLON');
+      const value = this.parseThenFieldValue();
+      fields.push({ name, value });
+      this.match('SEMICOLON');
+      this.skipSeps();
+    }
+    return fields;
+  }
+
+  /** Parse a list literal like [?loc] or [?a, ?b] inside then fields. */
+  private parseThenListLiteral(): string {
+    this.expect('LBRACKET');
+    let items: string[] = [];
+    while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        const name = this.expectIdent().value;
+        items.push(`?${name}`);
+      } else if (this.peek().type === 'STRING_LIT') {
+        items.push(`"${this.advance().value}"`);
+      } else {
+        items.push(this.advance().value);
+      }
+      this.match('COMMA');
+      this.match('SEMICOLON');
+    }
+    this.expect('RBRACKET');
+    return `[${items.join(', ')}]`;
+  }
+
+  /** Collect a function-call expression like concat("a", ?b, "c") preserving structure. */
+  private collectExpression(): string {
+    let expr = '';
+    let depth = 0;
+    while (this.peek().type !== 'EOF') {
+      const tok = this.peek();
+      if (tok.type === 'LPAREN') depth++;
+      if (tok.type === 'RPAREN') {
+        depth--;
+        if (depth < 0) break;
+      }
+      if (depth === 0 && (tok.type === 'SEMICOLON' || tok.type === 'RBRACKET' || tok.type === 'RBRACE')) break;
+      if (tok.type === 'QUESTION') {
+        expr += '?';
+      } else if (tok.type === 'SEP') {
+        // skip newlines inside expressions
+      } else {
+        expr += tok.value;
+      }
+      this.advance();
+    }
+    return expr.trim();
+  }
+
+  /** Skip a brace-delimited block (e.g. "for each ... { ... }"). Consumes tokens up to and including matching }. */
+  private skipBraceBlock(): void {
+    // Advance until we hit a LBRACE
+    while (this.peek().type !== 'LBRACE' && this.peek().type !== 'EOF') {
+      this.advance();
+    }
+    if (this.peek().type === 'EOF') return;
+    this.advance(); // consume LBRACE
+    let depth = 1;
+    while (depth > 0 && this.peek().type !== 'EOF') {
+      if (this.peek().type === 'LBRACE') depth++;
+      if (this.peek().type === 'RBRACE') depth--;
+      this.advance();
+    }
+  }
+
   private parseNestedObjectBraces(): Record<string, unknown> {
     this.expect('LBRACE');
+    this.skipSeps();
+
+    // Check for set literal pattern: { ?var, ?var }
+    if (this.peek().type === 'QUESTION') {
+      const items: string[] = [];
+      while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+        this.skipSeps();
+        if (this.peek().type === 'RBRACE') break;
+        if (this.peek().type === 'QUESTION') {
+          this.advance();
+          items.push(`?${this.expectIdent().value}`);
+        } else {
+          items.push(this.advance().value);
+        }
+        this.match('COMMA');
+        this.skipSeps();
+      }
+      this.expect('RBRACE');
+      return { __set: items };
+    }
+
     const obj: Record<string, unknown> = {};
 
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
-      const key = this.expect('IDENT').value;
+      const key = this.expectIdent().value;
       this.expect('COLON');
 
       if (this.peek().type === 'QUESTION') {
         this.advance();
-        const varName = this.expect('IDENT').value;
+        const varName = this.expectIdent().value;
         obj[key] = `{{${varName}}}`;
       } else if (this.peek().type === 'STRING_LIT') {
         obj[key] = this.advance().value;
@@ -591,6 +951,12 @@ class SyncFileParser {
         obj[key] = this.parseNestedObjectBraces();
       } else if (this.peek().type === 'LBRACKET') {
         obj[key] = this.parseNestedObject();
+      } else if ((this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD') && this.peekAt(1)?.type === 'LPAREN') {
+        // Function call: concat(...), cond(...)
+        obj[key] = this.collectExpression();
+      } else if (this.peek().type === 'IDENT' && this.peek().value === 'null') {
+        this.advance();
+        obj[key] = null;
       } else {
         obj[key] = this.advance().value;
       }
@@ -611,12 +977,12 @@ class SyncFileParser {
       this.skipSeps();
       if (this.peek().type === 'RBRACKET') break;
 
-      const key = this.expect('IDENT').value;
+      const key = this.expectIdent().value;
       this.expect('COLON');
 
       if (this.peek().type === 'QUESTION') {
         this.advance();
-        const varName = this.expect('IDENT').value;
+        const varName = this.expectIdent().value;
         // Store as template variable reference
         obj[key] = `{{${varName}}}`;
       } else if (this.peek().type === 'STRING_LIT') {

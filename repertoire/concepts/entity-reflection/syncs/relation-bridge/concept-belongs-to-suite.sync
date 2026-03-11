@@ -1,4 +1,4 @@
-// When a concept is registered with a kit/suite reference, create a
+// When a concept is registered with a suite/suite reference, create a
 // Relation linking the concept to its parent suite. Enables queries
 // like "what concepts belong to suite X?"
 

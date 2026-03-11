@@ -122,6 +122,6 @@ concept ProjectInit [J] {
                  module_list: mods, profile: prof,
                  derived_concepts: derived) -> ok(init: j)
     then writeManifest(init: j) -> ok
-    A freshly created init can always proceed to write its manifest.
+    // A freshly created init can always proceed to write its manifest.
   }
 }

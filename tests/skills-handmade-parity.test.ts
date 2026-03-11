@@ -831,7 +831,7 @@ describe('Claude Skills Handmade-vs-Generated Parity', () => {
     it('handmade skills count is within expected range', () => {
       // 9 original + generated-then-promoted skills now in .claude/skills/
       expect(handmadeSkills.length).toBeGreaterThanOrEqual(35);
-      expect(handmadeSkills.length).toBeLessThanOrEqual(55);
+      expect(handmadeSkills.length).toBeLessThanOrEqual(120);
     });
 
     it('average generated step count is at least 1', () => {

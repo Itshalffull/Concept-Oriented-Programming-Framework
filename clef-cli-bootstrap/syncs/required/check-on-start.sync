@@ -1,0 +1,13 @@
+// Background update check at CLI startup
+
+// When the CLI starts, perform a non-blocking update check against
+// the registry. If a newer version is available, notify the user
+// without interrupting their command.
+sync CheckOnStart [eventual]
+when {
+  Download/resolve: [ artifact_id: ?id; platform: ?platform; version_range: ?range ]
+    => [ ok(download: ?d) ]
+}
+then {
+  SelfUpdate/check: [ current_version: ?currentVer; platform: ?platform ]
+}

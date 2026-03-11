@@ -1,14 +1,14 @@
-# Worked Example: Content Management Kit
+# Worked Example: Content Management Suite
 
 A complete walkthrough of the content management suite (Entity, Field, Relation, Node) — the reference suite in the Clef architecture.
 
-## Kit Purpose
+## Suite Purpose
 
 > Drupal-style entity/field/relation system for structured content. Provides typed entities with attachable fields and inter-entity relationships, with cascade lifecycle management.
 
 This suite enables any app to manage structured content without reinventing entity CRUD, field attachment, or relationship management. It's analogous to Drupal's entity system or WordPress's post/meta architecture, but expressed as independent concepts.
 
-## Step 1: Identify the Kit Boundary
+## Step 1: Identify the Suite Boundary
 
 Four concepts belong together:
 
@@ -200,7 +200,7 @@ then {
 ## Step 4: Full Suite Manifest
 
 ```yaml
-kit:
+suite:
   name: content-management
   version: 0.1.0
   description: >
@@ -263,7 +263,7 @@ syncs:
         updated timestamp. Disable if you manage timestamps differently.
 
 uses:
-  - kit: auth
+  - suite: auth
     optional: true
     concepts:
       - name: JWT
@@ -283,9 +283,9 @@ dependencies: []
 
 ```yaml
 # deploy.yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
 ```
 
 All 3 required + 3 recommended syncs load. Optional uses syncs are skipped (no auth suite present).
@@ -293,11 +293,11 @@ All 3 required + 3 recommended syncs load. Optional uses syncs are skipped (no a
 ### With auth suite
 
 ```yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
   - name: auth
-    path: ./kits/auth
+    path: ./suites/auth
 ```
 
 All 6 suite syncs + 1 optional uses sync (EntityOwnership) load.
@@ -305,9 +305,9 @@ All 6 suite syncs + 1 optional uses sync (EntityOwnership) load.
 ### With overrides and disables
 
 ```yaml
-kits:
+suites:
   - name: content-management
-    path: ./kits/content-management
+    path: ./suites/content-management
     overrides:
       DefaultTitleField: ./syncs/custom-title-and-slug.sync
     disable:
@@ -319,7 +319,7 @@ kits:
 ## Directory Structure
 
 ```
-kits/content-management/
+suites/content-management/
 ├── suite.yaml
 ├── entity.concept
 ├── field.concept

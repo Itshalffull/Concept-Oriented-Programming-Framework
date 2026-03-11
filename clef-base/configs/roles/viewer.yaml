@@ -1,0 +1,30 @@
+# Viewer role — read-only access to content and configuration.
+# See §6.1 of the Clef Base spec.
+
+role:
+  name: viewer
+  label: "Viewer"
+  description: "Read-only access to published content and public views. No write or administrative access"
+  weight: 2
+
+permissions:
+  content:
+    - read
+
+  schema:
+    - list
+    - get
+
+  view:
+    - list
+    - get
+    - preview
+
+  workflow:
+    - list
+    - get
+
+  theme:
+    - list
+    - get
+    - preview

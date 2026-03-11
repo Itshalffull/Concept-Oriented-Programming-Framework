@@ -6,7 +6,7 @@
 
 pub mod storage;
 
-// Governance kit
+// Governance suite
 pub mod governance;
 
 // App concepts
@@ -21,7 +21,7 @@ pub mod favorite;
 pub mod follow;
 pub mod echo;
 
-// Foundation kit concepts
+// Foundation suite concepts
 pub mod content_node;
 pub mod content_storage;
 pub mod outline;
@@ -31,19 +31,19 @@ pub mod page_as_record;
 pub mod content_parser;
 pub mod intent;
 
-// Identity kit concepts
+// Identity suite concepts
 pub mod authentication;
 pub mod authorization;
 pub mod access_control;
 pub mod session;
 
-// Linking kit concepts
+// Linking suite concepts
 pub mod reference;
 pub mod backlink;
 pub mod relation;
 pub mod alias;
 
-// Classification kit concepts
+// Classification suite concepts
 pub mod classification_tag;
 pub mod taxonomy;
 
@@ -66,7 +66,7 @@ pub mod renderer;
 pub mod collection;
 pub mod graph;
 
-// Content kit concepts
+// Content suite concepts
 pub mod daily_note;
 pub mod comment_threaded;
 pub mod synced_content;
@@ -74,21 +74,21 @@ pub mod template;
 pub mod canvas;
 pub mod version;
 
-// Computation kit concepts
+// Computation suite concepts
 pub mod formula;
 pub mod computation_token;
 pub mod expression_language;
 
-// Automation kit concepts
+// Automation suite concepts
 pub mod workflow;
 pub mod automation_rule;
 pub mod queue;
 pub mod control;
 
-// Layout kit concepts
+// Layout suite concepts
 pub mod component;
 
-// Infrastructure kit concepts
+// Infrastructure suite concepts
 pub mod cache;
 pub mod config_sync;
 pub mod pathauto;
@@ -96,18 +96,18 @@ pub mod plugin_registry;
 pub mod event_bus;
 pub mod validator;
 
-// Media kit concepts
+// Media suite concepts
 pub mod file_management;
 pub mod media_asset;
 
-// Collaboration kit concepts
+// Collaboration suite concepts
 pub mod collaboration_flag;
 pub mod group;
 
-// Notification kit concepts
+// Notification suite concepts
 pub mod notification;
 
-// Data integration kit concepts
+// Data integration suite concepts
 pub mod data_source;
 pub mod connector;
 pub mod capture;
@@ -125,3 +125,10 @@ pub mod viewport_provider;
 pub mod binding_provider;
 pub mod slot_provider;
 pub mod machine_provider;
+
+// ── Automation Providers ──
+pub mod automation_dispatch;
+pub mod automation_scope;
+pub mod manifest_automation_provider;
+pub mod sync_automation_provider;
+pub mod automation_target;

@@ -29,7 +29,6 @@ describe('DataQuality conformance', () => {
     const storage = createTestStorage();
     const handler = dataQualityHandler;
 
-
     // setup: validate -> ok
     const validateResultSetup = await pipe(
       handler.validate({
@@ -64,7 +63,6 @@ describe('DataQuality conformance', () => {
   it('invariant 2: after validate, quarantine, release behaves correctly', async () => {
     const storage = createTestStorage();
     const handler = dataQualityHandler;
-
 
     // setup: validate -> invalid
     const validateResultSetup = await pipe(

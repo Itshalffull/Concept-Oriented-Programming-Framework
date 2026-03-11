@@ -1,0 +1,20 @@
+# Component mapping: dispatch SlotSource resolution to provider.
+# When SlotSource/resolve fires, dispatch to the registered
+# provider via PluginRegistry lookup.
+
+sync SlotSourceDispatchesToProvider [eager]
+  purpose: "When SlotSource/resolve fires, dispatch to the registered provider via PluginRegistry"
+when {
+  SlotSource/resolve: [ slot: ?slot; context: ?context ]
+    => [ ok: ?source_config ]
+}
+where {
+  PluginRegistry: { category: "slot_source_provider"; provider_id: ?slot.provider_id; handler: ?handler }
+}
+then {
+  ?handler/resolve: [
+    slot: ?slot;
+    context: ?context;
+    config: ?source_config
+  ]
+}

@@ -1,0 +1,10 @@
+// Create local session on successful authentication
+
+sync SessionOnAuth [eager]
+when {
+  AccountProxy/authenticate: [ token: ?token ]
+    => [ ok(user: ?user) ]
+}
+then {
+  Session/validate: [ session: ?user ]
+}

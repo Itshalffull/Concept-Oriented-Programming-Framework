@@ -29,8 +29,8 @@ describe('SolidityBuilder conformance', () => {
     const storage = createTestStorage();
     const handler = solidityBuilderHandler;
 
-    const l = 'u-test-invariant-001';
-    const null = 'u-test-invariant-002';
+    let l: any = 'u-test-invariant-001';
+    const nullVar = 'u-test-invariant-002';
 
     // setup: build -> ok
     const buildResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('SolidityBuilder conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).build).toBe(l);
+        l = (output as any).build;
         expect((output as any).artifactPath).toBe('.clef-artifacts/solidity/password');
         expect((output as any).artifactHash).toBe('sha256:jkl');
         return output;

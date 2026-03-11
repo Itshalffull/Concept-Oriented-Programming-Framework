@@ -1,4 +1,4 @@
-# kits/web3/suite.yaml
+# suites/web3/suite.yaml
 suite:
   name: web3
   version: 0.1.0

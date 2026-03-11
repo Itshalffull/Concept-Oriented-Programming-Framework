@@ -1,0 +1,21 @@
+type TokenBalanceState {
+  """All tbs in this concept"""
+  tbs: [ID!]!
+}
+
+type TokenBalanceEntry {
+  tb: ID!
+  tokenAddress: String!
+  snapshotBlock: String!
+  balanceCache: [JSON!]!
+}
+
+extend type Query {
+  tokenbalance_entry(tb: ID!): TokenBalanceEntry
+  tokenbalance_entries: [TokenBalanceEntry!]!
+}
+
+type TokenBalanceConfigurations {
+  tb: ID!
+  value: ID!
+}

@@ -1,0 +1,22 @@
+type BackgroundWorkerState {
+  """All ws in this concept"""
+  ws: [ID!]!
+}
+
+type BackgroundWorkerEntry {
+  w: ID!
+  status: String!
+  alarms: String!
+  persistedState: String!
+  lastActive: Int!
+}
+
+extend type Query {
+  backgroundworker_entry(w: ID!): BackgroundWorkerEntry
+  backgroundworker_entries: [BackgroundWorkerEntry!]!
+}
+
+type BackgroundWorkerWorkers {
+  w: ID!
+  value: ID!
+}

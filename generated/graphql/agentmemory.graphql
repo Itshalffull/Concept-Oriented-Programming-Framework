@@ -1,0 +1,25 @@
+type AgentMemoryState {
+  """All es in this concept"""
+  es: [ID!]!
+}
+
+type AgentMemoryEntry {
+  e: ID!
+  memory_type: String!
+  content: String!
+  embedding: [Float!]!
+  timestamp: String!
+  metadata: String!
+  working_memory: [JSON!]!
+  consolidation_queue: [String!]!
+}
+
+extend type Query {
+  agentmemory_entry(e: ID!): AgentMemoryEntry
+  agentmemory_entries: [AgentMemoryEntry!]!
+}
+
+type AgentMemoryEntries {
+  e: ID!
+  value: ID!
+}

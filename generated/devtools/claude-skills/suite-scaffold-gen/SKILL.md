@@ -37,6 +37,11 @@ const result = await kitScaffoldGenHandler.register({}, storage);
 // { variant: 'ok', name: 'SuiteScaffoldGen', inputKind: 'KitConfig', ... }
 ```
 
+*Generate a basic suite*
+```bash
+clef scaffold suite --name auth --concepts User,Session,Password
+```
+
 ### Step 2: Preview Changes
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
@@ -51,7 +56,6 @@ Generate a suite yaml manifest and directory structure
 **Arguments:** `$0` **name** (string), `$1` **description** (string), `$2` **concepts** (string[])
 
 **Checklist:**
-- [ ] Kit name is kebab-case?
 - [ ] Version is valid semver?
 - [ ] All listed concepts have matching .concept stub files?
 - [ ] Syncs are grouped by tier (required/recommended/integration)?
@@ -60,15 +64,16 @@ Generate a suite yaml manifest and directory structure
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] Suite name is kebab-case?
 
 **Examples:**
 *Generate a basic kit*
 ```bash
-clef scaffold kit --name auth --concepts User,Session,Password
+clef scaffold suite --name auth --concepts User,Session,Password
 ```
 *Generate a domain suite with infrastructure*
 ```bash
-clef scaffold kit --name web3 --concepts Token,Wallet --domain
+clef scaffold suite --name web3 --concepts Token,Wallet --domain
 ```
 *Generate programmatically*
 ```typescript
@@ -83,6 +88,11 @@ const result = await kitScaffoldGenHandler.generate({
   ],
 }, storage);
 ```
+
+
+### Step 4: Edit the Suite Manifest
+
+Refine the generated suite.yaml: add concept specs, declare syncs grouped by tier, set dependencies, and configure type parameter alignment.
 
 ## References
 

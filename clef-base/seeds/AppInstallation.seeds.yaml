@@ -1,0 +1,37 @@
+# Installed suite inventory for clef-base.
+
+concept: AppInstallation
+action: register
+entries:
+  - installation: installation:app-shell
+    name: app-shell
+    version: 0.1.0
+    status: installed
+    registry: local
+    description: Root shell, navigation, and destination orchestration.
+    concepts: 0
+    syncs: 1
+  - installation: installation:ui-app
+    name: ui-app
+    version: 0.5.0
+    status: installed
+    registry: local
+    description: Navigation, host lifecycle, transport, platform adaptation, and runtime profile declarations.
+    concepts: 9
+    syncs: 13
+  - installation: installation:identity-integration
+    name: identity-integration
+    version: 1.0.0
+    status: installed
+    registry: local
+    description: Identity sync wiring and access enforcement.
+    concepts: 0
+    syncs: 7
+  - installation: installation:infrastructure
+    name: infrastructure
+    version: 0.1.0
+    status: installed
+    registry: local
+    description: Seed loading, app installation inventory, and supporting infrastructure concepts.
+    concepts: 8
+    syncs: 1

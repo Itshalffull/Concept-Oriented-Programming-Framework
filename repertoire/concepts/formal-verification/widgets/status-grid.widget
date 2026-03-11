@@ -1,0 +1,155 @@
+@version(1)
+widget status-grid {
+
+  purpose {
+    Matrix grid displaying verification status across multiple dimensions.
+    Row headers represent properties or contracts, column headers represent
+    solvers or targets, and cells show status indicators with optional
+    numeric values. Supports cell hover for detail, row/column aggregation,
+    and filtering.
+  }
+
+  requires @1 {
+    fields {
+      rows: list;
+      columns: list;
+      cells: list;
+    }
+  }
+
+  anatomy {
+    root:          container  { Wrapper for the grid layout }
+    columnHeaders: container  { Column header row }
+    columnHeader:  container  { Single column header with label and aggregate }
+    rowHeaders:    container  { Row header column }
+    rowHeader:     container  { Single row header with label and aggregate }
+    grid:          container  { Matrix of status cells }
+    cell:          container  { Single cell with status indicator and optional value }
+    cellTooltip:   container  { Hover tooltip with cell detail }
+    aggregateRow:  container  { Bottom row with column aggregates }
+    aggregateCol:  container  { Right column with row aggregates }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER_CELL -> cellHovered;
+      on CLICK_CELL -> cellSelected;
+      on SORT -> idle;
+      on FILTER -> idle;
+    }
+
+    cellHovered {
+      on LEAVE_CELL -> idle;
+      on CLICK_CELL -> cellSelected;
+      entry [show cellTooltip; highlightRowCol];
+      exit [hide cellTooltip; unhighlightRowCol];
+    }
+
+    cellSelected {
+      on DESELECT -> idle;
+      on CLICK_CELL -> cellSelected;
+      entry [highlightCell];
+      exit [unhighlightCell];
+    }
+  }
+
+  accessibility {
+    role: grid;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_COL;
+      ArrowLeft -> FOCUS_PREV_COL;
+      ArrowDown -> FOCUS_NEXT_ROW;
+      ArrowUp -> FOCUS_PREV_ROW;
+      Enter -> CLICK_CELL;
+      Escape -> DESELECT;
+    }
+    focus {
+      trap: false;
+      initial: grid;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: "Verification status matrix";
+      };
+      columnHeader -> {
+        role: "columnheader";
+      };
+      rowHeader -> {
+        role: "rowheader";
+      };
+      cell -> {
+        role: "gridcell";
+        aria-label: concat(self.rowLabel, " × ", self.colLabel, ": ", self.status);
+      };
+    }
+  }
+
+  props {
+    showAggregates: Bool = true
+    sortBy: option String
+    filterStatus: option String
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "SolverProvider";
+    }
+    bind {
+      rows: supported_kinds;
+      columns: supported_languages;
+      cells: capabilities;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "grid";
+      data-state: state;
+    }
+    columnHeader -> {
+      data-part: "column-header";
+      role: "columnheader";
+      text: self.label;
+    }
+    rowHeader -> {
+      data-part: "row-header";
+      role: "rowheader";
+      text: self.label;
+    }
+    cell -> {
+      data-part: "cell";
+      role: "gridcell";
+      data-status: self.status;
+      data-value: self.value;
+      tabindex: if self.isFocused then "0" else "-1";
+      onMouseEnter: send(HOVER_CELL, { row: self.row, col: self.col });
+      onMouseLeave: send(LEAVE_CELL);
+      onClick: send(CLICK_CELL, { row: self.row, col: self.col });
+    }
+    cellTooltip -> {
+      data-part: "cell-tooltip";
+      role: "tooltip";
+    }
+    aggregateRow -> {
+      data-part: "aggregate-row";
+      data-visible: if ?showAggregates then "true" else "false";
+    }
+    aggregateCol -> {
+      data-part: "aggregate-col";
+      data-visible: if ?showAggregates then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Cell colors must map to verification status (green=proved, red=refuted, etc.)";
+    "Hovering a cell must highlight its entire row and column";
+    "Aggregates must show pass/fail counts for each row and column";
+    "Grid navigation must follow WAI-ARIA grid pattern";
+  }
+
+}

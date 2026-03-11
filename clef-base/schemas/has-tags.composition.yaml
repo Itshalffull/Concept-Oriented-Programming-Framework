@@ -1,0 +1,18 @@
+# HasTags composition
+# See Architecture doc Section 2.1.3
+
+composition: has-tags
+version: 1
+
+source: classification
+target: "*"
+rules:
+  - type: mixin
+    fields: [tags]
+    description: "Adds a tags field to any entity type via the Tag concept"
+    source_concept: Tag
+    field_definitions:
+      tags:
+        type: "list Reference"
+        required: false
+        description: "List of tag references applied to this entity"

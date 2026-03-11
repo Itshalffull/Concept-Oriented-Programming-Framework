@@ -62,7 +62,7 @@ const storageError = (error: unknown): TransportError => ({
 });
 
 // Valid transport kinds
-const VALID_KINDS: readonly string[] = ['http', 'grpc', 'websocket', 'memory', 'queue'];
+const VALID_KINDS: readonly string[] = ['http', 'rest', 'grpc', 'websocket', 'memory', 'queue'];
 
 // Cache TTL in milliseconds (5 minutes)
 const CACHE_TTL_MS = 5 * 60 * 1000;

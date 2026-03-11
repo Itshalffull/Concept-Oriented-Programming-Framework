@@ -205,7 +205,7 @@ describe('Claude Skills Generation Parity', () => {
       return fileName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
     });
     // Only concepts with annotations in the manifest are expected to have
-    // generated SKILL.md and .commands.ts files. Kit concepts added to the
+    // generated SKILL.md and .commands.ts files. Suite concepts added to the
     // manifest without annotations (e.g. Generator, Projection, ApiSurface,
     // Conformance, TestSelection, FlakyTest, ContractTest, Snapshot) do not
     // produce skill output until annotations are added.
@@ -809,20 +809,20 @@ describe('Claude Skills Generation Parity', () => {
   describe('SuiteManager skill', () => {
     const kebab = 'suite-manager';
 
-    it('has 5 workflow steps matching kit-lifecycle', () => {
+    it('has 5 workflow steps matching suite-lifecycle', () => {
       const steps = extractSteps(readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8'));
       expect(steps.length).toBe(5);
-      expect(steps[0].title).toBe('Create Kit');
-      expect(steps[1].title).toBe('Validate Kit');
-      expect(steps[2].title).toBe('Test Kit');
-      expect(steps[3].title).toBe('List Active Kits');
+      expect(steps[0].title).toBe('Create Suite');
+      expect(steps[1].title).toBe('Validate Suite');
+      expect(steps[2].title).toBe('Test Suite');
+      expect(steps[3].title).toBe('List Active Suites');
       expect(steps[4].title).toBe('Check Overrides');
     });
 
     it('has "Create a new suite" and "Validate a suite" examples', () => {
       const content = readFileSync(resolve(GENERATED_SKILLS_DIR, kebab, 'SKILL.md'), 'utf-8');
       expect(content).toContain('Create a new suite');
-      expect(content).toContain('clef suite init my-kit');
+      expect(content).toContain('clef suite init my-suite');
       expect(content).toContain('Validate a suite');
       expect(content).toContain('clef suite validate');
     });

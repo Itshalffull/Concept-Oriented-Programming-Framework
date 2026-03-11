@@ -138,7 +138,7 @@ describe('Generator Handler', () => {
   it('creates a plan from a valid interface manifest', async () => {
     const storage = createInMemoryStorage();
     const interfaceManifest = JSON.stringify({
-      kit: 'test-kit',
+      suite: 'test-suite',
       targets: ['rest', 'graphql'],
       concepts: ['Todo', 'User'],
       sdkLanguages: ['typescript'],
@@ -146,7 +146,7 @@ describe('Generator Handler', () => {
       outputDir: 'generated',
     });
 
-    const result = await interfaceGeneratorHandler.plan({ kit: 'test-kit', interfaceManifest }, storage);
+    const result = await interfaceGeneratorHandler.plan({ suite: 'test-suite', interfaceManifest }, storage);
     expect(result.variant).toBe('ok');
     expect(result.plan).toBeDefined();
     expect(Array.isArray(result.targets)).toBe(true);
@@ -157,21 +157,21 @@ describe('Generator Handler', () => {
   it('returns noTargetsConfigured when no targets', async () => {
     const storage = createInMemoryStorage();
     const interfaceManifest = JSON.stringify({
-      kit: 'empty-kit',
+      suite: 'empty-suite',
       targets: [],
       concepts: ['Todo'],
       sdkLanguages: [],
       specFormats: [],
     });
 
-    const result = await interfaceGeneratorHandler.plan({ kit: 'empty-kit', interfaceManifest }, storage);
+    const result = await interfaceGeneratorHandler.plan({ suite: 'empty-suite', interfaceManifest }, storage);
     expect(result.variant).toBe('noTargetsConfigured');
   });
 
   it('generates from a plan', async () => {
     const storage = createInMemoryStorage();
     const interfaceManifest = JSON.stringify({
-      kit: 'test-kit',
+      suite: 'test-suite',
       targets: ['rest'],
       concepts: ['Todo'],
       sdkLanguages: [],
@@ -179,7 +179,7 @@ describe('Generator Handler', () => {
       outputDir: 'generated',
     });
 
-    const planResult = await interfaceGeneratorHandler.plan({ kit: 'test-kit', interfaceManifest }, storage);
+    const planResult = await interfaceGeneratorHandler.plan({ suite: 'test-suite', interfaceManifest }, storage);
     expect(planResult.variant).toBe('ok');
 
     const genResult = await interfaceGeneratorHandler.generate({ plan: planResult.plan }, storage);
@@ -191,14 +191,14 @@ describe('Generator Handler', () => {
   it('reports status for a plan', async () => {
     const storage = createInMemoryStorage();
     const interfaceManifest = JSON.stringify({
-      kit: 'test-kit',
+      suite: 'test-suite',
       targets: ['rest'],
       concepts: ['Todo'],
       sdkLanguages: [],
       specFormats: [],
     });
 
-    const planResult = await interfaceGeneratorHandler.plan({ kit: 'test-kit', interfaceManifest }, storage);
+    const planResult = await interfaceGeneratorHandler.plan({ suite: 'test-suite', interfaceManifest }, storage);
     expect(planResult.variant).toBe('ok');
 
     const statusResult = await interfaceGeneratorHandler.status({ plan: planResult.plan }, storage);
@@ -325,7 +325,7 @@ describe('Surface Handler', () => {
   it('composes a REST surface from multiple concept outputs', async () => {
     const storage = createInMemoryStorage();
     const result = await surfaceHandler.compose({
-      kit: 'test-kit',
+      suite: 'test-suite',
       target: 'rest',
       outputs: ['todo-output', 'user-output'],
     }, storage);
@@ -339,7 +339,7 @@ describe('Surface Handler', () => {
   it('composes a GraphQL surface', async () => {
     const storage = createInMemoryStorage();
     const result = await surfaceHandler.compose({
-      kit: 'test-kit',
+      suite: 'test-suite',
       target: 'graphql',
       outputs: ['todo-schema'],
     }, storage);
@@ -351,7 +351,7 @@ describe('Surface Handler', () => {
   it('returns entrypoint content for composed surface', async () => {
     const storage = createInMemoryStorage();
     const composeResult = await surfaceHandler.compose({
-      kit: 'test-kit',
+      suite: 'test-suite',
       target: 'rest',
       outputs: ['todo-output'],
     }, storage);

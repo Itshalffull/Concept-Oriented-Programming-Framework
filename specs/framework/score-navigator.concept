@@ -1,0 +1,72 @@
+@version(1)
+concept ScoreNavigator [N] {
+
+  purpose {
+    Browse Score entities by kind and name, showing each item with
+    all its related items, and traverse relationships to walk the
+    Score graph interactively.
+  }
+
+  state {
+    cursor: option String
+    cursorKind: option String
+    history: list String
+  }
+
+  actions {
+    action show(kind: String, name: String) {
+      -> ok(item: String, related: String, cursor: N) {
+        Look up the Score entity by kind and name, return its full
+        details plus a list of all related entities grouped by
+        relationship type. Sets the cursor to this item for
+        subsequent traverse calls.
+      }
+      -> notfound(kind: String, name: String) {
+        No Score entity of the given kind exists with that name.
+      }
+    }
+
+    action traverse(relation: String, target: String) {
+      -> ok(item: String, related: String, cursor: N) {
+        Follow the named relationship from the current cursor
+        position to the target entity. Updates the cursor and
+        appends to history for back-navigation.
+      }
+      -> notfound(relation: String, target: String) {
+        The current cursor item has no relationship of that type
+        to the named target, or no cursor is set.
+      }
+    }
+
+    action back() {
+      -> ok(item: String, related: String, cursor: N) {
+        Pop the most recent item from the history stack and
+        navigate back to it, restoring the cursor.
+      }
+      -> empty() {
+        The history stack is empty — there is nowhere to go back to.
+      }
+    }
+
+    action list(kind: String) {
+      -> ok(items: String) {
+        List all Score entities of the given kind. Returns names
+        and brief summaries as a JSON array.
+      }
+      -> error(message: String) {
+        The kind is not recognized by the Score index.
+      }
+    }
+  }
+
+  invariant {
+    after show(kind: "concept", name: "User") -> ok(item: i, related: r, cursor: c)
+    then back() -> empty()
+  }
+
+  invariant {
+    after show(kind: "concept", name: "User") -> ok(item: i1, related: r1, cursor: c1)
+    and  traverse(relation: "actions", target: "register") -> ok(item: i2, related: r2, cursor: c2)
+    then back() -> ok(item: i3, related: r3, cursor: c3)
+  }
+}

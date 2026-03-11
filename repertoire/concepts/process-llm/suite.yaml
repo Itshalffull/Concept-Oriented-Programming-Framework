@@ -1,4 +1,4 @@
-kit:
+suite:
   name: process-llm
   version: 0.1.0
   description: "LLM task execution: prompt management, tool calling, validation, evaluation"
@@ -26,9 +26,22 @@ syncs:
     - ./syncs/tool-authorization.sync
     - ./syncs/eval-provider-dispatch.sync
 
+widgets:
+  - path: ./widgets/prompt-editor.widget
+    description: "Multi-message prompt template editor for LLM steps in process workflows"
+  - path: ./widgets/eval-results-table.widget
+    description: "Results table for LLM evaluation runs with pass/fail and score metrics"
+
+surface:
+  entityAffordances:
+    - concept: LLMCall
+      editor: prompt-editor
+    - concept: EvaluationRun
+      detail: eval-results-table
+
 uses:
-  - kit: process-foundation
+  - suite: process-foundation
     concepts: [StepRun, ProcessSpec, ProcessRun]
-  - kit: infrastructure
+  - suite: infrastructure
     optional: true
     concepts: [PluginRegistry, Validator]

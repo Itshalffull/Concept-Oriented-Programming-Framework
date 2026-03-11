@@ -1,0 +1,26 @@
+type WebhookInboxState {
+  """All hs in this concept"""
+  hs: [ID!]!
+}
+
+type WebhookInboxEntry {
+  h: ID!
+  run_ref: String!
+  step_ref: String!
+  event_type: String!
+  correlation_key: String!
+  status: String!
+  payload: String!
+  registered_at: String!
+  received_at: String!
+}
+
+extend type Query {
+  webhookinbox_entry(h: ID!): WebhookInboxEntry
+  webhookinbox_entries: [WebhookInboxEntry!]!
+}
+
+type WebhookInboxHooks {
+  h: ID!
+  value: ID!
+}

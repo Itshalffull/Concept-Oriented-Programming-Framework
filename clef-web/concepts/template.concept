@@ -1,0 +1,49 @@
+@version(1)
+concept Template [T] {
+
+  purpose {
+    Page templates for the website. Provides reusable layouts for
+    landing pages, documentation, and download pages.
+  }
+
+  state {
+    templates: set T
+    name: T -> String
+    layout: T -> String
+    slots: T -> list String
+  }
+
+  actions {
+    action register(name: String, layout: String, slots: list String) {
+      -> ok(template: T) {
+        Registers a new page template.
+      }
+      -> exists() {
+        A template with this name already exists.
+      }
+    }
+
+    action render(name: String, data: String) {
+      -> ok(html: String) {
+        Renders the template with the provided data.
+      }
+      -> notfound() {
+        No template exists with this name.
+      }
+      -> error(message: String) {
+        Rendering failed.
+      }
+    }
+
+    action list() {
+      -> ok(templates: list { name: String, slots: list String }) {
+        Lists all registered templates.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "landing", layout: "<main>{{content}}</main>", slots: ["content"]) -> ok(template: t)
+    then render(name: "landing", data: "{\"content\": \"Hello\"}") -> ok(html: h)
+  }
+}

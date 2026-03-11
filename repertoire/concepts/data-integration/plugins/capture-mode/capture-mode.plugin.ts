@@ -1,6 +1,6 @@
 // Capture Mode Plugin — capture strategy implementations for the Capture concept
 // Provides pluggable content capture from URLs, files, emails, APIs, and OS share intents.
-// See Data Integration Kit capture.concept for the parent Capture concept definition.
+// See Data Integration Suite capture.concept for the parent Capture concept definition.
 
 // ---------------------------------------------------------------------------
 // Core types

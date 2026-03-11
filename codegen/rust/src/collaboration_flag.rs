@@ -1,4 +1,4 @@
-// Flag Concept Implementation (Rust) — Collaboration kit
+// Flag Concept Implementation (Rust) — Collaboration suite
 //
 // Flags/unflags entities by user and flag type, checks flagged status,
 // and counts flags per entity.

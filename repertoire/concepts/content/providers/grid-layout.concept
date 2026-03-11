@@ -1,0 +1,38 @@
+@version(1)
+concept GridLayout [C] {
+
+  purpose {
+    Compute spatial positions by arranging items in a uniform grid.
+    Places items in rows and columns with configurable spacing. Best
+    for collections, galleries, and any context where uniform spacing
+    and alignment are preferred over relational positioning.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "grid", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String) {
+      -> ok(positions: list String) {
+        Computes grid positions by distributing items across rows and
+        columns with uniform cell sizing and spacing.
+      }
+      -> error(message: String) {
+        Layout computation failed.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["a", "b", "c", "d"]) -> ok(positions: p)
+    then apply(canvas: "c1", items: ["a"]) -> ok(positions: _)
+  }
+}

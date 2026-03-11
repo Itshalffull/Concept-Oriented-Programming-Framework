@@ -43,6 +43,44 @@ concept ScoreIndex [X] {
       role: X -> String
       definitions: X -> list String
     }
+    handlers {
+      handlerConcept: X -> String
+      handlerLanguage: X -> String
+      handlerFile: X -> String
+      handlerActions: X -> list String
+      handlerLineCount: X -> Int
+    }
+    widgetImpls {
+      widgetImplWidget: X -> String
+      widgetImplFramework: X -> String
+      widgetImplFile: X -> String
+      widgetImplComponent: X -> String
+    }
+    themeImpls {
+      themeImplTheme: X -> String
+      themeImplPlatform: X -> String
+      themeImplFile: X -> String
+      themeImplTokenCount: X -> Int
+    }
+    deployments {
+      deploymentName: X -> String
+      deploymentApp: X -> String
+      deploymentRuntimes: X -> list String
+      deploymentFile: X -> String
+    }
+    suiteManifests {
+      suiteName: X -> String
+      suiteVersion: X -> String
+      suiteConcepts: X -> list String
+      suiteSyncs: X -> list String
+      suiteFile: X -> String
+    }
+    interfaces {
+      interfaceName: X -> String
+      interfaceTargets: X -> list String
+      interfaceEndpointCount: X -> Int
+      interfaceFile: X -> String
+    }
   }
 
   actions {
@@ -82,6 +120,60 @@ concept ScoreIndex [X] {
       }
     }
 
+    action upsertHandler(concept: String, language: String, file: String, actions: list String, lineCount: Int) {
+      -> ok(index: X) {
+        Insert or update a handler entry in the index.
+      }
+      -> error(message: String) {
+        Invalid handler data.
+      }
+    }
+
+    action upsertWidgetImpl(widget: String, framework: String, file: String, component: String) {
+      -> ok(index: X) {
+        Insert or update a widget implementation entry in the index.
+      }
+      -> error(message: String) {
+        Invalid widget implementation data.
+      }
+    }
+
+    action upsertThemeImpl(theme: String, platform: String, file: String, tokenCount: Int) {
+      -> ok(index: X) {
+        Insert or update a theme implementation entry in the index.
+      }
+      -> error(message: String) {
+        Invalid theme implementation data.
+      }
+    }
+
+    action upsertDeployment(name: String, app: String, runtimes: list String, file: String) {
+      -> ok(index: X) {
+        Insert or update a deployment entry in the index.
+      }
+      -> error(message: String) {
+        Invalid deployment data.
+      }
+    }
+
+    action upsertSuiteManifest(name: String, version: String, concepts: list String, syncs: list String, file: String) {
+      -> ok(index: X) {
+        Insert or update a suite manifest entry in the index.
+      }
+      -> error(message: String) {
+        Invalid suite manifest data.
+      }
+    }
+
+    action upsertInterface(name: String, targets: list String, endpointCount: Int, file: String) {
+      -> ok(index: X) {
+        Insert or update an interface entry in the index.
+      }
+      -> error(message: String) {
+        Invalid interface data.
+      }
+    }
+
     action removeByFile(path: String) {
       -> ok(removed: Int) {
         Remove all index entries associated with a file.
@@ -95,7 +187,7 @@ concept ScoreIndex [X] {
     }
 
     action stats() {
-      -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, lastUpdated: DateTime) {
+      -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastUpdated: DateTime) {
         Return current index statistics.
       }
     }

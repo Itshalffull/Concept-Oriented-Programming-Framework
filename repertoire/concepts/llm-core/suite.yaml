@@ -32,6 +32,15 @@ syncs:
     - path: ./syncs/provider-health-to-eventbus.sync
       description: "LLMProvider health changes publish to EventBus"
 
+widgets:
+  - path: ./widgets/generation-indicator.widget
+    description: "Animated status indicator for LLM generation in progress"
+
+surface:
+  entityAffordances:
+    - concept: LLMProvider
+      inline: generation-indicator
+
 uses:
   - suite: infrastructure
     optional: true

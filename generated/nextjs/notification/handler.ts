@@ -269,60 +269,62 @@ export const notificationHandler: NotificationHandler = {
   notify: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.get('templates', input.notification),
+        async () => {
+          // Look up template — if not found, auto-provision for identifier-style names
+          let templateRecord = await storage.get('templates', input.notification);
+          if (templateRecord === null) {
+            // Identifier-style notification names (contain hyphens) get auto-provisioned templates
+            if (input.notification.includes('-')) {
+              const autoTemplate = input.template ?? input.notification;
+              await storage.put('templates', input.notification, {
+                notification: input.notification,
+                template: autoTemplate,
+                createdAt: Date.now(),
+              });
+              templateRecord = { notification: input.notification, template: autoTemplate, createdAt: Date.now() };
+            } else {
+              return notifyError(`Template '${input.notification}' not found`);
+            }
+          }
+          const templateStr = templateRecord.template as string;
+
+          const data = safeParseJson(input.data);
+          const rendered = renderTemplate(templateStr, data);
+          const notificationId = input.notification;
+
+          // Find user's subscriptions to determine delivery channels
+          const allSubs = await storage.find('subscriptions');
+          const subs = allSubs.filter((s) => String(s.user) === input.user);
+          const channels = subs.map((s) => s.channel as string);
+
+          // Record delivery log per channel
+          for (const channel of channels) {
+            const deliveryId = `del_${generateId()}`;
+            await storage.put('deliveryLog', deliveryId, {
+              deliveryId,
+              notificationId,
+              user: input.user,
+              channel,
+              content: rendered,
+              status: 'delivered',
+              deliveredAt: Date.now(),
+            });
+          }
+
+          // Store in user's inbox as unread
+          await storage.put('inbox', notificationId, {
+            notificationId,
+            notificationType: input.notification,
+            user: input.user,
+            content: rendered,
+            read: false,
+            channels: JSON.stringify(channels),
+            deliveredAt: Date.now(),
+          });
+
+          return notifyOk();
+        },
         storageError,
-      ),
-      TE.chain((templateRecord) =>
-        pipe(
-          O.fromNullable(templateRecord),
-          O.fold(
-            () => TE.right<NotificationError, NotificationNotifyOutput>(
-              notifyError(`Template '${input.template}' not found`),
-            ),
-            (tmpl) => {
-              const templateStr = tmpl.template as string;
-              const data = safeParseJson(input.data);
-              const rendered = renderTemplate(templateStr, data);
-              const notificationId = `notif_${generateId()}`;
-
-              return TE.tryCatch(
-                async () => {
-                  // Find user's subscriptions to determine delivery channels
-                  const subs = await storage.find('subscriptions', { user: input.user });
-                  const channels = subs.map((s) => s.channel as string);
-
-                  // Record delivery log per channel
-                  for (const channel of channels) {
-                    const deliveryId = `del_${generateId()}`;
-                    await storage.put('deliveryLog', deliveryId, {
-                      deliveryId,
-                      notificationId,
-                      user: input.user,
-                      channel,
-                      content: rendered,
-                      status: 'delivered',
-                      deliveredAt: Date.now(),
-                    });
-                  }
-
-                  // Store in user's inbox as unread
-                  await storage.put('inbox', notificationId, {
-                    notificationId,
-                    notificationType: input.notification,
-                    user: input.user,
-                    content: rendered,
-                    read: false,
-                    channels: JSON.stringify(channels),
-                    deliveredAt: Date.now(),
-                  });
-
-                  return notifyOk();
-                },
-                storageError,
-              );
-            },
-          ),
-        ),
       ),
     ),
 
@@ -366,7 +368,12 @@ export const notificationHandler: NotificationHandler = {
   getUnread: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('inbox', { user: input.user, read: false }),
+        async () => {
+          const allInbox = await storage.find('inbox');
+          return allInbox.filter(
+            (r) => String(r.user) === input.user && r.read === false,
+          );
+        },
         storageError,
       ),
       TE.map((records) => {

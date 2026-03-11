@@ -1,0 +1,764 @@
+{
+  "uri": "urn:clef/ToolRegistry",
+  "name": "ToolRegistry",
+  "typeParams": [
+    {
+      "name": "G",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Int"
+          },
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          },
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "allowed_models",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "allowed_processes",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "tools",
+      "source": "set-valued",
+      "keyField": {
+        "name": "g",
+        "paramRef": "G"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "register",
+      "params": [
+        {
+          "name": "name",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "schema",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Bytes"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "version",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Registers a new tool or increments version of existing tool"
+        },
+        {
+          "tag": "invalid_schema",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Schema is not valid JSON Schema"
+        }
+      ]
+    },
+    {
+      "name": "deprecate",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Transitions to deprecated Existing calls continue but new calls are warned"
+        }
+      ]
+    },
+    {
+      "name": "disable",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Transitions to disabled No new calls allowed"
+        }
+      ]
+    },
+    {
+      "name": "authorize",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "process_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            }
+          ],
+          "prose": "Grants a specific model process pair access to this tool"
+        }
+      ]
+    },
+    {
+      "name": "check_access",
+      "params": [
+        {
+          "name": "tool",
+          "type": {
+            "kind": "param",
+            "paramRef": "G"
+          }
+        },
+        {
+          "name": "model",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "process_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "allowed",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "schema",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Access is permitted Returns schema for inclusion in LLM request"
+        },
+        {
+          "tag": "denied",
+          "fields": [
+            {
+              "name": "tool",
+              "type": {
+                "kind": "param",
+                "paramRef": "G"
+              }
+            },
+            {
+              "name": "reason",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Tool is disabled , deprecated , or the model process is not authorized"
+        }
+      ]
+    },
+    {
+      "name": "list_active",
+      "params": [
+        {
+          "name": "process_ref",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "tools",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Bytes"
+              }
+            }
+          ],
+          "prose": "Returns all active tools authorized for a process"
+        }
+      ]
+    }
+  ],
+  "invariants": [],
+  "graphqlSchema": "type ToolRegistryState {\n  \"\"\"All gs in this concept\"\"\"\n  gs: [ID!]!\n}\n\ntype ToolRegistryEntry {\n  g: ID!\n  name: String!\n  version: Int!\n  description: String!\n  schema: String!\n  status: String!\n  allowed_models: [String!]!\n  allowed_processes: [String!]!\n}\n\nextend type Query {\n  toolregistry_entry(g: ID!): ToolRegistryEntry\n  toolregistry_entries: [ToolRegistryEntry!]!\n}\n\ntype ToolRegistryTools {\n  g: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "register": {
+        "$id": "urn:clef/ToolRegistry/register/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "register"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "schema": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "schema"
+            ]
+          }
+        }
+      },
+      "deprecate": {
+        "$id": "urn:clef/ToolRegistry/deprecate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "deprecate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
+        }
+      },
+      "disable": {
+        "$id": "urn:clef/ToolRegistry/disable/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "disable"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool"
+            ]
+          }
+        }
+      },
+      "authorize": {
+        "$id": "urn:clef/ToolRegistry/authorize/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "authorize"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "process_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "model",
+              "process_ref"
+            ]
+          }
+        }
+      },
+      "check_access": {
+        "$id": "urn:clef/ToolRegistry/check_access/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "check_access"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "process_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "model",
+              "process_ref"
+            ]
+          }
+        }
+      },
+      "list_active": {
+        "$id": "urn:clef/ToolRegistry/list_active/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/ToolRegistry"
+          },
+          "action": {
+            "const": "list_active"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "process_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "process_ref"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "register": {
+        "ok": {
+          "$id": "urn:clef/ToolRegistry/register/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "tool",
+                "version"
+              ]
+            }
+          }
+        },
+        "invalid_schema": {
+          "$id": "urn:clef/ToolRegistry/register/completion/invalid_schema",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "register"
+            },
+            "variant": {
+              "const": "invalid_schema"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "deprecate": {
+        "ok": {
+          "$id": "urn:clef/ToolRegistry/deprecate/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "deprecate"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            }
+          }
+        }
+      },
+      "disable": {
+        "ok": {
+          "$id": "urn:clef/ToolRegistry/disable/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "disable"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            }
+          }
+        }
+      },
+      "authorize": {
+        "ok": {
+          "$id": "urn:clef/ToolRegistry/authorize/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "authorize"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            }
+          }
+        }
+      },
+      "check_access": {
+        "allowed": {
+          "$id": "urn:clef/ToolRegistry/check_access/completion/allowed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "check_access"
+            },
+            "variant": {
+              "const": "allowed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "tool",
+                "schema"
+              ]
+            }
+          }
+        },
+        "denied": {
+          "$id": "urn:clef/ToolRegistry/check_access/completion/denied",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "check_access"
+            },
+            "variant": {
+              "const": "denied"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tool",
+                "reason"
+              ]
+            }
+          }
+        }
+      },
+      "list_active": {
+        "ok": {
+          "$id": "urn:clef/ToolRegistry/list_active/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/ToolRegistry"
+            },
+            "action": {
+              "const": "list_active"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "tools": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              },
+              "required": [
+                "tools"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Register , version , and authorize tool schemas for LLM function tool calling"
+}

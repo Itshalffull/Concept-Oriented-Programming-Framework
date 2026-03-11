@@ -1,0 +1,18 @@
+# Oracle bridge: Prevent infinite sync loops.
+# Changes that originated from a chain event carry originId="chain:{txHash}".
+# This sync short-circuits them to local-only save, preventing them from
+# being submitted back to the chain.
+# See §7.4.4 of the Clef Base spec.
+
+sync OracleLoopGuard [eager]
+when {
+  ContentStorage/saveRequested: [ node: ?node; schema: ?schema ]
+}
+where {
+  filter(?node.originId starts_with "chain:")
+  filter(?schema.associations.providers.connector_protocol == "ethereum_l2")
+}
+then {
+  # Short-circuit: save locally only, do NOT submit to chain
+  ContentStorage/saveLocal: [ node: ?node; schema: ?schema ]
+}

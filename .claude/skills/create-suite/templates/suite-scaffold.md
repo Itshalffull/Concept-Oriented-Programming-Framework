@@ -7,14 +7,14 @@ Copy the appropriate template for `suite.yaml` and replace all `TODO` markers.
 - Concepts are designed (use `create-concept` skill for each)
 - Sync tiers are decided (required vs. recommended)
 - Type parameter alignment is mapped
-- Kit type determined (framework vs. domain)
+- Suite type determined (framework vs. domain)
 
 ## Framework Suite Template
 
 Use this template for suites that contain only concepts and syncs — no custom transports, storage, or deploy templates.
 
 ```yaml
-kit:
+suite:
   name: TODO-suite-name
   version: 0.1.0
   description: >
@@ -53,19 +53,19 @@ syncs:
 # External concepts from other suites that this suite's syncs reference.
 # Required by default; set optional: true for conditional syncs.
 # uses:
-#   - kit: TODO-other-kit
+#   - suite: TODO-other-suite
 #     concepts:
 #       - name: TODO_ConceptName
 #         params:
 #           TODO_PARAM: { as: TODO-type-ref }
-#   - kit: TODO-optional-kit
+#   - suite: TODO-optional-suite
 #     optional: true
 #     concepts:
 #       - name: TODO_OptionalConcept
 #     syncs:
 #       - path: ./syncs/TODO-conditional-sync.sync
 #         description: >
-#           TODO: Only loads if TODO-optional-kit is present.
+#           TODO: Only loads if TODO-optional-suite is present.
 
 dependencies: []
 ```
@@ -75,7 +75,7 @@ dependencies: []
 Use this template for suites that introduce a new deployment target and bundle infrastructure (transport adapters, storage backends, deploy templates) alongside concepts.
 
 ```yaml
-kit:
+suite:
   name: TODO-suite-name
   version: 0.1.0
   description: >
@@ -109,7 +109,7 @@ syncs:
 
 # Optional: syncs that activate when another suite is present
 # integrations:
-#   - kit: TODO-other-kit
+#   - suite: TODO-other-suite
 #     syncs:
 #       - path: ./syncs/TODO-integration-sync.sync
 #         description: >
@@ -147,7 +147,7 @@ dependencies: []
 
 | TODO Marker | Replace With | Example |
 |-------------|-------------|---------|
-| `TODO-suite-name` | Kit name in kebab-case | `web3` |
+| `TODO-suite-name` | Suite name in kebab-case | `web3` |
 | `TODO_ConceptA` | Concept name in PascalCase | `ChainMonitor` |
 | `todo-concept-a.concept` | Concept file name in kebab-case | `chain-monitor.concept` |
 | `TODO_GateConcept` | Gate concept name in PascalCase | `FreshnessGate` |
@@ -156,7 +156,7 @@ dependencies: []
 | `TODO_SyncRuleName` | Sync rule name in PascalCase (used for overrides) | `ReorgCompensation` |
 | `TODO-required-sync.sync` | Sync file name in kebab-case | `finality-gate.sync` |
 | `TODO-recommended-sync.sync` | Sync file name in kebab-case | `reorg-compensation.sync` |
-| `TODO-other-kit` | Name of kit to integrate with or use concepts from | `auth` |
+| `TODO-other-suite` | Name of suite to integrate with or use concepts from | `auth` |
 | `TODO_ConceptName` (in uses) | External concept name in PascalCase | `User` |
 | `TODO-transport-name` | Transport name in kebab-case | `evm` |
 | `TODO-transport.ts` | Transport file name | `evm-transport.ts` |
@@ -181,14 +181,14 @@ dependencies: []
    ```
    Place concept files directly in the suite directory (not in `specs/app/`).
 
-3. Write syncs under `kits/<suite-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
+3. Write syncs under `suites/<suite-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
 
-4. Write implementations under `kits/<suite-name>/handlers/ts/`.
+4. Write implementations under `suites/<suite-name>/handlers/ts/`.
 
 5. Validate:
    ```bash
-   npx tsx cli/src/index.ts suite validate kits/<suite-name>
-   npx tsx cli/src/index.ts suite test kits/<suite-name>
+   npx tsx cli/src/index.ts suite validate suites/<suite-name>
+   npx tsx cli/src/index.ts suite test suites/<suite-name>
    ```
 
 ### Domain Suite
@@ -196,7 +196,7 @@ dependencies: []
 1. Scaffold the directory:
    ```bash
    npx tsx cli/src/index.ts suite init <suite-name>
-   mkdir -p kits/<suite-name>/infrastructure/{transports,storage,deploy-templates}
+   mkdir -p suites/<suite-name>/infrastructure/{transports,storage,deploy-templates}
    ```
 
 2. Write each concept spec (use `create-concept` skill). For gate concepts, include `@gate` annotation.
@@ -205,27 +205,27 @@ dependencies: []
    ```bash
    /create-transport-adapter <transport-name>
    ```
-   Place in `kits/<suite-name>/infrastructure/transports/`.
+   Place in `suites/<suite-name>/infrastructure/transports/`.
 
 4. Write storage adapters if needed (use `create-storage-adapter` skill):
    ```bash
    /create-storage-adapter <storage-name>
    ```
-   Place in `kits/<suite-name>/infrastructure/storage/`.
+   Place in `suites/<suite-name>/infrastructure/storage/`.
 
 5. Write deploy templates (use `configure-deployment` skill):
-   Place in `kits/<suite-name>/infrastructure/deploy-templates/`.
+   Place in `suites/<suite-name>/infrastructure/deploy-templates/`.
 
-6. Write syncs under `kits/<suite-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
+6. Write syncs under `suites/<suite-name>/syncs/`. Use `[required]` or `[recommended]` annotations.
 
-7. Write implementations under `kits/<suite-name>/handlers/ts/`.
+7. Write implementations under `suites/<suite-name>/handlers/ts/`.
 
 8. Validate:
    ```bash
-   npx tsx cli/src/index.ts suite validate kits/<suite-name>
-   npx tsx cli/src/index.ts suite test kits/<suite-name>
+   npx tsx cli/src/index.ts suite validate suites/<suite-name>
+   npx tsx cli/src/index.ts suite test suites/<suite-name>
    # For gate concepts:
-   npx tsx cli/src/index.ts check --pattern async-gate kits/<suite-name>/<gate>.concept
+   npx tsx cli/src/index.ts check --pattern async-gate suites/<suite-name>/<gate>.concept
    ```
 
 ## Sync File Templates

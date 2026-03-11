@@ -18,11 +18,11 @@ concept Session [S] {
   }
 
   actions {
-    action create(session: S, userId: String, device: String) {
-      -> ok(token: String) {
+    action create(session: option S, userId: String, device: String) {
+      -> ok(session: S, token: String) {
         Create a new session for the given user and device. Generate
-        an opaque token and set the expiration timestamp. Mark the
-        session as valid.
+        a session identifier when one is not supplied, issue an opaque
+        token, set the expiration timestamp, and mark the session as valid.
       }
       -> error(message: String) {
         Session creation failed, for example due to exceeding the
@@ -82,24 +82,24 @@ concept Session [S] {
   }
 
   invariant {
-    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
     then validate(session: s) -> ok(valid: true)
   }
 
   invariant {
-    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
     then getContext(session: s) -> ok(userId: "alice", device: "mobile")
   }
 
   invariant {
-    after create(session: s, userId: "alice", device: "mobile") -> ok(token: t)
+    after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
     and destroy(session: s) -> ok(session: s)
     then validate(session: s) -> notfound(message: m)
   }
 
   invariant {
-    after create(session: s1, userId: "alice", device: "mobile") -> ok(token: t1)
-    and create(session: s2, userId: "alice", device: "desktop") -> ok(token: t2)
+    after create(session: s1, userId: "alice", device: "mobile") -> ok(session: s1, token: t1)
+    and create(session: s2, userId: "alice", device: "desktop") -> ok(session: s2, token: t2)
     and destroyAll(userId: "alice") -> ok(userId: "alice")
     then validate(session: s1) -> notfound(message: m1)
   }

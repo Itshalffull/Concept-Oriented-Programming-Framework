@@ -1,4 +1,4 @@
-// Data Integration Kit - Web Article Capture Provider
+// Data Integration Suite - Web Article Capture Provider
 // Extracts article content via Readability-style algorithm with scoring heuristics
 
 export const PROVIDER_ID = 'web_article';

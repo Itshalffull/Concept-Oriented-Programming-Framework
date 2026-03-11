@@ -52,9 +52,8 @@ describe('Repertoire Extended Entity Syncs', () => {
     for (const name of repertoireExtendedSyncs) {
       it(`parses ${name}.sync without errors`, () => {
         const source = readSync('repertoire-extended', name);
-        const result = parseSyncFile(source);
-        expect(result.errors).toHaveLength(0);
-        expect(result.syncs.length).toBeGreaterThanOrEqual(1);
+        const syncs = parseSyncFile(source);
+        expect(syncs.length).toBeGreaterThanOrEqual(1);
       });
     }
   });
@@ -62,18 +61,18 @@ describe('Repertoire Extended Entity Syncs', () => {
   describe('repertoire extended entity structure', () => {
     it('CommentAsContentEntity creates comments_on Relation', () => {
       const source = readSync('repertoire-extended', 'comment-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });
 
     it('VersionAsContentEntity creates version_of Relation', () => {
       const source = readSync('repertoire-extended', 'version-as-content-entity');
-      const result = parseSyncFile(source);
-      const relationSync = result.syncs.find(s => s.thenActions.some(
-        a => a.concept === 'Relation' && a.action === 'link',
+      const syncs = parseSyncFile(source);
+      const relationSync = syncs.find(s => s.then.some(
+        a => a.concept === 'urn:clef/Relation' && a.action === 'link',
       ));
       expect(relationSync).toBeDefined();
     });

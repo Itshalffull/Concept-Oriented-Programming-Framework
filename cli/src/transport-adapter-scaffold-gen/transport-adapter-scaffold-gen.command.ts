@@ -4,7 +4,7 @@
 
 import { Command } from 'commander';
 
-export const transportAdapterScaffoldGenCommand = new Command('scaffold')
+export const transportAdapterScaffoldGenCommand = new Command('scaffold-transport')
   .description('Generate transport adapter for a communication protocol.');
 
 transportAdapterScaffoldGenCommand
@@ -18,8 +18,18 @@ transportAdapterScaffoldGenCommand
   .addHelpText('after', '  clef scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000  # Generate a WebSocket adapter')
   .addHelpText('after', '  clef scaffold transport --name TestTransport --protocol in-process  # Generate an in-process adapter for tests')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TransportAdapterScaffoldGen', 'generate', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 transportAdapterScaffoldGenCommand
@@ -29,25 +39,41 @@ transportAdapterScaffoldGenCommand
   .option('-p, --protocol <value>', 'Protocol type (http|websocket|worker|in-process)')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'preview', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TransportAdapterScaffoldGen', 'preview', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 transportAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : TransportAdapterScaffoldGen 
- inputKind : TransportConfig 
- outputKind : TransportAdapter 
- capabilities : [ http , websocket , worker , in-process ]')
+  .description('Return static metadata for PluginRegistry . name : TransportAdapterScaffoldGen inputKind : TransportConfig outputKind : TransportAdapter capabilities : [ http , websocket , worker , in-process ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
-    const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });
-    console.log(opts.json ? JSON.stringify(result) : result);
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/TransportAdapterScaffoldGen', 'register', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
   });
 
 export const transportAdapterScaffoldGenCommandTree = {
-  group: 'scaffold',
+  group: 'scaffold-transport',
   description: 'Generate transport adapter for a communication protocol.',
   commands: [{ action: 'generate', command: 'transport' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

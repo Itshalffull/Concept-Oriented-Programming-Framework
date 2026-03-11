@@ -1,0 +1,177 @@
+@version(1)
+widget trace-step-controls {
+
+  purpose {
+    Playback control toolbar for navigating verification trace steps.
+    Provides step-forward, step-backward, play/pause, jump-to-start,
+    jump-to-end buttons, a step counter display, and playback speed
+    control. Used alongside trace-timeline-viewer for counterexample
+    exploration.
+  }
+
+  requires @1 {
+    fields {
+      currentStep: Int;
+      totalSteps: Int;
+      playing: Bool;
+    }
+    actions {
+      stepForward: { };
+      stepBackward: { };
+      play: { };
+      pause: { };
+      jumpToStart: { };
+      jumpToEnd: { };
+    }
+  }
+
+  anatomy {
+    root:          container  { Toolbar wrapper }
+    jumpStart:     action     { Jump to first step button }
+    stepBack:      action     { Step backward button }
+    playPause:     action     { Toggle play/pause button }
+    stepFwd:       action     { Step forward button }
+    jumpEnd:       action     { Jump to last step button }
+    stepCounter:   text       { Current step / total steps display }
+    speedControl:  widget     { Playback speed selector }
+  }
+
+  states {
+    paused [initial] {
+      on PLAY -> playing;
+      on STEP_FWD -> paused;
+      on STEP_BACK -> paused;
+      on JUMP_START -> paused;
+      on JUMP_END -> paused;
+    }
+
+    playing {
+      on PAUSE -> paused;
+      on REACH_END -> paused;
+      entry [startPlayback];
+      exit [stopPlayback];
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    keyboard {
+      Space -> TOGGLE_PLAY;
+      ArrowRight -> STEP_FWD;
+      ArrowLeft -> STEP_BACK;
+      Home -> JUMP_START;
+      End -> JUMP_END;
+    }
+    focus {
+      trap: false;
+      initial: playPause;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "Trace step controls";
+      };
+      jumpStart -> {
+        role: "button";
+        aria-label: "Jump to start";
+        aria-disabled: if $currentStep <= 0 then "true" else "false";
+      };
+      stepBack -> {
+        role: "button";
+        aria-label: "Step backward";
+        aria-disabled: if $currentStep <= 0 then "true" else "false";
+      };
+      playPause -> {
+        role: "button";
+        aria-label: if $playing then "Pause" else "Play";
+      };
+      stepFwd -> {
+        role: "button";
+        aria-label: "Step forward";
+        aria-disabled: if $currentStep >= $totalSteps - 1 then "true" else "false";
+      };
+      jumpEnd -> {
+        role: "button";
+        aria-label: "Jump to end";
+        aria-disabled: if $currentStep >= $totalSteps - 1 then "true" else "false";
+      };
+      stepCounter -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Step ", $currentStep + 1, " of ", $totalSteps);
+      };
+    }
+  }
+
+  props {
+    speed: Float = 1.0
+    showSpeed: Bool = true
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 18;
+    when {
+      concept: "Evidence";
+    }
+    bind {
+      currentStep: confidence_score;
+      totalSteps: solver_metadata;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      role: "toolbar";
+      data-state: state;
+    }
+    jumpStart -> {
+      data-part: "jump-start";
+      aria-disabled: if $currentStep <= 0 then "true" else "false";
+      onClick: send(JUMP_START);
+    }
+    stepBack -> {
+      data-part: "step-back";
+      aria-disabled: if $currentStep <= 0 then "true" else "false";
+      onClick: send(STEP_BACK);
+    }
+    playPause -> {
+      data-part: "play-pause";
+      aria-label: if $playing then "Pause" else "Play";
+      onClick: if $playing then send(PAUSE) else send(PLAY);
+    }
+    stepFwd -> {
+      data-part: "step-fwd";
+      aria-disabled: if $currentStep >= $totalSteps - 1 then "true" else "false";
+      onClick: send(STEP_FWD);
+    }
+    jumpEnd -> {
+      data-part: "jump-end";
+      aria-disabled: if $currentStep >= $totalSteps - 1 then "true" else "false";
+      onClick: send(JUMP_END);
+    }
+    stepCounter -> {
+      data-part: "step-counter";
+      role: "status";
+      text: concat($currentStep + 1, " / ", $totalSteps);
+    }
+    speedControl -> {
+      data-part: "speed-control";
+      data-visible: if ?showSpeed then "true" else "false";
+    }
+  }
+
+  compose {
+    speedControl: widget("select", { options: ["0.5x", "1x", "2x", "4x"], value: concat(?speed, "x") });
+  }
+
+  invariant {
+    "Forward/backward buttons must be disabled at trace boundaries";
+    "Play must advance one step per interval based on speed setting";
+    "Step counter must always reflect the current position accurately";
+    "Reaching the last step during playback must auto-pause";
+  }
+
+}

@@ -1,0 +1,40 @@
+derived ClefBind [P] {
+
+  purpose {
+    Compose the interface enrichment and generation pipeline into
+    the complete Clef Bind system — transforming concept specs into
+    every programmatic interface target: REST, GraphQL, CLI, MCP,
+    Claude Skills, gRPC, and typed SDKs.
+  }
+
+  composes {
+    derived BindGeneration [P]
+    Projection [P]
+  }
+
+  syncs {
+    required: [generation-target-fan-out, projection-manifest-feed, target-output-write]
+  }
+
+  surface {
+    action bind(projectDir: String, targets: String, outputDir: String) {
+      matches: derivedContext "BindGeneration/bind"
+    }
+
+    action renderDocs(concept: String, format: String) {
+      matches: derivedContext "BindGeneration/renderDocs"
+    }
+
+    query enriched(concept: String) -> derivedContext "BindGeneration/enriched"
+    query guide(concept: String) -> derivedContext "BindGeneration/guide"
+    query generatedTargets(outputDir: String) -> Projection/targets(outputDir: outputDir)
+  }
+
+  principle {
+    after bind(projectDir: d, targets: t, outputDir: o)
+    then every concept manifest is projected, enriched, and routed
+         to each requested target generator (REST, MCP, CLI, SDK, etc.)
+    and  renderDocs(concept: c, format: f)
+    then structured documentation is emitted alongside generated interfaces
+  }
+}

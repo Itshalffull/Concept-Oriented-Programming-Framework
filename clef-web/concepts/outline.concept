@@ -1,0 +1,57 @@
+@version(1)
+concept Outline [O] {
+
+  purpose {
+    Navigation outline for the website. Maintains a hierarchical
+    tree of pages for sidebar navigation and breadcrumbs.
+  }
+
+  state {
+    entries: set O
+    slug: O -> String
+    title: O -> String
+    parent: O -> option String
+    order: O -> Int
+    visible: O -> Bool
+  }
+
+  actions {
+    action add(slug: String, title: String, parent: option String, order: Int) {
+      -> ok(entry: O) {
+        Adds a page to the navigation outline.
+      }
+      -> exists() {
+        An entry with this slug already exists.
+      }
+    }
+
+    action remove(slug: String) {
+      -> ok() {
+        Removes the entry and its children from the outline.
+      }
+      -> notfound() {
+        No entry exists with this slug.
+      }
+    }
+
+    action reorder(slug: String, order: Int) {
+      -> ok() {
+        Changes the display order of the entry.
+      }
+      -> notfound() {
+        No entry exists with this slug.
+      }
+    }
+
+    action getTree(root: option String) {
+      -> ok(entries: list { slug: String, title: String, children: list String, order: Int }) {
+        Returns the outline tree from the given root.
+      }
+    }
+  }
+
+  invariant {
+    after add(slug: "docs", title: "Documentation", parent: null, order: 0) -> ok(entry: o)
+    then getTree(root: null) -> ok(entries: e)
+  }
+}

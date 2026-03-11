@@ -1,0 +1,50 @@
+derived DeployPipeline [T] {
+
+  purpose {
+    Compose deployment planning, progressive rollout, schema
+    migration, health checking, and environment management into
+    a complete deployment pipeline with health-gated advancement
+    and automated rollback.
+  }
+
+  composes {
+    DeployPlan [T]
+    Rollout [T]
+    Migration [T]
+    Health [T]
+    Env [T]
+  }
+
+  syncs {
+    required: [plan-env-resolve, plan-migration-check, migration-rollout-gate, rollout-health-gate, health-rollout-advance-or-abort]
+  }
+
+  surface {
+    action deploy(manifest: String, environment: String) {
+      matches: DeployPlan/plan
+    }
+
+    action advance(rollout: T) {
+      matches: Rollout/advance
+    }
+
+    action migrate(concept: String, fromVersion: Int, toVersion: Int) {
+      matches: Migration/run
+    }
+
+    action abort(rollout: T) {
+      matches: Rollout/abort
+    }
+
+    query rolloutStatus(rollout: T) -> Rollout/status(rollout: rollout)
+    query health(environment: String) -> Health/check(environment: environment)
+    query pendingMigrations(environment: String) -> Migration/pending(environment: environment)
+  }
+
+  principle {
+    after deploy(manifest: m, environment: e)
+    then environment is resolved, pending migrations run, and rollout begins
+    and  health(environment: e) returns degraded
+    then abort triggers automatic rollback to the previous version
+  }
+}

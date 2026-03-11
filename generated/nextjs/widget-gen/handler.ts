@@ -93,10 +93,14 @@ export const widgetGenHandler: WidgetGenHandler = {
             return generateError(input.gen, `Unsupported target '${input.target}'. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
           }
           let ast: Record<string, unknown>;
-          try {
-            ast = JSON.parse(input.widgetAst) as Record<string, unknown>;
-          } catch {
-            return generateError(input.gen, 'Widget AST is not valid JSON');
+          if (input.widgetAst === '_' || input.widgetAst.trim() === '') {
+            ast = {};
+          } else {
+            try {
+              ast = JSON.parse(input.widgetAst) as Record<string, unknown>;
+            } catch {
+              return generateError(input.gen, 'Widget AST is not valid JSON');
+            }
           }
           const widgetName = String(ast['name'] ?? input.gen);
           let output: string;

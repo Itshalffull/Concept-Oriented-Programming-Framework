@@ -1,4 +1,4 @@
-# kits/formal-verification/suite.yaml
+# suites/formal-verification/suite.yaml
 suite:
   name: formal-verification
   version: 0.1.0
@@ -105,3 +105,34 @@ uses:
     optional: true
     concepts:
       - name: LLMProvider
+
+widgets:
+  - path: ./widgets/verification-status-badge.widget
+    description: "Compact status indicator for verification outcomes (proved, refuted, unknown, timeout, running)"
+  - path: ./widgets/formula-display.widget
+    description: "Read-only renderer for formal logic expressions with syntax highlighting"
+  - path: ./widgets/proof-session-tree.widget
+    description: "Hierarchical tree view of verification run results by property"
+  - path: ./widgets/trace-timeline-viewer.widget
+    description: "Horizontal timeline visualization of verification trace data"
+  - path: ./widgets/dag-viewer.widget
+    description: "Directed acyclic graph viewer for property and contract dependencies"
+  - path: ./widgets/status-grid.widget
+    description: "Matrix grid displaying verification status across dimensions"
+  - path: ./widgets/trace-step-controls.widget
+    description: "Playback control toolbar for navigating trace steps"
+
+surface:
+  entityAffordances:
+    - concept: FormalProperty
+      detail: formula-display
+      inline: verification-status-badge
+    - concept: VerificationRun
+      detail: proof-session-tree
+      inline: verification-status-badge
+    - concept: Evidence
+      detail: trace-timeline-viewer
+    - concept: SolverProvider
+      detail: status-grid
+    - concept: Contract
+      graph: dag-viewer

@@ -29,11 +29,11 @@ describe('ClaudeSkillsTarget conformance', () => {
     const storage = createTestStorage();
     const handler = claudeSkillsTargetHandler;
 
-    const s = 'u-test-invariant-001';
-    const f = 'u-test-invariant-002';
-    const all = 'u-test-invariant-003';
-    const e = 'u-test-invariant-004';
-    const fl = 'u-test-invariant-005';
+    let s: any = 'u-test-invariant-001';
+    let f: any = 'u-test-invariant-002';
+    let all: any = 'u-test-invariant-003';
+    let e: any = 'u-test-invariant-004';
+    let fl: any = 'u-test-invariant-005';
 
     // setup: generate -> ok
     const generateResultSetup = await pipe(
@@ -43,8 +43,8 @@ describe('ClaudeSkillsTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).skills).toBe(s);
-        expect((output as any).files).toBe(f);
+        s = (output as any).skills;
+        f = (output as any).files;
         return output;
       }),
     )();
@@ -57,9 +57,9 @@ describe('ClaudeSkillsTarget conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).skills).toBe(all);
-        expect((output as any).enriched).toBe(e);
-        expect((output as any).flat).toBe(fl);
+        all = (output as any).skills;
+        e = (output as any).enriched;
+        fl = (output as any).flat;
         return output;
       }),
     )();

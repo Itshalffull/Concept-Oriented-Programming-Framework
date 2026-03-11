@@ -1,4 +1,4 @@
-// Uses deploy kit Telemetry concept (configure, deployMarker, analyze actions)
+// Uses deploy suite Telemetry concept (configure, deployMarker, analyze actions)
 // Action records are published as deploy markers for observability tracking
 sync ExportTelemetry [eager]
 when {
@@ -6,7 +6,7 @@ when {
 }
 then {
   Telemetry/deployMarker: [
-    kit: ?record;
+    suite: ?record;
     version: "1.0.0";
     environment: "runtime";
     status: "logged" ]

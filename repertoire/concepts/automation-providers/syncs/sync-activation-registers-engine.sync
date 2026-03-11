@@ -1,0 +1,17 @@
+# Register activated user syncs with SyncEngine for live execution
+
+sync SyncActivationRegistersEngine [eager]
+  purpose: "Register compiled user syncs with the sync engine on activation."
+when {
+  SyncAutomationProvider/activate: [ sync_def: ?syncDef ]
+    => [ sync_def: ?syncDef ]
+}
+where {
+  SyncAutomationProvider: { ?syncDef compiled: ?compiled; name: ?name }
+}
+then {
+  SyncEngine/registerSync: [
+    name: ?name;
+    compiled: ?compiled
+  ]
+}

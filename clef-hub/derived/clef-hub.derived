@@ -1,0 +1,69 @@
+derived ClefHub [M] {
+
+  purpose {
+    Package browser and user dashboard for the Clef ecosystem.
+    Provides search, package detail views with readme rendering,
+    download statistics, component manifests, user authentication,
+    comments, flagging, and attribution.
+  }
+
+  composes {
+    AccountProxy [M]
+    RegistryProxy [M]
+    ComponentManifestProxy [M]
+    SchemaProxy [M]
+    DownloadProxy [M]
+    Session [M]
+    Comment [M]
+    Flag [M]
+    Attribution [M]
+    ContentNode [M]
+    ContentParser [M]
+  }
+
+  syncs {
+    required: [auth-on-login, session-on-auth, render-readme-on-view, flag-on-yank-request]
+  }
+
+  surface {
+    action login(user: M, credentials: String) {
+      matches: AccountProxy/login
+    }
+
+    action logout(user: M) {
+      matches: AccountProxy/logout
+    }
+
+    action searchPackages(query: String) {
+      matches: RegistryProxy/search
+    }
+
+    action viewPackage(name: String, namespace: String, version: String) {
+      matches: RegistryProxy/lookup
+    }
+
+    action addComment(entity: String, author: String, content: String, parent: option String) {
+      matches: Comment/add
+    }
+
+    action flagContent(entity: String, flagType: String, reporter: String, reason: String) {
+      matches: Flag/flag
+    }
+
+    query packageVersions(name: String, namespace: String) -> RegistryProxy/versions(name: name, namespace: namespace)
+    query componentManifest(module_id: String, version: String) -> ComponentManifestProxy/lookup(module_id: module_id, version: version)
+    query downloadStats(artifact_id: String) -> DownloadProxy/stats(artifact_id: artifact_id)
+    query comments(entity: String) -> Comment/list(entity: entity)
+    query attributions(module_id: String) -> Attribution/list(module_id: module_id)
+    query schemas(module_id: String, version: String) -> SchemaProxy/lookupSchemas(module_id: module_id, version: version)
+    query schemaSearch(query: String, field_filter: String) -> SchemaProxy/searchBySchema(query: query, field_filter: field_filter)
+  }
+
+  principle {
+    after login(user: u, credentials: c)
+    then searchPackages(query: q) succeeds
+    and  viewPackage(name: n, namespace: ns, version: v) returns package detail
+    and  addComment(entity: e, author: u, content: c, parent: null) succeeds
+    and  logout(user: u) succeeds
+  }
+}

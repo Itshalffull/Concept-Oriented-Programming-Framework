@@ -1,10 +1,10 @@
-# Clef Build Layer — Deploy Kit Extension
+# Clef Build Layer — Deploy Suite Extension
 
 ## Design Principle
 
 The same coordination + provider pattern used by Runtime, Secret, and IaC. **Builder** is a coordination concept that owns the shared build interface — what gets built, what the result is, what status it's in. **Toolchain** is a coordination concept that owns tool resolution — what compiler version, where it lives, whether it's installed. Provider concepts own the language-specific logic: how to invoke `tsc`, how to invoke `rustc`, what flags each needs. Both register providers through **PluginRegistry**.
 
-This is NOT a new suite. It extends the existing deploy kit with two coordination concepts and their providers, fitting into the same deploy manifest (`app.deploy.yaml`) and the same DeployPlan DAG.
+This is NOT a new suite. It extends the existing deploy suite with two coordination concepts and their providers, fitting into the same deploy manifest (`app.deploy.yaml`) and the same DeployPlan DAG.
 
 ### Why This Exists
 
@@ -19,7 +19,7 @@ Generated TypeScript / Rust / Swift / Solidity source
     ▼ (??? — this document)
 Compiled, tested, packaged artifacts
     │
-    ▼ (deploy kit — exists)
+    ▼ (deploy suite — exists)
 Running infrastructure
 ```
 
@@ -50,7 +50,7 @@ Builder and Toolchain fill this gap following the exact pattern Runtime establis
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                   Clef Deploy Kit (extended)                            │
+│                   Clef Deploy Suite (extended)                            │
 │                                                                         │
 │  Existing Orchestration Concepts:                                       │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
@@ -196,7 +196,7 @@ concept Toolchain [T] {
 
 ### 1.2 Toolchain Provider Concepts
 
-Each provider has sovereign state and language-specific resolution logic. Never referenced outside the deploy kit — only reached through integration syncs from Toolchain.
+Each provider has sovereign state and language-specific resolution logic. Never referenced outside the deploy suite — only reached through integration syncs from Toolchain.
 
 #### SwiftToolchain
 
@@ -505,7 +505,7 @@ concept Builder [B] {
 
 ### 1.4 Builder Provider Concepts
 
-Each provider owns the compilation pipeline for its language. Never referenced outside the deploy kit.
+Each provider owns the compilation pipeline for its language. Never referenced outside the deploy suite.
 
 #### SwiftBuilder
 
@@ -942,7 +942,7 @@ The deploy manifest gains a `build:` section alongside existing `runtime:`, `sec
 
 ```yaml
 # app.deploy.yaml
-kit: content-management
+suite: content-management
 version: 0.4.0
 
 environment: production
@@ -1160,10 +1160,10 @@ clef build test --concept password --language swift
 
 ---
 
-## Part 6: Kit Packaging
+## Part 6: Suite Packaging
 
 ```yaml
-# kits/deploy/suite.yaml (extended — additions only)
+# suites/deploy/suite.yaml (extended — additions only)
 
 concepts:
   # EXISTING concepts unchanged...
@@ -1291,9 +1291,9 @@ With provider concepts, adding a new language (e.g., `KotlinBuilder`) is:
 
 This is the same argument for why LambdaRuntime and EcsRuntime are concepts, not configuration of Runtime.
 
-### Why these live in the deploy kit, not a new "build kit"
+### Why these live in the deploy suite, not a new "build suite"
 
-The build step exists to produce deployable artifacts. It reads from the deploy manifest. It feeds into the deploy DAG. Its lifecycle is "prepare for deployment." Putting it in a separate kit would create a cross-suite dependency (deploy kit → build kit → generation suite) with no clear boundary. Keeping it in the deploy kit means one manifest, one DAG, one `clef deploy plan` command that shows the full pipeline from toolchain resolution through build through deployment.
+The build step exists to produce deployable artifacts. It reads from the deploy manifest. It feeds into the deploy DAG. Its lifecycle is "prepare for deployment." Putting it in a separate suite would create a cross-suite dependency (deploy suite → build suite → generation suite) with no clear boundary. Keeping it in the deploy suite means one manifest, one DAG, one `clef deploy plan` command that shows the full pipeline from toolchain resolution through build through deployment.
 
 ### Executor as a provider-internal concern
 

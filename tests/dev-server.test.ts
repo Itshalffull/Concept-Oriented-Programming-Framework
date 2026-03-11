@@ -22,7 +22,7 @@ describe('DevServer', () => {
   describe('start', () => {
     it('starts a dev server on a given port', async () => {
       const result = await devServerHandler.start!(
-        { port: 3000, watchDirs: ['./src', './kits'] },
+        { port: 3000, watchDirs: ['./src', './suites'] },
         storage,
       );
       expect(result.variant).toBe('ok');

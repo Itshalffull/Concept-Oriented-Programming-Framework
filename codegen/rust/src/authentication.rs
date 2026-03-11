@@ -6,6 +6,24 @@
 use crate::storage::{ConceptStorage, StorageResult};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sha2::{Sha256, Digest};
+use rand::RngCore;
+use base64::Engine;
+
+fn hash_password(password: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(password.as_bytes());
+    let result = hasher.finalize();
+    format!("{:x}", result)
+}
+
+fn generate_secure_token(prefix: &str) -> String {
+    let mut rng = rand::thread_rng();
+    let mut bytes = [0u8; 32];
+    rng.fill_bytes(&mut bytes);
+    let encoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes);
+    format!("{}_{}", prefix, encoded)
+}
 
 // --- Register ---
 
@@ -98,7 +116,7 @@ impl AuthenticationHandler {
                 &input.user_id,
                 json!({
                     "user_id": input.user_id,
-                    "credentials": input.credentials,
+                    "credentials": hash_password(&input.credentials),
                     "created_at": now,
                     "updated_at": now,
                     "active": true,
@@ -126,13 +144,13 @@ impl AuthenticationHandler {
                     .get("credentials")
                     .and_then(|v| v.as_str())
                     .unwrap_or("");
-                if stored_credentials != input.credentials {
+                if stored_credentials != hash_password(&input.credentials) {
                     return Ok(LoginOutput::InvalidCredentials {
                         message: "invalid user or credentials".to_string(),
                     });
                 }
 
-                let token = format!("tok_{}", rand::random::<u64>());
+                let token = generate_secure_token("tok");
 
                 // Mark account as logged in
                 let mut updated = account;
@@ -183,7 +201,7 @@ impl AuthenticationHandler {
                 message: format!("account '{}' not found", input.user_id),
             }),
             Some(mut account) => {
-                let reset_token = format!("reset_{}", rand::random::<u64>());
+                let reset_token = generate_secure_token("reset");
                 account["reset_token"] = json!(reset_token);
                 account["reset_requested_at"] = json!(chrono::Utc::now().to_rfc3339());
                 storage

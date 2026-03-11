@@ -29,8 +29,8 @@ describe('ActionLog conformance', () => {
     const storage = createTestStorage();
     const handler = actionLogHandler;
 
-    const r = 'u-test-invariant-001';
-    const recs = 'u-test-invariant-002';
+    let r: any = 'u-test-invariant-001';
+    let recs: any = 'u-test-invariant-002';
 
     // setup: append -> ok
     const appendResultSetup = await pipe(
@@ -39,7 +39,7 @@ describe('ActionLog conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).id).toBe(r);
+        r = (output as any).id;
         return output;
       }),
     )();
@@ -52,7 +52,7 @@ describe('ActionLog conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).records).toBe(recs);
+        recs = (output as any).records;
         return output;
       }),
     )();

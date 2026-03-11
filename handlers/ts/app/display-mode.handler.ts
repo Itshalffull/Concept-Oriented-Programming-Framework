@@ -2,6 +2,11 @@
 import type { ConceptHandler } from '@clef/runtime';
 
 export const displayModeHandler: ConceptHandler = {
+  async list(_input, storage) {
+    const items = await storage.find('displayMode', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
+  },
+
   async defineMode(input, storage) {
     const mode = input.mode as string;
     const name = input.name as string;

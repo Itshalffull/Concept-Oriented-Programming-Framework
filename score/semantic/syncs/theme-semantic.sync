@@ -1,6 +1,6 @@
 // Extract semantic entities from parsed .theme files.
-// Registers ThemeEntity with palette, typography, motion,
-// elevation, spacing, and radius structures.
+// Registers ThemeEntity (with typed ThemeManifest) with palette,
+// typography, motion, elevation, spacing, and radius structures.
 
 sync ThemeSemanticSync [eager]
 when {

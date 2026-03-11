@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 /// @title Authentication
 /// @notice Concept-oriented credential-based authentication with register, login, logout, and password reset
 /// @dev Implements the Authentication concept from Clef specification.
 ///      Stores credential hashes on-chain; actual password hashing should occur off-chain.
+///      Administrative actions (resetPassword) are restricted to the contract owner.
 
-contract Authentication {
+contract Authentication is Ownable {
     // --- Types ---
 
     struct Account {
@@ -26,6 +29,10 @@ contract Authentication {
     event LoggedIn(bytes32 indexed userId);
     event LoggedOut(bytes32 indexed userId);
     event PasswordReset(bytes32 indexed userId);
+
+    // --- Constructor ---
+
+    constructor() Ownable(msg.sender) {}
 
     // --- Actions ---
 
@@ -73,10 +80,10 @@ contract Authentication {
         emit LoggedOut(userId);
     }
 
-    /// @notice Reset a user's credential hash
+    /// @notice Reset a user's credential hash (admin only)
     /// @param userId The user whose password to reset
     /// @param newCredentialHash The new credential hash
-    function resetPassword(bytes32 userId, bytes32 newCredentialHash) external {
+    function resetPassword(bytes32 userId, bytes32 newCredentialHash) external onlyOwner {
         require(_accounts[userId].exists, "Account not found");
         require(newCredentialHash != bytes32(0), "Credential hash cannot be zero");
 

@@ -5,7 +5,7 @@ concept SolverProvider [S] {
     Coordination concept dispatching verification requests to
     registered solver backends. Routes based on formal language,
     property kind, and solver capabilities. Follows the same
-    coordination+provider pattern as ModelRouter in LLM kits.
+    coordination+provider pattern as ModelRouter in LLM suites.
   }
 
   state {

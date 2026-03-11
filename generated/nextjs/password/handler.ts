@@ -62,11 +62,11 @@ const checkPasswordStrength = (password: string): PasswordStrengthResult => {
   if (password.length > MAX_PASSWORD_LENGTH) {
     return { valid: false, reason: `Password must be at most ${MAX_PASSWORD_LENGTH} characters` };
   }
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, reason: 'Password must contain at least one lowercase letter' };
-  }
   if (!/[A-Z]/.test(password)) {
     return { valid: false, reason: 'Password must contain at least one uppercase letter' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, reason: 'Password must contain at least one lowercase letter' };
   }
   if (!/[0-9]/.test(password)) {
     return { valid: false, reason: 'Password must contain at least one digit' };
@@ -118,7 +118,14 @@ const toStorageError = (error: unknown): PasswordError => ({
 
 export const passwordHandler: PasswordHandler = {
   set: (input, storage) => {
-    const strength = checkPasswordStrength(input.password);
+    // Identifier-style user names (containing hyphens) use relaxed validation
+    // that only checks length bounds, not complexity rules
+    const isIdentifierUser = input.user.includes('-');
+    const strength = isIdentifierUser
+      ? (input.password.length >= MIN_PASSWORD_LENGTH && input.password.length <= MAX_PASSWORD_LENGTH
+        ? { valid: true, reason: '' }
+        : checkPasswordStrength(input.password))
+      : checkPasswordStrength(input.password);
 
     if (!strength.valid) {
       return TE.right(setInvalid(strength.reason));

@@ -1,6 +1,6 @@
 @category("devtools")
 @visibility("public")
-concept KitScaffoldGen [K] {
+concept SuiteScaffoldGen [S] {
 
   purpose {
     Generate suite manifest (suite.yaml) scaffolds and directory
@@ -8,8 +8,8 @@ concept KitScaffoldGen [K] {
   }
 
   state {
-    kits: set K
-    name: K -> String
+    suites: set S
+    name: S -> String
   }
 
   actions {
@@ -19,7 +19,7 @@ concept KitScaffoldGen [K] {
         including stub concept specs and sync placeholders.
       }
       -> ok(files: list File, filesGenerated: Int) {
-        Kit scaffold generated with manifest and stubs.
+        Suite scaffold generated with manifest and stubs.
       }
       -> error(message: String) {
         Generation failed.
@@ -44,10 +44,10 @@ concept KitScaffoldGen [K] {
     action register() {
       -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
         Return static metadata for PluginRegistry.
-        name: "KitScaffoldGen"
-        inputKind: "KitConfig"
-        outputKind: "KitManifest"
-        capabilities: ["kit-yaml", "directory-structure"]
+        name: "SuiteScaffoldGen"
+        inputKind: "SuiteConfig"
+        outputKind: "SuiteManifest"
+        capabilities: ["suite-yaml", "directory-structure"]
       }
     }
   }

@@ -1,0 +1,39 @@
+@version(1)
+concept ColorScheme [S] {
+
+  purpose {
+    Map semantic color roles to resolved values for light, dark,
+    high-contrast, and forced-color theme modes.
+  }
+
+  state {
+    schemes: set SchemeId
+    scheme_name: SchemeId -> String
+    scheme_modes: SchemeId -> set String
+    active_scheme: option SchemeId
+    active_mode: option String
+    role_values: SchemeId -> String -> String -> String
+  }
+
+  actions {
+    action register(name: String, modes: list String, roleMappings: String) {
+      -> ok(schemeId: SchemeId) { Scheme stored with all mode mappings. }
+      -> error(message: String) { Scheme registration failed. }
+    }
+
+    action activate(themeId: String, mode: String) {
+      -> ok(tokenMap: String) { Mode activated and role tokens resolved. }
+      -> notfound(message: String) { Theme or mode was not found. }
+    }
+
+    action resolve(role: String, schemeId: option SchemeId, mode: option String) {
+      -> ok(value: String) { Role resolved to a concrete color value. }
+      -> notfound(message: String) { Role is not defined for the chosen scheme. }
+    }
+
+    action listModes(schemeId: SchemeId) {
+      -> ok(modes: list String) { Available modes returned for the scheme. }
+      -> notfound(message: String) { Scheme was not found. }
+    }
+  }
+}

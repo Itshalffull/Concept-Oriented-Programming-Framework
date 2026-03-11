@@ -1,0 +1,1507 @@
+{
+  "uri": "urn:clef/Blackboard",
+  "name": "Blackboard",
+  "typeParams": [
+    {
+      "name": "B",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "entries",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "entry_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "content",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "confidence",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "status",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "entry_schema",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "entry_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "schema",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "subscriptions",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "entry_types",
+                  "type": {
+                    "kind": "list",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "condition",
+                  "type": {
+                    "kind": "option",
+                    "inner": {
+                      "kind": "primitive",
+                      "primitive": "String"
+                    }
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "access_log",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "agent_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "action",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "entry_id",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "boards",
+      "source": "set-valued",
+      "keyField": {
+        "name": "b",
+        "paramRef": "B"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "create",
+      "params": [
+        {
+          "name": "entry_schema",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "entry_type",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "schema",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "board",
+              "type": {
+                "kind": "param",
+                "paramRef": "B"
+              }
+            }
+          ],
+          "prose": "Creates a blackboard with typed entry schemas"
+        },
+        {
+          "tag": "invalid",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Invalid schema definitions"
+        }
+      ]
+    },
+    {
+      "name": "post",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "agent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entry_type",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "content",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "confidence",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Agent posts a finding Validates against entry_schema \n Notifies subscribers watching this entry_type \n Confidence 0.0 -1.0"
+        },
+        {
+          "tag": "schema_violation",
+          "fields": [
+            {
+              "name": "errors",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "path",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "message",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Content doesn t match entry_type schema"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "entry_type",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entries",
+              "type": {
+                "kind": "list",
+                "inner": {
+                  "kind": "record",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "agent_id",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "content",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "String"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "confidence",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "Float"
+                      },
+                      "optional": false
+                    },
+                    {
+                      "name": "timestamp",
+                      "type": {
+                        "kind": "primitive",
+                        "primitive": "DateTime"
+                      },
+                      "optional": false
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "prose": "Reads the board Optionally filters by type and custom predicates"
+        },
+        {
+          "tag": "empty",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No matching entries"
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "agent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "entry_types",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "condition",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "subscription_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Registers interest Agent gets notified via sync when new \n matching entries appear"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Board not found"
+        }
+      ]
+    },
+    {
+      "name": "challenge",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "entry_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "challenger_agent_id",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "counter_evidence",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "entry_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Challenges a posted finding Sets entry status to challenged \n Posts the counter evidence as a linked entry"
+        },
+        {
+          "tag": "notfound",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Entry not found"
+        }
+      ]
+    },
+    {
+      "name": "resolve",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        },
+        {
+          "name": "entry_ids",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "String"
+            }
+          }
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "resolved_entry_id",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Resolves contradictory entries Strategy : latest_wins , \n highest_confidence , merge , escalate_to_consensus"
+        },
+        {
+          "tag": "unresolvable",
+          "fields": [
+            {
+              "name": "message",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "Cannot resolve automatically"
+        }
+      ]
+    },
+    {
+      "name": "snapshot",
+      "params": [
+        {
+          "name": "board",
+          "type": {
+            "kind": "param",
+            "paramRef": "B"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "ok",
+          "fields": [
+            {
+              "name": "state",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "entry_count",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "Full board state for context injection into agent prompts"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after create, post, query behaves correctly",
+      "setup": [
+        {
+          "action": "create",
+          "inputs": [
+            {
+              "name": "entry_schema",
+              "value": {
+                "kind": "list",
+                "items": [
+                  {
+                    "kind": "record",
+                    "fields": [
+                      {
+                        "name": "entry_type",
+                        "value": {
+                          "kind": "literal",
+                          "value": "finding"
+                        }
+                      },
+                      {
+                        "name": "schema",
+                        "value": {
+                          "kind": "literal",
+                          "value": "{\"type\": \"object\"}"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "board",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            }
+          ]
+        },
+        {
+          "action": "post",
+          "inputs": [
+            {
+              "name": "board",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "agent_id",
+              "value": {
+                "kind": "literal",
+                "value": "a1"
+              }
+            },
+            {
+              "name": "entry_type",
+              "value": {
+                "kind": "literal",
+                "value": "finding"
+              }
+            },
+            {
+              "name": "content",
+              "value": {
+                "kind": "literal",
+                "value": "{\"fact\": \"X\"}"
+              }
+            },
+            {
+              "name": "confidence",
+              "value": {
+                "kind": "literal",
+                "value": 0.9
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entry_id",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "query",
+          "inputs": [
+            {
+              "name": "board",
+              "value": {
+                "kind": "variable",
+                "name": "b"
+              }
+            },
+            {
+              "name": "entry_type",
+              "value": {
+                "kind": "literal",
+                "value": "finding"
+              }
+            },
+            {
+              "name": "filters",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "ok",
+          "expectedOutputs": [
+            {
+              "name": "entries",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "b",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type BlackboardState {\n  \"\"\"All bs in this concept\"\"\"\n  bs: [ID!]!\n}\n\ntype BlackboardEntry {\n  b: ID!\n  entries: [JSON!]!\n  entry_schema: [JSON!]!\n  subscriptions: [JSON!]!\n  access_log: [JSON!]!\n}\n\nextend type Query {\n  blackboard_entry(b: ID!): BlackboardEntry\n  blackboard_entries: [BlackboardEntry!]!\n}\n\ntype BlackboardBoards {\n  b: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "create": {
+        "$id": "urn:clef/Blackboard/create/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "create"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "entry_schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entry_type": {
+                      "type": "string"
+                    },
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "entry_type",
+                    "schema"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "entry_schema"
+            ]
+          }
+        }
+      },
+      "post": {
+        "$id": "urn:clef/Blackboard/post/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "post"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              },
+              "agent_id": {
+                "type": "string"
+              },
+              "entry_type": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "board",
+              "agent_id",
+              "entry_type",
+              "content",
+              "confidence"
+            ]
+          }
+        }
+      },
+      "query": {
+        "$id": "urn:clef/Blackboard/query/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "query"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              },
+              "entry_type": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "filters": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "board",
+              "entry_type",
+              "filters"
+            ]
+          }
+        }
+      },
+      "subscribe": {
+        "$id": "urn:clef/Blackboard/subscribe/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "subscribe"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              },
+              "agent_id": {
+                "type": "string"
+              },
+              "entry_types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "condition": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "board",
+              "agent_id",
+              "entry_types",
+              "condition"
+            ]
+          }
+        }
+      },
+      "challenge": {
+        "$id": "urn:clef/Blackboard/challenge/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "challenge"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              },
+              "entry_id": {
+                "type": "string"
+              },
+              "challenger_agent_id": {
+                "type": "string"
+              },
+              "counter_evidence": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "board",
+              "entry_id",
+              "challenger_agent_id",
+              "counter_evidence"
+            ]
+          }
+        }
+      },
+      "resolve": {
+        "$id": "urn:clef/Blackboard/resolve/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "resolve"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              },
+              "entry_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "strategy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "board",
+              "entry_ids",
+              "strategy"
+            ]
+          }
+        }
+      },
+      "snapshot": {
+        "$id": "urn:clef/Blackboard/snapshot/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Blackboard"
+          },
+          "action": {
+            "const": "snapshot"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "board": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "board"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "create": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/create/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "board": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "board"
+              ]
+            }
+          }
+        },
+        "invalid": {
+          "$id": "urn:clef/Blackboard/create/completion/invalid",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "create"
+            },
+            "variant": {
+              "const": "invalid"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "post": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/post/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "post"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry_id"
+              ]
+            }
+          }
+        },
+        "schema_violation": {
+          "$id": "urn:clef/Blackboard/post/completion/schema_violation",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "post"
+            },
+            "variant": {
+              "const": "schema_violation"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "message"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "errors"
+              ]
+            }
+          }
+        }
+      },
+      "query": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/query/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "agent_id": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "confidence": {
+                        "type": "number"
+                      },
+                      "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "agent_id",
+                      "content",
+                      "confidence",
+                      "timestamp"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          }
+        },
+        "empty": {
+          "$id": "urn:clef/Blackboard/query/completion/empty",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "query"
+            },
+            "variant": {
+              "const": "empty"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "subscribe": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/subscribe/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "subscription_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "subscription_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Blackboard/subscribe/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "subscribe"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "challenge": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/challenge/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "challenge"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry_id"
+              ]
+            }
+          }
+        },
+        "notfound": {
+          "$id": "urn:clef/Blackboard/challenge/completion/notfound",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "challenge"
+            },
+            "variant": {
+              "const": "notfound"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "resolve": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/resolve/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "resolved_entry_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "resolved_entry_id"
+              ]
+            }
+          }
+        },
+        "unresolvable": {
+          "$id": "urn:clef/Blackboard/resolve/completion/unresolvable",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "resolve"
+            },
+            "variant": {
+              "const": "unresolvable"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "snapshot": {
+        "ok": {
+          "$id": "urn:clef/Blackboard/snapshot/completion/ok",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Blackboard"
+            },
+            "action": {
+              "const": "snapshot"
+            },
+            "variant": {
+              "const": "ok"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "type": "string"
+                },
+                "entry_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "state",
+                "entry_count"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Shared knowledge repository for asynchronous multi agent collaboration \n Agents communicate exclusively by reading from and writing to the board \n Eliminates redundant message passing all agents share one context \n Agents subscribe to entry types and get notified when relevant data \n appears Exceptional token efficiency compared to message passing \n topologies Includes conflict resolution for contradictory posts"
+}

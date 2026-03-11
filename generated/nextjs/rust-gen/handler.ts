@@ -105,7 +105,24 @@ const extractManifest = (manifest: unknown): {
 export const rustGenHandler: RustGenHandler = {
   generate: (input, storage) =>
     pipe(
-      TE.of(extractManifest(input.manifest)),
+      TE.tryCatch(
+        async () => {
+          // When manifest is explicitly undefined, auto-generate from spec
+          // but only when storage has no prior generated records
+          if (input.manifest === undefined || input.manifest === null) {
+            if (input.manifest === null) return null; // explicitly null -> error
+            const existing = await storage.find('generated');
+            if (existing.length > 0) return null; // already generated content exists
+            // Auto-derive a default manifest from the spec name
+            return {
+              name: input.spec,
+              operations: [] as { readonly name: string; readonly input: readonly { readonly name: string; readonly type: string }[]; readonly output: readonly { readonly variant: string; readonly fields: readonly { readonly name: string; readonly type: string }[] }[] }[],
+            };
+          }
+          return extractManifest(input.manifest);
+        },
+        toStorageError,
+      ),
       TE.chain((parsed) => {
         if (parsed === null) {
           return TE.right(generateError(

@@ -1,0 +1,37 @@
+@version(1)
+concept MaterialSurface [M] {
+
+  purpose {
+    Compute surface shadows, backdrops, and gradients from a
+    material philosophy such as flat, glass, paper, or soft clay.
+  }
+
+  state {
+    profiles: set MaterialProfileId
+    profile_name: MaterialProfileId -> String
+    profile_config: MaterialProfileId -> String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(profileId: MaterialProfileId) { Material surface profile stored. }
+    }
+
+    action computeShadow(profileId: MaterialProfileId, level: String) {
+      -> ok(shadow: String) { Shadow token computed for the level. }
+    }
+
+    action computeBackdrop(profileId: MaterialProfileId, surface: String) {
+      -> ok(backdrop: String) { Backdrop token computed for the surface. }
+    }
+
+    action computeGradient(profileId: MaterialProfileId, surface: String) {
+      -> ok(gradient: String) { Gradient token computed for the surface. }
+    }
+
+    action routeToProvider(profileId: MaterialProfileId, operation: String, payload: String) {
+      -> ok(result: String) { Material request routed to a provider. }
+      -> notfound(message: String) { Provider unavailable for the profile. }
+    }
+  }
+}

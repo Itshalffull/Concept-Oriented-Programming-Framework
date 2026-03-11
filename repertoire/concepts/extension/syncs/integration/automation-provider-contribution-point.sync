@@ -1,0 +1,17 @@
+# When an extension is installed, check if its manifest declares
+# automation provider contributions and define an "automation-provider"
+# contribution point so providers can register through the extension
+# contribution system. See Architecture doc Sections 16.11, 16.12.
+
+sync DefineAutomationProviderContributionPoint [eager]
+when {
+  ExtensionHost/install: [ manifest: ?manifest; hostType: ?hostType ]
+    => [ ok(extension: ?extension) ]
+}
+then {
+  ContributionPoint/definePoint: [
+    name: "automation-provider";
+    pointType: "automation-provider";
+    schema: "{providerName: string, providerType: string}"
+  ]
+}

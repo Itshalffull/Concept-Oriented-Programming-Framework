@@ -75,8 +75,30 @@ export const evidenceHandler: EvidenceHandler = {
     pipe(
       TE.tryCatch(
         async () => {
-          await storage.put('evidence', input.artifact_type, { artifact_type: input.artifact_type, content: input.content, solver_metadata: input.solver_metadata, property_ref: input.property_ref, confidence_score: input.confidence_score });
-          return recordOk(input.artifact_type, input.artifact_type);
+          // Generate a deterministic evidence ID
+          const allEvidence = await storage.find('evidence');
+          const count = allEvidence.length;
+          const evidenceId = `ev-${count + 1}`;
+
+          // Compute a content hash
+          const content = String(input.content ?? '');
+          let hash = 0;
+          for (let i = 0; i < content.length; i++) {
+            hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0;
+          }
+          const contentHash = (hash >>> 0).toString(16).padStart(8, '0');
+
+          await storage.put('evidence', evidenceId, {
+            evidence: evidenceId,
+            artifact_type: input.artifact_type,
+            content: input.content,
+            content_hash: contentHash,
+            solver_metadata: input.solver_metadata,
+            property_ref: input.property_ref,
+            confidence_score: input.confidence_score,
+            valid: true,
+          });
+          return recordOk(evidenceId, contentHash);
         },
         (error): EvidenceError => ({
           code: 'STORAGE_ERROR',
@@ -90,7 +112,19 @@ export const evidenceHandler: EvidenceHandler = {
       TE.tryCatch(
         async () => {
           const record = await storage.get('evidence', input.evidence);
-          return validateOk(input.evidence, (record as any).valid);
+          if (record === null) {
+            return validateCorrupted(input.evidence, 'Evidence not found');
+          }
+          // Validate by re-computing content hash
+          const content = String((record as any).content ?? '');
+          let hash = 0;
+          for (let i = 0; i < content.length; i++) {
+            hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0;
+          }
+          const computedHash = (hash >>> 0).toString(16).padStart(8, '0');
+          const storedHash = String((record as any).content_hash ?? '');
+          const valid = computedHash === storedHash;
+          return validateOk(input.evidence, valid);
         },
         (error): EvidenceError => ({
           code: 'STORAGE_ERROR',

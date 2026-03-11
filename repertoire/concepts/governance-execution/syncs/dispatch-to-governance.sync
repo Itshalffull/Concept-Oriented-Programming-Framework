@@ -1,0 +1,14 @@
+# Route dispatch to the governance automation provider when provider_name is "governance"
+
+sync DispatchToGovernance [eager]
+  purpose: "Delegate automation dispatch to the governance gate provider."
+when {
+  AutomationDispatch/dispatch: [ rule_ref: ?ruleRef; provider_name: "governance"; context: ?context ]
+    => [ dispatch: ?dispatch; result: ?result ]
+}
+then {
+  GovernanceAutomationProvider/execute: [
+    action_payload: ?context;
+    gate_config: ?ruleRef
+  ]
+}

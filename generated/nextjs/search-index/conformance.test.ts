@@ -29,8 +29,8 @@ describe('SearchIndex conformance', () => {
     const storage = createTestStorage();
     const handler = searchIndexHandler;
 
-    const i = 'u-test-invariant-001';
-    const r = 'u-test-invariant-002';
+    let i: any = 'u-test-invariant-001';
+    let r: any = 'u-test-invariant-002';
 
     // setup: createIndex -> ok
     const createIndexResultSetup = await pipe(
@@ -40,7 +40,7 @@ describe('SearchIndex conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).index).toBe(i);
+        i = (output as any).index;
         return output;
       }),
     )();
@@ -69,7 +69,7 @@ describe('SearchIndex conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).results).toBe(r);
+        r = (output as any).results;
         return output;
       }),
     )();

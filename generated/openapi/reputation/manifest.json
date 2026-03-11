@@ -1,0 +1,779 @@
+{
+  "uri": "urn:clef/Reputation",
+  "name": "Reputation",
+  "typeParams": [
+    {
+      "name": "RP",
+      "wireType": "string"
+    }
+  ],
+  "relations": [
+    {
+      "name": "entries",
+      "source": "merged",
+      "keyField": {
+        "name": "rp",
+        "paramRef": "RP"
+      },
+      "fields": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "score",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          },
+          "optional": false
+        },
+        {
+          "name": "algorithm",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          },
+          "optional": false
+        },
+        {
+          "name": "history",
+          "type": {
+            "kind": "list",
+            "inner": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "action",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "delta",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "Float"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "reason",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "String"
+                  },
+                  "optional": false
+                },
+                {
+                  "name": "timestamp",
+                  "type": {
+                    "kind": "primitive",
+                    "primitive": "DateTime"
+                  },
+                  "optional": false
+                }
+              ]
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "decayRate",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "Float"
+            }
+          },
+          "optional": false
+        },
+        {
+          "name": "lastDecay",
+          "type": {
+            "kind": "option",
+            "inner": {
+              "kind": "primitive",
+              "primitive": "DateTime"
+            }
+          },
+          "optional": false
+        }
+      ]
+    },
+    {
+      "name": "scores",
+      "source": "set-valued",
+      "keyField": {
+        "name": "rp",
+        "paramRef": "RP"
+      },
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "kind": "param",
+            "paramRef": "RP"
+          },
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "earn",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "earned",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "RP"
+              }
+            }
+          ],
+          "prose": "The participant s score increases by the given amount \n A history entry is recorded"
+        }
+      ]
+    },
+    {
+      "name": "burn",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        },
+        {
+          "name": "amount",
+          "type": {
+            "kind": "primitive",
+            "primitive": "Float"
+          }
+        },
+        {
+          "name": "reason",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "burned",
+          "fields": [
+            {
+              "name": "entry",
+              "type": {
+                "kind": "param",
+                "paramRef": "RP"
+              }
+            }
+          ],
+          "prose": "The participant s score decreases by the given amount"
+        },
+        {
+          "tag": "insufficient",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "currentScore",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The participant does not have enough reputation to burn"
+        }
+      ]
+    },
+    {
+      "name": "decay",
+      "params": [],
+      "variants": [
+        {
+          "tag": "decayed",
+          "fields": [
+            {
+              "name": "affectedCount",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Int"
+              }
+            }
+          ],
+          "prose": "All scores are reduced per the configured decay rate"
+        },
+        {
+          "tag": "no_decay_configured",
+          "fields": [],
+          "prose": "No decay rate is set"
+        }
+      ]
+    },
+    {
+      "name": "getScore",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "score",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "value",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "Returns the participant s current reputation score"
+        },
+        {
+          "tag": "not_found",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            }
+          ],
+          "prose": "No reputation record exists for this participant"
+        }
+      ]
+    },
+    {
+      "name": "recalculate",
+      "params": [
+        {
+          "name": "participant",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
+        }
+      ],
+      "variants": [
+        {
+          "tag": "recalculated",
+          "fields": [
+            {
+              "name": "participant",
+              "type": {
+                "kind": "primitive",
+                "primitive": "String"
+              }
+            },
+            {
+              "name": "newScore",
+              "type": {
+                "kind": "primitive",
+                "primitive": "Float"
+              }
+            }
+          ],
+          "prose": "The score is recomputed from history using the configured algorithm"
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    {
+      "description": "invariant 1: after earn, getScore behaves correctly",
+      "setup": [
+        {
+          "action": "earn",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "amount",
+              "value": {
+                "kind": "literal",
+                "value": 10
+              }
+            },
+            {
+              "name": "reason",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ],
+          "expectedVariant": "earned",
+          "expectedOutputs": [
+            {
+              "name": "entry",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "assertions": [
+        {
+          "action": "getScore",
+          "inputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            }
+          ],
+          "expectedVariant": "score",
+          "expectedOutputs": [
+            {
+              "name": "participant",
+              "value": {
+                "kind": "variable",
+                "name": "p"
+              }
+            },
+            {
+              "name": "value",
+              "value": {
+                "kind": "variable",
+                "name": "_"
+              }
+            }
+          ]
+        }
+      ],
+      "freeVariables": [
+        {
+          "name": "p",
+          "testValue": "u-test-invariant-001"
+        }
+      ]
+    }
+  ],
+  "graphqlSchema": "type ReputationState {\n  \"\"\"All rps in this concept\"\"\"\n  rps: [ID!]!\n}\n\ntype ReputationEntry {\n  rp: ID!\n  participant: String!\n  score: Float!\n  algorithm: String!\n  history: [JSON!]!\n  decayRate: Float!\n  lastDecay: String!\n}\n\nextend type Query {\n  reputation_entry(rp: ID!): ReputationEntry\n  reputation_entries: [ReputationEntry!]!\n}\n\ntype ReputationScores {\n  rp: ID!\n  value: ID!\n}",
+  "jsonSchemas": {
+    "invocations": {
+      "earn": {
+        "$id": "urn:clef/Reputation/earn/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Reputation"
+          },
+          "action": {
+            "const": "earn"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant",
+              "amount",
+              "reason"
+            ]
+          }
+        }
+      },
+      "burn": {
+        "$id": "urn:clef/Reputation/burn/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Reputation"
+          },
+          "action": {
+            "const": "burn"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant",
+              "amount",
+              "reason"
+            ]
+          }
+        }
+      },
+      "decay": {
+        "$id": "urn:clef/Reputation/decay/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Reputation"
+          },
+          "action": {
+            "const": "decay"
+          },
+          "input": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          }
+        }
+      },
+      "getScore": {
+        "$id": "urn:clef/Reputation/getScore/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Reputation"
+          },
+          "action": {
+            "const": "getScore"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant"
+            ]
+          }
+        }
+      },
+      "recalculate": {
+        "$id": "urn:clef/Reputation/recalculate/invocation",
+        "type": "object",
+        "properties": {
+          "concept": {
+            "const": "urn:clef/Reputation"
+          },
+          "action": {
+            "const": "recalculate"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "participant": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "participant"
+            ]
+          }
+        }
+      }
+    },
+    "completions": {
+      "earn": {
+        "earned": {
+          "$id": "urn:clef/Reputation/earn/completion/earned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "earn"
+            },
+            "variant": {
+              "const": "earned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        }
+      },
+      "burn": {
+        "burned": {
+          "$id": "urn:clef/Reputation/burn/completion/burned",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "burn"
+            },
+            "variant": {
+              "const": "burned"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "entry": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        },
+        "insufficient": {
+          "$id": "urn:clef/Reputation/burn/completion/insufficient",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "burn"
+            },
+            "variant": {
+              "const": "insufficient"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "currentScore": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "currentScore"
+              ]
+            }
+          }
+        }
+      },
+      "decay": {
+        "decayed": {
+          "$id": "urn:clef/Reputation/decay/completion/decayed",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "decay"
+            },
+            "variant": {
+              "const": "decayed"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "affectedCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "affectedCount"
+              ]
+            }
+          }
+        },
+        "no_decay_configured": {
+          "$id": "urn:clef/Reputation/decay/completion/no_decay_configured",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "decay"
+            },
+            "variant": {
+              "const": "no_decay_configured"
+            },
+            "output": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "getScore": {
+        "score": {
+          "$id": "urn:clef/Reputation/getScore/completion/score",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "getScore"
+            },
+            "variant": {
+              "const": "score"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "value"
+              ]
+            }
+          }
+        },
+        "not_found": {
+          "$id": "urn:clef/Reputation/getScore/completion/not_found",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "getScore"
+            },
+            "variant": {
+              "const": "not_found"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "participant"
+              ]
+            }
+          }
+        }
+      },
+      "recalculate": {
+        "recalculated": {
+          "$id": "urn:clef/Reputation/recalculate/completion/recalculated",
+          "type": "object",
+          "properties": {
+            "concept": {
+              "const": "urn:clef/Reputation"
+            },
+            "action": {
+              "const": "recalculate"
+            },
+            "variant": {
+              "const": "recalculated"
+            },
+            "output": {
+              "type": "object",
+              "properties": {
+                "participant": {
+                  "type": "string"
+                },
+                "newScore": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "participant",
+                "newScore"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "capabilities": [
+    "persistent-storage"
+  ],
+  "purpose": "Track accumulated standing based on contributions and behavior , \n with pluggable algorithms for score computation"
+}

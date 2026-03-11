@@ -1,0 +1,16 @@
+type WidgetGenVanillaState {
+  """All ps in this concept"""
+  ps: [ID!]!
+}
+
+type WidgetGenVanillaEntry {
+  p: ID!
+  target: String!
+  providerRef: String!
+  status: String!
+}
+
+extend type Query {
+  widgetgenvanilla_entry(p: ID!): WidgetGenVanillaEntry
+  widgetgenvanilla_entries: [WidgetGenVanillaEntry!]!
+}

@@ -7,5 +7,5 @@ when {
     => [ plan: ?plan; filesGenerated: ?count ]
 }
 then {
-  ApiSurface/compose: [ kit: ?kit; target: ?target; outputs: ?outputs ]
+  ApiSurface/compose: [ suite: ?suite; target: ?target; outputs: ?outputs ]
 }

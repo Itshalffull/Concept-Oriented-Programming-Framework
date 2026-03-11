@@ -1,0 +1,23 @@
+type GuardrailState {
+  """All gs in this concept"""
+  gs: [ID!]!
+}
+
+type GuardrailEntry {
+  g: ID!
+  name: String!
+  guardrail_type: String!
+  config: JSON!
+  rules: [JSON!]!
+  violation_log: [JSON!]!
+}
+
+extend type Query {
+  guardrail_entry(g: ID!): GuardrailEntry
+  guardrail_entries: [GuardrailEntry!]!
+}
+
+type GuardrailGuardrails {
+  g: ID!
+  value: ID!
+}

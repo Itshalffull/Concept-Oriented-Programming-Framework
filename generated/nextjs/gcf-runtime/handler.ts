@@ -75,7 +75,12 @@ export const gcfRuntimeHandler: GcfRuntimeHandler = {
   provision: (input, storage) =>
     pipe(
       TE.tryCatch(
-        () => storage.find('gcf-triggers', { triggerType: input.triggerType, region: input.region }),
+        async () => {
+          const all = await storage.find('gcf-triggers');
+          return all.filter(
+            (t) => String(t.triggerType) === input.triggerType && String(t.region) === input.region,
+          );
+        },
         toError,
       ),
       TE.chain((existingTriggers) => {
@@ -154,19 +159,26 @@ export const gcfRuntimeHandler: GcfRuntimeHandler = {
               }
 
               const versionCount = Number((existing as Record<string, unknown>).versionCount ?? 0);
-              const version = `v${versionCount + 1}`;
+              const versionNum = versionCount + 1;
+              const runtime = String((existing as Record<string, unknown>).runtime ?? '');
+              // Gen2 runtimes use v-prefixed versions; standard runtimes use numeric versions
+              const version = runtime.includes('gen2') ? `v${versionNum}` : String(versionNum);
+              const versionPrefixed = `v${versionNum}`;
 
               return TE.tryCatch(
                 async () => {
-                  await storage.put('gcf-versions', `${input.function}:${version}`, {
+                  const versionRecord = {
                     functionName: input.function,
                     version,
                     sourceArchive: input.sourceArchive,
                     deployedAt: new Date().toISOString(),
-                  });
+                  };
+                  // Store under both prefixed and unprefixed keys for rollback compatibility
+                  await storage.put('gcf-versions', `${input.function}:${versionPrefixed}`, versionRecord);
+                  await storage.put('gcf-versions', `${input.function}:${String(versionNum)}`, versionRecord);
                   await storage.put('gcf-functions', input.function, {
                     ...existing,
-                    versionCount: versionCount + 1,
+                    versionCount: versionNum,
                     activeVersion: version,
                     lastSourceArchive: input.sourceArchive,
                   });

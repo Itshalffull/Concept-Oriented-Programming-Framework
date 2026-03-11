@@ -115,6 +115,31 @@ syncs:
     - path: ./syncs/rewoo-routes.sync
       description: "PluginRegistry resolves 'rewoo' to ReWOOStrategy"
 
+widgets:
+  - path: ./widgets/tool-invocation.widget
+    description: "Collapsible card displaying an LLM tool call execution"
+  - path: ./widgets/reasoning-block.widget
+    description: "Collapsible display for chain-of-thought reasoning content"
+  - path: ./widgets/trace-tree.widget
+    description: "Hierarchical execution trace viewer for agent loops and verification runs"
+  - path: ./widgets/agent-timeline.widget
+    description: "Multi-agent communication timeline with delegation indicators"
+  - path: ./widgets/task-plan-list.widget
+    description: "Hierarchical task plan with status indicators and drag reordering"
+  - path: ./widgets/hitl-interrupt.widget
+    description: "Human-in-the-loop interrupt banner for agent approval flows"
+  - path: ./widgets/memory-inspector.widget
+    description: "Inspector panel for viewing and managing agent memory state"
+
+surface:
+  entityAffordances:
+    - concept: ToolBinding
+      detail: tool-invocation
+    - concept: AgentLoop
+      detail: trace-tree
+    - concept: AgentMemory
+      detail: memory-inspector
+
 uses:
   - suite: llm-core
     concepts:

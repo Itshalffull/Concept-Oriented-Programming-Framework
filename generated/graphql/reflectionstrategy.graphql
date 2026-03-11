@@ -1,0 +1,21 @@
+type ReflectionStrategyState {
+  """All ss in this concept"""
+  ss: [ID!]!
+}
+
+type ReflectionStrategyEntry {
+  s: ID!
+  draft_history: [JSON!]!
+  max_rounds: Int!
+  agent_ref: String!
+}
+
+extend type Query {
+  reflectionstrategy_entry(s: ID!): ReflectionStrategyEntry
+  reflectionstrategy_entries: [ReflectionStrategyEntry!]!
+}
+
+type ReflectionStrategySessions {
+  s: ID!
+  value: ID!
+}

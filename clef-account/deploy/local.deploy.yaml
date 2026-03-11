@@ -1,0 +1,78 @@
+app:
+  name: clef-account
+  version: "0.1.0"
+  uri: urn:clef:account
+
+runtimes:
+  local:
+    type: LocalRuntime
+    engine: true
+    transport: in-process
+    storage: memory
+    secrets: dotenv
+    config:
+      port: "${PORT:-4001}"
+      dotenvPath: ".env"
+      hotReload: true
+
+concepts:
+  Authentication:
+    spec: ../repertoire/concepts/identity/authentication.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/authentication.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Authorization:
+    spec: ../repertoire/concepts/identity/authorization.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/authorization.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  AccessControl:
+    spec: ../repertoire/concepts/identity/access-control.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/access-control.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+  Session:
+    spec: ../repertoire/concepts/identity/session.concept
+    implementations:
+      - language: typescript
+        path: handlers/ts/session.handler.ts
+        runtime: local
+        storage: memory
+        queryMode: lite
+
+syncs:
+  - path: syncs/required/auth-session.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/permission-check.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/role-on-register.sync
+    engine: engine
+    annotations: [eager]
+
+  - path: syncs/required/admin-role-bootstrap.sync
+    engine: engine
+    annotations: [eager]
+
+build:
+  typescript:
+    compiler: tsc
+    testRunner: vitest
+    testTypes:
+      - unit
+      - integration

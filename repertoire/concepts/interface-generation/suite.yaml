@@ -1,0 +1,177 @@
+# repertoire/concepts/interface-generation/suite.yaml
+suite:
+  name: interface-generation
+  version: 0.1.0
+  description: >
+    General-purpose multi-target interface generation patterns.
+    Provides target coordination, SDK generation, API surface
+    composition, spec document generation, metadata annotation,
+    middleware trait mapping, resource grouping, and generation
+    orchestration. Includes provider implementations for REST,
+    GraphQL, gRPC, CLI, MCP, multiple SDK languages, spec
+    formats, and automation manifests.
+
+concepts:
+  # --- Orchestration Concepts ---
+  Generator:
+    spec: ./concepts/generator.concept
+    params:
+      G: { as: generator-plan-ref, description: "Reference to a generation plan" }
+
+  ApiSurface:
+    spec: ./concepts/api-surface.concept
+    params:
+      S: { as: surface-ref, description: "Reference to a composed API surface" }
+
+  Middleware:
+    spec: ./concepts/middleware.concept
+    params:
+      M: { as: middleware-ref, description: "Reference to a middleware definition" }
+
+  Grouping:
+    spec: ./concepts/grouping.concept
+    params:
+      G: { as: grouping-ref, description: "Reference to a grouping result" }
+
+  Annotation:
+    spec: ./concepts/annotation.concept
+    params:
+      N: { as: annotation-ref, description: "Reference to metadata annotation" }
+
+  # --- Coordination Concepts ---
+  Target:
+    spec: ./concepts/target.concept
+    params:
+      T: { as: target-output-ref, description: "Reference to a target generation output" }
+
+  Sdk:
+    spec: ./concepts/sdk.concept
+    params:
+      S: { as: sdk-package-ref, description: "Reference to a generated SDK package" }
+
+  Spec:
+    spec: ./concepts/spec.concept
+    params:
+      D: { as: spec-document-ref, description: "Reference to a generated spec document" }
+
+  # --- Target Provider Concepts ---
+  RestTarget:
+    spec: ./concepts/providers/rest-target.concept
+    params:
+      R: { as: rest-route-ref, description: "Reference to a generated REST route" }
+    optional: true
+
+  GraphqlTarget:
+    spec: ./concepts/providers/graphql-target.concept
+    params:
+      Q: { as: graphql-type-ref, description: "Reference to a generated GraphQL type" }
+    optional: true
+
+  GrpcTarget:
+    spec: ./concepts/providers/grpc-target.concept
+    params:
+      G: { as: grpc-service-ref, description: "Reference to a generated gRPC service" }
+    optional: true
+
+  CliTarget:
+    spec: ./concepts/providers/cli-target.concept
+    params:
+      C: { as: cli-command-ref, description: "Reference to a generated CLI command" }
+    optional: true
+
+  McpTarget:
+    spec: ./concepts/providers/mcp-target.concept
+    params:
+      M: { as: mcp-tool-ref, description: "Reference to a generated MCP tool" }
+    optional: true
+
+  ClaudeSkillsTarget:
+    spec: ./concepts/providers/claude-skills-target.concept
+    params:
+      K: { as: claude-skill-ref, description: "Reference to a generated Claude Code skill" }
+    optional: true
+
+  ClaudeMdTarget:
+    spec: ./concepts/providers/claude-md-target.concept
+    params:
+      D: { as: claude-md-ref, description: "Reference to a generated CLAUDE.md document" }
+    optional: true
+
+  # --- Spec Document Providers ---
+  OpenApiTarget:
+    spec: ./concepts/providers/openapi-target.concept
+    params:
+      O: { as: openapi-spec-ref, description: "Reference to a generated OpenAPI spec" }
+    optional: true
+
+  AsyncApiTarget:
+    spec: ./concepts/providers/asyncapi-target.concept
+    params:
+      A: { as: asyncapi-spec-ref, description: "Reference to a generated AsyncAPI spec" }
+    optional: true
+
+  # --- SDK Language Providers ---
+  TsSdkTarget:
+    spec: ./concepts/providers/ts-sdk-target.concept
+    params:
+      S: { as: ts-sdk-package-ref, description: "Reference to a generated TypeScript SDK" }
+    optional: true
+
+  PySdkTarget:
+    spec: ./concepts/providers/py-sdk-target.concept
+    params:
+      S: { as: py-sdk-package-ref, description: "Reference to a generated Python SDK" }
+    optional: true
+
+  GoSdkTarget:
+    spec: ./concepts/providers/go-sdk-target.concept
+    params:
+      S: { as: go-sdk-module-ref, description: "Reference to a generated Go SDK module" }
+    optional: true
+
+  RustSdkTarget:
+    spec: ./concepts/providers/rust-sdk-target.concept
+    params:
+      S: { as: rust-sdk-crate-ref, description: "Reference to a generated Rust SDK crate" }
+    optional: true
+
+  JavaSdkTarget:
+    spec: ./concepts/providers/java-sdk-target.concept
+    params:
+      S: { as: java-sdk-artifact-ref, description: "Reference to a generated Java SDK artifact" }
+    optional: true
+
+  SwiftSdkTarget:
+    spec: ./concepts/providers/swift-sdk-target.concept
+    params:
+      S: { as: swift-sdk-package-ref, description: "Reference to a generated Swift SDK package" }
+    optional: true
+
+  # --- Next.js Target & SDK Providers ---
+  NextjsTarget:
+    spec: ./concepts/providers/nextjs-target.concept
+    params:
+      R: { as: nextjs-route-ref, description: "Reference to a generated Next.js App Router route" }
+    optional: true
+
+  NextjsSdkTarget:
+    spec: ./concepts/providers/nextjs-sdk-target.concept
+    params:
+      S: { as: nextjs-sdk-package-ref, description: "Reference to a generated Next.js fp-ts SDK" }
+    optional: true
+
+  # --- Automation Manifest Provider ---
+  AutomationTarget:
+    spec: ./concepts/providers/automation-target.concept
+    params:
+      AT: { as: automation-manifest-ref, description: "Reference to a generated automation manifest" }
+    optional: true
+
+  # --- Open AI Compatibility Provider ---
+  OpenAiTarget:
+    spec: ./concepts/providers/openai-target.concept
+    params:
+      OA: { as: openai-target-ref, description: "Reference to an OpenAI-compatible target" }
+    optional: true
+
+dependencies: []

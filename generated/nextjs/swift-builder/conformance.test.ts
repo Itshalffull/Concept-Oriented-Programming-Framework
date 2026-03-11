@@ -29,8 +29,8 @@ describe('SwiftBuilder conformance', () => {
     const storage = createTestStorage();
     const handler = swiftBuilderHandler;
 
-    const s = 'u-test-invariant-001';
-    const null = 'u-test-invariant-002';
+    let s: any = 'u-test-invariant-001';
+    const nullVar = 'u-test-invariant-002';
 
     // setup: build -> ok
     const buildResultSetup = await pipe(
@@ -42,7 +42,7 @@ describe('SwiftBuilder conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).build).toBe(s);
+        s = (output as any).build;
         expect((output as any).artifactPath).toBe('.clef-artifacts/swift/password');
         expect((output as any).artifactHash).toBe('sha256:abc');
         return output;

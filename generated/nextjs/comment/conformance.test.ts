@@ -29,9 +29,9 @@ describe('Comment conformance', () => {
     const storage = createTestStorage();
     const handler = commentHandler;
 
-    const c = 'u-test-invariant-001';
+    let c: any = 'u-test-invariant-001';
     const e = 'u-test-invariant-002';
-    const r = 'u-test-invariant-003';
+    let r: any = 'u-test-invariant-003';
 
     // setup: addComment -> ok
     const addCommentResultSetup = await pipe(
@@ -43,7 +43,7 @@ describe('Comment conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).comment).toBe(c);
+        c = (output as any).comment;
         return output;
       }),
     )();
@@ -59,7 +59,7 @@ describe('Comment conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).comment).toBe(r);
+        r = (output as any).comment;
         return output;
       }),
     )();

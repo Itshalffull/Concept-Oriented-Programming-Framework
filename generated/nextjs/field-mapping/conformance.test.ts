@@ -29,7 +29,6 @@ describe('FieldMapping conformance', () => {
     const storage = createTestStorage();
     const handler = fieldMappingHandler;
 
-
     // setup: autoDiscover -> ok
     const autoDiscoverResultSetup = await pipe(
       handler.autoDiscover({

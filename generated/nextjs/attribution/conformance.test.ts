@@ -33,8 +33,8 @@ describe('Attribution conformance', () => {
     const r = 'u-test-invariant-002';
     const a = 'u-test-invariant-003';
     const ch = 'u-test-invariant-004';
-    const id = 'u-test-invariant-005';
-    const m = 'u-test-invariant-006';
+    let id: any = 'u-test-invariant-005';
+    let m: any = 'u-test-invariant-006';
 
     // setup: attribute -> ok
     const attributeResultSetup = await pipe(
@@ -46,7 +46,7 @@ describe('Attribution conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).attributionId).toBe(id);
+        id = (output as any).attributionId;
         return output;
       }),
     )();
@@ -59,7 +59,7 @@ describe('Attribution conformance', () => {
       }, storage),
       TE.map((output) => {
         expect(output.variant).toBe('ok');
-        expect((output as any).map).toBe(m);
+        m = (output as any).map;
         return output;
       }),
     )();

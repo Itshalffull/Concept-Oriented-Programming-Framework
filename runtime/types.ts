@@ -13,6 +13,7 @@ export interface ActionInvocation {
   input: Record<string, unknown>;
   flow: string;
   sync?: string;
+  matchedIds?: string[];
   timestamp: string;
   /** Stack of derived concept context tags (e.g. ["Trash/moveToTrash", "FileLifecycle/delete"]). */
   derivedContext?: string[];
@@ -214,7 +215,8 @@ export type TypeExpr =
   | { kind: 'list'; inner: TypeExpr }
   | { kind: 'option'; inner: TypeExpr }
   | { kind: 'relation'; from: TypeExpr; to: TypeExpr }
-  | { kind: 'record'; fields: { name: string; type: TypeExpr }[] };
+  | { kind: 'record'; fields: { name: string; type: TypeExpr }[] }
+  | { kind: 'enum'; values: string[] };
 
 export interface ActionDecl {
   name: string;
@@ -237,14 +239,47 @@ export interface ReturnVariant {
 
 export interface InvariantDecl {
   afterPatterns: ActionPattern[];
-  thenPatterns: ActionPattern[];
+  /** Sequence of action patterns and/or property assertions. */
+  thenPatterns: InvariantASTStep[];
+  /** Optional `when` guard clause. */
+  whenClause?: InvariantWhenClause;
 }
+
+/**
+ * A step in an invariant's `then` chain: either an action invocation
+ * or a property assertion (e.g. `d.status = "complete"`).
+ */
+export type InvariantASTStep =
+  | ({ kind: 'action' } & ActionPattern)
+  | ({ kind: 'assertion' } & InvariantAssertion);
 
 export interface ActionPattern {
   actionName: string;
   inputArgs: ArgPattern[];
   variantName: string;
   outputArgs: ArgPattern[];
+}
+
+/**
+ * A property assertion like `d.status = "complete"` or `i.generation > 0`.
+ */
+export interface InvariantAssertion {
+  left: AssertionExpr;
+  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in';
+  right: AssertionExpr;
+}
+
+export type AssertionExpr =
+  | { type: 'dot_access'; variable: string; field: string }
+  | { type: 'literal'; value: string | number | boolean | null }
+  | { type: 'variable'; name: string }
+  | { type: 'list'; items: AssertionExpr[] };
+
+/**
+ * A `when` guard clause with one or more conditions joined by `and`.
+ */
+export interface InvariantWhenClause {
+  conditions: InvariantAssertion[];
 }
 
 export interface ArgPattern {
@@ -255,6 +290,8 @@ export interface ArgPattern {
 export type ArgPatternValue =
   | { type: 'literal'; value: string | number | boolean }
   | { type: 'variable'; name: string }
+  | { type: 'dot_access'; variable: string; field: string }
+  | { type: 'spread' }
   | { type: 'record'; fields: ArgPattern[] }
   | { type: 'list'; items: ArgPatternValue[] };
 
@@ -324,6 +361,15 @@ export interface DerivedSurfaceAction {
   params: ParamDecl[];
   /** Entry pattern match — either a concept/action reference or derivedContext match. */
   matches: DerivedActionMatch;
+  /** Triggered actions after entry match (entry/triggers form). */
+  triggers?: DerivedActionTrigger[];
+}
+
+/** A triggered action in an entry/triggers surface action. */
+export interface DerivedActionTrigger {
+  concept: string;
+  action: string;
+  args: Record<string, string>;
 }
 
 /** How a surface action matches against constituent concept actions. */
@@ -331,7 +377,9 @@ export type DerivedActionMatch =
   /** Match on a constituent concept's action invocation input fields. */
   | { type: 'action'; concept: string; action: string; fields?: Record<string, unknown> }
   /** Match on a derivedContext tag (for derived-of-derived composition). */
-  | { type: 'derivedContext'; tag: string };
+  | { type: 'derivedContext'; tag: string }
+  /** Entry match with field bindings (entry/triggers form). */
+  | { type: 'entry'; concept: string; action: string; fields?: Record<string, string> };
 
 /** A surface query declaration in a derived concept. */
 export interface DerivedSurfaceQuery {
@@ -372,7 +420,7 @@ export interface DerivedAST {
   /** Concepts and derived concepts that participate in this composition. */
   composes: ComposesEntry[];
   /** Sync files claimed by this derived concept (defines the runtime boundary). */
-  syncs: { required: string[] };
+  syncs: { required: string[]; recommended?: string[] };
   /** Surface declarations — actions and queries. */
   surface: {
     actions: DerivedSurfaceAction[];
@@ -478,7 +526,7 @@ export interface ConceptManifest {
   category?: string;
   /** Visibility level from @visibility annotation (e.g. "framework", "public", "internal"). */
   visibility?: string;
-  /** Generation kit metadata — set when concept is declared as a generator. */
+  /** Generation suite metadata — set when concept is declared as a generator. */
   generation?: {
     family: string;
     inputKind: string;
@@ -486,6 +534,79 @@ export interface ConceptManifest {
     deterministic: boolean;
     pure: boolean;
   };
+}
+
+// --- Widget Manifest (Surface IR) ---
+
+/** Anatomy part in a widget specification. */
+export interface WidgetAnatomyPart {
+  name: string;
+  role?: string;
+  required?: boolean;
+  children?: WidgetAnatomyPart[];
+}
+
+/** State in a widget state machine. */
+export interface WidgetState {
+  name: string;
+  initial: boolean;
+  transitions: { event: string; target: string }[];
+  entryActions?: string[];
+  exitActions?: string[];
+}
+
+/** Accessibility contract for a widget. */
+export interface WidgetAccessibility {
+  role: string;
+  keyboard: { key: string; action: string }[];
+  focus: { trap?: boolean; initial?: string; roving?: boolean };
+  ariaAttrs?: { name: string; value: string; dynamic?: boolean }[];
+}
+
+/** Affordance declaration binding a widget to concept state. */
+export interface WidgetAffordance {
+  serves: string;
+  specificity?: number;
+  when?: string;
+  binds: { field: string; source: string }[];
+}
+
+/** Property declaration for a widget. */
+export interface WidgetProp {
+  name: string;
+  type: string;
+  defaultValue?: string;
+}
+
+/** Language-neutral IR for a parsed .widget file. */
+export interface WidgetManifest {
+  name: string;
+  purpose: string;
+  version?: number;
+  category?: string;
+  anatomy: WidgetAnatomyPart[];
+  states: WidgetState[];
+  props: WidgetProp[];
+  slots: string[];
+  accessibility: WidgetAccessibility;
+  affordance?: WidgetAffordance;
+  composedWidgets: string[];
+}
+
+// --- Theme Manifest (Surface IR) ---
+
+/** Language-neutral IR for a parsed .theme file. */
+export interface ThemeManifest {
+  name: string;
+  purpose: string;
+  extends?: string;
+  palette: Record<string, string>;
+  colorRoles: Record<string, string>;
+  typography: Record<string, unknown>;
+  spacing: { unit?: string; scale: Record<string, string> };
+  motion: Record<string, unknown>;
+  elevation: Record<string, unknown>;
+  radius: Record<string, string>;
 }
 
 // --- Suite Manifest (Section 9) ---
@@ -497,15 +618,15 @@ export interface UsesConceptEntry {
 }
 
 /**
- * A uses declaration grouping external concepts by source kit.
+ * A uses declaration grouping external concepts by source suite.
  *
  * When `optional` is true, the entry's syncs only load if the named
- * kit is present (what was previously the `integrations` section).
+ * suite is present (what was previously the `integrations` section).
  * When false or omitted, the concepts are required for this suite to
  * function — the compiler errors if they're unavailable.
  */
 export interface UsesEntry {
-  kit: string;
+  suite: string;
   optional?: boolean;
   concepts: UsesConceptEntry[];
   syncs?: Array<{ path: string; description?: string }>;
@@ -513,7 +634,7 @@ export interface UsesEntry {
 
 /** Parsed suite manifest structure (suite.yaml). */
 export interface SuiteManifest {
-  kit: { name: string; version: string; description: string };
+  suite: { name: string; version: string; description: string };
   concepts: Record<string, {
     spec: string;
     params: Record<string, { as: string; description?: string }>;

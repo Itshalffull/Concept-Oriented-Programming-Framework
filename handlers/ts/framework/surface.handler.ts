@@ -9,6 +9,7 @@
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { randomUUID } from 'crypto';
+import { toKebabCase, toCamelCase } from './providers/codegen-utils.js';
 
 // --- Internal Types ---
 
@@ -23,7 +24,7 @@ interface RouteEntry {
 /** Stored surface record persisted via ConceptStorage. */
 interface SurfaceRecord {
   id: string;
-  kit: string;
+  suite: string;
   target: string;
   outputs: string[];
   entrypoint: string;
@@ -125,21 +126,25 @@ function detectConflicts(routes: RouteEntry[]): string[] {
  * together all concept outputs into a single surface.
  */
 function generateEntrypointContent(
-  kit: string,
+  suite: string,
   target: string,
   outputs: string[],
   routes: RouteEntry[],
 ): string {
   const conceptNames = outputs.map(o => o.replace(/-output$/, ''));
-  const header = `// Auto-generated entrypoint for kit "${kit}", target "${target}"\n`;
+  const header = `// Auto-generated entrypoint for suite "${suite}", target "${target}"\n`;
 
   switch (target) {
     case 'rest': {
       const imports = conceptNames
-        .map(c => `import { ${c}Router } from './${c}/${c}.routes';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Router } from './${kebab}/${kebab}.routes';`;
+        })
         .join('\n');
       const mounts = conceptNames
-        .map(c => `  router.use('/${c}', ${c}Router);`)
+        .map(c => `  router.use('/${toKebabCase(c)}', ${toCamelCase(c)}Router);`)
         .join('\n');
       return (
         header +
@@ -153,10 +158,14 @@ function generateEntrypointContent(
 
     case 'graphql': {
       const imports = conceptNames
-        .map(c => `import { ${c}TypeDefs, ${c}Resolvers } from './${c}/${c}.schema';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const pascal = capitalize(c);
+          return `import { ${pascal}TypeDefs, ${pascal}Resolvers } from './${kebab}/${kebab}.schema';`;
+        })
         .join('\n');
-      const typeDefs = conceptNames.map(c => `${c}TypeDefs`).join(', ');
-      const resolvers = conceptNames.map(c => `${c}Resolvers`).join(', ');
+      const typeDefs = conceptNames.map(c => `${capitalize(c)}TypeDefs`).join(', ');
+      const resolvers = conceptNames.map(c => `${capitalize(c)}Resolvers`).join(', ');
       return (
         header +
         `import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';\n` +
@@ -168,7 +177,11 @@ function generateEntrypointContent(
 
     case 'grpc': {
       const imports = conceptNames
-        .map(c => `import { ${capitalize(c)}Service } from './${c}/${c}.service';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const pascal = capitalize(c);
+          return `import { ${pascal}Service } from './${kebab}/${kebab}.service';`;
+        })
         .join('\n');
       const services = conceptNames
         .map(c => `  server.addService(${capitalize(c)}Service);`)
@@ -185,10 +198,14 @@ function generateEntrypointContent(
 
     case 'cli': {
       const imports = conceptNames
-        .map(c => `import { ${c}Command } from './${c}/${c}.command';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Command } from './${kebab}/${kebab}.command';`;
+        })
         .join('\n');
       const commands = conceptNames
-        .map(c => `  program.addCommand(${c}Command);`)
+        .map(c => `  program.addCommand(${toCamelCase(c)}Command);`)
         .join('\n');
       return (
         header +
@@ -202,9 +219,13 @@ function generateEntrypointContent(
 
     case 'mcp': {
       const imports = conceptNames
-        .map(c => `import { ${c}Tools } from './${c}/${c}.tools';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Tools } from './${kebab}/${kebab}.tools';`;
+        })
         .join('\n');
-      const tools = conceptNames.map(c => `...${c}Tools`).join(', ');
+      const tools = conceptNames.map(c => `...${toCamelCase(c)}Tools`).join(', ');
       return (
         header +
         `${imports}\n\n` +
@@ -214,9 +235,13 @@ function generateEntrypointContent(
 
     default: {
       const imports = conceptNames
-        .map(c => `import { ${c}Module } from './${c}/${c}.module';`)
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Module } from './${kebab}/${kebab}.module';`;
+        })
         .join('\n');
-      const modules = conceptNames.map(c => `${c}Module`).join(', ');
+      const modules = conceptNames.map(c => `${toCamelCase(c)}Module`).join(', ');
       return (
         header +
         `${imports}\n\n` +
@@ -239,12 +264,12 @@ export const surfaceHandler: ConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ): Promise<{ variant: string; [key: string]: unknown }> {
-    const kit = input.kit as string;
+    const suite = input.suite as string;
     const target = input.target as string;
     const outputs = input.outputs as string[];
 
-    if (!kit || typeof kit !== 'string') {
-      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['kit is required'] };
+    if (!suite || typeof suite !== 'string') {
+      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['suite is required'] };
     }
     if (!target || typeof target !== 'string') {
       return { variant: 'conflictingRoutes', target: '', conflicts: ['target is required'] };
@@ -270,13 +295,13 @@ export const surfaceHandler: ConceptHandler = {
     const entrypoint = TARGET_ENTRYPOINTS[target] ?? `${target}.ts`;
 
     // Generate composed entrypoint content
-    const entrypointContent = generateEntrypointContent(kit, target, outputs, allRoutes);
+    const entrypointContent = generateEntrypointContent(suite, target, outputs, allRoutes);
 
     // Create and store the surface record
     const surfaceId = randomUUID();
     const surfaceRecord: SurfaceRecord = {
       id: surfaceId,
-      kit,
+      suite,
       target,
       outputs,
       entrypoint,

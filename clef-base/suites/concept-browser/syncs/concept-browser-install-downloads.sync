@@ -1,0 +1,19 @@
+# Concept browser: download package after lockfile check.
+# After the lockfile check passes with no conflicts, download
+# the package contents via Download/resolve.
+
+sync ConceptBrowserInstallDownloads [eventual]
+  purpose: "After lockfile check passes, download the package via Download/resolve"
+when {
+  Lockfile/check: [ package_id: ?package_id ]
+    => [ ok: ?lock_result ]
+}
+where {
+  filter(?lock_result.conflicts == null)
+}
+then {
+  Download/resolve: [
+    package_id: ?package_id;
+    lock_result: ?lock_result
+  ]
+}

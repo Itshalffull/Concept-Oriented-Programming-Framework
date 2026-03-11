@@ -1,0 +1,12 @@
+# When VersionSpace/merge encounters conflicts, delegate to the
+# Collaboration suite's ConflictResolution concept for pluggable
+# conflict resolution strategy dispatch.
+
+sync VersionSpaceConflictDelegatesToConflictResolution [eventual]
+when {
+  VersionSpace/merge: [ space: ?space; target: ?target; strategy: ?strategy ]
+    => [ conflicts(conflicts: ?conflicts) ]
+}
+then {
+  ConflictResolution/resolve: [ conflicts: ?conflicts; strategy: ?strategy ]
+}
