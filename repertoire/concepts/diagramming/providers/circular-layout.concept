@@ -1,0 +1,42 @@
+@version(1)
+concept CircularLayoutProvider [C] {
+
+  purpose {
+    Compute spatial positions by arranging items on a circle with
+    Baur-Brandes crossing minimization. Best for ring topologies,
+    protocol diagrams, and cyclic dependencies.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "circular", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String, config: option {
+      spacing_x: option Float, spacing_y: option Float
+    }) {
+      -> ok(positions: list { item_id: String, x: Float, y: Float }) {
+        Places items on a circle with radius proportional to item count,
+        then applies Baur-Brandes crossing minimization to reorder items
+        and reduce edge crossings.
+      }
+      -> error(message: String) {
+        Layout computation failed or provider not available.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["a", "b", "c", "d"], config: {})
+      -> ok(positions: _)
+    then apply(canvas: "c1", items: ["a", "b"], config: {})
+      -> ok(positions: _)
+  }
+}

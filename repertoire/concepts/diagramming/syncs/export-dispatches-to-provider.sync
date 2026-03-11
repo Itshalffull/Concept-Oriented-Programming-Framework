@@ -1,0 +1,13 @@
+# When DiagramExport/export is called, dispatch to the registered
+# export format provider via PluginRegistry.
+
+sync ExportDispatchesToProvider [eager]
+when {
+  DiagramExport/export: [ canvas_id: ?canvas; format: ?fmt ] => [ _ ]
+}
+where {
+  PluginRegistry: { ?provider type: "diagram_export"; key: ?fmt }
+}
+then {
+  PluginRegistry/dispatch: [ plugin_type: "diagram_export"; key: ?fmt; input: { canvas_id: ?canvas } ]
+}

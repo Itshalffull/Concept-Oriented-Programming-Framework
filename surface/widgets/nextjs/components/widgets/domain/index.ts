@@ -1,3 +1,14 @@
 export { QuorumGauge } from './QuorumGauge.js';
 export { SegmentedProgressBar } from './SegmentedProgressBar.js';
 export { MessageActions } from './MessageActions.js';
+export { NodePalettePanel } from './NodePalettePanel.js';
+export { ConnectorPortIndicator } from './ConnectorPortIndicator.js';
+export { LayoutControlPanel } from './LayoutControlPanel.js';
+export { ConstraintAnchorIndicator } from './ConstraintAnchorIndicator.js';
+export { DiagramExportDialog } from './DiagramExportDialog.js';
+export { NotationBadge } from './NotationBadge.js';
+export { CanvasPropertiesPanel } from './CanvasPropertiesPanel.js';
+export { SpatialCanvasViewport } from './SpatialCanvasViewport.js';
+export type { SpatialCanvasViewportProps } from './SpatialCanvasViewport.js';
+export { spatialCanvasViewportReducer, createInitialState, screenToWorld, visibleItems, itemsInMarquee } from './SpatialCanvasViewport.reducer.js';
+export type { SpatialCanvasViewportState, SpatialCanvasViewportEvent, Camera, CanvasItem, CanvasConnector, MarqueeBounds } from './SpatialCanvasViewport.reducer.js';

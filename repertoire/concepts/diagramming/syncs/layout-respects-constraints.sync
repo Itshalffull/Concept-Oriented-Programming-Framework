@@ -1,0 +1,13 @@
+# After SpatialLayout/arrange completes, apply ConstraintAnchor
+# constraints to adjust positions while preserving user intent.
+
+sync LayoutRespectsConstraints [eager]
+when {
+  SpatialLayout/arrange: [ canvas_id: ?canvas ] => [ _ ]
+}
+where {
+  ConstraintAnchor: { ?anchors canvas_id: ?canvas }
+}
+then {
+  SpatialLayout/applyConstraints: [ canvas_id: ?canvas; anchors: ?anchors ]
+}

@@ -47,6 +47,15 @@ import { accessControlHandler } from '../../handlers/ts/app/access-control.handl
 import { sessionHandler } from '../../handlers/ts/app/session.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
 
+// Diagramming concepts
+import { connectorPortHandler } from '../../handlers/ts/connector-port.handler';
+import { diagramNotationHandler } from '../../handlers/ts/diagram-notation.handler';
+import { diagramExportHandler } from '../../handlers/ts/diagram-export.handler';
+import { constraintAnchorHandler } from '../../handlers/ts/constraint-anchor.handler';
+import { canvasEntityHandler } from '../../handlers/ts/score/canvas-entity.handler';
+import { connectorEntityHandler } from '../../handlers/ts/score/connector-entity.handler';
+import { seedDataHandler } from '../../handlers/ts/seed-data.handler';
+
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
 const _registeredConcepts: { uri: string; hasStorage: boolean }[] = [];
@@ -107,6 +116,17 @@ export function getKernel(): Kernel {
   reg('urn:clef/AccessControl', accessControlHandler, getIdentityStorage('access-control'));
   reg('urn:clef/Session', sessionHandler, getIdentityStorage('session'));
 
+  // Diagramming concepts
+  reg('urn:clef/ConnectorPort', connectorPortHandler, makeStorage('connector-port'));
+  reg('urn:clef/DiagramNotation', diagramNotationHandler, makeStorage('diagram-notation'));
+  reg('urn:clef/DiagramExport', diagramExportHandler, makeStorage('diagram-export'));
+  reg('urn:clef/ConstraintAnchor', constraintAnchorHandler, makeStorage('constraint-anchor'));
+  reg('urn:clef/CanvasEntity', canvasEntityHandler, makeStorage('canvas-entity'));
+
+  // Infrastructure concepts
+  reg('urn:clef/SeedData', seedDataHandler, makeStorage('seed-data'));
+  reg('urn:clef/ConnectorEntity', connectorEntityHandler, makeStorage('connector-entity'));
+
   // Seed data on first initialization
   _seedPromise = seedData(kernel).then(() => bootstrapIdentity(kernel));
 
@@ -129,57 +149,18 @@ async function seedData(kernel: Kernel) {
   const inv = (concept: string, action: string, input: Record<string, unknown>) =>
     kernel.invokeConcept(`urn:clef/${concept}`, action, input).catch(() => {});
 
-  // Seed schemas
+  // Apply seed data from .seeds.yaml files in clef-base/seeds/
+  // Each file follows the convention <ConceptName>.seeds.yaml
+  // and declares { concept, action, entries[] } to invoke.
+  await applySeedsFromYaml(kernel);
+
+  // Re-read schemas from seed data for ContentNode seeding below
   const schemas = [
-    { schema: 'ContentNode', fields: 'node,type,content,metadata,createdBy,createdAt,updatedAt' },
-    { schema: 'Article', fields: 'title,body,author,publishedAt,status' },
-    { schema: 'Page', fields: 'title,slug,body,template,publishedAt' },
-    { schema: 'Media', fields: 'url,alt,mimeType,size,dimensions' },
-    { schema: 'View', fields: 'view,dataSource,layout,filters,sorts,groups,visibleFields' },
-    { schema: 'Workflow', fields: 'workflow,states,transitions,entities' },
-    { schema: 'AutomationRule', fields: 'rule,trigger,conditions,actions,enabled' },
-    { schema: 'TaxonomyTerm', fields: 'term,vocab,parent' },
-    { schema: 'Vocabulary', fields: 'vocab,name,terms' },
-    { schema: 'Schema', fields: 'schema,fields,extends,associations' },
-    { schema: 'DisplayMode', fields: 'mode,name,fieldDisplayConfigs,fieldFormConfigs' },
-    { schema: 'Theme', fields: 'name,base,overrides,active,priority' },
-    { schema: 'ComponentMapping', fields: 'mapping,widget,concept,action' },
-    { schema: 'Comment', fields: 'comment,author,body,target,createdAt' },
-    { schema: 'File', fields: 'file,path,mimeType,size,hash' },
+    'ContentNode', 'Article', 'Page', 'Media', 'View', 'Workflow',
+    'AutomationRule', 'TaxonomyTerm', 'Vocabulary', 'Schema',
+    'DisplayMode', 'Theme', 'ComponentMapping', 'Comment', 'File',
+    'Canvas', 'ConnectorPort', 'DiagramNotation', 'ConstraintAnchor',
   ];
-
-  for (const s of schemas) {
-    await inv('Schema', 'defineSchema', s);
-  }
-
-  // Seed display modes
-  const modes = [
-    { mode: 'entity-page', name: 'Entity Page' },
-    { mode: 'table-row', name: 'Table Row' },
-    { mode: 'card', name: 'Card' },
-    { mode: 'compact', name: 'Compact' },
-    { mode: 'score-graph', name: 'Score Graph' },
-  ];
-
-  for (const m of modes) {
-    await inv('DisplayMode', 'defineMode', m);
-  }
-
-  // Seed themes
-  const themes = [
-    { theme: 'light', name: 'Light', overrides: JSON.stringify({ mode: 'light' }) },
-    { theme: 'dark', name: 'Dark', overrides: JSON.stringify({ mode: 'dark' }) },
-    { theme: 'high-contrast', name: 'High Contrast', overrides: JSON.stringify({ mode: 'high-contrast' }) },
-  ];
-
-  for (const t of themes) {
-    await inv('Theme', 'create', t);
-  }
-
-  // Seed taxonomies
-  await inv('Taxonomy', 'createVocabulary', { vocab: 'concept-suites', name: 'Concept Suites' });
-  await inv('Taxonomy', 'createVocabulary', { vocab: 'schema-categories', name: 'Schema Categories' });
-  await inv('Taxonomy', 'createVocabulary', { vocab: 'content-types', name: 'Content Types' });
 
   // Seed content nodes for each registered concept
   const conceptNames = [
@@ -187,6 +168,8 @@ async function seedData(kernel: Kernel) {
     'Taxonomy', 'DisplayMode', 'Theme', 'Query', 'ContentStorage',
     'Property', 'Outline', 'ComponentMapping', 'ConceptBrowser',
     'Navigator', 'Host', 'Shell', 'Transport', 'Layout',
+    'ConnectorPort', 'DiagramNotation', 'DiagramExport', 'ConstraintAnchor',
+    'CanvasEntity', 'ConnectorEntity',
   ];
 
   for (const name of conceptNames) {
@@ -199,11 +182,11 @@ async function seedData(kernel: Kernel) {
   }
 
   // Seed content nodes for schemas
-  for (const s of schemas) {
+  for (const schemaName of schemas) {
     await inv('ContentNode', 'create', {
-      node: `schema:${s.schema}`,
+      node: `schema:${schemaName}`,
       type: 'schema',
-      content: JSON.stringify({ schema: s.schema, fields: s.fields.split(',') }),
+      content: JSON.stringify({ schema: schemaName }),
       createdBy: 'system',
     });
   }
@@ -234,7 +217,7 @@ async function seedData(kernel: Kernel) {
           { name: 'content', label: 'Content', type: 'textarea' },
           { name: 'createdBy', label: 'Created By' },
         ]},
-        rowClick: { navigateTo: '/content/{node}' },
+        rowClick: { navigateTo: '/admin/content/{node}' },
       }),
       filters: JSON.stringify([
         { field: 'type', label: 'Type', type: 'toggle-group' },
@@ -257,7 +240,7 @@ async function seedData(kernel: Kernel) {
           { name: 'schema', label: 'Schema Name', required: true },
           { name: 'fields', label: 'Fields (comma-separated)', required: true },
         ]},
-        rowClick: { navigateTo: '/content/schema:{schema}' },
+        rowClick: { navigateTo: '/admin/content/schema:{schema}' },
       }),
     },
     {
@@ -423,7 +406,7 @@ async function seedData(kernel: Kernel) {
         { key: 'createdBy', label: 'Source' },
       ]),
       controls: JSON.stringify({
-        rowClick: { navigateTo: '/content/{node}' },
+        rowClick: { navigateTo: '/admin/content/{node}' },
       }),
     },
     // Score — concept graph view (full system topology)
@@ -439,7 +422,7 @@ async function seedData(kernel: Kernel) {
         { key: 'content', label: 'Content' },
       ]),
       controls: JSON.stringify({
-        rowClick: { navigateTo: '/content/{node}' },
+        rowClick: { navigateTo: '/admin/content/{node}' },
       }),
       filters: JSON.stringify([
         { field: 'type', label: 'Type', type: 'toggle-group' },
@@ -456,7 +439,7 @@ async function seedData(kernel: Kernel) {
         { key: 'fields', label: 'Fields', formatter: 'json-count' },
       ]),
       controls: JSON.stringify({
-        rowClick: { navigateTo: '/content/schema:{schema}' },
+        rowClick: { navigateTo: '/admin/content/schema:{schema}' },
       }),
     },
     // Syncs list view
@@ -534,7 +517,7 @@ async function seedData(kernel: Kernel) {
         { key: 'createdBy', label: 'Source' },
       ]),
       controls: JSON.stringify({
-        rowClick: { navigateTo: '/content/{node}' },
+        rowClick: { navigateTo: '/admin/content/{node}' },
       }),
     },
     // Entity detail — related zone: all content (cross-reference)
@@ -549,11 +532,47 @@ async function seedData(kernel: Kernel) {
         { key: 'type', label: 'Type', formatter: 'badge' },
       ]),
       controls: JSON.stringify({
-        rowClick: { navigateTo: '/content/{node}' },
+        rowClick: { navigateTo: '/admin/content/{node}' },
       }),
       filters: JSON.stringify([
         { field: 'type', label: 'Type', type: 'toggle-group' },
       ]),
+    },
+    // Canvas / Diagramming views
+    {
+      view: 'canvases-list',
+      title: 'Canvases',
+      description: 'Browse all canvas diagrams.',
+      dataSource: JSON.stringify({ concept: 'ContentNode', action: 'list', params: { type: 'canvas' } }),
+      layout: 'card-grid',
+      visibleFields: JSON.stringify([
+        { key: 'node', label: 'Canvas' },
+        { key: 'notation', label: 'Notation', formatter: 'badge' },
+        { key: 'itemCount', label: 'Items' },
+        { key: 'createdBy', label: 'Created By' },
+      ]),
+      controls: JSON.stringify({
+        create: { concept: 'ContentNode', action: 'create', fields: [
+          { name: 'node', label: 'Canvas ID', required: true },
+          { name: 'type', label: 'Type', type: 'hidden', default: 'canvas' },
+          { name: 'content', label: 'Name', required: true },
+          { name: 'createdBy', label: 'Created By' },
+        ]},
+        rowClick: { navigateTo: '/admin/canvas/{node}' },
+      }),
+    },
+    {
+      view: 'canvas-notations',
+      title: 'Available Notations',
+      description: 'Diagram notation vocabularies that can be applied to canvases.',
+      dataSource: JSON.stringify({ concept: 'ContentNode', action: 'list', params: { type: 'notation' } }),
+      layout: 'card-grid',
+      visibleFields: JSON.stringify([
+        { key: 'node', label: 'Notation' },
+        { key: 'nodeTypes', label: 'Node Types' },
+        { key: 'edgeTypes', label: 'Edge Types' },
+      ]),
+      controls: JSON.stringify({}),
     },
     // Multiverse (version spaces)
     {
@@ -654,6 +673,17 @@ async function seedData(kernel: Kernel) {
       ]),
     },
     {
+      layout: 'canvas-browser',
+      name: 'Canvas Browser',
+      kind: 'stack',
+      title: 'Canvas Browser',
+      description: 'Browse and create canvas diagrams with notation support.',
+      children: JSON.stringify([
+        { type: 'view', id: 'canvases-list' },
+        { type: 'view', id: 'canvas-notations' },
+      ]),
+    },
+    {
       layout: 'multiverse',
       name: 'Version Spaces',
       kind: 'stack',
@@ -707,6 +737,7 @@ async function seedData(kernel: Kernel) {
     { name: 'version-space-integration', concepts: 0, syncs: 11 },
     { name: 'identity-integration', concepts: 0, syncs: 3 },
     { name: 'storage', concepts: 2, syncs: 2 },
+    { name: 'diagramming', concepts: 4, syncs: 12 },
   ];
 
   for (const s of suiteSeeds) {
@@ -718,22 +749,22 @@ async function seedData(kernel: Kernel) {
     });
   }
 
-  // Seed theme content nodes
-  for (const t of themes) {
+  // Seed theme content nodes (definitions loaded from Theme.seeds.yaml)
+  for (const t of ['light', 'dark', 'high-contrast']) {
     await inv('ContentNode', 'create', {
-      node: `theme:${t.theme}`,
+      node: `theme:${t}`,
       type: 'theme',
-      content: JSON.stringify({ name: t.name, overrides: t.overrides }),
+      content: JSON.stringify({ name: t }),
       createdBy: 'system',
     });
   }
 
-  // Seed display mode content nodes
-  for (const m of modes) {
+  // Seed display mode content nodes (definitions loaded from DisplayMode.seeds.yaml)
+  for (const m of ['entity-page', 'table-row', 'card', 'compact', 'score-graph']) {
     await inv('ContentNode', 'create', {
-      node: `display-mode:${m.mode}`,
+      node: `display-mode:${m}`,
       type: 'display-mode',
-      content: JSON.stringify({ name: m.name }),
+      content: JSON.stringify({ name: m }),
       createdBy: 'system',
     });
   }
@@ -753,6 +784,9 @@ async function seedData(kernel: Kernel) {
     'Card', 'Badge', 'Sidebar', 'DataTable', 'EmptyState', 'CreateForm',
     'TableDisplay', 'CardGridDisplay', 'GraphDisplay', 'StatCardsDisplay',
     'ViewRenderer', 'LayoutRenderer', 'HostedPage', 'AppShell',
+    'NodePalettePanel', 'ConnectorPortIndicator', 'LayoutControlPanel',
+    'ConstraintAnchorIndicator', 'DiagramExportDialog', 'NotationBadge',
+    'CanvasPropertiesPanel',
   ];
 
   for (const w of widgetSeeds) {
@@ -822,6 +856,65 @@ async function seedData(kernel: Kernel) {
     content: JSON.stringify({ name: 'Schema Categories', kind: 'vocabulary' }),
     createdBy: 'system',
   });
+
+  // Seed diagramming sync content nodes
+  const diagrammingSyncSeeds = [
+    { name: 'connector-port-validation', suite: 'diagramming', tier: 'required', pattern: 'Canvas/drawConnector -> ConnectorPort/validateConnection' },
+    { name: 'layout-applies-positions', suite: 'diagramming', tier: 'required', pattern: 'Canvas/applyLayout -> SpatialLayout/arrange' },
+    { name: 'layout-respects-constraints', suite: 'diagramming', tier: 'recommended', pattern: 'SpatialLayout/arrange -> ConstraintAnchor/getAnchorsForCanvas' },
+    { name: 'notation-validates-on-connect', suite: 'diagramming', tier: 'recommended', pattern: 'Canvas/drawConnector -> DiagramNotation/validateDiagram' },
+    { name: 'export-dispatches-to-provider', suite: 'diagramming', tier: 'required', pattern: 'DiagramExport/export -> PluginRegistry/dispatch' },
+    { name: 'auto-surface-references-on-add', suite: 'diagramming', tier: 'eventual', pattern: 'Canvas/addItem -> Canvas/surfaceExistingReferences' },
+    { name: 'notation-auto-apply-schema', suite: 'diagramming', tier: 'recommended', pattern: 'Canvas/setItemType -> Schema/applyTo' },
+  ];
+
+  for (const s of diagrammingSyncSeeds) {
+    await inv('ContentNode', 'create', {
+      node: `sync:${s.name}`,
+      type: 'sync',
+      content: JSON.stringify({ suite: s.suite, tier: s.tier, pattern: s.pattern }),
+      createdBy: 'system',
+    });
+  }
+
+  // Seed notation content nodes
+  const notationSeeds = [
+    { name: 'flowchart', nodeTypes: 6, edgeTypes: 1 },
+    { name: 'bpmn', nodeTypes: 6, edgeTypes: 3 },
+    { name: 'concept-map', nodeTypes: 2, edgeTypes: 1 },
+    { name: 'mind-map', nodeTypes: 3, edgeTypes: 1 },
+    { name: 'uml-class', nodeTypes: 3, edgeTypes: 4 },
+    { name: 'statechart', nodeTypes: 4, edgeTypes: 1 },
+    { name: 'c4', nodeTypes: 4, edgeTypes: 1 },
+    { name: 'erd', nodeTypes: 2, edgeTypes: 3 },
+    { name: 'causal-loop', nodeTypes: 2, edgeTypes: 2 },
+  ];
+
+  for (const n of notationSeeds) {
+    await inv('ContentNode', 'create', {
+      node: `notation:${n.name}`,
+      type: 'notation',
+      content: JSON.stringify({ name: n.name, nodeTypes: n.nodeTypes, edgeTypes: n.edgeTypes }),
+      createdBy: 'system',
+    });
+  }
+
+  // Seed example canvas content nodes
+  const canvasSeeds = [
+    { name: 'example-flowchart', notation: 'flowchart', itemCount: 5 },
+    { name: 'system-architecture', notation: 'c4', itemCount: 8 },
+    { name: 'data-model', notation: 'erd', itemCount: 6 },
+  ];
+
+  for (const c of canvasSeeds) {
+    await inv('ContentNode', 'create', {
+      node: `canvas:${c.name}`,
+      type: 'canvas',
+      content: JSON.stringify({ name: c.name }),
+      createdBy: 'system',
+      metadata: JSON.stringify({ notation: c.notation, itemCount: c.itemCount }),
+    });
+  }
 
   const versionSpaces = [
     {
@@ -901,6 +994,50 @@ async function seedData(kernel: Kernel) {
 
   for (const override of overrideSeeds) {
     await inv('ContentNode', 'create', override);
+  }
+}
+
+/**
+ * Discover *.seeds.yaml files and apply their entries via the kernel.
+ * Filename convention: <ConceptName>.seeds.yaml
+ * The concept name from the filename determines which concept to invoke.
+ */
+async function applySeedsFromYaml(kernel: Kernel) {
+  try {
+    const fs = await import('fs');
+    const pathMod = await import('path');
+    const { parseSeedsYaml } = await import('../../handlers/ts/seed-data.handler');
+
+    // Scan the app's own seeds directory
+    const seedsPath = pathMod.resolve(__dirname, '../seeds');
+
+    function walkDir(dir: string) {
+      let entries: string[];
+      try { entries = fs.readdirSync(dir); } catch { return; }
+      for (const entry of entries) {
+        const fullPath = pathMod.join(dir, entry);
+        try {
+          const stat = fs.statSync(fullPath);
+          if (stat.isDirectory()) {
+            walkDir(fullPath);
+          } else if (entry.endsWith('.seeds.yaml')) {
+            const conceptName = entry.replace('.seeds.yaml', '');
+            const content = fs.readFileSync(fullPath, 'utf-8');
+            const parsed = parseSeedsYaml(content);
+            for (const seedDef of parsed) {
+              const uri = `urn:clef/${conceptName || seedDef.concept_uri}`;
+              for (const entryData of seedDef.entries) {
+                kernel.invokeConcept(uri, seedDef.action_name, entryData).catch(() => {});
+              }
+            }
+          }
+        } catch { /* skip unreadable entries */ }
+      }
+    }
+
+    walkDir(seedsPath);
+  } catch {
+    // Seeds are optional — don't fail boot if fs is unavailable
   }
 }
 

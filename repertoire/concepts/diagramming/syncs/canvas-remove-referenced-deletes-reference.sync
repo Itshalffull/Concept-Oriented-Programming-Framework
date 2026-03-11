@@ -1,0 +1,10 @@
+sync CanvasRemoveReferencedDeletesReference [eager]
+when {
+  Canvas/removeItem: [ canvas: ?canvas; item: ?item ] => [ ok ]
+}
+where {
+  Canvas: { ?canvas item_is_local: { ?item: false } }
+}
+then {
+  Reference/removeRef: [ source: ?canvas; target: ?item ]
+}

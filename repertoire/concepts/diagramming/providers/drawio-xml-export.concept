@@ -1,0 +1,37 @@
+@version(1)
+concept DrawioXmlExportProvider [C] {
+
+  purpose {
+    Export and import canvas diagrams in draw.io (diagrams.net) XML
+    format for interoperability with the draw.io ecosystem.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "drawio-xml", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      compress: option Bool
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Generates draw.io mxGraphModel XML. Nodes as mxCell with geometry,
+        edges as mxCell with source/target. mime_type: "application/xml".
+      }
+      -> error(message: String) { Export failed. }
+    }
+
+    action importData(data: String, target_canvas: option String) {
+      -> ok(canvas_id: String, items_created: Int, connectors_created: Int) {
+        Parses mxGraphModel XML and creates items/connectors.
+      }
+      -> error(message: String) { Parse failed or invalid draw.io format. }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+# When an item is added to a canvas, automatically surface any
+# existing References between it and other items already on the canvas.
+
+sync AutoSurfaceReferencesOnAdd [eventual]
+when {
+  Canvas/addItem: [ canvas: ?canvas; item: ?item ] => [ ok ]
+}
+then {
+  Canvas/surfaceExistingReferences: [ canvas: ?canvas ]
+}

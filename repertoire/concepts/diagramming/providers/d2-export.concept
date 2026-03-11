@@ -1,0 +1,30 @@
+@version(1)
+concept D2ExportProvider [C] {
+
+  purpose {
+    Export canvas diagrams to D2 text format for rendering by the
+    D2 diagramming language engine.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "d2", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      direction: option String
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Generates D2 syntax. Nodes as identifiers with labels, connectors
+        as arrow syntax with optional labels. mime_type: "text/plain".
+      }
+      -> error(message: String) { Export failed. }
+    }
+  }
+}

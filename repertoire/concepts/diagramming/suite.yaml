@@ -1,0 +1,183 @@
+# Diagramming Suite Manifest
+name: diagramming
+version: 0.1.0
+description: "Composable diagramming with pluggable notations, layouts, ports, constraints, and export."
+
+concepts:
+  - name: ConnectorPort
+    spec: connector-port.concept
+  - name: SpatialLayout
+    spec: ../content/spatial-layout.concept
+    external: true
+  - name: DiagramNotation
+    spec: diagram-notation.concept
+  - name: DiagramExport
+    spec: diagram-export.concept
+  - name: ConstraintAnchor
+    spec: constraint-anchor.concept
+
+  # Layout providers
+  - name: HierarchicalLayoutProvider
+    spec: providers/hierarchical-layout.concept
+    optional: true
+  - name: ForceDirectedLayoutProvider
+    spec: providers/force-directed-layout.concept
+    optional: true
+  - name: TreeLayoutProvider
+    spec: providers/tree-layout.concept
+    optional: true
+  - name: CircularLayoutProvider
+    spec: providers/circular-layout.concept
+    optional: true
+  - name: GridLayoutProvider
+    spec: providers/grid-layout.concept
+    optional: true
+  - name: RadialLayoutProvider
+    spec: providers/radial-layout.concept
+    optional: true
+  - name: ConstraintLayoutProvider
+    spec: providers/constraint-layout.concept
+    optional: true
+
+  # Route providers
+  - name: OrthogonalRouteProvider
+    spec: providers/orthogonal-route.concept
+    optional: true
+  - name: BezierRouteProvider
+    spec: providers/bezier-route.concept
+    optional: true
+  - name: PolylineRouteProvider
+    spec: providers/polyline-route.concept
+    optional: true
+
+  # Export providers
+  - name: JsonExportProvider
+    spec: providers/json-export.concept
+    optional: true
+  - name: SvgExportProvider
+    spec: providers/svg-export.concept
+    optional: true
+  - name: PngExportProvider
+    spec: providers/png-export.concept
+    optional: true
+  - name: PdfExportProvider
+    spec: providers/pdf-export.concept
+    optional: true
+  - name: MermaidExportProvider
+    spec: providers/mermaid-export.concept
+    optional: true
+  - name: D2ExportProvider
+    spec: providers/d2-export.concept
+    optional: true
+  - name: DotExportProvider
+    spec: providers/dot-export.concept
+    optional: true
+  - name: BpmnXmlExportProvider
+    spec: providers/bpmn-xml-export.concept
+    optional: true
+  - name: DrawioXmlExportProvider
+    spec: providers/drawio-xml-export.concept
+    optional: true
+
+  # Notation providers
+  - name: FlowchartNotationProvider
+    spec: providers/flowchart-notation.concept
+    optional: true
+  - name: BpmnNotationProvider
+    spec: providers/bpmn-notation.concept
+    optional: true
+  - name: ConceptMapNotationProvider
+    spec: providers/concept-map-notation.concept
+    optional: true
+  - name: MindMapNotationProvider
+    spec: providers/mind-map-notation.concept
+    optional: true
+  - name: UmlClassNotationProvider
+    spec: providers/uml-class-notation.concept
+    optional: true
+  - name: StatechartNotationProvider
+    spec: providers/statechart-notation.concept
+    optional: true
+  - name: C4NotationProvider
+    spec: providers/c4-notation.concept
+    optional: true
+  - name: ErdNotationProvider
+    spec: providers/erd-notation.concept
+    optional: true
+  - name: CausalLoopNotationProvider
+    spec: providers/causal-loop-notation.concept
+    optional: true
+
+syncs:
+  # Canvas ↔ Linking syncs
+  - name: canvas-promote-creates-reference
+    file: syncs/canvas-promote-creates-reference.sync
+    tier: required
+  - name: canvas-demote-removes-reference
+    file: syncs/canvas-demote-removes-reference.sync
+    tier: required
+  - name: canvas-surface-queries-references
+    file: syncs/canvas-surface-queries-references.sync
+    tier: required
+  - name: canvas-remove-local-deletes-contentnode
+    file: syncs/canvas-remove-local-deletes-contentnode.sync
+    tier: required
+  - name: canvas-remove-referenced-deletes-reference
+    file: syncs/canvas-remove-referenced-deletes-reference.sync
+    tier: required
+
+  # Diagramming syncs
+  - name: connector-port-validation
+    file: syncs/connector-port-validation.sync
+    tier: required
+  - name: layout-applies-positions
+    file: syncs/layout-applies-positions.sync
+    tier: required
+  - name: layout-respects-constraints
+    file: syncs/layout-respects-constraints.sync
+    tier: required
+  - name: notation-validates-on-connect
+    file: syncs/notation-validates-on-connect.sync
+    tier: required
+  - name: export-dispatches-to-provider
+    file: syncs/export-dispatches-to-provider.sync
+    tier: required
+  - name: auto-surface-references-on-add
+    file: syncs/auto-surface-references-on-add.sync
+    tier: recommended
+  - name: notation-auto-apply-schema
+    file: syncs/notation-auto-apply-schema.sync
+    tier: recommended
+  - name: concept-map-requires-edge-labels
+    file: syncs/concept-map-requires-edge-labels.sync
+    tier: recommended
+  - name: canvas-index-items-for-search
+    file: syncs/canvas-index-items-for-search.sync
+    tier: recommended
+  - name: layout-provider-registers
+    file: syncs/layout-provider-registers.sync
+    tier: integration
+  - name: export-provider-registers
+    file: syncs/export-provider-registers.sync
+    tier: integration
+  - name: notation-provider-registers
+    file: syncs/notation-provider-registers.sync
+    tier: integration
+
+dependencies:
+  - name: content
+    concepts: [Canvas]
+  - name: foundation
+    concepts: [ContentNode, ContentStorage, Outline]
+  - name: linking
+    concepts: [Reference, Backlink, Relation]
+  - name: infrastructure
+    concepts: [PluginRegistry, Validator]
+  - name: presentation
+    concepts: [Renderer, DisplayMode]
+  - name: data-organization
+    concepts: [Graph]
+  - name: query-retrieval
+    concepts: [SearchIndex]
+  - name: classification
+    concepts: [Schema]

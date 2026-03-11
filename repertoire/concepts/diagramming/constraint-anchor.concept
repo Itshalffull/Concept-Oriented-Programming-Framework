@@ -1,0 +1,54 @@
+@version(1)
+concept ConstraintAnchor [A] {
+
+  purpose {
+    User-placed spatial constraints that layout algorithms must respect,
+    enabling hybrid manual+automatic layout preserving mental map.
+  }
+
+  state {
+    anchors: set A
+    canvas_id: A -> ID
+    anchor_type: A -> String   // pin | align_h | align_v | separate | group_bounds | flow_direction
+    target_items: A -> list ID
+    parameters: A -> {
+      x: option Float, y: option Float,
+      gap: option Float, axis: option String,
+      direction: option String
+    }
+  }
+
+  actions {
+    action pin(canvas_id: ID, item_id: ID, x: Float, y: Float) {
+      -> ok(anchor: A) { Pins item. Layout treats as immovable. }
+    }
+
+    action align(canvas_id: ID, item_ids: list ID, axis: String) {
+      -> ok(anchor: A) { Constrains items to share coordinate on axis. }
+      -> error(message: String) { Fewer than 2 items or invalid axis. }
+    }
+
+    action separate(canvas_id: ID, item_a: ID, item_b: ID, gap: Float) {
+      -> ok(anchor: A) { Maintains minimum gap. }
+    }
+
+    action setFlowDirection(canvas_id: ID, item_ids: list ID, direction: String) {
+      -> ok(anchor: A) { Constrains directional flow during layout. }
+    }
+
+    action removeAnchor(anchor: A) {
+      -> ok(anchor: A) { Removes constraint. }
+      -> notfound(message: String) { Not found. }
+    }
+
+    action getAnchorsForCanvas(canvas_id: ID) {
+      -> ok(anchors: list A) { All constraints for canvas. }
+    }
+  }
+
+  invariant {
+    after pin(canvas_id: c, item_id: i, x: 100.0, y: 200.0) -> ok(anchor: a)
+    then  getAnchorsForCanvas(canvas_id: c) -> ok(anchors: as)
+    and   as includes a
+  }
+}

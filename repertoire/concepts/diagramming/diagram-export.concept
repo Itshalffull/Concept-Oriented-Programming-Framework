@@ -1,0 +1,48 @@
+@version(1)
+concept DiagramExport [X] {
+
+  purpose {
+    Export canvas diagrams to multiple formats via pluggable providers,
+    with round-trip metadata embedding for re-import.
+  }
+
+  state {
+    exports: set X
+    canvas_id: X -> ID
+    format: X -> String
+    status: X -> String
+    output: X -> option Bytes
+    metadata: X -> option { width: Int, height: Int, embedded_data: Bool }
+  }
+
+  actions {
+    action export(canvas_id: ID, format: String, options: option {
+      width: option Int, height: option Int, background: option String,
+      embed_data: option Bool, selection_only: option Bool
+    }) {
+      -> ok(export: X, data: Bytes, mime_type: String) {
+        Renders to format. If embed_data, embeds full state for round-trip.
+      }
+      -> error(message: String) { Provider not found or render failed. }
+    }
+
+    action importDiagram(data: Bytes, format: String, target_canvas: option ID) {
+      -> ok(canvas_id: ID, items_created: Int, connectors_created: Int) {
+        Parses input, creates items/connectors on target canvas (or new).
+      }
+      -> error(message: String) { Format not recognized or data corrupt. }
+    }
+
+    action detectFormat(data: Bytes) {
+      -> ok(format: String, confidence: Float) { Identifies format. }
+      -> unknown(message: String) { Cannot determine. }
+    }
+  }
+
+  invariant {
+    after export(canvas_id: c, format: "json", options: { embed_data: true })
+           -> ok(export: x, data: d, mime_type: _)
+    then  importDiagram(data: d, format: "json", target_canvas: _)
+           -> ok(canvas_id: _, items_created: _, connectors_created: _)
+  }
+}

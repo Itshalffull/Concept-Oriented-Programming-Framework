@@ -19,6 +19,7 @@ export const destinations: Destination[] = [
   // Content group
   { name: 'dashboard', targetConcept: 'AppShell', targetView: 'dashboard', href: '/admin', icon: '◫', group: 'Content' },
   { name: 'content', targetConcept: 'ContentNode', targetView: 'list', href: '/admin/content', icon: '📄', group: 'Content' },
+  { name: 'canvas', targetConcept: 'Canvas', targetView: 'browser', href: '/admin/canvas', icon: '◇', group: 'Content' },
 
   // Structure group
   { name: 'schemas', targetConcept: 'Schema', targetView: 'list', href: '/admin/schemas', icon: '⬡', group: 'Structure' },

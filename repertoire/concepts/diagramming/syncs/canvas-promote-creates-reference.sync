@@ -1,0 +1,13 @@
+sync CanvasPromoteCreatesReference [eager]
+when {
+  Canvas/promoteConnector: [ canvas: ?canvas; connector_id: ?conn ]
+    => [ ok; connector_id: ?conn; reference_id: ?ref ]
+}
+where {
+  Canvas: { ?conn connector_source: ?src }
+  Canvas: { ?conn connector_target: ?tgt }
+  Canvas: { ?conn connector_label: ?label }
+}
+then {
+  Reference/addRef: [ source: ?src; target: ?tgt; label: ?label ]
+}

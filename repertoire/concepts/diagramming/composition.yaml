@@ -1,0 +1,7 @@
+# Schema composition rules for diagramming concepts.
+
+compositions:
+  - when_schema: Canvas
+    apply_mixin: HasTags
+  - when_schema: Shape
+    apply_mixin: Commentable

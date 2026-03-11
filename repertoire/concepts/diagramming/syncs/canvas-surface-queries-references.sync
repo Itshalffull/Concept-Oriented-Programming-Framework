@@ -1,0 +1,8 @@
+sync CanvasSurfaceQueriesReferences [eager]
+when {
+  Canvas/surfaceExistingReferences: [ canvas: ?canvas ]
+    => [ ok; surfaced: ?refs ]
+}
+then {
+  Reference/getRefs: [ scope: ?canvas ]
+}

@@ -1,0 +1,11 @@
+# Default taxonomy vocabularies for clef-base.
+
+concept: Taxonomy
+action: createVocabulary
+entries:
+  - vocab: concept-suites
+    name: Concept Suites
+  - vocab: schema-categories
+    name: Schema Categories
+  - vocab: content-types
+    name: Content Types

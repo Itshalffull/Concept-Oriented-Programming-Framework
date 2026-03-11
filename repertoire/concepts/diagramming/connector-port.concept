@@ -1,0 +1,72 @@
+@version(1)
+concept ConnectorPort [P] {
+
+  purpose {
+    Typed connection points on canvas items that control where and how
+    connectors attach, with direction and data-type validation.
+  }
+
+  state {
+    ports: set P
+    owner: P -> ID
+    position: P -> { side: String, offset: Float }
+    direction: P -> String            // in | out | bidirectional
+    port_type: P -> option String
+    label: P -> option String
+    max_connections: P -> option Int
+    connection_count: P -> Int
+  }
+
+  actions {
+    action addPort(owner: ID, side: String, offset: Float,
+                   direction: String, port_type: option String,
+                   label: option String, max_connections: option Int) {
+      -> ok(port: P) {
+        Creates port. connection_count = 0. side: top|right|bottom|left|center.
+        offset: 0.0-1.0 along the side.
+      }
+      -> error(message: String) { Invalid parameters. }
+    }
+
+    action removePort(port: P) {
+      -> ok(port: P) { Removes port. Attached connectors become floating. }
+      -> notfound(message: String) { Port not found. }
+    }
+
+    action movePort(port: P, side: String, offset: Float) {
+      -> ok(port: P, side: String, offset: Float) { Repositions port. }
+      -> notfound(message: String) { Port not found. }
+    }
+
+    action validateConnection(source_port: P, target_port: P) {
+      -> ok(source_port: P, target_port: P) {
+        Valid: source direction allows outgoing, target allows incoming,
+        types compatible (both null or matching), neither exceeds max.
+      }
+      -> incompatible(source_port: P, target_port: P, reason: String) {
+        Invalid: direction mismatch, type mismatch, or capacity exceeded.
+      }
+    }
+
+    action incrementConnection(port: P) {
+      -> ok(port: P, count: Int) { Increments count. }
+      -> exceeded(port: P, max: Int) { At max_connections. }
+    }
+
+    action decrementConnection(port: P) {
+      -> ok(port: P, count: Int) { Decrements count. Min 0. }
+    }
+
+    action getPortsForOwner(owner: ID) {
+      -> ok(ports: list P) { All ports on the ContentNode. }
+    }
+  }
+
+  invariant {
+    after addPort(owner: o, side: "right", offset: 0.5, direction: "out",
+                  port_type: "data", label: "Output", max_connections: 1)
+           -> ok(port: p)
+    then  validateConnection(source_port: p, target_port: p)
+           -> incompatible(source_port: p, target_port: p, reason: _)
+  }
+}
