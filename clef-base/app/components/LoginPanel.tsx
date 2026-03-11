@@ -14,7 +14,7 @@ export function LoginPanel({ defaultUser }: { defaultUser: string }) {
 
   useEffect(() => {
     if (state.message) {
-      router.refresh();
+      router.push('/admin');
     }
   }, [router, state.message]);
 
