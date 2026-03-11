@@ -210,7 +210,6 @@ export function getContentPermissionAction(action: string) {
     update: 'edit',
     delete: 'delete',
     setMetadata: 'edit-metadata',
-    changeType: 'change-type',
   };
   return nodeActionMap[action];
 }

@@ -1,4 +1,8 @@
 // Schema Concept Implementation
+// Per spec §2.1, §2.4: Schema is a composable mixin applied to ContentNodes.
+// A ContentNode's identity is the set of Schemas currently applied to it.
+// Schema manages: definitions (fields, constraints, inheritance) and
+// entity↔schema membership (applyTo, removeFrom, getSchemasFor).
 import type { ConceptHandler } from '@clef/runtime';
 
 export const schemaHandler: ConceptHandler = {
@@ -7,9 +11,19 @@ export const schemaHandler: ConceptHandler = {
     return { variant: 'ok', items: JSON.stringify(items) };
   },
 
+  async get(input, storage) {
+    const schema = input.schema as string;
+    const existing = await storage.get('schema', schema);
+    if (!existing) return { variant: 'notfound', message: 'Schema does not exist' };
+    return { variant: 'ok', ...existing };
+  },
+
   async defineSchema(input, storage) {
     const schema = input.schema as string;
     const fields = input.fields as string;
+    const label = (input.label as string | undefined) ?? schema;
+    const category = (input.category as string | undefined) ?? '';
+    const icon = (input.icon as string | undefined) ?? '';
 
     const existing = await storage.get('schema', schema);
     if (existing) {
@@ -18,9 +32,11 @@ export const schemaHandler: ConceptHandler = {
 
     await storage.put('schema', schema, {
       schema,
+      label,
+      category,
+      icon,
       fields: JSON.stringify(fields.split(',')),
       extends: '',
-      associations: JSON.stringify([]),
       createdAt: new Date().toISOString(),
     });
 
@@ -72,65 +88,77 @@ export const schemaHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 
+  // Apply a schema to a ContentNode — the core membership operation.
+  // Stored as membership records keyed by "entity_id::schema_name".
   async applyTo(input, storage) {
-    const entity = input.entity as string;
+    const entity_id = input.entity_id as string;
     const schema = input.schema as string;
 
+    // Verify schema exists
     const existing = await storage.get('schema', schema);
     if (!existing) {
       return { variant: 'notfound', message: 'Schema does not exist' };
     }
 
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    if (!associations.includes(entity)) {
-      associations.push(entity);
+    const membershipKey = `${entity_id}::${schema}`;
+    const alreadyApplied = await storage.get('membership', membershipKey);
+    if (alreadyApplied) {
+      return { variant: 'ok', message: 'Already applied' };
     }
 
-    await storage.put('schema', schema, {
-      ...existing,
-      associations: JSON.stringify(associations),
+    await storage.put('membership', membershipKey, {
+      entity_id,
+      schema,
+      appliedAt: new Date().toISOString(),
     });
 
     return { variant: 'ok' };
   },
 
+  // Remove a schema from a ContentNode.
   async removeFrom(input, storage) {
-    const entity = input.entity as string;
+    const entity_id = input.entity_id as string;
     const schema = input.schema as string;
 
-    const existing = await storage.get('schema', schema);
+    const membershipKey = `${entity_id}::${schema}`;
+    const existing = await storage.get('membership', membershipKey);
     if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
+      return { variant: 'notfound', message: 'Entity does not have this schema applied' };
     }
 
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    if (!associations.includes(entity)) {
-      return { variant: 'notfound', message: 'Entity is not associated with this schema' };
-    }
-
-    const updated = associations.filter(a => a !== entity);
-
-    await storage.put('schema', schema, {
-      ...existing,
-      associations: JSON.stringify(updated),
-    });
+    await storage.del('membership', membershipKey);
 
     return { variant: 'ok' };
   },
 
-  async getAssociations(input, storage) {
+  // Get all schemas applied to a given ContentNode.
+  async getSchemasFor(input, storage) {
+    const entity_id = input.entity_id as string;
+    const allMemberships = await storage.find('membership', {});
+    const memberships = Array.isArray(allMemberships) ? allMemberships : [];
+    const schemas = memberships
+      .filter((m: Record<string, unknown>) => m.entity_id === entity_id)
+      .map((m: Record<string, unknown>) => m.schema as string);
+
+    return { variant: 'ok', schemas: JSON.stringify(schemas) };
+  },
+
+  // Get all entity IDs that have a given schema applied.
+  async getEntitiesFor(input, storage) {
     const schema = input.schema as string;
+    const allMemberships = await storage.find('membership', {});
+    const memberships = Array.isArray(allMemberships) ? allMemberships : [];
+    const entities = memberships
+      .filter((m: Record<string, unknown>) => m.schema === schema)
+      .map((m: Record<string, unknown>) => m.entity_id as string);
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
+    return { variant: 'ok', entities: JSON.stringify(entities) };
+  },
 
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    return { variant: 'ok', associations: JSON.stringify(associations) };
+  // List all membership records (for debugging / admin views).
+  async listMemberships(_input, storage) {
+    const items = await storage.find('membership', {});
+    return { variant: 'ok', items: JSON.stringify(items) };
   },
 
   async export(input, storage) {
@@ -154,11 +182,18 @@ export const schemaHandler: ConceptHandler = {
       }
     }
 
+    // Collect entities with this schema
+    const allMemberships = await storage.find('membership', {});
+    const memberships = Array.isArray(allMemberships) ? allMemberships : [];
+    const entities = memberships
+      .filter((m: Record<string, unknown>) => m.schema === schema)
+      .map((m: Record<string, unknown>) => m.entity_id as string);
+
     const data = {
       schema,
       fields: allFields,
       extends: parentSchema || null,
-      associations: JSON.parse(existing.associations as string),
+      entities,
     };
 
     return { variant: 'ok', data: JSON.stringify(data) };

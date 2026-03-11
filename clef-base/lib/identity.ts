@@ -219,7 +219,6 @@ function defaultRolesForNodeAction(action: string) {
       return ['admin', 'editor', 'viewer'];
     case 'edit':
     case 'delete':
-    case 'change-type':
     case 'edit-metadata':
       return ['admin', 'editor'];
     default:
