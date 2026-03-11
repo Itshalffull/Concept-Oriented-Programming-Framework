@@ -1,7 +1,0 @@
-{
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/admin/access/schemas/route": "app/api/admin/access/schemas/route.js",
-  "/api/admin/access/users/create/route": "app/api/admin/access/users/create/route.js",
-  "/api/admin/access/roles/create/route": "app/api/admin/access/roles/create/route.js",
-  "/api/invoke/[concept]/[action]/route": "app/api/invoke/[concept]/[action]/route.js"
-}
