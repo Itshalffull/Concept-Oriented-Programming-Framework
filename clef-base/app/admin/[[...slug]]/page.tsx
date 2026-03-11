@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { HostedPage } from '../../components/HostedPage';
 import { LayoutRenderer } from '../../components/LayoutRenderer';
 import { ViewRenderer } from '../../components/ViewRenderer';
+import { ViewEditor } from '../../components/ViewEditor';
 import { ConceptBrowserView } from '../../views/ConceptBrowserView';
 import { EntityDetailView } from '../../views/EntityDetailView';
 import { MultiverseView } from '../../views/MultiverseView';
@@ -84,6 +85,14 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="display-modes-list" />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'view-builder' && slug[1]) {
+    return (
+      <HostedPage>
+        <ViewEditor viewId={decodeURIComponent(slug.slice(1).join('/'))} />
       </HostedPage>
     );
   }

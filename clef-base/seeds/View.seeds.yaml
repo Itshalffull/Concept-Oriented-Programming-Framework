@@ -58,7 +58,7 @@ entries:
     dataSource: '{"concept":"View","action":"list"}'
     layout: table
     visibleFields: '[{"key":"view","label":"View ID"},{"key":"title","label":"Title"},{"key":"layout","label":"Display Type","formatter":"badge"},{"key":"dataSource","label":"Data Source"}]'
-    controls: '{"create":{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]}}'
+    controls: '{"create":{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]},"rowClick":{"navigateTo":"/view-builder/{view}"}}'
     title: Views
     description: Saved queries with display configuration.
   - view: mappings-list
