@@ -1,0 +1,54 @@
+{
+  "name": "editorial",
+  "colorSpace": { "algorithm": "oklch", "gamut": "srgb", "seed": { "primary": "18" } },
+  "colorScheme": {
+    "activeMode": "light",
+    "modes": {
+      "light": {
+        "primary": "#8f3f2f",
+        "onPrimary": "#fffaf6",
+        "surface": "#fff9f1",
+        "background": "#f8f1e7",
+        "foreground": "#2b1d16"
+      },
+      "dark": {
+        "primary": "#f2a37b",
+        "onPrimary": "#2b1d16",
+        "surface": "#221914",
+        "background": "#18110d",
+        "foreground": "#f6ede5"
+      }
+    }
+  },
+  "density": { "mode": "comfortable", "multiplier": 1, "exempt": ["dialog", "datepicker"] },
+  "scope": { "global": { "depth": 0 }, "content": { "depth": 1 } },
+  "typeScale": { "baseSize": 17, "ratio": 1.2, "steps": { "body": "17px", "heading": "24.5px" } },
+  "fontMetrics": { "family": "Fraunces, Georgia, serif", "features": { "body": ["liga", "onum"], "data": ["tnum"] } },
+  "shape": { "family": "rounded", "radius": "0.75rem" },
+  "iconography": { "variant": "outlined", "gradeCompensation": -25 },
+  "material": {
+    "kind": "paper",
+    "shadows": {
+      "1": "0 1px 2px rgba(43, 29, 22, 0.08)",
+      "2": "0 12px 24px rgba(43, 29, 22, 0.12)"
+    },
+    "backdrop": "none"
+  },
+  "styleProfile": {
+    "name": "Editorial",
+    "prompt": "Warm editorial composition with serif typography and paper-like surfaces."
+  },
+  "springPhysics": { "presets": { "snappy": { "tension": 280, "friction": 22 }, "gentle": { "tension": 160, "friction": 18 } } },
+  "motionChoreography": { "sequences": { "listEnter": { "stagger": 24, "order": "forward" } } },
+  "structuralMotif": {
+    "default": "sidebar",
+    "intents": { "navigation": "sidebar", "primaryAction": "inline-toolbar", "utilityBar": "topbar" }
+  },
+  "imageFilter": { "presets": { "editorial": { "duotone": ["#2b1d16", "#d7c2b1"] } } },
+  "preference": { "priority": ["accessibility", "user", "system", "brand"] },
+  "constraint": { "contrast": 4.5, "focusRing": "2px solid #8f3f2f", "touchTarget": 44 },
+  "tokens": {
+    "radius.md": "0.75rem",
+    "color.secondary": "#355c7d"
+  }
+}

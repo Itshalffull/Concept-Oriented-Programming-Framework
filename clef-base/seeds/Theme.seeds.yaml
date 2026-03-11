@@ -12,3 +12,9 @@ entries:
   - theme: high-contrast
     name: High Contrast
     overrides: '{"mode":"high-contrast"}'
+  - theme: editorial
+    name: Editorial
+    overrides: '{"mode":"light","sourceType":"expressive-theme","density":"comfortable","motif":"sidebar","styleProfile":"editorial"}'
+  - theme: signal
+    name: Signal
+    overrides: '{"mode":"dark","sourceType":"expressive-theme","density":"compact","motif":"topbar","styleProfile":"signal"}'

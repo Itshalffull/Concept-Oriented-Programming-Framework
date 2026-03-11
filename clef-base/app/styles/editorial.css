@@ -1,9 +1,9 @@
-:root, [data-theme="light"] {
-  --palette-primary: oklch(0.55 0.24 265);
+[data-theme="editorial"] {
+  --palette-primary: #8f3f2f;
   --palette-primary-hover: oklch(0.50 0.24 265);
   --palette-primary-active: oklch(0.45 0.24 265);
   --palette-primary-container: oklch(0.92 0.06 265);
-  --palette-on-primary: oklch(1.0 0 0);
+  --palette-on-primary: #fffaf6;
   --palette-on-primary-container: oklch(0.25 0.10 265);
   --palette-secondary: oklch(0.55 0.12 290);
   --palette-secondary-hover: oklch(0.50 0.12 290);
@@ -17,14 +17,14 @@
   --palette-tertiary-container: oklch(0.93 0.04 180);
   --palette-on-tertiary: oklch(1.0 0 0);
   --palette-on-tertiary-container: oklch(0.25 0.06 180);
-  --palette-background: oklch(0.995 0.002 250);
-  --palette-on-background: oklch(0.20 0.015 260);
-  --palette-surface: oklch(0.99 0.002 250);
+  --palette-background: #f8f1e7;
+  --palette-on-background: #2b1d16;
+  --palette-surface: #fff9f1;
   --palette-surface-dim: oklch(0.94 0.004 250);
   --palette-surface-bright: oklch(0.995 0.002 250);
-  --palette-surface-variant: oklch(0.96 0.004 250);
-  --palette-on-surface: oklch(0.20 0.015 260);
-  --palette-on-surface-variant: oklch(0.45 0.01 260);
+  --palette-surface-variant: #fff9f1;
+  --palette-on-surface: #2b1d16;
+  --palette-on-surface-variant: #2b1d16;
   --palette-inverse-surface: oklch(0.24 0.015 260);
   --palette-inverse-on-surface: oklch(0.94 0.004 260);
   --palette-inverse-primary: oklch(0.78 0.14 265);
@@ -60,7 +60,7 @@
   --palette-drag-state-layer: oklch(0.20 0.015 260 / 0.16);
   --palette-disabled-content: oklch(0.20 0.015 260 / 0.38);
   --palette-disabled-container: oklch(0.20 0.015 260 / 0.12);
-  --typography-font-family-sans: Inter , system-ui , apple-system , sans-serif;
+  --typography-font-family-sans: Fraunces, Georgia, serif;
   --typography-font-family-mono: JetBrains Mono , ui-monospace , monospace;
   --typography-font-family-serif: Lora , Georgia , Times New Roman , serif;
   --typography-display-lg-size: 3.5rem ,;
@@ -202,16 +202,22 @@
   --elevation-elevation-toast: level-5;
   --radius-none: 0;
   --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-md: 0.75rem;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
-  --radius-radius-button: md;
-  --radius-radius-input: md;
+  --radius-radius-button: 0.75rem;
+  --radius-radius-input: 0.75rem;
   --radius-radius-card: lg;
   --radius-radius-dialog: xl;
   --radius-radius-chip: full;
   --radius-radius-avatar: full;
   --radius-radius-badge: full;
+  --typography-body-md-size: 17px;
+  --typography-body-sm-size: 17px;
+  --typography-heading-md-size: 24.5px;
+  --typography-heading-sm-size: 24.5px;
+  --theme-density: comfortable;
+  --theme-motif: sidebar;
 }

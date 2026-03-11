@@ -4,9 +4,7 @@
  * All visual properties reference CSS custom properties from the theme.
  */
 
-@import './light.css';
-@import './dark.css';
-@import './high-contrast.css';
+@import './themes.generated.css';
 
 /* ─── Reset ─── */
 *, *::before, *::after {
