@@ -9,5 +9,6 @@ export async function GET() {
     service: 'clef-base',
     concepts,
     conceptCount: concepts.length,
+    auth: 'repertoire-identity',
   });
 }

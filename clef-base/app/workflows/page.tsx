@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ViewRenderer } from '../components/ViewRenderer';
+import { redirect } from 'next/navigation';
 
 export default function WorkflowsPage() {
-  return (
-    <HostedPage>
-      <ViewRenderer viewId="workflows-list" />
-    </HostedPage>
-  );
+  redirect('/admin/workflows');
 }

@@ -81,18 +81,18 @@ concepts:
     rest:
       path: /authz
       actions:
-        grantRole:
+        grantPermission:
           method: POST
-          path: /authz/roles
-        revokeRole:
+          path: /authz/permissions
+        revokePermission:
           method: DELETE
+          path: /authz/permissions
+        assignRole:
+          method: POST
           path: /authz/roles
         checkPermission:
           method: POST
           path: /authz/check
-        listRoles:
-          method: GET
-          path: /authz/roles/:user
 
   AccessControl:
     rest:

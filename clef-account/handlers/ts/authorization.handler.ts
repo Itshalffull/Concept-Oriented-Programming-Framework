@@ -1,66 +1,39 @@
 import type { ConceptHandler, ConceptStorage } from '../../runtime/types';
+import { authorizationHandler as repertoireAuthorizationHandler } from '../../../handlers/ts/app/authorization.handler';
 
-const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ['read', 'write', 'delete', 'manage', 'publish'],
-  user: ['read', 'write', 'publish'],
-  viewer: ['read'],
-};
+function parseJsonArray(value: unknown): string[] {
+  if (typeof value !== 'string' || value.trim() === '') return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map((entry) => String(entry)) : [];
+  } catch {
+    return [];
+  }
+}
 
 export const authorizationHandler: ConceptHandler = {
+  ...repertoireAuthorizationHandler,
+
   async grantRole(input: Record<string, unknown>, storage: ConceptStorage) {
-    const user = input.user as string;
-    const role = input.role as string;
-
-    const existing = await storage.get('userRole', `${user}:${role}`);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    await storage.put('userRole', `${user}:${role}`, { user, role });
-
-    // Ensure role permissions are registered
-    if (DEFAULT_ROLE_PERMISSIONS[role]) {
-      for (const perm of DEFAULT_ROLE_PERMISSIONS[role]) {
-        await storage.put('rolePermission', `${role}:${perm}`, { role, permission: perm });
-      }
-    }
-
-    return { variant: 'ok' };
+    return repertoireAuthorizationHandler.assignRole(input, storage);
   },
 
   async revokeRole(input: Record<string, unknown>, storage: ConceptStorage) {
     const user = input.user as string;
     const role = input.role as string;
-
-    const existing = await storage.get('userRole', `${user}:${role}`);
-    if (!existing) {
+    const record = await storage.get('userRole', user);
+    if (!record) {
       return { variant: 'notfound' };
     }
 
-    await storage.del('userRole', `${user}:${role}`);
+    const roles = parseJsonArray(record.roles).filter((entry) => entry !== role);
+    await storage.put('userRole', user, { user, roles: JSON.stringify(roles) });
     return { variant: 'ok' };
-  },
-
-  async checkPermission(input: Record<string, unknown>, storage: ConceptStorage) {
-    const user = input.user as string;
-    const permission = input.permission as string;
-
-    const userRoles = await storage.find('userRole', { user });
-    for (const ur of userRoles) {
-      const role = ur.role as string;
-      const rolePerm = await storage.get('rolePermission', `${role}:${permission}`);
-      if (rolePerm) {
-        return { variant: 'allowed' };
-      }
-    }
-
-    return { variant: 'denied' };
   },
 
   async listRoles(input: Record<string, unknown>, storage: ConceptStorage) {
     const user = input.user as string;
-    const userRoles = await storage.find('userRole', { user });
-    const roles = userRoles.map((ur) => ur.role as string);
-    return { variant: 'ok', roles: JSON.stringify(roles) };
+    const record = await storage.get('userRole', user);
+    return { variant: 'ok', roles: JSON.stringify(record ? parseJsonArray(record.roles) : []) };
   },
 };

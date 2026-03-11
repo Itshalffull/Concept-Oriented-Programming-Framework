@@ -9,5 +9,5 @@ when {
     => [ user: ?user ]
 }
 then {
-  Authorization/grantRole: [ user: ?user; role: "admin" ]
+  Authorization/assignRole: [ user: ?user; role: "admin" ]
 }

@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { LayoutRenderer } from '../components/LayoutRenderer';
+import { redirect } from 'next/navigation';
 
 export default function ScorePage() {
-  return (
-    <HostedPage>
-      <LayoutRenderer layoutId="score" />
-    </HostedPage>
-  );
+  redirect('/admin/score');
 }

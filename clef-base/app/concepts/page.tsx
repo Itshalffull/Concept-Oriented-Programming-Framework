@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ConceptBrowserView } from '../views/ConceptBrowserView';
+import { redirect } from 'next/navigation';
 
 export default function ConceptsPage() {
-  return (
-    <HostedPage>
-      <ConceptBrowserView />
-    </HostedPage>
-  );
+  redirect('/admin/concepts');
 }

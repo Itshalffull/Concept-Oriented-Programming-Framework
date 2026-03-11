@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ViewRenderer } from '../components/ViewRenderer';
+import { redirect } from 'next/navigation';
 
 export default function DisplayModesPage() {
-  return (
-    <HostedPage>
-      <ViewRenderer viewId="display-modes-list" />
-    </HostedPage>
-  );
+  redirect('/admin/display-modes');
 }

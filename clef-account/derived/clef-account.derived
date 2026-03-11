@@ -35,8 +35,8 @@ derived ClefAccount [U] {
       matches: Authentication/authenticate
     }
 
-    action grantRole(user: U, role: String) {
-      matches: Authorization/grantRole
+    action assignRole(user: U, role: String) {
+      matches: Authorization/assignRole
     }
 
     action checkAccess(resource: String, action: String, context: String) {
