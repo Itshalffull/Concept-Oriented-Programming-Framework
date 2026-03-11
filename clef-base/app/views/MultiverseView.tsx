@@ -1,7 +1,13 @@
 'use client';
 
+/**
+ * MultiverseView — Version space manager.
+ * Per spec §2.1: Version spaces and overrides are ContentNodes with
+ * Schema "VersionSpace" and Schema "VersionOverride" applied.
+ */
+
 import React, { useMemo, useState } from 'react';
-import { useConceptQuery } from '../../lib/use-concept-query';
+import { useContentNodes } from '../../lib/use-content-nodes';
 import { useKernelInvoke } from '../../lib/clef-provider';
 import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
@@ -43,17 +49,18 @@ export const MultiverseView: React.FC = () => {
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // Filter by Schema membership instead of type field
   const { data: spacesData, loading: spacesLoading, refetch: refetchSpaces } =
-    useConceptQuery<Record<string, unknown>[]>('ContentNode', 'list', { type: 'version-space' });
+    useContentNodes('VersionSpace');
   const { data: overridesData, loading: overridesLoading, refetch: refetchOverrides } =
-    useConceptQuery<Record<string, unknown>[]>('ContentNode', 'list', { type: 'version-override' });
+    useContentNodes('VersionOverride');
 
   const spaces = useMemo(
-    () => (spacesData ?? []) as VersionSpaceRecord[],
+    () => (spacesData ?? []) as unknown as VersionSpaceRecord[],
     [spacesData],
   );
   const overrides = useMemo(
-    () => (overridesData ?? []) as OverrideRecord[],
+    () => (overridesData ?? []) as unknown as OverrideRecord[],
     [overridesData],
   );
 
@@ -96,9 +103,13 @@ export const MultiverseView: React.FC = () => {
     }
   };
 
+  const handleCreated = () => {
+    refetchSpaces();
+    refetchOverrides();
+  };
+
   const createFields = useMemo(() => [
     { name: 'node', label: 'Space ID', required: true, placeholder: 'version-space:editorial-pass' },
-    { name: 'type', label: 'Type', required: true, placeholder: 'version-space' },
     { name: 'content', label: 'Space Payload (JSON)', type: 'textarea' as const, required: true, placeholder: '{"name":"Editorial Pass","status":"active","owner":"alice","overrideCount":0,"lastActivity":"2026-03-10T12:00:00.000Z","visibility":"shared","description":"Reviewing site copy"}' },
     { name: 'createdBy', label: 'Owner', required: true, placeholder: 'alice' },
   ], []);
@@ -113,7 +124,7 @@ export const MultiverseView: React.FC = () => {
       </div>
 
       <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
-        The multiverse manager is a composed surface over `ContentNode` version-space records and their override entities.
+        The multiverse manager shows ContentNodes with Schema &quot;VersionSpace&quot; and their override entities.
         Select a space to inspect its deltas, then run merge, rebase, promote, or archive actions.
       </p>
 
@@ -227,10 +238,7 @@ export const MultiverseView: React.FC = () => {
       <CreateForm
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={() => {
-          refetchSpaces();
-          refetchOverrides();
-        }}
+        onCreated={handleCreated}
         concept="ContentNode"
         action="create"
         title="Create Version Space"

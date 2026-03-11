@@ -36,24 +36,29 @@ interface GraphDisplayProps {
   onRowClick?: (row: Record<string, unknown>) => void;
 }
 
-// Assign a color per type
-const TYPE_COLORS: Record<string, string> = {
-  concept: '#6366f1',     // indigo
-  schema: '#10b981',      // emerald
-  sync: '#f59e0b',        // amber
-  suite: '#ec4899',       // pink
-  workflow: '#8b5cf6',    // violet
-  theme: '#06b6d4',       // cyan
-  view: '#3b82f6',        // blue
-  'display-mode': '#14b8a6', // teal
-  'automation-rule': '#f97316', // orange
-  taxonomy: '#84cc16',    // lime
-  'version-space': '#a855f7', // purple
-  default: '#64748b',     // slate
+// Assign a color per schema (uses primary schema for coloring)
+const SCHEMA_COLORS: Record<string, string> = {
+  Concept: '#6366f1',        // indigo
+  Schema: '#10b981',         // emerald
+  Sync: '#f59e0b',           // amber
+  Suite: '#ec4899',          // pink
+  Workflow: '#8b5cf6',       // violet
+  Theme: '#06b6d4',          // cyan
+  View: '#3b82f6',           // blue
+  Widget: '#14b8a6',         // teal
+  DisplayMode: '#0ea5e9',    // sky
+  AutomationRule: '#f97316', // orange
+  Taxonomy: '#84cc16',       // lime
+  VersionSpace: '#a855f7',   // purple
+  VersionOverride: '#d946ef',// fuchsia
+  Article: '#22c55e',        // green
+  Page: '#22c55e',           // green
+  Media: '#eab308',          // yellow
+  default: '#64748b',        // slate
 };
 
-function getTypeColor(type: string): string {
-  return TYPE_COLORS[type] ?? TYPE_COLORS.default;
+function getSchemaColor(schema: string): string {
+  return SCHEMA_COLORS[schema] ?? SCHEMA_COLORS.default;
 }
 
 /** Extract edges from data — nodes that reference each other by name/id */
@@ -195,12 +200,12 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
   const [dimensions, setDimensions] = useState({ width: 900, height: 500 });
 
   const labelField = fields[0]?.key ?? Object.keys(data[0] ?? {})[0] ?? 'id';
-  const typeField = fields[1]?.key ?? 'type';
 
-  // Build graph
+  // Build graph — use primary schema (first in array) for coloring
   const rawNodes: NodePosition[] = data.map((item) => {
     const label = String(item[labelField] ?? '');
-    const type = String(item[typeField] ?? 'default');
+    const schemas = Array.isArray(item.schemas) ? item.schemas : [];
+    const type = schemas[0] ? String(schemas[0]) : 'default';
     return { x: 0, y: 0, vx: 0, vy: 0, label, type, data: item };
   });
 
@@ -285,7 +290,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
           const isHovered = hoveredNode === idx;
           const isConnected = connectedNodes.has(idx);
           const dimmed = hoveredNode !== null && !isConnected;
-          const color = getTypeColor(node.type);
+          const color = getSchemaColor(node.type);
           const nodeRadius = isHovered ? 8 : 6;
 
           return (
@@ -344,7 +349,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: getTypeColor(type),
+              background: getSchemaColor(type),
             }} />
             {type}
           </div>

@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * DashboardView — Admin dashboard composed from views and blocks
- * Renders in the Shell's primary zone via Host lifecycle.
- * Uses stat-card, card, data-table widgets with theme CSS vars.
+ * DashboardView — Admin dashboard composed from views and blocks.
+ * Per spec §2.1: Stats are aggregated by Schema membership, not by type field.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -13,6 +12,7 @@ import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
 import { Badge } from '../components/widgets/Badge';
 import { useHost } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
+import { useSchemaStats } from '../../lib/use-content-nodes';
 
 interface KernelState {
   concepts: { uri: string; hasStorage: boolean }[];
@@ -26,7 +26,7 @@ export const DashboardView: React.FC = () => {
   const { host } = useHost();
 
   // Live counts from concept queries
-  const { data: contentNodes } = useConceptQuery<Record<string, unknown>[]>('ContentNode', 'list');
+  const { stats: schemaStats, totalNodes, loading: statsLoading } = useSchemaStats();
   const { data: schemas } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
   const { data: displayModes } = useConceptQuery<Record<string, unknown>[]>('DisplayMode', 'list');
   const { data: themes } = useConceptQuery<Record<string, unknown>[]>('Theme', 'list');
@@ -107,7 +107,7 @@ export const DashboardView: React.FC = () => {
         <Badge variant="success">{state?.health?.status ?? 'unknown'}</Badge>
       </div>
 
-      {/* Stat cards — live KPIs from concept queries */}
+      {/* Stat cards — live KPIs */}
       <div className="section">
         <div className="card-grid card-grid--stats">
           <StatCard
@@ -117,11 +117,11 @@ export const DashboardView: React.FC = () => {
           />
           <StatCard
             label="Content Nodes"
-            value={String(contentNodes?.length ?? 0)}
+            value={String(totalNodes)}
             description="Entities in the content pool"
           />
           <StatCard
-            label="Schemas"
+            label="Schema Definitions"
             value={String(schemas?.length ?? 0)}
             description="Composable data shapes defined"
           />
@@ -143,6 +143,23 @@ export const DashboardView: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Schema membership stats */}
+      {schemaStats && schemaStats.length > 0 && (
+        <div className="section">
+          <div className="section__header">
+            <h2 className="section__title">Entities by Schema</h2>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-lg)' }}>
+            {schemaStats.map(({ schema, count }) => (
+              <Card key={schema} variant="outlined" style={{ padding: 'var(--spacing-sm) var(--spacing-md)', minWidth: '120px' }}>
+                <div style={{ fontWeight: 600, fontSize: '20px' }}>{count}</div>
+                <div style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)' }}>{schema}</div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Registered concepts — data-table view */}
       <div className="section">

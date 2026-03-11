@@ -41,6 +41,17 @@ function formatValue(value: unknown, formatter?: string): React.ReactNode {
         return str;
       }
     }
+    case 'schema-badges': {
+      const schemas = Array.isArray(value) ? value : [];
+      if (schemas.length === 0) return <Badge variant="secondary">none</Badge>;
+      return (
+        <span style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+          {schemas.map((s: unknown) => (
+            <Badge key={String(s)} variant="info">{String(s)}</Badge>
+          ))}
+        </span>
+      );
+    }
     case 'code':
       return <code style={{ fontFamily: 'var(--typography-font-family-mono)', fontSize: 'var(--typography-code-sm-size)' }}>{str}</code>;
     case 'json':

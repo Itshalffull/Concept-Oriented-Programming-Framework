@@ -4,13 +4,18 @@
  * ViewRenderer — generic component that loads a View config entity from the
  * kernel and renders it using the appropriate display type component.
  *
+ * Per spec §2.1: ContentNode identity = set of applied Schemas.
+ * When a view's dataSource targets ContentNode, ViewRenderer enriches each
+ * node with its Schema memberships and supports schema-based filtering
+ * (both toggle-group filters on the `schemas` field and schemaFilter params).
+ *
  * Flow:
  * 1. invoke('View', 'get', { view: viewId }) → loads the View config
  * 2. Parse dataSource → { concept, action, params }
  * 3. invoke(concept, action, params) → fetches the data
- * 4. Parse filters → exposed filter controls rendered in header
- * 5. Render filtered data through the display type (table, card-grid, graph, etc.)
- * 6. Wire controls (create button, row click, etc.)
+ * 4. If ContentNode data, enrich with Schema memberships
+ * 5. Apply schemaFilter (from params) and toggle filters
+ * 6. Render filtered data through the display type (table, card-grid, graph, etc.)
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -98,6 +103,42 @@ function resolveTemplates(obj: Record<string, unknown>, context: Record<string, 
   return resolved;
 }
 
+// Schema color map for visual differentiation
+const SCHEMA_COLORS: Record<string, string> = {
+  Concept: '#6366f1', Schema: '#10b981', Sync: '#f59e0b', Suite: '#ec4899',
+  Workflow: '#8b5cf6', Theme: '#06b6d4', View: '#3b82f6', Widget: '#14b8a6',
+  AutomationRule: '#f97316', Taxonomy: '#84cc16', DisplayMode: '#0ea5e9',
+  VersionSpace: '#a855f7', VersionOverride: '#d946ef',
+  Article: '#22c55e', Page: '#22c55e', Media: '#eab308',
+  Comment: '#78716c', File: '#64748b',
+};
+
+/**
+ * Extract all unique schema values from data rows for filter UI.
+ * Since `schemas` is an array field, we flatten across all rows.
+ */
+function extractSchemaValues(data: Record<string, unknown>[]): string[] {
+  const schemaSet = new Set<string>();
+  for (const row of data) {
+    const schemas = row.schemas;
+    if (Array.isArray(schemas)) {
+      for (const s of schemas) schemaSet.add(String(s));
+    }
+  }
+  return [...schemaSet].sort();
+}
+
+/**
+ * Check if a row matches an active schema filter.
+ * A node with schemas ["Concept", "Commentable"] matches if ANY of its
+ * schemas are in the active set — this supports multi-schema entities.
+ */
+function rowMatchesSchemaFilter(row: Record<string, unknown>, activeSchemas: Set<string>): boolean {
+  const schemas = row.schemas;
+  if (!Array.isArray(schemas) || schemas.length === 0) return activeSchemas.size === 0;
+  return schemas.some((s: unknown) => activeSchemas.has(String(s)));
+}
+
 export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: titleOverride, context, children }) => {
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
@@ -125,13 +166,27 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     } catch { /* empty */ }
   }
 
+  // Extract schemaFilter from params before resolving (it's a UI-layer filter, not a concept action param)
+  const schemaFilter = dataSource?.params?.schemaFilter as string | undefined;
+  const cleanParams = useMemo(() => {
+    if (!dataSource?.params) return undefined;
+    const { schemaFilter: _sf, ...rest } = dataSource.params;
+    return Object.keys(rest).length > 0 ? rest : undefined;
+  }, [dataSource?.params]);
+
   // Resolve template variables in dataSource params using context
   const resolvedParams = useMemo(() => {
-    if (!dataSource?.params || !context) return dataSource?.params;
-    return resolveTemplates(dataSource.params, context);
-  }, [dataSource?.params, context]);
+    if (!cleanParams || !context) return cleanParams;
+    return resolveTemplates(cleanParams, context);
+  }, [cleanParams, context]);
 
-  // Step 2: Fetch data using the dataSource config
+  // Resolve schemaFilter templates too
+  const resolvedSchemaFilter = useMemo(() => {
+    if (!schemaFilter || !context) return schemaFilter;
+    return schemaFilter.replace(/\{\{(\w+)\}\}/g, (_, varName) => context[varName] ?? '');
+  }, [schemaFilter, context]);
+
+  // Step 2: Fetch primary data
   const { data: rawData, loading: dataLoading, error: dataError, refetch } =
     useConceptQuery<Record<string, unknown>[] | Record<string, unknown>>(
       dataSource?.concept ?? '__none__',
@@ -139,25 +194,73 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       resolvedParams,
     );
 
-  // Normalize: wrap single-object results into array for uniform handling
+  // Step 3: If this is ContentNode data, fetch Schema memberships for enrichment
+  const isContentNodeData = dataSource?.concept === 'ContentNode';
+  const { data: membershipsData } = useConceptQuery<Record<string, unknown>[]>(
+    isContentNodeData ? 'Schema' : '__none__',
+    isContentNodeData ? 'listMemberships' : '__none__',
+  );
+
+  // Normalize + enrich data
   const allData = useMemo(() => {
     if (!rawData) return [];
-    if (Array.isArray(rawData)) return rawData;
-    return [rawData];
-  }, [rawData]);
+    const items = Array.isArray(rawData) ? rawData : [rawData];
+
+    if (!isContentNodeData || !membershipsData) return items;
+
+    // Build entity_id → schemas[] lookup
+    const memberships = Array.isArray(membershipsData) ? membershipsData : [];
+    const schemasByEntity = new Map<string, string[]>();
+    for (const m of memberships) {
+      const entityId = m.entity_id as string;
+      const schema = m.schema as string;
+      if (!entityId || !schema) continue;
+      const existing = schemasByEntity.get(entityId) ?? [];
+      existing.push(schema);
+      schemasByEntity.set(entityId, existing);
+    }
+
+    // Enrich each node with its schemas
+    let enriched = items.map((item) => ({
+      ...item,
+      schemas: schemasByEntity.get(item.node as string) ?? [],
+    }));
+
+    // Apply schemaFilter if present
+    if (resolvedSchemaFilter) {
+      enriched = enriched.filter((n) =>
+        (n.schemas as string[]).includes(resolvedSchemaFilter),
+      );
+    }
+
+    return enriched;
+  }, [rawData, isContentNodeData, membershipsData, resolvedSchemaFilter]);
 
   // Initialize filter state from data + config once data arrives
   if (allData.length > 0 && filters.length > 0 && !filtersInitialized) {
     const initial: Record<string, Set<string>> = {};
     for (const filter of filters) {
-      const allValues = [...new Set(allData.map((row) => String(row[filter.field] ?? '')))];
-      if (filter.defaultOn) {
-        initial[filter.field] = new Set(filter.defaultOn);
-      } else if (filter.defaultOff) {
-        const offSet = new Set(filter.defaultOff);
-        initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+      // Special handling for schemas (array field)
+      if (filter.field === 'schemas') {
+        const allValues = extractSchemaValues(allData);
+        if (filter.defaultOn) {
+          initial[filter.field] = new Set(filter.defaultOn);
+        } else if (filter.defaultOff) {
+          const offSet = new Set(filter.defaultOff);
+          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+        } else {
+          initial[filter.field] = new Set(allValues);
+        }
       } else {
-        initial[filter.field] = new Set(allValues);
+        const allValues = [...new Set(allData.map((row) => String(row[filter.field] ?? '')))];
+        if (filter.defaultOn) {
+          initial[filter.field] = new Set(filter.defaultOn);
+        } else if (filter.defaultOff) {
+          const offSet = new Set(filter.defaultOff);
+          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+        } else {
+          initial[filter.field] = new Set(allValues);
+        }
       }
     }
     setActiveFilters(initial);
@@ -170,7 +273,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     return allData.filter((row) => {
       for (const filter of filters) {
         const active = activeFilters[filter.field];
-        if (active && !active.has(String(row[filter.field] ?? ''))) return false;
+        if (!active) continue;
+        if (filter.field === 'schemas') {
+          if (!rowMatchesSchemaFilter(row, active)) return false;
+        } else {
+          if (!active.has(String(row[filter.field] ?? ''))) return false;
+        }
       }
       return true;
     });
@@ -237,16 +345,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
   const renderFilters = () => {
     if (filters.length === 0 || allData.length === 0) return null;
 
-    // Color map for common types
-    const TYPE_COLORS: Record<string, string> = {
-      concept: '#6366f1', schema: '#10b981', sync: '#f59e0b', suite: '#ec4899',
-      workflow: '#8b5cf6', theme: '#06b6d4', view: '#3b82f6',
-      'display-mode': '#14b8a6', 'automation-rule': '#f97316', taxonomy: '#84cc16',
-      'version-space': '#a855f7',
-    };
-
     return filters.map((filter) => {
-      const allValues = [...new Set(allData.map((row) => String(row[filter.field] ?? '')))].sort();
+      // For schemas, extract unique values from array fields
+      const allValues = filter.field === 'schemas'
+        ? extractSchemaValues(allData)
+        : [...new Set(allData.map((row) => String(row[filter.field] ?? '')))].sort();
       const active = activeFilters[filter.field] ?? new Set(allValues);
 
       return (
@@ -270,8 +373,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
           </button>
           {allValues.map((value) => {
             const isOn = active.has(value);
-            const dotColor = TYPE_COLORS[value] ?? '#64748b';
-            const count = allData.filter((row) => String(row[filter.field] ?? '') === value).length;
+            const dotColor = SCHEMA_COLORS[value] ?? '#64748b';
+            // Count: for schemas, count nodes that have this schema
+            const count = filter.field === 'schemas'
+              ? allData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length
+              : allData.filter((row) => String(row[filter.field] ?? '') === value).length;
             return (
               <button
                 key={value}
@@ -344,8 +450,6 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
                     await invoke('ContentNode', 'update', { node, content: value });
                   } else if (field === 'metadata') {
                     await invoke('ContentNode', 'setMetadata', { node, metadata: value });
-                  } else if (field === 'type') {
-                    await invoke('ContentNode', 'changeType', { node, type: value });
                   }
                   refetch();
                 }
