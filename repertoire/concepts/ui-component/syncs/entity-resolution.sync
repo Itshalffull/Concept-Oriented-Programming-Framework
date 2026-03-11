@@ -1,0 +1,33 @@
+# ============================================================
+# EntityResolution — surface-component recommended sync
+#
+# Resolve entity interactor to domain widget before the
+# field-level pipeline runs. When an interactor is classified
+# with an entity-* type, resolve it through WidgetResolver
+# with concept, suite, and tag context for affordance matching.
+# ============================================================
+
+sync EntityResolution [eager]
+when {
+  Interactor/classify: [ interactor: ?element ]
+    => ok(interactorType: ?interactorType; confidence: ?confidence)
+}
+where {
+  ?interactorType starts-with "entity-"
+  Viewport/current: [] => ok(breakpoint: ?breakpoint)
+  Host/current: [] => ok(host: ?host)
+}
+then {
+  WidgetResolver/resolve: [
+    resolver: ?element;
+    element: ?element;
+    context: {
+      interactorType: ?interactorType;
+      concept: ?element.concept;
+      suite: ?element.suite;
+      tags: ?element.tags;
+      platform: ?host.platform;
+      viewport: ?breakpoint
+    }
+  ]
+}

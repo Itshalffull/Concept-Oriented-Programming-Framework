@@ -1,0 +1,100 @@
+@version(1)
+
+purpose {
+  Generic entity card for any concept in the governance suite.
+  Renders a compact summary with title, status, and key metadata.
+  Lower specificity than concept-specific widgets so it serves
+  as a fallback for governance concepts that lack dedicated widgets.
+}
+
+anatomy {
+  root:        container  { Card wrapper }
+  header:      container  { Title row }
+  title:       text       { Entity name or primary identifier }
+  statusBadge: container  { Status indicator badge }
+  metadata:    container  { Key-value metadata pairs }
+  timestamp:   text       { Creation or last-updated time }
+}
+
+states {
+  card {
+    initial: idle
+
+    idle {
+      on {
+        CLICK -> navigating
+        HOVER_IN -> hovered
+      }
+    }
+
+    hovered {
+      on {
+        HOVER_OUT -> idle
+        CLICK -> navigating
+      }
+    }
+
+    navigating {
+      entry { invoke: navigateToDetail }
+    }
+  }
+}
+
+accessibility {
+  role: "article"
+  label: concat("Governance item: ", $title)
+
+  keyboard {
+    Enter {
+      action: CLICK
+      description: "Navigate to detail view"
+    }
+  }
+}
+
+props {
+  showTimestamp: Boolean = true
+  compact: Boolean = false
+}
+
+requires {
+  fields {
+    title: String
+    status: String
+  }
+}
+
+connect {
+  title -> {
+    text: $title;
+  }
+  statusBadge -> {
+    data-status: $status;
+    aria-label: concat("Status: ", $status);
+  }
+  timestamp -> {
+    visible: $showTimestamp;
+  }
+}
+
+affordance {
+  serves: entity-card
+  specificity: 12
+  when {
+    suite: "governance"
+    tags: ["governance", "summary", "card"]
+  }
+}
+
+affordance {
+  serves: entity-detail
+  specificity: 12
+  when {
+    suite: "governance"
+    tags: ["governance", "summary", "detail"]
+  }
+}
+
+invariant {
+  always root has aria-label
+}

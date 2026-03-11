@@ -1,0 +1,29 @@
+# ============================================================
+# EntityWidgetCreatesSecondaryBindings — surface-component
+# recommended sync
+#
+# When an entity widget is resolved and its spec declares
+# secondary roles in the requires block, create additional
+# bindings for each secondary concept. This enables multi-
+# concept widgets (e.g., an approval widget that also pulls
+# data from the User concept for the approver field).
+# ============================================================
+
+sync EntityWidgetCreatesSecondaryBindings [eager]
+when {
+  WidgetResolver/resolve: [ resolver: ?resolver; element: ?element ]
+    => ok(widget: ?widgetName; score: ?_)
+}
+where {
+  ?element.kind == "entity"
+  Widget/get: [ widget: ?widgetName ] => ok(ast: ?ast)
+  ?ast.requires has secondaryRoles
+}
+then {
+  Binding/bind: [
+    binding: concat(?element.id, "/", role.name);
+    concept: role.source;
+    mode: "coupled";
+    filter: role.relation
+  ]
+}

@@ -1,0 +1,21 @@
+# ============================================================
+# SuiteCheckValidatesContracts — surface-component
+# recommended sync
+#
+# Run contract checks when a suite is loaded. Validates that
+# all entity-level affordances bundled with the suite resolve
+# cleanly against their target concepts. Reports errors via
+# ContractChecker diagnostics.
+# ============================================================
+
+sync SuiteCheckValidatesContracts [eager]
+when {
+  Suite/load: [ suite: ?s ] => ok(name: ?name)
+}
+where {
+  WidgetRegistry/query: [ concept: _; suite: ?name; interactor: _ ]
+    => ok(entries: ?entries)
+}
+then {
+  ContractChecker/checkSuite: [ checker: ?name; suite: ?name ]
+}

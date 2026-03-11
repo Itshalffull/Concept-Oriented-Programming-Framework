@@ -1,0 +1,22 @@
+# ============================================================
+# EntityResolutionBypassesFieldPipeline — surface-component
+# recommended sync
+#
+# When an entity widget is resolved, skip per-field resolution.
+# UISchema/markResolved prevents UISchema/getElements from
+# firing, which prevents the field-level classification
+# cascade. The entity widget handles all rendering internally.
+# ============================================================
+
+sync EntityResolutionBypassesFieldPipeline [eager]
+when {
+  WidgetResolver/resolve: [ resolver: ?resolver; element: ?element ]
+    => ok(widget: ?widget; score: ?score)
+}
+where {
+  ?element.kind == "entity"
+}
+then {
+  Host/trackResource: [ host: ?host; kind: "entity-widget"; ref: ?widget ]
+  UISchema/markResolved: [ schema: ?element.schema ]
+}

@@ -1,0 +1,26 @@
+# ============================================================
+# EntityClassification — surface-component recommended sync
+#
+# Classify entity element from UISchema inspection. When
+# UISchema emits an entity element (whole-concept rendering),
+# trigger Interactor/classify with entity-level parameters.
+# This is the concept-level counterpart of ElementsClassified.
+# ============================================================
+
+sync EntityClassification [eager]
+when {
+  UISchema/inspect: [ schema: ?schema ]
+    => ok(schema: ?schema)
+}
+where {
+  UISchema/getEntityElement: [ schema: ?schema ]
+    => ok(entityElement: ?entityElement)
+}
+then {
+  Interactor/classify: [
+    interactor: ?entityElement;
+    fieldType: "entity";
+    constraints: ?entityElement.constraints;
+    intent: ?entityElement.annotations.surface
+  ]
+}

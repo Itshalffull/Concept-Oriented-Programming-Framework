@@ -77,6 +77,7 @@ widget segmented-progress-bar {
     specificity: 18;
     when {
       concept: "VerificationRun";
+      tags: ["verification", "progress", "status"];
     }
     bind {
       segments: results;

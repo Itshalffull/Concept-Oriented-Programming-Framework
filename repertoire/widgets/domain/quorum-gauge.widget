@@ -79,6 +79,7 @@ widget quorum-gauge {
     specificity: 18;
     when {
       suite: "governance-decision";
+      tags: ["quorum", "decision", "metric"];
     }
   }
 

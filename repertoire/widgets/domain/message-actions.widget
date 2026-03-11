@@ -76,6 +76,7 @@ widget message-actions {
     specificity: 16;
     when {
       suite: "llm-conversation";
+      tags: ["message", "actions", "conversation"];
     }
   }
 

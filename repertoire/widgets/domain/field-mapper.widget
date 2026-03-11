@@ -186,6 +186,7 @@ widget field-mapper {
     specificity: 20;
     when {
       concept: "ConnectorCall";
+      tags: ["mapping", "integration", "editor"];
     }
     bind {
       source: input;

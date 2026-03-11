@@ -40,6 +40,16 @@ concepts:
     params:
       R: { as: resolver-ref, description: "Reference to a widget resolution context" }
 
+  ContractChecker:
+    spec: ./contract-checker.concept
+    params:
+      C: { as: contract-check-ref, description: "Reference to a contract compatibility check" }
+
+  WidgetRegistry:
+    spec: ./widget-registry.concept
+    params:
+      W: { as: widget-registry-ref, description: "Reference to an entity widget registry entry" }
+
 syncs:
   required:
     - path: ./syncs/destroy-machine-on-unbind.sync
@@ -86,6 +96,36 @@ syncs:
       description: >
         When a machine produces props via connect(), send to the
         active framework adapter for rendering.
+
+    - path: ./syncs/entity-classification.sync
+      name: EntityClassification
+      description: >
+        Classify schema-level entity elements into entity interactors.
+
+    - path: ./syncs/entity-resolution.sync
+      name: EntityResolution
+      description: >
+        Resolve entity interactors through affordances and contracts.
+
+    - path: ./syncs/entity-resolution-bypasses-field-pipeline.sync
+      name: EntityResolutionBypassesFieldPipeline
+      description: >
+        Skip field-level extraction after successful entity resolution.
+
+    - path: ./syncs/entity-widget-creates-secondary-bindings.sync
+      name: EntityWidgetCreatesSecondaryBindings
+      description: >
+        Materialize secondary bindings declared by entity widget contracts.
+
+    - path: ./syncs/parsed-entity-affordance-registered.sync
+      name: ParsedEntityAffordanceRegistered
+      description: >
+        Register parsed entity affordances in the widget registry.
+
+    - path: ./syncs/suite-check-validates-contracts.sync
+      name: SuiteCheckValidatesContracts
+      description: >
+        Run contract validation across suite-scoped entity widgets.
 
 dependencies:
   - ui-core: ">=0.5.0"

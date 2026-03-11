@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Affordance [F] {
 
   purpose {
@@ -9,6 +9,12 @@ concept Affordance [F] {
     levels. The most specific matching affordance wins.
     Affordances are declared in .widget file affordance
     sections and registered by WidgetParser.
+
+    Entity-level affordances extend the condition system
+    with concept, suite, and tag conditions for whole-concept
+    widget matching. The bind block maps concept field names
+    to widget contract slot names when they differ. Theme
+    matching can also expose density and motif preferences.
   }
 
   state {
@@ -26,7 +32,12 @@ concept Affordance [F] {
       density: F -> option String
       motif: F -> option String
       mutable: F -> option Bool
+      concept: F -> option String
+      suite: F -> option String
+      tags: F -> option list String
     }
+    bind: F -> option String
+    contractVersion: F -> option Int
   }
 
   capabilities {
@@ -36,10 +47,17 @@ concept Affordance [F] {
   actions {
     action declare(affordance: F, widget: String,
                    interactor: String, specificity: Int,
-                   conditions: option String) {
+                   conditions: option String,
+                   bind: option String,
+                   contractVersion: option Int,
+                   densityExempt: option Bool,
+                   motifOptimized: option String) {
       -> ok(affordance: F) {
         Declare that widget can serve the named interactor
         type when conditions are met. Higher specificity wins.
+        The bind block maps concept fields to contract slots
+        when names differ. contractVersion pins to a specific
+        widget contract version for stability.
       }
       -> duplicate(message: String) { Exact affordance exists. }
     }
@@ -50,7 +68,8 @@ concept Affordance [F] {
         Find all affordances matching the interactor type
         whose conditions are satisfied by context. Returns
         ranked list by specificity then score.
-        Context: { optionCount, platform, viewport, density, motif }.
+        Context: { optionCount, platform, viewport, density,
+                   motif, concept, suite, tags }.
       }
       -> none(message: String) { No affordances match. }
     }
@@ -71,11 +90,25 @@ concept Affordance [F] {
   invariant {
     after declare(affordance: f1, widget: "radio-group",
       interactor: "single-choice", specificity: 10,
-      conditions: "{ \"maxOptions\": 8 }") -> ok(affordance: f1)
+      conditions: "{ \"maxOptions\": 8 }",
+      bind: _, contractVersion: _, densityExempt: _, motifOptimized: _)
+      -> ok(affordance: f1)
     and declare(affordance: f2, widget: "select",
       interactor: "single-choice", specificity: 5,
-      conditions: _) -> ok(affordance: f2)
+      conditions: _, bind: _, contractVersion: _, densityExempt: _,
+      motifOptimized: _) -> ok(affordance: f2)
     then match(affordance: _, interactor: "single-choice",
       context: "{ \"optionCount\": 4 }") -> ok(matches: _)
+  }
+
+  invariant {
+    after declare(affordance: f1, widget: "approval-detail",
+      interactor: "entity-detail", specificity: 20,
+      conditions: "{ \"concept\": \"Approval\" }",
+      bind: "{ \"actor\": \"approver\", \"body\": \"reasoning\" }",
+      contractVersion: 1, densityExempt: _, motifOptimized: _)
+      -> ok(affordance: f1)
+    then match(affordance: _, interactor: "entity-detail",
+      context: "{ \"concept\": \"Approval\" }") -> ok(matches: _)
   }
 }

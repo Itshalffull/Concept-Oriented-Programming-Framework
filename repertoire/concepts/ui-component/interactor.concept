@@ -8,6 +8,13 @@ concept Interactor [I] {
     "user selects one from a set" — whether that renders
     as radio buttons, a dropdown, or a voice prompt is
     determined downstream by affordance matching.
+
+    The entity category classifies whole-concept rendering
+    rather than individual fields. Entity interactors describe
+    how much space and attention a concept instance gets
+    (detail, card, row, inline, editor, graph). Domain
+    specificity comes from affordance conditions, not from
+    the interactor type itself.
   }
 
   state {
@@ -23,6 +30,9 @@ concept Interactor [I] {
       comparison: I -> Bool
       mutable: I -> Bool
       multiLine: I -> Bool
+      concept: I -> option String
+      suite: I -> option String
+      tags: I -> option list String
     }
   }
 
@@ -36,8 +46,9 @@ concept Interactor [I] {
       -> ok(interactor: I) {
         Define an interaction type. Categories:
         selection, edit, control, output, navigation,
-        composition. Properties describe semantic
-        constraints on the type.
+        composition, entity. Properties describe semantic
+        constraints on the type. Entity-category interactors
+        use concept, suite, and tags properties for matching.
       }
       -> duplicate(message: String) { Name already defined. }
     }
@@ -46,9 +57,12 @@ concept Interactor [I] {
                     constraints: option String,
                     intent: option String) {
       -> ok(interactor: I, confidence: Float) {
-        Classify a concept field into an interaction type.
-        Uses field type, constraints (min/max, enum, cardinality),
-        and optional intent annotation for best match.
+        Classify a concept field or entity element into an
+        interaction type. For fieldType "entity", uses
+        constraints.concept, constraints.suite, and
+        constraints.tags for entity-category classification.
+        The host view context determines which entity subtype
+        is selected (entity-detail, entity-card, etc.).
         Confidence: 1.0 = exact, 0.5 = heuristic.
       }
       -> ambiguous(interactor: I, candidates: String) {
@@ -76,6 +90,17 @@ concept Interactor [I] {
       -> ok(interactor: i)
     then classify(interactor: _, fieldType: "T -> T",
       constraints: "{ \"enum\": [\"A\",\"B\",\"C\"] }",
+      intent: _)
+      -> ok(interactor: _, confidence: _)
+  }
+
+  invariant {
+    after define(interactor: i, name: "entity-detail",
+      category: "entity",
+      properties: "{ \"dataType\": \"entity\" }")
+      -> ok(interactor: i)
+    then classify(interactor: _, fieldType: "entity",
+      constraints: "{ \"concept\": \"Approval\", \"view\": \"detail\" }",
       intent: _)
       -> ok(interactor: _, confidence: _)
   }

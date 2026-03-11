@@ -1,0 +1,68 @@
+@version(1)
+concept WidgetRegistry [W] {
+
+  purpose {
+    Queryable index of all registered entity-level affordances.
+    Answers questions about which widgets serve which concepts,
+    at what specificity, with what contract requirements.
+    Populated automatically from parsed .widget files.
+  }
+
+  state {
+    entries: set W
+    widget: W -> String
+    interactor: W -> String
+    concept: W -> option String
+    suite: W -> option String
+    tags: W -> list String
+    specificity: W -> Int
+    contractVersion: W -> Int
+    contractSlots: W -> list String
+    contractActions: W -> list String
+    secondaryRoles: W -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(entry: W, widget: String, interactor: String,
+                    concept: option String, suite: option String,
+                    tags: list String, specificity: Int,
+                    contractVersion: Int, contractSlots: String,
+                    contractActions: String, secondaryRoles: String) {
+      -> ok(entry: W) {
+        Register an entity-level affordance entry. Called by
+        WidgetParser when processing .widget files with entity
+        affordance declarations.
+      }
+      -> duplicate(message: String) { Exact entry already registered. }
+    }
+
+    action query(concept: option String, suite: option String,
+                 interactor: option String) {
+      -> ok(entries: String) {
+        Find all entity affordances matching the given filters.
+        Any filter left empty is a wildcard. Results ranked
+        by specificity descending.
+      }
+      -> none(message: String) { No matching entries. }
+    }
+
+    action remove(entry: W) {
+      -> ok(entry: W) { Remove entry. }
+      -> notfound(message: String) { Entry not registered. }
+    }
+  }
+
+  invariant {
+    after register(entry: w, widget: "approval-detail",
+      interactor: "entity-detail", concept: "Approval",
+      suite: "governance", tags: _, specificity: 20,
+      contractVersion: 1, contractSlots: _, contractActions: _,
+      secondaryRoles: _) -> ok(entry: w)
+    then query(concept: "Approval", suite: _, interactor: _)
+      -> ok(entries: _)
+  }
+}
