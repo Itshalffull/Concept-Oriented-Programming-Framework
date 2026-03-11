@@ -1,0 +1,129 @@
+@version(1)
+concept FieldPlacement [P] {
+
+  purpose {
+    One field's display configuration in one rendering context.
+    Stores which field to render, how to format it, label
+    overrides, visibility rules, and optional ComponentMapping
+    delegation for custom field-level rendering. Multiple
+    FieldPlacements can reference the same source field with
+    different configurations.
+  }
+
+  state {
+    placements: set P
+    source_field: P -> String
+    formatter: P -> String
+    formatter_options: P -> option String
+
+    label {
+      label_display: P -> String
+      label_override: P -> option String
+    }
+
+    visibility {
+      visible: P -> Bool
+      role_visibility: P -> option String
+    }
+
+    field_mapping: P -> option String
+  }
+
+  actions {
+    action create(source_field: String, formatter: String) {
+      -> ok(placement: P) {
+        Creates a new field placement with the given field and formatter.
+        Defaults: label_display "above", visible true, no label override,
+        no role restrictions, no field_mapping.
+      }
+    }
+
+    action configure(placement: P, formatter: option String,
+                     formatter_options: option String,
+                     label_display: option String,
+                     label_override: option String) {
+      -> ok(placement: P) {
+        Updates the placement's display configuration. Only non-null
+        parameters are applied (partial update).
+      }
+      -> not_found(placement: P) {
+        The placement does not exist.
+      }
+    }
+
+    action set_visibility(placement: P, visible: Bool,
+                          role_visibility: option String) {
+      -> ok(placement: P) {
+        Updates visibility settings.
+      }
+    }
+
+    action set_field_mapping(placement: P, mapping: String) {
+      -> ok(placement: P) {
+        Assigns a ComponentMapping for custom field-level rendering.
+        The field's value is passed as context to the mapping.
+      }
+    }
+
+    action clear_field_mapping(placement: P) {
+      -> ok(placement: P) {
+        Removes ComponentMapping delegation. Field renders through
+        its formatter directly.
+      }
+    }
+
+    action get(placement: P) {
+      -> ok(placement: P, source_field: String, formatter: String,
+            formatter_options: option String, label_display: String,
+            label_override: option String, visible: Bool,
+            role_visibility: option String,
+            field_mapping: option String) {
+        Returns the full placement configuration.
+      }
+      -> not_found(placement: P) {
+        The placement does not exist.
+      }
+    }
+
+    action delete(placement: P) {
+      -> ok() {
+        Removes the placement. Consumers referencing this placement
+        (DisplayMode flat_fields, Layout areas) must handle the
+        missing reference gracefully — skip the field in rendering.
+      }
+    }
+
+    action duplicate(placement: P) {
+      -> ok(new_placement: P) {
+        Creates a copy of the placement with the same configuration.
+        Used when placing the same field in a second location — the
+        admin duplicates the placement and then customizes the copy's
+        formatter independently.
+      }
+    }
+
+    action list() {
+      -> ok(items: String) {
+        Returns all field placements in the system.
+      }
+    }
+  }
+
+  invariant {
+    after create(source_field: "Article.title", formatter: "heading")
+          -> ok(placement: p)
+    and   configure(placement: p, formatter_options: "{\"level\": 1}")
+          -> ok(placement: p)
+    then  get(placement: p) -> ok(source_field: "Article.title",
+                                  formatter: "heading",
+                                  formatter_options: "{\"level\": 1}")
+  }
+
+  invariant {
+    after create(source_field: "Article.title", formatter: "heading")
+          -> ok(placement: p)
+    and   duplicate(placement: p) -> ok(new_placement: p2)
+    then  get(placement: p2) -> ok(source_field: "Article.title",
+                                   formatter: "heading")
+  }
+}
