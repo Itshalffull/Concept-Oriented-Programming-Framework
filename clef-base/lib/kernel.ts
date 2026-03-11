@@ -42,6 +42,7 @@ import { workflowHandler } from '../../handlers/ts/app/workflow.handler';
 import { automationRuleHandler } from '../../handlers/ts/app/automation-rule.handler';
 import { taxonomyHandler } from '../../handlers/ts/app/taxonomy.handler';
 import { displayModeHandler } from '../../handlers/ts/app/display-mode.handler';
+import { fieldPlacementHandler } from '../../handlers/ts/app/field-placement.handler';
 import { themeHandler } from '../../handlers/ts/app/theme.handler';
 import { queryHandler } from '../../handlers/ts/app/query.handler';
 import { contentStorageHandler } from '../../handlers/ts/app/content-storage.handler';
@@ -132,6 +133,7 @@ export function getKernel(): Kernel {
   reg('urn:clef/AutomationRule', automationRuleHandler, makeStorage('automation-rule'));
   reg('urn:clef/Taxonomy', taxonomyHandler, makeStorage('taxonomy'));
   reg('urn:clef/DisplayMode', displayModeHandler, makeStorage('display-mode'));
+  reg('urn:clef/FieldPlacement', fieldPlacementHandler, makeStorage('field-placement'));
   reg('urn:clef/Theme', themeHandler, makeStorage('theme'));
   reg('urn:clef/Query', queryHandler, makeStorage('query'));
   reg('urn:clef/ContentStorage', contentStorageHandler, makeStorage('content-storage'));
@@ -178,7 +180,7 @@ function parseSeedEntries(raw: unknown): Array<Record<string, unknown>> {
 
 async function applyDeclarativeSeeds(kernel: Kernel) {
   const discovery = await kernel.invokeConcept('urn:clef/SeedData', 'discover', {
-    base_path: resolve('clef-base/seeds'),
+    base_path: resolve('seeds'),
   });
   if (discovery.variant !== 'ok') {
     throw new Error(String(discovery.message ?? 'Failed to discover seed data'));

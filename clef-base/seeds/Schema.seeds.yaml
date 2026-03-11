@@ -25,7 +25,9 @@ entries:
   - schema: Schema
     fields: 'schema,fields,extends,associations'
   - schema: DisplayMode
-    fields: 'mode,name,fieldDisplayConfigs,fieldFormConfigs'
+    fields: 'mode,name,mode_id,schema,layout,component_mapping,placements,role_visibility,cacheable'
+  - schema: FieldPlacement
+    fields: 'placement,source_field,formatter,formatter_options,label_display,label_override,visible,role_visibility,field_mapping'
   - schema: Theme
     fields: 'name,base,overrides,active,priority'
   - schema: ComponentMapping

@@ -17,11 +17,12 @@
  * The related zone uses embeddable Views (table/card-grid) with queries.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Badge } from '../components/widgets/Badge';
 import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { LayoutRenderer } from '../components/LayoutRenderer';
+import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator } from '../../lib/clef-provider';
 
@@ -32,6 +33,11 @@ interface EntityDetailViewProps {
 export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const { data, loading, error } = useConceptQuery<Record<string, unknown>>('ContentNode', 'get', { node: id });
   const { navigateToHref } = useNavigator();
+  const [displayMode, setDisplayMode] = useState('entity-page');
+
+  const handleDisplayModeChange = useCallback((modeId: string) => {
+    setDisplayMode(modeId);
+  }, []);
 
   if (loading) {
     return (
@@ -79,6 +85,12 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
           </button>
           <h1 style={{ margin: 0 }}>{displayName}</h1>
           <Badge variant="info">{entityType}</Badge>
+          <DisplayAsPicker
+            currentSchema="ContentNode"
+            currentMode={displayMode}
+            onChange={handleDisplayModeChange}
+            variant="inline"
+          />
         </div>
       </div>
 
