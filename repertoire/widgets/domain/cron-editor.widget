@@ -224,6 +224,7 @@ widget cron-editor {
     specificity: 20;
     when {
       concept: "Timer";
+      tags: ["temporal", "schedule", "editor"];
     }
     bind {
       expression: cronExpression;

@@ -229,6 +229,7 @@ widget workflow-editor {
     specificity: 20;
     when {
       concept: "ProcessSpec";
+      tags: ["workflow", "process", "editor"];
     }
     bind {
       workflowNodes: steps;

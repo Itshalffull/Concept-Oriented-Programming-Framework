@@ -282,6 +282,7 @@ widget graph-view {
     specificity: 20;
     when {
       concept: "Contract";
+      tags: ["contract", "graph", "verification"];
     }
     bind {
       nodeLabel: name;
@@ -296,6 +297,7 @@ widget graph-view {
     specificity: 20;
     when {
       concept: "Delegation";
+      tags: ["delegation", "graph", "governance"];
     }
     bind {
       sourceNode: delegator;

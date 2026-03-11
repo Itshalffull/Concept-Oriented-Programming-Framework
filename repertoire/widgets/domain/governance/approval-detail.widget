@@ -160,6 +160,8 @@ affordance {
   specificity: 20
   when {
     concept: "Approval"
+    suite: "governance"
+    tags: ["approval", "decision", "detail"]
   }
   bind {
     step_ref: step_ref
@@ -173,6 +175,8 @@ affordance {
   specificity: 20
   when {
     concept: "Approval"
+    suite: "governance"
+    tags: ["approval", "decision", "editor"]
   }
   bind {
     step_ref: step_ref

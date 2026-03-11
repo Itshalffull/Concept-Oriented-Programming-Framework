@@ -97,6 +97,7 @@ widget approval-tracker {
     specificity: 18;
     when {
       suite: "governance-execution";
+      tags: ["approval", "tracker", "execution"];
     }
   }
 

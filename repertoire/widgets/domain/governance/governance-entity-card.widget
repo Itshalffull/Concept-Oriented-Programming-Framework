@@ -82,6 +82,7 @@ affordance {
   specificity: 12
   when {
     suite: "governance"
+    tags: ["governance", "summary", "card"]
   }
 }
 
@@ -90,6 +91,7 @@ affordance {
   specificity: 12
   when {
     suite: "governance"
+    tags: ["governance", "summary", "detail"]
   }
 }
 
