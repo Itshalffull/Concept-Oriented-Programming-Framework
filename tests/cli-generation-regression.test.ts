@@ -21,6 +21,7 @@ import { parse as parseYaml } from 'yaml';
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DEVTOOLS_MANIFEST = resolve(PROJECT_ROOT, 'examples/devtools/devtools.interface.yaml');
 const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'generated/devtools/cli');
+const CODEX_MCP_CONFIG = resolve(PROJECT_ROOT, '.codex/config.toml');
 
 // ---- Generated CLI Structure Extraction ----
 
@@ -922,9 +923,15 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('clef');
     });
 
-    it('manifest lists exactly 81 concept specs', () => {
+    it('manifest lists exactly 85 concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(81);
+      expect(concepts.length).toBe(85);
+    });
+
+    it('generated Codex MCP config passes the devtools manifest path to the server entrypoint', () => {
+      expect(existsSync(CODEX_MCP_CONFIG)).toBe(true);
+      const content = readFileSync(CODEX_MCP_CONFIG, 'utf-8');
+      expect(content).toContain('args = ["tsx","./.claude/mcp/index.ts","examples/devtools/devtools.interface.yaml"]');
     });
   });
 });

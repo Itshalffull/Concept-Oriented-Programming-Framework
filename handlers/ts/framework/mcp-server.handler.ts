@@ -24,6 +24,42 @@ interface RegisteredTool {
 
 const toolRegistry = new Map<string, RegisteredTool>();
 
+function toPascalCase(value: string): string {
+  return value
+    .split(/[-_]/g)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
+
+function toSnakeCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/-/g, '_')
+    .toLowerCase();
+}
+
+function camelCaseFromSnake(value: string): string {
+  const parts = value.split('_').filter(Boolean);
+  if (parts.length === 0) return value;
+  return parts[0] + parts.slice(1).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+}
+
+export function inferConceptFromToolFile(toolFile: string): string {
+  const path = toolFile.replace(/\\/g, '/');
+  const parts = path.split('/');
+  const dirName = parts[parts.length - 2] || '';
+  return toPascalCase(dirName);
+}
+
+export function inferActionFromToolName(toolName: string, conceptName: string): string {
+  const prefix = `${toSnakeCase(conceptName)}_`;
+  if (toolName.startsWith(prefix)) {
+    return camelCaseFromSnake(toolName.slice(prefix.length));
+  }
+  return inferAction(toolName);
+}
+
 // ─── McpServer Handler ──────────────────────────────────
 
 export const mcpServerHandler: ConceptHandler = {
@@ -86,13 +122,14 @@ export const mcpServerHandler: ConceptHandler = {
             for (const entry of arr) {
               if (!entry.name) continue;
               // Only register tools (not resources/templates for now)
+              const inferredConcept = inferConceptFromToolFile(toolFile);
               const tool: RegisteredTool = {
                 name: entry.name,
                 description: entry.description || '',
                 inputSchema: entry.inputSchema || { type: 'object', properties: {}, required: [] },
                 type: entry.type || 'tool',
-                concept: inferConcept(entry.name),
-                action: inferAction(entry.name),
+                concept: entry.concept || inferredConcept || inferConcept(entry.name),
+                action: entry.action || inferActionFromToolName(entry.name, entry.concept || inferredConcept || inferConcept(entry.name)),
               };
               toolRegistry.set(tool.name, tool);
               totalTools++;
@@ -303,13 +340,14 @@ export async function bootMcpServer(manifestPath: string) {
         if (!Array.isArray(arr)) continue;
         for (const entry of arr) {
           if (!entry.name || entry.type !== 'tool') continue;
+          const inferredConcept = inferConceptFromToolFile(toolFile);
           allTools.push({
             name: entry.name,
             description: entry.description || '',
             inputSchema: entry.inputSchema || { type: 'object', properties: {}, required: [] },
             type: 'tool',
-            concept: inferConcept(entry.name),
-            action: inferAction(entry.name),
+            concept: entry.concept || inferredConcept || inferConcept(entry.name),
+            action: entry.action || inferActionFromToolName(entry.name, entry.concept || inferredConcept || inferConcept(entry.name)),
           });
           toolRegistry.set(entry.name, allTools[allTools.length - 1]);
         }
@@ -367,9 +405,13 @@ export async function bootMcpServer(manifestPath: string) {
     toolRegistry.set(tool.name, tool);
   }
 
-  // Create a shared storage instance seeded with Score index data
+  // Start Score seeding in the background so initialize can complete quickly.
   const sharedStorage = createInMemoryStorage();
-  await seedScoreIndex(sharedStorage);
+  const conceptsNeedingScoreSeed = new Set(['ScoreApi', 'ScoreIndex', 'ScoreNavigator', 'ScoreQuery']);
+  const scoreSeedPromise = seedScoreIndex(sharedStorage).catch((err) => {
+    console.error('Failed to seed Score index for MCP server:', err);
+    throw err;
+  });
 
   // Create MCP server
   const server = new Server(
@@ -400,6 +442,10 @@ export async function bootMcpServer(manifestPath: string) {
     }
 
     try {
+      if (conceptsNeedingScoreSeed.has(tool.concept)) {
+        await scoreSeedPromise;
+      }
+
       const handler = await resolveHandler(tool.concept);
       if (!handler) {
         return {
@@ -427,102 +473,115 @@ export async function bootMcpServer(manifestPath: string) {
 }
 
 /** Seed the shared storage with Score index data from the project */
-async function seedScoreIndex(storage: ConceptStorage) {
+export async function seedScoreIndex(storage: ConceptStorage) {
   const fs = await import('fs');
   const path = await import('path');
+  const { scoreIndexHandler } = await import('../score/score-index.handler.js');
   const cwd = process.cwd();
+  const sourceDirs = ['bind', 'cli', 'examples', 'handlers', 'repertoire', 'runtime', 'score', 'specs', 'surface', 'syncs', 'tests'];
+  const excludedDirs = new Set(['.git', 'node_modules', 'dist', 'coverage', '.claude', '.codex', 'generated']);
 
-  // Parse all .concept files and index them
-  const specDirs = ['specs/app', 'specs/framework', 'score/semantic', 'score/auto',
-    'repertoire/concepts/versioning', 'repertoire/concepts/collaboration',
-    'repertoire/concepts/code-analysis', 'repertoire/concepts/code-discovery',
-    'repertoire/concepts/code-symbol', 'repertoire/concepts/interface-generation/concepts',
-    'bind/interface/concepts'];
+  async function indexFile(absPath: string) {
+    const relPath = path.relative(cwd, absPath).replace(/\\/g, '/');
+    const content = fs.readFileSync(absPath, 'utf-8');
+    const definitions = extractDefinitions(relPath, content);
+    await scoreIndexHandler.upsertFile({
+      path: relPath,
+      language: inferLanguageFromPath(relPath),
+      role: inferRoleFromPath(relPath),
+      definitions,
+    }, storage);
 
-  for (const dir of specDirs) {
-    const fullDir = path.join(cwd, dir);
-    if (!fs.existsSync(fullDir)) continue;
-    for (const file of fs.readdirSync(fullDir)) {
-      if (!file.endsWith('.concept')) continue;
-      const content = fs.readFileSync(path.join(fullDir, file), 'utf-8');
-      const name = extractConceptName(content) || file.replace('.concept', '');
-      const purpose = extractPurpose(content);
-      const actions = extractActions(content);
-      const stateFields = extractStateFields(content);
-      await storage.put('concepts', `concept:${name}`, {
-        conceptName: name,
-        purpose,
-        actions,
-        stateFields,
-        file: `${dir}/${file}`,
-      });
+    for (const symbol of extractSymbols(relPath, content)) {
+      await scoreIndexHandler.upsertSymbol(symbol, storage);
     }
-  }
 
-  // Parse all .sync files
-  const syncDirs = ['syncs/app', 'syncs/framework'];
-  for (const dir of syncDirs) {
-    const fullDir = path.join(cwd, dir);
-    if (!fs.existsSync(fullDir)) continue;
-    for (const file of fs.readdirSync(fullDir)) {
-      if (!file.endsWith('.sync')) continue;
-      const content = fs.readFileSync(path.join(fullDir, file), 'utf-8');
-      const syncs = extractSyncs(content);
-      for (const s of syncs) {
-        await storage.put('syncs', `sync:${s.name}`, {
-          syncName: s.name,
+    if (relPath.endsWith('.concept')) {
+      const name = extractConceptName(content) || path.basename(relPath, '.concept');
+      await scoreIndexHandler.upsertConcept({
+        name,
+        purpose: extractPurpose(content),
+        actions: extractActions(content),
+        stateFields: extractStateFields(content),
+        file: relPath,
+      }, storage);
+      return;
+    }
+
+    if (relPath.endsWith('.sync')) {
+      for (const s of extractSyncs(content)) {
+        await scoreIndexHandler.upsertSync({
+          name: s.name,
           annotation: s.annotation,
           triggers: s.triggers,
           effects: s.effects,
-          file: `${dir}/${file}`,
-        });
+          file: relPath,
+        }, storage);
       }
+      return;
     }
-  }
 
-  // Index handler files
-  const handlerDirs = ['handlers/ts/framework', 'handlers/ts/score', 'handlers/ts/app'];
-  for (const dir of handlerDirs) {
-    const fullDir = path.join(cwd, dir);
-    if (!fs.existsSync(fullDir)) continue;
-    for (const file of fs.readdirSync(fullDir)) {
-      if (!file.endsWith('.handler.ts')) continue;
-      const content = fs.readFileSync(path.join(fullDir, file), 'utf-8');
-      const concept = file.replace('.handler.ts', '')
+    if (relPath.endsWith('.handler.ts')) {
+      const concept = path.basename(relPath, '.handler.ts')
         .replace(/(^|-)(\w)/g, (_: string, __: string, c: string) => c.toUpperCase());
       const actions = extractHandlerActions(content);
       const lines = content.split('\n').length;
       await storage.put('handlers', `handler:${concept}:typescript`, {
         handlerConcept: concept,
         handlerLanguage: 'typescript',
-        handlerFile: `${dir}/${file}`,
+        handlerFile: relPath,
         handlerActions: actions,
         handlerLineCount: lines,
       });
     }
   }
 
-  // Index suite manifests
-  const suiteDirs = ['suites'];
+  async function walkDir(dir: string): Promise<void> {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) {
+        if (excludedDirs.has(entry.name)) continue;
+        await walkDir(path.join(dir, entry.name));
+        continue;
+      }
+      await indexFile(path.join(dir, entry.name));
+    }
+  }
+
+  for (const dir of sourceDirs) {
+    const fullDir = path.join(cwd, dir);
+    if (!fs.existsSync(fullDir)) continue;
+    await walkDir(fullDir);
+  }
+
+  const suiteDirs = ['suites', 'repertoire/concepts', 'bind/interface', 'score/semantic', 'score/analysis', 'score/parse', 'score/discovery', 'score/auto'];
   for (const dir of suiteDirs) {
     const fullDir = path.join(cwd, dir);
     if (!fs.existsSync(fullDir)) continue;
-    for (const entry of fs.readdirSync(fullDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const yamlPath = path.join(fullDir, entry.name, 'suite.yaml');
-      if (!fs.existsSync(yamlPath)) continue;
+    for (const yamlPath of findFilesNamed(fullDir, 'suite.yaml', fs, path)) {
       try {
         const yaml = await import('yaml');
         const suiteContent = yaml.parse(fs.readFileSync(yamlPath, 'utf-8'));
-        await storage.put('suiteManifests', `suite:${entry.name}`, {
-          suiteName: suiteContent?.suite?.name || entry.name,
+        const relPath = path.relative(cwd, yamlPath).replace(/\\/g, '/');
+        const fallbackName = path.basename(path.dirname(yamlPath));
+        const conceptMap = suiteContent?.concepts || {};
+        const syncSection = suiteContent?.syncs || {};
+        const conceptNames = Array.isArray(conceptMap)
+          ? conceptMap
+          : Object.keys(conceptMap);
+        const suiteSyncs = Array.isArray(syncSection)
+          ? syncSection
+          : [
+            ...(syncSection.required || []),
+            ...(syncSection.recommended || []),
+          ];
+
+        await storage.put('suiteManifests', `suite:${suiteContent?.suite?.name || fallbackName}`, {
+          suiteName: suiteContent?.suite?.name || fallbackName,
           suiteVersion: suiteContent?.suite?.version || '0.0.0',
-          suiteConcepts: Object.keys(suiteContent?.concepts || {}),
-          suiteSyncs: [
-            ...(suiteContent?.syncs?.required || []),
-            ...(suiteContent?.syncs?.recommended || []),
-          ],
-          suiteFile: `${dir}/${entry.name}/suite.yaml`,
+          suiteConcepts: conceptNames,
+          suiteSyncs,
+          suiteFile: relPath,
         });
       } catch {
         // skip malformed suite files
@@ -604,6 +663,138 @@ function extractHandlerActions(content: string): string[] {
     actions.push(m[1]);
   }
   return actions;
+}
+
+function inferLanguageFromPath(filePath: string): string {
+  const ext = filePath.split('.').pop()?.toLowerCase() || '';
+  const langMap: Record<string, string> = {
+    ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
+    concept: 'concept-spec', sync: 'sync-spec', yaml: 'yaml', yml: 'yaml',
+    json: 'json', md: 'markdown', widget: 'widget-spec', theme: 'theme-spec', derived: 'derived-spec',
+  };
+  return langMap[ext] || ext || 'unknown';
+}
+
+function inferRoleFromPath(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, '/');
+  if (normalized.includes('/generated/') || normalized.startsWith('generated/')) return 'generated';
+  if (normalized.includes('/tests/') || normalized.endsWith('.test.ts')) return 'test';
+  if (/\.(concept|sync|widget|theme|derived)$/.test(normalized)) return 'spec';
+  if (/\.(yaml|yml|json)$/.test(normalized)) return 'config';
+  if (normalized.endsWith('.md')) return 'doc';
+  return 'source';
+}
+
+function lineNumberAt(content: string, offset: number): number {
+  return content.slice(0, offset).split('\n').length;
+}
+
+function extractDefinitions(filePath: string, content: string): string[] {
+  if (filePath.endsWith('.concept')) {
+    return [extractConceptName(content), ...extractActions(content)].filter((value): value is string => Boolean(value));
+  }
+  if (filePath.endsWith('.sync')) {
+    return extractSyncs(content).map(sync => sync.name);
+  }
+  const definitions: string[] = [];
+  const regexes = [
+    /export\s+(?:async\s+)?function\s+(\w+)/g,
+    /export\s+const\s+(\w+)/g,
+    /export\s+class\s+(\w+)/g,
+    /export\s+interface\s+(\w+)/g,
+    /export\s+type\s+(\w+)/g,
+  ];
+  for (const regex of regexes) {
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      definitions.push(match[1]);
+    }
+  }
+  return Array.from(new Set(definitions));
+}
+
+function extractSymbols(filePath: string, content: string): Array<{ name: string; kind: string; file: string; line: number; scope: string }> {
+  const symbols: Array<{ name: string; kind: string; file: string; line: number; scope: string }> = [];
+
+  if (filePath.endsWith('.concept')) {
+    const conceptName = extractConceptName(content);
+    if (conceptName) {
+      const conceptMatch = content.match(/concept\s+(\w+)/);
+      symbols.push({
+        name: conceptName,
+        kind: 'concept',
+        file: filePath,
+        line: conceptMatch ? lineNumberAt(content, conceptMatch.index || 0) : 1,
+        scope: 'module',
+      });
+    }
+    const actionRegex = /action\s+(\w+)\s*\(/g;
+    let match;
+    while ((match = actionRegex.exec(content)) !== null) {
+      symbols.push({
+        name: match[1],
+        kind: 'action',
+        file: filePath,
+        line: lineNumberAt(content, match.index),
+        scope: conceptName || 'module',
+      });
+    }
+    return symbols;
+  }
+
+  if (filePath.endsWith('.sync')) {
+    for (const sync of extractSyncs(content)) {
+      const match = content.match(new RegExp(`^sync\\s+${sync.name}\\b`, 'm'));
+      symbols.push({
+        name: sync.name,
+        kind: 'sync',
+        file: filePath,
+        line: match ? lineNumberAt(content, match.index || 0) : 1,
+        scope: 'module',
+      });
+    }
+    return symbols;
+  }
+
+  const patterns: Array<{ regex: RegExp; kind: string }> = [
+    { regex: /export\s+(?:async\s+)?function\s+(\w+)/g, kind: 'function' },
+    { regex: /export\s+const\s+(\w+)/g, kind: 'variable' },
+    { regex: /export\s+class\s+(\w+)/g, kind: 'class' },
+    { regex: /export\s+interface\s+(\w+)/g, kind: 'type' },
+    { regex: /export\s+type\s+(\w+)/g, kind: 'type' },
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.regex.exec(content)) !== null) {
+      symbols.push({
+        name: match[1],
+        kind: pattern.kind,
+        file: filePath,
+        line: lineNumberAt(content, match.index),
+        scope: 'module',
+      });
+    }
+  }
+
+  return symbols;
+}
+
+function findFilesNamed(rootDir: string, fileName: string, fs: typeof import('fs'), path: typeof import('path')): string[] {
+  const matches: string[] = [];
+  function walk(dir: string) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isSymbolicLink()) continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.name === fileName) {
+        matches.push(fullPath);
+      }
+    }
+  }
+  walk(rootDir);
+  return matches;
 }
 
 /** Resolve a concept name to its handler module */
