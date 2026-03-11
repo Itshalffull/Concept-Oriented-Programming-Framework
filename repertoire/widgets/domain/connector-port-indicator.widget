@@ -1,0 +1,97 @@
+@version(1)
+widget connector-port-indicator {
+
+  purpose {
+    Visual indicator for a ConnectorPort on a canvas item. Shows
+    direction via color (blue=in, orange=out, green=bidirectional),
+    optional label, and connection count badge.
+  }
+
+  anatomy {
+    root:             container  { Positioned circle at the port location on the item edge }
+    port-dot:         indicator  { Colored circle indicating port direction }
+    port-label:       text       { Optional text label next to the port }
+    connection-badge: indicator  { Badge showing current connection count vs max }
+  }
+
+  states {
+    idle [initial] {
+      on HOVER -> hovered;
+      on CONNECT_START -> connecting;
+    }
+
+    hovered {
+      on UNHOVER -> idle;
+      on CONNECT_START -> connecting;
+      entry [enlarge port-dot; show port-label];
+      exit [shrink port-dot; hide port-label];
+    }
+
+    connecting {
+      on CONNECT_END -> idle;
+      on CANCEL -> idle;
+      entry [highlight compatible ports];
+      exit [unhighlight all ports];
+    }
+
+    full {
+      on DISCONNECT -> idle;
+      entry [dim port-dot; show "full" badge];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Enter -> CONNECT_START;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: concat(?direction, " port", if ?label then concat(": ", ?label) else "", " (", ?connectionCount, if ?maxConnections then concat("/", ?maxConnections) else "", " connections)");
+      };
+      port-dot -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    portId: String
+    direction: union "in" | "out" | "bidirectional"
+    portType: option String
+    label: option String
+    side: union "top" | "right" | "bottom" | "left" | "center"
+    offset: Float = 0.5
+    connectionCount: Int = 0
+    maxConnections: option Int
+  }
+
+  connect {
+    root -> {
+      data-part: "port";
+      data-port-id: ?portId;
+      data-direction: ?direction;
+      data-side: ?side;
+      style-left: concat(if ?side == "left" then "0%" else if ?side == "right" then "100%" else concat(?offset * 100, "%"));
+      style-top: concat(if ?side == "top" then "0%" else if ?side == "bottom" then "100%" else concat(?offset * 100, "%"));
+    }
+    port-dot -> {
+      data-part: "port-dot";
+      style-background: if ?direction == "in" then "#2196F3" else if ?direction == "out" then "#FF9800" else "#4CAF50";
+    }
+    connection-badge -> {
+      data-part: "connection-badge";
+      text: concat(?connectionCount, if ?maxConnections then concat("/", ?maxConnections) else "");
+      data-visible: if ?connectionCount > 0 then "true" else "false";
+    }
+  }
+}

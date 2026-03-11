@@ -1,12 +1,5 @@
-/**
- * Navigator destination registry for clef-base.
- * Each destination maps a name to a targetConcept + targetView,
- * which the Navigator concept tracks for history/guards.
- * The href is the Next.js route path (used by the NextjsAdapter
- * to sync Navigator state ↔ App Router).
- */
-
 export interface Destination {
+  destination: string;
   name: string;
   targetConcept: string;
   targetView: string;
@@ -15,53 +8,31 @@ export interface Destination {
   group: string;
 }
 
-export const destinations: Destination[] = [
-  // Content group
-  { name: 'dashboard', targetConcept: 'AppShell', targetView: 'dashboard', href: '/admin', icon: '◫', group: 'Content' },
-  { name: 'content', targetConcept: 'ContentNode', targetView: 'list', href: '/admin/content', icon: '📄', group: 'Content' },
-
-  // Structure group
-  { name: 'schemas', targetConcept: 'Schema', targetView: 'list', href: '/admin/schemas', icon: '⬡', group: 'Structure' },
-  { name: 'views', targetConcept: 'View', targetView: 'builder', href: '/admin/view-builder', icon: '⊞', group: 'Structure' },
-  { name: 'taxonomy', targetConcept: 'Taxonomy', targetView: 'browser', href: '/admin/taxonomy', icon: '🌳', group: 'Structure' },
-
-  // Surface group
-  { name: 'mappings', targetConcept: 'ComponentMapping', targetView: 'list', href: '/admin/mappings', icon: '⇋', group: 'Surface' },
-  { name: 'display-modes', targetConcept: 'DisplayMode', targetView: 'list', href: '/admin/display-modes', icon: '◩', group: 'Surface' },
-  { name: 'themes', targetConcept: 'Theme', targetView: 'browser', href: '/admin/themes', icon: '🎨', group: 'Surface' },
-
-  // Platform group
-  { name: 'concepts', targetConcept: 'ConceptBrowser', targetView: 'browser', href: '/admin/concepts', icon: '⬢', group: 'Platform' },
-  { name: 'syncs', targetConcept: 'SyncEngine', targetView: 'list', href: '/admin/syncs', icon: '⇄', group: 'Platform' },
-  { name: 'score', targetConcept: 'Score', targetView: 'dashboard', href: '/admin/score', icon: '📊', group: 'Platform' },
-
-  // System group
-  { name: 'multiverse', targetConcept: 'VersionSpace', targetView: 'manager', href: '/admin/multiverse', icon: '⎇', group: 'System' },
-  { name: 'workflows', targetConcept: 'Workflow', targetView: 'list', href: '/admin/workflows', icon: '⤷', group: 'System' },
-  { name: 'automations', targetConcept: 'AutomationRule', targetView: 'list', href: '/admin/automations', icon: '⚡', group: 'System' },
-  { name: 'access', targetConcept: 'Authorization', targetView: 'admin', href: '/admin/access', icon: '🔐', group: 'System' },
-];
-
-/** Look up a destination by its Next.js href path */
-export function destinationByHref(href: string): Destination | undefined {
-  return destinations.find((destination) => {
-    if (destination.href === href) return true;
-    return href.startsWith(`${destination.href}/`);
-  });
+export function destinationByHref(
+  destinations: Destination[],
+  href: string,
+): Destination | undefined {
+  return destinations.find((destination) => (
+    destination.href === href || href.startsWith(`${destination.href}/`)
+  ));
 }
 
-/** Look up a destination by name */
-export function destinationByName(name: string): Destination | undefined {
-  return destinations.find(d => d.name === name);
+export function destinationByName(
+  destinations: Destination[],
+  name: string,
+): Destination | undefined {
+  return destinations.find((destination) => destination.name === name);
 }
 
-/** Group destinations by their group label (for sidebar rendering) */
-export function groupedDestinations(): { label: string; items: Destination[] }[] {
+export function groupDestinations(
+  destinations: Destination[],
+): Array<{ label: string; items: Destination[] }> {
   const groups = new Map<string, Destination[]>();
-  for (const d of destinations) {
-    const existing = groups.get(d.group) ?? [];
-    existing.push(d);
-    groups.set(d.group, existing);
+  for (const destination of destinations) {
+    const existing = groups.get(destination.group) ?? [];
+    existing.push(destination);
+    groups.set(destination.group, existing);
   }
+
   return Array.from(groups.entries()).map(([label, items]) => ({ label, items }));
 }

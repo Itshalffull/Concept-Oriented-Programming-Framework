@@ -1,0 +1,149 @@
+# Admin surface view definitions for clef-base.
+
+concept: View
+action: create
+entries:
+  - view: content-list
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Name"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"type","label":"Type","type":"select","options":["article","page","media","concept","schema","workflow","view","theme"],"required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Content
+    description: Browse all content entities in the system.
+    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+  - view: schemas-list
+    dataSource: '{"concept":"Schema","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"},{"key":"associations","label":"Associations","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]},"rowClick":{"navigateTo":"/content/schema:{schema}"}}'
+    title: Schemas
+    description: Composable data shapes applied to ContentNodes.
+  - view: workflows-list
+    dataSource: '{"concept":"Workflow","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"workflow","label":"Workflow"},{"key":"states","label":"States","formatter":"json-count"},{"key":"transitions","label":"Transitions","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}}'
+    title: Workflows
+    description: Content moderation state machines with states and transitions.
+  - view: automations-list
+    dataSource: '{"concept":"AutomationRule","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
+    controls: '{"create":{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}}'
+    title: Automations
+    description: Event-condition-action rules that fire automatically.
+  - view: taxonomy-list
+    dataSource: '{"concept":"Taxonomy","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"vocab","label":"Vocabulary ID"},{"key":"name","label":"Name"},{"key":"terms","label":"Terms","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"Taxonomy","action":"createVocabulary","fields":[{"name":"vocab","label":"Vocabulary ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
+    title: Taxonomy
+    description: Hierarchical classification using Vocabularies and Terms.
+  - view: themes-list
+    dataSource: '{"concept":"Theme","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"name","label":"Name"},{"key":"base","label":"Extends","formatter":"badge"},{"key":"active","label":"Active","formatter":"boolean-badge"},{"key":"overrides","label":"Overrides","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]}}'
+    title: Themes
+    description: Design system themes with token inheritance.
+  - view: display-modes-list
+    dataSource: '{"concept":"DisplayMode","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"mode","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"fieldDisplayConfigs","label":"Display Configs","formatter":"json-count"},{"key":"fieldFormConfigs","label":"Form Configs","formatter":"json-count"}]'
+    controls: '{"create":{"concept":"DisplayMode","action":"defineMode","fields":[{"name":"mode","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
+    title: Display Modes
+    description: Named presentation profiles controlling per-field rendering.
+  - view: views-list
+    dataSource: '{"concept":"View","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"view","label":"View ID"},{"key":"title","label":"Title"},{"key":"layout","label":"Display Type","formatter":"badge"},{"key":"dataSource","label":"Data Source"}]'
+    controls: '{"create":{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]}}'
+    title: Views
+    description: Saved queries with display configuration.
+  - view: mappings-list
+    dataSource: '{"concept":"ComponentMapping","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"schema","label":"Schema"},{"key":"displayMode","label":"Display Mode","formatter":"badge"},{"key":"widget","label":"Widget"},{"key":"slots","label":"Slots"}]'
+    controls: '{}'
+    title: Component Mappings
+    description: Widget-to-Schema-to-DisplayMode bindings.
+  - view: dashboard-stats
+    dataSource: '{"concept":"ContentNode","action":"stats"}'
+    layout: stat-cards
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"value","label":"Value"},{"key":"description","label":"Description"}]'
+    controls: '{}'
+    title: System Stats
+    description: ''
+  - view: dashboard-concepts
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"concept"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Concept"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Registered Concepts
+    description: ''
+  - view: concept-graph
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: graph
+    visibleFields: '[{"key":"node","label":"Node"},{"key":"type","label":"Type"},{"key":"content","label":"Content"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Score Graph
+    description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Toggle filters to focus.
+    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+  - view: score-schemas
+    dataSource: '{"concept":"Schema","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"schema","label":"Schema"},{"key":"fields","label":"Fields","formatter":"json-count"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/schema:{schema}"}}'
+    title: Schema Browser
+    description: Browse all schema definitions.
+  - view: syncs-list
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"sync"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Sync Name"},{"key":"suite","label":"Suite","formatter":"badge"},{"key":"tier","label":"Tier","formatter":"badge"},{"key":"pattern","label":"Pattern"}]'
+    controls: '{}'
+    title: Sync Rules
+    description: Synchronization rules wiring concepts together through pattern matching.
+    filters: '[{"field":"suite","label":"Suite","type":"toggle-group"},{"field":"tier","label":"Tier","type":"toggle-group"}]'
+  - view: installed-suites
+    dataSource: '{"concept":"AppInstallation","action":"list","params":{"status":"installed"}}'
+    layout: table
+    visibleFields: '[{"key":"name","label":"Suite"},{"key":"version","label":"Version"},{"key":"concepts","label":"Concepts"},{"key":"syncs","label":"Syncs"},{"key":"status","label":"Status","formatter":"badge"}]'
+    controls: '{}'
+    title: Installed Suites
+    description: Concept suite packages installed in this kernel.
+  - view: entity-properties
+    dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
+    layout: detail
+    visibleFields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
+    controls: '{}'
+    title: Properties
+    description: ''
+  - view: entity-content
+    dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
+    layout: content-body
+    visibleFields: '[{"key":"content","label":"Content"}]'
+    controls: '{}'
+    title: Content
+    description: ''
+  - view: entity-same-type
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"{{entityType}}"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Same Type
+    description: Other entities of the same type.
+  - view: entity-all-content
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: All Content
+    description: Browse all entities in the system.
+    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+  - view: version-spaces-list
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"version-space"}}'
+    layout: card-grid
+    visibleFields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"}]'
+    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"type","label":"Type","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}}'
+    title: Version Spaces
+    description: Named content variations — like git branches for content.

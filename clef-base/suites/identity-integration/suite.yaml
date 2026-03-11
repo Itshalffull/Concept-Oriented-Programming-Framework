@@ -20,3 +20,7 @@ syncs:
     - access-control-on-content-load
     - access-control-on-content-save
     - access-control-on-schema-apply
+    - session-create-sets-ui-transport-auth
+    - session-refresh-sets-ui-transport-auth
+    - session-destroy-clears-ui-transport-auth
+    - session-destroy-all-clears-ui-transport-auth

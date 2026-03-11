@@ -1,0 +1,44 @@
+# Core schema definitions for clef-base.
+# Each entry registers a schema with its field list.
+
+concept: Schema
+action: defineSchema
+entries:
+  - schema: ContentNode
+    fields: 'node,type,content,metadata,createdBy,createdAt,updatedAt'
+  - schema: Article
+    fields: 'title,body,author,publishedAt,status'
+  - schema: Page
+    fields: 'title,slug,body,template,publishedAt'
+  - schema: Media
+    fields: 'url,alt,mimeType,size,dimensions'
+  - schema: View
+    fields: 'view,dataSource,layout,filters,sorts,groups,visibleFields'
+  - schema: Workflow
+    fields: 'workflow,states,transitions,entities'
+  - schema: AutomationRule
+    fields: 'rule,trigger,conditions,actions,enabled'
+  - schema: TaxonomyTerm
+    fields: 'term,vocab,parent'
+  - schema: Vocabulary
+    fields: 'vocab,name,terms'
+  - schema: Schema
+    fields: 'schema,fields,extends,associations'
+  - schema: DisplayMode
+    fields: 'mode,name,fieldDisplayConfigs,fieldFormConfigs'
+  - schema: Theme
+    fields: 'name,base,overrides,active,priority'
+  - schema: ComponentMapping
+    fields: 'mapping,widget,concept,action'
+  - schema: Comment
+    fields: 'comment,author,body,target,createdAt'
+  - schema: File
+    fields: 'file,path,mimeType,size,hash'
+  - schema: Canvas
+    fields: 'canvas,name,items,connectors,notation,layout'
+  - schema: ConnectorPort
+    fields: 'port,owner,direction,type,capacity,position'
+  - schema: DiagramNotation
+    fields: 'notation,name,nodeTypes,edgeTypes,connectionRules'
+  - schema: ConstraintAnchor
+    fields: 'anchor,canvasId,type,items,axis,value'

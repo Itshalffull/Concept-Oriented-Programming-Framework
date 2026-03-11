@@ -1,0 +1,13 @@
+# Identity to ui-app transport wiring.
+# When a session token rotates, keep the ui-app transport auth
+# state aligned with the new session token.
+
+sync SessionRefreshSetsUiTransportAuth [eager]
+  purpose: "When a session refresh issues a new token, update the ui-app transport auth state so the shell continues using the current session token"
+when {
+  Session/refresh: [ session: ?session ]
+    => [ token: ?token ]
+}
+then {
+  Transport/setAuth: [ transport: "clef-base-transport"; auth: ?token ]
+}

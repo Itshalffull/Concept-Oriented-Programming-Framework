@@ -12,7 +12,6 @@ import {
   canAccessSchema,
   createManagedUser,
   createManagedRole,
-  createSessionForUser,
   readUserPermissions,
   readUserRoles,
   revokeManagedRole,
@@ -94,9 +93,17 @@ export async function loginAsAdmin(options: {
     return { ok: false as const, message: 'Invalid username or password.' };
   }
 
+  const sessionResult = await kernel.invokeConcept('urn:clef/Session', 'create', {
+    userId: options.user,
+    device: options.device,
+  });
+
+  if (sessionResult.variant !== 'ok') {
+    return { ok: false as const, message: 'Unable to create an authenticated session.' };
+  }
+
   const permissions = await readUserPermissions(options.user);
-  const sessionId = await createSessionForUser(kernel, options.user, options.device);
-  return { ok: true as const, sessionId, permissions };
+  return { ok: true as const, sessionId: String(sessionResult.session), permissions };
 }
 
 export async function logoutCurrentSession(sessionId: string | undefined) {
@@ -168,7 +175,7 @@ export async function updateSchemaAccess(input: {
   roles: string[];
 }) {
   await ensureSeeded();
-  await setSchemaActionRoles(input.schema, input.action, input.roles);
+  await setSchemaActionRoles(getKernel(), input.schema, input.action, input.roles);
 }
 
 export async function updateNodeAccess(input: {
@@ -177,7 +184,7 @@ export async function updateNodeAccess(input: {
   roles: string[];
 }) {
   await ensureSeeded();
-  await setNodeActionRoles(input.node, input.action, input.roles);
+  await setNodeActionRoles(getKernel(), input.node, input.action, input.roles);
 }
 
 export function getSchemaPermissionAction(action: string) {
@@ -222,7 +229,7 @@ export async function canInvokeAdminConcept(
     const schema =
       String(input.schema ?? input.type ?? '').trim() ||
       (action === 'list' ? 'ContentNode' : '');
-    return canAccessSchema(session.roles, schema, permissionAction);
+    return canAccessSchema(getKernel(), session.roles, schema, permissionAction);
   }
 
   if (concept === 'ContentNode') {
@@ -234,13 +241,13 @@ export async function canInvokeAdminConcept(
 
     if (action === 'create') {
       const schema = String(input.type ?? '').trim();
-      return canAccessSchema(session.roles, schema, 'create');
+      return canAccessSchema(getKernel(), session.roles, schema, 'create');
     }
 
     if (action === 'list') {
       const schema = String(input.type ?? '').trim();
       if (schema) {
-        return canAccessSchema(session.roles, schema, 'view');
+        return canAccessSchema(getKernel(), session.roles, schema, 'view');
       }
       return session.roles.some((role) => ['admin', 'editor', 'viewer'].includes(role));
     }
@@ -252,7 +259,7 @@ export async function canInvokeAdminConcept(
     const node = String(input.node ?? '').trim();
     const record = await contentStorage.invokeConcept('urn:clef/ContentNode', 'get', { node });
     const schema = record.variant === 'ok' ? String(record.type ?? '') : '';
-    return canAccessNode(session.roles, node, schema, permissionAction);
+    return canAccessNode(getKernel(), session.roles, node, schema, permissionAction);
   }
 
   return session.permissions.includes(ADMIN_PERMISSION);

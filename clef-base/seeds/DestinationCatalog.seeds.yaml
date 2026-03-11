@@ -1,0 +1,117 @@
+# Shell destination registry for clef-base.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: dashboard
+    name: dashboard
+    targetConcept: AppShell
+    targetView: dashboard
+    href: /admin
+    icon: "◫"
+    group: Content
+  - destination: content
+    name: content
+    targetConcept: ContentNode
+    targetView: list
+    href: /admin/content
+    icon: "📄"
+    group: Content
+  - destination: canvas
+    name: canvas
+    targetConcept: Canvas
+    targetView: browser
+    href: /admin/canvas
+    icon: "◇"
+    group: Content
+  - destination: schemas
+    name: schemas
+    targetConcept: Schema
+    targetView: list
+    href: /admin/schemas
+    icon: "⬡"
+    group: Structure
+  - destination: views
+    name: views
+    targetConcept: View
+    targetView: builder
+    href: /admin/view-builder
+    icon: "⊞"
+    group: Structure
+  - destination: taxonomy
+    name: taxonomy
+    targetConcept: Taxonomy
+    targetView: browser
+    href: /admin/taxonomy
+    icon: "🌳"
+    group: Structure
+  - destination: mappings
+    name: mappings
+    targetConcept: ComponentMapping
+    targetView: list
+    href: /admin/mappings
+    icon: "⇋"
+    group: Surface
+  - destination: display-modes
+    name: display-modes
+    targetConcept: DisplayMode
+    targetView: list
+    href: /admin/display-modes
+    icon: "◩"
+    group: Surface
+  - destination: themes
+    name: themes
+    targetConcept: Theme
+    targetView: browser
+    href: /admin/themes
+    icon: "🎨"
+    group: Surface
+  - destination: concepts
+    name: concepts
+    targetConcept: ConceptBrowser
+    targetView: browser
+    href: /admin/concepts
+    icon: "⬢"
+    group: Platform
+  - destination: syncs
+    name: syncs
+    targetConcept: SyncEngine
+    targetView: list
+    href: /admin/syncs
+    icon: "⇄"
+    group: Platform
+  - destination: score
+    name: score
+    targetConcept: Score
+    targetView: dashboard
+    href: /admin/score
+    icon: "📊"
+    group: Platform
+  - destination: multiverse
+    name: multiverse
+    targetConcept: VersionSpace
+    targetView: manager
+    href: /admin/multiverse
+    icon: "⎇"
+    group: System
+  - destination: workflows
+    name: workflows
+    targetConcept: Workflow
+    targetView: list
+    href: /admin/workflows
+    icon: "⤷"
+    group: System
+  - destination: automations
+    name: automations
+    targetConcept: AutomationRule
+    targetView: list
+    href: /admin/automations
+    icon: "⚡"
+    group: System
+  - destination: access
+    name: access
+    targetConcept: Authorization
+    targetView: admin
+    href: /admin/access
+    icon: "🔐"
+    group: System

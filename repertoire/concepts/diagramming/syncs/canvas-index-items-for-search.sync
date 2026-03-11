@@ -1,0 +1,9 @@
+# When an item is added to a canvas, index it for full-text search.
+
+sync CanvasIndexItemsForSearch [eventual]
+when {
+  Canvas/addItem: [ canvas: ?canvas; item: ?item ] => [ ok ]
+}
+then {
+  SearchIndex/index: [ entity: ?item ]
+}

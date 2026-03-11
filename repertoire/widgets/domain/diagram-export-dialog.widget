@@ -1,0 +1,111 @@
+@version(1)
+widget diagram-export-dialog {
+
+  purpose {
+    Dialog for exporting a canvas diagram. Provides format selection,
+    size options, background toggle, data embedding toggle, preview,
+    and export action.
+  }
+
+  anatomy {
+    root:               container  { Modal dialog wrapper }
+    format-selector:    input      { Dropdown of available export formats }
+    size-options:       container  { Width/height inputs }
+    background-toggle:  input      { Toggle for including background }
+    embed-data-toggle:  input      { Toggle for embedding round-trip data }
+    preview:            container  { Live preview of export output }
+    export-button:      action     { Trigger export action }
+    cancel-button:      action     { Close dialog without exporting }
+  }
+
+  states {
+    open [initial] {
+      on SELECT_FORMAT -> configured;
+      on CANCEL -> closed;
+    }
+
+    configured {
+      on EXPORT -> exporting;
+      on SELECT_FORMAT -> configured;
+      on CANCEL -> closed;
+      entry [update preview];
+    }
+
+    exporting {
+      on COMPLETE -> complete;
+      on ERROR -> configured;
+      entry [disable export-button; show progress];
+    }
+
+    complete {
+      on CLOSE -> closed;
+      on EXPORT_AGAIN -> configured;
+      entry [show download link];
+    }
+
+    closed {
+      entry [close dialog];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Enter -> EXPORT;
+      Escape -> CANCEL;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: format-selector;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Export diagram";
+        aria-modal: "true";
+      };
+      export-button -> {
+        role: "button";
+        aria-label: concat("Export as ", ?selectedFormat);
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    formats: list { name: String, label: String, mime_type: String } = []
+    selectedFormat: option String
+    width: Int = 1920
+    height: Int = 1080
+    includeBackground: Bool = true
+    embedData: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "export-dialog";
+      data-canvas: ?canvasId;
+    }
+    format-selector -> {
+      data-part: "format-selector";
+      value: ?selectedFormat;
+      onChange: send(SELECT_FORMAT, { format: self.value });
+    }
+    embed-data-toggle -> {
+      data-part: "embed-toggle";
+      checked: ?embedData;
+      onChange: send(TOGGLE_EMBED, { value: self.checked });
+    }
+    export-button -> {
+      data-part: "export-button";
+      onClick: send(EXPORT, { format: ?selectedFormat, width: ?width, height: ?height, background: ?includeBackground, embed_data: ?embedData });
+    }
+    cancel-button -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+}

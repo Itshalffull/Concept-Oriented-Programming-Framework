@@ -1,0 +1,41 @@
+# Admin surface layout definitions for clef-base.
+
+concept: Layout
+action: create
+entries:
+  - layout: dashboard
+    name: Dashboard
+    kind: stack
+    title: Dashboard
+    description: System overview with live stats and registered concepts.
+    children: '[{"type":"view","id":"dashboard-stats"},{"type":"view","id":"dashboard-concepts"},{"type":"view","id":"content-list"}]'
+  - layout: score
+    name: Score
+    kind: stack
+    title: Score
+    description: Code-as-data analysis: concept dependencies, sync chains, and schema browsing.
+    children: '[{"type":"view","id":"concept-graph"},{"type":"view","id":"score-schemas"}]'
+  - layout: syncs
+    name: Syncs
+    kind: stack
+    title: Syncs
+    description: Sync rules wire concepts together through pattern matching on completions.
+    children: '[{"type":"view","id":"syncs-list"}]'
+  - layout: concept-browser
+    name: Concept Browser
+    kind: stack
+    title: Concept Browser
+    description: Browse and manage concept suite packages.
+    children: '[{"type":"view","id":"installed-suites"},{"type":"view","id":"concept-graph"}]'
+  - layout: entity-detail
+    name: Entity Detail
+    kind: stack
+    title: ''
+    description: ''
+    children: '[{"type":"view","id":"entity-properties"},{"type":"view","id":"entity-content"},{"type":"view","id":"entity-same-type"},{"type":"view","id":"entity-all-content"}]'
+  - layout: multiverse
+    name: Version Spaces
+    kind: stack
+    title: Version Spaces
+    description: Named content variations — like git branches for content. Each space can override any ContentNode.
+    children: '[{"type":"view","id":"version-spaces-list"}]'

@@ -37,6 +37,21 @@ concept Transport [P] {
       -> invalid(message: String) { Kind unknown. }
     }
 
+    action setAuth(transport: P, auth: String) {
+      -> ok(transport: P) {
+        Update the transport's active authentication material
+        without changing other connection settings.
+      }
+      -> notfound(message: String) { Transport not configured. }
+    }
+
+    action clearAuth(transport: P) {
+      -> ok(transport: P) {
+        Remove the transport's active authentication material.
+      }
+      -> notfound(message: String) { Transport not configured. }
+    }
+
     action fetch(transport: P, query: String) {
       -> ok(transport: P, data: String) { Execute read. Return data. }
       -> cached(transport: P, data: String, age: Int) { Returned from cache. }

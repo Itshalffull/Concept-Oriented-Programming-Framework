@@ -1,0 +1,38 @@
+@version(1)
+concept BpmnXmlExportProvider [C] {
+
+  purpose {
+    Export and import canvas diagrams in BPMN 2.0 XML format for
+    interoperability with business process modeling tools.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "bpmn-xml", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      process_id: option String
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Generates BPMN 2.0 XML with process definition and diagram
+        interchange (BPMNDI) for layout. mime_type: "application/xml".
+      }
+      -> error(message: String) { Export failed. }
+    }
+
+    action importData(data: String, target_canvas: option String) {
+      -> ok(canvas_id: String, items_created: Int, connectors_created: Int) {
+        Parses BPMN XML, creates items from flow nodes and connectors
+        from sequence flows.
+      }
+      -> error(message: String) { Parse failed or invalid BPMN. }
+    }
+  }
+}

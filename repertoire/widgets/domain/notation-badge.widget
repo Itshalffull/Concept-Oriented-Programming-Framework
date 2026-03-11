@@ -1,0 +1,85 @@
+@version(1)
+widget notation-badge {
+
+  purpose {
+    Small badge displaying the active diagram notation on a canvas
+    toolbar. Shows notation icon and name. Clicking opens notation
+    selector.
+  }
+
+  anatomy {
+    root:           action     { Clickable badge in canvas toolbar }
+    notation-icon:  indicator  { Icon representing the notation type }
+    notation-name:  text       { Name of the active notation }
+  }
+
+  states {
+    active [initial] {
+      on CLICK -> selecting;
+      on HOVER -> hovered;
+    }
+
+    hovered {
+      on UNHOVER -> active;
+      on CLICK -> selecting;
+      entry [show tooltip with notation description];
+      exit [hide tooltip];
+    }
+
+    selecting {
+      on SELECT -> active;
+      on CANCEL -> active;
+      entry [open notation selector dropdown];
+      exit [close dropdown];
+    }
+
+    none {
+      on CLICK -> selecting;
+      entry [show "No notation" placeholder];
+    }
+  }
+
+  accessibility {
+    role: button;
+    modal: false;
+    keyboard {
+      Enter -> CLICK;
+      Space -> CLICK;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "button";
+        aria-label: concat("Notation: ", if ?notationName then ?notationName else "None");
+        aria-haspopup: "listbox";
+      };
+    }
+  }
+
+  props {
+    notationId: option String
+    notationName: option String
+    notationIcon: option String
+    canvasId: String
+  }
+
+  connect {
+    root -> {
+      data-part: "notation-badge";
+      data-canvas: ?canvasId;
+      data-notation: ?notationId;
+      onClick: send(CLICK);
+      onPointerEnter: send(HOVER);
+      onPointerLeave: send(UNHOVER);
+    }
+    notation-name -> {
+      data-part: "notation-name";
+      text: if ?notationName then ?notationName else "Freeform";
+    }
+  }
+}

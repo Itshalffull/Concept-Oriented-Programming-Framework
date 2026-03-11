@@ -1,0 +1,15 @@
+# When a connector is drawn on a concept map canvas without a label,
+# report a validation error (concept maps require labeled edges).
+
+sync ConceptMapRequiresEdgeLabels [eager]
+when {
+  Canvas/drawConnector: [ canvas: ?canvas; source: ?src; target: ?tgt; label: ?label ] => [ ok ]
+}
+where {
+  Canvas: { ?canvas notation_id: ?notation }
+  DiagramNotation: { ?notation name: "Concept Map" }
+  filter(?label == null or ?label == "")
+}
+then {
+  Validator/reportError: [ entity: ?canvas; field: "connector_label"; message: "Concept maps require labeled edges" ]
+}

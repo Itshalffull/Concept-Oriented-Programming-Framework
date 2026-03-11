@@ -1,0 +1,42 @@
+@version(1)
+concept TreeLayoutProvider [C] {
+
+  purpose {
+    Compute spatial positions using Buchheim tree layout algorithm.
+    Produces compact, aesthetically pleasing tree drawings with O(V)
+    complexity. Best for mind maps, org charts, and file trees.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "tree", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String, config: option {
+      direction: option String, spacing_x: option Float, spacing_y: option Float
+    }) {
+      -> ok(positions: list { item_id: String, x: Float, y: Float }) {
+        Computes tree positions using Buchheim-Junger-Leipert algorithm
+        with thread pointers for contour computation. Supports variable
+        node sizes and configurable direction (top-down, left-right).
+      }
+      -> error(message: String) {
+        Layout computation failed or input is not a valid tree.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["root", "child1", "child2"], config: _)
+           -> ok(positions: _)
+    then apply(canvas: "c1", items: ["root", "child1"], config: _)
+           -> ok(positions: _)
+  }
+}

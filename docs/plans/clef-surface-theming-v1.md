@@ -2331,16 +2331,20 @@ suites/
     implementations/
       typescript/
         src/concepts/...   // 16 concept handlers
-        src/gen/theme-gen-extension.ts
-        src/providers/...  // 19 provider handlers
-      swift/
-        Sources/ClefSurface/Concepts/...
-      kotlin/
-        src/main/kotlin/clef/surface/...
-      python/
-        clef_surface/concepts/...
-        clef_surface/gen/...      // primary build pipeline
-        clef_surface/providers/...
+        src/providers/...  // provider handlers
+        // ThemeGen generation passes are TypeScript handlers wired via the
+        // Clef generation suite — not standalone scripts. ThemeParser and
+        // ThemeGen concept handlers live here, invoked by the sync engine
+        // like any other concept handler.
+      nextjs/
+        src/concepts/...   // fp-ts functional TypeScript handlers
+        // Reuses TypeScript concept handlers with fp-ts discipline
+        // (no mutation, Either/TaskEither for all IO). Server-side
+        // ThemeGen pass runs at build time via Next.js build pipeline.
+      rust/
+        src/concepts/...   // Rust handlers for compute-intensive passes
+        // ColorSpace OKLCH arithmetic, SpringPhysics ODE stepping, and
+        // Constraint validation. Compiles to WASM for browser-side use.
 ```
 
 **suite.yaml:**
@@ -2366,7 +2370,7 @@ providers:
   style-profile: [StyleProfileRuleBasedProvider, StyleProfileAIProvider, StyleProfileStaticProvider, StyleProfileDesignToolProvider]
 derived: [ExpressionTheme, ThemeKit]
 syncs: 42
-implementations: [typescript, swift, kotlin, python]
+implementations: [typescript, nextjs, rust]
 uses: [ui-core, ui-component, ui-render]
 ```
 
@@ -2374,41 +2378,35 @@ uses: [ui-core, ui-component, ui-render]
 
 ## 10. Implementation Notes per Language
 
-These are architectural notes for implementors, not code.
+Generation in this kit flows through Clef's own generation suite — ThemeParser and ThemeGen are Clef concepts whose handlers live in the implementation targets below. There is no external build script or standalone pipeline. The sync engine invokes ThemeParser/ThemeGen handlers exactly as it does any other concept handler. Each new ThemeGen generation pass (one per new theme block) is an additional handler method in the TypeScript or Rust implementation, not a new file type.
 
-### TypeScript (primary web target)
-- Primary dependency: `culori` for OKLCH/HCT color math (MIT licensed, tree-shakeable)
-- ColorSpace derives palettes at build time via ThemeGen; runtime switching uses CSS custom properties only
-- SpringPhysics computes `linear()` approximations at build time by stepping the spring ODE at 10ms intervals until settlement; output is a static CSS string
-- MaterialSurface shadow computation uses pure arithmetic; no canvas or DOM access required at build time
-- StructuralMotif providers are lazy-loaded framework components; the coordination concept emits CSS `--motif-*` hints that the framework adapter reads to determine which component to mount
+Solidity has no applicable surface in this kit — theming is UI-layer work with no blockchain state.
 
-### Swift (iOS / macOS / visionOS)
-- ColorSpace implemented as an `actor` for safe concurrent state access
-- `OklchColor` as a value type (struct) with methods for sRGB conversion and WCAG luminance
-- MaterialSurface returns `[ShadowLayer]` structs consumed by SwiftUI `.shadow()` modifiers
-- For glassmorphism: `glassBackground()` returns the `Material` enum value (`.ultraThinMaterial` etc.) plus opacity and border alpha — maps directly to SwiftUI `.background(.ultraThinMaterial)` with overlay
-- TypeScale returns both `clamp()` CSS strings (for web-embedded views) and `CGFloat` point sizes (for native `Font` usage)
-- SpringPhysics: native path uses `UISpringTimingParameters` on iOS; pure spring math fallback for macOS/visionOS
-- StructuralMotif: paradigm names map to SwiftUI `NavigationSplitView`, `TabView`, or custom toolbar implementations
+### TypeScript (primary web handler target)
 
-### Kotlin / Android (Compose target)
-- ColorSpace as a class with suspend functions; state held in `MutableStateFlow` for Compose reactivity
-- `OklchColor` as a data class with `toAndroidColor(): Int` for `@Composable Color` usage
-- TypeScale: `getTextUnit()` returns `TextUnit` (sp) at the midpoint of the fluid range for native use
-- Density modes map to Compose's `LocalDensity` provider or a custom `CompositionLocal`
-- MaterialSurface shadows map to `BoxShadow` in Compose or draw-layer elevation
-- StructuralMotif: `toNavigationSuiteType()` maps paradigm names to `NavigationSuiteType` enum values from `androidx.compose.material3.adaptive.navigationsuite`
-- SpringPhysics: native provider maps to `spring()` from `androidx.compose.animation.core`
+- All 16 concept handlers and all provider handlers have TypeScript implementations
+- Primary color math dependency: `culori` (MIT, tree-shakeable) for OKLCH palette derivation; HCT uses `@material/material-color-utilities`
+- ThemeGen TypeScript handlers implement all new generation passes: one method per new `.theme` block, extending the existing ThemeGen handler class
+- ThemeParser TypeScript handler adds 12 new block parsers to the existing parser, following the existing `ParsedXRegistered` sync pattern
+- SpringPhysics ODE stepping (`spring_to_css_linear`) is pure arithmetic — no DOM, no canvas access needed at build time
+- MaterialSurface shadow computation is pure arithmetic; no rendering primitives required
+- StructuralMotif providers are lazy-loaded via the Clef provider registration pattern; the coordination concept emits `--motif-*` CSS hints that FrameworkAdapter reads to mount the correct component
 
-### Python (build pipeline — primary ThemeGen language)
-- All CSS generation lives in Python; this is the canonical implementation for the generation pipeline
-- ColorSpace: pure arithmetic OKLCH implementation; the conversion math is self-contained
-- TypeScale: `fluid_clamp()` is a pure formula used by ThemeGen to emit all type scale CSS custom properties
-- SpringPhysics: `spring_to_css_linear()` steps the ODE at 10ms intervals using semi-implicit Euler integration; output is a CSS `linear()` string
-- ThemeGen extension: one class with one method per new block, called after the existing ThemeGen pass
-- Constraint validation runs during `clef theme build` and halts with an error report if severity="error" violations exist
-- ImageFilter SVG duotone: feColorMatrix matrix computation from two OKLCH colors; pure arithmetic
+### Next.js / fp-ts (functional TypeScript target)
+
+- Reuses all TypeScript concept handlers with fp-ts discipline: no mutation, all IO wrapped in `TaskEither`, errors surfaced as typed `Either` values rather than thrown exceptions
+- ThemeGen's Next.js handler runs at build time within Next.js's build pipeline via `getStaticProps` or a custom webpack plugin — the same concept handler, invoked at the right build moment
+- Server-side rendering concerns: CSS custom property output must be inlined into `<style>` tags in `_document.tsx` to avoid FOUC; the ThemeGen handler exposes a `getInlineCSS()` action for this purpose
+- Color scheme preference negotiation (`Preference/negotiate`) uses `prefers-color-scheme` media query server-side detection via request headers where available
+
+### Rust (compute-intensive handler target)
+
+- Implements the three computationally heavy concept handlers: ColorSpace (OKLCH/HCT arithmetic), SpringPhysics (ODE stepping at 10ms intervals using semi-implicit Euler integration), Constraint (batch WCAG contrast validation across full palette)
+- Compiles to WASM via `wasm-pack` for browser-side use (live theme preview in ConceptBrowser); the same Rust handler binary serves both native CLI and WASM targets via conditional compilation
+- ColorSpace: pure arithmetic structs (`OklchColor`, `HctColor`) with no external color library dependency — the conversion math is self-contained and auditable
+- SpringPhysics: `spring_to_css_linear()` steps the ODE until settlement (amplitude < 0.001), returns a `String` CSS `linear()` value; deterministic given the same tension/friction/mass inputs
+- Constraint validation: parallel batch evaluation across all palette combinations using `rayon`; halts ThemeGen with a structured error report if severity=`"error"` violations exist
+- MaterialSurface SVG filter matrix computation (duotone feColorMatrix from two OKLCH colors) also lives in Rust for precision
 
 ---
 

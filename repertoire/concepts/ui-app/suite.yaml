@@ -14,6 +14,21 @@ concepts:
     params:
       N: { as: nav-ref, description: "Reference to a navigation destination" }
 
+  DestinationCatalog:
+    spec: ./destination-catalog.concept
+    params:
+      D: { as: destination-ref, description: "Reference to declared application destinations" }
+
+  RuntimeProfile:
+    spec: ./runtime-profile.concept
+    params:
+      R: { as: runtime-profile-ref, description: "Reference to a declarative runtime assembly profile" }
+
+  PlatformBindingCatalog:
+    spec: ./platform-binding-catalog.concept
+    params:
+      B: { as: platform-binding-ref, description: "Reference to a platform-specific binding declaration" }
+
   Host:
     spec: ./host.concept
     params:

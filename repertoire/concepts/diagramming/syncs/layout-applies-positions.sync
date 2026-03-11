@@ -1,0 +1,10 @@
+# When Canvas/applyLayout is called, dispatch to SpatialLayout/arrange
+# to compute positions via the requested algorithm provider.
+
+sync LayoutAppliesPositions [eager]
+when {
+  Canvas/applyLayout: [ canvas: ?canvas; algorithm: ?alg; config: ?cfg ] => [ _ ]
+}
+then {
+  SpatialLayout/arrange: [ canvas_id: ?canvas; algorithm: ?alg; config: ?cfg ]
+}

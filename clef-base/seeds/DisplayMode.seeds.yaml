@@ -1,0 +1,15 @@
+# Core display mode definitions for clef-base.
+
+concept: DisplayMode
+action: defineMode
+entries:
+  - mode: entity-page
+    name: Entity Page
+  - mode: table-row
+    name: Table Row
+  - mode: card
+    name: Card
+  - mode: compact
+    name: Compact
+  - mode: score-graph
+    name: Score Graph

@@ -1,0 +1,42 @@
+@version(1)
+concept RadialLayoutProvider [C] {
+
+  purpose {
+    Compute spatial positions using radial tree layout. Places root at
+    center with children on concentric circles via BFS. Best for radial
+    mind maps and network hop visualizations. O(V+E) complexity.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        name: "radial", category: "layout"
+      }
+    }
+
+    action apply(canvas: String, items: list String, config: option {
+      spacing_x: option Float, spacing_y: option Float
+    }) {
+      -> ok(positions: list { item_id: String, x: Float, y: Float }) {
+        Computes radial positions via BFS from root node. Each depth
+        level is placed on a concentric circle with angular spacing
+        proportional to subtree size.
+      }
+      -> error(message: String) {
+        Layout computation failed or no root node found.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", items: ["center", "a", "b"], config: _)
+           -> ok(positions: _)
+    then apply(canvas: "c1", items: ["center", "a"], config: _)
+           -> ok(positions: _)
+  }
+}

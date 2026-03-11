@@ -1,0 +1,36 @@
+derived MindMapEditor [T] {
+
+  purpose {
+    Canvas with mind-map notation enforcing tree topology and tree
+    layout. Central topic as root with branching child nodes.
+  }
+
+  composes {
+    Canvas [T]
+    DiagramNotation [T]
+    SpatialLayout [T]
+    Outline [T]
+  }
+
+  syncs {
+    required: [mindmap-setup, mindmap-tree-constraint, mindmap-layout]
+  }
+
+  surface {
+    action create(name: String, central_topic: String) {
+      matches: Canvas/create + Canvas/addItem + DiagramNotation/applyToCanvas(notation: "mind-map")
+    }
+
+    action addBranch(parent: ID, topic: String) {
+      matches: Canvas/addItem + Outline/appendChild
+    }
+
+    action autoLayout() {
+      matches: Canvas/applyLayout(algorithm: "tree")
+    }
+  }
+
+  principle {
+    after create then autoLayout() arranges in radial tree from center
+  }
+}

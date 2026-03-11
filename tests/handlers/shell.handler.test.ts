@@ -63,4 +63,31 @@ describe('shellHandler adapt', () => {
       utility: 'persistent',
     });
   });
+
+  it('initializes shell zones from named zone objects', async () => {
+    const storage = createStorage();
+
+    const result = await shellHandler.initialize!(
+      {
+        shell: 'shell-2',
+        zones: JSON.stringify([
+          { name: 'sidebar', role: 'persistent' },
+          { name: 'primary', role: 'navigated' },
+        ]),
+      },
+      storage as never,
+    );
+
+    expect(result.variant).toBe('ok');
+    const record = await storage.get('shell', 'shell-2');
+    expect(record?.status).toBe('ready');
+    expect(JSON.parse(String(record?.zones))).toEqual({
+      sidebar: '',
+      primary: '',
+    });
+    expect(JSON.parse(String(record?.zoneRole))).toEqual({
+      sidebar: 'persistent',
+      primary: 'navigated',
+    });
+  });
 });

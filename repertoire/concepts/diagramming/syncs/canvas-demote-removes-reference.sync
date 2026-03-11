@@ -1,0 +1,11 @@
+sync CanvasDemoteRemovesReference [eager]
+when {
+  Canvas/demoteConnector: [ canvas: ?canvas; connector_id: ?conn ]
+    => [ ok; connector_id: ?conn ]
+}
+where {
+  Canvas: { ?conn reference_id: ?ref }
+}
+then {
+  Reference/removeRef: [ reference_id: ?ref ]
+}

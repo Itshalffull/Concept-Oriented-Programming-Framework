@@ -6,14 +6,27 @@
  *
  * Implements the AppShell derived concept's runtime:
  * - Initializes Shell with zones on mount
- * - Registers all destinations with Navigator
+ * - Loads destinations from DestinationCatalog
  * - Syncs Next.js pathname ↔ Navigator state bidirectionally
  * - Exposes useClef(), useNavigator(), useShell(), useHost() hooks
  */
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { destinations, destinationByHref, destinationByName, groupedDestinations, type Destination } from './destinations';
+import {
+  destinationByHref,
+  destinationByName,
+  groupDestinations,
+  type Destination,
+} from './destinations';
+import {
+  bootstrapUiApp,
+  createInitialUiAppSnapshot,
+  markHostReady as markHostReadyInRuntime,
+  syncPathToUiApp,
+  UI_APP_IDS,
+  unmountHost as unmountHostInRuntime,
+} from './ui-app-runtime';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,7 +40,7 @@ interface NavigatorState {
 }
 
 interface ShellState {
-  zones: Record<string, string>; // zone name → host ref
+  zones: Record<string, string>;
   status: 'initializing' | 'ready' | 'error';
   overlays: string[];
 }
@@ -68,128 +81,112 @@ interface ClefContextValue {
 const ClefContext = createContext<ClefContextValue | null>(null);
 
 // ---------------------------------------------------------------------------
-// Shell zone definitions
-// ---------------------------------------------------------------------------
-
-const SHELL_ZONES = ['sidebar', 'primary', 'overlay'] as const;
-type ZoneName = typeof SHELL_ZONES[number];
-
-const ZONE_ROLES: Record<ZoneName, string> = {
-  sidebar: 'persistent',
-  primary: 'navigated',
-  overlay: 'transient',
-};
-
-// ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
-
-let hostCounter = 0;
 
 export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const router = useRouter();
   const initialized = useRef(false);
+  const bootstrapping = useRef<Promise<void> | null>(null);
+  const snapshotRef = useRef(createInitialUiAppSnapshot());
 
   // Navigator state
-  const [navState, setNavState] = useState<NavigatorState>({
-    current: null,
-    history: [],
-    canGoBack: false,
-    canGoForward: false,
-  });
+  const [navState, setNavState] = useState<NavigatorState>(snapshotRef.current.navigator);
   const forwardStack = useRef<Destination[]>([]);
 
   // Shell state
-  const [shellState, setShellState] = useState<ShellState>({
-    zones: Object.fromEntries(SHELL_ZONES.map(z => [z, ''])),
-    status: 'initializing',
-  overlays: [],
-  });
+  const [shellState, setShellState] = useState<ShellState>(snapshotRef.current.shell);
 
   // Host state
   const [hosts, setHosts] = useState<Map<string, HostState>>(new Map());
   const [currentHostId, setCurrentHostId] = useState<string | null>(null);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
 
   // ------------------------------------------------------------------
+  const invoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
+    const res = await fetch(`/api/invoke/${concept}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    return res.json();
+  }, []);
+
+  const applySnapshot = useCallback((nextSnapshot: ReturnType<typeof createInitialUiAppSnapshot>) => {
+    snapshotRef.current = nextSnapshot;
+    setNavState(nextSnapshot.navigator);
+    setShellState(nextSnapshot.shell);
+    setCurrentHostId(nextSnapshot.currentHost?.id ?? null);
+    setHosts((prev) => {
+      const next = new Map(prev);
+      if (nextSnapshot.currentHost) {
+        next.set(nextSnapshot.currentHost.id, nextSnapshot.currentHost);
+      }
+      return next;
+    });
+  }, []);
+
+  const loadDestinations = useCallback(async () => {
+    const response = await invoke('DestinationCatalog', 'list', {});
+    const records = Array.isArray(response.destinations)
+      ? response.destinations as Destination[]
+      : [];
+    setDestinations(records);
+    return records;
+  }, [invoke]);
+
   // Initialize Shell (runs once on mount)
   // ------------------------------------------------------------------
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-
-    // Shell/initialize — set up zones
-    setShellState(prev => ({
-      ...prev,
-      status: 'ready',
-    }));
-  }, []);
+    bootstrapping.current = Promise.all([
+      bootstrapUiApp(invoke),
+      loadDestinations(),
+    ])
+      .then(([nextSnapshot]) => applySnapshot(nextSnapshot))
+      .catch(() => {
+        setShellState((prev) => ({ ...prev, status: 'error' }));
+      });
+  }, [applySnapshot, invoke, loadDestinations]);
 
   // ------------------------------------------------------------------
   // Sync pathname → Navigator (Next.js is source of truth for URL)
   // ------------------------------------------------------------------
   useEffect(() => {
-    const dest = destinationByHref(pathname);
+    const dest = destinationByHref(destinations, pathname);
     if (!dest) return;
 
     // Only update if actually changed
     if (navState.current?.name === dest.name) return;
 
-    setNavState(prev => {
-      const history = prev.current
-        ? [...prev.history, prev.current]
-        : prev.history;
+    const sync = async () => {
+      if (bootstrapping.current) {
+        await bootstrapping.current;
+      }
 
-      return {
-        current: dest,
-        history,
-        canGoBack: history.length > 0,
-        canGoForward: false,
-      };
-    });
-    forwardStack.current = [];
-
-    // Mount host for this destination
-    const hostId = `host-${++hostCounter}`;
-    const newHost: HostState = {
-      id: hostId,
-      concept: dest.targetConcept,
-      view: dest.targetView,
-      zone: 'primary',
-      status: 'mounted',
+      const nextSnapshot = await syncPathToUiApp(invoke, snapshotRef.current, dest);
+      forwardStack.current = [];
+      applySnapshot(nextSnapshot);
     };
 
-    setHosts(prev => {
-      const next = new Map(prev);
-      // Unmount previous primary host
-      for (const [id, host] of next) {
-        if (host.zone === 'primary' && host.status !== 'unmounted') {
-          next.set(id, { ...host, status: 'unmounted' });
-        }
-      }
-      next.set(hostId, newHost);
-      return next;
+    sync().catch(() => {
+      setShellState((prev) => ({ ...prev, status: 'error' }));
     });
-    setCurrentHostId(hostId);
-
-    // Shell/assignToZone
-    setShellState(prev => ({
-      ...prev,
-      zones: { ...prev.zones, primary: hostId },
-    }));
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [applySnapshot, destinations, invoke, navState.current?.name, pathname]);
 
   // ------------------------------------------------------------------
   // Navigation actions
   // ------------------------------------------------------------------
   const navigate = useCallback((name: string) => {
-    const dest = destinationByName(name);
+    const dest = destinationByName(destinations, name);
     if (!dest) {
       console.warn(`[ClefProvider] Destination "${name}" not found`);
       return;
     }
     router.push(dest.href);
-  }, [router]);
+  }, [destinations, router]);
 
   const navigateToHref = useCallback((href: string) => {
     router.push(href);
@@ -221,7 +218,7 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Host actions
   // ------------------------------------------------------------------
   const mountHost = useCallback((concept: string, view: string, zone = 'primary') => {
-    const hostId = `host-${++hostCounter}`;
+    const hostId = `${UI_APP_IDS.shell}:${zone}:${concept}:${view}`;
     const host: HostState = { id: hostId, concept, view, zone, status: 'mounted' };
     setHosts(prev => new Map(prev).set(hostId, host));
     setShellState(prev => ({
@@ -232,36 +229,32 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const unmountHost = useCallback((hostId: string) => {
-    setHosts(prev => {
-      const next = new Map(prev);
-      const host = next.get(hostId);
-      if (host) next.set(hostId, { ...host, status: 'unmounted' });
-      return next;
-    });
-  }, []);
+    unmountHostInRuntime(invoke, snapshotRef.current, hostId)
+      .then((nextSnapshot) => applySnapshot(nextSnapshot))
+      .catch(() => {
+        setHosts((prev) => {
+          const next = new Map(prev);
+          const host = next.get(hostId);
+          if (host) next.set(hostId, { ...host, status: 'unmounted' });
+          return next;
+        });
+      });
+  }, [applySnapshot, invoke]);
 
   const setHostReady = useCallback((hostId: string) => {
-    setHosts(prev => {
-      const next = new Map(prev);
-      const host = next.get(hostId);
-      if (host && host.status === 'mounted') {
-        next.set(hostId, { ...host, status: 'ready' });
-      }
-      return next;
-    });
-  }, []);
-
-  // ------------------------------------------------------------------
-  // Kernel invoke (server-side via API route)
-  // ------------------------------------------------------------------
-  const invoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
-    const res = await fetch(`/api/invoke/${concept}/${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    });
-    return res.json();
-  }, []);
+    markHostReadyInRuntime(invoke, snapshotRef.current, hostId)
+      .then((nextSnapshot) => applySnapshot(nextSnapshot))
+      .catch(() => {
+        setHosts((prev) => {
+          const next = new Map(prev);
+          const host = next.get(hostId);
+          if (host && host.status === 'mounted') {
+            next.set(hostId, { ...host, status: 'ready' });
+          }
+          return next;
+        });
+      });
+  }, [applySnapshot, invoke]);
 
   // ------------------------------------------------------------------
   // Context value
@@ -280,7 +273,7 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
     unmountHost,
     setHostReady,
     destinations,
-    groupedDestinations: groupedDestinations(),
+    groupedDestinations: groupDestinations(destinations),
     invoke,
   };
 

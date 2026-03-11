@@ -1,0 +1,37 @@
+@version(1)
+concept JsonExportProvider [C] {
+
+  purpose {
+    Export and import canvas diagrams in JSON format with full round-trip
+    fidelity. Embeds complete canvas state for lossless re-import.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "json", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      embed_data: option Bool
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Serializes canvas items, connectors, groups, and spatial data
+        to JSON. mime_type: "application/json".
+      }
+      -> error(message: String) { Export failed. }
+    }
+
+    action importData(data: String, target_canvas: option String) {
+      -> ok(canvas_id: String, items_created: Int, connectors_created: Int) {
+        Parses JSON and creates items/connectors on canvas.
+      }
+      -> error(message: String) { Parse failed or invalid format. }
+    }
+  }
+}

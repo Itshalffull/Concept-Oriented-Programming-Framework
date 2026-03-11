@@ -1,0 +1,14 @@
+# Identity to ui-app transport wiring.
+# When a session is created for the admin shell, update the
+# ui-app transport auth context so subsequent invocations use
+# the active session token.
+
+sync SessionCreateSetsUiTransportAuth [eager]
+  purpose: "When a session is created, copy its token into the ui-app transport auth state so the shell runtime and authenticated requests stay aligned"
+when {
+  Session/create: [ session: ?session ]
+    => [ token: ?token ]
+}
+then {
+  Transport/setAuth: [ transport: "clef-base-transport"; auth: ?token ]
+}

@@ -1,0 +1,12 @@
+# Registration sync for layout algorithm providers. Each provider
+# registers itself with SpatialLayout on install.
+
+sync LayoutProviderRegisters [integration]
+when {
+  TreeLayoutProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  RadialLayoutProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  ConstraintLayoutProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+}
+then {
+  SpatialLayout/register: [ algorithm: ?name; provider: ?name ]
+}

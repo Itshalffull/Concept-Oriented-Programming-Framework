@@ -1,0 +1,80 @@
+# Default access grants for clef-base resources.
+
+concept: ResourceGrantPolicy
+action: setGrant
+entries:
+  - grant: schema:*:view
+    scope: schema
+    resourcePattern: '*'
+    actionName: view
+    roles: '["admin","editor","viewer"]'
+  - grant: schema:*:create
+    scope: schema
+    resourcePattern: '*'
+    actionName: create
+    roles: '["admin","editor"]'
+  - grant: schema:*:edit
+    scope: schema
+    resourcePattern: '*'
+    actionName: edit
+    roles: '["admin","editor"]'
+  - grant: schema:*:delete
+    scope: schema
+    resourcePattern: '*'
+    actionName: delete
+    roles: '["admin","editor"]'
+  - grant: schema:*:define-schema
+    scope: schema
+    resourcePattern: '*'
+    actionName: define-schema
+    roles: '["admin"]'
+  - grant: schema:*:add-field
+    scope: schema
+    resourcePattern: '*'
+    actionName: add-field
+    roles: '["admin"]'
+  - grant: schema:*:extend-schema
+    scope: schema
+    resourcePattern: '*'
+    actionName: extend-schema
+    roles: '["admin"]'
+  - grant: schema:*:apply-schema
+    scope: schema
+    resourcePattern: '*'
+    actionName: apply-schema
+    roles: '["admin"]'
+  - grant: schema:*:remove-schema
+    scope: schema
+    resourcePattern: '*'
+    actionName: remove-schema
+    roles: '["admin"]'
+  - grant: schema:*:export-schema
+    scope: schema
+    resourcePattern: '*'
+    actionName: export-schema
+    roles: '["admin"]'
+  - grant: node:*:view
+    scope: node
+    resourcePattern: '*'
+    actionName: view
+    roles: '["admin","editor","viewer"]'
+  - grant: node:*:edit
+    scope: node
+    resourcePattern: '*'
+    actionName: edit
+    roles: '["admin","editor"]'
+  - grant: node:*:delete
+    scope: node
+    resourcePattern: '*'
+    actionName: delete
+    roles: '["admin","editor"]'
+  - grant: node:*:change-type
+    scope: node
+    resourcePattern: '*'
+    actionName: change-type
+    roles: '["admin","editor"]'
+  - grant: node:*:edit-metadata
+    scope: node
+    resourcePattern: '*'
+    actionName: edit-metadata
+    roles: '["admin","editor"]'

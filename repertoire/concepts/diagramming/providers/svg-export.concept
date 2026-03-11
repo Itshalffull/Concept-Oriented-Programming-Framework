@@ -1,0 +1,31 @@
+@version(1)
+concept SvgExportProvider [C] {
+
+  purpose {
+    Export canvas diagrams to SVG format with optional embedded JSON
+    comment for round-trip re-import.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "svg", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      width: option Int, height: option Int, background: option String,
+      embed_data: option Bool
+    }) {
+      -> ok(data: String, mime_type: String) {
+        Renders to SVG. Items as groups, connectors as paths.
+        If embed_data, includes JSON comment. mime_type: "image/svg+xml".
+      }
+      -> error(message: String) { Export failed. }
+    }
+  }
+}

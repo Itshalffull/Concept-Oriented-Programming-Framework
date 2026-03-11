@@ -1,0 +1,40 @@
+derived FlowchartEditor [T] {
+
+  purpose {
+    Canvas pre-configured with flowchart notation, hierarchical layout,
+    and standard process tooling. Provides a streamlined interface for
+    creating and editing flowchart diagrams.
+  }
+
+  composes {
+    Canvas [T]
+    DiagramNotation [T]
+    SpatialLayout [T]
+    DiagramExport [T]
+  }
+
+  syncs {
+    required: [flowchart-setup, flowchart-layout-default]
+  }
+
+  surface {
+    action create(name: String) {
+      matches: Canvas/create + DiagramNotation/applyToCanvas(notation: "flowchart")
+    }
+
+    action autoLayout() {
+      matches: Canvas/applyLayout(algorithm: "hierarchical")
+    }
+
+    action export(format: String) {
+      matches: DiagramExport/export
+    }
+
+    query getItems() -> Canvas/getItems
+  }
+
+  principle {
+    after create(name: "My Flow")
+    then getItems() returns empty canvas with flowchart palette
+  }
+}

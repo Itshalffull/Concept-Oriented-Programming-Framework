@@ -1,0 +1,29 @@
+@version(1)
+concept PdfExportProvider [C] {
+
+  purpose {
+    Export canvas diagrams to PDF format for printing and sharing.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        name: "pdf", category: "diagram_export"
+      }
+    }
+
+    action export(canvas_id: String, options: option {
+      width: option Int, height: option Int, background: option String
+    }) {
+      -> ok(data: Bytes, mime_type: String) {
+        Renders canvas to PDF. Items as vector paths, text as embedded fonts.
+        mime_type: "application/pdf".
+      }
+      -> error(message: String) { Export failed. }
+    }
+  }
+}

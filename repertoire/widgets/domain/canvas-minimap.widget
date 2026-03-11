@@ -1,0 +1,99 @@
+@version(1)
+widget canvas-minimap {
+
+  purpose {
+    Thumbnail overview of the full canvas extent. Shows all items as
+    small dots/rectangles and a draggable camera rectangle representing
+    the current viewport. Dragging the camera rectangle pans the main
+    viewport. Provides spatial orientation for large diagrams.
+  }
+
+  anatomy {
+    root:        container  { Minimap container with fixed dimensions }
+    canvas-bg:   container  { Scaled-down rendering of all items }
+    item-dot:    indicator  { Small rectangle representing a canvas item }
+    camera-rect: action     { Draggable rectangle showing current viewport bounds }
+  }
+
+  states {
+    idle [initial] {
+      on DRAG_START -> dragging;
+      on CLICK -> idle;
+      entry [update camera-rect position from viewport];
+    }
+
+    dragging {
+      on DRAG_MOVE -> dragging;
+      on DRAG_END -> idle;
+      entry [begin viewport pan];
+      exit [end viewport pan];
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      ArrowUp -> PAN_UP;
+      ArrowDown -> PAN_DOWN;
+      ArrowLeft -> PAN_LEFT;
+      ArrowRight -> PAN_RIGHT;
+    }
+    focus {
+      trap: false;
+      initial: camera-rect;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: "Canvas minimap";
+        aria-roledescription: "minimap";
+      };
+      camera-rect -> {
+        role: "slider";
+        aria-label: "Viewport position";
+        aria-roledescription: "viewport handle";
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    items: list { id: String, x: Float, y: Float, width: Float, height: Float, color: option String }
+    viewportX: Float = 0.0
+    viewportY: Float = 0.0
+    viewportWidth: Float = 800.0
+    viewportHeight: Float = 600.0
+    canvasExtentX: Float = 0.0
+    canvasExtentY: Float = 0.0
+    canvasExtentWidth: Float = 2000.0
+    canvasExtentHeight: Float = 2000.0
+    width: Int = 200
+    height: Int = 150
+  }
+
+  connect {
+    root -> {
+      data-part: "minimap";
+      data-canvas: ?canvasId;
+      style-width: concat(?width, "px");
+      style-height: concat(?height, "px");
+    }
+    item-dot -> {
+      data-part: "item-dot";
+      data-item-id: self.id;
+    }
+    camera-rect -> {
+      data-part: "camera-rect";
+      onPointerDown: send(DRAG_START, { clientX: event.clientX, clientY: event.clientY });
+    }
+  }
+
+  invariant {
+    "Camera rectangle must proportionally represent the main viewport bounds";
+    "Item dots must proportionally represent item positions on the canvas";
+    "Dragging camera-rect must immediately pan the main viewport";
+    "Click on minimap background must center the viewport at that position";
+  }
+}

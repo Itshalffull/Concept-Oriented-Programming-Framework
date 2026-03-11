@@ -10,30 +10,15 @@
  */
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { Sidebar, type SidebarGroup } from './widgets/Sidebar';
 import { useClef } from '../../lib/clef-provider';
+import { logoutAdminAction } from '../admin/actions';
 
-export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: string }> = ({
+  children,
+  sessionUser = '',
+}) => {
   const { groupedDestinations, navigator, shell } = useClef();
-  const router = useRouter();
-  const [sessionUser, setSessionUser] = React.useState('');
-
-  React.useEffect(() => {
-    let active = true;
-    fetch('/api/auth/session')
-      .then((response) => response.json())
-      .then((session) => {
-        if (active && session.authenticated) {
-          setSessionUser(String(session.user ?? ''));
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
@@ -72,16 +57,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           </h2>
           <div className="app-shell__session">
             {sessionUser ? <span>{sessionUser}</span> : null}
-            <button
-              type="button"
-              onClick={async () => {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                router.push('/');
-                router.refresh();
-              }}
-            >
-              Log out
-            </button>
+            <form action={logoutAdminAction}>
+              <button type="submit">Log out</button>
+            </form>
           </div>
         </header>
         <main className="app-shell__content">

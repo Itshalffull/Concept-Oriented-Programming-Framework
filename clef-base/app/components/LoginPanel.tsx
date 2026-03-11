@@ -1,68 +1,40 @@
 'use client';
 
+import { useActionState } from 'react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { loginAdminAction, type LoginActionState } from '../admin/actions';
 
 export function LoginPanel({ defaultUser }: { defaultUser: string }) {
   const router = useRouter();
-  const [user, setUser] = useState(defaultUser);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [state, formAction, pending] = useActionState<LoginActionState, FormData>(loginAdminAction, {
+    error: '',
+    message: '',
+  });
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError('');
-    setMessage('');
-
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user, password }),
-    });
-
-    const result = await response.json();
-    setSubmitting(false);
-
-    if (!response.ok) {
-      setError(String(result.message ?? 'Login failed.'));
-      return;
-    }
-
-    if (result.admin) {
-      router.push('/admin');
+  useEffect(() => {
+    if (state.message) {
       router.refresh();
-      return;
     }
-
-    setMessage('Signed in. This deployment only exposes the admin console to users with admin access.');
-    router.refresh();
-  }
+  }, [router, state.message]);
 
   return (
     <section className="setup-login-card">
       <h2>Administrator sign in</h2>
       <p>Use the seeded administrator account to open the Clef Base console.</p>
-      <form className="setup-form" onSubmit={onSubmit}>
+      <form className="setup-form" action={formAction}>
         <label>
           <span>Username</span>
-          <input value={user} onChange={(event) => setUser(event.target.value)} required />
+          <input name="user" defaultValue={defaultUser} required />
         </label>
         <label>
           <span>Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
+          <input name="password" type="password" required />
         </label>
-        {error ? <p className="setup-error">{error}</p> : null}
-        {message ? <p className="setup-success">{message}</p> : null}
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Signing in...' : 'Open admin'}
+        {state.error ? <p className="setup-error">{state.error}</p> : null}
+        {state.message ? <p className="setup-success">{state.message}</p> : null}
+        <button type="submit" disabled={pending}>
+          {pending ? 'Signing in...' : 'Open admin'}
         </button>
       </form>
     </section>
