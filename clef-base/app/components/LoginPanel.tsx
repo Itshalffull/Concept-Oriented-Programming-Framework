@@ -32,7 +32,7 @@ export function LoginPanel({ defaultUser }: { defaultUser: string }) {
           <input name="password" type="password" required />
         </label>
         {state.error ? <p className="setup-error">{state.error}</p> : null}
-        {state.message ? <p className="setup-success">{state.message}</p> : null}
+        {state.message && state.message !== 'admin' ? <p className="setup-success">{state.message}</p> : null}
         <button type="submit" disabled={pending}>
           {pending ? 'Signing in...' : 'Open admin'}
         </button>
