@@ -39,3 +39,21 @@ entries:
     title: Version Spaces
     description: Named content variations — like git branches for content. Each space can override any ContentNode.
     children: '[{"type":"view","id":"version-spaces-list"}]'
+  - layout: triple-zone-default
+    name: Triple Zone Default
+    kind: stack
+    title: ''
+    description: Standard entity page layout with three zones — structured fields, unstructured content, and related entities.
+    children: '[{"type":"area","id":"fields","content_mode":"structured","content_refs":[]},{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"related","content_mode":"structured","content_refs":[{"type":"view_embed","view":"backlinks"},{"type":"view_embed","view":"similar-entities"},{"type":"view_embed","view":"unlinked-references"},{"type":"view_embed","view":"graph-neighbors"}]}]'
+  - layout: flat-default
+    name: Flat Default
+    kind: stack
+    title: ''
+    description: Single structured area for simple display modes like teaser and card.
+    children: '[{"type":"area","id":"fields","content_mode":"structured","content_refs":[]}]'
+  - layout: two-column-sidebar
+    name: Two Column Sidebar
+    kind: grid
+    title: ''
+    description: Main content with a structured sidebar. Alternative to triple-zone for entity pages.
+    children: '[{"type":"area","id":"main","content_mode":"structured","content_refs":[]},{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"sidebar","content_mode":"structured","content_refs":[]}]'

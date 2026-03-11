@@ -1,0 +1,21 @@
+# FieldPlacement rendering — when a Layout area renders a field_placement
+# content ref, resolve the FieldPlacement and render it through its formatter.
+
+sync AreaRendersFieldPlacement [eager]
+when {
+  Component/renderAreaItem: [ item_type: "field_placement";
+                              item_ref: ?placement_id;
+                              context: ?ctx ]
+}
+where {
+  FieldPlacement: { ?p; source_field: ?field;
+                    formatter: ?fmt; formatter_options: ?opts;
+                    visible: true }
+  filter(?p == ?placement_id)
+}
+then {
+  Renderer/renderField: [ field: ?field;
+                          formatter: ?fmt;
+                          formatter_options: ?opts;
+                          context: ?ctx ]
+}

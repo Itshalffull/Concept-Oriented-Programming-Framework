@@ -19,6 +19,7 @@ import { Badge } from '../components/widgets/Badge';
 import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { LayoutRenderer } from '../components/LayoutRenderer';
+import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
 
@@ -49,6 +50,11 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const { data: schemasResult, refetch: refetchSchemas } = useConceptQuery<{ schemas: string }>('Schema', 'getSchemasFor', { entity_id: id });
   const { data: allSchemaDefs } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
   const { navigateToHref } = useNavigator();
+  const [displayMode, setDisplayMode] = useState('entity-page');
+
+  const handleDisplayModeChange = useCallback((modeId: string) => {
+    setDisplayMode(modeId);
+  }, []);
 
   const [showSchemaManager, setShowSchemaManager] = useState(false);
 
@@ -147,6 +153,12 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
           {schemas.length === 0 && (
             <Badge variant="secondary">no schemas</Badge>
           )}
+          <DisplayAsPicker
+            currentSchema={primarySchema}
+            currentMode={displayMode}
+            onChange={handleDisplayModeChange}
+            variant="inline"
+          />
           <button
             data-part="button"
             data-variant="outlined"

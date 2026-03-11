@@ -1,63 +1,165 @@
-@version(1)
+@version(2)
 concept DisplayMode [D] {
 
   purpose {
-    Define named presentation profiles that control how each field renders
-    in different contexts (view mode, edit mode, teaser mode).
+    Named rendering configuration for entities of a given Schema.
+    Each instance specifies how to display entities when a rendering
+    context requests a particular (schema, mode_id) pair. The display
+    strategy is one of: a Layout with FieldPlacements and embedded
+    Views, a ComponentMapping for full widget takeover, or a flat
+    ordered list of FieldPlacements rendered sequentially.
   }
 
   state {
     modes: set D
-    fieldDisplayConfigs: D -> String
-    fieldFormConfigs: D -> String
     name: D -> String
+    mode_id: D -> String
+    schema: D -> String
+
+    strategy {
+      layout: D -> option String
+      component_mapping: D -> option String
+    }
+
+    flat_fields {
+      placements: D -> list String
+    }
+
+    config {
+      role_visibility: D -> option String
+      cacheable: D -> option Bool
+    }
   }
 
   actions {
-    action defineMode(mode: D, name: String) {
+    action create(schema: String, mode_id: String, name: String) {
       -> ok(mode: D) {
-        A new display mode is registered with the given name.
+        Creates a new display mode for the given Schema. The flat_fields
+        list starts empty. No layout or component_mapping is set — the
+        mode starts in flat-field-list mode.
       }
-      -> exists(message: String) {
-        A mode with this name already exists.
+      -> already_exists(schema: String, mode_id: String) {
+        A mode with this (schema, mode_id) pair already exists.
       }
     }
 
-    action configureFieldDisplay(mode: D, field: String, config: String) {
+    action resolve(schema: String, mode_id: String) {
       -> ok(mode: D) {
-        The field display configuration is set for the mode.
+        Returns the DisplayMode for the given (schema, mode_id) pair.
+        This is the primary lookup action — every rendering context
+        calls this to get the display configuration.
       }
-      -> notfound(message: String) {
+      -> not_found(schema: String, mode_id: String) {
+        No mode configured. Caller should fall back to WidgetResolver
+        automatic rendering with no display customization.
+      }
+    }
+
+    action set_layout(mode: D, layout: String) {
+      -> ok(mode: D) {
+        Assigns a Layout entity to this mode. Rendering will use the
+        Layout's spatial areas. Clears component_mapping if set.
+      }
+      -> not_found(mode: D) {
         The mode does not exist.
       }
     }
 
-    action configureFieldForm(mode: D, field: String, config: String) {
+    action clear_layout(mode: D) {
       -> ok(mode: D) {
-        The field form configuration is set for the mode.
+        Removes the Layout assignment. Rendering falls back to the
+        flat_fields list or WidgetResolver defaults.
       }
-      -> notfound(message: String) {
+    }
+
+    action set_component_mapping(mode: D, mapping: String) {
+      -> ok(mode: D) {
+        Assigns a ComponentMapping for full widget takeover. Rendering
+        delegates entirely to this mapping. Clears layout if set.
+      }
+    }
+
+    action clear_component_mapping(mode: D) {
+      -> ok(mode: D) {
+        Removes the ComponentMapping assignment.
+      }
+    }
+
+    action set_flat_fields(mode: D, placements: list String) {
+      -> ok(mode: D) {
+        Sets the ordered list of FieldPlacement IDs for flat rendering.
+        Used when no layout is assigned, or as the default field config
+        that Layout areas can inherit from.
+      }
+    }
+
+    action get(mode: D) {
+      -> ok(mode: D, name: String, mode_id: String, schema: String,
+            layout: option String, component_mapping: option String,
+            placements: list String, role_visibility: option String,
+            cacheable: option Bool) {
+        Returns the full configuration of a display mode.
+      }
+      -> not_found(mode: D) {
         The mode does not exist.
       }
     }
 
-    action renderInMode(mode: D, entity: String) {
-      -> ok(output: String) {
-        The entity is rendered using the display configurations of the mode.
+    action delete(mode: D) {
+      -> ok() {
+        Removes the display mode. All FieldPlacements owned by this
+        mode are orphaned and garbage-collected.
       }
-      -> notfound(message: String) {
+      -> not_found(mode: D) {
         The mode does not exist.
+      }
+    }
+
+    action list_for_schema(schema: String) {
+      -> ok(modes: list D) {
+        Returns all display modes configured for a Schema. This is
+        what powers the display-as picker — the picker shows the
+        available mode_ids for each of the entity's applied Schemas.
+      }
+    }
+
+    action list() {
+      -> ok(items: String) {
+        Returns all display modes in the system.
       }
     }
   }
 
   invariant {
-    after defineMode(mode: d, name: "teaser") -> ok(mode: d)
-    then configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)
+    after create(schema: "Article", mode_id: "full", name: "Full Page")
+          -> ok(mode: m)
+    then resolve(schema: "Article", mode_id: "full")
+         -> ok(mode: m)
   }
 
   invariant {
-    after configureFieldDisplay(mode: d, field: "title", config: "truncated") -> ok(mode: d)
-    then renderInMode(mode: d, entity: "article-1") -> ok(output: _)
+    after create(schema: "Article", mode_id: "teaser", name: "Teaser Card")
+          -> ok(mode: m)
+    then list_for_schema(schema: "Article")
+         -> ok(modes: ms)
+    and  ms includes m
+  }
+
+  invariant {
+    after create(schema: "Article", mode_id: "full", name: "Full Page")
+          -> ok(mode: m)
+    and   set_layout(mode: m, layout: "triple-zone-default")
+          -> ok(mode: m)
+    then  get(mode: m) -> ok(layout: "triple-zone-default",
+                             component_mapping: null)
+  }
+
+  invariant {
+    after create(schema: "Article", mode_id: "full", name: "Full Page")
+          -> ok(mode: m)
+    and   set_component_mapping(mode: m, mapping: "article-hero-card")
+          -> ok(mode: m)
+    then  get(mode: m) -> ok(component_mapping: "article-hero-card",
+                             layout: null)
   }
 }

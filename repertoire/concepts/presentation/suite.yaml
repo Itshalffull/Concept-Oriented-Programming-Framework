@@ -1,13 +1,15 @@
 # Presentation Suite Manifest
 name: presentation
-version: 0.1.0
-description: "View rendering and display — views, display modes, form building, and renderers for presenting content to users."
+version: 0.2.0
+description: "View rendering and display — views, display modes, field placements, form building, and renderers for presenting content to users."
 
 concepts:
   - name: View
     spec: view.concept
   - name: DisplayMode
     spec: display-mode.concept
+  - name: FieldPlacement
+    spec: field-placement.concept
   - name: FormBuilder
     spec: form-builder.concept
   - name: Renderer
@@ -17,5 +19,23 @@ syncs:
   - name: view-rendering
     file: syncs/view-rendering.sync
     tier: required
+  - name: display-mode-resolve-strategy
+    file: syncs/display-mode-resolve-strategy.sync
+    tier: required
+  - name: display-mode-uses-layout
+    file: syncs/display-mode-uses-layout.sync
+    tier: required
+  - name: display-mode-uses-mapping
+    file: syncs/display-mode-uses-mapping.sync
+    tier: required
+  - name: view-resolves-contextual-filters
+    file: syncs/view-resolves-contextual-filters.sync
+    tier: required
+  - name: area-renders-field-placement
+    file: syncs/area-renders-field-placement.sync
+    tier: required
+  - name: field-placement-uses-mapping
+    file: syncs/field-placement-uses-mapping.sync
+    tier: recommended
 
 dependencies: []

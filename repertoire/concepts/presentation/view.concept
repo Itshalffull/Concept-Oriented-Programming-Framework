@@ -1,4 +1,4 @@
-@version(2)
+@version(3)
 concept View [V] {
 
   purpose {
@@ -7,6 +7,8 @@ concept View [V] {
     A View is a config entity: dataSource says what to query (concept/action or Query
     reference), layout selects the display type, and controls attach action triggers.
     Views are self-describing — embed one anywhere and it brings its own data + controls.
+    Filters support three source types: static (admin-configured), exposed (user-picked),
+    and contextual (bound from rendering context at render time).
   }
 
   state {
@@ -21,6 +23,12 @@ concept View [V] {
     controls: V -> String
     title: V -> option String
     description: V -> option String
+
+    filter_source {
+      source_type: F -> String
+      context_binding: F -> option String
+      fallback_behavior: F -> option String
+    }
   }
 
   actions {
@@ -130,6 +138,23 @@ concept View [V] {
     action embed(view: V) {
       -> ok(embedCode: String) {
         An embeddable representation of the view is generated.
+      }
+      -> notfound(message: String) {
+        The view does not exist.
+      }
+    }
+  }
+
+    action addContextualFilter(view: V, field: String, operator: String,
+                              context_binding: String, fallback_behavior: String) {
+      -> ok(filter: String) {
+        Adds a filter whose value is bound from the rendering context.
+        The operator ("equals", "contains", "in", "references") determines
+        how the bound value is compared to the field's values in results.
+        Supported fallback_behavior values: "hide", "show_empty", "ignore_filter".
+      }
+      -> invalid_binding(binding: String) {
+        The binding expression does not match a known context path.
       }
       -> notfound(message: String) {
         The view does not exist.

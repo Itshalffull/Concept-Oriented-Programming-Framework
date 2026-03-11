@@ -50,10 +50,11 @@ entries:
   - view: display-modes-list
     dataSource: '{"concept":"DisplayMode","action":"list"}'
     layout: card-grid
-    visibleFields: '[{"key":"mode","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"fieldDisplayConfigs","label":"Display Configs","formatter":"json-count"},{"key":"fieldFormConfigs","label":"Form Configs","formatter":"json-count"}]'
-    controls: '{"create":{"concept":"DisplayMode","action":"defineMode","fields":[{"name":"mode","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
+    visibleFields: '[{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode_id","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"layout","label":"Layout","formatter":"badge"},{"key":"component_mapping","label":"Mapping","formatter":"badge"}]'
+    controls: '{"create":{"concept":"DisplayMode","action":"create","fields":[{"name":"schema","label":"Schema","required":true},{"name":"mode_id","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
     title: Display Modes
-    description: Named presentation profiles controlling per-field rendering.
+    description: Named rendering configurations per (Schema, mode_id) pair. Strategy is Layout, ComponentMapping, or flat field list.
+    filters: '[{"field":"schema","label":"Schema","type":"toggle-group"}]'
   - view: views-list
     dataSource: '{"concept":"View","action":"list"}'
     layout: table
@@ -148,3 +149,35 @@ entries:
     controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}}'
     title: Version Spaces
     description: Named content variations — like git branches for content.
+  - view: backlinks
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"backlink"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Source"},{"key":"type","label":"Type","formatter":"badge"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Backlinks
+    description: Entities that link to this entity.
+    filters: '[{"field":"target","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+  - view: similar-entities
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Similar Entities
+    description: Semantically related entities based on content similarity.
+    filters: '[{"field":"similar_to","operator":"embedding_similarity","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+  - view: unlinked-references
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"},{"key":"mention","label":"Mention"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Unlinked References
+    description: Entities that mention this entity but do not have a formal link.
+    filters: '[{"field":"mentions","operator":"contains","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+  - view: graph-neighbors
+    dataSource: '{"concept":"ContentNode","action":"list"}'
+    layout: graph
+    visibleFields: '[{"key":"node","label":"Node"},{"key":"type","label":"Type"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Graph Neighbors
+    description: Direct connections in the knowledge graph.
+    filters: '[{"field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'

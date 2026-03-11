@@ -1,0 +1,161 @@
+@version(1)
+widget display-as-picker {
+
+  purpose {
+    Dropdown picker that lets users switch between DisplayMode configurations
+    for an entity. Shows available modes grouped by Schema, with the current
+    mode highlighted. Used in entity page headers, embed toolbars, and admin
+    surfaces to control how entities are rendered.
+  }
+
+  requires @1 {
+    fields {
+      currentMode: string;
+      availableModes: list;
+      schemaName: string;
+    }
+  }
+
+  anatomy {
+    root:         container  { Wrapper for the picker }
+    trigger:      container  { Button that opens the dropdown }
+    dropdown:     container  { Popover containing mode options }
+    schemaGroup:  container  { Group of modes for one schema (repeating) }
+    schemaLabel:  container  { Schema name heading within a group }
+    modeItem:     container  { Single mode option (repeating) }
+  }
+
+  states {
+    default [initial] {
+      on TOGGLE -> open;
+      on SELECT -> default;
+    }
+
+    open {
+      on TOGGLE -> default;
+      on SELECT -> default;
+      on ESCAPE -> default;
+      on CLICK_OUTSIDE -> default;
+      entry [show dropdown; focusFirst];
+      exit [hide dropdown];
+    }
+
+    loading {
+      on LOADED -> default;
+      entry [show spinner];
+      exit [hide spinner];
+    }
+
+    empty {
+      entry [show emptyMessage];
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    keyboard {
+      Enter -> TOGGLE;
+      Space -> TOGGLE;
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: trigger;
+      roving: true;
+    }
+    aria {
+      trigger -> {
+        role: "button";
+        aria-haspopup: "listbox";
+        aria-expanded: if state == open then "true" else "false";
+        aria-label: concat("Display as: ", self.currentModeName);
+      };
+      dropdown -> {
+        role: "listbox";
+        aria-label: "Display mode options";
+      };
+      modeItem -> {
+        role: "option";
+        aria-selected: if self.id == ?currentMode then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    entity_id: String
+    schema_list: list String
+    current_schema: String
+    current_mode: String
+    on_change: Function
+    variant: String = "compact"
+  }
+
+  affordance {
+    serves: display-mode-selector;
+    specificity: 30;
+    when {
+      concept: "DisplayMode";
+    }
+    bind {
+      currentMode: mode_id;
+      availableModes: modes;
+      schemaName: schema;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-variant: ?variant;
+      data-state: state;
+    }
+    trigger -> {
+      data-part: "trigger";
+      role: "button";
+      aria-haspopup: "listbox";
+      aria-expanded: if state == open then "true" else "false";
+      onClick: send(TOGGLE);
+    }
+    dropdown -> {
+      data-part: "dropdown";
+      role: "listbox";
+      data-visible: if state == open then "true" else "false";
+    }
+    schemaGroup -> {
+      data-part: "schema-group";
+    }
+    schemaLabel -> {
+      data-part: "schema-label";
+      text: self.schemaName;
+    }
+    modeItem -> {
+      data-part: "mode-item";
+      role: "option";
+      data-selected: if self.id == ?currentMode then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { mode: self.id });
+    }
+  }
+
+  compose {
+    compact {
+      trigger -> { text: self.currentModeName; icon: "chevron-down"; size: "sm" }
+    }
+    inline {
+      trigger -> { text: self.currentModeName; icon: "chevron-down"; size: "xs"; minimal: true }
+    }
+    admin {
+      trigger -> { text: concat(self.schemaName, " / ", self.currentModeName); icon: "chevron-down"; size: "md" }
+    }
+  }
+
+  invariant {
+    "Current mode must be visually distinguished from other options";
+    "Modes must be grouped by Schema when multiple schemas are present";
+    "Selecting a mode must trigger on_change callback with the new mode_id";
+    "Keyboard navigation must follow WAI-ARIA listbox pattern";
+  }
+
+}

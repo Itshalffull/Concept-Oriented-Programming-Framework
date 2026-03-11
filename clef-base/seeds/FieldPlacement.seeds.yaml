@@ -1,0 +1,42 @@
+# Default field placement definitions for common field formatters.
+# These provide sensible defaults for auto-generated display modes.
+
+concept: FieldPlacement
+action: create
+entries:
+  - placement: fp-title-heading
+    source_field: title
+    formatter: heading
+  - placement: fp-title-plain
+    source_field: title
+    formatter: plain_text
+  - placement: fp-date-relative
+    source_field: createdAt
+    formatter: date_relative
+  - placement: fp-date-absolute
+    source_field: publishedAt
+    formatter: date_absolute
+  - placement: fp-type-badge
+    source_field: type
+    formatter: badge
+  - placement: fp-status-badge
+    source_field: status
+    formatter: badge
+  - placement: fp-author-reference
+    source_field: author
+    formatter: entity_reference
+  - placement: fp-body-richtext
+    source_field: body
+    formatter: rich_text
+  - placement: fp-content-richtext
+    source_field: content
+    formatter: rich_text
+  - placement: fp-tags-list
+    source_field: tags
+    formatter: tag_list
+  - placement: fp-thumbnail-image
+    source_field: thumbnail
+    formatter: image
+  - placement: fp-metadata-json
+    source_field: metadata
+    formatter: json

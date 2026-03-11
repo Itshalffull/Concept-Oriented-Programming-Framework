@@ -1,0 +1,19 @@
+# Layout delegation — when DisplayMode has a layout set, delegate rendering
+# to Component/renderLayout with the entity context.
+
+sync DisplayModeUsesLayout [eager]
+when {
+  DisplayMode/get: [ mode: ?dm; layout: ?layout ]
+    => [ ok ]
+}
+where {
+  filter(?layout != null)
+  Renderer/render: [ schema: ?schema; display_mode: ?mode; entity: ?entity ]
+  DisplayMode: { ?dm schema: ?schema; mode_id: ?mode }
+}
+then {
+  Component/renderLayout: [ layout: ?layout;
+                            context: { entity: ?entity,
+                                       schema: ?schema,
+                                       mode_id: ?mode } ]
+}

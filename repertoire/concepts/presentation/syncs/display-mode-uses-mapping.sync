@@ -1,0 +1,16 @@
+# ComponentMapping takeover — when DisplayMode has a component_mapping set,
+# delegate rendering entirely to the ComponentMapping widget.
+
+sync DisplayModeUsesMapping [eager]
+when {
+  Renderer/render: [ schema: ?schema; display_mode: ?mode; entity: ?entity ]
+}
+where {
+  DisplayMode: { ?dm schema: ?schema; mode_id: ?mode;
+                 component_mapping: ?mapping_id }
+  filter(?mapping_id != null)
+}
+then {
+  ComponentMapping/render: [ mapping: ?mapping_id;
+                             context: { entity: ?entity, schema: ?schema } ]
+}

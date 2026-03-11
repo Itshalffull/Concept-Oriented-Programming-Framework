@@ -1,4 +1,4 @@
-# ClefOS Implementation Plan
+why# ClefOS Implementation Plan
 
 **Synthesized from:** Clef Base Platform spec, CMS/App Studio design, ClefOS architecture spec
 **Clef framework dependency:** COPF v0.18.0, Concept Library v0.4.0, Clef Surface v0.4.0
@@ -17,7 +17,7 @@ Four traditions converge in the design:
 - **Roam/Logseq/Obsidian** contribute block references, backlinks, graph overlays, query blocks, daily notes, and transclusion.
 - **Clef** contributes concept independence, sync-driven coordination, derived concepts, Bind as universal interface generation, Surface as multi-platform UI, and Score as graph/file/runtime inspection.
 
-The result is a general app-builder and runtime whose base abstraction is a reflectable entity graph, whose editing model unifies structured and unstructured content, and whose distribution model unifies software packages, UI packages, and interface manifests.
+The result is a general app-builder and runtime whose base abstraction is a reflectable entity graph, whose edng model unifies structured and unstructured content, and whose distribution model unifies software packages, UI packages, and interface manifests.
 
 ---
 

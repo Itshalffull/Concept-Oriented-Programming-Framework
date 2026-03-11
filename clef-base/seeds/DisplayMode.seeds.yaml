@@ -1,15 +1,21 @@
 # Core display mode definitions for clef-base.
+# Each entry defines a (schema, mode_id) rendering configuration.
 
 concept: DisplayMode
-action: defineMode
+action: create
 entries:
-  - mode: entity-page
+  - schema: ContentNode
+    mode_id: entity-page
     name: Entity Page
-  - mode: table-row
+  - schema: ContentNode
+    mode_id: table-row
     name: Table Row
-  - mode: card
+  - schema: ContentNode
+    mode_id: card
     name: Card
-  - mode: compact
+  - schema: ContentNode
+    mode_id: compact
     name: Compact
-  - mode: score-graph
+  - schema: ContentNode
+    mode_id: score-graph
     name: Score Graph

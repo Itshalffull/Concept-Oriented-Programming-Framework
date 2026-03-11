@@ -1,0 +1,16 @@
+# View contextual filter resolution — when a View executes inside a rendering
+# context, resolve contextual filters by binding values from the context.
+
+sync ViewResolvesContextualFilters [eager]
+when {
+  View/execute: [ view: ?view; context: ?ctx ]
+}
+where {
+  View: { ?view filters: ?filters }
+  filter(?filters has_contextual_filters)
+}
+then {
+  View/resolveContextualFilters: [ view: ?view;
+                                   filters: ?filters;
+                                   context: ?ctx ]
+}
