@@ -28,6 +28,8 @@ interface NodePosition {
 interface Edge {
   source: number;
   target: number;
+  /** True when this edge originates from a sync node's pattern */
+  isSync?: boolean;
 }
 
 interface GraphDisplayProps {
@@ -81,16 +83,30 @@ function buildEdges(nodes: NodePosition[]): Edge[] {
         // Check for pattern fields (syncs referencing concepts)
         const pattern = parsed.pattern as string | undefined;
         if (pattern) {
+          const isSync = node.type === 'Sync';
           // Pattern like "ContentStorage/save -> Cache/invalidateByTags"
           const parts = pattern.split(/\s*->\s*/);
+          const resolvedConcepts: number[] = [];
           for (const part of parts) {
             const conceptName = part.split('/')[0]?.trim();
             if (conceptName) {
               // Try to find matching concept node
               const targetIdx = labelIndex.get(`concept:${conceptName}`);
               if (targetIdx !== undefined && targetIdx !== sourceIdx) {
-                edges.push({ source: sourceIdx, target: targetIdx });
+                edges.push({ source: sourceIdx, target: targetIdx, isSync });
+                resolvedConcepts.push(targetIdx);
               }
+            }
+          }
+          // For syncs, also create a direct concept-to-concept edge
+          // so the wiring is visible even when the sync node is filtered out
+          if (isSync && resolvedConcepts.length >= 2) {
+            for (let i = 0; i < resolvedConcepts.length - 1; i++) {
+              edges.push({
+                source: resolvedConcepts[i],
+                target: resolvedConcepts[i + 1],
+                isSync: true,
+              });
             }
           }
         }
@@ -267,12 +283,40 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
           border: '1px solid var(--palette-outline-variant)',
         }}
       >
+        {/* Arrowhead marker for sync edges */}
+        <defs>
+          <marker
+            id="sync-arrow"
+            viewBox="0 0 10 7"
+            refX="10"
+            refY="3.5"
+            markerWidth="8"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill={SCHEMA_COLORS.Sync} />
+          </marker>
+          <marker
+            id="sync-arrow-highlight"
+            viewBox="0 0 10 7"
+            refX="10"
+            refY="3.5"
+            markerWidth="8"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="var(--palette-primary)" />
+          </marker>
+        </defs>
+
         {/* Edges */}
         {edges.map((edge, idx) => {
           const s = nodes[edge.source];
           const t = nodes[edge.target];
           const highlighted = hoveredEdges.has(idx);
           const dimmed = hoveredNode !== null && !highlighted;
+          const isSyncEdge = edge.isSync;
+          const defaultStroke = isSyncEdge ? SCHEMA_COLORS.Sync : 'var(--palette-outline-variant)';
           return (
             <line
               key={`edge-${idx}`}
@@ -280,9 +324,11 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
               y1={s.y}
               x2={t.x}
               y2={t.y}
-              stroke={highlighted ? 'var(--palette-primary)' : 'var(--palette-outline-variant)'}
-              strokeWidth={highlighted ? 2 : 1}
-              strokeOpacity={dimmed ? 0.15 : highlighted ? 1 : 0.4}
+              stroke={highlighted ? 'var(--palette-primary)' : defaultStroke}
+              strokeWidth={highlighted ? 2 : isSyncEdge ? 1.5 : 1}
+              strokeOpacity={dimmed ? 0.15 : highlighted ? 1 : isSyncEdge ? 0.6 : 0.4}
+              strokeDasharray={isSyncEdge ? '5 3' : undefined}
+              markerEnd={isSyncEdge ? (highlighted ? 'url(#sync-arrow-highlight)' : 'url(#sync-arrow)') : undefined}
             />
           );
         })}
@@ -296,6 +342,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
           const dimmed = hoveredNode !== null && !isConnected;
           const color = getSchemaColor(node.type);
           const nodeRadius = isHovered ? 8 : 6;
+          const isSyncNode = node.type === 'Sync';
 
           return (
             <g
@@ -306,15 +353,25 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
               onMouseLeave={() => setHoveredNode(null)}
               opacity={dimmed ? 0.25 : 1}
             >
-              {/* Node circle */}
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={nodeRadius}
-                fill={color}
-                stroke={isHovered ? 'var(--palette-on-surface)' : 'var(--palette-surface)'}
-                strokeWidth={isHovered ? 2.5 : 1.5}
-              />
+              {isSyncNode ? (
+                /* Sync nodes render as diamonds */
+                <polygon
+                  points={`${node.x},${node.y - nodeRadius} ${node.x + nodeRadius},${node.y} ${node.x},${node.y + nodeRadius} ${node.x - nodeRadius},${node.y}`}
+                  fill={color}
+                  stroke={isHovered ? 'var(--palette-on-surface)' : 'var(--palette-surface)'}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
+                />
+              ) : (
+                /* All other nodes render as circles */
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={nodeRadius}
+                  fill={color}
+                  stroke={isHovered ? 'var(--palette-on-surface)' : 'var(--palette-surface)'}
+                  strokeWidth={isHovered ? 2.5 : 1.5}
+                />
+              )}
               {/* Label */}
               <text
                 x={node.x}
@@ -352,8 +409,9 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
               display: 'inline-block',
               width: 8,
               height: 8,
-              borderRadius: '50%',
+              borderRadius: type === 'Sync' ? '1px' : '50%',
               background: getSchemaColor(type),
+              transform: type === 'Sync' ? 'rotate(45deg) scale(0.85)' : undefined,
             }} />
             {type}
           </div>
