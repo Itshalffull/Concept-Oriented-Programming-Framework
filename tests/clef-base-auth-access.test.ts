@@ -260,7 +260,7 @@ describe('Clef Base auth access', () => {
     expect(getContentPermissionAction('create')).toBe('create');
     expect(getContentPermissionAction('update')).toBe('edit');
     expect(getContentPermissionAction('setMetadata')).toBe('edit-metadata');
-    expect(getContentPermissionAction('changeType')).toBe('change-type');
+    expect(getContentPermissionAction('delete')).toBe('delete');
   });
 
   it('uses admin-only defaults for schema definition actions', async () => {
