@@ -1,0 +1,7 @@
+# Resolver baseline for clef-base admin view selection.
+
+concept: WidgetResolver
+action: setWeights
+entries:
+  - resolver: clef-base-view-resolver
+    weights: '{"specificity":0.45,"conditionMatch":0.35,"popularity":0.1,"recency":0.1}'

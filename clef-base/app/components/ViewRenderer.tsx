@@ -18,7 +18,7 @@
  * 6. Render filtered data through the display type (table, card-grid, graph, etc.)
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Card } from './widgets/Card';
 import { Badge } from './widgets/Badge';
 import { EmptyState } from './widgets/EmptyState';
@@ -29,8 +29,13 @@ import { GraphDisplay } from './widgets/GraphDisplay';
 import { StatCardsDisplay } from './widgets/StatCardsDisplay';
 import { DetailDisplay } from './widgets/DetailDisplay';
 import { ContentBodyDisplay } from './widgets/ContentBodyDisplay';
-import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
+import { useActiveTheme, useNavigator, useKernelInvoke } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
+import {
+  buildDisplayWidgetContext,
+  getDisplayInteractor,
+  mapWidgetToLayout,
+} from '../../lib/widget-selection';
 
 interface ViewConfig {
   view: string;
@@ -142,9 +147,12 @@ function rowMatchesSchemaFilter(row: Record<string, unknown>, activeSchemas: Set
 export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: titleOverride, context, children }) => {
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
+  const theme = useActiveTheme();
   const [showCreate, setShowCreate] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({});
   const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
+  const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
 
   // Step 1: Load the View config
   const { data: viewConfig, loading: configLoading, error: configError } =
@@ -204,7 +212,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
   // Normalize + enrich data
   const allData = useMemo(() => {
     if (!rawData) return [];
-    const items = Array.isArray(rawData) ? rawData : [rawData];
+    const items = (Array.isArray(rawData) ? rawData : [rawData]) as Record<string, unknown>[];
 
     if (!isContentNodeData || !membershipsData) return items;
 
@@ -285,9 +293,64 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
   }, [allData, activeFilters, filters]);
 
   const layout = viewConfig?.layout ?? 'table';
+  const effectiveLayout = resolvedLayout ?? layout;
   const viewTitle = titleOverride ?? viewConfig?.title ?? viewId;
   const viewDescription = viewConfig?.description ?? '';
   const loading = configLoading || dataLoading;
+
+  useEffect(() => {
+    const interactor = getDisplayInteractor(layout);
+    if (!interactor) {
+      setResolvedLayout(layout);
+      setResolvedWidget(null);
+      return;
+    }
+
+    const context = buildDisplayWidgetContext({
+      viewId,
+      layout,
+      rowCount: allData.length,
+      fieldCount: fields.length,
+      density: theme.density,
+      motif: theme.motif,
+      styleProfile: theme.styleProfile,
+      sourceType: theme.sourceType,
+    });
+
+    let cancelled = false;
+    invoke('WidgetResolver', 'resolve', {
+      resolver: 'clef-base-view-resolver',
+      element: interactor,
+      context: JSON.stringify(context),
+    })
+      .then((result) => {
+        if (cancelled) return;
+        const widget = result.variant === 'ok' && typeof result.widget === 'string'
+          ? result.widget
+          : null;
+        setResolvedWidget(widget);
+        setResolvedLayout(mapWidgetToLayout(widget, layout));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setResolvedWidget(null);
+        setResolvedLayout(layout);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    allData.length,
+    fields.length,
+    invoke,
+    layout,
+    theme.density,
+    theme.motif,
+    theme.sourceType,
+    theme.styleProfile,
+    viewId,
+  ]);
 
   // Toggle a filter value
   const toggleFilter = useCallback((field: string, value: string) => {
@@ -435,7 +498,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       );
     }
 
-    switch (layout) {
+    switch (effectiveLayout) {
       case 'detail':
         return (
           <DetailDisplay
@@ -443,7 +506,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
             onRowClick={controls.rowClick ? handleRowClick : undefined}
             onFieldSave={async (field, value) => {
               if (displayData[0]) {
-                const entity = displayData[0];
+                const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
                   if (field === 'content') {
@@ -465,7 +528,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
             onRowClick={controls.rowClick ? handleRowClick : undefined}
             onFieldSave={async (field, value) => {
               if (displayData[0]) {
-                const entity = displayData[0];
+                const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
                   await invoke('ContentNode', 'update', { node, content: value });
@@ -519,13 +582,16 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
         <h1>{viewTitle}</h1>
         <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
           <Badge variant="info">{displayData.length}{allData.length !== displayData.length ? `/${allData.length}` : ''}</Badge>
-          <Badge variant="secondary">{layout}</Badge>
+          <Badge variant="secondary">{effectiveLayout}</Badge>
+          {resolvedWidget && (
+            <Badge variant="info">{resolvedWidget}</Badge>
+          )}
           {controls.create && (
             <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
-              Create {viewTitle.replace(/s$/, '')}
-            </button>
-          )}
-        </div>
+            Create {viewTitle.replace(/s$/, '')}
+          </button>
+        )}
+      </div>
       </div>
 
       {viewDescription && (

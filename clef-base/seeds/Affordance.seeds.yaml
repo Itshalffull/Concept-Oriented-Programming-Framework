@@ -1,0 +1,74 @@
+# Widget affordances that let clef-base resolve local admin displays through WidgetResolver.
+
+concept: Affordance
+action: declare
+entries:
+  - affordance: admin-records-collection-table
+    widget: admin-table-display
+    interactor: records-collection
+    specificity: 72
+    conditions: '{"minOptions":8,"tags":["admin","collection"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: true
+    motifOptimized: topbar
+
+  - affordance: admin-records-collection-card-grid
+    widget: admin-card-grid-display
+    interactor: records-collection
+    specificity: 68
+    conditions: '{"maxOptions":12,"tags":["admin","collection"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: false
+    motifOptimized: sidebar
+
+  - affordance: admin-record-detail-display
+    widget: admin-detail-display
+    interactor: record-detail
+    specificity: 90
+    conditions: '{"tags":["admin","detail"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: false
+    motifOptimized: sidebar
+
+  - affordance: admin-record-body-display
+    widget: admin-content-body-display
+    interactor: record-body
+    specificity: 90
+    conditions: '{"tags":["admin","body"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: false
+    motifOptimized: sidebar
+
+  - affordance: admin-record-graph-display
+    widget: admin-graph-display
+    interactor: record-graph
+    specificity: 90
+    conditions: '{"tags":["admin","graph"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: true
+    motifOptimized: topbar
+
+  - affordance: admin-record-metrics-display
+    widget: admin-stat-cards-display
+    interactor: record-metrics
+    specificity: 90
+    conditions: '{"tags":["admin","metrics"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: true
+    motifOptimized: topbar
+
+  - affordance: admin-records-collection-default
+    widget: admin-table-display
+    interactor: records-collection
+    specificity: 40
+    conditions: '{"tags":["admin","collection"]}'
+    bind: null
+    contractVersion: null
+    densityExempt: true
+    motifOptimized: topbar

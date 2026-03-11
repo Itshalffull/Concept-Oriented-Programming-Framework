@@ -1,20 +1,29 @@
-# Interactor type seeds for the diagramming suite.
-# Registers three new interaction types used by diagramming widgets.
+# Core admin interactors for clef-base display selection.
 
 concept: Interactor
 action: define
 entries:
-  - interactor: spatial-canvas
-    name: spatial-canvas
-    category: container
-    properties: '{"dataType":"canvas","zoom_range":[0.1,5.0],"grid":true,"snap":true,"background":"dots"}'
+  - interactor: records-collection
+    name: records-collection
+    category: output
+    properties: '{"dataType":"entity","cardinality":"many","mutable":false,"multiLine":false,"tags":["admin","collection"]}'
 
-  - interactor: connector-draw
-    name: connector-draw
-    category: input
-    properties: '{"dataType":"connector","mode":"local","show_ports":true,"route_style":"bezier"}'
+  - interactor: record-detail
+    name: record-detail
+    category: entity
+    properties: '{"dataType":"entity","cardinality":"one","mutable":true,"multiLine":true,"tags":["admin","detail"]}'
 
-  - interactor: node-palette
-    name: node-palette
-    category: input
-    properties: '{"dataType":"palette","notation_id":null,"orientation":"vertical"}'
+  - interactor: record-body
+    name: record-body
+    category: output
+    properties: '{"dataType":"document","cardinality":"one","mutable":true,"multiLine":true,"tags":["admin","body"]}'
+
+  - interactor: record-graph
+    name: record-graph
+    category: output
+    properties: '{"dataType":"graph","cardinality":"many","mutable":false,"multiLine":false,"tags":["admin","graph"]}'
+
+  - interactor: record-metrics
+    name: record-metrics
+    category: output
+    properties: '{"dataType":"metric","cardinality":"many","mutable":false,"multiLine":false,"tags":["admin","metrics"]}'

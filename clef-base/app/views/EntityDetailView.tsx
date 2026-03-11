@@ -61,6 +61,28 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const availableSchemas = (allSchemaDefs ?? [])
     .map((s) => s.schema as string)
     .filter((s) => !schemas.includes(s));
+  const parsedContent = (() => {
+    if (typeof data?.content !== 'string') return null;
+    try {
+      return JSON.parse(data.content) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  })();
+  const registryConcept = schemas.includes('Concept') ? String(parsedContent?.name ?? '') : '';
+  const registrySuite = schemas.includes('Suite') ? String(parsedContent?.suite ?? parsedContent?.name ?? '') : '';
+  const { data: widgetRegistryResult } = useConceptQuery<Record<string, unknown>>(
+    registryConcept || registrySuite ? 'WidgetRegistry' : '__none__',
+    'query',
+    {
+      concept: registryConcept || null,
+      suite: registrySuite || null,
+      interactor: null,
+    },
+  );
+  const recommendedWidgets = typeof widgetRegistryResult?.entries === 'string'
+    ? JSON.parse(widgetRegistryResult.entries as string) as Array<Record<string, unknown>>
+    : [];
 
   const handleApplySchema = useCallback(async (schema: string) => {
     await invoke('Schema', 'applyTo', { entity_id: id, schema });
@@ -180,6 +202,44 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
               </div>
             </>
           )}
+        </Card>
+      )}
+
+      {recommendedWidgets.length > 0 && (
+        <Card variant="outlined" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '14px' }}>Recommended Widgets</h3>
+              <p style={{ color: 'var(--palette-on-surface-variant)' }}>
+                Registered via the entity widget pipeline for this {registryConcept ? 'concept' : 'suite'}.
+              </p>
+            </div>
+            <Badge variant="secondary">{recommendedWidgets.length}</Badge>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-md)' }}>
+            {recommendedWidgets.map((entry) => (
+              <div
+                key={String(entry.entry)}
+                style={{
+                  border: '1px solid var(--palette-outline-variant)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.65rem 0.85rem',
+                  background: 'var(--palette-surface-variant)',
+                  minWidth: '220px',
+                }}
+              >
+                <strong>{String(entry.widget)}</strong>
+                <div style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+                  {String(entry.interactor)}
+                </div>
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                  <Badge variant="info">spec {String(entry.specificity ?? '')}</Badge>
+                  {entry.suite ? <Badge variant="secondary">{String(entry.suite)}</Badge> : null}
+                  {entry.concept ? <Badge variant="secondary">{String(entry.concept)}</Badge> : null}
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 
