@@ -12,7 +12,7 @@
  * No external dependencies — pure React + SVG.
  */
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import type { FieldConfig } from './TableDisplay';
 
 interface NodePosition {
@@ -202,15 +202,19 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
   const labelField = fields[0]?.key ?? Object.keys(data[0] ?? {})[0] ?? 'id';
 
   // Build graph — use primary schema (first in array) for coloring
-  const rawNodes: NodePosition[] = data.map((item) => {
-    const label = String(item[labelField] ?? '');
-    const schemas = Array.isArray(item.schemas) ? item.schemas : [];
-    const type = schemas[0] ? String(schemas[0]) : 'default';
-    return { x: 0, y: 0, vx: 0, vy: 0, label, type, data: item };
-  });
+  // Memoize layout so hover state changes don't re-run the simulation
+  const { nodes, edges } = useMemo(() => {
+    const rawNodes: NodePosition[] = data.map((item) => {
+      const label = String(item[labelField] ?? '');
+      const schemas = Array.isArray(item.schemas) ? item.schemas : [];
+      const type = schemas[0] ? String(schemas[0]) : 'default';
+      return { x: 0, y: 0, vx: 0, vy: 0, label, type, data: item };
+    });
 
-  const edges = buildEdges(rawNodes);
-  const nodes = simulate(rawNodes, edges, dimensions.width, dimensions.height);
+    const computedEdges = buildEdges(rawNodes);
+    const computedNodes = simulate(rawNodes, computedEdges, dimensions.width, dimensions.height);
+    return { nodes: computedNodes, edges: computedEdges };
+  }, [data, labelField, dimensions.width, dimensions.height]);
 
   // Resize observer
   useEffect(() => {
