@@ -1,0 +1,157 @@
+@version(1)
+widget spatial-canvas-viewport {
+
+  purpose {
+    Primary spatial editing surface for canvas diagrams. Renders items,
+    connectors, and grid in a pannable/zoomable viewport with layers
+    for interaction, selection, and minimap. The heaviest widget in the
+    diagramming kit — handles camera transforms, viewport culling,
+    hit testing, and multi-select marquee.
+  }
+
+  anatomy {
+    root:              container  { Outermost wrapper managing viewport dimensions }
+    viewport:          container  { Transformed container: scale(zoom) translate(x,y) }
+    grid-layer:        container  { Repeating dot/line grid background }
+    item-layer:        container  { Positioned item nodes (each resolves via WidgetResolver) }
+    connector-layer:   container  { SVG overlay for connector paths }
+    interaction-layer: container  { Invisible overlay capturing pointer events }
+    minimap-slot:      container  { Slot for optional canvas-minimap widget }
+    selection-marquee: container  { Rectangular selection rubber-band }
+  }
+
+  states {
+    idle [initial] {
+      on PAN_START -> panning;
+      on ZOOM -> idle;
+      on MARQUEE_START -> selecting;
+      on ITEM_POINTERDOWN -> idle;
+      on CONNECTOR_POINTERDOWN -> idle;
+      on CONTEXT_MENU -> contextMenu;
+    }
+
+    panning {
+      on PAN_MOVE -> panning;
+      on PAN_END -> idle;
+      entry [set cursor grab];
+      exit [reset cursor];
+    }
+
+    selecting {
+      on MARQUEE_MOVE -> selecting;
+      on MARQUEE_END -> idle;
+      entry [show selection-marquee];
+      exit [hide selection-marquee; compute selected items];
+    }
+
+    contextMenu {
+      on CLOSE_MENU -> idle;
+      on ACTION -> idle;
+      entry [show context menu at pointer];
+      exit [hide context menu];
+    }
+  }
+
+  accessibility {
+    role: application;
+    modal: false;
+    keyboard {
+      Space -> PAN_START;
+      Escape -> CLOSE_MENU;
+      "Ctrl+A" -> SELECT_ALL;
+      "Ctrl+=" -> ZOOM_IN;
+      "Ctrl+-" -> ZOOM_OUT;
+      "Ctrl+0" -> ZOOM_RESET;
+      "Ctrl+Shift+F" -> ZOOM_FIT;
+      Delete -> DELETE_SELECTED;
+      ArrowUp -> NUDGE_UP;
+      ArrowDown -> NUDGE_DOWN;
+      ArrowLeft -> NUDGE_LEFT;
+      ArrowRight -> NUDGE_RIGHT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: concat("Canvas: ", ?canvasName);
+        aria-roledescription: "spatial canvas";
+      };
+      item-layer -> {
+        role: "group";
+        aria-label: "Canvas items";
+      };
+      connector-layer -> {
+        role: "group";
+        aria-label: "Connectors";
+      };
+      selection-marquee -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    canvasName: String = ""
+    cameraX: Float = 0.0
+    cameraY: Float = 0.0
+    zoom: Float = 1.0
+    zoomMin: Float = 0.1
+    zoomMax: Float = 5.0
+    gridVisible: Bool = true
+    gridSize: Int = 20
+    gridStyle: union "dots" | "lines" | "none" = "dots"
+    snapToGrid: Bool = true
+    selectedItemIds: list String = []
+    items: list { id: String, x: Float, y: Float, width: Float, height: Float, type: String }
+    connectors: list { id: String, sourceId: String, targetId: String, lineStyle: String }
+    backgroundFill: String = "#FAFAFA"
+  }
+
+  connect {
+    root -> {
+      data-part: "canvas-viewport";
+      data-canvas: ?canvasId;
+      data-zoom: ?zoom;
+      data-grid: if ?gridVisible then "true" else "false";
+      tabindex: "0";
+      onWheel: send(ZOOM, { delta: event.deltaY, clientX: event.clientX, clientY: event.clientY });
+      onPointerDown: send(PAN_START, { clientX: event.clientX, clientY: event.clientY });
+      onContextMenu: send(CONTEXT_MENU, { clientX: event.clientX, clientY: event.clientY });
+    }
+    viewport -> {
+      data-part: "viewport";
+      style-transform: concat("scale(", ?zoom, ") translate(", ?cameraX, "px, ", ?cameraY, "px)");
+    }
+    grid-layer -> {
+      data-part: "grid-layer";
+      data-grid-style: ?gridStyle;
+      data-grid-size: ?gridSize;
+      data-visible: if ?gridVisible then "true" else "false";
+    }
+    interaction-layer -> {
+      data-part: "interaction-layer";
+      onPointerMove: send(PAN_MOVE, { clientX: event.clientX, clientY: event.clientY });
+      onPointerUp: send(PAN_END);
+    }
+    selection-marquee -> {
+      data-part: "selection-marquee";
+      data-visible: if state == "selecting" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Camera transforms must not cause items to become permanently unreachable";
+    "Viewport culling must hide items outside visible rect for performance";
+    "Zoom must apply at pointer position (zoom-at-point), not viewport center";
+    "Grid must align to world coordinates regardless of camera position";
+    "Selection marquee must select all items whose bounds intersect the rect";
+    "Items must render via WidgetResolver based on their Schema+DisplayMode";
+    "Connector paths must update when connected items move";
+  }
+}
