@@ -1,0 +1,20 @@
+# FieldPlacement with ComponentMapping delegation — when a FieldPlacement
+# has a field_mapping set, delegate to ComponentMapping instead of the
+# default formatter rendering.
+
+sync FieldPlacementUsesMapping [eager]
+when {
+  Component/renderAreaItem: [ item_type: "field_placement";
+                              item_ref: ?placement_id;
+                              context: ?ctx ]
+}
+where {
+  FieldPlacement: { ?p; source_field: ?field;
+                    field_mapping: ?mapping_id; visible: true }
+  filter(?p == ?placement_id)
+  filter(?mapping_id != null)
+}
+then {
+  ComponentMapping/render: [ mapping: ?mapping_id;
+                             context: { field: ?field, value: ?ctx[?field] } ]
+}
