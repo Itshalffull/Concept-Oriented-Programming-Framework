@@ -56,6 +56,7 @@ import { resourceGrantPolicyHandler } from '../../handlers/ts/app/resource-grant
 import { sessionHandler } from '../../handlers/ts/app/session.handler';
 import { appInstallationHandler } from '../../handlers/ts/app/app-installation.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
+import { pickActiveTheme, type ThemeRecord } from './theme-selection';
 
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
@@ -157,6 +158,12 @@ export function getKernel(): Kernel {
 export function ensureSeeded(): Promise<void> {
   getKernel(); // ensure initialized
   return _seedPromise ?? Promise.resolve();
+}
+
+export async function getActiveThemeId(defaultTheme = 'light') {
+  await ensureSeeded();
+  const themes = await getKernel().queryConcept('urn:clef/Theme', 'theme');
+  return pickActiveTheme(themes as ThemeRecord[], defaultTheme);
 }
 
 let _seeded = false;

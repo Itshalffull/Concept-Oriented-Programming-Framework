@@ -5,6 +5,66 @@ import type { ConceptHandler } from '@clef/runtime';
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
+type ThemeRecord = Record<string, unknown>;
+
+function themeKey(theme: ThemeRecord): string {
+  return String(theme._key ?? theme.id ?? theme.theme ?? theme.name ?? '');
+}
+
+function isActive(theme: ThemeRecord): boolean {
+  return theme.active === true || theme.status === 'active';
+}
+
+function sortThemes(themes: ThemeRecord[]): ThemeRecord[] {
+  return [...themes].sort((left, right) => {
+    const priorityDiff = Number(right.priority ?? 0) - Number(left.priority ?? 0);
+    if (priorityDiff !== 0) return priorityDiff;
+    return themeKey(left).localeCompare(themeKey(right));
+  });
+}
+
+function pickFallbackTheme(themes: ThemeRecord[], excludeKey: string): ThemeRecord | null {
+  const candidates = sortThemes(themes).filter((theme) => themeKey(theme) !== excludeKey);
+  if (candidates.length === 0) return null;
+  return (
+    candidates.find((theme) => themeKey(theme) === 'light')
+    ?? candidates[0]
+    ?? null
+  );
+}
+
+async function listThemes(storage: { find: (relation: string, criteria?: Record<string, unknown>) => Promise<Record<string, unknown>[]> }) {
+  return await storage.find('theme', {});
+}
+
+async function saveTheme(
+  storage: { put: (relation: string, key: string, value: Record<string, unknown>) => Promise<void> },
+  key: string,
+  value: ThemeRecord,
+) {
+  await storage.put('theme', key, { ...value, id: key });
+}
+
+async function activateSingleTheme(
+  storage: {
+    find: (relation: string, criteria?: Record<string, unknown>) => Promise<Record<string, unknown>[]>;
+    put: (relation: string, key: string, value: Record<string, unknown>) => Promise<void>;
+  },
+  activeThemeKey: string,
+  priority: number,
+) {
+  const themes = await listThemes(storage);
+  for (const theme of themes) {
+    const key = themeKey(theme);
+    if (!key) continue;
+    await saveTheme(storage, key, {
+      ...theme,
+      active: key === activeThemeKey,
+      priority: key === activeThemeKey ? priority : Number(theme.priority ?? 0),
+    });
+  }
+}
+
 export const themeHandler: ConceptHandler = {
   async list(_input, storage) {
     const items = await storage.find('theme', {});
@@ -17,17 +77,20 @@ export const themeHandler: ConceptHandler = {
     const overrides = input.overrides as string;
 
     const id = theme || nextId('H');
+    const themes = await listThemes(storage);
+    const shouldActivate = !themes.some((item) => isActive(item));
 
     const existing = await storage.get('theme', id);
     if (existing) {
       return { variant: 'duplicate', message: `Theme "${id}" already exists` };
     }
 
-    await storage.put('theme', id, {
+    await saveTheme(storage, id, {
+      id,
       name,
       base: '',
       overrides: overrides || JSON.stringify({}),
-      active: false,
+      active: shouldActivate,
       priority: 0,
     });
 
@@ -45,17 +108,20 @@ export const themeHandler: ConceptHandler = {
     }
 
     const id = theme || nextId('H');
+    const themes = await listThemes(storage);
+    const shouldActivate = !themes.some((item) => isActive(item));
 
     // Merge base overrides with new overrides
     const baseOverrides: Record<string, unknown> = JSON.parse((baseTheme.overrides as string) || '{}');
     const newOverrides: Record<string, unknown> = overrides ? JSON.parse(overrides) : {};
     const merged = { ...baseOverrides, ...newOverrides };
 
-    await storage.put('theme', id, {
+    await saveTheme(storage, id, {
+      id,
       name: `${baseTheme.name as string}-extended`,
       base,
       overrides: JSON.stringify(merged),
-      active: false,
+      active: shouldActivate,
       priority: 0,
     });
 
@@ -71,13 +137,9 @@ export const themeHandler: ConceptHandler = {
       return { variant: 'notfound', message: `Theme "${theme}" not found` };
     }
 
-    await storage.put('theme', theme, {
-      ...existing,
-      active: true,
-      priority: priority ?? 0,
-    });
+    await activateSingleTheme(storage, theme, priority ?? Number(existing.priority ?? 0));
 
-    return { variant: 'ok' };
+    return { variant: 'ok', theme };
   },
 
   async deactivate(input, storage) {
@@ -88,12 +150,28 @@ export const themeHandler: ConceptHandler = {
       return { variant: 'notfound', message: `Theme "${theme}" not found` };
     }
 
-    await storage.put('theme', theme, {
+    if (!isActive(existing)) {
+      return { variant: 'ok', theme };
+    }
+
+    const themes = await listThemes(storage);
+    const fallback = pickFallbackTheme(themes, theme);
+
+    if (!fallback) {
+      await saveTheme(storage, theme, {
+        ...existing,
+        active: true,
+      });
+      return { variant: 'ok', theme };
+    }
+
+    await saveTheme(storage, theme, {
       ...existing,
       active: false,
     });
+    await activateSingleTheme(storage, themeKey(fallback), Number(fallback.priority ?? 0));
 
-    return { variant: 'ok' };
+    return { variant: 'ok', theme: themeKey(fallback) };
   },
 
   async resolve(input, storage) {

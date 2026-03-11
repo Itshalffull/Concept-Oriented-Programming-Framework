@@ -27,6 +27,7 @@ import {
   UI_APP_IDS,
   unmountHost as unmountHostInRuntime,
 } from './ui-app-runtime';
+import { applyDocumentTheme, pickActiveTheme, type ThemeRecord } from './theme-selection';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,7 +105,7 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [destinations, setDestinations] = useState<Destination[]>([]);
 
   // ------------------------------------------------------------------
-  const invoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
+  const rawInvoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
     const res = await fetch(`/api/invoke/${concept}/${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,6 +113,30 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return res.json();
   }, []);
+
+  const syncActiveTheme = useCallback(async () => {
+    try {
+      const result = await rawInvoke('Theme', 'list', {});
+      const items = typeof result.items === 'string'
+        ? JSON.parse(result.items) as ThemeRecord[]
+        : [];
+      applyDocumentTheme(pickActiveTheme(items));
+    } catch {
+      // fall through
+    }
+  }, [rawInvoke]);
+
+  const invoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
+    const result = await rawInvoke(concept, action, input);
+    if (
+      concept === 'Theme'
+      && result.variant === 'ok'
+      && ['create', 'extend', 'activate', 'deactivate'].includes(action)
+    ) {
+      void syncActiveTheme();
+    }
+    return result;
+  }, [rawInvoke, syncActiveTheme]);
 
   const applySnapshot = useCallback((nextSnapshot: ReturnType<typeof createInitialUiAppSnapshot>) => {
     snapshotRef.current = nextSnapshot;
@@ -150,6 +175,10 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setShellState((prev) => ({ ...prev, status: 'error' }));
       });
   }, [applySnapshot, invoke, loadDestinations]);
+
+  useEffect(() => {
+    void syncActiveTheme();
+  }, [syncActiveTheme]);
 
   // ------------------------------------------------------------------
   // Sync pathname → Navigator (Next.js is source of truth for URL)
