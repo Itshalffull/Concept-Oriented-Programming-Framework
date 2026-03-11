@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ViewRenderer } from '../components/ViewRenderer';
+import { redirect } from 'next/navigation';
 
 export default function MappingsPage() {
-  return (
-    <HostedPage>
-      <ViewRenderer viewId="mappings-list" />
-    </HostedPage>
-  );
+  redirect('/admin/mappings');
 }

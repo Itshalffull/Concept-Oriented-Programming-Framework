@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ViewRenderer } from '../components/ViewRenderer';
+import { redirect } from 'next/navigation';
 
 export default function ThemesPage() {
-  return (
-    <HostedPage>
-      <ViewRenderer viewId="themes-list" />
-    </HostedPage>
-  );
+  redirect('/admin/themes');
 }

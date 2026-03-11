@@ -41,6 +41,11 @@ import { contentStorageHandler } from '../../handlers/ts/app/content-storage.han
 import { propertyHandler } from '../../handlers/ts/app/property.handler';
 import { outlineHandler } from '../../handlers/ts/app/outline.handler';
 import { layoutHandler } from '../../handlers/ts/app/layout.handler';
+import { authenticationHandler } from '../../handlers/ts/app/authentication.handler';
+import { authorizationHandler } from '../../handlers/ts/app/authorization.handler';
+import { accessControlHandler } from '../../handlers/ts/app/access-control.handler';
+import { sessionHandler } from '../../handlers/ts/app/session.handler';
+import { bootstrapIdentity, getIdentityStorage } from './identity';
 
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
@@ -97,9 +102,13 @@ export function getKernel(): Kernel {
   reg('urn:clef/Property', propertyHandler, makeStorage('property'));
   reg('urn:clef/Outline', outlineHandler, makeStorage('outline'));
   reg('urn:clef/Layout', layoutHandler, makeStorage('layout'));
+  reg('urn:clef/Authentication', authenticationHandler, getIdentityStorage('authentication'));
+  reg('urn:clef/Authorization', authorizationHandler, getIdentityStorage('authorization'));
+  reg('urn:clef/AccessControl', accessControlHandler, getIdentityStorage('access-control'));
+  reg('urn:clef/Session', sessionHandler, getIdentityStorage('session'));
 
   // Seed data on first initialization
-  _seedPromise = seedData(kernel);
+  _seedPromise = seedData(kernel).then(() => bootstrapIdentity(kernel));
 
   _kernel = kernel;
   return kernel;

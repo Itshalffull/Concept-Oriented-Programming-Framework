@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { ViewRenderer } from '../components/ViewRenderer';
+import { redirect } from 'next/navigation';
 
 export default function ViewBuilderPage() {
-  return (
-    <HostedPage>
-      <ViewRenderer viewId="views-list" />
-    </HostedPage>
-  );
+  redirect('/admin/view-builder');
 }
