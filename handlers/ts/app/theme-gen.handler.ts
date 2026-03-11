@@ -1,11 +1,53 @@
 // ThemeGen Concept Implementation [G]
-// Generates platform-specific theme output from a theme AST for multiple targets.
+// Generates target output from a normalized expressive theme AST.
 import type { ConceptHandler } from '@clef/runtime';
 
 let counter = 0;
-function nextId(prefix: string) { return prefix + '-' + (++counter); }
+
+function nextId(prefix: string): string {
+  return prefix + '-' + (++counter);
+}
 
 const VALID_TARGETS = ['css-variables', 'tailwind', 'react-native', 'terminal', 'w3c-dtcg'];
+
+type Json = Record<string, unknown>;
+
+function isObject(value: unknown): value is Json {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function camelize(path: string): string {
+  return path.replace(/\.([a-zA-Z0-9])/g, (_, ch: string) => ch.toUpperCase());
+}
+
+function inferTokenType(path: string): string {
+  if (path.startsWith('color.')) return 'color';
+  if (path.startsWith('elevation.')) return 'shadow';
+  if (path.startsWith('motion.')) return 'transition';
+  if (path.startsWith('typography.')) return 'typography';
+  if (path.startsWith('density.')) return 'number';
+  return 'string';
+}
+
+function readTokens(ast: Json): Record<string, string> {
+  const tokens = isObject(ast.tokens) ? ast.tokens : {};
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(tokens)) {
+    result[key] = String(value);
+  }
+
+  return result;
+}
+
+function readContext(ast: Json): Record<string, string> {
+  const context = isObject(ast.context) ? ast.context : {};
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(context)) {
+    result[key] = String(value);
+  }
+  return result;
+}
 
 export const themeGenHandler: ConceptHandler = {
   async generate(input, storage) {
@@ -17,60 +59,59 @@ export const themeGenHandler: ConceptHandler = {
       return { variant: 'error', message: `Unsupported target "${target}". Valid targets: ${VALID_TARGETS.join(', ')}` };
     }
 
-    let ast: Record<string, unknown>;
+    let ast: Json;
     try {
-      ast = JSON.parse(themeAst);
+      ast = JSON.parse(themeAst) as Json;
     } catch {
       return { variant: 'error', message: 'Failed to parse theme AST as JSON' };
     }
 
     const id = gen || nextId('G');
+    const tokens = readTokens(ast);
+    const context = readContext(ast);
 
-    let output: string;
+    let output = '';
     switch (target) {
       case 'css-variables': {
-        const vars: string[] = [];
-        for (const [key, value] of Object.entries(ast)) {
-          vars.push(`  --${key}: ${value};`);
-        }
-        output = `:root {\n${vars.join('\n')}\n}`;
+        const vars = Object.entries(tokens).map(([key, value]) => `  --${key.replace(/\./g, '-')}: ${value};`);
+        const contextVars = Object.entries(context).map(([key, value]) => `  --theme-${key}: ${value};`);
+        output = `:root {\n${[...vars, ...contextVars].join('\n')}\n}`;
         break;
       }
       case 'tailwind': {
-        const extend: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(ast)) {
-          extend[key] = value;
-        }
-        output = JSON.stringify({ theme: { extend } }, null, 2);
+        output = JSON.stringify({
+          theme: {
+            extend: tokens,
+          },
+          clef: {
+            context,
+          },
+        }, null, 2);
         break;
       }
       case 'react-native': {
-        const styles: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(ast)) {
-          const camelKey = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-          styles[camelKey] = value;
+        const nativeTheme: Record<string, string> = {};
+        for (const [key, value] of Object.entries(tokens)) {
+          nativeTheme[camelize(key)] = value;
         }
-        output = `export const theme = ${JSON.stringify(styles, null, 2)};`;
+        output = `export const theme = ${JSON.stringify({ tokens: nativeTheme, context }, null, 2)};`;
         break;
       }
       case 'terminal': {
-        const ansiMap: string[] = [];
-        for (const [key, value] of Object.entries(ast)) {
-          ansiMap.push(`${key}=${value}`);
-        }
-        output = ansiMap.join('\n');
+        output = [
+          ...Object.entries(context).map(([key, value]) => `context.${key}=${value}`),
+          ...Object.entries(tokens).map(([key, value]) => `${key}=${value}`),
+        ].join('\n');
         break;
       }
       case 'w3c-dtcg': {
-        const tokens: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(ast)) {
-          tokens[key] = { $value: value, $type: 'color' };
+        const dtcg: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(tokens)) {
+          dtcg[key] = { $value: value, $type: inferTokenType(key) };
         }
-        output = JSON.stringify(tokens, null, 2);
+        output = JSON.stringify({ tokens: dtcg, extensions: { clef: { context } } }, null, 2);
         break;
       }
-      default:
-        output = '';
     }
 
     await storage.put('themeGen', id, {

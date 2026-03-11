@@ -1,0 +1,47 @@
+@version(1)
+concept StructuralMotif [N] {
+
+  purpose {
+    Map semantic layout intents to concrete paradigms per scope,
+    breakpoint, and runtime context.
+  }
+
+  state {
+    motifs: set StructuralMotifId
+    motif_scope: StructuralMotifId -> String
+    motif_intent: StructuralMotifId -> String
+    motif_paradigm: StructuralMotifId -> String
+    motif_params: StructuralMotifId -> option String
+  }
+
+  actions {
+    action registerProvider(provider: String, paradigms: list String) {
+      -> ok(providerId: String) { Structural motif provider registered. }
+    }
+
+    action configure(scope: String, intent: String, paradigm: String, params: option String) {
+      -> ok(motifId: StructuralMotifId) { Motif mapping configured for the scope and intent. }
+    }
+
+    action resolve(scope: String, intent: String, context: String) {
+      -> ok(paradigm: String, layoutConfig: String) { Layout paradigm resolved for the request. }
+    }
+
+    action getParadigm(scope: String, intent: String) {
+      -> ok(paradigm: String) { Configured paradigm returned for the intent. }
+    }
+
+    action listIntents() {
+      -> ok(intents: list String) { Known layout intents returned. }
+    }
+
+    action listParadigms() {
+      -> ok(paradigms: list String) { Known layout paradigms returned. }
+    }
+
+    action routeToProvider(scope: String, intent: String, payload: String) {
+      -> ok(result: String) { Motif request routed to a provider. }
+      -> notfound(message: String) { No provider is available for the request. }
+    }
+  }
+}

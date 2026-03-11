@@ -1,0 +1,32 @@
+@version(1)
+concept Shape [H] {
+
+  purpose {
+    Encode the edge, corner, and clipping philosophy that gives
+    a theme its geometric character.
+  }
+
+  state {
+    shapes: set ShapeProfileId
+    shape_name: ShapeProfileId -> String
+    shape_config: ShapeProfileId -> String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(shapeId: ShapeProfileId) { Shape profile configured. }
+    }
+
+    action resolve(shapeId: ShapeProfileId, element: String) {
+      -> ok(value: String) { Shape value resolved for the element. }
+    }
+
+    action computeRadius(shapeId: ShapeProfileId, element: String) {
+      -> ok(radius: String) { Radius computed for the element. }
+    }
+
+    action computeClipPath(shapeId: ShapeProfileId, element: String) {
+      -> ok(clipPath: String) { Clip path computed for the element. }
+    }
+  }
+}

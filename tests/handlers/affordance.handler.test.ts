@@ -159,6 +159,7 @@ describe('Affordance Handler', () => {
       expect(conditions.platform).toBe('ios');
       expect(conditions.viewport).toBeNull();
       expect(conditions.density).toBeNull();
+      expect(conditions.motif).toBeNull();
       expect(conditions.mutable).toBeNull();
       expect(conditions.minOptions).toBeNull();
       expect(conditions.maxOptions).toBeNull();
@@ -174,6 +175,7 @@ describe('Affordance Handler', () => {
         platform: 'android',
         viewport: 'mobile',
         density: 'compact',
+        motif: 'sidebar',
         mutable: true,
         concept: 'Todo',
         suite: 'core',
@@ -199,6 +201,7 @@ describe('Affordance Handler', () => {
       expect(conditions.platform).toBe('android');
       expect(conditions.viewport).toBe('mobile');
       expect(conditions.density).toBe('compact');
+      expect(conditions.motif).toBe('sidebar');
       expect(conditions.mutable).toBe(true);
       expect(conditions.concept).toBe('Todo');
       expect(conditions.suite).toBe('core');
@@ -551,6 +554,34 @@ describe('Affordance Handler', () => {
       expect(widgets2).not.toContain('CompactList');
     });
 
+    it('evaluates motif condition correctly', async () => {
+      await affordanceHandler.declare(
+        {
+          affordance: 'sidebar-nav',
+          widget: 'SidebarNav',
+          interactor: 'navigation',
+          specificity: 12,
+          conditions: JSON.stringify({ motif: 'sidebar' }),
+          motifOptimized: 'sidebar',
+        },
+        storage as any,
+      );
+
+      const result = await affordanceHandler.match(
+        {
+          interactor: 'navigation',
+          context: JSON.stringify({ motif: 'sidebar' }),
+        },
+        storage as any,
+      );
+
+      expect(result.variant).toBe('ok');
+      const matches = JSON.parse(result.matches as string);
+      const match = matches.find((m: any) => m.affordance === 'sidebar-nav');
+      expect(match.widget).toBe('SidebarNav');
+      expect(match.motifOptimized).toBe('sidebar');
+    });
+
     it('evaluates mutable condition correctly', async () => {
       await affordanceHandler.declare(
         {
@@ -711,6 +742,8 @@ describe('Affordance Handler', () => {
         specificity: 1,
         bind: null,
         contractVersion: null,
+        densityExempt: null,
+        motifOptimized: null,
       });
     });
 
@@ -831,6 +864,7 @@ describe('Affordance Handler', () => {
             platform: 'web',
             viewport: 'desktop',
             density: 'comfortable',
+            motif: 'sidebar',
             mutable: true,
             minOptions: 1,
             maxOptions: 50,
@@ -852,6 +886,7 @@ describe('Affordance Handler', () => {
       expect(reason).toContain('platform=web');
       expect(reason).toContain('viewport=desktop');
       expect(reason).toContain('density=comfortable');
+      expect(reason).toContain('motif=sidebar');
       expect(reason).toContain('mutable=true');
       expect(reason).toContain('minOptions=1');
       expect(reason).toContain('maxOptions=50');
@@ -904,6 +939,30 @@ describe('Affordance Handler', () => {
 
       const reason = result.reason as string;
       expect(reason).toContain('contract: @5');
+    });
+
+    it('includes motif and density metadata in explanation when present', async () => {
+      await affordanceHandler.declare(
+        {
+          affordance: 'motif-aware',
+          widget: 'SidebarCard',
+          interactor: 'display',
+          specificity: 6,
+          conditions: JSON.stringify({ motif: 'sidebar' }),
+          densityExempt: true,
+          motifOptimized: 'sidebar',
+        },
+        storage as any,
+      );
+
+      const result = await affordanceHandler.explain(
+        { affordance: 'motif-aware' },
+        storage as any,
+      );
+
+      const reason = result.reason as string;
+      expect(reason).toContain('densityExempt: true');
+      expect(reason).toContain('motifOptimized: sidebar');
     });
 
     it('formats the reason string with correct structure', async () => {

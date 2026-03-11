@@ -1,0 +1,49 @@
+@version(1)
+concept ColorSpace [C] {
+
+  purpose {
+    Derive perceptual palettes, contrast data, and harmonized accents
+    from seed colors using named color algorithms and providers.
+  }
+
+  state {
+    algorithms: set AlgorithmId
+    algorithm_name: AlgorithmId -> String
+    algorithm_provider: AlgorithmId -> String
+    seeds: set SeedId
+    seed_value: SeedId -> String
+    seed_algorithm: SeedId -> AlgorithmId
+    derivations: set DerivationId
+    derivation_seed: DerivationId -> SeedId
+    derivation_result: DerivationId -> list String
+  }
+
+  actions {
+    action register(algorithm: String, gamut: String, provider: String) {
+      -> ok(algorithmId: AlgorithmId) { Algorithm registered for routing and derivation. }
+      -> error(message: String) { Algorithm registration failed. }
+    }
+
+    action deriveFromSeed(name: String, color: String, algorithmId: AlgorithmId, steps: Int) {
+      -> ok(seedId: SeedId, derivationId: DerivationId, palette: list String) {
+        Palette steps were derived from the named seed color.
+      }
+      -> error(message: String) { Seed derivation failed. }
+    }
+
+    action computeContrast(colorA: String, colorB: String, algorithmId: AlgorithmId) {
+      -> ok(ratio: Float, wcagAA: Bool, wcagAAA: Bool) { Contrast data computed for the pair. }
+      -> error(message: String) { Contrast computation failed. }
+    }
+
+    action harmonize(sourceColor: String, targetSeedId: SeedId, algorithmId: AlgorithmId) {
+      -> ok(harmonizationId: String, result: String) { Source color harmonized toward the target seed. }
+      -> error(message: String) { Harmonization failed. }
+    }
+
+    action routeToProvider(algorithmId: AlgorithmId, operation: String, payload: String) {
+      -> ok(result: String) { Operation dispatched to the registered provider. }
+      -> notfound(message: String) { No provider exists for the requested algorithm. }
+    }
+  }
+}

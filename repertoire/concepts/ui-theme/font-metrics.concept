@@ -1,0 +1,36 @@
+@version(1)
+concept FontMetrics [F] {
+
+  purpose {
+    Store font-specific metrics, OpenType features, and
+    variable-axis rules for precise typographic control.
+  }
+
+  state {
+    profiles: set FontProfileId
+    profile_name: FontProfileId -> String
+    profile_config: FontProfileId -> String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(profileId: FontProfileId) { Font metrics profile stored. }
+    }
+
+    action resolveFeatures(profileId: FontProfileId, context: String) {
+      -> ok(features: String) { Feature set resolved for the requested context. }
+    }
+
+    action getBaselineOffset(profileId: FontProfileId, size: String) {
+      -> ok(offset: String) { Baseline offset returned for the size. }
+    }
+
+    action getDropCapConfig(profileId: FontProfileId) {
+      -> ok(config: String) { Drop cap configuration returned. }
+    }
+
+    action resolveVariableAxes(profileId: FontProfileId, context: String) {
+      -> ok(axes: String) { Variable font axes resolved. }
+    }
+  }
+}

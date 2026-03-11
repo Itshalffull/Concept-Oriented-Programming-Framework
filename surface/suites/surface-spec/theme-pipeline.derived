@@ -3,7 +3,8 @@ derived ThemePipeline [G] {
   purpose {
     Combine theme specification parsing and cross-platform style
     code generation into an end-to-end pipeline that transforms
-    .theme files into framework-specific design token implementations.
+    expressive .theme files into framework-specific design token
+    implementations and widget-resolution context.
   }
 
   composes {
@@ -31,6 +32,7 @@ derived ThemePipeline [G] {
   principle {
     after parseTheme(specFile: f)
     then themeAst returns a typed AST for the theme spec
+    and includes density and motif context for widget resolution
     and  generateTheme(ast: a, target: "react", config: c)
     then platform-specific style tokens are emitted
   }

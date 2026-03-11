@@ -16,12 +16,15 @@ concept Affordance [F] {
     widget: F -> String
     interactor: F -> String
     specificity: F -> Int
+    densityExempt: F -> option Bool
+    motifOptimized: F -> option String
     conditions {
       minOptions: F -> option Int
       maxOptions: F -> option Int
       platform: F -> option String
       viewport: F -> option String
       density: F -> option String
+      motif: F -> option String
       mutable: F -> option Bool
     }
   }
@@ -47,7 +50,7 @@ concept Affordance [F] {
         Find all affordances matching the interactor type
         whose conditions are satisfied by context. Returns
         ranked list by specificity then score.
-        Context: { optionCount, platform, viewport, density }.
+        Context: { optionCount, platform, viewport, density, motif }.
       }
       -> none(message: String) { No affordances match. }
     }

@@ -16,7 +16,7 @@ derived AppShell [T] {
   }
 
   syncs {
-    required: [navigator-host-mount, host-shell-zone, shell-transport-fetch, shell-theme-activate, shell-layout-adapt]
+    required: [navigator-host-mount, host-shell-zone, shell-transport-fetch, shell-theme-activate, shell-layout-adapt, shell-theme-motif-adapt]
   }
 
   surface {

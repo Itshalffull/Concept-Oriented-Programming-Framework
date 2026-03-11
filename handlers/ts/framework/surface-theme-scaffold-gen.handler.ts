@@ -30,6 +30,45 @@ interface ThemeConfig {
   mode?: 'light' | 'dark' | 'both';
 }
 
+function buildExpressiveThemeSpec(config: ThemeConfig): string {
+  const primaryHue = config.primaryColor || '220';
+  const secondaryHue = config.secondaryColor || '280';
+  const fontFamily = config.fontFamily || 'system-ui, -apple-system, sans-serif';
+  const baseSize = config.baseSize || 16;
+  const scale = config.scale || 1.25;
+  const radius = config.borderRadius || '0.375rem';
+
+  return [
+    '{',
+    `  "name": "${toKebab(config.name)}",`,
+    '  "colorSpace": { "algorithm": "oklch", "gamut": "srgb", "seed": { "primary": "' + primaryHue + '" } },',
+    '  "colorScheme": {',
+    '    "activeMode": "light",',
+    '    "modes": {',
+    `      "light": { "primary": "#3b82f6", "onPrimary": "#ffffff", "surface": "#ffffff", "background": "#f8fafc", "foreground": "#0f172a" },`,
+    `      "dark": { "primary": "#60a5fa", "onPrimary": "#0f172a", "surface": "#111827", "background": "#030712", "foreground": "#f8fafc" }`,
+    '    }',
+    '  },',
+    `  "density": { "mode": "comfortable", "multiplier": 1, "exempt": ["dialog", "datepicker"] },`,
+    `  "scope": { "global": { "depth": 0 }, "content": { "depth": 1 } },`,
+    `  "typeScale": { "baseSize": ${baseSize}, "ratio": ${scale}, "steps": { "body": "${baseSize}px", "heading": "${(baseSize * scale * scale).toFixed(1)}px" } },`,
+    `  "fontMetrics": { "family": "${fontFamily}", "features": { "body": ["liga", "onum"], "data": ["tnum"] } },`,
+    `  "shape": { "family": "rounded", "radius": "${radius}" },`,
+    '  "iconography": { "variant": "outlined", "gradeCompensation": -25 },',
+    '  "material": { "kind": "paper", "shadows": { "1": "0 1px 2px rgba(15, 23, 42, 0.08)", "2": "0 10px 15px rgba(15, 23, 42, 0.12)" }, "backdrop": "none" },',
+    `  "styleProfile": { "name": "${config.name}", "prompt": "Confident editorial system with restrained motion and clear hierarchy." },`,
+    '  "springPhysics": { "presets": { "snappy": { "tension": 280, "friction": 22 }, "gentle": { "tension": 160, "friction": 18 } } },',
+    '  "motionChoreography": { "sequences": { "listEnter": { "stagger": 24, "order": "forward" } } },',
+    `  "structuralMotif": { "default": "sidebar", "intents": { "navigation": "sidebar", "primaryAction": "floating-action-button", "utilityBar": "topbar" } },`,
+    `  "imageFilter": { "presets": { "editorial": { "duotone": ["#0f172a", "#94a3b8"] } } },`,
+    `  "preference": { "priority": ["accessibility", "user", "system", "brand"] },`,
+    `  "constraint": { "contrast": 4.5, "focusRing": "2px solid #2563eb", "touchTarget": 44 },`,
+    `  "tokens": { "radius.md": "${radius}", "color.secondary": "${secondaryHue}" }`,
+    '}',
+    '',
+  ].join('\n');
+}
+
 function generateColorScale(hue: string): Record<string, string> {
   // Generate a 50-950 color scale using HSL approximation
   // Real implementation would use OKLCH perceptual color space
@@ -406,6 +445,11 @@ export const surfaceThemeScaffoldGenHandler: ConceptHandler = {
       files.push({
         path: `theme-${kebab}/suite.stub.yaml`,
         content: buildThemeSuiteYaml(config),
+      });
+
+      files.push({
+        path: `theme-${kebab}/themes/${kebab}.stub.theme.json`,
+        content: buildExpressiveThemeSpec(config),
       });
 
       // Theme JSON files (light/dark mode tokens)

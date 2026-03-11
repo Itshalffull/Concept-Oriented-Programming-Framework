@@ -517,7 +517,7 @@ describe('SurfaceThemeScaffoldGen', () => {
     );
     expect(result.variant).toBe('ok');
     const files = result.files as Array<{ path: string; content: string }>;
-    expect(files.length).toBe(7); // suite.yaml + light + dark + palette + typography + motion + elevation
+    expect(files.length).toBe(8); // suite.yaml + expressive theme + light + dark + palette + typography + motion + elevation
 
     const suiteFile = files.find(f => f.path.endsWith('suite.stub.yaml'));
     expect(suiteFile!.content).toContain('name: theme-ocean');
@@ -531,6 +531,13 @@ describe('SurfaceThemeScaffoldGen', () => {
     expect(dark).toBeDefined();
     const darkData = JSON.parse(dark!.content);
     expect(darkData.mode).toBe('dark');
+
+    const expressiveTheme = files.find(f => f.path.endsWith('.stub.theme.json'));
+    expect(expressiveTheme).toBeDefined();
+    const expressiveData = JSON.parse(expressiveTheme!.content);
+    expect(expressiveData.colorSpace.algorithm).toBe('oklch');
+    expect(expressiveData.structuralMotif.default).toBe('sidebar');
+    expect(expressiveData.density.mode).toBe('comfortable');
 
     const palette = files.find(f => f.path.includes('palette.stub.json'));
     expect(palette).toBeDefined();

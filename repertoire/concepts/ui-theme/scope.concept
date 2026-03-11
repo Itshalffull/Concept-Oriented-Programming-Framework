@@ -1,0 +1,38 @@
+@version(1)
+concept Scope [Q] {
+
+  purpose {
+    Define global, zone, and component scope boundaries for
+    contextual token resolution and layered theming.
+  }
+
+  state {
+    scopes: set ScopeId
+    scope_name: ScopeId -> String
+    scope_kind: ScopeId -> String
+    scope_config: ScopeId -> String
+    scope_depth: ScopeId -> Int
+  }
+
+  actions {
+    action define(name: String, kind: String, config: String) {
+      -> ok(scopeId: ScopeId) { Scope definition stored. }
+    }
+
+    action enter(scopeId: ScopeId, parentScope: option ScopeId) {
+      -> ok(depth: Int) { Scope entry established nesting depth. }
+    }
+
+    action exit(scopeId: ScopeId) {
+      -> ok(scopeId: ScopeId) { Scope exited. }
+    }
+
+    action resolve(path: String, scopeId: ScopeId) {
+      -> ok(value: String) { Token path resolved inside the selected scope. }
+    }
+
+    action getDepth(scopeId: ScopeId) {
+      -> ok(depth: Int) { Current nesting depth returned. }
+    }
+  }
+}

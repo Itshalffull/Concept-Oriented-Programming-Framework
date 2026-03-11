@@ -1,0 +1,32 @@
+@version(1)
+concept Iconography [I] {
+
+  purpose {
+    Configure icon style variants, grades, and variable-font axes
+    so icon treatment stays coherent with the active theme.
+  }
+
+  state {
+    profiles: set IconProfileId
+    profile_name: IconProfileId -> String
+    profile_config: IconProfileId -> String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(profileId: IconProfileId) { Iconography profile stored. }
+    }
+
+    action resolveAxes(profileId: IconProfileId, surface: String) {
+      -> ok(axes: String) { Icon axes resolved for the surface. }
+    }
+
+    action getGradeForSurface(profileId: IconProfileId, surface: String) {
+      -> ok(grade: Int) { Grade compensation returned for the surface. }
+    }
+
+    action getStyleVariant(profileId: IconProfileId) {
+      -> ok(variant: String) { Current icon style variant returned. }
+    }
+  }
+}

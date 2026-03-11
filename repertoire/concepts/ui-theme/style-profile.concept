@@ -1,0 +1,42 @@
+@version(1)
+concept StyleProfile [L] {
+
+  purpose {
+    Encode a coherent aesthetic across the theme design space and
+    fan that intent out to the lower-level theming concepts.
+  }
+
+  state {
+    profiles: set StyleProfileId
+    profile_name: StyleProfileId -> String
+    profile_config: StyleProfileId -> String
+    profile_prompt: StyleProfileId -> option String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(profileId: StyleProfileId) { Style profile configured. }
+    }
+
+    action encode(profileId: StyleProfileId) {
+      -> ok(designSpace: String) { Design-space values encoded for the profile. }
+    }
+
+    action decode(input: String, provider: option String) {
+      -> ok(profileId: StyleProfileId, axes: String) { Input decoded into style axes. }
+    }
+
+    action applyToTheme(profileId: StyleProfileId, themeId: String) {
+      -> ok(themeId: String) { Profile values applied to the theme. }
+    }
+
+    action requestAsset(profileId: StyleProfileId, assetType: String, context: String) {
+      -> ok(requestId: String) { Asset request created for the profile. }
+    }
+
+    action routeToProvider(profileId: StyleProfileId, operation: String, payload: String) {
+      -> ok(result: String) { Provider handled the style profile request. }
+      -> notfound(message: String) { No provider is available for the request. }
+    }
+  }
+}

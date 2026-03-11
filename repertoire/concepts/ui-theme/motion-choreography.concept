@@ -1,0 +1,36 @@
+@version(1)
+concept MotionChoreography [O] {
+
+  purpose {
+    Manage named motion sequences, staggers, and scroll-driven
+    animation parameters across related interface elements.
+  }
+
+  state {
+    sequences: set MotionSequenceId
+    sequence_name: MotionSequenceId -> String
+    sequence_config: MotionSequenceId -> String
+  }
+
+  actions {
+    action register(name: String, config: String) {
+      -> ok(sequenceId: MotionSequenceId) { Motion sequence registered. }
+    }
+
+    action resolve(sequenceId: MotionSequenceId, context: String) {
+      -> ok(sequence: String) { Sequence resolved for the context. }
+    }
+
+    action computeDelay(sequenceId: MotionSequenceId, index: Int) {
+      -> ok(delay: String) { Delay computed for the item index. }
+    }
+
+    action getScrollParams(sequenceId: MotionSequenceId) {
+      -> ok(params: String) { Scroll choreography parameters returned. }
+    }
+
+    action listSequences() {
+      -> ok(sequences: list String) { Registered sequence names returned. }
+    }
+  }
+}
