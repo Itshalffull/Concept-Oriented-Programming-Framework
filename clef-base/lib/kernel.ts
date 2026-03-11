@@ -62,14 +62,14 @@ let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
 const _registeredConcepts: { uri: string; hasStorage: boolean }[] = [];
 const CLEF_BASE_SYNC_FILES = [
-  'clef-base/suites/app-shell/syncs/destination-catalog-registers-navigator.sync',
-  'clef-base/suites/identity-integration/syncs/access-control-on-content-load.sync',
-  'clef-base/suites/identity-integration/syncs/access-control-on-content-save.sync',
-  'clef-base/suites/identity-integration/syncs/access-control-on-schema-apply.sync',
-  'clef-base/suites/identity-integration/syncs/session-create-sets-ui-transport-auth.sync',
-  'clef-base/suites/identity-integration/syncs/session-refresh-sets-ui-transport-auth.sync',
-  'clef-base/suites/identity-integration/syncs/session-destroy-clears-ui-transport-auth.sync',
-  'clef-base/suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync',
+  'suites/app-shell/syncs/destination-catalog-registers-navigator.sync',
+  'suites/identity-integration/syncs/access-control-on-content-load.sync',
+  'suites/identity-integration/syncs/access-control-on-content-save.sync',
+  'suites/identity-integration/syncs/access-control-on-schema-apply.sync',
+  'suites/identity-integration/syncs/session-create-sets-ui-transport-auth.sync',
+  'suites/identity-integration/syncs/session-refresh-sets-ui-transport-auth.sync',
+  'suites/identity-integration/syncs/session-destroy-clears-ui-transport-auth.sync',
+  'suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync',
 ] as const;
 
 function makeStorage(conceptName: string) {
