@@ -4,4 +4,4 @@
 
 [mcp_servers.clef_devtools]
 command = "npx"
-args = ["tsx", "./.claude/mcp/index.ts"]
+args = ["tsx","./.claude/mcp/index.ts","examples/devtools/devtools.interface.yaml"]

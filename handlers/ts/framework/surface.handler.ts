@@ -228,8 +228,19 @@ function generateEntrypointContent(
       const tools = conceptNames.map(c => `...${toCamelCase(c)}Tools`).join(', ');
       return (
         header +
+        `import { pathToFileURL } from 'url';\n` +
+        `import { bootMcpServer } from '../../handlers/ts/framework/mcp-server.handler';\n` +
         `${imports}\n\n` +
-        `export const tools = [${tools}];\n`
+        `export const tools = [${tools}];\n\n` +
+        `const isDirectRun = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;\n\n` +
+        `if (isDirectRun) {\n` +
+        `  const manifestPath = process.argv[2];\n` +
+        `  if (!manifestPath) {\n` +
+        `    console.error('Usage: npx tsx ./.claude/mcp/index.ts <manifest-path>');\n` +
+        `    process.exit(1);\n` +
+        `  }\n` +
+        `  await bootMcpServer(manifestPath);\n` +
+        `}\n`
       );
     }
 
