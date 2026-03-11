@@ -1,0 +1,31 @@
+derived ThemeKit [T] {
+
+  purpose {
+    Connect expressive theme concepts to parsing, generation,
+    and widget resolution for the Surface pipeline.
+  }
+
+  composes {
+    derived ExpressionTheme [T]
+    ThemeParser [T]
+    ThemeGen [T]
+    WidgetResolver [T]
+  }
+
+  syncs {
+    required: [
+      ParsedColorSpaceRegistered,
+      ParsedColorSchemeRegistered,
+      ParsedDensityRegistered,
+      ParsedStructuralMotifRegistered
+    ]
+  }
+
+  surface {
+  }
+
+  principle {
+    after ThemeParser parses an expressive theme
+    then ThemeGen and WidgetResolver can consume the derived density and motif context
+  }
+}

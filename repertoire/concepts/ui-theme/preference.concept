@@ -1,0 +1,34 @@
+@version(1)
+concept Preference [P] {
+
+  purpose {
+    Negotiate theme decisions between accessibility overrides,
+    explicit user choices, system settings, and brand defaults.
+  }
+
+  state {
+    entries: set PreferenceId
+    entry_key: PreferenceId -> String
+    entry_value: PreferenceId -> String
+    entry_source: PreferenceId -> String
+  }
+
+  actions {
+    action update(key: String, value: String, source: String) {
+      -> ok(preferenceId: PreferenceId, resolved: String) { Preference updated and resolution recalculated. }
+    }
+
+    action resolve(key: String) {
+      -> ok(value: String, source: String) { Winning value returned for the key. }
+      -> notfound(message: String) { No preference exists for the key. }
+    }
+
+    action negotiate(snapshot: String) {
+      -> ok(resolved: String) { Authority ordering produced a resolved configuration. }
+    }
+
+    action getPriority(source: String) {
+      -> ok(priority: Int) { Priority returned for the named source. }
+    }
+  }
+}

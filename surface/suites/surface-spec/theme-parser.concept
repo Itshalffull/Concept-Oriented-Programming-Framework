@@ -2,9 +2,10 @@
 concept ThemeParser [H] {
 
   purpose {
-    Parse .theme specification files into typed ASTs.
-    Resolves palette functions (contrast, lighten, darken),
-    computes typography scale, validates WCAG contrast.
+    Parse expressive .theme specifications into typed ASTs.
+    Understands algorithmic theming blocks such as color-space,
+    color-scheme, density, scope, motion choreography, and
+    structural motif while still resolving final token output.
   }
 
   state {
@@ -17,8 +18,8 @@ concept ThemeParser [H] {
   actions {
     action parse(theme: H, source: String) {
       -> ok(theme: H, ast: String) {
-        Parse .theme source into ThemeAST. Resolves palette
-        functions, typography scale, extension inheritance.
+        Parse theme source into a ThemeAST with block metadata,
+        derived tokens, widget-resolution context, and warnings.
       }
       -> error(theme: H, errors: list String) { Parse errors. }
     }

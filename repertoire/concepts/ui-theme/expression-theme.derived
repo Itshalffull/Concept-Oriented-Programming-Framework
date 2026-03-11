@@ -1,0 +1,69 @@
+derived ExpressionTheme [T] {
+
+  purpose {
+    Compose algorithmic derivation, design-space philosophy,
+    and existing theme tokens into one expressive resolution surface.
+  }
+
+  composes {
+    Theme [T]
+    Palette [T]
+    Typography [T]
+    Motion [T]
+    Elevation [T]
+    ColorSpace [T]
+    ColorScheme [T]
+    Constraint [T]
+    Preference [T]
+    Scope [T]
+    TypeScale [T]
+    FontMetrics [T]
+    Shape [T]
+    Iconography [T]
+    Density [T]
+    MaterialSurface [T]
+    StyleProfile [T]
+    SpringPhysics [T]
+    MotionChoreography [T]
+    StructuralMotif [T]
+    ImageFilter [T]
+    DesignToken [T]
+  }
+
+  syncs {
+    required: [
+      SeedColorDerivesPalette,
+      SchemeActivatesTokens,
+      PreferenceNegotiatesTheme,
+      DensityAppliesMultiplier,
+      StructuralMotifResolvesLayout,
+      StructuralMotifResolvesShell,
+      TypeScaleGeneratesTypographyTokens,
+      MaterialSurfaceComputesShadow,
+      SpringPhysicsResolvesMotionToken
+    ]
+  }
+
+  surface {
+    action applyTheme(themeId: String) {
+      matches: ColorScheme/activate(themeId: "themeId")
+    }
+
+    action setDensity(mode: String) {
+      matches: Density/set(mode: "mode")
+    }
+
+    action setMotif(intent: String, paradigm: String) {
+      matches: StructuralMotif/configure(intent: "intent", paradigm: "paradigm")
+    }
+
+    query resolveToken(path: String, scope: String) -> DesignToken/resolve(token: path)
+    query getDesignSpace(profileId: String) -> StyleProfile/encode(profileId: profileId)
+  }
+
+  principle {
+    after applyTheme(themeId: t)
+    then resolveToken(path: "color.primary", scope: "global")
+    and active motif mappings are available for layout resolution
+  }
+}

@@ -1,21 +1,43 @@
 # repertoire/concepts/ui-theme/suite.yaml
 suite:
   name: ui-theme
-  version: 0.5.0
+  version: 0.6.0
   description: >
-    Visual design system: themes, palettes, typography, motion,
-    and elevation. Concept structures are unchanged but inputs
-    now come from ThemeParser output rather than imperative calls.
-    Palette/generate, Typography scale computation, and Motion
-    reduced-motion handling are resolved at parse time; runtime
-    concepts store the resolved values (color maps, sizes, etc.)
-    with WCAG accessibility enforcement.
+    Expressive Surface theming with algorithmic derivation,
+    design-space profiles, contextual scopes, density and motif
+    controls, plus the legacy palette, typography, motion, and
+    elevation concepts used by existing Surface pipelines.
 
 concepts:
   Theme:
     spec: ./theme.concept
     params:
       H: { as: theme-ref, description: "Reference to a theme" }
+
+  ColorSpace:
+    spec: ./color-space.concept
+    params:
+      C: { as: color-space-ref, description: "Algorithmic color derivation engine" }
+
+  ColorScheme:
+    spec: ./color-scheme.concept
+    params:
+      S: { as: color-scheme-ref, description: "Semantic color role mappings per mode" }
+
+  Constraint:
+    spec: ./constraint.concept
+    params:
+      K: { as: theme-constraint-ref, description: "Theme constraint and compliance rule" }
+
+  Preference:
+    spec: ./preference.concept
+    params:
+      P: { as: theme-preference-ref, description: "Resolved theme preference state" }
+
+  Scope:
+    spec: ./scope.concept
+    params:
+      Q: { as: theme-scope-ref, description: "Theme scope boundary" }
 
   Palette:
     spec: ./palette.concept
@@ -27,15 +49,77 @@ concepts:
     params:
       X: { as: typography-ref, description: "Reference to a typography definition" }
 
+  TypeScale:
+    spec: ./type-scale.concept
+    params:
+      Y: { as: type-scale-ref, description: "Fluid type-scale profile" }
+
+  FontMetrics:
+    spec: ./font-metrics.concept
+    params:
+      F: { as: font-metrics-ref, description: "Font metrics and OpenType profile" }
+
+  Shape:
+    spec: ./shape.concept
+    params:
+      H: { as: shape-ref, description: "Shape and corner philosophy" }
+
+  Iconography:
+    spec: ./iconography.concept
+    params:
+      I: { as: iconography-ref, description: "Icon style and axis profile" }
+
+  Density:
+    spec: ./density.concept
+    params:
+      D: { as: density-ref, description: "Density transformation profile" }
+
   Motion:
     spec: ./motion.concept
     params:
       O: { as: motion-ref, description: "Reference to a motion/animation definition" }
 
+  SpringPhysics:
+    spec: ./spring-physics.concept
+    params:
+      J: { as: spring-physics-ref, description: "Spring motion preset" }
+
+  MotionChoreography:
+    spec: ./motion-choreography.concept
+    params:
+      O: { as: motion-choreography-ref, description: "Named motion choreography sequence" }
+
   Elevation:
     spec: ./elevation.concept
     params:
       W: { as: elevation-ref, description: "Reference to an elevation/shadow level" }
+
+  MaterialSurface:
+    spec: ./material-surface.concept
+    params:
+      M: { as: material-surface-ref, description: "Material surface profile" }
+
+  StyleProfile:
+    spec: ./style-profile.concept
+    params:
+      L: { as: style-profile-ref, description: "High-level design-space profile" }
+
+  StructuralMotif:
+    spec: ./structural-motif.concept
+    params:
+      N: { as: structural-motif-ref, description: "Layout paradigm mapping" }
+
+  ImageFilter:
+    spec: ./image-filter.concept
+    params:
+      Z: { as: image-filter-ref, description: "Theme image treatment preset" }
+
+derived:
+  ExpressionTheme:
+    spec: ./expression-theme.derived
+
+  ThemeKit:
+    spec: ./theme-kit.derived
 
 syncs:
   required:

@@ -7,7 +7,8 @@ concept WidgetResolver [R] {
     element's interactor type, combines with runtime context,
     queries affordance declarations, and returns a ranked
     selection. Replaces flat type-mapping tables with a
-    parameterized, extensible decision engine.
+    parameterized, extensible decision engine. Theme context
+    now includes density and structural motif signals.
   }
 
   state {
@@ -30,7 +31,8 @@ concept WidgetResolver [R] {
         2. Merge runtime context with defaults
         3. Check for explicit overrides
         4. Query affordance matches for candidates
-        5. Score candidates by specificity + condition fit
+        5. Score candidates by specificity + condition fit,
+           then bias for motif-optimized or density-exempt widgets
         6. Return highest-scoring widget with explanation
       }
       -> ambiguous(resolver: R, candidates: String) {

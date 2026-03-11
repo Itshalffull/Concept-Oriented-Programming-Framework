@@ -1,0 +1,32 @@
+@version(1)
+concept TypeScale [Y] {
+
+  purpose {
+    Generate fluid type and spacing values from viewport-aware
+    ratios instead of hard-coded breakpoint sizes.
+  }
+
+  state {
+    scales: set TypeScaleId
+    scale_name: TypeScaleId -> String
+    scale_config: TypeScaleId -> String
+  }
+
+  actions {
+    action configure(name: String, config: String) {
+      -> ok(scaleId: TypeScaleId) { Fluid type scale configuration stored. }
+    }
+
+    action computeStep(scaleId: TypeScaleId, step: String) {
+      -> ok(value: String) { Named step resolved for the scale. }
+    }
+
+    action generateFluidClamp(scaleId: TypeScaleId, step: String) {
+      -> ok(clampValue: String) { Clamp expression generated for the step. }
+    }
+
+    action deriveSpacer(scaleId: TypeScaleId, token: String) {
+      -> ok(value: String) { Spacing token derived from the type scale. }
+    }
+  }
+}

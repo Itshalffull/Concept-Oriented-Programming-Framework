@@ -1,0 +1,37 @@
+@version(1)
+concept SpringPhysics [J] {
+
+  purpose {
+    Define named spring presets and reduced-motion fallbacks for
+    more natural theme-level motion behavior.
+  }
+
+  state {
+    presets: set SpringPresetId
+    preset_name: SpringPresetId -> String
+    preset_config: SpringPresetId -> String
+  }
+
+  actions {
+    action register(name: String, config: String) {
+      -> ok(presetId: SpringPresetId) { Spring preset registered. }
+    }
+
+    action resolve(presetId: SpringPresetId, target: String) {
+      -> ok(value: String) { Spring preset resolved for the target. }
+    }
+
+    action computeValue(presetId: SpringPresetId, time: Float) {
+      -> ok(value: Float) { Spring value sampled at the requested time. }
+    }
+
+    action getReducedMotionFallback(presetId: SpringPresetId) {
+      -> ok(fallback: String) { Reduced-motion fallback returned. }
+    }
+
+    action routeToProvider(presetId: SpringPresetId, provider: String, payload: String) {
+      -> ok(result: String) { Spring request routed to the named provider. }
+      -> notfound(message: String) { Provider unavailable for the preset. }
+    }
+  }
+}
