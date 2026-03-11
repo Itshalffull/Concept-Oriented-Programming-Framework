@@ -128,6 +128,14 @@ export default async function AdminPage({
     );
   }
 
+  if (path === 'canvas') {
+    return (
+      <HostedPage>
+        <LayoutRenderer layoutId="canvas-browser" />
+      </HostedPage>
+    );
+  }
+
   if (path === 'multiverse') {
     return (
       <HostedPage>
