@@ -4,7 +4,8 @@
       "command": "npx",
       "args": [
         "tsx",
-        "./.claude/mcp/index.ts"
+        "./.claude/mcp/index.ts",
+        "examples/devtools/devtools.interface.yaml"
       ]
     }
   }

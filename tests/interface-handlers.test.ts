@@ -362,6 +362,24 @@ describe('Surface Handler', () => {
     expect(typeof epResult.content).toBe('string');
     expect((epResult.content as string).length).toBeGreaterThan(0);
   });
+
+  it('generates a runnable MCP entrypoint that boots the server from a manifest path', async () => {
+    const storage = createInMemoryStorage();
+    const composeResult = await surfaceHandler.compose({
+      suite: 'test-suite',
+      target: 'mcp',
+      outputs: ['score-api-output'],
+    }, storage);
+    expect(composeResult.variant).toBe('ok');
+
+    const epResult = await surfaceHandler.entrypoint({ surface: composeResult.surface }, storage);
+    expect(epResult.variant).toBe('ok');
+
+    const content = epResult.content as string;
+    expect(content).toContain("import { bootMcpServer } from '../../handlers/ts/framework/mcp-server.handler';");
+    expect(content).toContain('const manifestPath = process.argv[2];');
+    expect(content).toContain('await bootMcpServer(manifestPath);');
+  });
 });
 
 // ============================================================

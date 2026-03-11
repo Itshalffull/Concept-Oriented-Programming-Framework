@@ -294,9 +294,11 @@ function buildMcpConfigString(
   targetConfig: Record<string, unknown>,
   _toolFiles: string[],
   outputDir: string,
+  manifestPath: string,
 ): string {
   const name = (targetConfig.name as string) || 'clef-devtools';
   const description = (targetConfig.description as string) || `${name} MCP server`;
+  const serverArgs = ['tsx', `${outputDir}/index.ts`, manifestPath];
 
   if (format === 'claude-mcp-config') {
     // Claude Code: .mcp.json at project root
@@ -304,7 +306,7 @@ function buildMcpConfigString(
       mcpServers: {
         [name]: {
           command: 'npx',
-          args: ['tsx', `${outputDir}/index.ts`],
+          args: serverArgs,
         },
       },
     }, null, 2);
@@ -318,7 +320,7 @@ function buildMcpConfigString(
       ``,
       `[mcp_servers.${name.replace(/-/g, '_')}]`,
       `command = "npx"`,
-      `args = ["tsx", "${outputDir}/index.ts"]`,
+      `args = ${JSON.stringify(serverArgs)}`,
     ];
     return lines.join('\n') + '\n';
   }
@@ -329,7 +331,7 @@ function buildMcpConfigString(
       mcpServers: {
         [name]: {
           command: 'npx',
-          args: ['tsx', `${outputDir}/index.ts`],
+          args: serverArgs,
         },
       },
     }, null, 2);
@@ -339,7 +341,7 @@ function buildMcpConfigString(
   return JSON.stringify({
     name,
     command: 'npx',
-    args: ['tsx', `${outputDir}/index.ts`],
+    args: serverArgs,
   }, null, 2);
 }
 
@@ -613,6 +615,7 @@ async function interfaceGenerate(
           targetConfig,
           toolFiles.map((f) => f.relativePath),
           targetOutputDir,
+          relative(projectDir, manifestPath).replace(/\\/g, '/'),
         );
         mkdirSync(dirname(configPath), { recursive: true });
         writeFileSync(configPath, mcpConfigContent);
