@@ -1,0 +1,65 @@
+@version(1)
+concept DestinationCatalog [D] {
+
+  purpose {
+    Manage named application destinations and their presentation
+    metadata so navigation structure can be declared once and
+    consumed across shells, routers, and platform adapters.
+  }
+
+  state {
+    destinations: set D
+    name: D -> String
+    targetConcept: D -> String
+    targetView: D -> String
+    href: D -> String
+    icon: D -> String
+    group: D -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(destination: D, name: String, targetConcept: String,
+                    targetView: String, href: String, icon: String, group: String) {
+      -> ok(destination: D) { Register a destination and its shell metadata. }
+      -> duplicate(message: String) { A destination with this name or href already exists. }
+    }
+
+    action resolveByName(name: String) {
+      -> ok(destination: D, targetConcept: String, targetView: String,
+            href: String, icon: String, group: String) {
+        Resolve a destination by its logical name.
+      }
+      -> notfound(message: String) { No destination exists with this name. }
+    }
+
+    action resolveByHref(href: String) {
+      -> ok(destination: D, name: String, targetConcept: String, targetView: String,
+            href: String, icon: String, group: String) {
+        Resolve a destination by href, matching nested paths to their base destination.
+      }
+      -> notfound(message: String) { No destination matches this href. }
+    }
+
+    action list() {
+      -> ok(destinations: list {
+        destination: D, name: String, targetConcept: String, targetView: String,
+        href: String, icon: String, group: String
+      }) {
+        Return all registered destinations.
+      }
+    }
+  }
+
+  invariant {
+    after register(destination: d, name: "dashboard", targetConcept: "AppShell",
+                   targetView: "dashboard", href: "/admin", icon: "home", group: "Content")
+      -> ok(destination: d)
+    then resolveByName(name: "dashboard")
+      -> ok(destination: d, targetConcept: "AppShell", targetView: "dashboard",
+            href: "/admin", icon: "home", group: "Content")
+  }
+}

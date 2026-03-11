@@ -1,0 +1,30 @@
+# Platform bindings for clef-base destinations.
+
+concept: PlatformBindingCatalog
+action: register
+entries:
+  - binding: binding:browser:navigation:*
+    platform: browser
+    destinationPattern: '*'
+    bindingKind: navigation
+    payload: '{"type":"push","target":"href"}'
+  - binding: binding:mobile:navigation:*
+    platform: mobile
+    destinationPattern: '*'
+    bindingKind: navigation
+    payload: '{"type":"push","target":"stack"}'
+  - binding: binding:desktop:navigation:*
+    platform: desktop
+    destinationPattern: '*'
+    bindingKind: navigation
+    payload: '{"type":"focus","target":"window"}'
+  - binding: binding:terminal:navigation:*
+    platform: terminal
+    destinationPattern: '*'
+    bindingKind: navigation
+    payload: '{"type":"replace","target":"screen"}'
+  - binding: binding:watch:navigation:*
+    platform: watch
+    destinationPattern: '*'
+    bindingKind: navigation
+    payload: '{"type":"replace","target":"page"}'

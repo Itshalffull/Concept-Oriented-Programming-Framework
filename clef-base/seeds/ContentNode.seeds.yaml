@@ -1,0 +1,273 @@
+# Browseable content nodes used by the admin surface.
+
+concept: ContentNode
+action: create
+entries:
+  - node: concept:ContentNode
+    type: concept
+    content: '{"name":"ContentNode","uri":"urn:clef/ContentNode"}'
+    createdBy: system
+  - node: concept:Schema
+    type: concept
+    content: '{"name":"Schema","uri":"urn:clef/Schema"}'
+    createdBy: system
+  - node: concept:View
+    type: concept
+    content: '{"name":"View","uri":"urn:clef/View"}'
+    createdBy: system
+  - node: concept:Workflow
+    type: concept
+    content: '{"name":"Workflow","uri":"urn:clef/Workflow"}'
+    createdBy: system
+  - node: concept:AutomationRule
+    type: concept
+    content: '{"name":"AutomationRule","uri":"urn:clef/AutomationRule"}'
+    createdBy: system
+  - node: concept:Taxonomy
+    type: concept
+    content: '{"name":"Taxonomy","uri":"urn:clef/Taxonomy"}'
+    createdBy: system
+  - node: concept:DisplayMode
+    type: concept
+    content: '{"name":"DisplayMode","uri":"urn:clef/DisplayMode"}'
+    createdBy: system
+  - node: concept:Theme
+    type: concept
+    content: '{"name":"Theme","uri":"urn:clef/Theme"}'
+    createdBy: system
+  - node: concept:Query
+    type: concept
+    content: '{"name":"Query","uri":"urn:clef/Query"}'
+    createdBy: system
+  - node: concept:ContentStorage
+    type: concept
+    content: '{"name":"ContentStorage","uri":"urn:clef/ContentStorage"}'
+    createdBy: system
+  - node: concept:Property
+    type: concept
+    content: '{"name":"Property","uri":"urn:clef/Property"}'
+    createdBy: system
+  - node: concept:Outline
+    type: concept
+    content: '{"name":"Outline","uri":"urn:clef/Outline"}'
+    createdBy: system
+  - node: concept:ComponentMapping
+    type: concept
+    content: '{"name":"ComponentMapping","uri":"urn:clef/ComponentMapping"}'
+    createdBy: system
+  - node: concept:ConceptBrowser
+    type: concept
+    content: '{"name":"ConceptBrowser","uri":"urn:clef/ConceptBrowser"}'
+    createdBy: system
+  - node: concept:Navigator
+    type: concept
+    content: '{"name":"Navigator","uri":"urn:clef/Navigator"}'
+    createdBy: system
+  - node: concept:DestinationCatalog
+    type: concept
+    content: '{"name":"DestinationCatalog","uri":"urn:clef/DestinationCatalog"}'
+    createdBy: system
+  - node: concept:RuntimeProfile
+    type: concept
+    content: '{"name":"RuntimeProfile","uri":"urn:clef/RuntimeProfile"}'
+    createdBy: system
+  - node: concept:PlatformBindingCatalog
+    type: concept
+    content: '{"name":"PlatformBindingCatalog","uri":"urn:clef/PlatformBindingCatalog"}'
+    createdBy: system
+  - node: concept:Host
+    type: concept
+    content: '{"name":"Host","uri":"urn:clef/Host"}'
+    createdBy: system
+  - node: concept:Shell
+    type: concept
+    content: '{"name":"Shell","uri":"urn:clef/Shell"}'
+    createdBy: system
+  - node: concept:Transport
+    type: concept
+    content: '{"name":"Transport","uri":"urn:clef/Transport"}'
+    createdBy: system
+  - node: concept:Layout
+    type: concept
+    content: '{"name":"Layout","uri":"urn:clef/Layout"}'
+    createdBy: system
+  - node: concept:SeedData
+    type: concept
+    content: '{"name":"SeedData","uri":"urn:clef/SeedData"}'
+    createdBy: system
+  - node: concept:AppInstallation
+    type: concept
+    content: '{"name":"AppInstallation","uri":"urn:clef/AppInstallation"}'
+    createdBy: system
+  - node: concept:ResourceGrantPolicy
+    type: concept
+    content: '{"name":"ResourceGrantPolicy","uri":"urn:clef/ResourceGrantPolicy"}'
+    createdBy: system
+  - node: concept:AccessCatalog
+    type: concept
+    content: '{"name":"AccessCatalog","uri":"urn:clef/AccessCatalog"}'
+    createdBy: system
+  - node: sync:save-invalidates-cache
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Cache/invalidateByTags"}'
+    createdBy: system
+  - node: sync:save-indexes-search
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Queue/enqueue"}'
+    createdBy: system
+  - node: sync:save-generates-alias
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Pathauto/generateAlias"}'
+    createdBy: system
+  - node: sync:save-tracks-provenance
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Provenance/record"}'
+    createdBy: system
+  - node: sync:save-reindexes-backlinks
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Backlink/reindex"}'
+    createdBy: system
+  - node: sync:delete-cascades
+    type: sync
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/delete -> Comment,Reference,..."}'
+    createdBy: system
+  - node: sync:slot-source-dispatches
+    type: sync
+    content: '{"suite":"component-mapping","tier":"required","pattern":"SlotSource/resolve -> [provider]/resolve"}'
+    createdBy: system
+  - node: sync:resolver-uses-mapping
+    type: sync
+    content: '{"suite":"component-mapping","tier":"required","pattern":"WidgetResolver/resolve -> ComponentMapping/lookup"}'
+    createdBy: system
+  - node: sync:entity-page-triple-zone
+    type: sync
+    content: '{"suite":"surface-integration","tier":"required","pattern":"Renderer/render -> TripleZoneLayout"}'
+    createdBy: system
+  - node: sync:block-zone-renders-canvas
+    type: sync
+    content: '{"suite":"surface-integration","tier":"required","pattern":"TripleZoneLayout/renderZone -> Canvas/render"}'
+    createdBy: system
+  - node: sync:version-aware-load
+    type: sync
+    content: '{"suite":"version-space","tier":"required","pattern":"ContentStorage/load -> VersionSpace/resolve"}'
+    createdBy: system
+  - node: sync:version-aware-save
+    type: sync
+    content: '{"suite":"version-space","tier":"required","pattern":"ContentStorage/save -> VersionSpace/write"}'
+    createdBy: system
+  - node: sync:view-creates-content-node
+    type: sync
+    content: '{"suite":"view-content","tier":"required","pattern":"View/create -> ContentNode/create"}'
+    createdBy: system
+  - node: sync:schema-creates-content-node
+    type: sync
+    content: '{"suite":"view-content","tier":"required","pattern":"Schema/defineSchema -> ContentNode/create"}'
+    createdBy: system
+  - node: sync:theme-creates-content-node
+    type: sync
+    content: '{"suite":"view-content","tier":"required","pattern":"Theme/create -> ContentNode/create"}'
+    createdBy: system
+  - node: widget:Card
+    type: widget
+    content: '{"name":"Card","framework":"react"}'
+    createdBy: system
+  - node: widget:Badge
+    type: widget
+    content: '{"name":"Badge","framework":"react"}'
+    createdBy: system
+  - node: widget:Sidebar
+    type: widget
+    content: '{"name":"Sidebar","framework":"react"}'
+    createdBy: system
+  - node: widget:DataTable
+    type: widget
+    content: '{"name":"DataTable","framework":"react"}'
+    createdBy: system
+  - node: widget:EmptyState
+    type: widget
+    content: '{"name":"EmptyState","framework":"react"}'
+    createdBy: system
+  - node: widget:CreateForm
+    type: widget
+    content: '{"name":"CreateForm","framework":"react"}'
+    createdBy: system
+  - node: widget:TableDisplay
+    type: widget
+    content: '{"name":"TableDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:CardGridDisplay
+    type: widget
+    content: '{"name":"CardGridDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:GraphDisplay
+    type: widget
+    content: '{"name":"GraphDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:StatCardsDisplay
+    type: widget
+    content: '{"name":"StatCardsDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:ViewRenderer
+    type: widget
+    content: '{"name":"ViewRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:LayoutRenderer
+    type: widget
+    content: '{"name":"LayoutRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:HostedPage
+    type: widget
+    content: '{"name":"HostedPage","framework":"react"}'
+    createdBy: system
+  - node: widget:AppShell
+    type: widget
+    content: '{"name":"AppShell","framework":"react"}'
+    createdBy: system
+  - node: workflow:content-lifecycle
+    type: workflow
+    content: '{"name":"content-lifecycle","states":["draft","review","published","archived"]}'
+    createdBy: system
+  - node: workflow:schema-evolution
+    type: workflow
+    content: '{"name":"schema-evolution","states":["draft","active","deprecated"]}'
+    createdBy: system
+  - node: automation-rule:auto-tag-on-create
+    type: automation-rule
+    content: '{"trigger":"ContentNode/create","description":"Auto-apply taxonomy tags based on content type"}'
+    createdBy: system
+  - node: automation-rule:notify-on-publish
+    type: automation-rule
+    content: '{"trigger":"Workflow/transition","description":"Send notification when content moves to published state"}'
+    createdBy: system
+  - node: automation-rule:cache-invalidate-on-save
+    type: automation-rule
+    content: '{"trigger":"ContentStorage/save","description":"Invalidate cache entries when content is saved"}'
+    createdBy: system
+  - node: taxonomy:concept-suites
+    type: taxonomy
+    content: '{"name":"Concept Suites","kind":"vocabulary"}'
+    createdBy: system
+  - node: taxonomy:schema-categories
+    type: taxonomy
+    content: '{"name":"Schema Categories","kind":"vocabulary"}'
+    createdBy: system
+  - node: version-space:editorial-pass
+    type: version-space
+    content: '{"name":"Editorial Pass","status":"active","owner":"alice","overrideCount":3,"lastActivity":"2026-03-08T14:15:00.000Z","visibility":"shared","parent":null,"description":"Copy edits and narrative cleanup ahead of launch."}'
+    createdBy: alice
+  - node: version-space:taxonomy-refactor
+    type: version-space
+    content: '{"name":"Taxonomy Refactor","status":"review","owner":"matt","overrideCount":2,"lastActivity":"2026-03-09T09:30:00.000Z","visibility":"private","parent":"version-space:editorial-pass","description":"Experimenting with revised schema categories and tags."}'
+    createdBy: matt
+  - node: version-override:editorial-pass:content:Article
+    type: version-override
+    content: '{"space":"version-space:editorial-pass","entity":"content:Article","operation":"update","fields":["title","summary"],"summary":"Tightened article copy and updated teaser text."}'
+    createdBy: alice
+  - node: version-override:editorial-pass:view:content-list
+    type: version-override
+    content: '{"space":"version-space:editorial-pass","entity":"view:content-list","operation":"update","fields":["title","description"],"summary":"Renamed the content dashboard and adjusted helper copy."}'
+    createdBy: alice
+  - node: version-override:taxonomy-refactor:schema:TaxonomyTerm
+    type: version-override
+    content: '{"space":"version-space:taxonomy-refactor","entity":"schema:TaxonomyTerm","operation":"update","fields":["fields"],"summary":"Added hierarchy and grouping metadata to taxonomy terms."}'
+    createdBy: matt

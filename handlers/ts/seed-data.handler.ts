@@ -100,6 +100,34 @@ function parseYamlValue(raw: string): unknown {
   return raw;
 }
 
+async function listSeedRecords(storage: ConceptStorage): Promise<Array<Record<string, unknown>>> {
+  return storage.find('seed-data', {});
+}
+
+function normalizeConceptUri(conceptUri: string): string {
+  return conceptUri.startsWith('urn:') ? conceptUri : `urn:clef/${conceptUri}`;
+}
+
+function parseStoredEntries(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((entry) => String(entry));
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    return JSON.parse(raw) as string[];
+  }
+  return [];
+}
+
+function parseStoredErrors(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((entry) => String(entry));
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    return JSON.parse(raw) as string[];
+  }
+  return [];
+}
+
 export const seedDataHandler: ConceptHandler = {
   async discover(input: Record<string, unknown>, storage: ConceptStorage) {
     const basePath = input.base_path as string;
@@ -119,6 +147,7 @@ export const seedDataHandler: ConceptHandler = {
         seed: string; concept_uri: string;
         source_path: string; entry_count: number;
       }> = [];
+      const registrations: Promise<void>[] = [];
 
       function walkDir(dir: string) {
         let dirEntries: string[];
@@ -140,23 +169,23 @@ export const seedDataHandler: ConceptHandler = {
             const fileConceptName = entry.replace('.seeds.yaml', '');
             const parsed = parseSeedsYaml(content);
             for (const seedDef of parsed) {
-              const conceptUri = fileConceptName || seedDef.concept_uri;
+              const conceptUri = normalizeConceptUri(fileConceptName || seedDef.concept_uri);
               const id = nextId();
               const record = {
                 id,
                 source_path: fullPath,
                 concept_uri: conceptUri,
                 action_name: seedDef.action_name,
-                entries: JSON.stringify(seedDef.entries),
+                entries: JSON.stringify(seedDef.entries.map((entry) => JSON.stringify(entry))),
                 entry_count: seedDef.entries.length,
                 applied: false,
                 applied_at: null,
                 error_log: JSON.stringify([]),
               };
-              storage.put('seed-data', id, record);
+              registrations.push(storage.put('seed-data', id, record));
               found.push({
                 seed: id,
-                concept_uri: seedDef.concept_uri,
+                concept_uri: conceptUri,
                 source_path: fullPath,
                 entry_count: seedDef.entries.length,
               });
@@ -166,6 +195,7 @@ export const seedDataHandler: ConceptHandler = {
       }
 
       walkDir(basePath);
+      await Promise.all(registrations);
       return { variant: 'ok', found };
     } catch (e) {
       return { variant: 'error', message: `Failed to discover seeds: ${e}` };
@@ -174,18 +204,14 @@ export const seedDataHandler: ConceptHandler = {
 
   async register(input: Record<string, unknown>, storage: ConceptStorage) {
     const sourcePath = input.source_path as string;
-    const conceptUri = input.concept_uri as string;
+    const conceptUri = normalizeConceptUri(input.concept_uri as string);
     const actionName = input.action_name as string;
     const entries = input.entries as string[];
 
     // Check for duplicate by source_path
-    const existing = await storage.find('seed-data', sourcePath);
-    if (existing && (Array.isArray(existing) ? existing.length > 0 : existing)) {
-      const arr = Array.isArray(existing) ? existing : [existing];
-      const dup = arr.find((e: Record<string, unknown>) => e.source_path === sourcePath);
-      if (dup) {
-        return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
-      }
+    const existing = await storage.find('seed-data', { source_path: sourcePath });
+    if (existing.some((entry) => entry.source_path === sourcePath)) {
+      return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
     }
 
     const id = nextId();
@@ -217,15 +243,13 @@ export const seedDataHandler: ConceptHandler = {
     }
 
     // Parse entries and invoke concept action for each
-    const entries = JSON.parse(record.entries as string) as Record<string, unknown>[];
     const errors: string[] = [];
-    let appliedCount = 0;
 
     // The actual invocation is delegated to the kernel via a callback.
     // The handler stores the intent; the kernel's seed loader calls
     // kernel.invokeConcept() for each entry.
     // For now, mark as applied and return the count.
-    appliedCount = entries.length;
+    const appliedCount = parseStoredEntries(record.entries).length;
 
     await storage.put('seed-data', seedId, {
       ...record,
@@ -238,8 +262,7 @@ export const seedDataHandler: ConceptHandler = {
   },
 
   async applyAll(input: Record<string, unknown>, storage: ConceptStorage) {
-    const all = await storage.list('seed-data');
-    const seeds = Array.isArray(all) ? all : [];
+    const seeds = await listSeedRecords(storage);
 
     let appliedCount = 0;
     let skippedCount = 0;
@@ -251,8 +274,7 @@ export const seedDataHandler: ConceptHandler = {
         continue;
       }
 
-      const entries = JSON.parse(seed.entries as string) as Record<string, unknown>[];
-      appliedCount += entries.length;
+      appliedCount += parseStoredEntries(seed.entries).length;
 
       await storage.put('seed-data', seed.id as string, {
         ...seed,
@@ -265,8 +287,7 @@ export const seedDataHandler: ConceptHandler = {
   },
 
   async status(input: Record<string, unknown>, storage: ConceptStorage) {
-    const all = await storage.list('seed-data');
-    const seeds = Array.isArray(all) ? all : [];
+    const seeds = await listSeedRecords(storage);
 
     const result = seeds.map((s) => ({
       seed: s.id,
@@ -275,7 +296,7 @@ export const seedDataHandler: ConceptHandler = {
       entry_count: s.entry_count,
       applied: s.applied,
       applied_at: s.applied_at,
-      errors: JSON.parse((s.error_log as string) || '[]'),
+      errors: parseStoredErrors(s.error_log),
     }));
 
     return { variant: 'ok', seeds: result };

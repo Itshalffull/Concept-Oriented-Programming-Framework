@@ -1,0 +1,55 @@
+@version(1)
+concept RuntimeProfile [R] {
+
+  purpose {
+    Manage named runtime profiles that declare how an application
+    shell should be assembled on a target platform, including the
+    core ui-app identifiers and transport configuration.
+  }
+
+  state {
+    profiles: set R
+    name: R -> String
+    shellId: R -> String
+    navigatorId: R -> String
+    transportId: R -> String
+    platformAdapterId: R -> String
+    platform: R -> String
+    router: R -> String
+    baseUrl: R -> String
+    retryPolicy: R -> String
+    authMode: R -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(profile: R, name: String, shellId: String, navigatorId: String,
+                    transportId: String, platformAdapterId: String, platform: String,
+                    router: String, baseUrl: String, retryPolicy: String,
+                    authMode: option String) {
+      -> ok(profile: R) { Store or update a named runtime profile. }
+    }
+
+    action resolve(name: String) {
+      -> ok(profile: R, shellId: String, navigatorId: String, transportId: String,
+            platformAdapterId: String, platform: String, router: String,
+            baseUrl: String, retryPolicy: String, authMode: option String) {
+        Resolve a runtime profile by name.
+      }
+      -> notfound(message: String) { No runtime profile exists with this name. }
+    }
+
+    action list() {
+      -> ok(profiles: list {
+        profile: R, name: String, shellId: String, navigatorId: String,
+        transportId: String, platformAdapterId: String, platform: String,
+        router: String, baseUrl: String, retryPolicy: String, authMode: option String
+      }) {
+        Return all declared runtime profiles.
+      }
+    }
+  }
+}

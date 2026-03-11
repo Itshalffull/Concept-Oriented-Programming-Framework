@@ -14,6 +14,8 @@ concepts:
     spec: plugin-registry.concept
   - name: EventBus
     spec: event-bus.concept
+  - name: AppInstallation
+    spec: app-installation.concept
   - name: Validator
     spec: validator.concept
 

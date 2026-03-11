@@ -1,0 +1,26 @@
+# Workflow state definitions for clef-base.
+
+concept: Workflow
+action: defineState
+entries:
+  - workflow: content-lifecycle
+    name: draft
+    flags: initial
+  - workflow: content-lifecycle
+    name: review
+    flags: ''
+  - workflow: content-lifecycle
+    name: published
+    flags: ''
+  - workflow: content-lifecycle
+    name: archived
+    flags: ''
+  - workflow: schema-evolution
+    name: draft
+    flags: initial
+  - workflow: schema-evolution
+    name: active
+    flags: ''
+  - workflow: schema-evolution
+    name: deprecated
+    flags: ''

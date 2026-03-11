@@ -1,0 +1,67 @@
+@version(1)
+concept AccessCatalog [C] {
+
+  purpose {
+    Manage descriptive access metadata such as permission definitions,
+    role blueprints, and named resource-action catalogs so access
+    administration can be rendered consistently across applications
+    and platforms.
+  }
+
+  state {
+    entries: set C
+    kind: C -> String
+    key: C -> String
+    label: C -> String
+    group: C -> option String
+    description: C -> option String
+    permissions: C -> list String
+    catalog: C -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerPermission(entry: C, key: String, label: String,
+                              group: String, description: String) {
+      -> ok(entry: C) { Store a permission definition used by access administration surfaces. }
+    }
+
+    action registerRole(entry: C, key: String, label: String,
+                        description: String, permissions: list String) {
+      -> ok(entry: C) { Store a role definition and its default permission bundle. }
+    }
+
+    action registerResourceAction(entry: C, catalog: String, key: String, label: String) {
+      -> ok(entry: C) { Store a named action entry for a resource-action catalog such as schema or node. }
+    }
+
+    action listPermissions() {
+      -> ok(permissions: list { key: String, label: String, group: String, description: String }) {
+        Return all registered permission definitions.
+      }
+    }
+
+    action listRoles() {
+      -> ok(roles: list { key: String, label: String, description: String, permissions: list String }) {
+        Return all registered role definitions.
+      }
+    }
+
+    action listResourceActions(catalog: String) {
+      -> ok(actions: list { key: String, label: String }) {
+        Return all action definitions for the named resource catalog.
+      }
+    }
+  }
+
+  invariant {
+    after registerPermission(entry: p, key: "admin.access", label: "Access administration",
+                             group: "Administration", description: "Open the admin shell")
+      -> ok(entry: p)
+    then listPermissions()
+      -> ok(permissions: ps)
+  }
+}

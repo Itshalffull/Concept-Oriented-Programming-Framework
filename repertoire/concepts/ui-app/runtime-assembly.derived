@@ -1,0 +1,46 @@
+derived RuntimeAssembly {
+  purpose {
+    Provide a reusable assembly boundary for bringing up a ui-app shell
+    from declarative runtime profiles, destination catalogs, platform
+    bindings, transport, and platform adaptation.
+  }
+
+  composes {
+    RuntimeProfile [R]
+    DestinationCatalog [D]
+    PlatformBindingCatalog [B]
+    Navigator [N]
+    Shell [S]
+    Transport [P]
+    PlatformAdapter [A]
+    Host [H]
+  }
+
+  syncs {
+    required: [
+      NavigatorGoMountsHost
+      NavigatorGoUnmountsPrevious
+      HostMountCreatesBinding
+      HostUnmountDestroysMachines
+    ]
+    recommended: [
+      NavigatorToPlatform
+      PlatformEventToNavigator
+      ShellInitCreatesRootSurface
+    ]
+  }
+
+  surface {
+    queries {
+      query profile(name: String) -> RuntimeProfile/resolve(name: name)
+      query destinations() -> DestinationCatalog/list()
+      query bindings(platform: String) -> PlatformBindingCatalog/list(platform: platform)
+    }
+  }
+
+  principle {
+    after profile(name: "clef-base-admin")
+    then destinations()
+    and bindings(platform: "browser")
+  }
+}
