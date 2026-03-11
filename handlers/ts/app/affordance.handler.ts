@@ -15,6 +15,8 @@ export const affordanceHandler: ConceptHandler = {
     const conditions = input.conditions as string;
     const bind = input.bind as string;
     const contractVersion = input.contractVersion as number;
+    const densityExempt = input.densityExempt as boolean | undefined;
+    const motifOptimized = input.motifOptimized as string | undefined;
 
     const existing = await storage.get('affordance', affordance);
     if (existing) {
@@ -35,6 +37,7 @@ export const affordanceHandler: ConceptHandler = {
         platform: parsedConditions.platform ?? null,
         viewport: parsedConditions.viewport ?? null,
         density: parsedConditions.density ?? null,
+        motif: parsedConditions.motif ?? null,
         mutable: parsedConditions.mutable ?? null,
         concept: parsedConditions.concept ?? null,
         suite: parsedConditions.suite ?? null,
@@ -42,6 +45,8 @@ export const affordanceHandler: ConceptHandler = {
       }),
       bind: parsedBind ? JSON.stringify(parsedBind) : null,
       contractVersion: contractVersion ?? null,
+      densityExempt: densityExempt ?? null,
+      motifOptimized: motifOptimized ?? null,
       createdAt: new Date().toISOString(),
     });
 
@@ -73,6 +78,9 @@ export const affordanceHandler: ConceptHandler = {
       }
       if (conditions.density && parsedContext.density) {
         if (conditions.density !== parsedContext.density) return false;
+      }
+      if (conditions.motif && parsedContext.motif) {
+        if (conditions.motif !== parsedContext.motif) return false;
       }
       if (conditions.mutable !== null && parsedContext.mutable !== undefined) {
         if (conditions.mutable !== parsedContext.mutable) return false;
@@ -113,6 +121,8 @@ export const affordanceHandler: ConceptHandler = {
       specificity: aff.specificity,
       bind: aff.bind ? JSON.parse(aff.bind as string) : null,
       contractVersion: aff.contractVersion ?? null,
+      densityExempt: aff.densityExempt ?? null,
+      motifOptimized: aff.motifOptimized ?? null,
     }));
 
     return { variant: 'ok', matches: JSON.stringify(matches) };
@@ -132,6 +142,7 @@ export const affordanceHandler: ConceptHandler = {
     if (conditions.platform) conditionParts.push(`platform=${conditions.platform}`);
     if (conditions.viewport) conditionParts.push(`viewport=${conditions.viewport}`);
     if (conditions.density) conditionParts.push(`density=${conditions.density}`);
+    if (conditions.motif) conditionParts.push(`motif=${conditions.motif}`);
     if (conditions.mutable !== null) conditionParts.push(`mutable=${conditions.mutable}`);
     if (conditions.minOptions !== null) conditionParts.push(`minOptions=${conditions.minOptions}`);
     if (conditions.maxOptions !== null) conditionParts.push(`maxOptions=${conditions.maxOptions}`);
@@ -142,7 +153,11 @@ export const affordanceHandler: ConceptHandler = {
     const conditionStr = conditionParts.length > 0 ? conditionParts.join(', ') : 'none';
     const bindStr = existing.bind ? `, bind: ${existing.bind}` : '';
     const contractStr = existing.contractVersion ? `, contract: @${existing.contractVersion}` : '';
-    const reason = `Affordance "${existing.affordance}" maps interactor "${existing.interactor}" to widget "${existing.widget}" at specificity ${existing.specificity} with conditions: ${conditionStr}${bindStr}${contractStr}`;
+    const densityStr = existing.densityExempt !== null && existing.densityExempt !== undefined
+      ? `, densityExempt: ${existing.densityExempt}`
+      : '';
+    const motifStr = existing.motifOptimized ? `, motifOptimized: ${existing.motifOptimized}` : '';
+    const reason = `Affordance "${existing.affordance}" maps interactor "${existing.interactor}" to widget "${existing.widget}" at specificity ${existing.specificity} with conditions: ${conditionStr}${bindStr}${contractStr}${densityStr}${motifStr}`;
 
     return { variant: 'ok', reason };
   },

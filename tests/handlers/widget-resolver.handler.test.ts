@@ -300,6 +300,38 @@ describe('WidgetResolver Handler', () => {
       expect(result.reason).toBe('specificity=0, conditionMatch=3/3');
     });
 
+    it('adds a motif bonus for motif-optimized widgets', async () => {
+      await storage.put('affordance', 'aff1', {
+        widget: 'SidebarNav',
+        specificity: 50,
+        conditions: JSON.stringify({ motif: 'sidebar' }),
+        motifOptimized: 'sidebar',
+      });
+
+      const result = await handler.resolve(
+        { resolver: 'r1', element: 'navigation', context: JSON.stringify({ motif: 'sidebar' }) },
+        storage,
+      );
+      expect(result.variant).toBe('ok');
+      expect(result.reason).toContain('motifBonus=sidebar');
+    });
+
+    it('adds a density exemption bonus for compact themes', async () => {
+      await storage.put('affordance', 'aff1', {
+        widget: 'ComfortableDialog',
+        specificity: 10,
+        conditions: '{}',
+        densityExempt: true,
+      });
+
+      const result = await handler.resolve(
+        { resolver: 'r1', element: 'dialog', context: JSON.stringify({ density: 'compact' }) },
+        storage,
+      );
+      expect(result.variant).toBe('ok');
+      expect(result.reason).toContain('densityExempt=true');
+    });
+
     it('skips null-valued conditions in match calculation', async () => {
       // null conditions are not counted
       await storage.put('affordance', 'aff1', {

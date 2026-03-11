@@ -98,10 +98,12 @@ export const widgetResolverHandler: ConceptHandler = {
       const conditions = JSON.parse((aff.conditions as string) || '{}');
       const bindMap = aff.bind ? JSON.parse(aff.bind as string) : {};
       let score = 0;
+      const scoringNotes: string[] = [];
 
       // Specificity score
       const specificity = (aff.specificity as number) || 0;
       score += (specificity / 100) * (weights.specificity || 0.4);
+      scoringNotes.push(`specificity=${specificity}`);
 
       // Condition match score
       let conditionMatches = 0;
@@ -119,6 +121,17 @@ export const widgetResolverHandler: ConceptHandler = {
       } else {
         score += weights.conditionMatch || 0.3;
       }
+      scoringNotes.push(`conditionMatch=${conditionMatches}/${conditionTotal}`);
+
+      if (parsedContext.motif && aff.motifOptimized && parsedContext.motif === aff.motifOptimized) {
+        score += 0.1;
+        scoringNotes.push(`motifBonus=${aff.motifOptimized}`);
+      }
+
+      if (parsedContext.density === 'compact' && aff.densityExempt) {
+        score += 0.05;
+        scoringNotes.push('densityExempt=true');
+      }
 
       // For entity-level resolution, validate the widget contract
       if (isEntityResolution) {
@@ -135,7 +148,7 @@ export const widgetResolverHandler: ConceptHandler = {
             diagnostics.push({
               widget: aff.widget as string,
               score: 0,
-              reason: `Contract validation failed`,
+              reason: scoringNotes.join(', '),
               bindingMap: null,
               contractResult: 'error',
               errors: [
@@ -150,7 +163,7 @@ export const widgetResolverHandler: ConceptHandler = {
           candidates.push({
             widget: aff.widget as string,
             score: Math.round(score * 1000) / 1000,
-            reason: `specificity=${specificity}, conditionMatch=${conditionMatches}/${conditionTotal}, contract=ok`,
+            reason: `${scoringNotes.join(', ')}, contract=ok`,
             bindingMap: validation.bindingMap,
             contractResult: 'ok',
             errors: [],
@@ -160,7 +173,7 @@ export const widgetResolverHandler: ConceptHandler = {
           candidates.push({
             widget: aff.widget as string,
             score: Math.round(score * 1000) / 1000,
-            reason: `specificity=${specificity}, conditionMatch=${conditionMatches}/${conditionTotal}, no contract`,
+            reason: `${scoringNotes.join(', ')}, no contract`,
             bindingMap: null,
             contractResult: 'no-contract',
             errors: [],
@@ -171,7 +184,7 @@ export const widgetResolverHandler: ConceptHandler = {
         candidates.push({
           widget: aff.widget as string,
           score: Math.round(score * 1000) / 1000,
-          reason: `specificity=${specificity}, conditionMatch=${conditionMatches}/${conditionTotal}`,
+          reason: scoringNotes.join(', '),
           bindingMap: null,
           contractResult: 'n/a',
           errors: [],
