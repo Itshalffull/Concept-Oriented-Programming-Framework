@@ -1,0 +1,32 @@
+# ============================================================
+# ParsedEntityAffordanceRegistered — surface-component
+# recommended sync
+#
+# Register entity affordances in WidgetRegistry when a widget
+# file is parsed. This populates the queryable index that
+# ContractChecker and CLI tooling use to discover which
+# widgets serve which concepts.
+# ============================================================
+
+sync ParsedEntityAffordanceRegistered [eager]
+when {
+  WidgetParser/parse: [ parser: ?p ] => ok(ast: ?ast)
+}
+where {
+  ?ast.affordances has entityAffordances
+}
+then {
+  WidgetRegistry/register: [
+    entry: concat(?ast.name, "/", affordance.serves);
+    widget: ?ast.name;
+    interactor: affordance.serves;
+    concept: affordance.when.concept;
+    suite: affordance.when.suite;
+    tags: affordance.when.tags;
+    specificity: affordance.specificity;
+    contractVersion: ?ast.requires.version;
+    contractSlots: ?ast.requires.fields;
+    contractActions: ?ast.requires.actions;
+    secondaryRoles: ?ast.requires.secondaryRoles
+  ]
+}

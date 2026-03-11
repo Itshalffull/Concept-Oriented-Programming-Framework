@@ -1,5 +1,7 @@
 // Affordance Concept Implementation
 // Maps interactor types to concrete widgets based on specificity and contextual conditions.
+// Supports concept, suite, and tag conditions for entity-level widget matching,
+// plus bind blocks for field-to-contract-slot mapping.
 import type { ConceptHandler } from '@clef/runtime';
 
 let affordanceCounter = 0;
@@ -11,6 +13,8 @@ export const affordanceHandler: ConceptHandler = {
     const interactor = input.interactor as string;
     const specificity = input.specificity as number ?? 0;
     const conditions = input.conditions as string;
+    const bind = input.bind as string;
+    const contractVersion = input.contractVersion as number;
 
     const existing = await storage.get('affordance', affordance);
     if (existing) {
@@ -18,6 +22,7 @@ export const affordanceHandler: ConceptHandler = {
     }
 
     const parsedConditions = JSON.parse(conditions || '{}');
+    const parsedBind = bind ? JSON.parse(bind) : null;
 
     await storage.put('affordance', affordance, {
       affordance,
@@ -31,7 +36,12 @@ export const affordanceHandler: ConceptHandler = {
         viewport: parsedConditions.viewport ?? null,
         density: parsedConditions.density ?? null,
         mutable: parsedConditions.mutable ?? null,
+        concept: parsedConditions.concept ?? null,
+        suite: parsedConditions.suite ?? null,
+        tags: parsedConditions.tags ?? null,
       }),
+      bind: parsedBind ? JSON.stringify(parsedBind) : null,
+      contractVersion: contractVersion ?? null,
       createdAt: new Date().toISOString(),
     });
 
@@ -54,7 +64,7 @@ export const affordanceHandler: ConceptHandler = {
 
       const conditions = JSON.parse((aff.conditions as string) || '{}');
 
-      // Evaluate each condition against the context
+      // Evaluate field-level conditions
       if (conditions.platform && parsedContext.platform && conditions.platform !== parsedContext.platform) {
         return false;
       }
@@ -74,6 +84,19 @@ export const affordanceHandler: ConceptHandler = {
         if (parsedContext.optionCount > conditions.maxOptions) return false;
       }
 
+      // Evaluate entity-level conditions
+      if (conditions.concept && parsedContext.concept) {
+        if (conditions.concept !== parsedContext.concept) return false;
+      }
+      if (conditions.suite && parsedContext.suite) {
+        if (conditions.suite !== parsedContext.suite) return false;
+      }
+      if (conditions.tags && Array.isArray(conditions.tags) && parsedContext.tags) {
+        const contextTags = Array.isArray(parsedContext.tags) ? parsedContext.tags : JSON.parse(parsedContext.tags);
+        const hasAllTags = conditions.tags.every((tag: string) => contextTags.includes(tag));
+        if (!hasAllTags) return false;
+      }
+
       return true;
     });
 
@@ -88,6 +111,8 @@ export const affordanceHandler: ConceptHandler = {
       affordance: aff.affordance,
       widget: aff.widget,
       specificity: aff.specificity,
+      bind: aff.bind ? JSON.parse(aff.bind as string) : null,
+      contractVersion: aff.contractVersion ?? null,
     }));
 
     return { variant: 'ok', matches: JSON.stringify(matches) };
@@ -110,9 +135,14 @@ export const affordanceHandler: ConceptHandler = {
     if (conditions.mutable !== null) conditionParts.push(`mutable=${conditions.mutable}`);
     if (conditions.minOptions !== null) conditionParts.push(`minOptions=${conditions.minOptions}`);
     if (conditions.maxOptions !== null) conditionParts.push(`maxOptions=${conditions.maxOptions}`);
+    if (conditions.concept) conditionParts.push(`concept=${conditions.concept}`);
+    if (conditions.suite) conditionParts.push(`suite=${conditions.suite}`);
+    if (conditions.tags) conditionParts.push(`tags=${JSON.stringify(conditions.tags)}`);
 
     const conditionStr = conditionParts.length > 0 ? conditionParts.join(', ') : 'none';
-    const reason = `Affordance "${existing.affordance}" maps interactor "${existing.interactor}" to widget "${existing.widget}" at specificity ${existing.specificity} with conditions: ${conditionStr}`;
+    const bindStr = existing.bind ? `, bind: ${existing.bind}` : '';
+    const contractStr = existing.contractVersion ? `, contract: @${existing.contractVersion}` : '';
+    const reason = `Affordance "${existing.affordance}" maps interactor "${existing.interactor}" to widget "${existing.widget}" at specificity ${existing.specificity} with conditions: ${conditionStr}${bindStr}${contractStr}`;
 
     return { variant: 'ok', reason };
   },

@@ -1,0 +1,80 @@
+@version(1)
+concept ContractChecker [C] {
+
+  purpose {
+    Validate widget contracts against concept specs. Runs the
+    field resolution algorithm statically — without a live
+    binding — and reports resolved slots, unresolved slots,
+    type mismatches, and missing roles. Used by build tooling
+    and developer-facing diagnostics.
+  }
+
+  state {
+    results: set C
+    widget: C -> String
+    concept: C -> String
+    contractVersion: C -> Int
+    status: C -> String
+    resolvedSlots: C -> list String
+    unresolvedSlots: C -> list String
+    typeMismatches: C -> list String
+    missingRoles: C -> list String
+    suggestions: C -> list String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action check(checker: C, widget: String, concept: String,
+                 contractVersion: option Int) {
+      -> ok(checker: C, resolved: String, unresolved: String,
+           mismatches: String) {
+        Run field resolution algorithm for the widget's
+        requires block against the concept's state and actions.
+        Use explicit contract version if provided, otherwise
+        latest. Return structured result with per-slot status.
+      }
+      -> incompatible(checker: C, errors: String) {
+        Widget and concept are fundamentally incompatible
+        (no affordance declares this concept for this widget).
+      }
+      -> notfound(message: String) { Widget or concept not registered. }
+    }
+
+    action checkAll(checker: C, concept: String) {
+      -> ok(checker: C, results: String) {
+        Run contract check for every widget with an affordance
+        matching the named concept. Returns ranked results
+        with contract status per widget.
+      }
+      -> notfound(message: String) { Concept not registered. }
+    }
+
+    action checkSuite(checker: C, suite: String) {
+      -> ok(checker: C, results: String) {
+        Run contract check for every concept-widget pair in a
+        suite. Validates that all suite-bundled affordances
+        resolve cleanly against their target concepts.
+      }
+      -> notfound(message: String) { Suite not registered. }
+    }
+
+    action suggest(checker: C, widget: String, concept: String) {
+      -> ok(checker: C, suggestions: String) {
+        For each unresolved slot, suggest candidate concept
+        fields by type compatibility. Output is advisory —
+        the developer writes the bind mapping.
+      }
+      -> resolved(message: String) { All slots already resolved, no suggestions needed. }
+      -> notfound(message: String) { Widget or concept not registered. }
+    }
+  }
+
+  invariant {
+    after check(checker: c, widget: "approval-detail",
+      concept: "Approval", contractVersion: _)
+      -> ok(checker: c, resolved: _, unresolved: _, mismatches: _)
+  }
+}

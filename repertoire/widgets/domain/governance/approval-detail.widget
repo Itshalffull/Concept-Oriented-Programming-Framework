@@ -1,0 +1,214 @@
+@version(1)
+
+purpose {
+  Domain-specific entity widget for rendering Approval concepts
+  in detail view. Shows status badge, decision policy, action
+  buttons, and optional comment thread and action log timeline.
+  Uses widget contracts to bind structurally to any concept that
+  satisfies the requires block.
+}
+
+anatomy {
+  root:           container  { Card wrapper with status-colored border }
+  header:         container  { Title row with status badge }
+  statusBadge:    container  { Visual status indicator (pending/approved/denied) }
+  title:          text       { Approval title derived from step reference }
+  policyInfo:     text       { Policy description (e.g., "1 of 2 required") }
+  decisionList:   container  { List of recorded decisions }
+  actorDisplay:   text       { Who is assigned / who acted }
+  reasoning:      text       { Decision comment or reasoning }
+  actions:        container  { Approve/deny/request-changes buttons }
+  commentThread:  container  { Optional comment thread (secondary role) }
+  timeline:       container  { Optional action log timeline (secondary role) }
+}
+
+states {
+  approval {
+    initial: loading
+
+    loading {
+      on {
+        DATA_READY -> idle
+        ERROR -> error
+      }
+    }
+
+    idle {
+      on {
+        APPROVE_CLICK -> confirming { guard: $status == "pending" }
+        DENY_CLICK -> confirming { guard: $status == "pending" }
+        REQUEST_CHANGES_CLICK -> confirming { guard: $status == "pending" }
+      }
+    }
+
+    confirming {
+      on {
+        CONFIRM -> submitting
+        CANCEL -> idle
+      }
+    }
+
+    submitting {
+      entry { invoke: submitDecision }
+      on {
+        SUCCESS -> idle
+        FAILURE -> idle
+      }
+    }
+
+    error {
+      on {
+        RETRY -> loading
+      }
+    }
+  }
+}
+
+accessibility {
+  role: "article"
+  label: concat("Approval: ", $step_ref)
+
+  keyboard {
+    Enter {
+      focus: actions
+      description: "Focus action buttons"
+    }
+  }
+
+  live {
+    statusBadge: "polite"
+  }
+}
+
+props {
+  showTimeline: Boolean = true
+  showComments: Boolean = true
+  confirmBeforeAction: Boolean = true
+}
+
+requires {
+  fields {
+    status: String
+    step_ref: String
+    policy_kind: String
+    required_count: Int
+    decisions: collection
+    requested_at: DateTime
+    resolved_at: String
+  }
+  actions {
+    approve: { }
+    deny: { }
+    request_changes: { }
+    get_status: { }
+  }
+  secondaryRoles {
+    comments {
+      source: "Comment"
+      relation: "parentId = primary.id"
+      fields {
+        entries: collection
+      }
+      actions {
+        add: { body: String }
+      }
+      optional: true
+    }
+    history {
+      source: "ActionLog"
+      relation: "entityId = primary.id"
+      fields {
+        entries: collection
+      }
+      optional: true
+    }
+  }
+}
+
+connect {
+  statusBadge -> {
+    data-status: $status;
+    aria-label: concat("Status: ", $status);
+    class: concat("badge--", $status);
+  }
+  title -> {
+    text: $step_ref;
+  }
+  policyInfo -> {
+    text: concat($policy_kind, ": ", $required_count, " required");
+  }
+  actorDisplay -> {
+    text: if $decisions then concat($decisions.length, " decision(s)") else "No decisions yet";
+  }
+  reasoning -> {
+    text: if $decisions then $decisions[0].comment else "";
+    visible: $decisions != null;
+  }
+  actions -> {
+    visible: $status == "pending";
+  }
+  commentThread -> {
+    visible: $showComments;
+  }
+  timeline -> {
+    visible: $showTimeline;
+  }
+}
+
+affordance {
+  serves: entity-detail
+  specificity: 20
+  when {
+    concept: "Approval"
+  }
+  bind {
+    step_ref: step_ref
+    policy_kind: policy.kind
+    required_count: policy.required_count
+  }
+}
+
+affordance {
+  serves: entity-editor
+  specificity: 20
+  when {
+    concept: "Approval"
+  }
+  bind {
+    step_ref: step_ref
+    policy_kind: policy.kind
+    required_count: policy.required_count
+  }
+}
+
+compose {
+  approveButton: widget("button", {
+    variant: "filled",
+    label: "Approve",
+    onClick: command($approve)
+  });
+  denyButton: widget("button", {
+    variant: "danger",
+    label: "Deny",
+    onClick: command($deny)
+  });
+  requestChangesButton: widget("button", {
+    variant: "outline",
+    label: "Request Changes",
+    onClick: command($request_changes)
+  });
+
+  commentThread: entity("Comment", {
+    view: "entity-list",
+    filter: $comments.relation
+  });
+
+  timeline: entity("ActionLog", {
+    view: "entity-list",
+    filter: $history.relation
+  });
+}
+
+invariant {
+  always statusBadge.data-status in ["pending", "approved", "denied", "timed_out", "changes_requested"]
+}

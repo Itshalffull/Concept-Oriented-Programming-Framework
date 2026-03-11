@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept UISchema [S, C] {
 
   purpose {
@@ -8,13 +8,21 @@ concept UISchema [S, C] {
     is the source, UI schema (generated here) is the presentation
     layer. Inspection pipeline: inspect → classify interaction
     types → apply defaults → apply overrides → produce element tree.
+
+    Emits an entity element alongside the field element tree.
+    The entity element represents the whole concept as a single
+    renderable unit for concept-level widget matching. If an
+    entity-level widget resolves, markResolved prevents the
+    field-level pipeline from running.
   }
 
   state {
     concept: S -> C
     elements: S -> list String
+    entityElement: S -> option String
     uiSchema: S -> String
     overrides: S -> option String
+    resolved: S -> Bool
     generatedAt: S -> DateTime
   }
 
@@ -29,6 +37,8 @@ concept UISchema [S, C] {
         and return variants. Generate default views: list,
         detail, create, edit. If spec contains an interface
         section, apply overrides on top of defaults.
+        Emits entityElement with concept name, suite, tags,
+        and field summary for entity-level classification.
       }
       -> parseError(message: String) { Spec could not be parsed. }
     }
@@ -51,7 +61,31 @@ concept UISchema [S, C] {
       -> ok(elements: String) {
         Return abstract element tree — intermediate
         representation consumed by downstream classification
-        and widget resolution.
+        and widget resolution. Only fires if schema has not
+        been marked as resolved by entity-level resolution.
+      }
+      -> notfound(message: String) { No schema exists. }
+      -> resolved(message: String) {
+        Schema was resolved at entity level. Field-level
+        element extraction is skipped.
+      }
+    }
+
+    action getEntityElement(schema: S) {
+      -> ok(entityElement: String) {
+        Return the entity-level element for this concept.
+        Contains kind, concept name, suite, tags, and a
+        summary of fields and actions for contract matching.
+      }
+      -> notfound(message: String) { No schema exists. }
+    }
+
+    action markResolved(schema: S) {
+      -> ok(schema: S) {
+        Mark this schema as entity-resolved. Subsequent
+        calls to getElements will return the resolved
+        variant, preventing the field-level pipeline from
+        running for this concept instance.
       }
       -> notfound(message: String) { No schema exists. }
     }
@@ -61,5 +95,17 @@ concept UISchema [S, C] {
     after inspect(schema: s, conceptSpec: "concept Test [T] { state { name: T -> String } }")
       -> ok(schema: s)
     then getElements(schema: s) -> ok(elements: _)
+  }
+
+  invariant {
+    after inspect(schema: s, conceptSpec: "concept Approval [A] { state { status: A -> String } }")
+      -> ok(schema: s)
+    then getEntityElement(schema: s) -> ok(entityElement: _)
+  }
+
+  invariant {
+    after inspect(schema: s, conceptSpec: _) -> ok(schema: s)
+    and markResolved(schema: s) -> ok(schema: s)
+    then getElements(schema: s) -> resolved(message: _)
   }
 }
