@@ -172,6 +172,27 @@ export const viewHandler: ConceptHandler = {
     return { variant: 'ok', newView };
   },
 
+  async update(input, storage) {
+    const view = input.view as string;
+    const existing = await storage.get('view', view);
+    if (!existing) return { variant: 'notfound', message: 'View not found' };
+
+    const updated: Record<string, unknown> = { ...existing };
+    if (input.dataSource !== undefined) updated.dataSource = input.dataSource as string;
+    if (input.layout !== undefined) updated.layout = input.layout as string;
+    if (input.filters !== undefined) updated.filters = input.filters as string;
+    if (input.sorts !== undefined) updated.sorts = input.sorts as string;
+    if (input.groups !== undefined) updated.groups = input.groups as string;
+    if (input.visibleFields !== undefined) updated.visibleFields = input.visibleFields as string;
+    if (input.formatting !== undefined) updated.formatting = input.formatting as string;
+    if (input.controls !== undefined) updated.controls = input.controls as string;
+    if (input.title !== undefined) updated.title = input.title as string;
+    if (input.description !== undefined) updated.description = input.description as string;
+
+    await storage.put('view', view, updated);
+    return { variant: 'ok', view };
+  },
+
   async embed(input, storage) {
     const view = input.view as string;
     const existing = await storage.get('view', view);
