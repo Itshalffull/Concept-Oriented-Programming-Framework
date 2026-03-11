@@ -4,10 +4,10 @@ import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
 import { createInMemoryStorage } from '../../runtime/adapters/storage';
 import type { Kernel } from '../../runtime/self-hosted';
-import { authenticationHandler } from '../handlers/ts/authentication.handler';
+import { authenticationHandler } from '../../handlers/ts/app/authentication.handler';
 import { authorizationHandler } from '../handlers/ts/authorization.handler';
-import { accessControlHandler } from '../handlers/ts/access-control.handler';
-import { sessionHandler } from '../handlers/ts/session.handler';
+import { accessControlHandler } from '../../handlers/ts/app/access-control.handler';
+import { sessionHandler } from '../../handlers/ts/app/session.handler';
 
 let _kernel: Kernel | null = null;
 

@@ -33,7 +33,7 @@ infrastructure:
 
 concepts:
   Authentication:
-    spec: concepts/authentication.concept
+    spec: ../repertoire/concepts/identity/authentication.concept
     implementations:
       - language: typescript
         path: handlers/ts/authentication.handler.ts
@@ -42,7 +42,7 @@ concepts:
         queryMode: lite
 
   Authorization:
-    spec: concepts/authorization.concept
+    spec: ../repertoire/concepts/identity/authorization.concept
     implementations:
       - language: typescript
         path: handlers/ts/authorization.handler.ts
@@ -51,7 +51,7 @@ concepts:
         queryMode: lite
 
   AccessControl:
-    spec: concepts/access-control.concept
+    spec: ../repertoire/concepts/identity/access-control.concept
     implementations:
       - language: typescript
         path: handlers/ts/access-control.handler.ts
@@ -60,7 +60,7 @@ concepts:
         queryMode: lite
 
   Session:
-    spec: concepts/session.concept
+    spec: ../repertoire/concepts/identity/session.concept
     implementations:
       - language: typescript
         path: handlers/ts/session.handler.ts

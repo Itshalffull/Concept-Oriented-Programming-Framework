@@ -17,33 +17,37 @@ export interface Destination {
 
 export const destinations: Destination[] = [
   // Content group
-  { name: 'dashboard', targetConcept: 'AppShell', targetView: 'dashboard', href: '/', icon: '◫', group: 'Content' },
-  { name: 'content', targetConcept: 'ContentNode', targetView: 'list', href: '/content', icon: '📄', group: 'Content' },
+  { name: 'dashboard', targetConcept: 'AppShell', targetView: 'dashboard', href: '/admin', icon: '◫', group: 'Content' },
+  { name: 'content', targetConcept: 'ContentNode', targetView: 'list', href: '/admin/content', icon: '📄', group: 'Content' },
 
   // Structure group
-  { name: 'schemas', targetConcept: 'Schema', targetView: 'list', href: '/schemas', icon: '⬡', group: 'Structure' },
-  { name: 'views', targetConcept: 'View', targetView: 'builder', href: '/view-builder', icon: '⊞', group: 'Structure' },
-  { name: 'taxonomy', targetConcept: 'Taxonomy', targetView: 'browser', href: '/taxonomy', icon: '🌳', group: 'Structure' },
+  { name: 'schemas', targetConcept: 'Schema', targetView: 'list', href: '/admin/schemas', icon: '⬡', group: 'Structure' },
+  { name: 'views', targetConcept: 'View', targetView: 'builder', href: '/admin/view-builder', icon: '⊞', group: 'Structure' },
+  { name: 'taxonomy', targetConcept: 'Taxonomy', targetView: 'browser', href: '/admin/taxonomy', icon: '🌳', group: 'Structure' },
 
   // Surface group
-  { name: 'mappings', targetConcept: 'ComponentMapping', targetView: 'list', href: '/mappings', icon: '⇋', group: 'Surface' },
-  { name: 'display-modes', targetConcept: 'DisplayMode', targetView: 'list', href: '/display-modes', icon: '◩', group: 'Surface' },
-  { name: 'themes', targetConcept: 'Theme', targetView: 'browser', href: '/themes', icon: '🎨', group: 'Surface' },
+  { name: 'mappings', targetConcept: 'ComponentMapping', targetView: 'list', href: '/admin/mappings', icon: '⇋', group: 'Surface' },
+  { name: 'display-modes', targetConcept: 'DisplayMode', targetView: 'list', href: '/admin/display-modes', icon: '◩', group: 'Surface' },
+  { name: 'themes', targetConcept: 'Theme', targetView: 'browser', href: '/admin/themes', icon: '🎨', group: 'Surface' },
 
   // Platform group
-  { name: 'concepts', targetConcept: 'ConceptBrowser', targetView: 'browser', href: '/concepts', icon: '⬢', group: 'Platform' },
-  { name: 'syncs', targetConcept: 'SyncEngine', targetView: 'list', href: '/syncs', icon: '⇄', group: 'Platform' },
-  { name: 'score', targetConcept: 'Score', targetView: 'dashboard', href: '/score', icon: '📊', group: 'Platform' },
+  { name: 'concepts', targetConcept: 'ConceptBrowser', targetView: 'browser', href: '/admin/concepts', icon: '⬢', group: 'Platform' },
+  { name: 'syncs', targetConcept: 'SyncEngine', targetView: 'list', href: '/admin/syncs', icon: '⇄', group: 'Platform' },
+  { name: 'score', targetConcept: 'Score', targetView: 'dashboard', href: '/admin/score', icon: '📊', group: 'Platform' },
 
   // System group
-  { name: 'multiverse', targetConcept: 'VersionSpace', targetView: 'manager', href: '/multiverse', icon: '⎇', group: 'System' },
-  { name: 'workflows', targetConcept: 'Workflow', targetView: 'list', href: '/workflows', icon: '⤷', group: 'System' },
-  { name: 'automations', targetConcept: 'AutomationRule', targetView: 'list', href: '/automations', icon: '⚡', group: 'System' },
+  { name: 'multiverse', targetConcept: 'VersionSpace', targetView: 'manager', href: '/admin/multiverse', icon: '⎇', group: 'System' },
+  { name: 'workflows', targetConcept: 'Workflow', targetView: 'list', href: '/admin/workflows', icon: '⤷', group: 'System' },
+  { name: 'automations', targetConcept: 'AutomationRule', targetView: 'list', href: '/admin/automations', icon: '⚡', group: 'System' },
+  { name: 'access', targetConcept: 'Authorization', targetView: 'admin', href: '/admin/access', icon: '🔐', group: 'System' },
 ];
 
 /** Look up a destination by its Next.js href path */
 export function destinationByHref(href: string): Destination | undefined {
-  return destinations.find(d => d.href === href);
+  return destinations.find((destination) => {
+    if (destination.href === href) return true;
+    return href.startsWith(`${destination.href}/`);
+  });
 }
 
 /** Look up a destination by name */

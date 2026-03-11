@@ -7,5 +7,5 @@ when {
     => [ user: ?user ]
 }
 then {
-  Authorization/grantRole: [ user: ?user; role: "user" ]
+  Authorization/assignRole: [ user: ?user; role: "user" ]
 }

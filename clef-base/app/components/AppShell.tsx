@@ -10,11 +10,30 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar, type SidebarGroup } from './widgets/Sidebar';
 import { useClef } from '../../lib/clef-provider';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { groupedDestinations, navigator, shell } = useClef();
+  const router = useRouter();
+  const [sessionUser, setSessionUser] = React.useState('');
+
+  React.useEffect(() => {
+    let active = true;
+    fetch('/api/auth/session')
+      .then((response) => response.json())
+      .then((session) => {
+        if (active && session.authenticated) {
+          setSessionUser(String(session.user ?? ''));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
@@ -37,7 +56,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <Sidebar
         groups={sidebarGroups}
         footer={
-          <small style={{ opacity: 0.5 }}>v0.1.0</small>
+          <div className="sidebar-footer-meta">
+            <small style={{ opacity: 0.5 }}>v0.1.0</small>
+            {sessionUser ? <small>{sessionUser}</small> : null}
+          </div>
         }
       />
       <div className="app-shell__main">
@@ -48,6 +70,19 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           }}>
             {pageTitle}
           </h2>
+          <div className="app-shell__session">
+            {sessionUser ? <span>{sessionUser}</span> : null}
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                router.push('/');
+                router.refresh();
+              }}
+            >
+              Log out
+            </button>
+          </div>
         </header>
         <main className="app-shell__content">
           {children}

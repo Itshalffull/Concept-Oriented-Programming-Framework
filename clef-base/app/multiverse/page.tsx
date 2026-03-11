@@ -1,10 +1,5 @@
-import { HostedPage } from '../components/HostedPage';
-import { MultiverseView } from '../views/MultiverseView';
+import { redirect } from 'next/navigation';
 
 export default function MultiversePage() {
-  return (
-    <HostedPage>
-      <MultiverseView />
-    </HostedPage>
-  );
+  redirect('/admin/multiverse');
 }
