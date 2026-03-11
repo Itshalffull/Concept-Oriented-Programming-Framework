@@ -32,7 +32,7 @@ entries:
     kind: stack
     title: ''
     description: ''
-    children: '[{"type":"view","id":"entity-properties"},{"type":"view","id":"entity-content"},{"type":"view","id":"entity-same-type"},{"type":"view","id":"entity-all-content"}]'
+    children: '[{"type":"view","id":"entity-properties"},{"type":"view","id":"entity-content"},{"type":"view","id":"entity-same-schema"},{"type":"view","id":"entity-all-content"}]'
   - layout: multiverse
     name: Version Spaces
     kind: stack

@@ -1,0 +1,84 @@
+# ContentNode seeds: registered concept handlers.
+# Each concept in the kernel gets a ContentNode with Schema "Concept" applied.
+
+concept: ContentNode
+action: create
+entries:
+  - node: concept:ContentNode
+    content: '{"name":"ContentNode","uri":"urn:clef/ContentNode"}'
+    createdBy: system
+  - node: concept:Schema
+    content: '{"name":"Schema","uri":"urn:clef/Schema"}'
+    createdBy: system
+  - node: concept:View
+    content: '{"name":"View","uri":"urn:clef/View"}'
+    createdBy: system
+  - node: concept:Workflow
+    content: '{"name":"Workflow","uri":"urn:clef/Workflow"}'
+    createdBy: system
+  - node: concept:AutomationRule
+    content: '{"name":"AutomationRule","uri":"urn:clef/AutomationRule"}'
+    createdBy: system
+  - node: concept:Taxonomy
+    content: '{"name":"Taxonomy","uri":"urn:clef/Taxonomy"}'
+    createdBy: system
+  - node: concept:DisplayMode
+    content: '{"name":"DisplayMode","uri":"urn:clef/DisplayMode"}'
+    createdBy: system
+  - node: concept:Theme
+    content: '{"name":"Theme","uri":"urn:clef/Theme"}'
+    createdBy: system
+  - node: concept:Query
+    content: '{"name":"Query","uri":"urn:clef/Query"}'
+    createdBy: system
+  - node: concept:ContentStorage
+    content: '{"name":"ContentStorage","uri":"urn:clef/ContentStorage"}'
+    createdBy: system
+  - node: concept:Property
+    content: '{"name":"Property","uri":"urn:clef/Property"}'
+    createdBy: system
+  - node: concept:Outline
+    content: '{"name":"Outline","uri":"urn:clef/Outline"}'
+    createdBy: system
+  - node: concept:ComponentMapping
+    content: '{"name":"ComponentMapping","uri":"urn:clef/ComponentMapping"}'
+    createdBy: system
+  - node: concept:ConceptBrowser
+    content: '{"name":"ConceptBrowser","uri":"urn:clef/ConceptBrowser"}'
+    createdBy: system
+  - node: concept:Navigator
+    content: '{"name":"Navigator","uri":"urn:clef/Navigator"}'
+    createdBy: system
+  - node: concept:DestinationCatalog
+    content: '{"name":"DestinationCatalog","uri":"urn:clef/DestinationCatalog"}'
+    createdBy: system
+  - node: concept:RuntimeProfile
+    content: '{"name":"RuntimeProfile","uri":"urn:clef/RuntimeProfile"}'
+    createdBy: system
+  - node: concept:PlatformBindingCatalog
+    content: '{"name":"PlatformBindingCatalog","uri":"urn:clef/PlatformBindingCatalog"}'
+    createdBy: system
+  - node: concept:Host
+    content: '{"name":"Host","uri":"urn:clef/Host"}'
+    createdBy: system
+  - node: concept:Shell
+    content: '{"name":"Shell","uri":"urn:clef/Shell"}'
+    createdBy: system
+  - node: concept:Transport
+    content: '{"name":"Transport","uri":"urn:clef/Transport"}'
+    createdBy: system
+  - node: concept:Layout
+    content: '{"name":"Layout","uri":"urn:clef/Layout"}'
+    createdBy: system
+  - node: concept:SeedData
+    content: '{"name":"SeedData","uri":"urn:clef/SeedData"}'
+    createdBy: system
+  - node: concept:AppInstallation
+    content: '{"name":"AppInstallation","uri":"urn:clef/AppInstallation"}'
+    createdBy: system
+  - node: concept:ResourceGrantPolicy
+    content: '{"name":"ResourceGrantPolicy","uri":"urn:clef/ResourceGrantPolicy"}'
+    createdBy: system
+  - node: concept:AccessCatalog
+    content: '{"name":"AccessCatalog","uri":"urn:clef/AccessCatalog"}'
+    createdBy: system

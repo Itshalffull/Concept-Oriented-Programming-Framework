@@ -1,0 +1,23 @@
+# ContentNode seeds: version spaces and overrides.
+
+concept: ContentNode
+action: create
+entries:
+  # --- Version spaces ---
+  - node: version-space:editorial-pass
+    content: '{"name":"Editorial Pass","status":"active","owner":"alice","overrideCount":3,"lastActivity":"2026-03-08T14:15:00.000Z","visibility":"shared","parent":null,"description":"Copy edits and narrative cleanup ahead of launch."}'
+    createdBy: alice
+  - node: version-space:taxonomy-refactor
+    content: '{"name":"Taxonomy Refactor","status":"review","owner":"matt","overrideCount":2,"lastActivity":"2026-03-09T09:30:00.000Z","visibility":"private","parent":"version-space:editorial-pass","description":"Experimenting with revised schema categories and tags."}'
+    createdBy: matt
+
+  # --- Version overrides ---
+  - node: version-override:editorial-pass:content:Article
+    content: '{"space":"version-space:editorial-pass","entity":"content:Article","operation":"update","fields":["title","summary"],"summary":"Tightened article copy and updated teaser text."}'
+    createdBy: alice
+  - node: version-override:editorial-pass:view:content-list
+    content: '{"space":"version-space:editorial-pass","entity":"view:content-list","operation":"update","fields":["title","description"],"summary":"Renamed the content dashboard and adjusted helper copy."}'
+    createdBy: alice
+  - node: version-override:taxonomy-refactor:schema:TaxonomyTerm
+    content: '{"space":"version-space:taxonomy-refactor","entity":"schema:TaxonomyTerm","operation":"update","fields":["fields"],"summary":"Added hierarchy and grouping metadata to taxonomy terms."}'
+    createdBy: matt

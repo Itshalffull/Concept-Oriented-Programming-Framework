@@ -1,0 +1,31 @@
+# ContentNode seeds: workflows, automation rules, taxonomy vocabularies.
+
+concept: ContentNode
+action: create
+entries:
+  # --- Workflows ---
+  - node: workflow:content-lifecycle
+    content: '{"name":"content-lifecycle","states":["draft","review","published","archived"]}'
+    createdBy: system
+  - node: workflow:schema-evolution
+    content: '{"name":"schema-evolution","states":["draft","active","deprecated"]}'
+    createdBy: system
+
+  # --- Automation rules ---
+  - node: automation-rule:auto-tag-on-create
+    content: '{"trigger":"ContentNode/create","description":"Auto-apply taxonomy tags based on schema membership"}'
+    createdBy: system
+  - node: automation-rule:notify-on-publish
+    content: '{"trigger":"Workflow/transition","description":"Send notification when content moves to published state"}'
+    createdBy: system
+  - node: automation-rule:cache-invalidate-on-save
+    content: '{"trigger":"ContentStorage/save","description":"Invalidate cache entries when content is saved"}'
+    createdBy: system
+
+  # --- Taxonomy vocabularies ---
+  - node: taxonomy:concept-suites
+    content: '{"name":"Concept Suites","kind":"vocabulary"}'
+    createdBy: system
+  - node: taxonomy:schema-categories
+    content: '{"name":"Schema Categories","kind":"vocabulary"}'
+    createdBy: system

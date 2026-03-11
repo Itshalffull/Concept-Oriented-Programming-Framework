@@ -1,0 +1,35 @@
+# Schema membership: sync nodes get Schema "Sync" applied.
+
+concept: Schema
+action: applyTo
+entries:
+  - entity_id: sync:save-invalidates-cache
+    schema: Sync
+  - entity_id: sync:save-indexes-search
+    schema: Sync
+  - entity_id: sync:save-generates-alias
+    schema: Sync
+  - entity_id: sync:save-tracks-provenance
+    schema: Sync
+  - entity_id: sync:save-reindexes-backlinks
+    schema: Sync
+  - entity_id: sync:delete-cascades
+    schema: Sync
+  - entity_id: sync:slot-source-dispatches
+    schema: Sync
+  - entity_id: sync:resolver-uses-mapping
+    schema: Sync
+  - entity_id: sync:entity-page-triple-zone
+    schema: Sync
+  - entity_id: sync:block-zone-renders-canvas
+    schema: Sync
+  - entity_id: sync:version-aware-load
+    schema: Sync
+  - entity_id: sync:version-aware-save
+    schema: Sync
+  - entity_id: sync:view-creates-content-node
+    schema: Sync
+  - entity_id: sync:schema-creates-content-node
+    schema: Sync
+  - entity_id: sync:theme-creates-content-node
+    schema: Sync

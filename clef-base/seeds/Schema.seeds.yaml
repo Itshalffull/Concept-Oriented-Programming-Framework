@@ -1,11 +1,22 @@
 # Core schema definitions for clef-base.
-# Each entry registers a schema with its field list.
+# Per spec §2.4: Schema IS the subtype. Applying a Schema to a ContentNode
+# gives it that Schema's fields. Multiple Schemas compose on one entity.
 
 concept: Schema
 action: defineSchema
 entries:
   - schema: ContentNode
-    fields: 'node,type,content,metadata,createdBy,createdAt,updatedAt'
+    fields: 'node,content,metadata,createdBy,createdAt,updatedAt'
+  - schema: Concept
+    fields: 'name,uri'
+  - schema: Sync
+    fields: 'suite,tier,pattern'
+  - schema: Widget
+    fields: 'name,framework'
+  - schema: VersionSpace
+    fields: 'name,status,owner,overrideCount,lastActivity,visibility,parent,description'
+  - schema: VersionOverride
+    fields: 'space,entity,operation,fields,summary'
   - schema: Article
     fields: 'title,body,author,publishedAt,status'
   - schema: Page

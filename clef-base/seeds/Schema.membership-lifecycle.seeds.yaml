@@ -1,0 +1,24 @@
+# Schema membership: workflow, automation-rule, and taxonomy nodes.
+
+concept: Schema
+action: applyTo
+entries:
+  # --- Workflow nodes get Schema "Workflow" ---
+  - entity_id: workflow:content-lifecycle
+    schema: Workflow
+  - entity_id: workflow:schema-evolution
+    schema: Workflow
+
+  # --- Automation rule nodes get Schema "AutomationRule" ---
+  - entity_id: automation-rule:auto-tag-on-create
+    schema: AutomationRule
+  - entity_id: automation-rule:notify-on-publish
+    schema: AutomationRule
+  - entity_id: automation-rule:cache-invalidate-on-save
+    schema: AutomationRule
+
+  # --- Taxonomy nodes get Schema "Taxonomy" ---
+  - entity_id: taxonomy:concept-suites
+    schema: Taxonomy
+  - entity_id: taxonomy:schema-categories
+    schema: Taxonomy

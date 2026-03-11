@@ -166,10 +166,11 @@ export const seedDataHandler: ConceptHandler = {
             // Convention: filename is <ConceptName>.seeds.yaml
             // The concept name from the filename takes precedence,
             // falling back to the `concept:` field inside the YAML.
-            const fileConceptName = entry.replace('.seeds.yaml', '');
             const parsed = parseSeedsYaml(content);
             for (const seedDef of parsed) {
-              const conceptUri = normalizeConceptUri(fileConceptName || seedDef.concept_uri);
+              // In-file concept: field is the source of truth.
+              // Filename is for human organization only.
+              const conceptUri = normalizeConceptUri(seedDef.concept_uri);
               const id = nextId();
               const record = {
                 id,

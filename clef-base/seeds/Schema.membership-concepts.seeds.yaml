@@ -1,0 +1,57 @@
+# Schema membership: concept nodes get Schema "Concept" applied.
+
+concept: Schema
+action: applyTo
+entries:
+  - entity_id: concept:ContentNode
+    schema: Concept
+  - entity_id: concept:Schema
+    schema: Concept
+  - entity_id: concept:View
+    schema: Concept
+  - entity_id: concept:Workflow
+    schema: Concept
+  - entity_id: concept:AutomationRule
+    schema: Concept
+  - entity_id: concept:Taxonomy
+    schema: Concept
+  - entity_id: concept:DisplayMode
+    schema: Concept
+  - entity_id: concept:Theme
+    schema: Concept
+  - entity_id: concept:Query
+    schema: Concept
+  - entity_id: concept:ContentStorage
+    schema: Concept
+  - entity_id: concept:Property
+    schema: Concept
+  - entity_id: concept:Outline
+    schema: Concept
+  - entity_id: concept:ComponentMapping
+    schema: Concept
+  - entity_id: concept:ConceptBrowser
+    schema: Concept
+  - entity_id: concept:Navigator
+    schema: Concept
+  - entity_id: concept:DestinationCatalog
+    schema: Concept
+  - entity_id: concept:RuntimeProfile
+    schema: Concept
+  - entity_id: concept:PlatformBindingCatalog
+    schema: Concept
+  - entity_id: concept:Host
+    schema: Concept
+  - entity_id: concept:Shell
+    schema: Concept
+  - entity_id: concept:Transport
+    schema: Concept
+  - entity_id: concept:Layout
+    schema: Concept
+  - entity_id: concept:SeedData
+    schema: Concept
+  - entity_id: concept:AppInstallation
+    schema: Concept
+  - entity_id: concept:ResourceGrantPolicy
+    schema: Concept
+  - entity_id: concept:AccessCatalog
+    schema: Concept

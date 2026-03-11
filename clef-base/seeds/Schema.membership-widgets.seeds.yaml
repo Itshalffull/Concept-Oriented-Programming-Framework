@@ -1,0 +1,33 @@
+# Schema membership: widget nodes get Schema "Widget" applied.
+
+concept: Schema
+action: applyTo
+entries:
+  - entity_id: widget:Card
+    schema: Widget
+  - entity_id: widget:Badge
+    schema: Widget
+  - entity_id: widget:Sidebar
+    schema: Widget
+  - entity_id: widget:DataTable
+    schema: Widget
+  - entity_id: widget:EmptyState
+    schema: Widget
+  - entity_id: widget:CreateForm
+    schema: Widget
+  - entity_id: widget:TableDisplay
+    schema: Widget
+  - entity_id: widget:CardGridDisplay
+    schema: Widget
+  - entity_id: widget:GraphDisplay
+    schema: Widget
+  - entity_id: widget:StatCardsDisplay
+    schema: Widget
+  - entity_id: widget:ViewRenderer
+    schema: Widget
+  - entity_id: widget:LayoutRenderer
+    schema: Widget
+  - entity_id: widget:HostedPage
+    schema: Widget
+  - entity_id: widget:AppShell
+    schema: Widget

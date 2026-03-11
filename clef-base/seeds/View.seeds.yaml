@@ -1,4 +1,5 @@
 # Admin surface view definitions for clef-base.
+# Per spec §2.1: Views filter by Schema membership, not by "type" field.
 
 concept: View
 action: create
@@ -6,18 +7,18 @@ entries:
   - view: content-list
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"node","label":"Name"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"type","label":"Type","type":"select","options":["article","page","media","concept","schema","workflow","view","theme"],"required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    visibleFields: '[{"key":"node","label":"Name"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Content
-    description: Browse all content entities in the system.
-    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+    description: Browse all content entities in the system. Every entity is a ContentNode with Schemas applied.
+    filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
   - view: schemas-list
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"},{"key":"associations","label":"Associations","formatter":"json-count"}]'
+    visibleFields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"}]'
     controls: '{"create":{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]},"rowClick":{"navigateTo":"/content/schema:{schema}"}}'
     title: Schemas
-    description: Composable data shapes applied to ContentNodes.
+    description: Composable data shapes applied to ContentNodes. A ContentNode's identity is the set of Schemas applied to it.
   - view: workflows-list
     dataSource: '{"concept":"Workflow","action":"list"}'
     layout: table
@@ -75,20 +76,20 @@ entries:
     title: System Stats
     description: ''
   - view: dashboard-concepts
-    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"concept"}}'
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}'
     layout: table
-    visibleFields: '[{"key":"node","label":"Concept"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"}]'
+    visibleFields: '[{"key":"node","label":"Concept"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"}]'
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Registered Concepts
     description: ''
   - view: concept-graph
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: graph
-    visibleFields: '[{"key":"node","label":"Node"},{"key":"type","label":"Type"},{"key":"content","label":"Content"}]'
+    visibleFields: '[{"key":"node","label":"Node"},{"key":"schemas","label":"Schemas"},{"key":"content","label":"Content"}]'
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Score Graph
     description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Toggle filters to focus.
-    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+    filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
   - view: score-schemas
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: card-grid
@@ -97,7 +98,7 @@ entries:
     title: Schema Browser
     description: Browse all schema definitions.
   - view: syncs-list
-    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"sync"}}'
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Sync"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Sync Name"},{"key":"suite","label":"Suite","formatter":"badge"},{"key":"tier","label":"Tier","formatter":"badge"},{"key":"pattern","label":"Pattern"}]'
     controls: '{}'
@@ -114,7 +115,7 @@ entries:
   - view: entity-properties
     dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
     layout: detail
-    visibleFields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
+    visibleFields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
     controls: '{}'
     title: Properties
     description: ''
@@ -125,25 +126,25 @@ entries:
     controls: '{}'
     title: Content
     description: ''
-  - view: entity-same-type
-    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"{{entityType}}"}}'
+  - view: entity-same-schema
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"{{entityPrimarySchema}}"}}'
     layout: table
-    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"},{"key":"createdBy","label":"Source"}]'
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"}]'
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
-    title: Same Type
-    description: Other entities of the same type.
+    title: Same Schema
+    description: Other entities with the same primary schema.
   - view: entity-all-content
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"node","label":"Entity"},{"key":"type","label":"Type","formatter":"badge"}]'
+    visibleFields: '[{"key":"node","label":"Entity"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"}]'
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
     title: All Content
     description: Browse all entities in the system.
-    filters: '[{"field":"type","label":"Type","type":"toggle-group"}]'
+    filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
   - view: version-spaces-list
-    dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"version-space"}}'
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
     layout: card-grid
     visibleFields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"type","label":"Type","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}}'
+    controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}}'
     title: Version Spaces
     description: Named content variations — like git branches for content.

@@ -1,0 +1,47 @@
+# ContentNode seeds: widget component records.
+
+concept: ContentNode
+action: create
+entries:
+  - node: widget:Card
+    content: '{"name":"Card","framework":"react"}'
+    createdBy: system
+  - node: widget:Badge
+    content: '{"name":"Badge","framework":"react"}'
+    createdBy: system
+  - node: widget:Sidebar
+    content: '{"name":"Sidebar","framework":"react"}'
+    createdBy: system
+  - node: widget:DataTable
+    content: '{"name":"DataTable","framework":"react"}'
+    createdBy: system
+  - node: widget:EmptyState
+    content: '{"name":"EmptyState","framework":"react"}'
+    createdBy: system
+  - node: widget:CreateForm
+    content: '{"name":"CreateForm","framework":"react"}'
+    createdBy: system
+  - node: widget:TableDisplay
+    content: '{"name":"TableDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:CardGridDisplay
+    content: '{"name":"CardGridDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:GraphDisplay
+    content: '{"name":"GraphDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:StatCardsDisplay
+    content: '{"name":"StatCardsDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:ViewRenderer
+    content: '{"name":"ViewRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:LayoutRenderer
+    content: '{"name":"LayoutRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:HostedPage
+    content: '{"name":"HostedPage","framework":"react"}'
+    createdBy: system
+  - node: widget:AppShell
+    content: '{"name":"AppShell","framework":"react"}'
+    createdBy: system

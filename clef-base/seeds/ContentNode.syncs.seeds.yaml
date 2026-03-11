@@ -1,0 +1,50 @@
+# ContentNode seeds: sync rule records.
+
+concept: ContentNode
+action: create
+entries:
+  - node: sync:save-invalidates-cache
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Cache/invalidateByTags"}'
+    createdBy: system
+  - node: sync:save-indexes-search
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Queue/enqueue"}'
+    createdBy: system
+  - node: sync:save-generates-alias
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Pathauto/generateAlias"}'
+    createdBy: system
+  - node: sync:save-tracks-provenance
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Provenance/record"}'
+    createdBy: system
+  - node: sync:save-reindexes-backlinks
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/save -> Backlink/reindex"}'
+    createdBy: system
+  - node: sync:delete-cascades
+    content: '{"suite":"entity-lifecycle","tier":"recommended","pattern":"ContentStorage/delete -> Comment,Reference,..."}'
+    createdBy: system
+  - node: sync:slot-source-dispatches
+    content: '{"suite":"component-mapping","tier":"required","pattern":"SlotSource/resolve -> [provider]/resolve"}'
+    createdBy: system
+  - node: sync:resolver-uses-mapping
+    content: '{"suite":"component-mapping","tier":"required","pattern":"WidgetResolver/resolve -> ComponentMapping/lookup"}'
+    createdBy: system
+  - node: sync:entity-page-triple-zone
+    content: '{"suite":"surface-integration","tier":"required","pattern":"Renderer/render -> TripleZoneLayout"}'
+    createdBy: system
+  - node: sync:block-zone-renders-canvas
+    content: '{"suite":"surface-integration","tier":"required","pattern":"TripleZoneLayout/renderZone -> Canvas/render"}'
+    createdBy: system
+  - node: sync:version-aware-load
+    content: '{"suite":"version-space","tier":"required","pattern":"ContentStorage/load -> VersionSpace/resolve"}'
+    createdBy: system
+  - node: sync:version-aware-save
+    content: '{"suite":"version-space","tier":"required","pattern":"ContentStorage/save -> VersionSpace/write"}'
+    createdBy: system
+  - node: sync:view-creates-content-node
+    content: '{"suite":"view-content","tier":"required","pattern":"View/create -> ContentNode/create"}'
+    createdBy: system
+  - node: sync:schema-creates-content-node
+    content: '{"suite":"view-content","tier":"required","pattern":"Schema/defineSchema -> ContentNode/create"}'
+    createdBy: system
+  - node: sync:theme-creates-content-node
+    content: '{"suite":"view-content","tier":"required","pattern":"Theme/create -> ContentNode/create"}'
+    createdBy: system

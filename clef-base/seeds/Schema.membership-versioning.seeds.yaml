@@ -1,0 +1,18 @@
+# Schema membership: version space and version override nodes.
+
+concept: Schema
+action: applyTo
+entries:
+  # --- Version space nodes get Schema "VersionSpace" ---
+  - entity_id: version-space:editorial-pass
+    schema: VersionSpace
+  - entity_id: version-space:taxonomy-refactor
+    schema: VersionSpace
+
+  # --- Version override nodes get Schema "VersionOverride" ---
+  - entity_id: version-override:editorial-pass:content:Article
+    schema: VersionOverride
+  - entity_id: version-override:editorial-pass:view:content-list
+    schema: VersionOverride
+  - entity_id: version-override:taxonomy-refactor:schema:TaxonomyTerm
+    schema: VersionOverride
