@@ -1,0 +1,54 @@
+{
+  "name": "signal",
+  "colorSpace": { "algorithm": "oklch", "gamut": "srgb", "seed": { "primary": "160" } },
+  "colorScheme": {
+    "activeMode": "dark",
+    "modes": {
+      "light": {
+        "primary": "#0f766e",
+        "onPrimary": "#f4fffd",
+        "surface": "#f2fbfa",
+        "background": "#e8f8f5",
+        "foreground": "#082f2d"
+      },
+      "dark": {
+        "primary": "#34d399",
+        "onPrimary": "#042f2e",
+        "surface": "#0b1718",
+        "background": "#071012",
+        "foreground": "#d9fff5"
+      }
+    }
+  },
+  "density": { "mode": "compact", "multiplier": 0.92, "exempt": ["dialog", "datepicker"] },
+  "scope": { "global": { "depth": 0 }, "content": { "depth": 1 } },
+  "typeScale": { "baseSize": 16, "ratio": 1.25, "steps": { "body": "15px", "heading": "25px" } },
+  "fontMetrics": { "family": "IBM Plex Sans, system-ui, sans-serif", "features": { "body": ["liga"], "data": ["tnum"] } },
+  "shape": { "family": "rounded", "radius": "0.5rem" },
+  "iconography": { "variant": "outlined", "gradeCompensation": -25 },
+  "material": {
+    "kind": "glass",
+    "shadows": {
+      "1": "0 1px 2px rgba(3, 10, 12, 0.18)",
+      "2": "0 10px 22px rgba(3, 10, 12, 0.28)"
+    },
+    "backdrop": "blur(14px)"
+  },
+  "styleProfile": {
+    "name": "Signal",
+    "prompt": "Compact telemetry dashboard with crisp dark contrast and luminous accents."
+  },
+  "springPhysics": { "presets": { "snappy": { "tension": 320, "friction": 24 }, "gentle": { "tension": 180, "friction": 20 } } },
+  "motionChoreography": { "sequences": { "listEnter": { "stagger": 18, "order": "forward" } } },
+  "structuralMotif": {
+    "default": "topbar",
+    "intents": { "navigation": "topbar", "primaryAction": "floating-action-button", "utilityBar": "command-palette" }
+  },
+  "imageFilter": { "presets": { "telemetry": { "duotone": ["#071012", "#34d399"] } } },
+  "preference": { "priority": ["user", "system", "accessibility", "brand"] },
+  "constraint": { "contrast": 4.5, "focusRing": "2px solid #34d399", "touchTarget": 44 },
+  "tokens": {
+    "radius.md": "0.5rem",
+    "color.secondary": "#38bdf8"
+  }
+}

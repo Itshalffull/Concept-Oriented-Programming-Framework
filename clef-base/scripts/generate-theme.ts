@@ -12,6 +12,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { parseThemeFile } from '../../handlers/ts/framework/theme-spec-parser.js';
 import { themeGenHandler } from '../../handlers/ts/app/theme-gen.handler.js';
+import { themeParserHandler } from '../../handlers/ts/app/theme-parser.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,9 +20,11 @@ const repoRoot = resolve(__dirname, '..', '..');
 
 // Theme files to process
 const themes = [
-  { name: 'light', path: resolve(repoRoot, 'repertoire/themes/light.theme') },
-  { name: 'dark', path: resolve(repoRoot, 'repertoire/themes/dark.theme') },
-  { name: 'high-contrast', path: resolve(repoRoot, 'repertoire/themes/high-contrast.theme') },
+  { name: 'light', kind: 'legacy' as const, path: resolve(repoRoot, 'repertoire/themes/light.theme') },
+  { name: 'dark', kind: 'legacy' as const, path: resolve(repoRoot, 'repertoire/themes/dark.theme') },
+  { name: 'high-contrast', kind: 'legacy' as const, path: resolve(repoRoot, 'repertoire/themes/high-contrast.theme') },
+  { name: 'editorial', kind: 'expressive' as const, path: resolve(repoRoot, 'clef-base/themes/editorial.theme.json') },
+  { name: 'signal', kind: 'expressive' as const, path: resolve(repoRoot, 'clef-base/themes/signal.theme.json') },
 ];
 
 /**
@@ -89,43 +92,124 @@ async function main() {
   const lightManifest = parseThemeFile(lightSource);
   const lightFlat = flattenManifest(lightManifest);
 
+  const bundle: string[] = [];
+
   for (const theme of themes) {
     console.log(`Processing ${theme.name}...`);
-    const source = readFileSync(theme.path, 'utf-8');
-    const manifest = parseThemeFile(source);
-
-    // For themes that extend light, merge with light's tokens
     let flat: Record<string, string>;
-    if (manifest.extends === 'light' && theme.name !== 'light') {
-      flat = { ...lightFlat, ...flattenManifest(manifest) };
+    let context: Record<string, string> = {};
+
+    if (theme.kind === 'legacy') {
+      const source = readFileSync(theme.path, 'utf-8');
+      const manifest = parseThemeFile(source);
+      if (manifest.extends === 'light' && theme.name !== 'light') {
+        flat = { ...lightFlat, ...flattenManifest(manifest) };
+      } else {
+        flat = flattenManifest(manifest);
+      }
     } else {
-      flat = flattenManifest(manifest);
+      const source = readFileSync(theme.path, 'utf-8');
+      const parsed = await themeParserHandler.parse({ theme: theme.name, source }, storage);
+      if (parsed.variant !== 'ok') {
+        throw new Error(`Failed to parse expressive theme "${theme.name}"`);
+      }
+      const ast = JSON.parse(parsed.ast as string) as {
+        context?: Record<string, string>;
+        tokens?: Record<string, string>;
+        raw?: Record<string, unknown>;
+      };
+      context = Object.fromEntries(
+        Object.entries(ast.context ?? {}).map(([key, value]) => [key, String(value)]),
+      );
+      const activeMode = context.mode ?? String(ast.tokens?.['theme.mode'] ?? 'light');
+      const base = activeMode === 'dark'
+        ? { ...lightFlat, ...flattenManifest(parseThemeFile(readFileSync(themes[1]!.path, 'utf-8'))) }
+        : { ...lightFlat };
+      flat = {
+        ...base,
+        ...mapExpressiveTokens(ast.tokens ?? {}, ast.raw ?? {}),
+      };
     }
 
     // Run ThemeGen with css-variables target
     const result = await themeGenHandler.generate(
-      { gen: `theme-${theme.name}`, target: 'css-variables', themeAst: JSON.stringify(flat) },
+      {
+        gen: `theme-${theme.name}`,
+        target: 'css-variables',
+        themeAst: JSON.stringify({ tokens: flat, context }),
+      },
       storage,
     );
 
     if (result.variant === 'ok') {
-      // For dark theme, scope to [data-theme="dark"] instead of :root
       let css = result.output as string;
-      if (theme.name === 'dark') {
-        css = css.replace(':root', '[data-theme="dark"]');
-      } else if (theme.name === 'high-contrast') {
-        css = css.replace(':root', '[data-theme="high-contrast"]');
-      }
+      css = scopeThemeCss(theme.name, css);
 
       const outPath = resolve(outDir, `${theme.name}.css`);
       writeFileSync(outPath, css, 'utf-8');
+      bundle.push(css);
       console.log(`  → ${outPath}`);
     } else {
       console.error(`  Error generating ${theme.name}:`, result.message);
     }
   }
 
+  writeFileSync(resolve(outDir, 'themes.generated.css'), bundle.join('\n\n'), 'utf-8');
+
   console.log('Done.');
+}
+
+function scopeThemeCss(themeName: string, css: string) {
+  if (themeName === 'light') {
+    return css.replace(':root', ':root, [data-theme="light"]');
+  }
+  return css.replace(':root', `[data-theme="${themeName}"]`);
+}
+
+function mapExpressiveTokens(
+  tokens: Record<string, string>,
+  raw: Record<string, unknown>,
+): Record<string, string> {
+  const mapped: Record<string, string> = {};
+
+  const directMap: Record<string, string[]> = {
+    'color.primary': ['palette-primary'],
+    'color.onPrimary': ['palette-on-primary'],
+    'color.surface': ['palette-surface', 'palette-surface-variant'],
+    'color.background': ['palette-background'],
+    'color.foreground': ['palette-on-background', 'palette-on-surface', 'palette-on-surface-variant'],
+    'typography.body': ['typography-body-md-size', 'typography-body-sm-size'],
+    'typography.heading': ['typography-heading-md-size', 'typography-heading-sm-size'],
+    'radius.md': ['radius-md', 'radius-radius-button', 'radius-radius-input'],
+  };
+
+  for (const [source, targets] of Object.entries(directMap)) {
+    const value = tokens[source];
+    if (!value) continue;
+    for (const target of targets) {
+      mapped[target] = value;
+    }
+  }
+
+  const fontMetrics = raw.fontMetrics as Record<string, unknown> | undefined;
+  if (typeof fontMetrics?.family === 'string' && fontMetrics.family.trim()) {
+    mapped['typography-font-family-sans'] = fontMetrics.family;
+  }
+
+  const shape = raw.shape as Record<string, unknown> | undefined;
+  if (typeof shape?.radius === 'string' && shape.radius.trim()) {
+    mapped['radius-md'] = shape.radius;
+    mapped['radius-radius-button'] = shape.radius;
+    mapped['radius-radius-input'] = shape.radius;
+  }
+
+  if (tokens['density.multiplier']) {
+    mapped['spacing-page-inline'] = tokens['density.multiplier'] === '1'
+      ? mapped['spacing-page-inline'] ?? '24px'
+      : '20px';
+  }
+
+  return mapped;
 }
 
 main().catch(console.error);
