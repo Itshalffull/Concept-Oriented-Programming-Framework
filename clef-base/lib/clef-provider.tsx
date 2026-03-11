@@ -27,7 +27,13 @@ import {
   UI_APP_IDS,
   unmountHost as unmountHostInRuntime,
 } from './ui-app-runtime';
-import { applyDocumentTheme, pickActiveTheme, type ThemeRecord } from './theme-selection';
+import {
+  applyDocumentTheme,
+  pickActiveTheme,
+  resolveThemeDocumentState,
+  type ThemeDocumentState,
+  type ThemeRecord,
+} from './theme-selection';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,6 +60,15 @@ interface HostState {
   status: 'mounting' | 'mounted' | 'ready' | 'error' | 'unmounted';
 }
 
+interface ActiveThemeState {
+  id: string;
+  mode: string | null;
+  density: string | null;
+  motif: string | null;
+  styleProfile: string | null;
+  sourceType: string | null;
+}
+
 interface ClefContextValue {
   // Navigator
   navigator: NavigatorState;
@@ -74,6 +89,7 @@ interface ClefContextValue {
   // Destinations
   destinations: Destination[];
   groupedDestinations: { label: string; items: Destination[] }[];
+  theme: ActiveThemeState;
 
   // Kernel invoke
   invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>;
@@ -103,6 +119,14 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hosts, setHosts] = useState<Map<string, HostState>>(new Map());
   const [currentHostId, setCurrentHostId] = useState<string | null>(null);
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [theme, setTheme] = useState<ActiveThemeState>({
+    id: 'light',
+    mode: null,
+    density: null,
+    motif: null,
+    styleProfile: null,
+    sourceType: null,
+  });
 
   // ------------------------------------------------------------------
   const rawInvoke = useCallback(async (concept: string, action: string, input: Record<string, unknown>) => {
@@ -120,7 +144,21 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const items = typeof result.items === 'string'
         ? JSON.parse(result.items) as ThemeRecord[]
         : [];
-      applyDocumentTheme(pickActiveTheme(items));
+      const themeId = pickActiveTheme(items);
+      const resolved = await rawInvoke('Theme', 'resolve', { theme: themeId });
+      const resolvedTokens = resolved.variant === 'ok' && typeof resolved.tokens === 'string'
+        ? JSON.parse(resolved.tokens) as Record<string, unknown>
+        : {};
+      const selection = resolveThemeDocumentState(items, resolvedTokens);
+      applyDocumentTheme(selection);
+      setTheme({
+        id: selection.id,
+        mode: selection.mode,
+        density: selection.density,
+        motif: selection.motif,
+        styleProfile: selection.styleProfile,
+        sourceType: selection.sourceType,
+      });
     } catch {
       // fall through
     }
@@ -303,6 +341,7 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHostReady,
     destinations,
     groupedDestinations: groupDestinations(destinations),
+    theme,
     invoke,
   };
 
@@ -341,6 +380,11 @@ export function useHost() {
 export function useDestinations() {
   const { destinations: dests, groupedDestinations: grouped } = useClef();
   return { destinations: dests, grouped };
+}
+
+export function useActiveTheme() {
+  const { theme } = useClef();
+  return theme;
 }
 
 export function useKernelInvoke() {

@@ -18,7 +18,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
   children,
   sessionUser = '',
 }) => {
-  const { groupedDestinations, navigator, shell } = useClef();
+  const { groupedDestinations, navigator, shell, theme } = useClef();
 
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
@@ -37,9 +37,16 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
     : 'Clef Base';
 
   return (
-    <div className="app-shell" data-shell-status={shell.status}>
+    <div
+      className="app-shell"
+      data-shell-status={shell.status}
+      data-theme-density={theme.density ?? undefined}
+      data-theme-motif={theme.motif ?? undefined}
+      data-theme-style-profile={theme.styleProfile ?? undefined}
+    >
       <Sidebar
         groups={sidebarGroups}
+        collapsible={theme.motif !== 'topbar'}
         footer={
           <div className="sidebar-footer-meta">
             <small style={{ opacity: 0.5 }}>v0.1.0</small>

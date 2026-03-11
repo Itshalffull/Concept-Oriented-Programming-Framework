@@ -101,5 +101,28 @@ describe('clef-base seed bootstrap', () => {
         expect.objectContaining({ id: 'installation:infrastructure', status: 'installed' }),
       ]),
     );
+
+    const interactors = await kernel.queryConcept('urn:clef/Interactor', 'interactor');
+    expect(interactors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ interactor: 'records-collection', category: 'output' }),
+        expect.objectContaining({ interactor: 'record-detail', category: 'entity' }),
+      ]),
+    );
+
+    const affordances = await kernel.queryConcept('urn:clef/Affordance', 'affordance');
+    expect(affordances).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ affordance: 'admin-records-collection-table', widget: 'admin-table-display' }),
+        expect.objectContaining({ affordance: 'admin-records-collection-card-grid', widget: 'admin-card-grid-display' }),
+      ]),
+    );
+
+    const resolvers = await kernel.queryConcept('urn:clef/WidgetResolver', 'resolver');
+    expect(resolvers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ resolver: 'clef-base-view-resolver' }),
+      ]),
+    );
   });
 });

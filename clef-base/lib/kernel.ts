@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { createConceptRegistry } from '../../runtime/adapters/transport';
 import { createSelfHostedKernel } from '../../runtime/self-hosted';
 import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
@@ -32,6 +32,12 @@ import { platformAdapterHandler } from '../../handlers/ts/app/platform-adapter.h
 import { destinationCatalogHandler } from '../../handlers/ts/app/destination-catalog.handler';
 import { runtimeProfileHandler } from '../../handlers/ts/app/runtime-profile.handler';
 import { platformBindingCatalogHandler } from '../../handlers/ts/app/platform-binding-catalog.handler';
+import { interactorHandler } from '../../handlers/ts/app/interactor.handler';
+import { affordanceHandler } from '../../handlers/ts/app/affordance.handler';
+import { widgetResolverHandler } from '../../handlers/ts/app/widget-resolver.handler';
+import { contractCheckerHandler } from '../../handlers/ts/app/contract-checker.handler';
+import { widgetRegistryHandler } from '../../handlers/ts/app/widget-registry.handler';
+import { uiSchemaHandler } from '../../handlers/ts/app/ui-schema.handler';
 import { seedDataHandler } from '../../handlers/ts/seed-data.handler';
 
 // Domain concepts
@@ -56,7 +62,12 @@ import { resourceGrantPolicyHandler } from '../../handlers/ts/app/resource-grant
 import { sessionHandler } from '../../handlers/ts/app/session.handler';
 import { appInstallationHandler } from '../../handlers/ts/app/app-installation.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
-import { pickActiveTheme, type ThemeRecord } from './theme-selection';
+import {
+  pickActiveTheme,
+  resolveThemeDocumentState,
+  type ThemeDocumentState,
+  type ThemeRecord,
+} from './theme-selection';
 
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
@@ -72,13 +83,15 @@ const CLEF_BASE_SYNC_FILES = [
   'suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync',
 ] as const;
 
+const CLEF_BASE_ROOT = resolve(dirname(__filename), '..');
+
 function makeStorage(conceptName: string) {
   return createStorageFromEnv(`clef-base:${conceptName}`) ?? createInMemoryStorage();
 }
 
 function registerClefBaseSyncs(kernel: Kernel) {
   for (const relativePath of CLEF_BASE_SYNC_FILES) {
-    const source = readFileSync(resolve(relativePath), 'utf-8');
+    const source = readFileSync(resolve(CLEF_BASE_ROOT, relativePath), 'utf-8');
     const syncs = parseSyncFile(source);
     for (const sync of syncs) {
       kernel.registerSync(sync);
@@ -123,6 +136,12 @@ export function getKernel(): Kernel {
   reg('urn:clef/PlatformAdapter', platformAdapterHandler, makeStorage('platform-adapter'));
   reg('urn:clef/SeedData', seedDataHandler, makeStorage('seed-data'));
   reg('urn:clef/AppInstallation', appInstallationHandler, makeStorage('app-installation'));
+  reg('urn:clef/Interactor', interactorHandler, makeStorage('interactor'));
+  reg('urn:clef/Affordance', affordanceHandler, makeStorage('affordance'));
+  reg('urn:clef/WidgetResolver', widgetResolverHandler, makeStorage('widget-resolver'));
+  reg('urn:clef/ContractChecker', contractCheckerHandler, makeStorage('contract-checker'));
+  reg('urn:clef/WidgetRegistry', widgetRegistryHandler, makeStorage('widget-registry'));
+  reg('urn:clef/UISchema', uiSchemaHandler, makeStorage('ui-schema'));
 
   // Domain concepts
   reg('urn:clef/ContentNode', contentNodeHandler, makeStorage('content-node'));
@@ -166,6 +185,18 @@ export async function getActiveThemeId(defaultTheme = 'light') {
   return pickActiveTheme(themes as ThemeRecord[], defaultTheme);
 }
 
+export async function getActiveThemeDocumentState(defaultTheme = 'light'): Promise<ThemeDocumentState> {
+  await ensureSeeded();
+  const kernel = getKernel();
+  const themes = await kernel.queryConcept('urn:clef/Theme', 'theme');
+  const themeId = pickActiveTheme(themes as ThemeRecord[], defaultTheme);
+  const resolved = await kernel.invokeConcept('urn:clef/Theme', 'resolve', { theme: themeId });
+  const resolvedTokens = resolved.variant === 'ok' && typeof resolved.tokens === 'string'
+    ? JSON.parse(resolved.tokens as string) as Record<string, unknown>
+    : {};
+  return resolveThemeDocumentState(themes as ThemeRecord[], resolvedTokens, defaultTheme);
+}
+
 let _seeded = false;
 
 function parseSeedEntries(raw: unknown): Array<Record<string, unknown>> {
@@ -178,7 +209,7 @@ function parseSeedEntries(raw: unknown): Array<Record<string, unknown>> {
 
 async function applyDeclarativeSeeds(kernel: Kernel) {
   const discovery = await kernel.invokeConcept('urn:clef/SeedData', 'discover', {
-    base_path: resolve('clef-base/seeds'),
+    base_path: resolve(CLEF_BASE_ROOT, 'seeds'),
   });
   if (discovery.variant !== 'ok') {
     throw new Error(String(discovery.message ?? 'Failed to discover seed data'));
