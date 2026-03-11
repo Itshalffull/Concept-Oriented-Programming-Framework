@@ -1,6 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import {
+  assignAccessRoleAction,
+  createAccessRoleAction,
+  createAccessUserAction,
+  grantAccessPermissionAction,
+  readAccessSnapshotAction,
+  resetAccessPasswordAction,
+  revokeAccessPermissionAction,
+  revokeAccessRoleAction,
+  updateNodeAccessAction,
+  updateSchemaAccessAction,
+} from '../admin/actions';
 
 interface Snapshot {
   users: Array<{
@@ -33,36 +45,21 @@ interface Snapshot {
   nodeActionCatalog: Array<{ key: string; label: string }>;
 }
 
-async function postJson(path: string, body: Record<string, unknown>) {
-  const response = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(String(result.message ?? 'Request failed.'));
-  }
-  return result;
-}
-
 export function AccessAdmin({ initial }: { initial: Snapshot }) {
   const [snapshot, setSnapshot] = useState(initial);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   async function refresh() {
-    const response = await fetch('/api/admin/access');
-    const next = await response.json();
-    setSnapshot(next);
+    setSnapshot(await readAccessSnapshotAction());
   }
 
-  async function runAction(action: () => Promise<void>, successMessage: string) {
+  async function runAction(action: () => Promise<Snapshot>, successMessage: string) {
     setMessage('');
     setError('');
     try {
-      await action();
-      await refresh();
+      const nextSnapshot = await action();
+      setSnapshot(nextSnapshot);
       setMessage(successMessage);
     } catch (issue) {
       setError(issue instanceof Error ? issue.message : 'Request failed.');
@@ -92,7 +89,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
             const roles = form.getAll('roles').map((entry) => String(entry));
             await runAction(
               () =>
-                postJson('/api/admin/access/users/create', {
+                createAccessUserAction({
                   user: String(form.get('user') ?? ''),
                   password: String(form.get('password') ?? ''),
                   provider: String(form.get('provider') ?? 'local'),
@@ -135,7 +132,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     type="button"
                     onClick={() =>
                       runAction(
-                        () => postJson('/api/admin/access/users/revoke-role', { user: user.user, role }),
+                        () => revokeAccessRoleAction({ user: user.user, role }),
                         `Removed ${role} from ${user.user}.`,
                       )
                     }
@@ -152,7 +149,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     const form = new FormData(event.currentTarget);
                     await runAction(
                       () =>
-                        postJson('/api/admin/access/users/assign-role', {
+                        assignAccessRoleAction({
                           user: user.user,
                           role: String(form.get('role') ?? ''),
                         }),
@@ -176,7 +173,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     const form = new FormData(event.currentTarget);
                     await runAction(
                       () =>
-                        postJson('/api/admin/access/users/reset-password', {
+                        resetAccessPasswordAction({
                           user: user.user,
                           password: String(form.get('password') ?? ''),
                         }),
@@ -205,7 +202,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
             const form = new FormData(event.currentTarget);
             await runAction(
               () =>
-                postJson('/api/admin/access/roles/create', {
+                createAccessRoleAction({
                   role: String(form.get('role') ?? ''),
                 }),
               'Role created.',
@@ -239,12 +236,9 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     onClick={() =>
                       runAction(
                         () =>
-                          postJson(
-                            enabled
-                              ? '/api/admin/access/roles/revoke-permission'
-                              : '/api/admin/access/roles/grant-permission',
-                            { role: role.role, permission: permission.key },
-                          ),
+                          enabled
+                            ? revokeAccessPermissionAction({ role: role.role, permission: permission.key })
+                            : grantAccessPermissionAction({ role: role.role, permission: permission.key }),
                         `${enabled ? 'Revoked' : 'Granted'} ${permission.label} for ${role.role}.`,
                       )
                     }
@@ -285,7 +279,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     const form = new FormData(event.currentTarget);
                     await runAction(
                       () =>
-                        postJson('/api/admin/access/schemas', {
+                        updateSchemaAccessAction({
                           schema: schemaPolicy.schema,
                           action: action.key,
                           roles: form.getAll('roles').map((entry) => String(entry)),
@@ -341,7 +335,7 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
                     const form = new FormData(event.currentTarget);
                     await runAction(
                       () =>
-                        postJson('/api/admin/access/nodes', {
+                        updateNodeAccessAction({
                           node: nodePolicy.node,
                           action: action.key,
                           roles: form.getAll('roles').map((entry) => String(entry)),
