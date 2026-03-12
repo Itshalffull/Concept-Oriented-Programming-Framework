@@ -67,6 +67,12 @@ import { appInstallationHandler } from '../../handlers/ts/app/app-installation.h
 import { graphAnalysisHandler } from '../../handlers/ts/app/graph-analysis.handler';
 import { analysisOverlayHandler } from '../../handlers/ts/app/analysis-overlay.handler';
 import { analysisReportHandler } from '../../handlers/ts/app/analysis-report.handler';
+
+// Infrastructure concepts — auto-registration
+import { fileCatalogHandler } from '../../handlers/ts/app/file-catalog.handler';
+import { runtimeRegistryHandler } from '../../handlers/ts/app/runtime-registry.handler';
+import { entityReflectorHandler, setEntityReflectorKernel } from '../../handlers/ts/app/entity-reflector.handler';
+
 import { bootstrapIdentity, getIdentityStorage } from './identity';
 import {
   pickActiveTheme,
@@ -77,7 +83,7 @@ import {
 
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
-const _registeredConcepts: { uri: string; hasStorage: boolean }[] = [];
+
 const CLEF_BASE_SYNC_FILES = [
   'suites/app-shell/syncs/destination-catalog-registers-navigator.sync',
   'suites/identity-integration/syncs/access-control-on-content-load.sync',
@@ -105,12 +111,15 @@ function makeStorage(conceptName: string) {
   return createStorageFromEnv(`clef-base:${conceptName}`) ?? createInMemoryStorage();
 }
 
-function registerClefBaseSyncs(kernel: Kernel) {
+function registerClefBaseSyncs(kernel: Kernel): string[] {
+  const loadedSyncs: string[] = [];
+
   for (const relativePath of CLEF_BASE_SYNC_FILES) {
     const source = readFileSync(resolve(CLEF_BASE_ROOT, relativePath), 'utf-8');
     const syncs = parseSyncFile(source);
     for (const sync of syncs) {
       kernel.registerSync(sync);
+      loadedSyncs.push(sync.name ?? relativePath);
     }
   }
 
@@ -120,11 +129,22 @@ function registerClefBaseSyncs(kernel: Kernel) {
       const syncs = parseSyncFile(source);
       for (const sync of syncs) {
         kernel.registerSync(sync);
+        loadedSyncs.push(sync.name ?? relativePath);
       }
     } catch {
       // Presentation syncs are optional — don't fail startup if missing
     }
   }
+
+  return loadedSyncs;
+}
+
+// Track registrations for RuntimeRegistry population
+interface RegEntry {
+  uri: string;
+  hasStorage: boolean;
+  storageName: string;
+  storageType: string;
 }
 
 export function getKernel(): Kernel {
@@ -134,13 +154,26 @@ export function getKernel(): Kernel {
   const { handler: syncEngine, log } = createSyncEngineHandler(registry);
   const kernel = createSelfHostedKernel(syncEngine, log, registry);
 
-  function reg(uri: string, handler: ConceptHandler, storage?: ReturnType<typeof makeStorage>) {
+  const registrations: RegEntry[] = [];
+
+  function reg(uri: string, handler: ConceptHandler, storage?: ReturnType<typeof makeStorage>, meta?: { storageName?: string; storageType?: string }) {
     kernel.registerConcept(uri, handler, storage);
-    _registeredConcepts.push({ uri, hasStorage: !!storage });
+    registrations.push({
+      uri,
+      hasStorage: !!storage,
+      storageName: meta?.storageName ?? '',
+      storageType: meta?.storageType ?? (storage ? 'standard' : 'none'),
+    });
   }
 
-  reg('urn:clef/ComponentMapping', componentMappingHandler, makeStorage('mapping'));
-  reg('urn:clef/ConceptBrowser', conceptBrowserHandler, makeStorage('browser'));
+  // --- 1. Register infrastructure concepts early ---
+  reg('urn:clef/RuntimeRegistry', runtimeRegistryHandler, makeStorage('runtime-registry'), { storageName: 'runtime-registry' });
+  reg('urn:clef/FileCatalog', fileCatalogHandler, makeStorage('file-catalog'), { storageName: 'file-catalog' });
+  reg('urn:clef/EntityReflector', entityReflectorHandler, makeStorage('entity-reflector'), { storageName: 'entity-reflector' });
+
+  // --- 2. Register all other concepts ---
+  reg('urn:clef/ComponentMapping', componentMappingHandler, makeStorage('mapping'), { storageName: 'mapping' });
+  reg('urn:clef/ConceptBrowser', conceptBrowserHandler, makeStorage('browser'), { storageName: 'browser' });
   reg('urn:clef/SlotSource', slotSourceHandler);
   reg('urn:clef/BlockEmbedSource', blockEmbedSourceHandler);
   reg('urn:clef/EntityFieldSource', entityFieldSourceHandler);
@@ -153,57 +186,61 @@ export function getKernel(): Kernel {
   reg('urn:clef/HubProxy', hubProxyHandler);
 
   // UI-App concepts — Navigator, Host, Shell (AppShell derived)
-  reg('urn:clef/Navigator', navigatorHandler, makeStorage('navigator'));
-  reg('urn:clef/DestinationCatalog', destinationCatalogHandler, makeStorage('destination-catalog'));
-  reg('urn:clef/RuntimeProfile', runtimeProfileHandler, makeStorage('runtime-profile'));
-  reg('urn:clef/PlatformBindingCatalog', platformBindingCatalogHandler, makeStorage('platform-binding-catalog'));
-  reg('urn:clef/Host', hostHandler, makeStorage('host'));
-  reg('urn:clef/Shell', shellHandler, makeStorage('shell'));
-  reg('urn:clef/Transport', transportHandler, makeStorage('transport'));
-  reg('urn:clef/NextjsAdapter', nextjsAdapterHandler, makeStorage('nextjs-adapter'));
-  reg('urn:clef/PlatformAdapter', platformAdapterHandler, makeStorage('platform-adapter'));
-  reg('urn:clef/SeedData', seedDataHandler, makeStorage('seed-data'));
-  reg('urn:clef/AppInstallation', appInstallationHandler, makeStorage('app-installation'));
-  reg('urn:clef/Interactor', interactorHandler, makeStorage('interactor'));
-  reg('urn:clef/Affordance', affordanceHandler, makeStorage('affordance'));
-  reg('urn:clef/WidgetResolver', widgetResolverHandler, makeStorage('widget-resolver'));
-  reg('urn:clef/ContractChecker', contractCheckerHandler, makeStorage('contract-checker'));
-  reg('urn:clef/WidgetRegistry', widgetRegistryHandler, makeStorage('widget-registry'));
-  reg('urn:clef/UISchema', uiSchemaHandler, makeStorage('ui-schema'));
+  reg('urn:clef/Navigator', navigatorHandler, makeStorage('navigator'), { storageName: 'navigator' });
+  reg('urn:clef/DestinationCatalog', destinationCatalogHandler, makeStorage('destination-catalog'), { storageName: 'destination-catalog' });
+  reg('urn:clef/RuntimeProfile', runtimeProfileHandler, makeStorage('runtime-profile'), { storageName: 'runtime-profile' });
+  reg('urn:clef/PlatformBindingCatalog', platformBindingCatalogHandler, makeStorage('platform-binding-catalog'), { storageName: 'platform-binding-catalog' });
+  reg('urn:clef/Host', hostHandler, makeStorage('host'), { storageName: 'host' });
+  reg('urn:clef/Shell', shellHandler, makeStorage('shell'), { storageName: 'shell' });
+  reg('urn:clef/Transport', transportHandler, makeStorage('transport'), { storageName: 'transport' });
+  reg('urn:clef/NextjsAdapter', nextjsAdapterHandler, makeStorage('nextjs-adapter'), { storageName: 'nextjs-adapter' });
+  reg('urn:clef/PlatformAdapter', platformAdapterHandler, makeStorage('platform-adapter'), { storageName: 'platform-adapter' });
+  reg('urn:clef/SeedData', seedDataHandler, makeStorage('seed-data'), { storageName: 'seed-data' });
+  reg('urn:clef/AppInstallation', appInstallationHandler, makeStorage('app-installation'), { storageName: 'app-installation' });
+  reg('urn:clef/Interactor', interactorHandler, makeStorage('interactor'), { storageName: 'interactor' });
+  reg('urn:clef/Affordance', affordanceHandler, makeStorage('affordance'), { storageName: 'affordance' });
+  reg('urn:clef/WidgetResolver', widgetResolverHandler, makeStorage('widget-resolver'), { storageName: 'widget-resolver' });
+  reg('urn:clef/ContractChecker', contractCheckerHandler, makeStorage('contract-checker'), { storageName: 'contract-checker' });
+  reg('urn:clef/WidgetRegistry', widgetRegistryHandler, makeStorage('widget-registry'), { storageName: 'widget-registry' });
+  reg('urn:clef/UISchema', uiSchemaHandler, makeStorage('ui-schema'), { storageName: 'ui-schema' });
 
   // Domain concepts
-  reg('urn:clef/ContentNode', contentNodeHandler, makeStorage('content-node'));
-  reg('urn:clef/Schema', schemaHandler, makeStorage('schema'));
-  reg('urn:clef/View', viewHandler, makeStorage('view'));
-  reg('urn:clef/Workflow', workflowHandler, makeStorage('workflow'));
-  reg('urn:clef/AutomationRule', automationRuleHandler, makeStorage('automation-rule'));
-  reg('urn:clef/Taxonomy', taxonomyHandler, makeStorage('taxonomy'));
-  reg('urn:clef/DisplayMode', displayModeHandler, makeStorage('display-mode'));
-  reg('urn:clef/FieldPlacement', fieldPlacementHandler, makeStorage('field-placement'));
-  reg('urn:clef/Renderer', rendererHandler, makeStorage('renderer'));
-  reg('urn:clef/Component', componentHandler, makeStorage('component'));
-  reg('urn:clef/Theme', themeHandler, makeStorage('theme'));
-  reg('urn:clef/Query', queryHandler, makeStorage('query'));
-  reg('urn:clef/ContentStorage', contentStorageHandler, makeStorage('content-storage'));
-  reg('urn:clef/Property', propertyHandler, makeStorage('property'));
-  reg('urn:clef/Outline', outlineHandler, makeStorage('outline'));
-  reg('urn:clef/Layout', layoutHandler, makeStorage('layout'));
-  reg('urn:clef/Authentication', authenticationHandler, getIdentityStorage('authentication'));
-  reg('urn:clef/Authorization', authorizationHandler, getIdentityStorage('authorization'));
-  reg('urn:clef/AccessControl', accessControlHandler, getIdentityStorage('access-control'));
-  reg('urn:clef/AccessCatalog', accessCatalogHandler, getIdentityStorage('access-catalog'));
-  reg('urn:clef/ResourceGrantPolicy', resourceGrantPolicyHandler, getIdentityStorage('resource-grant-policy'));
-  reg('urn:clef/Session', sessionHandler, getIdentityStorage('session'));
+  reg('urn:clef/ContentNode', contentNodeHandler, makeStorage('content-node'), { storageName: 'content-node' });
+  reg('urn:clef/Schema', schemaHandler, makeStorage('schema'), { storageName: 'schema' });
+  reg('urn:clef/View', viewHandler, makeStorage('view'), { storageName: 'view' });
+  reg('urn:clef/Workflow', workflowHandler, makeStorage('workflow'), { storageName: 'workflow' });
+  reg('urn:clef/AutomationRule', automationRuleHandler, makeStorage('automation-rule'), { storageName: 'automation-rule' });
+  reg('urn:clef/Taxonomy', taxonomyHandler, makeStorage('taxonomy'), { storageName: 'taxonomy' });
+  reg('urn:clef/DisplayMode', displayModeHandler, makeStorage('display-mode'), { storageName: 'display-mode' });
+  reg('urn:clef/FieldPlacement', fieldPlacementHandler, makeStorage('field-placement'), { storageName: 'field-placement' });
+  reg('urn:clef/Renderer', rendererHandler, makeStorage('renderer'), { storageName: 'renderer' });
+  reg('urn:clef/Component', componentHandler, makeStorage('component'), { storageName: 'component' });
+  reg('urn:clef/Theme', themeHandler, makeStorage('theme'), { storageName: 'theme' });
+  reg('urn:clef/Query', queryHandler, makeStorage('query'), { storageName: 'query' });
+  reg('urn:clef/ContentStorage', contentStorageHandler, makeStorage('content-storage'), { storageName: 'content-storage' });
+  reg('urn:clef/Property', propertyHandler, makeStorage('property'), { storageName: 'property' });
+  reg('urn:clef/Outline', outlineHandler, makeStorage('outline'), { storageName: 'outline' });
+  reg('urn:clef/Layout', layoutHandler, makeStorage('layout'), { storageName: 'layout' });
+  reg('urn:clef/Authentication', authenticationHandler, getIdentityStorage('authentication'), { storageName: 'authentication', storageType: 'identity' });
+  reg('urn:clef/Authorization', authorizationHandler, getIdentityStorage('authorization'), { storageName: 'authorization', storageType: 'identity' });
+  reg('urn:clef/AccessControl', accessControlHandler, getIdentityStorage('access-control'), { storageName: 'access-control', storageType: 'identity' });
+  reg('urn:clef/AccessCatalog', accessCatalogHandler, getIdentityStorage('access-catalog'), { storageName: 'access-catalog', storageType: 'identity' });
+  reg('urn:clef/ResourceGrantPolicy', resourceGrantPolicyHandler, getIdentityStorage('resource-grant-policy'), { storageName: 'resource-grant-policy', storageType: 'identity' });
+  reg('urn:clef/Session', sessionHandler, getIdentityStorage('session'), { storageName: 'session', storageType: 'identity' });
 
   // Graph analysis concepts
-  reg('urn:clef/GraphAnalysis', graphAnalysisHandler, makeStorage('graph-analysis'));
-  reg('urn:clef/AnalysisOverlay', analysisOverlayHandler, makeStorage('analysis-overlay'));
-  reg('urn:clef/AnalysisReport', analysisReportHandler, makeStorage('analysis-report'));
+  reg('urn:clef/GraphAnalysis', graphAnalysisHandler, makeStorage('graph-analysis'), { storageName: 'graph-analysis' });
+  reg('urn:clef/AnalysisOverlay', analysisOverlayHandler, makeStorage('analysis-overlay'), { storageName: 'analysis-overlay' });
+  reg('urn:clef/AnalysisReport', analysisReportHandler, makeStorage('analysis-report'), { storageName: 'analysis-report' });
 
-  registerClefBaseSyncs(kernel);
+  // --- 3. Register syncs ---
+  const loadedSyncs = registerClefBaseSyncs(kernel);
 
-  // Seed data on first initialization
-  _seedPromise = seedData(kernel).then(() => bootstrapIdentity(kernel));
+  // --- 4. Wire EntityReflector kernel reference ---
+  setEntityReflectorKernel(kernel);
+
+  // --- 5. Seed data + populate RuntimeRegistry + reflect entities ---
+  _seedPromise = seedData(kernel, registrations, loadedSyncs).then(() => bootstrapIdentity(kernel));
 
   _kernel = kernel;
   return kernel;
@@ -269,14 +306,64 @@ async function applyDeclarativeSeeds(kernel: Kernel) {
   }
 }
 
-async function seedData(kernel: Kernel) {
+async function populateRuntimeRegistry(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[]) {
+  // Register all concepts in RuntimeRegistry
+  for (const reg of registrations) {
+    await kernel.invokeConcept('urn:clef/RuntimeRegistry', 'registerConcept', {
+      uri: reg.uri,
+      has_storage: reg.hasStorage,
+      storage_name: reg.storageName,
+      storage_type: reg.storageType,
+    }).catch(() => {});
+  }
+
+  // Register all syncs in RuntimeRegistry
+  for (const syncName of loadedSyncs) {
+    await kernel.invokeConcept('urn:clef/RuntimeRegistry', 'registerSync', {
+      sync_name: syncName,
+      source: 'file',
+      suite: '',
+    }).catch(() => {});
+  }
+}
+
+async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[]) {
   if (_seeded) return;
   _seeded = true;
 
+  // Populate RuntimeRegistry with all registered concepts and syncs
+  await populateRuntimeRegistry(kernel, registrations, loadedSyncs);
+
+  // Run FileCatalog discovery (scans specs, syncs, surface, repertoire)
+  await kernel.invokeConcept('urn:clef/FileCatalog', 'discover', {
+    base_paths: [
+      resolve(CLEF_BASE_ROOT, '..', 'specs'),
+      resolve(CLEF_BASE_ROOT, '..', 'syncs'),
+      resolve(CLEF_BASE_ROOT, '..', 'surface'),
+      resolve(CLEF_BASE_ROOT, '..', 'repertoire', 'concepts'),
+      resolve(CLEF_BASE_ROOT, 'suites'),
+    ].join(','),
+  }).catch(() => {
+    // FileCatalog discovery is best-effort — don't fail boot
+  });
+
+  // Apply declarative seeds (Schema, View, ContentNode, etc.)
   await applyDeclarativeSeeds(kernel);
+
+  // Reflect entities — auto-creates ContentNode entries from RuntimeRegistry + FileCatalog
+  await kernel.invokeConcept('urn:clef/EntityReflector', 'reflect', {}).catch(() => {
+    // Entity reflection is best-effort — don't fail boot
+  });
 }
 
 export function getRegisteredConcepts() {
   getKernel(); // ensure initialized
-  return _registeredConcepts;
+  // Query RuntimeRegistry for live data instead of stale array
+  return _kernel!.invokeConcept('urn:clef/RuntimeRegistry', 'listConcepts', {}).then(result => {
+    if (result.variant === 'ok') {
+      const concepts = JSON.parse(result.concepts as string) as Array<Record<string, unknown>>;
+      return concepts.map(c => ({ uri: c.uri as string, hasStorage: c.has_storage as boolean }));
+    }
+    return [];
+  });
 }

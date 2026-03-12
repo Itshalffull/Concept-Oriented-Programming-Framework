@@ -1,0 +1,86 @@
+@version(1)
+concept RuntimeRegistry [C] {
+
+  purpose {
+    Track what concepts and syncs are actually registered and running
+    in the kernel. The kernel populates this during boot. Answers
+    "is concept X loaded?" and "what syncs are active?"
+  }
+
+  state {
+    concepts: set C
+    uri: C -> String
+    has_storage: C -> Bool
+    storage_name: C -> option String
+    storage_type: C -> String
+    registered_at: C -> DateTime
+    syncs: set String
+    sync_source: String -> String
+    sync_suite: String -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action registerConcept(uri: String, has_storage: Bool, storage_name: String, storage_type: String) {
+      -> ok() {
+        Record that a concept is registered in the kernel.
+      }
+      -> already_registered() {
+        This concept URI is already registered.
+      }
+    }
+
+    action registerSync(sync_name: String, source: String, suite: String) {
+      -> ok() {
+        Record that a sync is loaded in the kernel.
+      }
+      -> already_registered() {
+        This sync name is already registered.
+      }
+    }
+
+    action getConcept(uri: String) {
+      -> ok(concept: String) {
+        Return concept registration data as JSON.
+      }
+      -> notfound() {
+        No concept registered with this URI.
+      }
+    }
+
+    action listConcepts() {
+      -> ok(concepts: String) {
+        Return all registered concepts as JSON array.
+      }
+    }
+
+    action listSyncs() {
+      -> ok(syncs: String) {
+        Return all loaded syncs as JSON array.
+      }
+    }
+
+    action isLoaded(uri: String) {
+      -> ok(loaded: Bool) {
+        Check whether a concept URI is loaded in the kernel.
+      }
+    }
+  }
+
+  invariant {
+    after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+      -> ok()
+    then isLoaded(uri: "urn:clef/ContentNode")
+      -> ok(loaded: true)
+  }
+
+  invariant {
+    after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+      -> ok()
+    then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+      -> already_registered()
+  }
+}

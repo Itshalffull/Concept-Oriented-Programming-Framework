@@ -1,7 +1,7 @@
 # Infrastructure Suite Manifest
 name: infrastructure
-version: 0.1.0
-description: "System infrastructure — caching, configuration sync, path aliases, plugin discovery, event dispatching, and validation."
+version: 0.2.0
+description: "System infrastructure — caching, configuration sync, path aliases, plugin discovery, event dispatching, validation, file catalog, runtime registry, and entity reflection."
 
 concepts:
   - name: Cache
@@ -18,6 +18,12 @@ concepts:
     spec: app-installation.concept
   - name: Validator
     spec: validator.concept
+  - name: FileCatalog
+    spec: file-catalog.concept
+  - name: RuntimeRegistry
+    spec: runtime-registry.concept
+  - name: EntityReflector
+    spec: entity-reflector.concept
 
 syncs:
   - name: event-validation

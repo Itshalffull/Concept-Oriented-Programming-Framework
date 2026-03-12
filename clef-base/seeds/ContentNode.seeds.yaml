@@ -1,0 +1,113 @@
+# Browseable content nodes used by the admin surface.
+# Auto-reflected by EntityReflector at boot: concepts, syncs, schemas,
+# widgets (.widget specs), themes, derived concepts, and suites.
+# Only manually-curated entries remain here (UI widgets without .widget
+# spec files, workflows, automation rules, taxonomies, version data).
+
+concept: ContentNode
+action: create
+entries:
+  - node: widget:Card
+    type: widget
+    content: '{"name":"Card","framework":"react"}'
+    createdBy: system
+  - node: widget:Badge
+    type: widget
+    content: '{"name":"Badge","framework":"react"}'
+    createdBy: system
+  - node: widget:Sidebar
+    type: widget
+    content: '{"name":"Sidebar","framework":"react"}'
+    createdBy: system
+  - node: widget:DataTable
+    type: widget
+    content: '{"name":"DataTable","framework":"react"}'
+    createdBy: system
+  - node: widget:EmptyState
+    type: widget
+    content: '{"name":"EmptyState","framework":"react"}'
+    createdBy: system
+  - node: widget:CreateForm
+    type: widget
+    content: '{"name":"CreateForm","framework":"react"}'
+    createdBy: system
+  - node: widget:TableDisplay
+    type: widget
+    content: '{"name":"TableDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:CardGridDisplay
+    type: widget
+    content: '{"name":"CardGridDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:GraphDisplay
+    type: widget
+    content: '{"name":"GraphDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:StatCardsDisplay
+    type: widget
+    content: '{"name":"StatCardsDisplay","framework":"react"}'
+    createdBy: system
+  - node: widget:ViewRenderer
+    type: widget
+    content: '{"name":"ViewRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:LayoutRenderer
+    type: widget
+    content: '{"name":"LayoutRenderer","framework":"react"}'
+    createdBy: system
+  - node: widget:HostedPage
+    type: widget
+    content: '{"name":"HostedPage","framework":"react"}'
+    createdBy: system
+  - node: widget:AppShell
+    type: widget
+    content: '{"name":"AppShell","framework":"react"}'
+    createdBy: system
+  - node: workflow:content-lifecycle
+    type: workflow
+    content: '{"name":"content-lifecycle","states":["draft","review","published","archived"]}'
+    createdBy: system
+  - node: workflow:schema-evolution
+    type: workflow
+    content: '{"name":"schema-evolution","states":["draft","active","deprecated"]}'
+    createdBy: system
+  - node: automation-rule:auto-tag-on-create
+    type: automation-rule
+    content: '{"trigger":"ContentNode/create","description":"Auto-apply taxonomy tags based on content type"}'
+    createdBy: system
+  - node: automation-rule:notify-on-publish
+    type: automation-rule
+    content: '{"trigger":"Workflow/transition","description":"Send notification when content moves to published state"}'
+    createdBy: system
+  - node: automation-rule:cache-invalidate-on-save
+    type: automation-rule
+    content: '{"trigger":"ContentStorage/save","description":"Invalidate cache entries when content is saved"}'
+    createdBy: system
+  - node: taxonomy:concept-suites
+    type: taxonomy
+    content: '{"name":"Concept Suites","kind":"vocabulary"}'
+    createdBy: system
+  - node: taxonomy:schema-categories
+    type: taxonomy
+    content: '{"name":"Schema Categories","kind":"vocabulary"}'
+    createdBy: system
+  - node: version-space:editorial-pass
+    type: version-space
+    content: '{"name":"Editorial Pass","status":"active","owner":"alice","overrideCount":3,"lastActivity":"2026-03-08T14:15:00.000Z","visibility":"shared","parent":null,"description":"Copy edits and narrative cleanup ahead of launch."}'
+    createdBy: alice
+  - node: version-space:taxonomy-refactor
+    type: version-space
+    content: '{"name":"Taxonomy Refactor","status":"review","owner":"matt","overrideCount":2,"lastActivity":"2026-03-09T09:30:00.000Z","visibility":"private","parent":"version-space:editorial-pass","description":"Experimenting with revised schema categories and tags."}'
+    createdBy: matt
+  - node: version-override:editorial-pass:content:Article
+    type: version-override
+    content: '{"space":"version-space:editorial-pass","entity":"content:Article","operation":"update","fields":["title","summary"],"summary":"Tightened article copy and updated teaser text."}'
+    createdBy: alice
+  - node: version-override:editorial-pass:view:content-list
+    type: version-override
+    content: '{"space":"version-space:editorial-pass","entity":"view:content-list","operation":"update","fields":["title","description"],"summary":"Renamed the content dashboard and adjusted helper copy."}'
+    createdBy: alice
+  - node: version-override:taxonomy-refactor:schema:TaxonomyTerm
+    type: version-override
+    content: '{"space":"version-space:taxonomy-refactor","entity":"schema:TaxonomyTerm","operation":"update","fields":["fields"],"summary":"Added hierarchy and grouping metadata to taxonomy terms."}'
+    createdBy: matt

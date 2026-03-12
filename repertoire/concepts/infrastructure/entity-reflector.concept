@@ -1,0 +1,65 @@
+@version(1)
+concept EntityReflector [P] {
+
+  purpose {
+    Create ContentNode entries for registered concepts, loaded syncs,
+    defined schemas, and other entity types. Uses the PluginRegistry
+    provider model so new entity type providers can be added later
+    (widget reflection, theme reflection, derived concept reflection).
+  }
+
+  state {
+    providers: set P
+    provider_name: P -> String
+    last_run: P -> option DateTime
+    reflected_count: P -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action reflect() {
+      -> ok(created: Int, skipped: Int) {
+        Run all registered providers to create ContentNode entries
+        for discovered artifacts. Returns counts of newly created
+        and already-existing (skipped) entries.
+      }
+    }
+
+    action reflectProvider(provider_name: String) {
+      -> ok(created: Int, skipped: Int) {
+        Run a single named provider to reflect its entities.
+      }
+      -> notfound(message: String) {
+        No provider registered with this name.
+      }
+    }
+
+    action registerProvider(provider_name: String) {
+      -> ok() {
+        Register a reflection provider by name. The provider logic
+        is dispatched by name within the handler.
+      }
+      -> already_registered() {
+        A provider with this name already exists.
+      }
+    }
+
+    action status() {
+      -> ok(providers: String) {
+        Return all providers with last_run and reflected_count as JSON.
+      }
+    }
+  }
+
+  invariant {
+    after registerProvider(provider_name: "concept")
+      -> ok()
+    then reflect()
+      -> ok(created: c, skipped: s)
+    then status()
+      -> ok(providers: ps)
+  }
+}
