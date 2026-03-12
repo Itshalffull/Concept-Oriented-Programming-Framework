@@ -309,6 +309,8 @@ widget canvas {
     toolbar: widget("toolbar", { tools: ["select", "hand", "draw", "erase", "text", "shape", "connector", "frame"], active: ?tool });
     contextMenu: widget("context-menu", { items: ["Cut", "Copy", "Paste", "Duplicate", "Delete", "Bring Forward", "Send Backward", "Group", "Ungroup"] });
     minimap: widget("minimap", { zoom: ?zoom, panX: ?panX, panY: ?panY });
+    propertiesPanel: widget("canvas-properties-panel", { canvasId: self.id, selectionType: if ?selectedIds.length > 0 then "item" else "none" });
+    analysisPanel: widget("graph-analysis-panel", { canvasId: self.id, graphData: self.graphSnapshot });
   }
 
   invariant {

@@ -112,6 +112,16 @@ widget canvas-properties-panel {
     }
   }
 
+  compose {
+    _panel: widget("canvas-panel", {
+      canvasId: ?canvasId,
+      title: "Properties",
+      dock: "right",
+      ariaLabel: "Properties panel",
+      collapsible: true
+    })
+  }
+
   invariant {
     "Only one properties section visible at a time";
     "Properties must update when selection changes";
