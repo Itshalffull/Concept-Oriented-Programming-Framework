@@ -1,0 +1,63 @@
+derived GraphAnalysisExplorer [T] {
+
+  purpose {
+    Interactive graph analysis workbench that runs algorithms on canvas
+    graphs, displays results as visual overlays on nodes and edges, and
+    generates standalone reports. Composes graph analysis dispatch with
+    canvas overlays and report generation for a complete analysis
+    exploration experience.
+  }
+
+  composes {
+    Canvas [T]
+    Graph [T]
+    GraphAnalysis [T]
+    AnalysisOverlay [T]
+    AnalysisReport [T]
+    SpatialLayout [T]
+  }
+
+  syncs {
+    required: [analysis-dispatches-to-provider, analysis-provider-registers]
+    recommended: [analysis-overlays-canvas, analysis-generates-report, analysis-clears-on-graph-change]
+  }
+
+  surface {
+    action analyze(algorithm: String, config: option String) {
+      matches: GraphAnalysis/analyze + AnalysisOverlay/apply + AnalysisReport/generate
+    }
+
+    action showOverlay(kind: String) {
+      matches: AnalysisOverlay/apply with selected overlay kind
+    }
+
+    action hideOverlay(overlay: ID) {
+      matches: AnalysisOverlay/toggle to hide
+    }
+
+    action viewReport(format: String) {
+      matches: AnalysisReport/generate with selected format
+    }
+
+    action compareRuns(results: list ID) {
+      matches: AnalysisReport/compare across multiple analysis results
+    }
+
+    query listAlgorithms(category: option String) -> {
+      reads: GraphAnalysis/listAlgorithms
+    }
+
+    query listOverlays(canvas: ID) -> {
+      reads: AnalysisOverlay/listOverlays
+    }
+
+    query listReports(result: option ID) -> {
+      reads: AnalysisReport/listReports
+    }
+  }
+
+  principle {
+    after analyze("pagerank") then canvas nodes are sized by importance
+    and a ranked score table is available in the report panel
+  }
+}

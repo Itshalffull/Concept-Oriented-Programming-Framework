@@ -1,0 +1,16 @@
+# Registration sync for graph analysis algorithm providers. Each provider
+# registers itself with GraphAnalysis on install.
+
+sync AnalysisProviderRegisters [integration]
+when {
+  CentralityAnalysisProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  CommunityDetectionProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  PathAnalysisProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  PatternDetectionProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  FlowAnalysisProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  StructuralAnalysisProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+  ClusteringMetricsProvider/register: [] => [ ok; name: ?name; category: ?cat ]
+}
+then {
+  GraphAnalysis/register: [ algorithm: ?name; category: ?cat; provider: ?name ]
+}

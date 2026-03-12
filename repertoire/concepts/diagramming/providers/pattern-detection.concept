@@ -1,0 +1,58 @@
+@version(1)
+concept PatternDetectionProvider [C] {
+
+  purpose {
+    Detect structural patterns in graphs: cycles, cliques, bridges,
+    and articulation points. Identifies topological features that
+    reveal structural vulnerabilities, tightly-coupled clusters,
+    and feedback loops.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: cycles, cliques, bridges, articulation-points.
+        category: "pattern"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      max_length: option Int,
+      min_size: option Int,
+      directed: option String
+    }) {
+      -> ok(payload: String) {
+        Detects patterns and returns JSON:
+        { matches: { type: string, nodes: string[], edges: string[] }[],
+          count: number }.
+
+        Algorithm details:
+        - cycles: Johnson's algorithm for elementary cycles in directed
+          graphs, or DFS-based cycle detection for undirected. O((V+E)(C+1))
+          where C is cycle count. Use max_length to bound search.
+        - cliques: Bron-Kerbosch with pivoting for maximal cliques.
+          O(3^(V/3)) worst case. Use min_size to filter small cliques.
+        - bridges: Tarjan's bridge-finding algorithm. O(V+E). Returns
+          edges whose removal disconnects the graph.
+        - articulation-points: Tarjan's algorithm for cut vertices.
+          O(V+E). Returns nodes whose removal disconnects the graph.
+      }
+      -> error(message: String) {
+        Analysis failed — graph too large for exhaustive enumeration
+        or algorithm not applicable to graph type.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "bridges", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "articulation-points", config: {})
+      -> ok(payload: _)
+  }
+}

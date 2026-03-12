@@ -1,0 +1,64 @@
+@version(1)
+concept PathAnalysisProvider [C] {
+
+  purpose {
+    Find paths between nodes using shortest path (Dijkstra/BFS),
+    all simple paths (DFS with backtracking), or critical path
+    (longest path in DAG) algorithms. Produces ordered node/edge
+    sequences suitable for path highlighting overlays.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: shortest-path, all-paths, critical-path.
+        category: "path"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      source: option String,
+      target: option String,
+      max_paths: option Int,
+      weighted: option String
+    }) {
+      -> ok(payload: String) {
+        Finds paths and returns JSON:
+        { paths: { nodes: string[], edges: string[], cost: number }[],
+          stats: { pathCount: number, minCost: number, maxCost: number } }.
+
+        Algorithm details:
+        - shortest-path: Dijkstra (weighted) or BFS (unweighted) single-source
+          shortest path. O((V+E) log V) with binary heap. Requires source;
+          target optional (computes to all reachable nodes if omitted).
+        - all-paths: DFS enumeration of all simple paths between source and
+          target with optional max_paths limit. Exponential worst case;
+          use max_paths to bound. Requires both source and target.
+        - critical-path: Longest path in a DAG via topological sort.
+          O(V+E). Returns error if graph contains cycles. Source/target
+          optional — finds the global critical path if omitted.
+      }
+      -> no_path(message: String) {
+        No path exists between the specified source and target.
+      }
+      -> error(message: String) {
+        Analysis failed — cyclic graph for critical-path, missing
+        source/target, or path enumeration exceeded limit.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "shortest-path",
+      config: { source: "A", target: "Z" })
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "all-paths",
+      config: { source: "A", target: "Z", max_paths: 10 })
+      -> ok(payload: _)
+  }
+}

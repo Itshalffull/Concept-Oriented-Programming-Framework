@@ -1,0 +1,11 @@
+# When Score's DependenceGraph computes a new graph, make it available
+# for graph analysis algorithms. Converts the dependence graph into
+# the Graph data structure that analysis providers consume.
+
+sync ScoreDependenceFeedsAnalysis [integration]
+when {
+  DependenceGraph/compute: [ scopeRef: ?scope ] => [ ok; graph: ?dgraph ]
+}
+then {
+  Graph/addNode: [ graph: ?dgraph; node: ?scope ]
+}

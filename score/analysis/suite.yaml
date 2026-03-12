@@ -28,6 +28,17 @@ concepts:
     spec: ./providers/dependence/binding.concept
     optional: true
 
+  # Clef-specific graph analysis providers
+  ConceptCentralityProvider:
+    spec: ./providers/graph-analysis/concept-centrality.concept
+    optional: true
+  SyncCommunityProvider:
+    spec: ./providers/graph-analysis/sync-community.concept
+    optional: true
+  DependencyPatternProvider:
+    spec: ./providers/graph-analysis/dependency-pattern.concept
+    optional: true
+
 syncs:
   required: []
   recommended: []
@@ -63,3 +74,5 @@ dependencies:
   - suite: code-analysis
   - suite: code-parse
   - suite: code-symbol
+  - suite: diagramming
+    optional: true

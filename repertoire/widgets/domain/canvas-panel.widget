@@ -1,0 +1,175 @@
+@version(1)
+widget canvas-panel {
+
+  purpose {
+    Generic collapsible, resizable side panel that docks to the canvas edge.
+    Provides consistent chrome — header bar with title, collapse toggle, and
+    resize handle — while delegating domain-specific content to a slot.
+    Both the properties panel and analysis panel compose this widget so all
+    canvas panels share identical collapse, resize, and keyboard behavior.
+  }
+
+  anatomy {
+    root:             container  { Panel wrapper positioned at the dock edge }
+    header:           container  { Top bar containing title, tab indicators, and collapse control }
+    title:            text       { Panel heading reflecting the active content }
+    tab-bar:          container  { Optional tab strip when multiple panels share a dock }
+    tab:              action     { Individual tab button within the tab bar }
+    collapse-trigger: action     { Toggle button that collapses or expands the panel body }
+    resize-handle:    interactive { Draggable edge for resizing panel width }
+    body:             container  { Scrollable content area filled by the composing widget }
+  }
+
+  slots {
+    content { inside body }
+  }
+
+  states {
+    visibility {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+        on MINIMIZE -> minimized;
+        entry [restoreWidth];
+      }
+      collapsed {
+        on EXPAND -> expanded;
+        on MINIMIZE -> minimized;
+        entry [collapseToHeader];
+      }
+      minimized {
+        on EXPAND -> expanded;
+        on COLLAPSE -> collapsed;
+        entry [hidePanel];
+      }
+    }
+
+    resize [parallel] {
+      idle [initial] {
+        on RESIZE_START -> resizing;
+      }
+      resizing {
+        on RESIZE_MOVE -> resizing;
+        on RESIZE_END -> idle;
+        entry [showResizeCursor];
+        exit [resetCursor];
+      }
+    }
+
+    tabs [parallel] {
+      inactive [initial] {
+        on ACTIVATE_TAB -> active;
+      }
+      active {
+        on ACTIVATE_TAB -> active;
+        on DEACTIVATE_TAB -> inactive;
+        entry [switchTabContent];
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    modal: false;
+    keyboard {
+      Escape -> COLLAPSE;
+      Tab -> FOCUS_NEXT;
+      "Shift+Tab" -> FOCUS_PREV;
+      ArrowLeft -> PREV_TAB;
+      ArrowRight -> NEXT_TAB;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: ?ariaLabel;
+      };
+      header -> {
+        role: "banner";
+      };
+      tab-bar -> {
+        role: "tablist";
+        aria-label: "Panel tabs";
+      };
+      tab -> {
+        role: "tab";
+        aria-selected: if self.active then "true" else "false";
+      };
+      collapse-trigger -> {
+        role: "button";
+        aria-expanded: if state.visibility == "expanded" then "true" else "false";
+        aria-label: if state.visibility == "expanded" then "Collapse panel" else "Expand panel";
+      };
+      body -> {
+        role: "tabpanel";
+        aria-labelledby: title;
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    ariaLabel: String = "Canvas panel"
+    title: String = "Panel"
+    dock: union "left" | "right" = "right"
+    defaultWidth: Int = 320
+    minWidth: Int = 200
+    maxWidth: Int = 600
+    collapsible: Bool = true
+    initialState: union "expanded" | "collapsed" | "minimized" = "expanded"
+    tabs: list { id: String, label: String, icon: option String } = []
+    activeTab: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "canvas-panel";
+      data-canvas: ?canvasId;
+      data-dock: ?dock;
+      data-state: state.visibility;
+      data-width: if state.visibility == "expanded" then ?defaultWidth else 0;
+    }
+    header -> {
+      data-part: "panel-header";
+    }
+    title -> {
+      data-part: "panel-title";
+    }
+    tab-bar -> {
+      data-part: "panel-tab-bar";
+      data-visible: if ?tabs.length > 1 then "true" else "false";
+    }
+    tab -> {
+      data-part: "panel-tab";
+      data-active: if self.id == ?activeTab then "true" else "false";
+      onClick: send(ACTIVATE_TAB, { tabId: self.id });
+    }
+    collapse-trigger -> {
+      data-part: "panel-collapse";
+      aria-expanded: if state.visibility == "expanded" then "true" else "false";
+      onClick: if state.visibility == "expanded" then send(COLLAPSE) else send(EXPAND);
+    }
+    resize-handle -> {
+      data-part: "panel-resize";
+      data-dock: ?dock;
+      onPointerDown: send(RESIZE_START, { clientX: event.clientX });
+    }
+    body -> {
+      data-part: "panel-body";
+      data-visible: if state.visibility == "expanded" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "Panel width must stay between minWidth and maxWidth during resize";
+    "Collapsed state must show only the header bar";
+    "Minimized state must hide the entire panel";
+    "Tab switching must preserve scroll position per tab";
+    "Resize handle must be on the edge opposite the dock side";
+    "Only one tab may be active at a time";
+    "Keyboard Escape must collapse an expanded panel, not close it entirely";
+  }
+}

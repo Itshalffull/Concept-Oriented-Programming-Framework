@@ -16,7 +16,8 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "@clef/runtime": ["../runtime/index.ts"]
+      "@clef/runtime": ["../runtime/index.ts"],
+      "@clef/surface/*": ["../surface/widgets/nextjs/components/widgets/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -1,0 +1,57 @@
+@version(1)
+concept CommunityDetectionProvider [C] {
+
+  purpose {
+    Partition graph nodes into communities using Louvain modularity
+    optimization, label propagation, or direct modularity scoring.
+    Produces non-overlapping community assignments suitable for
+    cluster boundary overlays and group coloring.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: louvain, label-propagation, modularity.
+        category: "community"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      resolution: option String,
+      max_iterations: option Int,
+      seed: option Int
+    }) {
+      -> ok(payload: String) {
+        Detects communities and returns JSON:
+        { communities: { communityId: string, nodes: string[], size: number }[],
+          modularity: number }.
+
+        Algorithm details:
+        - louvain: Multi-level modularity optimization with configurable
+          resolution parameter. O(V log V) typical. Best for large graphs
+          with clear community structure.
+        - label-propagation: Near-linear community detection via iterative
+          neighbor majority voting. O(V+E) per iteration. Fast but
+          non-deterministic; use seed for reproducibility.
+        - modularity: Direct modularity score computation for a given
+          partition. O(E). Used for evaluating quality of existing
+          community assignments.
+      }
+      -> error(message: String) {
+        Analysis failed — convergence not reached or graph is trivial.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "louvain", config: { resolution: "1.0" })
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "modularity", config: {})
+      -> ok(payload: _)
+  }
+}

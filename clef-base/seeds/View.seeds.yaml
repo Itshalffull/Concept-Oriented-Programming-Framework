@@ -85,11 +85,11 @@ entries:
     description: ''
   - view: concept-graph
     dataSource: '{"concept":"ContentNode","action":"list"}'
-    layout: graph
+    layout: canvas
     visibleFields: '[{"key":"node","label":"Node"},{"key":"schemas","label":"Schemas"},{"key":"content","label":"Content"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"},"analysisPanel":true}'
     title: Score Graph
-    description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Toggle filters to focus.
+    description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Includes graph analysis algorithms, overlays, and report generation.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
   - view: score-schemas
     dataSource: '{"concept":"Schema","action":"list"}'

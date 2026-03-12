@@ -1,0 +1,289 @@
+@version(1)
+widget graph-analysis-panel {
+
+  purpose {
+    Collapsible canvas side panel for running graph analysis algorithms,
+    viewing scored results, toggling visual overlays on nodes and edges,
+    and generating structured reports. Organized by algorithm category
+    with a config form per algorithm, live status feedback, and controls
+    for overlay visibility and report export.
+  }
+
+  requires @2 {
+    fields {
+      algorithms: list;
+      results: list;
+      overlays: list;
+      reports: list;
+    }
+    actions {
+      analyze();
+      listAlgorithms();
+      getResult();
+      listResults();
+      applyOverlay();
+      removeOverlay();
+      toggleOverlay();
+      generateReport();
+      exportReport();
+      compareResults();
+    }
+  }
+
+  anatomy {
+    root:                  container  { Panel wrapper composing canvas-panel }
+    category-tabs:         container  { Tab strip for algorithm categories: centrality, community, path, pattern, flow, structural, clustering }
+    algorithm-selector:    action     { Dropdown or list selecting a specific algorithm within the active category }
+    config-form:           container  { Dynamic parameter inputs for the selected algorithm }
+    run-button:            action     { Executes the selected algorithm on the current graph }
+    status-bar:            container  { Progress indicator and status text during analysis }
+    results-panel:         container  { Scrollable area showing analysis output }
+    scores-table:          container  { Ranked table of node scores from the last analysis run }
+    overlay-controls:      container  { Section header and master toggle for visual overlays }
+    overlay-toggle-list:   container  { List of active overlays with individual visibility toggles }
+    report-section:        container  { Report generation and export controls }
+    report-format-selector: action    { Dropdown selecting report format: table, summary, dashboard }
+    compare-button:        action     { Triggers side-by-side comparison of two or more result sets }
+  }
+
+  slots {
+    extra-controls { after overlay-controls }
+  }
+
+  states {
+    workflow {
+      idle [initial] {
+        on SELECT_CATEGORY -> configuring;
+        on SELECT_ALGORITHM -> configuring;
+        on LOAD_PREVIOUS_RESULT -> showingResults;
+      }
+      configuring {
+        on RUN -> running;
+        on SELECT_CATEGORY -> configuring;
+        on SELECT_ALGORITHM -> configuring;
+        on CANCEL -> idle;
+        entry [loadAlgorithmConfig];
+      }
+      running {
+        on COMPLETE -> showingResults;
+        on ERROR -> configuring;
+        entry [showProgress; disableRun];
+        exit [hideProgress; enableRun];
+      }
+      showingResults {
+        on SELECT_CATEGORY -> configuring;
+        on SELECT_ALGORITHM -> configuring;
+        on GENERATE_REPORT -> showingReport;
+        on COMPARE -> comparing;
+        on RUN -> running;
+        entry [displayScores; applyDefaultOverlay];
+      }
+      showingReport {
+        on BACK_TO_RESULTS -> showingResults;
+        on EXPORT -> showingReport;
+        on SELECT_CATEGORY -> configuring;
+        entry [renderReport];
+      }
+      comparing {
+        on BACK_TO_RESULTS -> showingResults;
+        on SELECT_CATEGORY -> configuring;
+        entry [loadComparisonData];
+      }
+    }
+
+    overlays [parallel] {
+      overlaysOff [initial] {
+        on ENABLE_OVERLAYS -> overlaysOn;
+      }
+      overlaysOn {
+        on DISABLE_OVERLAYS -> overlaysOff;
+        on TOGGLE_OVERLAY -> overlaysOn;
+        entry [applyActiveOverlays];
+        exit [removeAllOverlays];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape -> CANCEL;
+      Enter -> RUN;
+      Tab -> FOCUS_NEXT;
+      "Shift+Tab" -> FOCUS_PREV;
+      ArrowLeft -> PREV_CATEGORY;
+      ArrowRight -> NEXT_CATEGORY;
+      ArrowUp -> PREV_ALGORITHM;
+      ArrowDown -> NEXT_ALGORITHM;
+    }
+    focus {
+      trap: false;
+      initial: category-tabs;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Graph analysis panel";
+      };
+      category-tabs -> {
+        role: "tablist";
+        aria-label: "Algorithm categories";
+      };
+      algorithm-selector -> {
+        role: "listbox";
+        aria-label: "Select algorithm";
+      };
+      config-form -> {
+        role: "form";
+        aria-label: "Algorithm parameters";
+      };
+      run-button -> {
+        role: "button";
+        aria-label: "Run analysis";
+        aria-disabled: if state.workflow == "running" then "true" else "false";
+      };
+      status-bar -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Analysis status";
+      };
+      scores-table -> {
+        role: "table";
+        aria-label: "Analysis scores";
+      };
+      overlay-controls -> {
+        role: "group";
+        aria-label: "Overlay controls";
+      };
+      overlay-toggle-list -> {
+        role: "list";
+        aria-label: "Active overlays";
+      };
+      report-section -> {
+        role: "group";
+        aria-label: "Report controls";
+      };
+      report-format-selector -> {
+        role: "listbox";
+        aria-label: "Report format";
+      };
+      compare-button -> {
+        role: "button";
+        aria-label: "Compare results";
+      };
+    }
+  }
+
+  props {
+    canvasId: String
+    graphData: option String
+    selectedCategory: union "centrality" | "community" | "path" | "pattern" | "flow" | "structural" | "clustering" = "centrality"
+    selectedAlgorithm: option String
+    algorithmConfig: option String
+    resultId: option String
+    overlayKinds: list String = ["node-color", "node-size"]
+    reportFormat: union "table" | "summary" | "dashboard" = "summary"
+    autoOverlay: Bool = true
+    maxResultHistory: Int = 10
+  }
+
+  connect {
+    root -> {
+      data-part: "graph-analysis-panel";
+      data-canvas: ?canvasId;
+      data-state: state.workflow;
+    }
+    category-tabs -> {
+      data-part: "category-tabs";
+      data-active: ?selectedCategory;
+    }
+    algorithm-selector -> {
+      data-part: "algorithm-selector";
+      data-category: ?selectedCategory;
+      data-selected: ?selectedAlgorithm;
+      onChange: send(SELECT_ALGORITHM, { algorithm: self.value });
+    }
+    config-form -> {
+      data-part: "config-form";
+      data-visible: if state.workflow == "configuring" or state.workflow == "showingResults" then "true" else "false";
+    }
+    run-button -> {
+      data-part: "run-button";
+      disabled: if state.workflow == "running" then true else false;
+      onClick: send(RUN);
+    }
+    status-bar -> {
+      data-part: "status-bar";
+      data-state: state.workflow;
+      data-visible: if state.workflow == "running" then "true" else "false";
+    }
+    results-panel -> {
+      data-part: "results-panel";
+      data-visible: if state.workflow == "showingResults" or state.workflow == "showingReport" or state.workflow == "comparing" then "true" else "false";
+    }
+    scores-table -> {
+      data-part: "scores-table";
+      data-result: ?resultId;
+      data-visible: if state.workflow == "showingResults" then "true" else "false";
+    }
+    overlay-controls -> {
+      data-part: "overlay-controls";
+      data-enabled: if state.overlays == "overlaysOn" then "true" else "false";
+      data-visible: if state.workflow == "showingResults" or state.workflow == "showingReport" then "true" else "false";
+    }
+    overlay-toggle-list -> {
+      data-part: "overlay-toggle-list";
+      data-visible: if state.overlays == "overlaysOn" then "true" else "false";
+    }
+    report-section -> {
+      data-part: "report-section";
+      data-visible: if state.workflow == "showingResults" or state.workflow == "showingReport" then "true" else "false";
+    }
+    report-format-selector -> {
+      data-part: "report-format-selector";
+      data-format: ?reportFormat;
+      onChange: send(SELECT_FORMAT, { format: self.value });
+    }
+    compare-button -> {
+      data-part: "compare-button";
+      data-visible: if state.workflow == "showingResults" then "true" else "false";
+      onClick: send(COMPARE);
+    }
+  }
+
+  affordance {
+    serves: analysis-control;
+    specificity: 8;
+    when { conceptUri: "urn:clef/GraphAnalysis" }
+    bind {
+      graphData: graphSnapshot;
+      selectedAlgorithm: algorithm;
+      resultId: currentResult;
+    }
+  }
+
+  compose {
+    _panel: widget("canvas-panel", {
+      canvasId: ?canvasId,
+      title: "Analysis",
+      dock: "right",
+      ariaLabel: "Graph analysis panel",
+      collapsible: true
+    })
+  }
+
+  invariant {
+    "Only one algorithm category tab may be active at a time";
+    "Run button must be disabled while analysis is running";
+    "Status bar must show progress during running state and hide otherwise";
+    "Scores table must display results sorted by score descending";
+    "Toggling an overlay off must immediately remove its visual effect from the canvas";
+    "Toggling overlays master switch off must remove all overlays from the canvas";
+    "Report export must produce output matching the selected format";
+    "Returning from report or compare view must preserve the last result";
+    "Algorithm config form must update when switching algorithms";
+    "Auto-overlay must apply default overlay kinds when results arrive if enabled";
+  }
+}

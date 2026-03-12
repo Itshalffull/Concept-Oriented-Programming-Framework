@@ -1,0 +1,60 @@
+@version(1)
+concept CentralityAnalysisProvider [C] {
+
+  purpose {
+    Compute node importance scores using degree, betweenness, closeness,
+    eigenvector, or PageRank centrality measures. Each algorithm produces
+    a normalized score per node, enabling ranking, comparison, and visual
+    scaling of node prominence in graph visualizations.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: degree, betweenness, closeness,
+        eigenvector, pagerank. category: "centrality"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      directed: option String,
+      weighted: option String,
+      damping: option String,
+      iterations: option Int,
+      tolerance: option String
+    }) {
+      -> ok(payload: String) {
+        Computes centrality scores for all nodes in the graph.
+        Returns JSON: { scores: { nodeId: string, score: number, rank: number }[] }.
+
+        Algorithm details:
+        - degree: In/out/total degree count, normalized by (V-1).
+          O(V+E), real-time feasible on any graph.
+        - betweenness: Fraction of shortest paths through each node
+          (Brandes algorithm). O(V*E), on-demand for medium graphs.
+        - closeness: Inverse sum of shortest distances to all other
+          nodes. O(V*(V+E)), on-demand for medium graphs.
+        - eigenvector: Dominant eigenvector of adjacency matrix via
+          power iteration. O(k*E) where k is iteration count.
+        - pagerank: Iterative random-walk importance with damping
+          factor (default 0.85). O(k*(V+E)) per iteration.
+      }
+      -> error(message: String) {
+        Analysis failed — graph too large, disconnected for closeness,
+        or convergence not reached within iteration limit.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "degree", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "pagerank", config: { damping: "0.85", iterations: 100 })
+      -> ok(payload: _)
+  }
+}

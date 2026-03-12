@@ -19,3 +19,6 @@ entries:
   - schema: ContentNode
     mode_id: score-graph
     name: Score Graph
+  - schema: ContentNode
+    mode_id: graph-analysis
+    name: Graph Analysis

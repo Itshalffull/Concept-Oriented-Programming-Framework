@@ -8,3 +8,5 @@ export { createConstraintAnchorIndicator } from './ConstraintAnchorIndicator.js'
 export { createDiagramExportDialog } from './DiagramExportDialog.js';
 export { createNotationBadge } from './NotationBadge.js';
 export { createCanvasPropertiesPanel } from './CanvasPropertiesPanel.js';
+export { createCanvasPanel } from './CanvasPanel.js';
+export { createGraphAnalysisPanel } from './GraphAnalysisPanel.js';

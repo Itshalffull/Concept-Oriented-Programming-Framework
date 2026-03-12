@@ -1,0 +1,57 @@
+@version(1)
+concept StructuralAnalysisProvider [C] {
+
+  purpose {
+    Decompose graphs into structural components: connected components,
+    strongly connected components, and k-cores. Reveals the fundamental
+    connectivity structure and hierarchical cohesion of the graph.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: connected-components, strongly-connected,
+        k-core. category: "structural"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      k: option Int,
+      directed: option String
+    }) {
+      -> ok(payload: String) {
+        Decomposes graph and returns JSON:
+        { components: { id: string, nodes: string[], size: number }[],
+          componentCount: number }.
+
+        Algorithm details:
+        - connected-components: Union-Find or BFS/DFS component
+          labeling. O(V+E). Works on undirected graphs; for directed
+          graphs, uses the underlying undirected structure.
+        - strongly-connected: Tarjan's or Kosaraju's algorithm for
+          strongly connected components in directed graphs. O(V+E).
+          Returns maximal subsets where every node is reachable from
+          every other node.
+        - k-core: Iterative pruning to find the maximal subgraph where
+          every node has degree >= k. O(V+E). Returns nested cores
+          for all k values up to the degeneracy of the graph if k
+          is omitted.
+      }
+      -> error(message: String) {
+        Analysis failed — algorithm not applicable to graph type.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "connected-components", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "k-core", config: { k: 3 })
+      -> ok(payload: _)
+  }
+}

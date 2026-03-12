@@ -26,6 +26,7 @@ import { CreateForm } from './widgets/CreateForm';
 import { TableDisplay, type FieldConfig } from './widgets/TableDisplay';
 import { CardGridDisplay } from './widgets/CardGridDisplay';
 import { GraphDisplay } from './widgets/GraphDisplay';
+import { CanvasDisplay } from './widgets/CanvasDisplay';
 import { StatCardsDisplay } from './widgets/StatCardsDisplay';
 import { DetailDisplay } from './widgets/DetailDisplay';
 import { ContentBodyDisplay } from './widgets/ContentBodyDisplay';
@@ -542,6 +543,14 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       case 'card-grid':
         return (
           <CardGridDisplay
+            data={displayData} fields={fields}
+            onRowClick={controls.rowClick ? handleRowClick : undefined}
+          />
+        );
+
+      case 'canvas':
+        return (
+          <CanvasDisplay
             data={displayData} fields={fields}
             onRowClick={controls.rowClick ? handleRowClick : undefined}
           />

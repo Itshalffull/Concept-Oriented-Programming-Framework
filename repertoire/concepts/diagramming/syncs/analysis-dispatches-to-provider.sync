@@ -1,0 +1,13 @@
+# When GraphAnalysis/analyze is called, dispatch to the registered
+# algorithm provider via PluginRegistry.
+
+sync AnalysisDispatchesToProvider [eager]
+when {
+  GraphAnalysis/analyze: [ graph: ?graph; algorithm: ?alg; config: ?cfg ] => [ _ ]
+}
+where {
+  PluginRegistry: { ?provider type: "graph_analysis"; key: ?alg }
+}
+then {
+  PluginRegistry/dispatch: [ plugin_type: "graph_analysis"; key: ?alg; input: { graph: ?graph; config: ?cfg } ]
+}

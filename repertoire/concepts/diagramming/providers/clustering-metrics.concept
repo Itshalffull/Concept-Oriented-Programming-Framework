@@ -1,0 +1,52 @@
+@version(1)
+concept ClusteringMetricsProvider [C] {
+
+  purpose {
+    Compute clustering and transitivity metrics for individual nodes
+    and whole graphs. Measures the tendency of nodes to form tightly
+    connected groups, quantifying local and global clustering structure.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: clustering-coefficient, transitivity.
+        category: "clustering"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      weighted: option String
+    }) {
+      -> ok(payload: String) {
+        Computes clustering metrics and returns JSON:
+        { nodeMetrics: { nodeId: string, coefficient: number }[],
+          graphMetric: number, triads: number, triangles: number }.
+
+        Algorithm details:
+        - clustering-coefficient: Local clustering coefficient for each
+          node (ratio of triangles to possible triangles among
+          neighbors). O(V * d^2) where d is max degree. Graph-level
+          metric is the average of all local coefficients.
+        - transitivity: Global transitivity ratio (3 * triangles /
+          triads). O(V+E) with triangle counting. A single graph-wide
+          metric; nodeMetrics contains the per-node triangle count.
+      }
+      -> error(message: String) {
+        Analysis failed — graph is empty or has insufficient structure.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "clustering-coefficient", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "transitivity", config: {})
+      -> ok(payload: _)
+  }
+}

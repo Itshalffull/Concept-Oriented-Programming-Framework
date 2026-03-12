@@ -1,0 +1,10 @@
+# When a graph analysis completes, automatically generate a summary
+# report from the result for the report panel.
+
+sync AnalysisGeneratesReport [recommended]
+when {
+  GraphAnalysis/analyze: [ graph: ?graph; algorithm: ?alg ] => [ ok; result: ?result; category: ?cat; payload: ?payload ]
+}
+then {
+  AnalysisReport/generate: [ result: ?result; format: "summary"; title: ?alg ]
+}

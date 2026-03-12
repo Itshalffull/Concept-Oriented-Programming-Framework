@@ -1,0 +1,91 @@
+@version(1)
+concept AnalysisOverlay [O] {
+
+  purpose {
+    Map graph analysis results to visual attributes on canvas nodes and
+    edges for interactive exploration. Supports node coloring and sizing
+    by score, edge highlighting by flow or path membership, community
+    cluster boundaries as convex hulls, and heat map gradients. Overlays
+    are non-destructive layers that can be toggled, stacked, and removed
+    without altering the underlying diagram.
+  }
+
+  state {
+    overlays: set O
+    overlay_canvas: O -> String
+    overlay_result: O -> String
+    overlay_kind: O -> String
+    overlay_config: O -> String
+    overlay_visible: O -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action apply(canvas: String, result: String, kind: String, config: option String) {
+      -> ok(overlay: O, attributes: String) {
+        Creates an overlay from the analysis result and returns the
+        computed visual attributes as a JSON-encoded structure:
+        - node-color: { nodeId: string, color: string }[]
+        - node-size: { nodeId: string, scale: number }[]
+        - edge-highlight: { edgeId: string, color: string, width: number }[]
+        - cluster-boundary: { clusterId: string, nodes: string[], hull: { x: number, y: number }[] }[]
+        - heat-map: { nodeId: string, intensity: number }[]
+        - label-annotation: { nodeId: string, label: string, position: string }[]
+      }
+      -> unsupported_kind(message: String) {
+        The requested overlay kind is not supported for the given
+        analysis result category.
+      }
+      -> invalid_result(message: String) {
+        The analysis result reference is invalid or has been cleared.
+      }
+    }
+
+    action remove(overlay: O) {
+      -> ok() {
+        Removes the overlay from the canvas, restoring original
+        visual attributes for affected nodes and edges.
+      }
+      -> notfound() {
+        No overlay exists with the given identifier.
+      }
+    }
+
+    action toggle(overlay: O) {
+      -> ok(visible: String) {
+        Toggles the overlay visibility between shown and hidden.
+        Returns the new visibility state.
+      }
+      -> notfound() {
+        No overlay exists with the given identifier.
+      }
+    }
+
+    action listOverlays(canvas: String) {
+      -> ok(overlays: String) {
+        Returns all overlays applied to the given canvas as a
+        JSON array of overlay summaries with visibility state.
+      }
+    }
+
+    action updateConfig(overlay: O, config: String) {
+      -> ok(attributes: String) {
+        Updates the overlay configuration (e.g., color palette,
+        scale range, threshold) and recomputes visual attributes.
+      }
+      -> notfound() {
+        No overlay exists with the given identifier.
+      }
+    }
+  }
+
+  invariant {
+    after apply(canvas: "c1", result: "r1", kind: "node-color", config: {})
+      -> ok(overlay: _, attributes: _)
+    then toggle(overlay: _) -> ok(visible: "hidden")
+    then toggle(overlay: _) -> ok(visible: "visible")
+  }
+}
