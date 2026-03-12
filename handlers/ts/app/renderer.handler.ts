@@ -94,4 +94,21 @@ export const rendererHandler: ConceptHandler = {
 
     return { variant: 'ok', merged: JSON.stringify(merged) };
   },
+
+  async renderField(input, _storage) {
+    const field = input.field as string;
+    const formatter = input.formatter as string;
+    const formatterOptions = input.formatter_options as string | null;
+    const context = input.context as string;
+
+    // Dispatch point for field-level rendering. Surface's WidgetResolver
+    // picks the appropriate platform widget for the formatter type.
+    return {
+      variant: 'ok',
+      field,
+      formatter,
+      formatter_options: formatterOptions,
+      context,
+    };
+  },
 };

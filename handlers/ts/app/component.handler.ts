@@ -113,4 +113,41 @@ export const componentHandler: ConceptHandler = {
 
     return { variant: 'ok', visible: effectiveVisibility };
   },
+
+  async renderLayout(input, storage) {
+    const layout = input.layout as string;
+    const context = input.context as string;
+
+    const existing = await storage.get('component', layout);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Layout not found' };
+    }
+
+    // Return the layout config and context for the rendering pipeline.
+    // The sync engine uses this to trigger area-level rendering.
+    return {
+      variant: 'ok',
+      layout,
+      config: existing.config as string,
+      context,
+    };
+  },
+
+  async renderAreaItem(input, _storage) {
+    const itemType = input.item_type as string;
+    const itemRef = input.item_ref as string;
+    const context = input.context as string;
+
+    // Dispatch point for area content rendering. The sync engine
+    // matches on item_type to route to the correct handler:
+    // - "field_placement" → AreaRendersFieldPlacement sync
+    // - "view_embed" → View/execute
+    // - "component_mapping" → ComponentMapping/render
+    return {
+      variant: 'ok',
+      item_type: itemType,
+      item_ref: itemRef,
+      context,
+    };
+  },
 };
