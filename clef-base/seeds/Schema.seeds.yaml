@@ -55,3 +55,7 @@ entries:
     fields: 'notation,name,nodeTypes,edgeTypes,connectionRules'
   - schema: ConstraintAnchor
     fields: 'anchor,canvasId,type,items,axis,value'
+  - schema: Derived
+    fields: 'name,purpose,composedConcepts,composedDerived,requiredSyncs,recommendedSyncs'
+  - schema: Suite
+    fields: 'name,version,description,conceptCount,syncCount,dependencies'
