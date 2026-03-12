@@ -1,0 +1,15 @@
+# Graph analysis integration: render graph analysis displays via the
+# GraphAnalysisPanel surface widget from the diagramming suite.
+
+sync GraphAnalysisRendersViaAnalysisPanel [eager]
+  purpose: "Resolve graph-analysis display mode to the GraphAnalysisPanel widget via WidgetResolver"
+when {
+  DisplayMode/resolve: [ entity_id: ?entity_id; mode: "graph-analysis" ]
+    => [ ok: ?display_config ]
+}
+then {
+  WidgetResolver/resolve: [
+    interactor: "graph-analysis";
+    props: [ entityId: ?entity_id; config: ?display_config ]
+  ]
+}

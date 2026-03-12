@@ -13,7 +13,7 @@ entries:
     name: Score
     kind: stack
     title: Score
-    description: Code-as-data analysis: concept dependencies, sync chains, and schema browsing.
+    description: Code-as-data analysis: concept dependencies, sync chains, graph analysis, and schema browsing.
     children: '[{"type":"view","id":"concept-graph"},{"type":"view","id":"score-schemas"}]'
   - layout: syncs
     name: Syncs
