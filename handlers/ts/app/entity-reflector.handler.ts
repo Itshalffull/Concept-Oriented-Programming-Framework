@@ -19,6 +19,34 @@ export function setEntityReflectorKernel(kernel: typeof _kernelRef) {
   _kernelRef = kernel;
 }
 
+// Maps entity type (ContentNode.type) to the Schema name to apply.
+const TYPE_TO_SCHEMA: Record<string, string> = {
+  concept: 'Concept',
+  sync: 'Sync',
+  schema: 'Schema',
+  widget: 'Widget',
+  theme: 'Theme',
+  derived: 'Derived',
+  suite: 'Suite',
+};
+
+// Apply the corresponding schema to a newly created ContentNode.
+// Best-effort: schema may not exist yet during early boot.
+async function applySchemaToNode(nodeId: string, entityType: string): Promise<void> {
+  if (!_kernelRef) return;
+  const schemaName = TYPE_TO_SCHEMA[entityType];
+  if (!schemaName) return;
+
+  try {
+    await _kernelRef.invokeConcept('urn:clef/Schema', 'applyTo', {
+      entity_id: nodeId,
+      schema: schemaName,
+    });
+  } catch {
+    // Schema may not be seeded yet — don't fail reflection
+  }
+}
+
 // --- Provider implementations ---
 
 async function reflectConcepts(): Promise<{ created: number; skipped: number }> {
@@ -81,6 +109,7 @@ async function reflectConcepts(): Promise<{ created: number; skipped: number }> 
       content: JSON.stringify(content),
       createdBy: 'system',
     });
+    await applySchemaToNode(nodeId, 'concept');
     created++;
   }
 
@@ -142,6 +171,7 @@ async function reflectSyncs(): Promise<{ created: number; skipped: number }> {
       content: JSON.stringify(content),
       createdBy: 'system',
     });
+    await applySchemaToNode(nodeId, 'sync');
     created++;
   }
 
@@ -179,6 +209,7 @@ async function reflectSchemas(): Promise<{ created: number; skipped: number }> {
       content: JSON.stringify(content),
       createdBy: 'system',
     });
+    await applySchemaToNode(nodeId, 'schema');
     created++;
   }
 
@@ -229,6 +260,7 @@ async function reflectFromFileCatalog(
         content: JSON.stringify(content),
         createdBy: 'system',
       });
+      await applySchemaToNode(nodeId, kind);
       created++;
     }
   } catch {
