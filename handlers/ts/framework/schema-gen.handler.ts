@@ -521,7 +521,7 @@ export const schemaGenHandler: ConceptHandler = {
       name: 'SchemaGen',
       inputKind: 'ConceptAST',
       outputKind: 'ConceptManifest',
-      capabilities: JSON.stringify(['graphql', 'json-schema', 'invariants']),
+      capabilities: JSON.stringify(['graphql', 'json-schema', 'invariants', 'generate-seeds']),
     };
   },
 
@@ -544,6 +544,97 @@ export const schemaGenHandler: ConceptHandler = {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
       return { variant: 'error', message, ...(stack ? { stack } : {}) };
+    }
+  },
+
+  async generateSeeds(input) {
+    const conceptPaths = input.concept_paths as string;
+    const outputFormat = (input.output_format as string) ?? 'yaml';
+
+    if (!conceptPaths) {
+      return { variant: 'error', message: 'concept_paths is required' };
+    }
+
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const { parseConceptFile } = await import('./parser.js');
+
+      // Resolve file paths: could be comma-separated files or a directory
+      const paths = conceptPaths.split(',').map(p => p.trim());
+      const conceptFiles: string[] = [];
+
+      for (const p of paths) {
+        const resolved = path.resolve(p);
+        try {
+          const stat = fs.statSync(resolved);
+          if (stat.isDirectory()) {
+            // Scan directory for .concept files
+            const entries = fs.readdirSync(resolved);
+            for (const entry of entries) {
+              if (entry.endsWith('.concept')) {
+                conceptFiles.push(path.join(resolved, entry));
+              }
+            }
+          } else if (resolved.endsWith('.concept')) {
+            conceptFiles.push(resolved);
+          }
+        } catch {
+          // skip inaccessible paths
+        }
+      }
+
+      if (conceptFiles.length === 0) {
+        return { variant: 'error', message: 'No .concept files found' };
+      }
+
+      const seedEntries: Array<{ schema: string; fields: string }> = [];
+
+      for (const filePath of conceptFiles) {
+        try {
+          const source = fs.readFileSync(filePath, 'utf-8');
+          const ast = parseConceptFile(source);
+
+          // Extract state field names, skipping set-type entries (those become
+          // separate relations, not fields on the merged schema)
+          const fields = ast.state
+            .filter(entry => entry.type.kind !== 'set')
+            .map(entry => entry.name);
+
+          if (fields.length > 0) {
+            seedEntries.push({
+              schema: ast.name,
+              fields: fields.join(','),
+            });
+          }
+        } catch {
+          // skip files that fail to parse
+        }
+      }
+
+      if (outputFormat === 'json') {
+        return { variant: 'ok', seeds: JSON.stringify(seedEntries, null, 2) };
+      }
+
+      // YAML output (Schema.seeds.yaml format)
+      const yamlLines: string[] = [
+        '# Auto-generated Schema seed entries',
+        '# Review and paste into Schema.seeds.yaml',
+        '',
+        'concept: Schema',
+        'action: defineSchema',
+        'entries:',
+      ];
+
+      for (const entry of seedEntries) {
+        yamlLines.push(`  - schema: ${entry.schema}`);
+        yamlLines.push(`    fields: '${entry.fields}'`);
+      }
+
+      return { variant: 'ok', seeds: yamlLines.join('\n') };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { variant: 'error', message };
     }
   },
 };
