@@ -1,0 +1,13 @@
+# When a graph analysis completes, automatically create a canvas overlay
+# from the result if the analyzed graph is associated with a canvas.
+
+sync AnalysisOverlaysCanvas [recommended]
+when {
+  GraphAnalysis/analyze: [ graph: ?graph; algorithm: ?alg ] => [ ok; result: ?result; category: ?cat; payload: ?payload ]
+}
+where {
+  query Canvas: { ?canvas nodes: ?graph }
+}
+then {
+  AnalysisOverlay/apply: [ canvas: ?canvas; result: ?result; kind: "node-color"; config: {} ]
+}

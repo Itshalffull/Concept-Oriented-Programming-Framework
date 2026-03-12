@@ -1,0 +1,62 @@
+@version(1)
+concept DependencyPatternProvider [C] {
+
+  purpose {
+    Detect structural patterns in Clef dependency graphs that reveal
+    architectural concerns: circular dependencies between concepts,
+    bridge concepts whose removal disconnects the application, hub
+    concepts with excessive coupling, and dependency bottlenecks.
+    Maps generic graph patterns (cycles, bridges, articulation points)
+    to Clef-specific architectural recommendations.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: circular-deps, bridge-concepts,
+        hub-detection, bottleneck-analysis. category: "pattern"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      max_cycle_length: option Int,
+      hub_threshold: option Int
+    }) {
+      -> ok(payload: String) {
+        Detects dependency patterns and returns JSON:
+        { matches: { type: string, concepts: string[],
+          syncs: string[], severity: string,
+          recommendation: string }[], count: number }.
+
+        Algorithm details:
+        - circular-deps: Finds cycles in the concept dependency graph.
+          Each cycle represents mutual coupling that violates concept
+          independence. Severity based on cycle length and sync tiers.
+        - bridge-concepts: Concepts whose removal disconnects parts of
+          the application. Highlights single points of failure in the
+          architecture.
+        - hub-detection: Concepts with degree above hub_threshold
+          (default: 8). Excessive coupling suggests the concept may
+          need decomposition.
+        - bottleneck-analysis: Concepts on the critical path of most
+          sync chains. High betweenness centrality in the sync graph
+          indicates potential performance or reliability bottlenecks.
+      }
+      -> error(message: String) {
+        Analysis failed — dependency graph not available.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "app-deps", algorithm: "circular-deps", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "app-deps", algorithm: "bridge-concepts", config: {})
+      -> ok(payload: _)
+  }
+}

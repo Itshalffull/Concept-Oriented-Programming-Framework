@@ -1,0 +1,53 @@
+@version(1)
+concept ConceptCentralityProvider [C] {
+
+  purpose {
+    Compute centrality scores for Clef concept entities within the
+    dependence graph. Identifies the most important concepts in an
+    application by analyzing sync wiring density, action invocation
+    frequency, and transitive dependency depth. Uses the generic
+    CentralityAnalysisProvider algorithms (degree, betweenness,
+    PageRank) with Clef-specific edge weighting based on sync tier
+    (required > recommended > integration).
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: concept-degree, concept-betweenness,
+        concept-pagerank. category: "centrality"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      sync_tier_weights: option String,
+      include_derived: option String
+    }) {
+      -> ok(payload: String) {
+        Computes concept-level centrality scores. Returns JSON:
+        { scores: { nodeId: string, conceptUri: string, score: number,
+          rank: number, syncCount: number }[] }.
+
+        Weights sync edges by tier:
+        - required: weight 3 (core coupling)
+        - recommended: weight 2 (standard integration)
+        - integration: weight 1 (loose coupling)
+      }
+      -> error(message: String) {
+        Analysis failed — dependence graph not computed for this scope.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "app-deps", algorithm: "concept-pagerank", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "app-deps", algorithm: "concept-degree", config: {})
+      -> ok(payload: _)
+  }
+}

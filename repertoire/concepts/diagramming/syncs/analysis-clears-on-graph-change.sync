@@ -1,0 +1,13 @@
+# When a graph's structure changes (node/edge added or removed),
+# clear cached analysis results since they are now stale.
+
+sync AnalysisClearsOnGraphChange [recommended]
+when {
+  Graph/addNode: [ graph: ?graph ] => [ ok ]
+  Graph/removeNode: [ graph: ?graph ] => [ ok ]
+  Graph/addEdge: [ graph: ?graph ] => [ ok ]
+  Graph/removeEdge: [ graph: ?graph ] => [ ok ]
+}
+then {
+  GraphAnalysis/clearResults: [ graph: ?graph ]
+}

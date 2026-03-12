@@ -1,0 +1,59 @@
+@version(1)
+concept SyncCommunityProvider [C] {
+
+  purpose {
+    Detect concept communities in Clef applications by analyzing sync
+    wiring patterns. Concepts wired together through dense sync
+    networks form natural communities that often correspond to suites
+    or feature boundaries. Identifies coupling hotspots where
+    cross-community sync wiring suggests potential architectural
+    concerns.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: sync-community, suite-boundary-check.
+        category: "community"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      resolution: option String,
+      respect_suite_boundaries: option String
+    }) {
+      -> ok(payload: String) {
+        Detects concept communities and returns JSON:
+        { communities: { communityId: string, concepts: string[],
+          suiteAlignment: string, crossBoundarySyncs: number }[],
+          modularity: number,
+          boundaryViolations: { sync: string, fromCommunity: string,
+          toCommunity: string }[] }.
+
+        Algorithm details:
+        - sync-community: Louvain on the concept-to-concept sync graph
+          with Clef-aware edge weights. Identifies natural concept
+          clusters independent of suite boundaries.
+        - suite-boundary-check: Compares detected communities against
+          declared suite boundaries. Flags syncs that cross community
+          boundaries unexpectedly, suggesting potential suite
+          restructuring.
+      }
+      -> error(message: String) {
+        Analysis failed — no sync data available for this scope.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "app-deps", algorithm: "sync-community", config: {})
+      -> ok(payload: _)
+    then analyze(graph: "app-deps", algorithm: "suite-boundary-check", config: {})
+      -> ok(payload: _)
+  }
+}

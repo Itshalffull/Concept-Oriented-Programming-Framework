@@ -1,0 +1,89 @@
+@version(1)
+concept AnalysisReport [R] {
+
+  purpose {
+    Generate standalone reports from graph analysis results as tables,
+    charts, and markdown summaries. Reports are persistence-backed
+    documents that can be exported, compared across analysis runs,
+    and embedded alongside diagrams. Supports ranked tables for
+    centrality scores, partition summaries for communities, path
+    listings, pattern inventories, and aggregate metric dashboards.
+  }
+
+  state {
+    reports: set R
+    report_result: R -> String
+    report_format: R -> String
+    report_content: R -> String
+    report_title: R -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action generate(result: String, format: String, title: option String) {
+      -> ok(report: R, content: String) {
+        Generates a report from the analysis result in the requested
+        format. Supported formats:
+        - table: ranked/grouped tabular data as JSON rows
+        - chart: chart specification (bar, pie, scatter, histogram)
+        - summary: markdown prose summary with key findings
+        - dashboard: composite with metrics, top-N, and distribution
+      }
+      -> unsupported_format(message: String) {
+        The requested format is not supported.
+      }
+      -> invalid_result(message: String) {
+        The analysis result reference is invalid or has been cleared.
+      }
+    }
+
+    action compare(results: String, format: String) {
+      -> ok(report: R, content: String) {
+        Generates a comparison report across multiple analysis results,
+        highlighting changes in rankings, community shifts, or metric
+        deltas between runs.
+      }
+      -> insufficient_results(message: String) {
+        Fewer than two valid results were provided for comparison.
+      }
+    }
+
+    action getReport(report: R) {
+      -> ok(report: R, result: String, format: String, title: String, content: String) {
+        Returns the stored report with full content.
+      }
+      -> notfound() {
+        No report exists with the given identifier.
+      }
+    }
+
+    action listReports(result: option String) {
+      -> ok(reports: String) {
+        Returns all stored reports, optionally filtered by the
+        source analysis result.
+      }
+    }
+
+    action exportReport(report: R, outputFormat: String) {
+      -> ok(exported: String) {
+        Exports the report content to an external format:
+        csv, json, markdown, html.
+      }
+      -> notfound() {
+        No report exists with the given identifier.
+      }
+      -> unsupported_output(message: String) {
+        The requested output format is not supported.
+      }
+    }
+  }
+
+  invariant {
+    after generate(result: "r1", format: "table", title: "Centrality Scores")
+      -> ok(report: _, content: _)
+    then getReport(report: _) -> ok(report: _, result: "r1", format: "table", title: "Centrality Scores", content: _)
+  }
+}

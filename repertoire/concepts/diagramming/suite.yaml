@@ -1,7 +1,7 @@
 # Diagramming Suite Manifest
 name: diagramming
-version: 0.1.0
-description: "Composable diagramming with pluggable notations, layouts, ports, constraints, and export."
+version: 0.2.0
+description: "Composable diagramming with pluggable notations, layouts, graph analysis, ports, constraints, and export."
 
 concepts:
   - name: ConnectorPort
@@ -108,6 +108,37 @@ concepts:
     spec: providers/causal-loop-notation.concept
     optional: true
 
+  # Graph analysis core
+  - name: GraphAnalysis
+    spec: graph-analysis.concept
+  - name: AnalysisOverlay
+    spec: analysis-overlay.concept
+  - name: AnalysisReport
+    spec: analysis-report.concept
+
+  # Graph analysis providers
+  - name: CentralityAnalysisProvider
+    spec: providers/centrality-analysis.concept
+    optional: true
+  - name: CommunityDetectionProvider
+    spec: providers/community-detection.concept
+    optional: true
+  - name: PathAnalysisProvider
+    spec: providers/path-analysis.concept
+    optional: true
+  - name: PatternDetectionProvider
+    spec: providers/pattern-detection.concept
+    optional: true
+  - name: FlowAnalysisProvider
+    spec: providers/flow-analysis.concept
+    optional: true
+  - name: StructuralAnalysisProvider
+    spec: providers/structural-analysis.concept
+    optional: true
+  - name: ClusteringMetricsProvider
+    spec: providers/clustering-metrics.concept
+    optional: true
+
 syncs:
   # Canvas ↔ Linking syncs
   - name: canvas-promote-creates-reference
@@ -164,6 +195,26 @@ syncs:
     file: syncs/notation-provider-registers.sync
     tier: integration
 
+  # Graph analysis syncs
+  - name: analysis-provider-registers
+    file: syncs/analysis-provider-registers.sync
+    tier: integration
+  - name: analysis-dispatches-to-provider
+    file: syncs/analysis-dispatches-to-provider.sync
+    tier: required
+  - name: analysis-overlays-canvas
+    file: syncs/analysis-overlays-canvas.sync
+    tier: recommended
+  - name: analysis-generates-report
+    file: syncs/analysis-generates-report.sync
+    tier: recommended
+  - name: analysis-clears-on-graph-change
+    file: syncs/analysis-clears-on-graph-change.sync
+    tier: recommended
+  - name: score-dependence-feeds-analysis
+    file: syncs/score-dependence-feeds-analysis.sync
+    tier: integration
+
 dependencies:
   - name: content
     concepts: [Canvas]
@@ -181,3 +232,6 @@ dependencies:
     concepts: [SearchIndex]
   - name: classification
     concepts: [Schema]
+  - name: code-analysis
+    concepts: [DependenceGraph]
+    optional: true

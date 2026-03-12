@@ -1,0 +1,56 @@
+@version(1)
+concept FlowAnalysisProvider [C] {
+
+  purpose {
+    Compute network flow properties including maximum flow and minimum
+    cut. Determines capacity bottlenecks and minimal edge sets that
+    disconnect source from sink in weighted directed graphs.
+  }
+
+  state {
+    cache: set C
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, category: String) {
+        Returns provider metadata for PluginRegistry registration.
+        Registers algorithms: max-flow, min-cut.
+        category: "flow"
+      }
+    }
+
+    action analyze(graph: String, algorithm: String, config: option {
+      source: option String,
+      sink: option String,
+      capacity_field: option String
+    }) {
+      -> ok(payload: String) {
+        Computes flow properties and returns JSON:
+        - max-flow: { value: number, edgeFlows: { source: string, target: string, flow: number, capacity: number }[] }
+        - min-cut: { value: number, cutEdges: { source: string, target: string }[], sourcePartition: string[], sinkPartition: string[] }
+
+        Algorithm details:
+        - max-flow: Edmonds-Karp (BFS-based Ford-Fulkerson). O(V*E^2).
+          Requires source and sink nodes. Edge capacities from
+          capacity_field or default to 1.
+        - min-cut: Derived from max-flow residual graph. Returns the
+          minimum weight edge cut separating source from sink, plus
+          the two resulting partitions.
+      }
+      -> error(message: String) {
+        Analysis failed — missing source/sink, no path exists,
+        or negative capacities detected.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(graph: "g1", algorithm: "max-flow",
+      config: { source: "S", sink: "T" })
+      -> ok(payload: _)
+    then analyze(graph: "g1", algorithm: "min-cut",
+      config: { source: "S", sink: "T" })
+      -> ok(payload: _)
+  }
+}

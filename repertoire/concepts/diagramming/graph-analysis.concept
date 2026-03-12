@@ -1,0 +1,94 @@
+@version(1)
+concept GraphAnalysis [A] {
+
+  purpose {
+    Dispatch graph analysis algorithm execution to registered providers
+    and store results for visualization and reporting. Providers register
+    named algorithms by category; analyze dispatches to the registered
+    provider for the requested algorithm. Results carry typed payloads
+    (node scores, community assignments, paths, subgraph sets, flow
+    values, metrics) suitable for overlay rendering or report generation.
+  }
+
+  state {
+    results: set A
+    result_graph: A -> String
+    result_algorithm: A -> String
+    result_category: A -> String
+    result_provider: A -> String
+    result_payload: A -> String
+    result_metadata: A -> String
+    registered_algorithms: set A
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action analyze(graph: String, algorithm: String, config: option String) {
+      -> ok(result: A, category: String, payload: String) {
+        Dispatches the algorithm to the registered provider, stores the
+        result, and returns the typed payload. The payload is a JSON-encoded
+        structure whose shape depends on the algorithm category:
+        - centrality: { scores: { nodeId: number }[] }
+        - community: { communities: { communityId: string, nodes: string[] }[] }
+        - path: { paths: { nodes: string[], edges: string[], cost: number }[] }
+        - pattern: { matches: { type: string, nodes: string[], edges: string[] }[] }
+        - flow: { value: number, edgeFlows: { edge: string, flow: number }[] }
+        - structural: { components: { id: string, nodes: string[] }[] }
+        - clustering: { nodeMetrics: { nodeId: string, coefficient: number }[], graphMetric: number }
+      }
+      -> unknown_algorithm(message: String) {
+        No provider is registered for the requested algorithm.
+      }
+      -> analysis_failed(message: String) {
+        The provider encountered an error during analysis.
+      }
+    }
+
+    action register(algorithm: String, category: String, provider: String) {
+      -> ok() {
+        Registers an analysis provider for the given algorithm name
+        within the specified category.
+      }
+      -> already_registered(message: String) {
+        A provider is already registered for this algorithm.
+      }
+    }
+
+    action getResult(result: A) {
+      -> ok(result: A, graph: String, algorithm: String, category: String, payload: String, metadata: String) {
+        Returns the stored analysis result with full metadata.
+      }
+      -> notfound() {
+        No result exists with the given identifier.
+      }
+    }
+
+    action listResults(graph: String) {
+      -> ok(results: String) {
+        Returns all stored analysis results for the given graph,
+        as a JSON array of result summaries.
+      }
+    }
+
+    action listAlgorithms(category: option String) {
+      -> ok(algorithms: String) {
+        Returns all registered algorithms, optionally filtered by
+        category. JSON array of { algorithm, category, provider }.
+      }
+    }
+
+    action clearResults(graph: String) {
+      -> ok(count: Int) {
+        Removes all stored analysis results for the given graph.
+      }
+    }
+  }
+
+  invariant {
+    after register(algorithm: "pagerank", category: "centrality", provider: "CentralityAnalysis") -> ok()
+    then analyze(graph: "g1", algorithm: "pagerank", config: {}) -> ok(result: _, category: "centrality", payload: _)
+  }
+}
