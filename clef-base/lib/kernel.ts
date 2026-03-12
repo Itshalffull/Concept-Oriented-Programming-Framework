@@ -43,6 +43,8 @@ import { automationRuleHandler } from '../../handlers/ts/app/automation-rule.han
 import { taxonomyHandler } from '../../handlers/ts/app/taxonomy.handler';
 import { displayModeHandler } from '../../handlers/ts/app/display-mode.handler';
 import { fieldPlacementHandler } from '../../handlers/ts/app/field-placement.handler';
+import { rendererHandler } from '../../handlers/ts/app/renderer.handler';
+import { componentHandler } from '../../handlers/ts/app/component.handler';
 import { themeHandler } from '../../handlers/ts/app/theme.handler';
 import { queryHandler } from '../../handlers/ts/app/query.handler';
 import { contentStorageHandler } from '../../handlers/ts/app/content-storage.handler';
@@ -56,6 +58,9 @@ import { accessCatalogHandler } from '../../handlers/ts/app/access-catalog.handl
 import { resourceGrantPolicyHandler } from '../../handlers/ts/app/resource-grant-policy.handler';
 import { sessionHandler } from '../../handlers/ts/app/session.handler';
 import { appInstallationHandler } from '../../handlers/ts/app/app-installation.handler';
+import { graphAnalysisHandler } from '../../handlers/ts/app/graph-analysis.handler';
+import { analysisOverlayHandler } from '../../handlers/ts/app/analysis-overlay.handler';
+import { analysisReportHandler } from '../../handlers/ts/app/analysis-report.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
 import { pickActiveTheme, type ThemeRecord } from './theme-selection';
 
@@ -73,6 +78,16 @@ const CLEF_BASE_SYNC_FILES = [
   'suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync',
 ] as const;
 
+// Presentation syncs from the Repertoire — DisplayMode/FieldPlacement rendering pipeline
+const PRESENTATION_SYNC_FILES = [
+  '../repertoire/concepts/presentation/syncs/display-mode-resolve-strategy.sync',
+  '../repertoire/concepts/presentation/syncs/display-mode-uses-layout.sync',
+  '../repertoire/concepts/presentation/syncs/display-mode-uses-mapping.sync',
+  '../repertoire/concepts/presentation/syncs/view-resolves-contextual-filters.sync',
+  '../repertoire/concepts/presentation/syncs/area-renders-field-placement.sync',
+  '../repertoire/concepts/presentation/syncs/field-placement-uses-mapping.sync',
+] as const;
+
 function makeStorage(conceptName: string) {
   return createStorageFromEnv(`clef-base:${conceptName}`) ?? createInMemoryStorage();
 }
@@ -83,6 +98,18 @@ function registerClefBaseSyncs(kernel: Kernel) {
     const syncs = parseSyncFile(source);
     for (const sync of syncs) {
       kernel.registerSync(sync);
+    }
+  }
+
+  for (const relativePath of PRESENTATION_SYNC_FILES) {
+    try {
+      const source = readFileSync(resolve(relativePath), 'utf-8');
+      const syncs = parseSyncFile(source);
+      for (const sync of syncs) {
+        kernel.registerSync(sync);
+      }
+    } catch {
+      // Presentation syncs are optional — don't fail startup if missing
     }
   }
 }
@@ -134,6 +161,8 @@ export function getKernel(): Kernel {
   reg('urn:clef/Taxonomy', taxonomyHandler, makeStorage('taxonomy'));
   reg('urn:clef/DisplayMode', displayModeHandler, makeStorage('display-mode'));
   reg('urn:clef/FieldPlacement', fieldPlacementHandler, makeStorage('field-placement'));
+  reg('urn:clef/Renderer', rendererHandler, makeStorage('renderer'));
+  reg('urn:clef/Component', componentHandler, makeStorage('component'));
   reg('urn:clef/Theme', themeHandler, makeStorage('theme'));
   reg('urn:clef/Query', queryHandler, makeStorage('query'));
   reg('urn:clef/ContentStorage', contentStorageHandler, makeStorage('content-storage'));
@@ -146,6 +175,11 @@ export function getKernel(): Kernel {
   reg('urn:clef/AccessCatalog', accessCatalogHandler, getIdentityStorage('access-catalog'));
   reg('urn:clef/ResourceGrantPolicy', resourceGrantPolicyHandler, getIdentityStorage('resource-grant-policy'));
   reg('urn:clef/Session', sessionHandler, getIdentityStorage('session'));
+
+  // Graph analysis concepts
+  reg('urn:clef/GraphAnalysis', graphAnalysisHandler, makeStorage('graph-analysis'));
+  reg('urn:clef/AnalysisOverlay', analysisOverlayHandler, makeStorage('analysis-overlay'));
+  reg('urn:clef/AnalysisReport', analysisReportHandler, makeStorage('analysis-report'));
 
   registerClefBaseSyncs(kernel);
 
