@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import { createConceptRegistry } from '../../runtime/adapters/transport';
 import { createSelfHostedKernel } from '../../runtime/self-hosted';
 import { createSyncEngineHandler } from '../../handlers/ts/framework/sync-engine.handler';
@@ -95,7 +95,9 @@ const CLEF_BASE_SYNC_FILES = [
   'suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync',
 ] as const;
 
-const CLEF_BASE_ROOT = resolve(dirname(__filename), '..');
+// process.cwd() is the clef-base/ dir when Next.js runs; __filename
+// resolves inside .next/server/ at runtime, so we can't use it.
+const CLEF_BASE_ROOT = process.cwd();
 
 // Presentation syncs from the Repertoire — DisplayMode/FieldPlacement rendering pipeline
 const PRESENTATION_SYNC_FILES = [
