@@ -1,0 +1,90 @@
+@version(1)
+concept FileCatalog [E] {
+
+  purpose {
+    Discover what Clef artifacts exist on disk. Uses PluginRegistry providers
+    so each file type (.concept, .sync, .widget, .theme, .derived, suite.yaml)
+    has its own discovery provider. Single source of truth for "what's available"
+    vs "what's loaded."
+  }
+
+  state {
+    entries: set E
+    path: E -> String
+    kind: E -> String
+    name: E -> String
+    suite: E -> option String
+    metadata: E -> String
+    providers: set String
+    provider_kind: String -> String
+    file_pattern: String -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action discover(base_paths: String) {
+      -> ok(found: Int) {
+        Discover providers from PluginRegistry (type: file-catalog),
+        then delegate to each provider to scan its file pattern.
+        Stores entries. base_paths is comma-separated list of directories.
+      }
+      -> error(message: String) {
+        One or more base paths do not exist or are not readable.
+      }
+    }
+
+    action registerProvider(provider_name: String, kind: String, file_pattern: String) {
+      -> ok() {
+        Register a file discovery provider for a specific artifact kind.
+      }
+      -> already_registered() {
+        A provider with this name already exists.
+      }
+    }
+
+    action get(name: String, kind: String) {
+      -> ok(entry: String) {
+        Return the catalog entry as JSON.
+      }
+      -> notfound() {
+        No entry with this name and kind exists.
+      }
+    }
+
+    action list(kind: String) {
+      -> ok(entries: String) {
+        Return all catalog entries, optionally filtered by kind.
+        Entries returned as JSON array.
+      }
+    }
+
+    action listForSuite(suite: String) {
+      -> ok(entries: String) {
+        Return all artifacts belonging to the given suite as JSON array.
+      }
+    }
+
+    action syncFilePathsForSuite(suite: String, search_paths: String) {
+      -> ok(paths: String) {
+        Return resolved sync file paths for a suite, following uses:
+        dependencies. Replaces hardcoded sync path arrays in kernel.ts.
+        Paths returned as JSON array of absolute paths.
+      }
+      -> error(message: String) {
+        Suite manifest not found or dependency cycle detected.
+      }
+    }
+  }
+
+  invariant {
+    after registerProvider(provider_name: "concept", kind: "concept", file_pattern: "*.concept")
+      -> ok()
+    then discover(base_paths: "/test/specs")
+      -> ok(found: n)
+    then list(kind: "concept")
+      -> ok(entries: es)
+  }
+}
