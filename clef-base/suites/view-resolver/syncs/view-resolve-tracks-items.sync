@@ -1,0 +1,16 @@
+# View resolver: track view-item relations after data resolution.
+# Fires when KernelViewResolver returns data and a data concept
+# also returns items in the same flow.
+
+sync ViewResolveTracksItems [eager]
+  purpose: "After the dispatched concept returns data, sync view-item relations so backlinks and graph show which views display each entity"
+when {
+  KernelViewResolver/resolve: [ view: ?view ] => [ variant: "ok" ]
+  ?concept/?action: [] => [ variant: "ok"; items: ?data ]
+}
+then {
+  Relation/trackViewItems: [
+    view: ?view;
+    items: ?data
+  ]
+}

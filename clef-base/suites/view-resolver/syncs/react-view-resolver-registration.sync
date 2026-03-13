@@ -1,0 +1,16 @@
+# View resolver: register ReactViewResolver as a view resolver provider.
+# On startup, registers ReactViewResolver with PluginRegistry so it
+# can be dispatched by ViewResolver/resolve for client-side data fetching.
+
+sync ReactViewResolverRegistration [eager]
+  purpose: "Register ReactViewResolver as a view_resolver_provider with PluginRegistry on startup"
+when {
+  ReactViewResolver/register: [] => [ variant: "ok" ]
+}
+then {
+  PluginRegistry/register: [
+    category: "view_resolver_provider";
+    provider_id: "react";
+    handler: "urn:clef/ReactViewResolver"
+  ]
+}

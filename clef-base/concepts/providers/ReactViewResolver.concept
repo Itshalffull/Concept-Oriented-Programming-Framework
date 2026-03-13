@@ -1,0 +1,48 @@
+concept ReactViewResolver [R] {
+
+  purpose {
+    Client-side View data resolver that fetches data through
+    React hooks and the browser API layer. Suitable for
+    interactive views that need client-side state management,
+    optimistic updates, and re-rendering on data changes.
+  }
+
+  state {
+    registrations: set R
+    registered: R -> Bool
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Register this provider with the framework. Returns
+        the provider name "react" for PluginRegistry wiring.
+      }
+      -> already_registered() {
+        This provider has already been registered in the
+        current runtime.
+      }
+    }
+
+    action resolve(view: String, data_source: String, filters: String, context: String) {
+      -> ok(data: String, count: String, view: String) {
+        Fetch data via the kernel API endpoint from the
+        browser, apply client-side filters, and return the
+        result set as a JSON array.
+      }
+      -> invalid_source(message: String) {
+        The data_source JSON is malformed or references a
+        concept or action not available through the API.
+      }
+      -> error(message: String) {
+        The API call failed — network error, timeout, or
+        the server returned an error response.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "react")
+    then register() -> already_registered()
+  }
+}

@@ -1,0 +1,16 @@
+# View resolver: register KernelViewResolver as a view resolver provider.
+# On startup, registers KernelViewResolver with PluginRegistry so it
+# can be dispatched by ViewResolver/resolve for server-side data fetching.
+
+sync KernelViewResolverRegistration [eager]
+  purpose: "Register KernelViewResolver as a view_resolver_provider with PluginRegistry on startup"
+when {
+  KernelViewResolver/register: [] => [ variant: "ok" ]
+}
+then {
+  PluginRegistry/register: [
+    category: "view_resolver_provider";
+    provider_id: "kernel";
+    handler: "urn:clef/KernelViewResolver"
+  ]
+}

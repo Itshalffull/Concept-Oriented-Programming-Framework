@@ -1,0 +1,56 @@
+concept ViewResolver [V] {
+
+  purpose {
+    Pluggable data resolution for Views. Coordinates between View
+    configurations and resolver providers that fetch data using
+    different strategies (server-side kernel invocation, client-side
+    React hooks). Each provider registers itself via PluginRegistry;
+    the hub dispatches resolve calls to the appropriate provider
+    based on resolver_type.
+  }
+
+  state {
+    providers: set V
+    resolver_type: V -> String
+    provider_name: V -> String
+  }
+
+  actions {
+    action register(resolver_type: String, provider: String) {
+      -> ok(resolver_type: String) {
+        Store a new resolver provider for the given type. The
+        provider name identifies the concept handler that will
+        be invoked for resolution.
+      }
+      -> already_registered(resolver_type: String) {
+        A provider is already registered for this resolver type.
+      }
+    }
+
+    action resolve(view: String, data_source: String, filters: String, context: String) {
+      -> ok(data: String, count: String, view: String) {
+        The registered provider fetched data for the view's
+        data source configuration. Data is a JSON array of
+        result entities; count is the total number of results.
+      }
+      -> no_provider(resolver_type: String) {
+        No resolver provider is registered for the requested
+        resolver type. Register a provider first.
+      }
+      -> view_not_found(view: String) {
+        The view identifier does not match any known view
+        configuration.
+      }
+      -> error(message: String) {
+        The provider encountered an error during data
+        resolution — network failure, invalid data source
+        configuration, or concept action returned an error.
+      }
+    }
+  }
+
+  invariant {
+    after register(resolver_type: "kernel", provider: "KernelViewResolver") -> ok(resolver_type: "kernel")
+    then resolve(view: "test-view", data_source: "{\"concept\":\"ContentNode\",\"action\":\"list\"}", filters: "[]", context: "{\"resolver_type\":\"kernel\"}") -> ok(data: d, count: c, view: "test-view")
+  }
+}

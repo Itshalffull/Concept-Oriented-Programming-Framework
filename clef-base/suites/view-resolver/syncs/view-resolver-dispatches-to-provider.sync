@@ -1,0 +1,21 @@
+# View resolver: dispatch ViewResolver resolution to provider.
+# When ViewResolver/resolve fires, look up the registered provider
+# in PluginRegistry and dispatch to it for actual data fetching.
+
+sync ViewResolverDispatchesToProvider [eager]
+  purpose: "When ViewResolver/resolve fires, dispatch to the registered provider via PluginRegistry"
+when {
+  ViewResolver/resolve: [ view: ?view; data_source: ?data_source; filters: ?filters; context: ?context ]
+    => [ variant: "ok"; resolver_type: ?resolver_type ]
+}
+where {
+  PluginRegistry: { category: "view_resolver_provider"; provider_id: ?resolver_type; handler: ?handler }
+}
+then {
+  ?handler/resolve: [
+    view: ?view;
+    data_source: ?data_source;
+    filters: ?filters;
+    context: ?context
+  ]
+}

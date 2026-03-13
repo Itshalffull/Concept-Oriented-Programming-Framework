@@ -1,0 +1,48 @@
+concept KernelViewResolver [K] {
+
+  purpose {
+    Server-side View data resolver that fetches data by invoking
+    concept actions through the kernel. Runs in pure TypeScript
+    without React dependencies, suitable for API routes, server
+    components, and seed-time resolution.
+  }
+
+  state {
+    registrations: set K
+    registered: K -> Bool
+  }
+
+  actions {
+    action register() {
+      -> ok(provider_name: String) {
+        Register this provider with the framework. Returns
+        the provider name "kernel" for PluginRegistry wiring.
+      }
+      -> already_registered() {
+        This provider has already been registered in the
+        current runtime.
+      }
+    }
+
+    action resolve(view: String, data_source: String, filters: String, context: String) {
+      -> ok(data: String, count: String, view: String) {
+        Invoke the concept action specified in data_source
+        (e.g. ContentNode/list) through the kernel, apply
+        filters, and return the result set as a JSON array.
+      }
+      -> invalid_source(message: String) {
+        The data_source JSON is malformed or references a
+        concept or action that is not registered in the kernel.
+      }
+      -> error(message: String) {
+        The kernel invocation failed — the concept action
+        returned an error variant or threw an exception.
+      }
+    }
+  }
+
+  invariant {
+    after register() -> ok(provider_name: "kernel")
+    then register() -> already_registered()
+  }
+}

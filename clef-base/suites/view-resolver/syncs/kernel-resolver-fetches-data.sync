@@ -1,0 +1,14 @@
+# View resolver: KernelViewResolver dispatches to the concept/action
+# specified in the view's dataSource. The handler parses the JSON and
+# returns target_concept, target_action as separate output fields.
+# This sync uses dynamic dispatch for both concept and action.
+
+sync KernelResolverFetchesData [eager]
+  purpose: "Dispatch from KernelViewResolver to the concept/action in the view's dataSource configuration"
+when {
+  KernelViewResolver/resolve: [ view: ?view ]
+    => [ variant: "ok"; target_concept: ?concept; target_action: ?action ]
+}
+then {
+  ?concept/?action: []
+}
