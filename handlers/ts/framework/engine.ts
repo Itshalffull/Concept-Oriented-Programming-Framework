@@ -167,10 +167,16 @@ export function matchWhenClause(
   const results: Binding[] = [];
   const resultIds = new Set<string>();
 
+  // Helper: check if a pattern's concept/action matches a completion
+  // Supports ?variable wildcards that match any value
+  function conceptActionMatches(pattern: WhenPattern, completion: ActionCompletion): boolean {
+    const conceptMatch = pattern.concept.startsWith('?') || pattern.concept === completion.concept;
+    const actionMatch = pattern.action.startsWith('?') || pattern.action === completion.action;
+    return conceptMatch && actionMatch;
+  }
+
   // Find the index of the first pattern that matches the trigger
-  const firstTriggerPatternIdx = patterns.findIndex(p => 
-    p.concept === trigger.concept && p.action === trigger.action
-  );
+  const firstTriggerPatternIdx = patterns.findIndex(p => conceptActionMatches(p, trigger));
 
   if (firstTriggerPatternIdx === -1) return [];
 
@@ -181,8 +187,7 @@ export function matchWhenClause(
     }
     return completions.filter(c =>
       c.id !== trigger.id &&
-      c.concept === pattern.concept &&
-      c.action === pattern.action
+      conceptActionMatches(pattern, c)
     );
   });
 
@@ -216,8 +221,22 @@ export function matchWhenClause(
         __matchedCompletionIds: [...currentBinding.__matchedCompletionIds, candidate.id],
       };
 
+      // Bind ?concept and ?action wildcards from the completion
       let consistent = true;
-      for (const field of pattern.inputFields) {
+      if (pattern.concept.startsWith('?')) {
+        const varName = pattern.concept.slice(1);
+        if (!matchField({ name: varName, match: { type: 'variable', name: varName } }, candidate.concept, nextBinding)) {
+          consistent = false;
+        }
+      }
+      if (consistent && pattern.action.startsWith('?')) {
+        const varName = pattern.action.slice(1);
+        if (!matchField({ name: varName, match: { type: 'variable', name: varName } }, candidate.action, nextBinding)) {
+          consistent = false;
+        }
+      }
+
+      if (consistent) for (const field of pattern.inputFields) {
         if (!matchField(field, candidate.input[field.name], nextBinding)) {
           consistent = false;
           break;
@@ -446,10 +465,19 @@ export function buildInvocations(
       }
     }
 
+    // Resolve dynamic action references: ?action → binding value
+    let actionName = action.action;
+    if (actionName.startsWith('?')) {
+      const resolved = binding[actionName.slice(1)];
+      if (typeof resolved === 'string') {
+        actionName = resolved;
+      }
+    }
+
     invocations.push({
       id: generateId(),
       concept,
-      action: action.action,
+      action: actionName,
       input,
       flow,
       sync: syncName,
@@ -592,6 +620,25 @@ export class SyncEngine {
   }
 
   /**
+   * Find syncs with wildcard (?concept/?action) when-clause patterns
+   * that could match the given concept/action. These are indexed under
+   * keys containing '?' and need to be checked for every completion.
+   */
+  private getWildcardCandidates(concept: string, action: string): Set<CompiledSync> {
+    const result = new Set<CompiledSync>();
+    for (const [key, syncs] of this.index) {
+      if (!key.includes('?')) continue;
+      const [patConcept, patAction] = key.split(':');
+      const conceptMatch = patConcept.startsWith('?') || patConcept === concept;
+      const actionMatch = patAction.startsWith('?') || patAction === action;
+      if (conceptMatch && actionMatch) {
+        for (const s of syncs) result.add(s);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Atomically replace the sync index with a new set of syncs.
    * In-flight flows continue using the old sync set (they have
    * captured references). New completions use the new index.
@@ -688,10 +735,14 @@ export class SyncEngine {
     // 1. Append completion to the action log
     this.log.append(completion, parentId);
 
-    // 2. Find candidate syncs
+    // 2. Find candidate syncs (exact match + wildcard patterns)
     const key = indexKey(completion.concept, completion.action);
-    const candidates = this.index.get(key);
-    if (!candidates) return [];
+    const exactCandidates = this.index.get(key);
+    const wildcardCandidates = this.getWildcardCandidates(completion.concept, completion.action);
+    if (!exactCandidates && wildcardCandidates.size === 0) return [];
+    const candidates = new Set<CompiledSync>();
+    if (exactCandidates) for (const s of exactCandidates) candidates.add(s);
+    for (const s of wildcardCandidates) candidates.add(s);
 
     const allInvocations: ActionInvocation[] = [];
 
@@ -730,6 +781,14 @@ export class SyncEngine {
         const whereBindings = await evaluateWhere(
           sync.where, binding, this.registry,
         );
+        if (whereBindings.length === 0 && sync.where.length > 0) {
+          const bindingDebug = Object.entries(binding)
+            .filter(([k]) => k !== '__matchedCompletionIds')
+            .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+            .join(', ');
+          const whereDebug = sync.where.map(w => `${w.type}:${w.concept ?? ''}(${(w.bindings ?? []).map(b => `${b.field}→${b.variable}`).join(',')})`).join('; ');
+          console.warn(`[clef] Sync "${sync.name}": where-clause produced 0 results.\n  bindings: {${bindingDebug}}\n  where: ${whereDebug}`);
+        }
 
         // 6c. For each where result, produce invocations
         for (const fullBinding of whereBindings) {

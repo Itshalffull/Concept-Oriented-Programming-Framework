@@ -41,15 +41,17 @@ export function createInProcessAdapter(
       }
 
       const result = await actionFn(invocation.input, storage);
-      const { variant, ...output } = result;
+      const { variant, ...rest } = result;
 
+      // Include variant in output so sync output patterns like
+      // => [variant: "ok"] can match against it.
       return {
         id: invocation.id,
         concept: invocation.concept,
         action: invocation.action,
         input: invocation.input,
         variant,
-        output,
+        output: { ...rest, variant },
         flow: invocation.flow,
         timestamp: timestamp(),
       };

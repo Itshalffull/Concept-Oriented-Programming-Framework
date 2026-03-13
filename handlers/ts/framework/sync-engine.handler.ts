@@ -112,6 +112,24 @@ export class DistributedSyncEngine {
     this.completionForwarders.push(forwarder);
   }
 
+  /**
+   * Find syncs with wildcard (?concept/?action) when-clause patterns
+   * that could match the given concept/action.
+   */
+  private getWildcardCandidates(concept: string, action: string): Set<CompiledSync> {
+    const result = new Set<CompiledSync>();
+    for (const [key, syncs] of this.syncIndex) {
+      if (!key.includes('?')) continue;
+      const [patConcept, patAction] = key.split(':');
+      const conceptMatch = patConcept.startsWith('?') || patConcept === concept;
+      const actionMatch = patAction.startsWith('?') || patAction === action;
+      if (conceptMatch && actionMatch) {
+        for (const s of syncs) result.add(s);
+      }
+    }
+    return result;
+  }
+
   /** Register a compiled sync */
   registerSync(sync: CompiledSync): void {
     this.syncs.push(sync);
@@ -155,10 +173,14 @@ export class DistributedSyncEngine {
       await forwarder(completion);
     }
 
-    // 3. Find candidate syncs
+    // 3. Find candidate syncs (exact match + wildcard patterns)
     const key = indexKey(completion.concept, completion.action);
-    const candidates = this.syncIndex.get(key);
-    if (!candidates) return [];
+    const exactCandidates = this.syncIndex.get(key);
+    const wildcardCandidates = this.getWildcardCandidates(completion.concept, completion.action);
+    if (!exactCandidates && wildcardCandidates.size === 0) return [];
+    const candidates = new Set<CompiledSync>();
+    if (exactCandidates) for (const s of exactCandidates) candidates.add(s);
+    for (const s of wildcardCandidates) candidates.add(s);
 
     const allInvocations: ActionInvocation[] = [];
 

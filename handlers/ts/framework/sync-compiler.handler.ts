@@ -36,8 +36,11 @@ export const syncCompilerHandler: ConceptHandler = {
       const boundVars = new Set<string>();
       const referencedVars = new Set<string>();
 
-      // Variables bound in when-clause output fields
+      // Variables bound in when-clause (concept/action wildcards + field patterns)
       for (const pattern of ast.when) {
+        // Dynamic concept/action refs like ?concept/?action bind variables
+        if (pattern.concept.startsWith('?')) boundVars.add(pattern.concept.slice(1));
+        if (pattern.action.startsWith('?')) boundVars.add(pattern.action.slice(1));
         for (const field of pattern.inputFields) {
           if (field.match.type === 'variable') boundVars.add(field.match.name);
         }
@@ -73,6 +76,10 @@ export const syncCompilerHandler: ConceptHandler = {
         // Dynamic concept refs like ?provider
         if (action.concept.startsWith('?')) {
           referencedVars.add(action.concept.slice(1));
+        }
+        // Dynamic action refs like ?action
+        if (action.action.startsWith('?')) {
+          referencedVars.add(action.action.slice(1));
         }
         for (const field of action.fields) {
           if (field.value.type === 'variable') {

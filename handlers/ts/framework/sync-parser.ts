@@ -341,10 +341,22 @@ class SyncFileParser {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
 
-      // Parse ConceptAction: Concept/Action
-      const concept = this.parseConceptRef();
+      // Parse ConceptAction: Concept/Action (supports ?variable for dynamic dispatch)
+      let concept: string;
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        concept = `?${this.expectIdent().value}`;
+      } else {
+        concept = this.parseConceptRef();
+      }
       this.expect('SLASH');
-      const action = this.expectIdent().value;
+      let action: string;
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        action = `?${this.expectIdent().value}`;
+      } else {
+        action = this.expectIdent().value;
+      }
 
       this.expect('COLON');
 
@@ -401,7 +413,7 @@ class SyncFileParser {
       }
 
       patterns.push({
-        concept: `urn:clef/${concept}`,
+        concept: concept.startsWith('?') ? concept : `urn:clef/${concept}`,
         action,
         inputFields,
         outputFields,
@@ -759,7 +771,14 @@ class SyncFileParser {
         concept = this.parseConceptRef();
       }
       this.expect('SLASH');
-      const action = this.expectIdent().value;
+      // Support dynamic action references: ?variable or static identifier
+      let action: string;
+      if (this.peek().type === 'QUESTION') {
+        this.advance();
+        action = `?${this.expectIdent().value}`;
+      } else {
+        action = this.expectIdent().value;
+      }
 
       this.expect('COLON');
       this.expect('LBRACKET');
