@@ -1,8 +1,8 @@
 // Relation Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 export const relationHandler: ConceptHandler = {
-  async defineRelation(input, storage) {
+  async defineRelation(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const schema = input.schema as string;
 
@@ -21,7 +21,7 @@ export const relationHandler: ConceptHandler = {
     return { variant: 'ok', relation };
   },
 
-  async link(input, storage) {
+  async link(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const source = input.source as string;
     const target = input.target as string;
@@ -48,7 +48,7 @@ export const relationHandler: ConceptHandler = {
     return { variant: 'ok', relation, source, target };
   },
 
-  async unlink(input, storage) {
+  async unlink(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const source = input.source as string;
     const target = input.target as string;
@@ -75,7 +75,7 @@ export const relationHandler: ConceptHandler = {
     return { variant: 'ok', relation, source, target };
   },
 
-  async getRelated(input, storage) {
+  async getRelated(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const entity = input.entity as string;
 
@@ -105,7 +105,7 @@ export const relationHandler: ConceptHandler = {
     return { variant: 'ok', related: relatedValue };
   },
 
-  async defineRollup(input, storage) {
+  async defineRollup(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const formula = input.formula as string;
 
@@ -122,7 +122,7 @@ export const relationHandler: ConceptHandler = {
     return { variant: 'ok', relation, formula };
   },
 
-  async computeRollup(input, storage) {
+  async computeRollup(input: Record<string, unknown>, storage: ConceptStorage) {
     const relation = input.relation as string;
     const entity = input.entity as string;
 
@@ -161,5 +161,76 @@ export const relationHandler: ConceptHandler = {
     }
 
     return { variant: 'ok', value };
+  },
+
+  async trackViewItems(input: Record<string, unknown>, storage: ConceptStorage) {
+    const viewId = String(input.view ?? '');
+    const itemsRaw = input.items as string;
+    if (!viewId || !itemsRaw) {
+      return { variant: 'error', message: 'view and items are required' };
+    }
+
+    let itemIds: string[];
+    try {
+      itemIds = JSON.parse(itemsRaw);
+    } catch {
+      return { variant: 'error', message: 'items must be a JSON array of strings' };
+    }
+
+    // Ensure view-item relation type exists
+    const existing = await storage.get('relation', 'view-item');
+    if (!existing) {
+      await storage.put('relation', 'view-item', {
+        relation: 'view-item',
+        definition: JSON.stringify({
+          forward_label: 'displays',
+          reverse_label: 'appears in',
+          cardinality: 'many-to-many',
+        }),
+        links: JSON.stringify([]),
+        rollups: '',
+      });
+    }
+
+    // Get current links
+    const rel = await storage.get('relation', 'view-item');
+    const links: { source: string; target: string }[] = JSON.parse(rel!.links as string);
+
+    // Find existing links for this view
+    const existingTargets = new Set(
+      links.filter(l => l.source === viewId).map(l => l.target),
+    );
+    const currentItems = new Set(itemIds.filter(Boolean));
+
+    // Add new links
+    let created = 0;
+    for (const itemId of currentItems) {
+      if (!existingTargets.has(itemId)) {
+        links.push({ source: viewId, target: itemId });
+        created++;
+      }
+    }
+
+    // Remove stale links
+    let removed = 0;
+    const updated = links.filter(l => {
+      if (l.source === viewId && !currentItems.has(l.target)) {
+        removed++;
+        return false;
+      }
+      return true;
+    });
+
+    await storage.put('relation', 'view-item', {
+      ...rel!,
+      links: JSON.stringify(updated),
+    });
+
+    return { variant: 'ok', created, removed, total: itemIds.length };
+  },
+
+  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
+    const all = await storage.find('relation', {});
+    return { variant: 'ok', items: JSON.stringify(all) };
   },
 };

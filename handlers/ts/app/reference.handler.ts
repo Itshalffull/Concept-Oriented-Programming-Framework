@@ -1,8 +1,8 @@
 // Reference Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 export const referenceHandler: ConceptHandler = {
-  async addRef(input, storage) {
+  async addRef(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
     const target = input.target as string;
 
@@ -25,7 +25,7 @@ export const referenceHandler: ConceptHandler = {
     return { variant: 'ok', source, target };
   },
 
-  async removeRef(input, storage) {
+  async removeRef(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
     const target = input.target as string;
 
@@ -50,7 +50,7 @@ export const referenceHandler: ConceptHandler = {
     return { variant: 'ok', source, target };
   },
 
-  async getRefs(input, storage) {
+  async getRefs(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
 
     const existing = await storage.get('reference', source);
@@ -65,7 +65,7 @@ export const referenceHandler: ConceptHandler = {
     return { variant: 'ok', targets };
   },
 
-  async resolveTarget(input, storage) {
+  async resolveTarget(input: Record<string, unknown>, storage: ConceptStorage) {
     const target = input.target as string;
 
     const allRefs = await storage.find('reference');

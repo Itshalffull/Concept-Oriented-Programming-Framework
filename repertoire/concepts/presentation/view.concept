@@ -24,6 +24,11 @@ concept View [V] {
     title: V -> option String
     description: V -> option String
 
+    display_mode {
+      defaultDisplayMode: V -> option String
+      useDisplayMode: V -> option String
+    }
+
     filter_source {
       source_type: F -> String
       context_binding: F -> option String
@@ -49,7 +54,8 @@ concept View [V] {
       -> ok(view: V, dataSource: String, layout: String, filters: String,
             sorts: String, groups: String, visibleFields: String,
             formatting: String, controls: String, title: String,
-            description: String) {
+            description: String, defaultDisplayMode: option String,
+            useDisplayMode: option String) {
         The full view configuration is returned.
       }
       -> notfound(message: String) {

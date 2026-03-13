@@ -18,6 +18,65 @@ export function resetComponentMappingCounter(): void {
 }
 
 export const componentMappingHandler: ConceptHandler = {
+  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
+    const mappings = await storage.find('mapping', {});
+
+    // Enrich each mapping with slot/prop counts
+    const allSlots = await storage.find('slot_binding', {});
+    const allProps = await storage.find('prop_binding', {});
+
+    const enriched = mappings.map((m: Record<string, unknown>) => {
+      const slots = allSlots.filter((s: Record<string, unknown>) => s.mapping_id === m.id);
+      const props = allProps.filter((p: Record<string, unknown>) => p.mapping_id === m.id);
+      return {
+        ...m,
+        slot_count: slots.length,
+        prop_count: props.length,
+        slot_bindings: JSON.stringify(slots.map((s: Record<string, unknown>) => ({
+          slot_name: s.slot_name,
+          sources: s.sources,
+        }))),
+        prop_bindings: JSON.stringify(props.map((p: Record<string, unknown>) => ({
+          prop_name: p.prop_name,
+          source: p.source,
+        }))),
+      };
+    });
+
+    return { variant: 'ok', items: JSON.stringify(enriched) };
+  },
+
+  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+    const mappingId = input.mapping as string;
+    const mapping = await storage.get('mapping', mappingId);
+    if (!mapping) {
+      return { variant: 'notfound', message: `Mapping '${mappingId}' does not exist.` };
+    }
+
+    const allSlots = await storage.find('slot_binding', {});
+    const allProps = await storage.find('prop_binding', {});
+    const slots = allSlots.filter((s: Record<string, unknown>) => s.mapping_id === mappingId);
+    const props = allProps.filter((p: Record<string, unknown>) => p.mapping_id === mappingId);
+
+    return {
+      variant: 'ok',
+      mapping: mappingId,
+      name: mapping.name as string,
+      widget_id: mapping.widget_id as string,
+      widget_variant: mapping.widget_variant as string | null,
+      schema: mapping.schema as string | null,
+      display_mode: mapping.display_mode as string | null,
+      slot_bindings: JSON.stringify(slots.map((s: Record<string, unknown>) => ({
+        slot_name: s.slot_name,
+        sources: s.sources,
+      }))),
+      prop_bindings: JSON.stringify(props.map((p: Record<string, unknown>) => ({
+        prop_name: p.prop_name,
+        source: p.source,
+      }))),
+    };
+  },
+
   async create(input: Record<string, unknown>, storage: ConceptStorage) {
     const name = input.name as string;
     const widgetId = input.widget_id as string;

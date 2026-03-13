@@ -3,33 +3,37 @@ import type { ConceptHandler } from '@clef/runtime';
 
 export const pluginRegistryHandler: ConceptHandler = {
   async register(input, storage) {
-    const type = input.type as string;
-    const name = input.name as string;
-    const metadata = input.metadata as string;
+    // Support both legacy (type/name/metadata) and sync-native (category/provider_id/handler) fields
+    const category = (input.category ?? input.type ?? '') as string;
+    const providerId = (input.provider_id ?? input.name ?? '') as string;
+    const handler = (input.handler ?? input.metadata ?? '') as string;
+
+    const key = `${category}:${providerId}`;
 
     // Check if plugin already registered (idempotent)
-    const existing = await storage.get('pluginDefinition', name);
-    if (existing && existing.type === type) {
-      return { variant: 'exists', plugin: existing.id || name };
+    const existing = await storage.get('pluginregistry', key);
+    if (existing && existing.category === category && existing.provider_id === providerId) {
+      return { variant: 'exists', plugin: key };
     }
 
-    const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
-
-    await storage.put('pluginDefinition', name, {
-      id: name,
-      type,
-      name,
-      metadata: parsedMetadata,
+    await storage.put('pluginregistry', key, {
+      id: key,
+      category,
+      provider_id: providerId,
+      handler,
+      // Legacy field aliases
+      type: category,
+      name: providerId,
       registeredAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', plugin: name };
+    return { variant: 'ok', plugin: key };
   },
 
   async discover(input, storage) {
     const type = input.type as string;
 
-    const allDefinitions = await storage.find('pluginDefinition', { type });
+    const allDefinitions = await storage.find('pluginregistry', { type });
     const plugins = allDefinitions.map(def => ({
       id: def.id,
       type: def.type,
@@ -43,7 +47,7 @@ export const pluginRegistryHandler: ConceptHandler = {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
-    let definition = await storage.get('pluginDefinition', plugin);
+    let definition = await storage.get('pluginregistry', plugin);
     if (!definition) {
       // Auto-create a minimal plugin definition
       definition = {
@@ -53,7 +57,7 @@ export const pluginRegistryHandler: ConceptHandler = {
         metadata: {},
         registeredAt: new Date().toISOString(),
       };
-      await storage.put('pluginDefinition', plugin, definition);
+      await storage.put('pluginregistry', plugin, definition);
     }
 
     const instanceId = `${plugin}:${Date.now()}`;
@@ -76,7 +80,7 @@ export const pluginRegistryHandler: ConceptHandler = {
   async getDefinitions(input, storage) {
     const type = input.type as string;
 
-    const allDefinitions = await storage.find('pluginDefinition', { type });
+    const allDefinitions = await storage.find('pluginregistry', { type });
     const definitions = allDefinitions.map(def => ({
       id: def.id,
       type: def.type,
@@ -92,12 +96,12 @@ export const pluginRegistryHandler: ConceptHandler = {
     const alterations = input.alterations as string;
 
     const parsedAlterations = JSON.parse(alterations) as Record<string, unknown>;
-    const allDefinitions = await storage.find('pluginDefinition', { type });
+    const allDefinitions = await storage.find('pluginregistry', { type });
 
     for (const def of allDefinitions) {
       const id = def.id as string;
       const updated = { ...def, ...parsedAlterations };
-      await storage.put('pluginDefinition', id, updated);
+      await storage.put('pluginregistry', id, updated);
     }
 
     return { variant: 'ok' };
@@ -107,7 +111,7 @@ export const pluginRegistryHandler: ConceptHandler = {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
-    const baseDefinition = await storage.get('pluginDefinition', plugin);
+    const baseDefinition = await storage.get('pluginregistry', plugin);
     if (!baseDefinition) {
       return { variant: 'notfound' };
     }
@@ -126,7 +130,7 @@ export const pluginRegistryHandler: ConceptHandler = {
       derivedFrom: plugin,
     };
 
-    await storage.put('pluginDefinition', derivedId, derived);
+    await storage.put('pluginregistry', derivedId, derived);
 
     return { variant: 'ok', derived: JSON.stringify(derived) };
   },

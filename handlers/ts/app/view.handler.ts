@@ -30,6 +30,8 @@ export const viewHandler: ConceptHandler = {
       controls: record.controls as string,
       title: record.title as string,
       description: record.description as string,
+      defaultDisplayMode: (record.defaultDisplayMode as string) ?? undefined,
+      useDisplayMode: (record.useDisplayMode as string) ?? undefined,
     };
   },
 
@@ -56,6 +58,8 @@ export const viewHandler: ConceptHandler = {
       controls: record.controls,
       title: record.title,
       description: record.description,
+      defaultDisplayMode: record.defaultDisplayMode,
+      useDisplayMode: record.useDisplayMode,
     });
 
     return { variant: 'ok', data: '[]', config };
@@ -83,6 +87,8 @@ export const viewHandler: ConceptHandler = {
       controls: input.controls as string ?? '{}',
       title: input.title as string ?? '',
       description: input.description as string ?? '',
+      defaultDisplayMode: input.defaultDisplayMode as string ?? undefined,
+      useDisplayMode: input.useDisplayMode as string ?? undefined,
     });
 
     return { variant: 'ok', view };
@@ -188,6 +194,8 @@ export const viewHandler: ConceptHandler = {
     if (input.controls !== undefined) updated.controls = input.controls as string;
     if (input.title !== undefined) updated.title = input.title as string;
     if (input.description !== undefined) updated.description = input.description as string;
+    if (input.defaultDisplayMode !== undefined) updated.defaultDisplayMode = input.defaultDisplayMode as string;
+    if (input.useDisplayMode !== undefined) updated.useDisplayMode = input.useDisplayMode as string;
 
     await storage.put('view', view, updated);
     return { variant: 'ok', view };

@@ -84,13 +84,26 @@ export const slotSourceHandler: ConceptHandler = {
         data = String(parsedConfig.value ?? '');
         break;
 
-      case 'entity_field':
-        // In a real implementation, this would look up the entity field
-        data = JSON.stringify({
-          field: parsedConfig.field,
-          entity_id: parsedContext.entity_id,
-        });
+      case 'entity_field': {
+        const field = String(parsedConfig.field ?? '');
+        // Resolve from entity in context if available
+        const entity = parsedContext.entity as Record<string, unknown> | undefined;
+        if (entity && field && field in entity) {
+          const val = entity[field];
+          // Return the actual value as a string
+          data = val === null || val === undefined
+            ? ''
+            : typeof val === 'object'
+              ? JSON.stringify(val)
+              : String(val);
+        } else if (parsedContext.entity_id) {
+          // Fallback: return field reference for client-side resolution
+          data = JSON.stringify({ field, entity_id: parsedContext.entity_id });
+        } else {
+          data = '';
+        }
         break;
+      }
 
       case 'widget_embed':
         data = JSON.stringify({

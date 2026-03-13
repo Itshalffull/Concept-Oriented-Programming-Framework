@@ -35,6 +35,24 @@ concept ComponentMapping [M] {
   }
 
   actions {
+    action list() {
+      -> ok(items: String) {
+        Returns all component mappings with enriched slot/prop counts.
+      }
+    }
+
+    action get(mapping: M) {
+      -> ok(mapping: M, name: String, widget_id: String,
+            widget_variant: option String, schema: option String,
+            display_mode: option String,
+            slot_bindings: String, prop_bindings: String) {
+        Returns the full mapping with all slot and prop bindings.
+      }
+      -> notfound(message: String) {
+        The mapping does not exist.
+      }
+    }
+
     action create(name: String, widget_id: String, schema: String,
                   display_mode: String) {
       -> ok(mapping: M) {

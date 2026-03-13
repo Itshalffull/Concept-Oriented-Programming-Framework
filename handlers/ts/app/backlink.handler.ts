@@ -1,8 +1,8 @@
 // Backlink Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 export const backlinkHandler: ConceptHandler = {
-  async getBacklinks(input, storage) {
+  async getBacklinks(input: Record<string, unknown>, storage: ConceptStorage) {
     const entity = input.entity as string;
 
     const existing = await storage.get('backlink', entity);
@@ -13,7 +13,7 @@ export const backlinkHandler: ConceptHandler = {
     return { variant: 'ok', sources: JSON.stringify(sources) };
   },
 
-  async getUnlinkedMentions(input, storage) {
+  async getUnlinkedMentions(input: Record<string, unknown>, storage: ConceptStorage) {
     const entity = input.entity as string;
 
     const existing = await storage.get('backlink', entity);
@@ -24,7 +24,7 @@ export const backlinkHandler: ConceptHandler = {
     return { variant: 'ok', mentions: JSON.stringify(mentions) };
   },
 
-  async reindex(_input, storage) {
+  async reindex(_input: Record<string, unknown>, storage: ConceptStorage) {
     const allBacklinks = await storage.find('backlink');
     let count = 0;
 
