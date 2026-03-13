@@ -1,8 +1,11 @@
 'use client';
 
 /**
- * DataTable — Sortable, filterable table
+ * DataTable — Sortable, filterable table with expandable rows.
  * Implements repertoire/widgets/data-display/data-table.widget
+ *
+ * Rows with a `_children` array field can be expanded to reveal a nested
+ * sub-table, enabling recursive tree rendering in table views.
  */
 
 import React, { useState, useCallback } from 'react';
@@ -33,6 +36,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 }) => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
 
   const handleSort = useCallback(
     (key: string) => {
@@ -47,6 +51,15 @@ export const DataTable: React.FC<DataTableProps> = ({
     [sortable, sortColumn],
   );
 
+  const toggleExpand = useCallback((index: number) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
   const sortedData = React.useMemo(() => {
     if (!sortColumn) return data;
     return [...data].sort((a, b) => {
@@ -56,6 +69,11 @@ export const DataTable: React.FC<DataTableProps> = ({
       return sortDirection === 'asc' ? cmp : -cmp;
     });
   }, [data, sortColumn, sortDirection]);
+
+  // Check if any rows have expandable children
+  const hasExpandableRows = data.some(row =>
+    Array.isArray(row._children) && (row._children as unknown[]).length > 0
+  );
 
   if (data.length === 0) {
     return (
@@ -69,6 +87,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     <table data-part="data-table" role="grid" aria-label={ariaLabel}>
       <thead>
         <tr>
+          {hasExpandableRows && <th style={{ width: 28 }} />}
           {columns.map((col) => (
             <th
               key={col.key}
@@ -89,19 +108,63 @@ export const DataTable: React.FC<DataTableProps> = ({
         </tr>
       </thead>
       <tbody>
-        {sortedData.map((row, i) => (
-          <tr
-            key={i}
-            onClick={onRowClick ? () => onRowClick(row) : undefined}
-            style={onRowClick ? { cursor: 'pointer' } : undefined}
-          >
-            {columns.map((col) => (
-              <td key={col.key}>
-                {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
-              </td>
-            ))}
-          </tr>
-        ))}
+        {sortedData.map((row, i) => {
+          const children = Array.isArray(row._children) ? row._children as Record<string, unknown>[] : null;
+          const isExpandable = children && children.length > 0;
+          const isExpanded = expanded.has(i);
+
+          return (
+            <React.Fragment key={i}>
+              <tr
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                style={onRowClick ? { cursor: 'pointer' } : undefined}
+              >
+                {hasExpandableRows && (
+                  <td
+                    style={{ width: 28, padding: '0 4px', textAlign: 'center' }}
+                    onClick={isExpandable ? (e) => { e.stopPropagation(); toggleExpand(i); } : undefined}
+                  >
+                    {isExpandable && (
+                      <span style={{
+                        display: 'inline-block',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        color: 'var(--palette-on-surface-variant)',
+                        transition: 'transform 0.15s',
+                        transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                        userSelect: 'none',
+                      }}>
+                        ▼
+                      </span>
+                    )}
+                  </td>
+                )}
+                {columns.map((col) => (
+                  <td key={col.key}>
+                    {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
+                  </td>
+                ))}
+              </tr>
+              {/* Expanded children — nested table */}
+              {isExpanded && children && (
+                <tr>
+                  <td
+                    colSpan={columns.length + (hasExpandableRows ? 1 : 0)}
+                    style={{ padding: '0 0 0 24px', background: 'var(--palette-surface-variant)' }}
+                  >
+                    <DataTable
+                      columns={columns}
+                      data={children}
+                      sortable={sortable}
+                      ariaLabel={`${ariaLabel} — nested`}
+                      onRowClick={onRowClick}
+                    />
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          );
+        })}
       </tbody>
     </table>
   );

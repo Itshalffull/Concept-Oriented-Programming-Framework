@@ -1,94 +1,73 @@
 'use client';
 
 /**
- * MappingsView — Component mapping configuration
- * Widget <-> Schema <-> DisplayMode bindings
+ * MappingsView — Component mapping detail/edit view.
+ * When given a mappingId, shows the SlotSourceEditor for that mapping.
+ * The list view is handled by ViewRenderer with the mappings-list View seed.
  */
 
-import React, { useState } from 'react';
-import { useConceptQuery } from '../../lib/use-concept-query';
-import { useNavigator } from '../../lib/clef-provider';
-import { Card } from '../components/widgets/Card';
-import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
-import { EmptyState } from '../components/widgets/EmptyState';
-import { Badge } from '../components/widgets/Badge';
-import { CreateForm } from '../components/widgets/CreateForm';
+import React from 'react';
+import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
+import { SlotSourceEditor } from '../components/widgets/SlotSourceEditor';
 
-const createFields = [
-  { name: 'schema', label: 'Schema', required: true, placeholder: 'e.g. Article' },
-  { name: 'displayMode', label: 'Display Mode', required: true, placeholder: 'e.g. entity-page' },
-  { name: 'widget', label: 'Widget', required: true, placeholder: 'e.g. fieldset-widget' },
-];
+interface MappingsViewProps {
+  mappingId: string;
+}
 
-const columns: ColumnDef[] = [
-  { key: 'schema', label: 'Schema', render: (val) => <code>{String(val)}</code> },
-  { key: 'displayMode', label: 'Display Mode', render: (val) => <Badge variant="primary">{String(val)}</Badge> },
-  { key: 'widget', label: 'Widget', render: (val) => <code>{String(val)}</code> },
-  { key: 'slots', label: 'Slots' },
-  {
-    key: 'status',
-    label: 'Status',
-    render: (val) => <Badge variant={val === 'active' ? 'success' : 'warning'}>{String(val ?? 'unknown')}</Badge>,
-  },
-];
-
-export const MappingsView: React.FC = () => {
-  const [createOpen, setCreateOpen] = useState(false);
-  const { data, loading, refetch } = useConceptQuery<Record<string, unknown>[]>('ComponentMapping', 'list');
+export const MappingsView: React.FC<MappingsViewProps> = ({ mappingId }) => {
   const { navigateToHref } = useNavigator();
-
-  // Handle response: data may be the array directly, or may have items/mappings field
-  let rows: Record<string, unknown>[] = [];
-  if (Array.isArray(data)) {
-    rows = data;
-  } else if (data && typeof data === 'object') {
-    const obj = data as Record<string, unknown>;
-    if (Array.isArray(obj.items)) rows = obj.items as Record<string, unknown>[];
-    else if (Array.isArray(obj.mappings)) rows = obj.mappings as Record<string, unknown>[];
-  }
+  const invoke = useKernelInvoke();
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Component Mappings</h1>
-        <button data-part="button" data-variant="filled" onClick={() => setCreateOpen(true)}>
-          Create Mapping
-        </button>
+      {/* Breadcrumb */}
+      <div style={{
+        display: 'flex', gap: 8, alignItems: 'center', marginBottom: 'var(--spacing-md)',
+        fontSize: '12px', color: 'var(--palette-on-surface-variant)',
+      }}>
+        <span
+          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+          onClick={() => navigateToHref('/view-builder')}
+        >
+          Views
+        </span>
+        <span>&rarr;</span>
+        <span
+          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+          onClick={() => navigateToHref('/display-modes')}
+        >
+          Display Modes
+        </span>
+        <span>&rarr;</span>
+        <span
+          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+          onClick={() => navigateToHref('/mappings')}
+        >
+          Mappings
+        </span>
+        <span>&rarr;</span>
+        <strong>{mappingId}</strong>
       </div>
 
-      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
-        Mappings bind widgets to Schema + DisplayMode pairs, configuring which data sources
-        feed each widget slot.
-      </p>
-
-      <Card variant="outlined" padding="none">
-        {loading ? (
-          <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>Loading...</div>
-        ) : rows.length === 0 ? (
-          <EmptyState
-            title="No mappings configured"
-            description="Create a component mapping to bind widgets to content schemas"
-          />
-        ) : (
-          <DataTable
-            columns={columns}
-            data={rows}
-            sortable
-            ariaLabel="Component mappings"
-            onRowClick={(row) => navigateToHref(`/content/${row.id ?? row.schema}`)}
-          />
-        )}
-      </Card>
-
-      <CreateForm
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreated={refetch}
-        concept="ComponentMapping"
-        action="create"
-        title="Create Component Mapping"
-        fields={createFields}
+      <SlotSourceEditor
+        mappingId={mappingId}
+        onClose={() => navigateToHref('/mappings')}
+        onSaved={() => {/* stay on page */}}
       />
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 'var(--spacing-md)', justifyContent: 'flex-end' }}>
+        <button
+          data-part="button"
+          data-variant="ghost"
+          style={{ color: 'var(--palette-error)' }}
+          onClick={async () => {
+            await invoke('ComponentMapping', 'delete', { mapping: mappingId });
+            navigateToHref('/mappings');
+          }}
+        >
+          Delete Mapping
+        </button>
+      </div>
     </div>
   );
 };

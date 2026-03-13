@@ -7,6 +7,8 @@ import { ConceptBrowserView } from '../../views/ConceptBrowserView';
 import { EntityDetailView } from '../../views/EntityDetailView';
 import { MultiverseView } from '../../views/MultiverseView';
 import { AccessAdmin } from '../../components/AccessAdmin';
+import { MappingsView } from '../../views/MappingsView';
+import { DisplayModesView } from '../../views/DisplayModesView';
 import { getAccessSnapshot } from '../../../lib/auth';
 
 export default async function AdminPage({
@@ -81,6 +83,14 @@ export default async function AdminPage({
     );
   }
 
+  if (slug[0] === 'display-modes' && slug[1]) {
+    return (
+      <HostedPage>
+        <DisplayModesView modeKey={decodeURIComponent(slug[1])} />
+      </HostedPage>
+    );
+  }
+
   if (path === 'display-modes') {
     return (
       <HostedPage>
@@ -101,6 +111,14 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="views-list" />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'mappings' && slug[1]) {
+    return (
+      <HostedPage>
+        <MappingsView mappingId={decodeURIComponent(slug[1])} />
       </HostedPage>
     );
   }

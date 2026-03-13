@@ -125,9 +125,9 @@ export const ThemesView: React.FC = () => {
             return (
               <Card
                 key={themeId || name}
-                variant="outlined"
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigateToHref(`/content/${themeId || name}`)}
+                variant={active ? 'filled' : 'outlined'}
+                style={{ cursor: active ? undefined : 'pointer', outline: active ? `2px solid var(--palette-primary)` : undefined }}
+                onClick={active ? undefined : () => updateTheme(themeId, 'activate')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
                   <strong style={{ fontSize: 'var(--typography-heading-sm-size)' }}>{name}</strong>
@@ -149,21 +149,31 @@ export const ThemesView: React.FC = () => {
                   }}
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <button
-                    data-part="button"
-                    data-variant={active ? 'outlined' : 'filled'}
-                    disabled={busyTheme === themeId}
-                    onClick={() => updateTheme(themeId, 'activate')}
-                  >
-                    {busyTheme === themeId && !active ? 'Activating...' : active ? 'Active Theme' : 'Activate'}
-                  </button>
+                  {active ? (
+                    <button
+                      data-part="button"
+                      data-variant="outlined"
+                      disabled={busyTheme === themeId || activeCount <= 1}
+                      onClick={() => updateTheme(themeId, 'deactivate')}
+                    >
+                      {busyTheme === themeId ? 'Updating...' : 'Deactivate'}
+                    </button>
+                  ) : (
+                    <button
+                      data-part="button"
+                      data-variant="filled"
+                      disabled={busyTheme === themeId}
+                      onClick={() => updateTheme(themeId, 'activate')}
+                    >
+                      {busyTheme === themeId ? 'Activating...' : 'Activate'}
+                    </button>
+                  )}
                   <button
                     data-part="button"
                     data-variant="ghost"
-                    disabled={busyTheme === themeId || (active && activeCount <= 1)}
-                    onClick={() => updateTheme(themeId, 'deactivate')}
+                    onClick={() => navigateToHref(`/content/${themeId || name}`)}
                   >
-                    {busyTheme === themeId && active ? 'Updating...' : 'Deactivate'}
+                    Details
                   </button>
                 </div>
               </Card>

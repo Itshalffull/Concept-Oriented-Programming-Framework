@@ -9,11 +9,16 @@ import React from 'react';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import type { FieldConfig } from './TableDisplay';
+import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
 
 interface CardGridDisplayProps {
   data: Record<string, unknown>[];
   fields: FieldConfig[];
   onRowClick?: (row: Record<string, unknown>) => void;
+  rowActions?: RowActionConfig[];
+  onRowAction?: (action: RowActionConfig, row: Record<string, unknown>) => void;
+  /** Custom item renderer — when provided, replaces default card content with DisplayMode rendering */
+  renderItem?: (row: Record<string, unknown>, onClick?: () => void) => React.ReactNode;
 }
 
 function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
@@ -38,7 +43,7 @@ function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
   }
 }
 
-export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, onRowClick }) => {
+export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, onRowClick, rowActions, onRowAction, renderItem }) => {
   const visibleFields = fields.filter(f => f.visible !== false);
 
   // First field is used as card title, rest as metadata
@@ -48,6 +53,41 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
   return (
     <div className="card-grid">
       {data.map((row, i) => {
+        // Custom renderItem from DisplayMode — replaces default card content
+        if (renderItem) {
+          return (
+            <Card
+              key={(row.node as string) ?? (row.id as string) ?? i}
+              variant="outlined"
+              clickable={!!onRowClick}
+              onClick={() => onRowClick?.(row)}
+            >
+              {renderItem(row, onRowClick ? () => onRowClick(row) : undefined)}
+              {rowActions && rowActions.length > 0 && (
+                <div
+                  style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {rowActions.map(action => {
+                    const { visible, label } = resolveRowAction(action, row);
+                    if (!visible) return null;
+                    return (
+                      <button
+                        key={action.key}
+                        data-part="button"
+                        data-variant={action.variant ?? 'ghost'}
+                        onClick={() => onRowAction?.(action, row)}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+          );
+        }
+
         const titleValue = titleField ? String(row[titleField.key] ?? '') : `Item ${i + 1}`;
         return (
           <Card
@@ -74,6 +114,27 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
                 );
               })}
             </div>
+            {rowActions && rowActions.length > 0 && (
+              <div
+                style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {rowActions.map(action => {
+                  const { visible, label } = resolveRowAction(action, row);
+                  if (!visible) return null;
+                  return (
+                    <button
+                      key={action.key}
+                      data-part="button"
+                      data-variant={action.variant ?? 'ghost'}
+                      onClick={() => onRowAction?.(action, row)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         );
       })}

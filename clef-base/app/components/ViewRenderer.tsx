@@ -30,6 +30,8 @@ import { CanvasDisplay } from './widgets/CanvasDisplay';
 import { StatCardsDisplay } from './widgets/StatCardsDisplay';
 import { DetailDisplay } from './widgets/DetailDisplay';
 import { ContentBodyDisplay } from './widgets/ContentBodyDisplay';
+import { BoardDisplay } from './widgets/BoardDisplay';
+import { DisplayModeRenderer } from './widgets/DisplayModeRenderer';
 import { useActiveTheme, useNavigator, useKernelInvoke } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import {
@@ -50,6 +52,10 @@ interface ViewConfig {
   controls: string;
   title: string;
   description: string;
+  /** Display mode used for each item (e.g. 'card', 'table-row'). Items render through DisplayMode.resolve(). */
+  defaultDisplayMode?: string;
+  /** When false, bypass display mode and use hardcoded display component. Default true. */
+  useDisplayMode?: string; // stored as string in kernel, parsed to boolean
 }
 
 interface DataSourceConfig {
@@ -61,11 +67,40 @@ interface DataSourceConfig {
 interface FilterConfig {
   field: string;
   label?: string;
-  type: 'toggle-group';
+  type?: 'toggle-group';
   /** Values that are ON by default. If omitted, all values are on. */
   defaultOn?: string[];
   /** Values that are OFF by default. */
   defaultOff?: string[];
+  /** Contextual filter source type */
+  source_type?: 'contextual';
+  /** Context binding path e.g. "context.entity" */
+  context_binding?: string;
+  /** Operator for contextual filters */
+  operator?: string;
+  /** What to do when context binding can't be resolved */
+  fallback_behavior?: 'hide' | 'show-all';
+}
+
+import { type RowActionConfig } from '../../lib/row-actions';
+
+// ─── Grouping Config ──────────────────────────────────────────────────────
+import type { GroupConfig } from '../../lib/view-types';
+export type { GroupConfig, GroupFieldConfig } from '../../lib/view-types';
+
+function parseGroupConfig(raw: string | undefined): GroupConfig | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    // Support simple string shorthand: "status" → { fields: [{ field: "status" }] }
+    if (typeof parsed === 'string') return { fields: [{ field: parsed }] };
+    if (parsed && Array.isArray(parsed.fields)) return parsed as GroupConfig;
+    return null;
+  } catch {
+    // Plain string (unquoted) — treat as field name
+    if (raw.trim()) return { fields: [{ field: raw.trim() }] };
+    return null;
+  }
 }
 
 interface ControlsConfig {
@@ -84,14 +119,29 @@ interface ControlsConfig {
   rowClick?: {
     navigateTo: string;
   };
+  rowActions?: RowActionConfig[];
 }
 
 interface ViewRendererProps {
-  viewId: string;
+  viewId?: string;
   title?: string;
   /** Context variables for template resolution — replaces {{var}} in dataSource params */
   context?: Record<string, string>;
   children?: React.ReactNode;
+  /** Inline data — when provided, skip dataSource fetch and render this data directly.
+   *  Enables block children view modes and other non-query-driven rendering. */
+  inlineData?: Record<string, unknown>[];
+  /** Layout override — used with inlineData when no View entity is needed */
+  inlineLayout?: string;
+  /** Field config override — used with inlineData when no View entity is needed */
+  inlineFields?: FieldConfig[];
+  /** Hide the header (title, badges, create button) — useful for inline/embedded views */
+  compact?: boolean;
+  /** Selection callback — when provided, row clicks call onSelect instead of navigating.
+   *  Used for picker mode (ViewPicker, EntityPicker). */
+  onSelect?: (row: Record<string, unknown>) => void;
+  /** Inline group config — used with inlineData for default grouping (e.g. blocks grouped by parent) */
+  inlineGroupConfig?: GroupConfig;
 }
 
 /** Resolve {{var}} template placeholders in an object using context */
@@ -145,7 +195,10 @@ function rowMatchesSchemaFilter(row: Record<string, unknown>, activeSchemas: Set
   return schemas.some((s: unknown) => activeSchemas.has(String(s)));
 }
 
-export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: titleOverride, context, children }) => {
+export const ViewRenderer: React.FC<ViewRendererProps> = ({
+  viewId, title: titleOverride, context, children,
+  inlineData, inlineLayout, inlineFields, compact, onSelect, inlineGroupConfig,
+}) => {
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
   const theme = useActiveTheme();
@@ -155,15 +208,18 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
   const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
 
-  // Step 1: Load the View config
+  const isInlineMode = !!inlineData;
+
+  // Step 1: Load the View config (skip if pure inline mode with no viewId)
   const { data: viewConfig, loading: configLoading, error: configError } =
-    useConceptQuery<ViewConfig>('View', 'get', { view: viewId });
+    useConceptQuery<ViewConfig>('View', 'get', { view: viewId ?? '__none__' });
 
   // Parse the config
   let dataSource: DataSourceConfig | null = null;
   let fields: FieldConfig[] = [];
   let controls: ControlsConfig = {};
   let filters: FilterConfig[] = [];
+  let groupConfig: GroupConfig | null = null;
 
   if (viewConfig) {
     try { dataSource = JSON.parse(viewConfig.dataSource); } catch { /* empty */ }
@@ -173,7 +229,31 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       const parsed = JSON.parse(viewConfig.filters);
       if (Array.isArray(parsed)) filters = parsed;
     } catch { /* empty */ }
+    groupConfig = parseGroupConfig(viewConfig.groups);
   }
+
+  // Parse display mode fields
+  const defaultDisplayMode = viewConfig?.defaultDisplayMode ?? undefined;
+  const useDisplayMode = viewConfig?.useDisplayMode !== undefined
+    ? viewConfig.useDisplayMode !== 'false' && viewConfig.useDisplayMode !== '0'
+    : true; // default true
+
+  // Inline group config takes precedence when no view-level config
+  const effectiveGroupConfig = groupConfig ?? inlineGroupConfig ?? null;
+
+  // Check for contextual filters that can't be resolved — hide the view if fallback_behavior is "hide"
+  const hasUnresolvedContextualHide = filters.some(f => {
+    if (f.source_type !== 'contextual' || f.fallback_behavior !== 'hide') return false;
+    // Resolve context binding — e.g. "context.entity" → context.entityId
+    if (!context) return true;
+    const binding = f.context_binding;
+    if (binding === 'context.entity') return !context.entityId;
+    return false;
+  });
+
+  // Separate interactive (toggle-group) filters from contextual filters
+  const interactiveFilters = filters.filter(f => f.source_type !== 'contextual');
+  const contextualFilters = filters.filter(f => f.source_type === 'contextual');
 
   // Extract schemaFilter from params before resolving (it's a UI-layer filter, not a concept action param)
   const schemaFilter = dataSource?.params?.schemaFilter as string | undefined;
@@ -195,16 +275,16 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     return schemaFilter.replace(/\{\{(\w+)\}\}/g, (_, varName) => context[varName] ?? '');
   }, [schemaFilter, context]);
 
-  // Step 2: Fetch primary data
+  // Step 2: Fetch primary data (skip when inlineData is provided)
   const { data: rawData, loading: dataLoading, error: dataError, refetch } =
     useConceptQuery<Record<string, unknown>[] | Record<string, unknown>>(
-      dataSource?.concept ?? '__none__',
-      dataSource?.action ?? '__none__',
-      resolvedParams,
+      isInlineMode ? '__none__' : (dataSource?.concept ?? '__none__'),
+      isInlineMode ? '__none__' : (dataSource?.action ?? '__none__'),
+      isInlineMode ? undefined : resolvedParams,
     );
 
   // Step 3: If this is ContentNode data, fetch Schema memberships for enrichment
-  const isContentNodeData = dataSource?.concept === 'ContentNode';
+  const isContentNodeData = !isInlineMode && dataSource?.concept === 'ContentNode';
   const { data: membershipsData } = useConceptQuery<Record<string, unknown>[]>(
     isContentNodeData ? 'Schema' : '__none__',
     isContentNodeData ? 'listMemberships' : '__none__',
@@ -212,6 +292,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
 
   // Normalize + enrich data
   const allData = useMemo(() => {
+    // Inline data path — use provided data directly
+    if (isInlineMode) return inlineData!;
+
     if (!rawData) return [];
     const items = (Array.isArray(rawData) ? rawData : [rawData]) as Record<string, unknown>[];
 
@@ -230,7 +313,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     }
 
     // Enrich each node with its schemas
-    let enriched = items.map((item) => ({
+    let enriched: Record<string, unknown>[] = items.map((item) => ({
       ...item,
       schemas: schemasByEntity.get(item.node as string) ?? [],
     }));
@@ -243,12 +326,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     }
 
     return enriched;
-  }, [rawData, isContentNodeData, membershipsData, resolvedSchemaFilter]);
+  }, [rawData, isContentNodeData, isInlineMode, inlineData, membershipsData, resolvedSchemaFilter]);
 
-  // Initialize filter state from data + config once data arrives
-  if (allData.length > 0 && filters.length > 0 && !filtersInitialized) {
+  // Initialize filter state from data + config once data arrives (interactive filters only)
+  if (allData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
     const initial: Record<string, Set<string>> = {};
-    for (const filter of filters) {
+    for (const filter of interactiveFilters) {
       // Special handling for schemas (array field)
       if (filter.field === 'schemas') {
         const allValues = extractSchemaValues(allData);
@@ -276,11 +359,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     setFiltersInitialized(true);
   }
 
-  // Apply filters to data
+  // Apply interactive filters to data
   const displayData = useMemo(() => {
-    if (filters.length === 0 || Object.keys(activeFilters).length === 0) return allData;
+    if (interactiveFilters.length === 0 || Object.keys(activeFilters).length === 0) return allData;
     return allData.filter((row) => {
-      for (const filter of filters) {
+      for (const filter of interactiveFilters) {
         const active = activeFilters[filter.field];
         if (!active) continue;
         if (filter.field === 'schemas') {
@@ -291,13 +374,14 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       }
       return true;
     });
-  }, [allData, activeFilters, filters]);
+  }, [allData, activeFilters, interactiveFilters]);
 
-  const layout = viewConfig?.layout ?? 'table';
+  const layout = inlineLayout ?? viewConfig?.layout ?? 'table';
   const effectiveLayout = resolvedLayout ?? layout;
-  const viewTitle = titleOverride ?? viewConfig?.title ?? viewId;
+  const effectiveFields = inlineFields ?? fields;
+  const viewTitle = titleOverride ?? viewConfig?.title ?? viewId ?? '';
   const viewDescription = viewConfig?.description ?? '';
-  const loading = configLoading || dataLoading;
+  const loading = (isInlineMode ? false : configLoading) || (isInlineMode ? false : dataLoading);
 
   useEffect(() => {
     const interactor = getDisplayInteractor(layout);
@@ -308,10 +392,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     }
 
     const context = buildDisplayWidgetContext({
-      viewId,
+      viewId: viewId ?? '',
       layout,
       rowCount: allData.length,
-      fieldCount: fields.length,
+      fieldCount: effectiveFields.length,
       density: theme.density,
       motif: theme.motif,
       styleProfile: theme.styleProfile,
@@ -375,13 +459,32 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     });
   }, []);
 
-  // Row click handler
+  // Row click handler — onSelect overrides navigation when in picker mode
   const handleRowClick = useCallback((row: Record<string, unknown>) => {
+    if (onSelect) {
+      onSelect(row);
+      return;
+    }
     if (!controls.rowClick?.navigateTo) return;
     let path = controls.rowClick.navigateTo;
     path = path.replace(/\{(\w+)\}/g, (_, key) => encodeURIComponent(String(row[key] ?? '')));
     navigateToHref(path);
-  }, [controls.rowClick, navigateToHref]);
+  }, [controls.rowClick, navigateToHref, onSelect]);
+
+  // Row action handler — invoke a concept action with params mapped from the row
+  const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
+    const params: Record<string, unknown> = {};
+    for (const [paramKey, rowField] of Object.entries(action.params)) {
+      params[paramKey] = row[rowField];
+    }
+    await invoke(action.concept, action.action, params);
+    refetch();
+  }, [invoke, refetch]);
+
+  // Hide view if contextual filters can't be resolved
+  if (hasUnresolvedContextualHide) {
+    return null;
+  }
 
   // Loading state
   if (loading && !viewConfig) {
@@ -405,11 +508,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
     );
   }
 
-  // Render filter controls
+  // Render filter controls (interactive filters only, not contextual)
   const renderFilters = () => {
-    if (filters.length === 0 || allData.length === 0) return null;
+    if (interactiveFilters.length === 0 || allData.length === 0) return null;
 
-    return filters.map((filter) => {
+    return interactiveFilters.map((filter) => {
       // For schemas, extract unique values from array fields
       const allValues = filter.field === 'schemas'
         ? extractSchemaValues(allData)
@@ -499,12 +602,36 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       );
     }
 
+    // Display mode item renderer: when useDisplayMode is true and defaultDisplayMode is set,
+    // create a renderItem function that renders each item through DisplayModeRenderer.
+    // Layout components that support per-item rendering use this; holistic layouts bypass it.
+    const shouldUseDisplayMode = useDisplayMode && !!defaultDisplayMode && !isInlineMode;
+    const holisticLayouts = new Set(['graph', 'stat-cards', 'canvas', 'detail', 'content-body']);
+
+    // Build a renderItem function for layout components that support it
+    const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout)
+      ? (row: Record<string, unknown>, onClick?: () => void) => {
+          const rowSchema = (row.schemas as string[])?.[0]
+            ?? (row.type as string)
+            ?? dataSource?.concept
+            ?? 'ContentNode';
+          return (
+            <DisplayModeRenderer
+              entity={row}
+              schema={rowSchema}
+              modeId={defaultDisplayMode!}
+              onClick={onClick}
+            />
+          );
+        }
+      : null;
+
     switch (effectiveLayout) {
       case 'detail':
         return (
           <DetailDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
             onFieldSave={async (field, value) => {
               if (displayData[0]) {
                 const entity = displayData[0] as Record<string, unknown>;
@@ -525,8 +652,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       case 'content-body':
         return (
           <ContentBodyDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+            context={context}
             onFieldSave={async (field, value) => {
               if (displayData[0]) {
                 const entity = displayData[0] as Record<string, unknown>;
@@ -543,32 +671,47 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
       case 'card-grid':
         return (
           <CardGridDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+            rowActions={controls.rowActions}
+            onRowAction={handleRowAction}
+            renderItem={renderDisplayModeItem ?? undefined}
           />
         );
 
       case 'canvas':
         return (
           <CanvasDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
           />
         );
 
       case 'graph':
         return (
           <GraphDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
           />
         );
 
       case 'stat-cards':
         return (
           <StatCardsDisplay
-            data={displayData} fields={fields}
-            onRowClick={controls.rowClick ? handleRowClick : undefined}
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+          />
+        );
+
+      case 'board':
+        return (
+          <BoardDisplay
+            data={displayData} fields={effectiveFields}
+            onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+            rowActions={controls.rowActions}
+            onRowAction={handleRowAction}
+            groupBy={effectiveGroupConfig?.fields[0]?.field}
+            renderItem={renderDisplayModeItem ?? undefined}
           />
         );
 
@@ -577,8 +720,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
         return (
           <Card variant="outlined" padding="none">
             <TableDisplay
-              data={displayData} fields={fields}
-              onRowClick={controls.rowClick ? handleRowClick : undefined}
+              data={displayData} fields={effectiveFields}
+              onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+              rowActions={controls.rowActions}
+              onRowAction={handleRowAction}
+              groupConfig={effectiveGroupConfig ?? undefined}
             />
           </Card>
         );
@@ -587,26 +733,30 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
 
   return (
     <div>
-      <div className="page-header">
-        <h1>{viewTitle}</h1>
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-          <Badge variant="info">{displayData.length}{allData.length !== displayData.length ? `/${allData.length}` : ''}</Badge>
-          <Badge variant="secondary">{effectiveLayout}</Badge>
-          {resolvedWidget && (
-            <Badge variant="info">{resolvedWidget}</Badge>
-          )}
-          {controls.create && (
-            <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
-            Create {viewTitle.replace(/s$/, '')}
-          </button>
-        )}
-      </div>
-      </div>
+      {!compact && (
+        <>
+          <div className="page-header">
+            <h1>{viewTitle}</h1>
+            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+              <Badge variant="info">{displayData.length}{allData.length !== displayData.length ? `/${allData.length}` : ''}</Badge>
+              <Badge variant="secondary">{effectiveLayout}</Badge>
+              {resolvedWidget && (
+                <Badge variant="info">{resolvedWidget}</Badge>
+              )}
+              {controls.create && (
+                <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
+                Create {viewTitle.replace(/s$/, '')}
+              </button>
+            )}
+          </div>
+          </div>
 
-      {viewDescription && (
-        <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-sm)' }}>
-          {viewDescription}
-        </p>
+          {viewDescription && (
+            <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-sm)' }}>
+              {viewDescription}
+            </p>
+          )}
+        </>
       )}
 
       {renderFilters()}
@@ -630,4 +780,5 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({ viewId, title: title
   );
 };
 
+export type { FieldConfig } from './widgets/TableDisplay';
 export default ViewRenderer;
