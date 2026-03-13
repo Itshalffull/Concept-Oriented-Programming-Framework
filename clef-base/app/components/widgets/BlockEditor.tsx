@@ -805,6 +805,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
   onDragStart, onDragOver, onDrop, dragOverId, dragOverPosition,
 }) => {
   const elRef = useRef<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = useState(false);
   const hasChildren = !!(block.children && block.children.length > 0);
   const isEditable = EDITABLE_TYPES.has(block.type);
 
@@ -832,7 +833,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
         }}
         onClick={() => onFocus(block.id)}
       >
-        <div style={{ width: 28, flexShrink: 0 }} />
+        <div style={{ width: 20, flexShrink: 0 }} />
         <hr style={{
           flex: 1, border: 'none', borderTop: '1px solid var(--palette-outline-variant)',
           margin: 'var(--spacing-sm) 0',
@@ -846,7 +847,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     return (
       <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
-          <div style={{ width: 28, flexShrink: 0 }} />
+          <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <ViewEmbedBlock block={block} onMetaChange={onMetaChange} readOnly={readOnly} />
           </div>
@@ -859,7 +860,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     return (
       <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
-          <div style={{ width: 28, flexShrink: 0 }} />
+          <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <EntityEmbedBlock block={block} onMetaChange={onMetaChange} readOnly={readOnly} />
           </div>
@@ -872,7 +873,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     return (
       <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
-          <div style={{ width: 28, flexShrink: 0 }} />
+          <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <ControlBlock block={block} onMetaChange={onMetaChange} readOnly={readOnly} />
           </div>
@@ -889,7 +890,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     return (
       <div style={{ paddingLeft: depth * 24, padding: '2px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)' }}>
-          <div style={{ width: 28, flexShrink: 0 }} />
+          <div style={{ width: 20, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <SchemaToolbar block={block} onMetaChange={onMetaChange} />
             {src ? (
@@ -955,7 +956,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
           display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)',
         }}>
           <div style={{
-            width: 28, flexShrink: 0, display: 'flex', flexDirection: 'column',
+            width: 20, flexShrink: 0, display: 'flex', flexDirection: 'column',
             alignItems: 'flex-end', gap: 2,
           }}>
             {hasChildren && (
@@ -972,7 +973,7 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
                 ▼
               </button>
             )}
-            {!readOnly && (
+            {!readOnly && hovered && (
               <select
                 value={displayMode}
                 onChange={e => onMetaChange(block.id, 'display_mode_change', e.target.value)}
@@ -1033,6 +1034,17 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
     }),
   } : {};
 
+  // Determine vertical spacing based on block type
+  const isListItem = block.type === 'bullet' || block.type === 'numbered';
+  const isHeading = block.type.startsWith('heading');
+  const isCode = block.type === 'code';
+  const blockGap = isHeading ? '6px 0 2px 0' : isListItem ? '1px 0' : isCode ? '4px 0' : '2px 0';
+
+  // Determine list marker to show
+  const listMarker = block.type === 'bullet' ? '\u2022'
+    : block.type === 'numbered' && numberLabel ? `${numberLabel}.`
+    : null;
+
   return (
     <div
       style={{ paddingLeft: depth * 24, ...dragIndicatorStyle }}
@@ -1047,28 +1059,33 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
         e.preventDefault();
         onDrop?.(block.id);
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div
         style={{
-          display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-xs)',
-          padding: '1px 0',
+          display: 'flex', alignItems: 'flex-start', gap: '4px',
+          padding: blockGap,
           position: 'relative',
+          borderRadius: 'var(--radius-sm)',
+          borderLeft: focused ? '2px solid var(--palette-primary)' : '2px solid transparent',
+          transition: 'border-color 0.15s',
         }}
       >
-        {/* Gutter: collapse/expand, drag handle, list marker, view-as */}
+        {/* Gutter: list marker or drag handle on hover */}
         <div
           style={{
-            width: 28, flexShrink: 0, textAlign: 'right',
+            width: 20, flexShrink: 0, textAlign: 'right',
             color: 'var(--palette-on-surface-variant)',
             fontSize: '14px',
             lineHeight: BLOCK_STYLES[block.type]?.lineHeight as string ?? '1.6',
-            paddingTop: block.type.startsWith('heading') ? BLOCK_STYLES[block.type].marginTop as string : undefined,
+            paddingTop: isHeading ? BLOCK_STYLES[block.type].marginTop as string : undefined,
             userSelect: 'none',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {/* Collapse/expand toggle */}
+            {/* Collapse/expand toggle — always visible when applicable */}
             {hasChildren && (
               <button
                 onClick={() => onToggleCollapse(block.id)}
@@ -1084,24 +1101,55 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
                 ▼
               </button>
             )}
-            {/* List marker / drag handle */}
-            <span
-              draggable={!readOnly}
-              onDragStart={e => {
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', block.id);
-                onDragStart?.(block.id);
-              }}
-              style={{ opacity: 0.4, cursor: readOnly ? 'default' : 'grab' }}
-            >
-              {block.type === 'bullet' ? '\u2022'
-                : block.type === 'numbered' && numberLabel ? `${numberLabel}.`
-                : calloutStyle ? calloutStyle.icon
-                : '\u2261'}
-            </span>
+            {/* List marker (always visible) or drag handle (hover-only) */}
+            {listMarker ? (
+              <span
+                draggable={!readOnly && hovered}
+                onDragStart={e => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', block.id);
+                  onDragStart?.(block.id);
+                }}
+                style={{
+                  opacity: 0.55,
+                  cursor: hovered && !readOnly ? 'grab' : 'default',
+                  fontSize: block.type === 'bullet' ? '16px' : '13px',
+                  minWidth: '14px',
+                  textAlign: 'right',
+                }}
+              >
+                {listMarker}
+              </span>
+            ) : hovered && !readOnly ? (
+              <span
+                draggable
+                onDragStart={e => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', block.id);
+                  onDragStart?.(block.id);
+                }}
+                style={{
+                  opacity: 0.3,
+                  cursor: 'grab',
+                  fontSize: '12px',
+                  minWidth: '14px',
+                  textAlign: 'right',
+                  transition: 'opacity 0.1s',
+                }}
+                title="Drag to move"
+              >
+                ⠿
+              </span>
+            ) : calloutStyle ? (
+              <span style={{ opacity: 0.5, fontSize: '13px', minWidth: '14px', textAlign: 'right' }}>
+                {calloutStyle.icon}
+              </span>
+            ) : (
+              <span style={{ minWidth: '14px' }} />
+            )}
           </div>
-          {/* View-as picker for blocks with children */}
-          {hasChildren && !readOnly && (
+          {/* View-as picker — hover-only */}
+          {hasChildren && !readOnly && hovered && (
             <ViewAsPicker block={block} onViewAsChange={onViewAsChange} />
           )}
         </div>
@@ -1495,16 +1543,33 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
     setDragOverPosition(null);
   }, [dragId, dragOverPosition, onChange]);
 
-  // Handle slash command
+  // Handle slash command — position near the cursor
   const openSlashMenu = useCallback((blockId: string) => {
     const el = blockRefs.current.get(blockId);
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setSlashMenu({
-      blockId,
-      query: '',
-      position: { top: rect.bottom + 4, left: rect.left },
-    });
+
+    // Try to position at cursor location
+    const sel = window.getSelection();
+    let top: number;
+    let left: number;
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const cursorRect = range.getBoundingClientRect();
+      if (cursorRect.height > 0) {
+        top = cursorRect.bottom + 4;
+        left = cursorRect.left;
+      } else {
+        const elRect = el.getBoundingClientRect();
+        top = elRect.bottom + 4;
+        left = elRect.left;
+      }
+    } else {
+      const elRect = el.getBoundingClientRect();
+      top = elRect.bottom + 4;
+      left = elRect.left;
+    }
+
+    setSlashMenu({ blockId, query: '', position: { top, left } });
     setSlashIndex(0);
   }, []);
 
@@ -1693,6 +1758,20 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
         const found = findBlock(prev, blockId);
         if (!found) return prev;
 
+        const currentText = el.textContent ?? '';
+        const isList = found.block.type === 'bullet' || found.block.type === 'numbered';
+
+        // Empty list item: exit list by converting to paragraph
+        if (isList && (currentText === '' || el.innerHTML === '<br>')) {
+          const next = updateBlock(prev, blockId, b => ({
+            ...b, type: 'paragraph' as BlockType, content: '',
+          }));
+          el.innerHTML = '';
+          onChange(next);
+          requestAnimationFrame(() => focusBlock(blockId));
+          return next;
+        }
+
         // Get cursor position to split content
         const sel = window.getSelection();
         let beforeHtml = el.innerHTML;
@@ -1718,9 +1797,7 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
         }
 
         // Determine new block type (continue list type)
-        const newType = (found.block.type === 'bullet' || found.block.type === 'numbered')
-          ? found.block.type
-          : 'paragraph';
+        const newType = isList ? found.block.type : 'paragraph';
 
         const newBlock = createBlock(newType, afterHtml);
 
@@ -1736,10 +1813,24 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
       return;
     }
 
-    // Backspace on empty block: outdent first, then delete at depth 0
+    // Backspace: handle empty blocks and merging at start of content
     if (e.key === 'Backspace') {
       const text = el.textContent ?? '';
-      if (text === '' || el.innerHTML === '<br>') {
+      const isEmpty = text === '' || el.innerHTML === '<br>';
+
+      // Check if cursor is at position 0 (start of block)
+      const sel = window.getSelection();
+      let cursorAtStart = isEmpty;
+      if (!isEmpty && sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const preRange = document.createRange();
+        preRange.selectNodeContents(el);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        cursorAtStart = preRange.toString().length === 0 && range.collapsed;
+      }
+
+      if (isEmpty) {
+        e.preventDefault();
         setBlocks(prev => {
           const found = findBlock(prev, blockId);
           if (!found) return prev;
@@ -1752,8 +1843,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
           }
 
           // Try to outdent first
-          const depth = getBlockDepth(prev, blockId);
-          if (depth > 0) {
+          const d = getBlockDepth(prev, blockId);
+          if (d > 0) {
             const next = outdentBlock(prev, blockId);
             if (next !== prev) {
               onChange(next);
@@ -1761,21 +1852,80 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({ blocks: initialBlocks,
             }
           }
 
-          // At root level with no previous sibling: nothing to do
+          // At root level: delete and focus previous
           const flat = flattenTree(prev, true);
           const flatIdx = flat.findIndex(e => e.block.id === blockId);
           if (flatIdx <= 0) return prev;
 
-          // Delete and focus previous
           const prevEntry = flat[flatIdx - 1];
           const { tree } = removeBlock(prev, blockId);
           onChange(tree);
           focusBlock(prevEntry.block.id, true);
           return tree;
         });
-        if ((el.textContent ?? '') === '') {
-          e.preventDefault();
-        }
+        return;
+      }
+
+      // Cursor at start of non-empty block: merge with previous block
+      if (cursorAtStart) {
+        e.preventDefault();
+        const currentHtml = el.innerHTML;
+        setBlocks(prev => {
+          const flat = flattenTree(prev, true);
+          const flatIdx = flat.findIndex(e => e.block.id === blockId);
+          if (flatIdx <= 0) return prev;
+
+          const prevEntry = flat[flatIdx - 1];
+          const prevBlock = prevEntry.block;
+          // Only merge with editable blocks
+          if (!EDITABLE_TYPES.has(prevBlock.type)) return prev;
+
+          // Append current content to previous block
+          const mergedContent = (prevBlock.content || '').replace(/<br\s*\/?>$/i, '') + currentHtml;
+          const prevContentLength = (blockRefs.current.get(prevBlock.id)?.textContent ?? '').length;
+
+          let next = updateBlock(prev, prevBlock.id, b => ({ ...b, content: mergedContent }));
+          const { tree } = removeBlock(next, blockId);
+          onChange(tree);
+
+          // Focus previous block and place cursor at merge point
+          requestAnimationFrame(() => {
+            const prevEl = blockRefs.current.get(prevBlock.id);
+            if (!prevEl) return;
+            prevEl.innerHTML = mergedContent;
+            prevEl.focus();
+            // Place cursor at merge point
+            try {
+              const r = document.createRange();
+              const s = window.getSelection();
+              // Walk text nodes to find the offset position
+              let charCount = 0;
+              function walkNodes(node: Node): boolean {
+                if (node.nodeType === Node.TEXT_NODE) {
+                  const len = (node.textContent ?? '').length;
+                  if (charCount + len >= prevContentLength) {
+                    r.setStart(node, prevContentLength - charCount);
+                    r.collapse(true);
+                    s?.removeAllRanges();
+                    s?.addRange(r);
+                    return true;
+                  }
+                  charCount += len;
+                } else {
+                  for (const child of Array.from(node.childNodes)) {
+                    if (walkNodes(child)) return true;
+                  }
+                }
+                return false;
+              }
+              walkNodes(prevEl);
+            } catch {
+              // Fallback: just focus at end
+              focusBlock(prevBlock.id, true);
+            }
+          });
+          return tree;
+        });
         return;
       }
     }
