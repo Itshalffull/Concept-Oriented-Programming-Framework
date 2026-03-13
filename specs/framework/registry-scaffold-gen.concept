@@ -1,0 +1,54 @@
+@category("devtools")
+@visibility("public")
+concept RegistryScaffoldGen [R] {
+
+  purpose {
+    Generate static kernel registry boot code from a deployment
+    manifest (deploy.yaml). Reads concept entries, handler paths,
+    storage configurations, and sync file paths to produce
+    language-specific import/registration arrays.
+  }
+
+  state {
+    registries: set R
+    deployManifest: R -> String
+  }
+
+  actions {
+    action generate(deployManifest: String, outputPath: String, language: String) {
+      description {
+        Read a deploy.yaml manifest and generate a static registry
+        file with handler imports, RegistryEntry arrays, and sync
+        file path arrays for the target language.
+      }
+      -> ok(files: list File, filesGenerated: Int) {
+        Registry boot code generated.
+      }
+      -> error(message: String) {
+        Generation failed.
+      }
+    }
+
+    action preview(deployManifest: String, outputPath: String, language: String) {
+      -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
+        Dry-run: compute output files without writing.
+      }
+      -> cached() {
+        Inputs unchanged since the last successful run.
+      }
+      -> error(message: String) {
+        Preview computation failed.
+      }
+    }
+
+    action register() {
+      -> ok(name: String, inputKind: String, outputKind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "RegistryScaffoldGen"
+        inputKind: "DeployManifest"
+        outputKind: "KernelRegistry"
+        capabilities: ["registry-ts", "boot-code", "import-map"]
+      }
+    }
+  }
+}

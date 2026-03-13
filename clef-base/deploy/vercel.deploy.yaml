@@ -30,23 +30,46 @@ infrastructure:
         projectId: "${VERCEL_PROJECT_ID}"
 
 concepts:
+  # ── Infrastructure (registered first) ──────────────────────────
+  RuntimeRegistry:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/runtime-registry.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  FileCatalog:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/file-catalog.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  EntityReflector:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/entity-reflector.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── ComponentMapping + SlotSource providers ────────────────────
   ComponentMapping:
+    storageName: mapping
     spec: concepts/component-mapping.concept
     implementations:
       - language: typescript
         path: handlers/ts/component-mapping.handler.ts
         runtime: vercel
         storage: vercel-kv
-        queryMode: lite
 
   ConceptBrowser:
+    storageName: browser
     spec: concepts/concept-browser.concept
     implementations:
       - language: typescript
         path: handlers/ts/concept-browser.handler.ts
         runtime: vercel
         storage: vercel-kv
-        queryMode: lite
 
   SlotSource:
     spec: concepts/slot-source.concept
@@ -55,123 +78,479 @@ concepts:
         path: handlers/ts/slot-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   BlockEmbedSource:
-    spec: concepts/block-embed-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/block-embed-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   EntityFieldSource:
-    spec: concepts/entity-field-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/entity-field-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   EntityReferenceDisplaySource:
-    spec: concepts/entity-reference-display-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/entity-reference-display-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   FormulaSource:
-    spec: concepts/formula-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/formula-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   MenuSource:
-    spec: concepts/menu-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/menu-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   StaticValueSource:
-    spec: concepts/static-value-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/static-value-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   ViewEmbedSource:
-    spec: concepts/view-embed-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/view-embed-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   WidgetEmbedSource:
-    spec: concepts/widget-embed-source.concept
     implementations:
       - language: typescript
         path: handlers/ts/widget-embed-source.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
 
   HubProxy:
     spec: concepts/hub-proxy.concept
     implementations:
       - language: typescript
-        path: handlers/ts/hub-proxy.handler.ts
+        path: clef-base/handlers/ts/hub-proxy.handler.ts
         runtime: vercel
         storage: memory
-        queryMode: lite
+
+  # ── UI-App concepts ────────────────────────────────────────────
+  Navigator:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/navigator.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  DestinationCatalog:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/destination-catalog.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  RuntimeProfile:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/runtime-profile.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  PlatformBindingCatalog:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/platform-binding-catalog.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Host:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/host.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Shell:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/shell.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Transport:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/transport.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  NextjsAdapter:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/nextjs-adapter.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  PlatformAdapter:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/platform-adapter.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  SeedData:
+    implementations:
+      - language: typescript
+        path: handlers/ts/seed-data.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AppInstallation:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/app-installation.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Interactor:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/interactor.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Affordance:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/affordance.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  WidgetResolver:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/widget-resolver.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  ContractChecker:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/contract-checker.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  WidgetRegistry:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/widget-registry.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  UISchema:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/ui-schema.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── Domain concepts ────────────────────────────────────────────
+  ContentNode:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/content-node.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Schema:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/schema.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  View:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/view.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Workflow:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/workflow.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AutomationRule:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/automation-rule.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Taxonomy:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/taxonomy.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  DisplayMode:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/display-mode.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  FieldPlacement:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/field-placement.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Renderer:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/renderer.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Component:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/component.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Theme:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/theme.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Query:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/query.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  ContentStorage:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/content-storage.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Property:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/property.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Outline:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/outline.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Layout:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/layout.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── Identity concepts ──────────────────────────────────────────
+  Authentication:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/authentication.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Authorization:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/authorization.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AccessControl:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/access-control.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AccessCatalog:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/access-catalog.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  ResourceGrantPolicy:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/resource-grant-policy.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Session:
+    storageType: identity
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/session.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── Graph analysis ─────────────────────────────────────────────
+  GraphAnalysis:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/graph-analysis.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AnalysisOverlay:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/analysis-overlay.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  AnalysisReport:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/analysis-report.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── Linking suite ──────────────────────────────────────────────
+  Relation:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/relation.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Reference:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/reference.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  Backlink:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/backlink.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── PluginRegistry ─────────────────────────────────────────────
+  PluginRegistry:
+    implementations:
+      - language: typescript
+        path: handlers/ts/app/plugin-registry.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  # ── View resolver ──────────────────────────────────────────────
+  ViewResolver:
+    implementations:
+      - language: typescript
+        path: handlers/ts/view-resolver.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  KernelViewResolver:
+    implementations:
+      - language: typescript
+        path: handlers/ts/kernel-view-resolver.handler.ts
+        runtime: vercel
+        storage: vercel-kv
+
+  ReactViewResolver:
+    implementations:
+      - language: typescript
+        path: handlers/ts/react-view-resolver.handler.ts
+        runtime: vercel
+        storage: vercel-kv
 
 syncs:
-  # AppShell required syncs (entity-lifecycle suite)
-  - path: suites/entity-lifecycle/syncs/save-invalidates-cache.sync
+  # ── AppShell syncs ─────────────────────────────────────────────
+  - path: suites/app-shell/syncs/destination-catalog-registers-navigator.sync
     engine: engine
-    annotations: [eager]
 
-  - path: suites/entity-lifecycle/syncs/save-indexes-search.sync
+  # ── Identity integration syncs ─────────────────────────────────
+  - path: suites/identity-integration/syncs/access-control-on-content-load.sync
     engine: engine
-    annotations: [eager]
+  - path: suites/identity-integration/syncs/access-control-on-content-save.sync
+    engine: engine
+  - path: suites/identity-integration/syncs/access-control-on-schema-apply.sync
+    engine: engine
+  - path: suites/identity-integration/syncs/session-create-sets-ui-transport-auth.sync
+    engine: engine
+  - path: suites/identity-integration/syncs/session-refresh-sets-ui-transport-auth.sync
+    engine: engine
+  - path: suites/identity-integration/syncs/session-destroy-clears-ui-transport-auth.sync
+    engine: engine
+  - path: suites/identity-integration/syncs/session-destroy-all-clears-ui-transport-auth.sync
+    engine: engine
 
-  - path: suites/entity-lifecycle/syncs/save-generates-alias.sync
+  # ── Presentation syncs (Repertoire) ────────────────────────────
+  - path: ../repertoire/concepts/presentation/syncs/display-mode-resolve-strategy.sync
     engine: engine
-    annotations: [eager]
+  - path: ../repertoire/concepts/presentation/syncs/display-mode-uses-layout.sync
+    engine: engine
+  - path: ../repertoire/concepts/presentation/syncs/display-mode-uses-mapping.sync
+    engine: engine
+  - path: ../repertoire/concepts/presentation/syncs/view-resolves-contextual-filters.sync
+    engine: engine
+  - path: ../repertoire/concepts/presentation/syncs/area-renders-field-placement.sync
+    engine: engine
+  - path: ../repertoire/concepts/presentation/syncs/field-placement-uses-mapping.sync
+    engine: engine
 
-  - path: suites/entity-lifecycle/syncs/save-tracks-provenance.sync
+  # ── View resolver syncs ────────────────────────────────────────
+  - path: suites/view-resolver/syncs/kernel-view-resolver-registration.sync
     engine: engine
-    annotations: [eager]
+  - path: suites/view-resolver/syncs/react-view-resolver-registration.sync
+    engine: engine
+  - path: suites/view-resolver/syncs/view-resolver-dispatches-to-provider.sync
+    engine: engine
+  - path: suites/view-resolver/syncs/kernel-resolver-fetches-data.sync
+    engine: engine
+  - path: suites/view-resolver/syncs/view-resolve-tracks-items.sync
+    engine: engine
 
-  - path: suites/entity-lifecycle/syncs/save-reindexes-backlinks.sync
+  # ── Linking syncs (Repertoire) ─────────────────────────────────
+  - path: ../repertoire/concepts/linking/syncs/bidirectional-links.sync
     engine: engine
-    annotations: [eager]
-
-  - path: suites/entity-lifecycle/syncs/delete-cascades.sync
+  - path: ../repertoire/concepts/linking/syncs/relation-reference-bridge.sync
     engine: engine
-    annotations: [eager]
-
-  - path: suites/entity-lifecycle/syncs/date-fields-reference-daily-notes.sync
-    engine: engine
-    annotations: [eager]
-
-  # Hub integration syncs
-  - path: syncs/required/browse-via-hub.sync
-    engine: engine
-    annotations: [eager]
 
 dependencies:
   clef-hub:
