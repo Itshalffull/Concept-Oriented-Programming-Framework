@@ -1,5 +1,7 @@
 # Admin surface view definitions for clef-base.
 # Per spec §2.1: Views filter by Schema membership, not by "type" field.
+# Each view specifies defaultDisplayMode for per-item rendering through DisplayMode.
+# useDisplayMode defaults to true; set to 'false' for holistic layouts (graph, stat-cards, canvas).
 
 concept: View
 action: create
@@ -12,6 +14,7 @@ entries:
     title: Content
     description: Browse all content entities in the system. Every entity is a ContentNode with Schemas applied.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
   - view: schemas-list
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: table
@@ -19,6 +22,7 @@ entries:
     controls: '{"create":{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]},"rowClick":{"navigateTo":"/content/schema:{schema}"}}'
     title: Schemas
     description: Composable data shapes applied to ContentNodes. A ContentNode's identity is the set of Schemas applied to it.
+    defaultDisplayMode: table-row
   - view: workflows-list
     dataSource: '{"concept":"Workflow","action":"list"}'
     layout: table
@@ -26,6 +30,7 @@ entries:
     controls: '{"create":{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}}'
     title: Workflows
     description: Content moderation state machines with states and transitions.
+    defaultDisplayMode: table-row
   - view: automations-list
     dataSource: '{"concept":"AutomationRule","action":"list"}'
     layout: table
@@ -33,6 +38,7 @@ entries:
     controls: '{"create":{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}}'
     title: Automations
     description: Event-condition-action rules that fire automatically.
+    defaultDisplayMode: table-row
   - view: taxonomy-list
     dataSource: '{"concept":"Taxonomy","action":"list"}'
     layout: table
@@ -40,35 +46,40 @@ entries:
     controls: '{"create":{"concept":"Taxonomy","action":"createVocabulary","fields":[{"name":"vocab","label":"Vocabulary ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
     title: Taxonomy
     description: Hierarchical classification using Vocabularies and Terms.
+    defaultDisplayMode: table-row
   - view: themes-list
     dataSource: '{"concept":"Theme","action":"list"}'
     layout: card-grid
     visibleFields: '[{"key":"name","label":"Name"},{"key":"base","label":"Extends","formatter":"badge"},{"key":"active","label":"Active","formatter":"boolean-badge"},{"key":"overrides","label":"Overrides","formatter":"json-count"}]'
-    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]}}'
+    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]},"rowActions":[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"id"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"id"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]}'
     title: Themes
     description: Design system themes with token inheritance.
+    defaultDisplayMode: card
   - view: display-modes-list
     dataSource: '{"concept":"DisplayMode","action":"list"}'
     layout: card-grid
     visibleFields: '[{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode_id","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"layout","label":"Layout","formatter":"badge"},{"key":"component_mapping","label":"Mapping","formatter":"badge"}]'
-    controls: '{"create":{"concept":"DisplayMode","action":"create","fields":[{"name":"schema","label":"Schema","required":true},{"name":"mode_id","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]}}'
+    controls: '{"create":{"concept":"DisplayMode","action":"create","fields":[{"name":"schema","label":"Schema","required":true},{"name":"mode_id","label":"Mode ID","required":true},{"name":"name","label":"Display Name","required":true}]},"rowClick":{"navigateTo":"/admin/display-modes/{mode}"}}'
     title: Display Modes
     description: Named rendering configurations per (Schema, mode_id) pair. Strategy is Layout, ComponentMapping, or flat field list.
     filters: '[{"field":"schema","label":"Schema","type":"toggle-group"}]'
+    defaultDisplayMode: card
   - view: views-list
     dataSource: '{"concept":"View","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"view","label":"View ID"},{"key":"title","label":"Title"},{"key":"layout","label":"Display Type","formatter":"badge"},{"key":"dataSource","label":"Data Source"}]'
-    controls: '{"create":{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]},"rowClick":{"navigateTo":"/view-builder/{view}"}}'
+    visibleFields: '[{"key":"view","label":"View ID"},{"key":"title","label":"Title"},{"key":"layout","label":"Display Type","formatter":"badge"},{"key":"defaultDisplayMode","label":"Item Mode","formatter":"badge"},{"key":"dataSource","label":"Data Source"}]'
+    controls: '{"create":{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"defaultDisplayMode","label":"Item Display Mode","placeholder":"e.g. card, table-row, compact"},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]},"rowClick":{"navigateTo":"/view-builder/{view}"}}'
     title: Views
-    description: Saved queries with display configuration.
+    description: Saved queries with display configuration. Each view renders items through a display mode.
+    defaultDisplayMode: table-row
   - view: mappings-list
     dataSource: '{"concept":"ComponentMapping","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"schema","label":"Schema"},{"key":"displayMode","label":"Display Mode","formatter":"badge"},{"key":"widget","label":"Widget"},{"key":"slots","label":"Slots"}]'
-    controls: '{}'
+    visibleFields: '[{"key":"name","label":"Name"},{"key":"widget_id","label":"Widget","formatter":"badge"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"display_mode","label":"Display Mode","formatter":"badge"},{"key":"slot_count","label":"Slots"},{"key":"prop_count","label":"Props"}]'
+    controls: '{"create":{"concept":"ComponentMapping","action":"create","fields":[{"name":"name","label":"Mapping Name","required":true},{"name":"widget_id","label":"Widget ID","required":true},{"name":"schema","label":"Schema"},{"name":"display_mode","label":"Display Mode"}]},"rowClick":{"navigateTo":"/admin/mappings/{id}"}}'
     title: Component Mappings
-    description: Widget-to-Schema-to-DisplayMode bindings.
+    description: Widget-to-data bindings. Each mapping pairs a widget with entity fields mapped to its slots and props.
+    defaultDisplayMode: table-row
   - view: dashboard-stats
     dataSource: '{"concept":"ContentNode","action":"stats"}'
     layout: stat-cards
@@ -76,6 +87,7 @@ entries:
     controls: '{}'
     title: System Stats
     description: ''
+    useDisplayMode: 'false'
   - view: dashboard-concepts
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}'
     layout: table
@@ -83,6 +95,7 @@ entries:
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Registered Concepts
     description: ''
+    defaultDisplayMode: table-row
   - view: concept-graph
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: canvas
@@ -91,6 +104,7 @@ entries:
     title: Score Graph
     description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Includes graph analysis algorithms, overlays, and report generation.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
+    useDisplayMode: 'false'
   - view: score-schemas
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: card-grid
@@ -98,6 +112,7 @@ entries:
     controls: '{"rowClick":{"navigateTo":"/content/schema:{schema}"}}'
     title: Schema Browser
     description: Browse all schema definitions.
+    defaultDisplayMode: card
   - view: syncs-list
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Sync"}}'
     layout: table
@@ -106,6 +121,7 @@ entries:
     title: Sync Rules
     description: Synchronization rules wiring concepts together through pattern matching.
     filters: '[{"field":"suite","label":"Suite","type":"toggle-group"},{"field":"tier","label":"Tier","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
   - view: installed-suites
     dataSource: '{"concept":"AppInstallation","action":"list","params":{"status":"installed"}}'
     layout: table
@@ -113,6 +129,7 @@ entries:
     controls: '{}'
     title: Installed Suites
     description: Concept suite packages installed in this kernel.
+    defaultDisplayMode: table-row
   - view: entity-properties
     dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
     layout: detail
@@ -120,6 +137,7 @@ entries:
     controls: '{}'
     title: Properties
     description: ''
+    defaultDisplayMode: detail
   - view: entity-content
     dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
     layout: content-body
@@ -127,6 +145,7 @@ entries:
     controls: '{}'
     title: Content
     description: ''
+    defaultDisplayMode: content-body
   - view: entity-same-schema
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"{{entityPrimarySchema}}"}}'
     layout: table
@@ -134,6 +153,7 @@ entries:
     controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Same Schema
     description: Other entities with the same primary schema.
+    defaultDisplayMode: table-row
   - view: entity-all-content
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
@@ -142,6 +162,7 @@ entries:
     title: All Content
     description: Browse all entities in the system.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
   - view: version-spaces-list
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
     layout: card-grid
@@ -149,6 +170,7 @@ entries:
     controls: '{"create":{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}}'
     title: Version Spaces
     description: Named content variations — like git branches for content.
+    defaultDisplayMode: card
   - view: backlinks
     dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"backlink"}}'
     layout: table
@@ -157,6 +179,7 @@ entries:
     title: Backlinks
     description: Entities that link to this entity.
     filters: '[{"field":"target","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+    defaultDisplayMode: compact
   - view: similar-entities
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: card-grid
@@ -165,6 +188,7 @@ entries:
     title: Similar Entities
     description: Semantically related entities based on content similarity.
     filters: '[{"field":"similar_to","operator":"embedding_similarity","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+    defaultDisplayMode: card
   - view: unlinked-references
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
@@ -173,6 +197,7 @@ entries:
     title: Unlinked References
     description: Entities that mention this entity but do not have a formal link.
     filters: '[{"field":"mentions","operator":"contains","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+    defaultDisplayMode: table-row
   - view: graph-neighbors
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: graph
@@ -181,3 +206,4 @@ entries:
     title: Graph Neighbors
     description: Direct connections in the knowledge graph.
     filters: '[{"field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
+    useDisplayMode: 'false'

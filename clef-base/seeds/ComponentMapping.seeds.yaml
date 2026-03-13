@@ -1,0 +1,316 @@
+# Default ComponentMapping seeds — widget-to-data bindings for built-in display types.
+# Each mapping pairs a widget with entity_field slot sources.
+
+concept: ComponentMapping
+action: create
+entries:
+  # Card display — used by ContentNode:card, Schema:card, Theme:card, etc.
+  - name: card-default
+    widget_id: card-widget
+    schema: ContentNode
+    display_mode: card
+
+  # Compact display — minimal one-line rendering
+  - name: compact-default
+    widget_id: inline-widget
+    schema: ContentNode
+    display_mode: compact
+
+  # Board card — kanban column cards
+  - name: board-card-default
+    widget_id: card-widget
+    schema: ContentNode
+    display_mode: board-card
+
+  # Stat card — aggregated metric cards
+  - name: stat-card-default
+    widget_id: stat-card-widget
+    schema: ContentNode
+    display_mode: stat-card
+
+  # Table row — tabular list rendering
+  - name: table-row-default
+    widget_id: table-row-widget
+    schema: ContentNode
+    display_mode: table-row
+
+  # Detail view — full entity detail page
+  - name: detail-default
+    widget_id: detail-widget
+    schema: ContentNode
+    display_mode: detail
+
+  # Content body — prose/markdown content rendering
+  - name: content-body-default
+    widget_id: content-body-widget
+    schema: ContentNode
+    display_mode: content-body
+
+  # Schema card
+  - name: schema-card
+    widget_id: card-widget
+    schema: Schema
+    display_mode: card
+
+  # Schema table row
+  - name: schema-table-row
+    widget_id: table-row-widget
+    schema: Schema
+    display_mode: table-row
+
+  # Workflow table row
+  - name: workflow-table-row
+    widget_id: table-row-widget
+    schema: Workflow
+    display_mode: table-row
+
+  # Automation rule table row
+  - name: automation-table-row
+    widget_id: table-row-widget
+    schema: AutomationRule
+    display_mode: table-row
+
+  # Taxonomy table row
+  - name: taxonomy-table-row
+    widget_id: table-row-widget
+    schema: Taxonomy
+    display_mode: table-row
+
+  # Theme card
+  - name: theme-card
+    widget_id: card-widget
+    schema: Theme
+    display_mode: card
+
+  # DisplayMode card
+  - name: displaymode-card
+    widget_id: card-widget
+    schema: DisplayMode
+    display_mode: card
+
+  # View table row
+  - name: view-table-row
+    widget_id: table-row-widget
+    schema: View
+    display_mode: table-row
+
+  # ComponentMapping table row
+  - name: mapping-table-row
+    widget_id: table-row-widget
+    schema: ComponentMapping
+    display_mode: table-row
+
+  # Sync table row
+  - name: sync-table-row
+    widget_id: table-row-widget
+    schema: Sync
+    display_mode: table-row
+
+  # VersionSpace card
+  - name: versionspace-card
+    widget_id: card-widget
+    schema: VersionSpace
+    display_mode: card
+
+---
+# Bind slots to entity fields for each mapping
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # mapping-1: card-default (ContentNode:card)
+  - mapping: mapping-1
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-1
+    slot_name: subtitle
+    sources: ["entity_field:type"]
+  - mapping: mapping-1
+    slot_name: metadata
+    sources: ["entity_field:createdBy"]
+
+  # mapping-2: compact-default (ContentNode:compact)
+  - mapping: mapping-2
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-2
+    slot_name: badge
+    sources: ["entity_field:type"]
+
+  # mapping-3: board-card-default (ContentNode:board-card)
+  - mapping: mapping-3
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-3
+    slot_name: badges
+    sources: ["entity_field:schemas"]
+  - mapping: mapping-3
+    slot_name: footer
+    sources: ["entity_field:createdBy"]
+
+  # mapping-4: stat-card-default (ContentNode:stat-card)
+  - mapping: mapping-4
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: mapping-4
+    slot_name: value
+    sources: ["entity_field:value"]
+
+  # mapping-5: table-row-default (ContentNode:table-row)
+  - mapping: mapping-5
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-5
+    slot_name: schemas
+    sources: ["entity_field:schemas"]
+  - mapping: mapping-5
+    slot_name: created_by
+    sources: ["entity_field:createdBy"]
+  - mapping: mapping-5
+    slot_name: created
+    sources: ["entity_field:createdAt"]
+
+  # mapping-6: detail-default (ContentNode:detail)
+  - mapping: mapping-6
+    slot_name: heading
+    sources: ["entity_field:node"]
+  - mapping: mapping-6
+    slot_name: schemas
+    sources: ["entity_field:schemas"]
+  - mapping: mapping-6
+    slot_name: metadata
+    sources: ["entity_field:metadata"]
+  - mapping: mapping-6
+    slot_name: content
+    sources: ["entity_field:content"]
+  - mapping: mapping-6
+    slot_name: created_by
+    sources: ["entity_field:createdBy"]
+
+  # mapping-7: content-body-default (ContentNode:content-body)
+  - mapping: mapping-7
+    slot_name: content
+    sources: ["entity_field:content"]
+
+  # mapping-8: schema-card (Schema:card)
+  - mapping: mapping-8
+    slot_name: title
+    sources: ["entity_field:schema"]
+  - mapping: mapping-8
+    slot_name: fields
+    sources: ["entity_field:fields"]
+  - mapping: mapping-8
+    slot_name: extends
+    sources: ["entity_field:extends"]
+
+  # mapping-9: schema-table-row (Schema:table-row)
+  - mapping: mapping-9
+    slot_name: title
+    sources: ["entity_field:schema"]
+  - mapping: mapping-9
+    slot_name: fields
+    sources: ["entity_field:fields"]
+  - mapping: mapping-9
+    slot_name: extends
+    sources: ["entity_field:extends"]
+
+  # mapping-10: workflow-table-row (Workflow:table-row)
+  - mapping: mapping-10
+    slot_name: title
+    sources: ["entity_field:workflow"]
+  - mapping: mapping-10
+    slot_name: states
+    sources: ["entity_field:states"]
+  - mapping: mapping-10
+    slot_name: transitions
+    sources: ["entity_field:transitions"]
+
+  # mapping-11: automation-table-row (AutomationRule:table-row)
+  - mapping: mapping-11
+    slot_name: title
+    sources: ["entity_field:rule"]
+  - mapping: mapping-11
+    slot_name: trigger
+    sources: ["entity_field:trigger"]
+  - mapping: mapping-11
+    slot_name: enabled
+    sources: ["entity_field:enabled"]
+
+  # mapping-12: taxonomy-table-row (Taxonomy:table-row)
+  - mapping: mapping-12
+    slot_name: title
+    sources: ["entity_field:vocab"]
+  - mapping: mapping-12
+    slot_name: name
+    sources: ["entity_field:name"]
+  - mapping: mapping-12
+    slot_name: terms
+    sources: ["entity_field:terms"]
+
+  # mapping-13: theme-card (Theme:card)
+  - mapping: mapping-13
+    slot_name: title
+    sources: ["entity_field:name"]
+  - mapping: mapping-13
+    slot_name: extends
+    sources: ["entity_field:base"]
+  - mapping: mapping-13
+    slot_name: active
+    sources: ["entity_field:active"]
+  - mapping: mapping-13
+    slot_name: overrides
+    sources: ["entity_field:overrides"]
+
+  # mapping-14: displaymode-card (DisplayMode:card)
+  - mapping: mapping-14
+    slot_name: title
+    sources: ["entity_field:mode_id"]
+  - mapping: mapping-14
+    slot_name: name
+    sources: ["entity_field:name"]
+  - mapping: mapping-14
+    slot_name: schema
+    sources: ["entity_field:schema"]
+
+  # mapping-15: view-table-row (View:table-row)
+  - mapping: mapping-15
+    slot_name: title
+    sources: ["entity_field:view"]
+  - mapping: mapping-15
+    slot_name: name
+    sources: ["entity_field:title"]
+  - mapping: mapping-15
+    slot_name: layout
+    sources: ["entity_field:layout"]
+
+  # mapping-16: mapping-table-row (ComponentMapping:table-row)
+  - mapping: mapping-16
+    slot_name: title
+    sources: ["entity_field:name"]
+  - mapping: mapping-16
+    slot_name: widget
+    sources: ["entity_field:widget_id"]
+  - mapping: mapping-16
+    slot_name: schema
+    sources: ["entity_field:schema"]
+
+  # mapping-17: sync-table-row (Sync:table-row)
+  - mapping: mapping-17
+    slot_name: title
+    sources: ["entity_field:node"]
+  - mapping: mapping-17
+    slot_name: suite
+    sources: ["entity_field:suite"]
+  - mapping: mapping-17
+    slot_name: tier
+    sources: ["entity_field:tier"]
+
+  # mapping-18: versionspace-card (VersionSpace:card)
+  - mapping: mapping-18
+    slot_name: title
+    sources: ["entity_field:name"]
+  - mapping: mapping-18
+    slot_name: status
+    sources: ["entity_field:status"]
+  - mapping: mapping-18
+    slot_name: owner
+    sources: ["entity_field:owner"]

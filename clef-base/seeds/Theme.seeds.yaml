@@ -18,3 +18,11 @@ entries:
   - theme: signal
     name: Signal
     overrides: '{"mode":"dark","sourceType":"expressive-theme","density":"compact","motif":"topbar","styleProfile":"signal"}'
+
+---
+# Activate the light theme by default.
+concept: Theme
+action: activate
+entries:
+  - theme: light
+    priority: 100

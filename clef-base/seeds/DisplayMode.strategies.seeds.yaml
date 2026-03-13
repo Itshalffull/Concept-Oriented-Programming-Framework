@@ -1,0 +1,66 @@
+# Configure rendering strategies for each DisplayMode.
+# Each entry calls set_flat_fields with FieldPlacement IDs.
+# Runs after DisplayMode.seeds.yaml (alphabetically later).
+
+concept: DisplayMode
+action: set_flat_fields
+entries:
+  # --- ContentNode display modes ---
+  - mode: "ContentNode:table-row"
+    placements: '["fp-node-heading","fp-schemas-badges","fp-createdBy-plain","fp-createdAt-date"]'
+  - mode: "ContentNode:card"
+    placements: '["fp-node-heading","fp-type-badge","fp-schemas-badges","fp-createdBy-plain"]'
+  - mode: "ContentNode:compact"
+    placements: '["fp-node-heading","fp-type-badge"]'
+  - mode: "ContentNode:board-card"
+    placements: '["fp-node-heading","fp-schemas-badges","fp-createdBy-plain"]'
+  - mode: "ContentNode:stat-card"
+    placements: '["fp-node-heading","fp-type-badge"]'
+  - mode: "ContentNode:detail"
+    placements: '["fp-node-heading","fp-schemas-badges","fp-createdBy-plain","fp-createdAt-date","fp-content-richtext","fp-metadata-json"]'
+  - mode: "ContentNode:entity-page"
+    placements: '["fp-node-heading","fp-type-badge","fp-schemas-badges","fp-createdBy-plain","fp-createdAt-date","fp-content-richtext","fp-metadata-json"]'
+  - mode: "ContentNode:content-body"
+    placements: '["fp-content-richtext"]'
+
+  # --- Schema display modes ---
+  - mode: "Schema:table-row"
+    placements: '["fp-schema-heading","fp-fields-count","fp-extends-badge"]'
+  - mode: "Schema:card"
+    placements: '["fp-schema-heading","fp-fields-count","fp-extends-badge"]'
+
+  # --- Workflow display mode ---
+  - mode: "Workflow:table-row"
+    placements: '["fp-workflow-heading","fp-states-count","fp-transitions-count"]'
+
+  # --- AutomationRule display mode ---
+  - mode: "AutomationRule:table-row"
+    placements: '["fp-rule-heading","fp-trigger-plain","fp-enabled-bool"]'
+
+  # --- Taxonomy display mode ---
+  - mode: "Taxonomy:table-row"
+    placements: '["fp-vocab-heading","fp-name-plain","fp-terms-count"]'
+
+  # --- Theme display mode ---
+  - mode: "Theme:card"
+    placements: '["fp-name-heading","fp-base-badge","fp-active-bool","fp-overrides-count"]'
+
+  # --- DisplayMode display mode (meta!) ---
+  - mode: "DisplayMode:card"
+    placements: '["fp-mode-id-heading","fp-schema-badge","fp-mode-name-plain","fp-component-mapping-badge","fp-layout-strategy-badge"]'
+
+  # --- View display mode ---
+  - mode: "View:table-row"
+    placements: '["fp-view-heading","fp-view-title","fp-layout-badge","fp-defaultDisplayMode-badge"]'
+
+  # --- ComponentMapping display mode ---
+  - mode: "ComponentMapping:table-row"
+    placements: '["fp-mapping-name-heading","fp-schema-badge","fp-widget-badge"]'
+
+  # --- Sync display mode ---
+  - mode: "Sync:table-row"
+    placements: '["fp-sync-node-heading","fp-suite-badge","fp-tier-badge"]'
+
+  # --- VersionSpace display mode ---
+  - mode: "VersionSpace:card"
+    placements: '["fp-space-name-heading","fp-status-badge","fp-owner-plain","fp-overrideCount-plain"]'

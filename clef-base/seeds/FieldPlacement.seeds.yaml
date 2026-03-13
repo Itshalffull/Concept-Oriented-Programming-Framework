@@ -40,3 +40,154 @@ entries:
   - placement: fp-metadata-json
     source_field: metadata
     formatter: json
+
+  # ContentNode-specific fields
+  - placement: fp-node-heading
+    source_field: node
+    formatter: heading
+  - placement: fp-node-code
+    source_field: node
+    formatter: code
+  - placement: fp-schemas-badges
+    source_field: schemas
+    formatter: tag_list
+  - placement: fp-createdBy-plain
+    source_field: createdBy
+    formatter: plain_text
+  - placement: fp-createdAt-date
+    source_field: createdAt
+    formatter: date_relative
+
+  # Schema-specific fields
+  - placement: fp-schema-heading
+    source_field: schema
+    formatter: heading
+  - placement: fp-schema-badge
+    source_field: schema
+    formatter: badge
+  - placement: fp-fields-count
+    source_field: fields
+    formatter: json_count
+  - placement: fp-extends-badge
+    source_field: extends
+    formatter: badge
+
+  # View-specific fields
+  - placement: fp-view-heading
+    source_field: view
+    formatter: heading
+  - placement: fp-view-title
+    source_field: title
+    formatter: heading
+  - placement: fp-layout-badge
+    source_field: layout
+    formatter: badge
+  - placement: fp-dataSource-code
+    source_field: dataSource
+    formatter: code
+  - placement: fp-defaultDisplayMode-badge
+    source_field: defaultDisplayMode
+    formatter: badge
+
+  # DisplayMode-specific fields
+  - placement: fp-mode-id-heading
+    source_field: mode_id
+    formatter: heading
+  - placement: fp-mode-name-plain
+    source_field: name
+    formatter: plain_text
+  - placement: fp-component-mapping-badge
+    source_field: component_mapping
+    formatter: badge
+  - placement: fp-layout-strategy-badge
+    source_field: layout
+    formatter: badge
+  - placement: fp-placements-count
+    source_field: placements
+    formatter: json_count
+
+  # Workflow fields
+  - placement: fp-workflow-heading
+    source_field: workflow
+    formatter: heading
+  - placement: fp-states-count
+    source_field: states
+    formatter: json_count
+  - placement: fp-transitions-count
+    source_field: transitions
+    formatter: json_count
+
+  # AutomationRule fields
+  - placement: fp-rule-heading
+    source_field: rule
+    formatter: heading
+  - placement: fp-trigger-plain
+    source_field: trigger
+    formatter: plain_text
+  - placement: fp-enabled-bool
+    source_field: enabled
+    formatter: boolean_badge
+
+  # Taxonomy fields
+  - placement: fp-vocab-heading
+    source_field: vocab
+    formatter: heading
+  - placement: fp-name-heading
+    source_field: name
+    formatter: heading
+  - placement: fp-name-plain
+    source_field: name
+    formatter: plain_text
+  - placement: fp-terms-count
+    source_field: terms
+    formatter: json_count
+
+  # Theme fields
+  - placement: fp-theme-name-heading
+    source_field: name
+    formatter: heading
+  - placement: fp-base-badge
+    source_field: base
+    formatter: badge
+  - placement: fp-active-bool
+    source_field: active
+    formatter: boolean_badge
+  - placement: fp-overrides-count
+    source_field: overrides
+    formatter: json_count
+
+  # ComponentMapping fields
+  - placement: fp-mapping-name-heading
+    source_field: name
+    formatter: heading
+  - placement: fp-widget-badge
+    source_field: widget
+    formatter: badge
+  - placement: fp-slots-code
+    source_field: slots
+    formatter: code
+
+  # Sync fields
+  - placement: fp-sync-node-heading
+    source_field: node
+    formatter: heading
+  - placement: fp-suite-badge
+    source_field: suite
+    formatter: badge
+  - placement: fp-tier-badge
+    source_field: tier
+    formatter: badge
+  - placement: fp-pattern-code
+    source_field: pattern
+    formatter: code
+
+  # Version Space fields
+  - placement: fp-space-name-heading
+    source_field: name
+    formatter: heading
+  - placement: fp-owner-plain
+    source_field: owner
+    formatter: plain_text
+  - placement: fp-overrideCount-plain
+    source_field: overrideCount
+    formatter: plain_text

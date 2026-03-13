@@ -1,12 +1,11 @@
 # Core display mode definitions for clef-base.
 # Each entry defines a (schema, mode_id) rendering configuration.
+# Strategy is set via subsequent set_flat_fields / set_component_mapping calls.
 
 concept: DisplayMode
 action: create
 entries:
-  - schema: ContentNode
-    mode_id: entity-page
-    name: Entity Page
+  # Per-item display modes used by Views
   - schema: ContentNode
     mode_id: table-row
     name: Table Row
@@ -17,8 +16,104 @@ entries:
     mode_id: compact
     name: Compact
   - schema: ContentNode
+    mode_id: board-card
+    name: Board Card
+  - schema: ContentNode
+    mode_id: stat-card
+    name: Stat Card
+  - schema: ContentNode
+    mode_id: detail
+    name: Detail View
+
+  # Full-page / special display modes
+  - schema: ContentNode
+    mode_id: entity-page
+    name: Entity Page
+  - schema: ContentNode
+    mode_id: content-body
+    name: Content Body
+  - schema: ContentNode
     mode_id: score-graph
     name: Score Graph
   - schema: ContentNode
     mode_id: graph-analysis
     name: Graph Analysis
+
+  # Schema-specific display modes
+  - schema: Schema
+    mode_id: table-row
+    name: Schema Table Row
+  - schema: Schema
+    mode_id: card
+    name: Schema Card
+  - schema: Workflow
+    mode_id: table-row
+    name: Workflow Table Row
+  - schema: AutomationRule
+    mode_id: table-row
+    name: Automation Table Row
+  - schema: Taxonomy
+    mode_id: table-row
+    name: Taxonomy Table Row
+  - schema: Theme
+    mode_id: card
+    name: Theme Card
+  - schema: DisplayMode
+    mode_id: card
+    name: DisplayMode Card
+  - schema: View
+    mode_id: table-row
+    name: View Table Row
+  - schema: ComponentMapping
+    mode_id: table-row
+    name: Mapping Table Row
+  - schema: Sync
+    mode_id: table-row
+    name: Sync Table Row
+  - schema: VersionSpace
+    mode_id: card
+    name: Version Space Card
+
+---
+# Wire each per-item display mode to its ComponentMapping.
+# Holistic modes (entity-page, score-graph, graph-analysis) are excluded —
+# they do not use component mappings.
+concept: DisplayMode
+action: set_component_mapping
+entries:
+  - mode: ContentNode:card
+    mapping: mapping-1
+  - mode: ContentNode:compact
+    mapping: mapping-2
+  - mode: ContentNode:board-card
+    mapping: mapping-3
+  - mode: ContentNode:stat-card
+    mapping: mapping-4
+  - mode: ContentNode:table-row
+    mapping: mapping-5
+  - mode: ContentNode:detail
+    mapping: mapping-6
+  - mode: ContentNode:content-body
+    mapping: mapping-7
+  - mode: Schema:card
+    mapping: mapping-8
+  - mode: Schema:table-row
+    mapping: mapping-9
+  - mode: Workflow:table-row
+    mapping: mapping-10
+  - mode: AutomationRule:table-row
+    mapping: mapping-11
+  - mode: Taxonomy:table-row
+    mapping: mapping-12
+  - mode: Theme:card
+    mapping: mapping-13
+  - mode: DisplayMode:card
+    mapping: mapping-14
+  - mode: View:table-row
+    mapping: mapping-15
+  - mode: ComponentMapping:table-row
+    mapping: mapping-16
+  - mode: Sync:table-row
+    mapping: mapping-17
+  - mode: VersionSpace:card
+    mapping: mapping-18

@@ -1,0 +1,94 @@
+# Relation type definitions — named, labeled edge types for the system graph.
+# Each entry registers a relation type with directional labels and cardinality.
+# These make every cross-entity reference navigable and describable in both directions.
+
+concept: Relation
+action: defineRelation
+entries:
+  # --- Content & Schema ---
+  - relation: schema-membership
+    schema: '{"forward_label":"applied to","reverse_label":"has schema","cardinality":"many-to-many","description":"Schema applied to a ContentNode"}'
+
+  - relation: schema-extends
+    schema: '{"forward_label":"extends","reverse_label":"extended by","cardinality":"many-to-one","description":"Schema inherits fields from parent schema"}'
+
+  - relation: entity-references
+    schema: '{"forward_label":"references","reverse_label":"referenced by","cardinality":"many-to-many","description":"Entity field references another entity"}'
+
+  - relation: created-by
+    schema: '{"forward_label":"created by","reverse_label":"created","cardinality":"many-to-one","description":"Entity provenance — who or what created it"}'
+
+  - relation: wiki-link
+    schema: '{"forward_label":"links to","reverse_label":"linked from","cardinality":"many-to-many","description":"[[Wiki-style link]] between entities in content"}'
+
+  # --- Rendering Pipeline ---
+  - relation: view-item
+    schema: '{"forward_label":"displays","reverse_label":"appears in","cardinality":"many-to-many","description":"View includes entity in its rendered results"}'
+
+  - relation: view-queries-concept
+    schema: '{"forward_label":"queries","reverse_label":"queried by","cardinality":"many-to-one","description":"View dataSource targets a concept for its data"}'
+
+  - relation: display-mode-uses-mapping
+    schema: '{"forward_label":"uses mapping","reverse_label":"renders for","cardinality":"one-to-one","description":"DisplayMode delegates rendering to a ComponentMapping"}'
+
+  - relation: display-mode-uses-layout
+    schema: '{"forward_label":"uses layout","reverse_label":"arranges for","cardinality":"one-to-one","description":"DisplayMode delegates spatial composition to a Layout"}'
+
+  - relation: mapping-binds-widget
+    schema: '{"forward_label":"binds widget","reverse_label":"bound by","cardinality":"many-to-one","description":"ComponentMapping specifies which widget renders the data"}'
+
+  - relation: mapping-targets-schema
+    schema: '{"forward_label":"targets schema","reverse_label":"rendered by","cardinality":"many-to-one","description":"ComponentMapping scoped to entities of a specific schema"}'
+
+  - relation: slot-reads-field
+    schema: '{"forward_label":"reads from","reverse_label":"feeds into","cardinality":"many-to-one","description":"Widget slot sources data from an entity field"}'
+
+  - relation: placement-formats-field
+    schema: '{"forward_label":"formats","reverse_label":"formatted by","cardinality":"one-to-one","description":"FieldPlacement applies a formatter to an entity field for display"}'
+
+  - relation: placement-delegates-to-mapping
+    schema: '{"forward_label":"delegates to","reverse_label":"renders for","cardinality":"one-to-one","description":"FieldPlacement delegates custom rendering to a ComponentMapping via field_mapping"}'
+
+  - relation: view-uses-display-mode
+    schema: '{"forward_label":"renders items as","reverse_label":"used by view","cardinality":"many-to-one","description":"View specifies defaultDisplayMode for per-item rendering"}'
+
+  # --- Spatial Composition ---
+  - relation: layout-contains
+    schema: '{"forward_label":"contains","reverse_label":"contained in","cardinality":"one-to-many","description":"Layout includes a child View, area, or nested Layout"}'
+
+  - relation: slot-embeds-view
+    schema: '{"forward_label":"embeds","reverse_label":"embedded in","cardinality":"many-to-one","description":"Widget slot embeds a View via view_embed source"}'
+
+  - relation: slot-embeds-widget
+    schema: '{"forward_label":"embeds","reverse_label":"embedded in","cardinality":"many-to-one","description":"Widget slot embeds another widget via widget_embed source"}'
+
+  - relation: slot-embeds-block
+    schema: '{"forward_label":"embeds","reverse_label":"embedded in","cardinality":"many-to-one","description":"Widget slot embeds a canvas block via block_embed source"}'
+
+  # --- Theming ---
+  - relation: theme-extends
+    schema: '{"forward_label":"extends","reverse_label":"extended by","cardinality":"many-to-one","description":"Theme inherits tokens from a base theme"}'
+
+  # --- Suites & Syncs ---
+  - relation: suite-includes-concept
+    schema: '{"forward_label":"includes","reverse_label":"included in","cardinality":"one-to-many","description":"Suite packages a concept"}'
+
+  - relation: suite-includes-sync
+    schema: '{"forward_label":"includes","reverse_label":"included in","cardinality":"one-to-many","description":"Suite packages a sync rule"}'
+
+  - relation: sync-triggers
+    schema: '{"forward_label":"triggers","reverse_label":"triggered by","cardinality":"many-to-many","description":"Sync fires a target action when source action completes"}'
+
+  # --- Versioning ---
+  - relation: version-space-parent
+    schema: '{"forward_label":"parent of","reverse_label":"child of","cardinality":"one-to-many","description":"Version space hierarchy — parent contains child spaces"}'
+
+  - relation: override-targets
+    schema: '{"forward_label":"overrides","reverse_label":"overridden in","cardinality":"many-to-one","description":"Version override modifies an entity within a space"}'
+
+  # --- Navigation & Access ---
+  - relation: destination-targets
+    schema: '{"forward_label":"navigates to","reverse_label":"navigated from","cardinality":"many-to-one","description":"Navigation destination links to a view or page"}'
+
+  - relation: affordance-maps
+    schema: '{"forward_label":"maps to","reverse_label":"mapped by","cardinality":"many-to-one","description":"Affordance maps a widget to an interactor for rendering"}'
