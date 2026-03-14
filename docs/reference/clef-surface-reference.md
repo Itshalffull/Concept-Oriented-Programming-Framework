@@ -107,8 +107,9 @@ Runtime presentation orchestration — how entities become rendered output.
 
 | Concept | Purpose |
 |---------|---------|
-| **DisplayMode** | Named presentation profiles controlling per-field rendering in different contexts (view, edit, teaser). Admins define modes; `renderInMode` produces output. |
-| **View** | Multiple visual representations (table, board, calendar, gallery, list) of the same dataset with independent filter/sort/group configuration. Views are embeddable and duplicable. |
+| **DisplayMode** | Named rendering configuration for entities of a given Schema. Each mode specifies a display strategy: a Layout with FieldPlacements, a ComponentMapping for full widget takeover, or a flat ordered list of FieldPlacements. Keyed by `(schema, mode_id)` pair. |
+| **FieldPlacement** | One field's display configuration in one rendering context. Stores formatter, label overrides, visibility rules, and optional ComponentMapping delegation for custom field-level rendering. Multiple placements can reference the same source field with different configurations. |
+| **View** | Multiple visual representations (table, board, calendar, gallery, list, timeline, graph) of the same dataset with independent filter/sort/group configuration. Views are embeddable and duplicable. Filters support three source types: static (admin-configured), exposed (user-picked), and contextual (bound from rendering context at render time). |
 | **Renderer** | Cache-aware rendering pipeline with placeholder support and streaming. Composes nested content into final output. |
 | **FormBuilder** | Generates form structure from schema definitions. Delegates validation, widget selection, and field display to other concepts via syncs. |
 
@@ -506,21 +507,38 @@ When `optionCount: 50`:
 
 ## Display Modes
 
-DisplayMode controls how each field renders in different presentation contexts.
-A single entity can appear differently depending on the mode:
+DisplayMode (v2) controls how entities of a given Schema render in different
+presentation contexts. Each mode is keyed by a `(schema, mode_id)` pair and
+specifies one of three mutually exclusive display strategies:
 
-| Mode | Use Case | Example |
-|------|----------|---------|
+| Strategy | Description |
+|----------|-------------|
+| **Layout** | Spatial arrangement via a Layout entity with FieldPlacements assigned to areas. Setting a layout clears any component_mapping. |
+| **ComponentMapping** | Full widget takeover — rendering delegates entirely to a ComponentMapping. Setting a mapping clears any layout. |
+| **Flat field list** | Ordered list of FieldPlacement IDs rendered sequentially. Used as the default when neither layout nor component_mapping is set. |
+
+Common `mode_id` values:
+
+| mode_id | Use Case | Example |
+|---------|----------|---------|
 | `view` | Full read-only display | All fields visible, rich formatting |
 | `edit` | Form editing | Fields as input widgets |
 | `teaser` | Summary card | Title + thumbnail only |
 | `embed` | Inline reference | Compact one-line display |
 | `entity-page` | Full page with zones | Triple-zone layout |
 
-Each mode has field-level configuration:
+Field-level configuration is handled by **FieldPlacement** — each placement
+stores a source field, formatter, label overrides, visibility rules, and
+optional ComponentMapping delegation:
+
 ```
-DisplayMode/configureFieldDisplay(mode: "teaser", field: "title", config: "truncated")
-DisplayMode/configureFieldDisplay(mode: "teaser", field: "body", config: "hidden")
+FieldPlacement/create(source_field: "Article.title", formatter: "heading")
+FieldPlacement/configure(placement: p, formatter_options: "{\"level\": 1}")
+FieldPlacement/set_visibility(placement: p, visible: true, role_visibility: "editor")
+FieldPlacement/set_field_mapping(placement: p, mapping: "rich-title-widget")
+
+DisplayMode/create(schema: "Article", mode_id: "teaser", name: "Teaser Card")
+DisplayMode/set_flat_fields(mode: m, placements: [p1, p2, p3])
 ```
 
 The `EntityPageUsesTripleZone` sync connects display mode resolution to
@@ -547,20 +565,61 @@ then {
 
 ## Views
 
-View provides multiple visual representations of the same data source.
+View (v3) provides multiple visual representations of the same data source.
 Each view has its own filter, sort, group, and visible-field configuration.
 
-Layout types: `table`, `board`, `calendar`, `gallery`, `list`.
+Layout types: `table`, `card-grid`, `tree`, `board`, `calendar`, `timeline`,
+`graph`.
 
 Views are first-class entities — they can be duplicated, embedded (via
 `ViewEmbedSource`), and shared. Changing the layout preserves all
 filter/sort/group configuration.
+
+### Filter Source Types
+
+Filters support three source types introduced in v3:
+
+| Source Type | Description |
+|-------------|-------------|
+| **static** | Admin-configured filters baked into the view definition. |
+| **exposed** | Filters the end-user can adjust at runtime (filter bar). |
+| **contextual** | Bound from the rendering context at render time (e.g., "show only items related to the current entity"). |
+
+Contextual filters are added via `View/addContextualFilter` with a
+`context_binding` expression and a `fallback_behavior` (`hide`,
+`show_empty`, or `ignore_filter`) for when the binding cannot be resolved.
+
+### View Data Resolution
+
+Views delegate data fetching to **ViewResolver**, which dispatches to
+registered providers. Server-side rendering uses `KernelViewResolver`
+(concept actions via the kernel); client-side rendering uses
+`ReactViewResolver` (API calls via React hooks).
 
 ---
 
 ## Component Mapping and Slot Sources (Clef Base)
 
 Clef Base adds a manual binding layer on top of automatic resolution.
+
+### ViewResolver
+
+Pluggable data resolution for Views. Coordinates between View configurations
+and resolver providers that fetch data using different strategies. Each
+provider registers itself via PluginRegistry; the hub dispatches `resolve`
+calls to the appropriate provider based on `resolver_type`.
+
+```
+ViewResolver/register(resolver_type: "kernel", provider: "KernelViewResolver")
+ViewResolver/resolve(view: v, data_source: ds, filters: f, context: ctx)
+```
+
+Two built-in providers:
+
+| Provider | Environment | Strategy |
+|----------|-------------|----------|
+| **KernelViewResolver** | Server-side | Invokes concept actions through the kernel. Runs in pure TypeScript without React dependencies — suitable for API routes, server components, and seed-time resolution. |
+| **ReactViewResolver** | Client-side | Fetches data through React hooks and the browser API layer. Suitable for interactive views that need client-side state management, optimistic updates, and re-rendering on data changes. |
 
 ### ComponentMapping
 
@@ -621,9 +680,9 @@ then {
 | **WidgetEmbedSource** | Embeds another widget's output into a slot. |
 | **ViewEmbedSource** | Executes a View query and renders the result set in a slot. |
 | **BlockEmbedSource** | Embeds canvas/block content. |
-| **MenuSource** | Produces dynamic menu items. |
-| **FormulaSource** | Computes values from expressions. |
-| **EntityReferenceDisplaySource** | Displays a referenced entity's summary. |
+| **MenuSource** | Produces dynamic menu items with active-state annotations. |
+| **FormulaSource** | Computes values from expressions against entity data. |
+| **EntityReferenceDisplaySource** | Resolves a referenced entity's display rendering (title, summary, badge, or card). |
 
 ### Data Flow: Entity to Rendered Widget
 
@@ -825,7 +884,8 @@ repertoire/concepts/
 clef-base/
 ├── widgets/                  # 10 app-specific .widget files
 ├── layouts/                  # 5 .uischema layout files
-├── concepts/                 # ComponentMapping, SlotSource, ConceptBrowser, + 8 providers
+├── concepts/                 # ComponentMapping, SlotSource, ViewResolver, ConceptBrowser, + others
+│   └── providers/            # 8 SlotSource providers + 2 ViewResolver providers (10 total)
 └── suites/
     ├── component-mapping/    # Syncs wiring SlotSource dispatch and provider registration
     └── surface-integration/  # Syncs bridging domain state to Surface widgets
