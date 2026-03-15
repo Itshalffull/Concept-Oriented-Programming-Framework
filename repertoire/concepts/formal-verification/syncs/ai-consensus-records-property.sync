@@ -1,0 +1,23 @@
+# Record AI-validated property as yellow/warn quality signal — Architecture doc Section 9.1
+# When the consensus step of property-synthesis-and-validation completes
+# with ai-validated status, record a QualitySignal at warn severity
+# (yellow in Score). Requires human approval to upgrade to gate/green.
+
+sync AIConsensusRecordsProperty [eager]
+  purpose { Record AI-validated property as warn-severity quality signal (yellow). }
+when {
+  StepRun/complete: [ step_key: "consensus"; process_spec: "property-synthesis-and-validation" ]
+    => ok(result: "ai-validated"; property_ref: ?prop; confidence: ?conf; target_symbol: ?target)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?target;
+    dimension: "formal";
+    status: "warn";
+    severity: "warn";
+    summary: concat("AI-validated property (confidence: ", ?conf, ") — awaiting human approval");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: ?prop
+  ]
+}
