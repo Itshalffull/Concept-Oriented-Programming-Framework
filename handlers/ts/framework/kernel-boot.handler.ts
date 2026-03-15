@@ -19,6 +19,7 @@ import { createSelfHostedKernel } from '../../../runtime/self-hosted.js';
 import { createSyncEngineHandler, SyncEngine } from './sync-engine.handler.js';
 import { parseSyncFile } from './sync-parser.handler.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { createStorageFactory } from '../../../runtime/adapters/storage-factory.js';
 import type { ConceptHandler, ConceptStorage, ConceptRegistry } from '../../../runtime/types.js';
 import type { Kernel } from '../../../runtime/self-hosted.js';
 import type { ActionLog } from './engine.js';
@@ -71,7 +72,7 @@ export function bootKernel(config: KernelBootConfig): KernelBootResult {
   const { handler: syncEngineHandler, engine: syncEngineInstance, log } = createSyncEngineHandler(registry);
   const kernel = createSelfHostedKernel(syncEngineHandler, log, registry);
 
-  const storageFactory = config.makeStorage ?? (() => createInMemoryStorage());
+  const storageFactory = config.makeStorage ?? createStorageFactory();
   const registrations: RegEntry[] = [];
 
   for (const entry of config.concepts) {

@@ -57,7 +57,7 @@ export interface FlowLog {
 export interface Kernel {
   registerConcept(uri: string, handler: ConceptHandler, storage?: ConceptStorage): void;
   registerSync(sync: CompiledSync): void;
-  registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler }): void;
+  registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler; makeStorage?: (name: string) => ConceptStorage }): void;
   handleRequest(request: WebRequest): Promise<WebResponse>;
   getFlowLog(flowId: string): ActionRecord[];
   invokeConcept(
@@ -150,9 +150,13 @@ export function createSelfHostedKernel(
       doRegisterSync(sync);
     },
 
-    registerBuiltins(builtins: { scoreApi?: ConceptHandler; scoreIndex?: ConceptHandler }): void {
+    registerBuiltins(builtins: {
+      scoreApi?: ConceptHandler;
+      scoreIndex?: ConceptHandler;
+      makeStorage?: (name: string) => ConceptStorage;
+    }): void {
       if (builtins.scoreApi && builtins.scoreIndex && !isScoreRegistered(registry)) {
-        bootstrapScore(registry, builtins.scoreApi, builtins.scoreIndex, doRegisterSync);
+        bootstrapScore(registry, builtins.scoreApi, builtins.scoreIndex, doRegisterSync, builtins.makeStorage);
       }
     },
 
