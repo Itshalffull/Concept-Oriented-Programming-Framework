@@ -1,0 +1,64 @@
+# Publish widget surface verification results to quality signal stream — Architecture doc Section 8.1
+# When WidgetParser/parse completes, record QualitySignals for FSM
+# determinism/reachability, a11y checks, and binding validity.
+
+sync WidgetFSMVerified [eager]
+  purpose { Publish widget FSM verification result (determinism, reachability, deadlock-freedom) to quality signal. }
+when {
+  WidgetParser/parse: [ path: ?path; widget: ?name ]
+    => ok(ast: ?ast; fsm_valid: ?valid; fsm_issues: ?issues)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: concat("clef/widget/", ?name);
+    dimension: "surface-fsm";
+    status: if(?valid, "pass", "fail");
+    severity: "gate";
+    summary: if(?valid, concat("FSM: deterministic, reachable, deadlock-free (", ?name, ")"), concat("FSM issues: ", ?issues));
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync WidgetA11yVerified [eager]
+  purpose { Publish widget accessibility verification result to quality signal. }
+when {
+  WidgetParser/parse: [ path: ?path; widget: ?name ]
+    => ok(ast: ?ast; a11y_valid: ?valid; a11y_issues: ?issues)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: concat("clef/widget/", ?name);
+    dimension: "surface-a11y";
+    status: if(?valid, "pass", "fail");
+    severity: "gate";
+    summary: if(?valid, concat("A11y: ARIA role-children, modal-focus, roving-keyboard valid (", ?name, ")"), concat("A11y issues: ", ?issues));
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync WidgetBindingVerified [eager]
+  purpose { Publish widget binding verification result (part/prop existence, type compatibility) to quality signal. }
+when {
+  WidgetParser/parse: [ path: ?path; widget: ?name ]
+    => ok(ast: ?ast; binding_valid: ?valid; binding_issues: ?issues)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: concat("clef/widget/", ?name);
+    dimension: "surface-binding";
+    status: if(?valid, "pass", "fail");
+    severity: "gate";
+    summary: if(?valid, concat("Binding: parts, props, types valid (", ?name, ")"), concat("Binding issues: ", ?issues));
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

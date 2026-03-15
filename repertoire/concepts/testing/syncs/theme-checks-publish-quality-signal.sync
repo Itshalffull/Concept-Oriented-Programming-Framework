@@ -1,0 +1,22 @@
+# Publish theme contrast verification to quality signal stream — Architecture doc Section 8.1
+# When ThemeParser/parse completes, record a QualitySignal for WCAG
+# contrast ratio checks across all fg/bg pairs.
+
+sync ThemeContrastVerified [eager]
+  purpose { Publish WCAG contrast check result for all theme fg/bg pairs to quality signal. }
+when {
+  ThemeParser/parse: [ path: ?path; theme: ?name ]
+    => ok(ast: ?ast; contrast_valid: ?valid; contrast_issues: ?issues; pairs_checked: ?pairs)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: concat("clef/theme/", ?name);
+    dimension: "surface-contrast";
+    status: if(?valid, "pass", "fail");
+    severity: "gate";
+    summary: if(?valid, concat("WCAG contrast: ", ?pairs, "/", ?pairs, " pairs AA (", ?name, ")"), concat("Contrast failures: ", ?issues));
+    artifact_path: ?path;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
