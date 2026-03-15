@@ -3,13 +3,13 @@ suite:
   name: testing
   version: 0.3.0
   description: >
-    General-purpose testing coordination and normalized quality
-    publishing. Six concepts that span generation, build, and deploy:
-    snapshot testing for generated output stability, conformance testing
-    for spec fidelity, test selection for change-aware test optimization,
-    cross-target contract testing for interoperability verification,
-    flaky test management for reliability tracking and quarantine,
-    and quality signal normalization for rollups and deploy gates.
+    Cross-layer testing, quality publishing, and automated test generation.
+    Seven concepts spanning generation, build, and deploy: snapshot testing
+    for generated output stability, conformance testing for spec fidelity,
+    test selection for change-aware test optimization, cross-target contract
+    testing for interoperability verification, flaky test management for
+    reliability tracking and quarantine, quality signal normalization for
+    rollups and deploy gates, and test generation from concept invariants.
 
 concepts:
   Snapshot:
@@ -43,6 +43,12 @@ concepts:
     params:
       Q: { as: quality-signal-ref, description: "Quality signal reference" }
 
+  # Added in v0.3.0
+  TestGen:
+    spec: ./test-gen.concept
+    params:
+      T: { as: test-gen-ref, description: "Test generation record reference" }
+
 syncs:
   required:
     # Generation layer syncs
@@ -74,6 +80,25 @@ syncs:
 
     - path: ./syncs/unit-tests-publish-quality-signal.sync
       description: "Builder/test -> QualitySignal/record"
+
+    # Invariant-to-test pipeline syncs (added in v0.3.0)
+    - path: ./syncs/invariant-compiled-to-conformance-vectors.sync
+      description: "Resource/track .concept -> Conformance/generate(invariant-driven)"
+
+    - path: ./syncs/invariant-compiled-to-test-gen.sync
+      description: "Resource/track .concept -> TestGen/generate"
+
+    - path: ./syncs/test-gen-dispatches-to-provider.sync
+      description: "TestGen/generate -> PluginRegistry -> TestGen{Lang}/generate"
+
+    - path: ./syncs/generated-tests-run-by-builder.sync
+      description: "TestGen ok -> Builder/test(property)"
+
+    - path: ./syncs/property-test-results-publish-quality-signal.sync
+      description: "Builder/test(property) -> QualitySignal/record(property-test)"
+
+    - path: ./syncs/fuzz-results-publish-quality-signal.sync
+      description: "Builder/test(fuzz) -> QualitySignal/record(fuzz)"
 
   recommended:
     - path: ./syncs/verify-conformance-after-build.sync
