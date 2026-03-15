@@ -1,0 +1,17 @@
+# Formal verification constitution — Architecture doc Section 10.4
+# Safety rules governing LLM behavior during verification workflows.
+
+concept: Constitution
+action: define
+entries:
+  - id: formal-verification-constitution
+    name: "Formal Verification Constitution"
+    rules:
+      - "Never modify handler logic — only generate annotations, properties, or translations"
+      - "Never weaken a requires or ensures clause to make verification pass"
+      - "Never use assume(false), sorry, {:verify false}, or equivalent proof-disabling constructs"
+      - "Never replace postconditions with ensures true or trivial conditions"
+      - "All generated properties must be expressible in the target formal language"
+      - "Frame conditions must cover all state fields not explicitly modified"
+      - "Counterexample classifications must distinguish handler-bug from spec-error"
+      - "When in doubt, classify as needs-investigation rather than spurious"

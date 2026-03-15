@@ -1,0 +1,282 @@
+# Verification workflow ProcessSpec seeds — Architecture doc Sections 9.1-9.6
+# These seeds create ProcessSpec instances at kernel startup that define
+# the verification workflows: property synthesis, counterexample investigation,
+# solver escalation, concept onboarding, reverification cascade, and Path B.
+
+concept: ProcessSpec
+action: publish
+entries:
+  - id: property-synthesis-and-validation
+    name: "Property Synthesis and Validation"
+    version: 1
+    steps:
+      - key: synthesize
+        type: llm
+        config:
+          provider: anthropic
+          model: claude-sonnet-4-5-20250929
+          strategy: formal-verification
+          max_cegis_iterations: 5
+        next: solver-check
+
+      - key: solver-check
+        type: automation
+        config: { connector: dafny-verifier, timeout_ms: 30000 }
+        next: review-fork
+
+      - key: review-fork
+        type: fork
+        branches: [ai-review-1, ai-review-2]
+
+      - key: ai-review-1
+        type: llm
+        config:
+          provider: openai
+          model: gpt-4o
+          temperature: 0.1
+          prompt_signature: property-review
+        next: review-join
+
+      - key: ai-review-2
+        type: llm
+        config:
+          provider: google
+          model: gemini-2.5-pro
+          temperature: 0.1
+          prompt_signature: property-review
+        next: review-join
+
+      - key: review-join
+        type: join
+        join_condition: all
+        next: consensus
+
+      - key: consensus
+        type: automation
+        config: { policy: unanimous, min_confidence: 0.7 }
+        routing:
+          - condition: "consensus in {ai-validated, ai-validated-with-concerns}"
+            next: record-yellow
+          - condition: "consensus = ai-rejected"
+            next: discard
+
+      - key: record-yellow
+        type: automation
+        config: { action: record-ai-validated-property }
+        next: human-review
+
+      - key: human-review
+        type: human
+        config:
+          work_item_type: property-review
+          priority: normal
+          escalation_timeout: "7d"
+        routing:
+          - { condition: approved, next: upgrade-green }
+          - { condition: rejected, next: discard }
+          - { condition: edit, next: synthesize }
+
+      - key: upgrade-green
+        type: automation
+        config: { action: upgrade-to-gate }
+
+      - key: discard
+        type: automation
+        config: { action: discard-property }
+
+  - id: counterexample-investigation
+    name: "Counterexample Investigation"
+    version: 1
+    steps:
+      - key: minimize
+        type: automation
+        config: { action: evidence-minimize, timeout_ms: 10000 }
+        next: explain
+      - key: explain
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, prompt_signature: counterexample-explanation }
+        next: classify
+      - key: classify
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, prompt_signature: counterexample-classification }
+        next: ai-confirm
+      - key: ai-confirm
+        type: llm
+        config: { provider: openai, model: gpt-4o, prompt_signature: counterexample-classification-review }
+        next: developer-triage
+      - key: developer-triage
+        type: human
+        config: { work_item_type: counterexample-triage, priority: high, escalation_timeout: "3d" }
+        routing:
+          - { condition: "action = handler-bug", next: create-fix-task }
+          - { condition: "action = spec-error", next: restart-synthesis }
+          - { condition: "action = spurious", next: mark-spurious }
+          - { condition: "action = investigate", next: create-investigation }
+      - key: create-fix-task
+        type: human
+        config: { work_item_type: handler-fix, priority: high }
+      - key: restart-synthesis
+        type: subprocess
+        config: { spec_ref: property-synthesis-and-validation }
+      - key: mark-spurious
+        type: automation
+        config: { action: mark-evidence-spurious }
+      - key: create-investigation
+        type: human
+        config: { work_item_type: investigation, priority: normal }
+
+  - id: solver-escalation
+    name: "Solver Escalation Chain"
+    version: 1
+    steps:
+      - key: z3
+        type: automation
+        config: { solver: z3, timeout_ms: 5000 }
+        routing:
+          - { condition: "status in {proved, refuted}", next: record-result }
+          - { condition: "status in {unknown, timeout}", next: cvc5 }
+      - key: cvc5
+        type: automation
+        config: { solver: cvc5, timeout_ms: 10000 }
+        routing:
+          - { condition: "status in {proved, refuted}", next: record-result }
+          - { condition: "status in {unknown, timeout}", next: alloy }
+      - key: alloy
+        type: automation
+        config: { solver: alloy, scope: 10, timeout_ms: 15000 }
+        routing:
+          - { condition: "status in {proved, refuted}", next: record-result }
+          - { condition: "status in {unknown, timeout}", next: dafny-with-llm }
+      - key: dafny-with-llm
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, strategy: formal-verification, max_cegis_iterations: 5, timeout_ms: 30000 }
+        routing:
+          - { condition: "status in {proved, refuted}", next: record-result }
+          - { condition: "status in {unknown, timeout}", next: report-unknown }
+      - key: record-result
+        type: automation
+        config: { action: record-evidence-and-update-property }
+      - key: report-unknown
+        type: automation
+        config: { action: record-unknown-with-diagnostics }
+    retry_policy: { max_retries: 1, retry_on: [solver_crash, network_error], delay_ms: 1000 }
+
+  - id: concept-onboarding-verification
+    name: "Concept Onboarding Verification"
+    version: 1
+    steps:
+      - key: extract-intent
+        type: automation
+        config: { action: parse-concept-and-load-intent }
+        next: parallel-gen
+      - key: parallel-gen
+        type: fork
+        branches: [generate-tests, synthesize-props]
+      - key: generate-tests
+        type: automation
+        config: { action: testgen-generate }
+        next: gen-join
+      - key: synthesize-props
+        type: automation
+        config: { action: formal-property-synthesize }
+        next: gen-join
+      - key: gen-join
+        type: join
+        join_condition: all
+        next: run-conformance
+      - key: run-conformance
+        type: automation
+        config: { action: conformance-verify, timeout_ms: 60000 }
+        next: verify-spec
+      - key: verify-spec
+        type: automation
+        config: { action: path-a-spec-consistency, timeout_ms: 30000 }
+        next: verify-properties
+      - key: verify-properties
+        type: automation
+        config: { action: solver-dispatch-batch, timeout_ms: 120000 }
+        next: ai-validate-each
+      - key: ai-validate-each
+        type: subprocess
+        config: { spec_ref: property-synthesis-and-validation, for_each: "$.process_variables.synthesized_properties" }
+        next: publish-baseline
+      - key: publish-baseline
+        type: automation
+        config: { action: publish-initial-quality-baseline }
+
+  - id: reverification-cascade
+    name: "Reverification Cascade"
+    version: 1
+    steps:
+      - key: identify-scope
+        type: automation
+        config: { action: find-affected-properties-and-contracts }
+        next: prioritize
+      - key: prioritize
+        type: automation
+        config: { action: test-selection-rank, strategy: cost-then-failure-probability }
+        next: invalidate
+      - key: invalidate
+        type: automation
+        config: { action: formal-property-invalidate-batch }
+        next: reverify-batch
+      - key: reverify-batch
+        type: automation
+        config: { action: solver-dispatch-batch-budgeted, budget_ms: 120000 }
+        next: recheck-contracts
+      - key: recheck-contracts
+        type: automation
+        config: { action: contract-verify-affected }
+        next: update-rollup
+      - key: update-rollup
+        type: automation
+        config: { action: quality-signal-batch-update }
+        next: notify-if-regression
+      - key: notify-if-regression
+        type: automation
+        config: { action: check-regressions-and-notify, notify_on: previously-green-now-red }
+    timer: { budget_timeout: 300000, on_timeout: record-partial-and-queue-remainder }
+
+  - id: path-b-handler-verification
+    name: "Path B Handler Verification"
+    version: 1
+    steps:
+      - key: select-strategy
+        type: automation
+        config: { action: determine-translation-target }
+        routing:
+          - { condition: "language = rust and verus_available", next: verus-annotate }
+          - { condition: "language = dafny", next: verify-direct }
+          - { condition: "language in {typescript, swift}", next: translate-to-dafny }
+      - key: verus-annotate
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, prompt_signature: rust-verus-annotation }
+        next: verify-direct
+      - key: translate-to-dafny
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, prompt_signature: handler-to-dafny-translation, max_cegis_iterations: 5 }
+        next: verify-direct
+      - key: verify-direct
+        type: automation
+        config: { action: dafny-or-verus-verify, timeout_ms: 30000 }
+        routing:
+          - { condition: verified, next: fidelity-check }
+          - { condition: "error and attempts < 5", next: cegis-repair }
+          - { condition: "error and attempts >= 5", next: fallback-path-a }
+      - key: cegis-repair
+        type: llm
+        config: { provider: anthropic, model: claude-sonnet-4-5-20250929, prompt_signature: dafny-repair }
+        next: verify-direct
+      - key: fidelity-check
+        type: automation
+        config: { action: run-conformance-on-both, timeout_ms: 60000 }
+        routing:
+          - { condition: outputs-match, next: record-proof }
+          - { condition: outputs-mismatch, next: fallback-path-a }
+      - key: record-proof
+        type: automation
+        config: { action: record-path-b-evidence }
+      - key: fallback-path-a
+        type: automation
+        config: { action: initiate-path-a-fallback }
+    compensation: { on_failure: cleanup-partial-translation-artifacts }

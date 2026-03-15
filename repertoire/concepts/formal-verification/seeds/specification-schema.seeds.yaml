@@ -1,0 +1,82 @@
+# Specification schema pattern seeds — Architecture doc Section 10.3
+# Reusable property templates based on Dwyer patterns, smart contract
+# patterns, and data integrity patterns.
+
+concept: SpecificationSchema
+action: define
+entries:
+  - id: dwyer-absence
+    name: absence
+    category: dwyer_pattern
+    pattern_type: absence
+    template_text: "always (not ${event})"
+    formal_language: smtlib
+    parameters:
+      - { name: event, type: String, description: "Event that must never occur" }
+
+  - id: dwyer-existence
+    name: existence
+    category: dwyer_pattern
+    pattern_type: existence
+    template_text: "eventually (${event})"
+    formal_language: smtlib
+    parameters:
+      - { name: event, type: String, description: "Event that must eventually occur" }
+
+  - id: dwyer-universality
+    name: universality
+    category: dwyer_pattern
+    pattern_type: universality
+    template_text: "always (${condition})"
+    formal_language: smtlib
+    parameters:
+      - { name: condition, type: String, description: "Condition that must always hold" }
+
+  - id: dwyer-response
+    name: response
+    category: dwyer_pattern
+    pattern_type: response
+    template_text: "always (${trigger} implies eventually ${response})"
+    formal_language: smtlib
+    parameters:
+      - { name: trigger, type: String, description: "Triggering event" }
+      - { name: response, type: String, description: "Required response" }
+
+  - id: dwyer-precedence
+    name: precedence
+    category: dwyer_pattern
+    pattern_type: precedence
+    template_text: "not (${event}) until (${prerequisite})"
+    formal_language: smtlib
+    parameters:
+      - { name: event, type: String, description: "Event that must be preceded" }
+      - { name: prerequisite, type: String, description: "Prerequisite event" }
+
+  - id: smart-contract-reentrancy
+    name: reentrancy-guard
+    category: smart_contract
+    pattern_type: absence
+    template_text: "always (call_depth(${function}) <= 1)"
+    formal_language: cvl
+    parameters:
+      - { name: function, type: String, description: "Function to guard" }
+
+  - id: smart-contract-overflow
+    name: arithmetic-overflow-guard
+    category: smart_contract
+    pattern_type: absence
+    template_text: "always (${expression} <= MAX_UINT256)"
+    formal_language: cvl
+    parameters:
+      - { name: expression, type: String, description: "Expression to guard" }
+
+  - id: data-integrity-nonzero
+    name: non-zero-field
+    category: data_integrity
+    pattern_type: universality
+    template_text: "always (forall x in ${collection}: ${field}(x) != ${zero_value})"
+    formal_language: smtlib
+    parameters:
+      - { name: collection, type: String, description: "Set to check" }
+      - { name: field, type: String, description: "Field that must be non-zero" }
+      - { name: zero_value, type: String, description: "Zero/empty value", default_value: "0" }

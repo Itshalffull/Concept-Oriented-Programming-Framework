@@ -1,0 +1,116 @@
+# LLM prompt Signature seeds for formal verification — Architecture doc Section 10.2
+# Define input/output schemas for LLM interactions in verification workflows.
+
+concept: Signature
+action: define
+entries:
+  - id: property-review
+    name: property-review
+    input_fields:
+      - { name: property_text, type: String, description: "Formal property to review" }
+      - { name: original_invariant, type: String, description: "Source invariant clause" }
+      - { name: handler_source, type: String, description: "Handler implementation" }
+      - { name: solver_result, type: String, description: "Solver verdict" }
+    output_fields:
+      - { name: verdict, type: String, description: "APPROVE | REJECT | CONCERNS" }
+      - { name: confidence, type: Float, description: "0.0-1.0" }
+      - { name: explanation, type: String, description: "Rationale" }
+    instruction: >
+      Review whether this formal property faithfully captures the intent of
+      the original invariant. Is it too weak? Too strong? Does it match the
+      handler logic? Does it make unstated assumptions?
+    module_type: chain_of_thought
+
+  - id: property-synthesis
+    name: property-synthesis
+    input_fields:
+      - { name: target_symbol, type: String }
+      - { name: intent_principles, type: String }
+      - { name: action_signature, type: String }
+      - { name: state_declarations, type: String }
+      - { name: example_traces, type: String }
+    output_fields:
+      - { name: properties, type: String, description: "Formal properties in extended invariant syntax" }
+      - { name: confidence_per_property, type: String }
+      - { name: reasoning, type: String }
+    instruction: >
+      Generate formal properties from operational principles and examples.
+      Use forall, always, never, action requires/ensures. Be conservative.
+    module_type: chain_of_thought
+
+  - id: counterexample-explanation
+    name: counterexample-explanation
+    input_fields:
+      - { name: counterexample, type: String }
+      - { name: property_text, type: String }
+      - { name: handler_source, type: String }
+      - { name: minimized_trace, type: String }
+    output_fields:
+      - { name: explanation, type: String }
+      - { name: root_cause, type: String }
+      - { name: suggested_fix, type: String }
+    instruction: >
+      Explain this counterexample to a developer. Use concrete values.
+      Point to the specific handler line. Suggest a fix.
+    module_type: chain_of_thought
+
+  - id: counterexample-classification
+    name: counterexample-classification
+    input_fields:
+      - { name: counterexample, type: String }
+      - { name: explanation, type: String }
+      - { name: property_text, type: String }
+      - { name: handler_source, type: String }
+    output_fields:
+      - { name: classification, type: String, description: "handler-bug | spec-error | spurious" }
+      - { name: confidence, type: Float }
+      - { name: reasoning, type: String }
+    instruction: >
+      Classify: handler-bug (handler has real bug), spec-error (property
+      is wrong), spurious (solver artifact). When in doubt: needs-investigation.
+    module_type: chain_of_thought
+
+  - id: spec-consistency-check
+    name: spec-consistency-check
+    input_fields:
+      - { name: dafny_spec, type: String, description: "Dafny class with contracts, no body" }
+    output_fields:
+      - { name: dafny_witness, type: String, description: "Method body satisfying contracts" }
+      - { name: auxiliary_lemmas, type: String }
+    instruction: >
+      Write a Dafny method body satisfying all requires/ensures. This is a
+      witness proving satisfiability. Keep it simple. Do NOT modify contracts.
+    module_type: chain_of_thought
+
+  - id: handler-to-dafny-translation
+    name: handler-to-dafny-translation
+    input_fields:
+      - { name: handler_source, type: String }
+      - { name: concept_state_dafny, type: String }
+      - { name: preconditions, type: String }
+      - { name: postconditions, type: String }
+      - { name: action_signature, type: String }
+    output_fields:
+      - { name: dafny_method, type: String }
+      - { name: auxiliary_lemmas, type: String }
+      - { name: ghost_state, type: String }
+    instruction: >
+      Translate faithfully to Dafny. Mirror control flow exactly. Do not
+      simplify. Every source branch must have a Dafny branch. Add frame
+      conditions for all unmodified state fields.
+    module_type: chain_of_thought
+
+  - id: rust-verus-annotation
+    name: rust-verus-annotation
+    input_fields:
+      - { name: rust_handler, type: String }
+      - { name: preconditions, type: String }
+      - { name: postconditions, type: String }
+    output_fields:
+      - { name: annotated_rust, type: String }
+      - { name: proof_functions, type: String }
+    instruction: >
+      Add Verus annotations. Do NOT modify executable code. Add only:
+      requires, ensures, invariant, assert, proof blocks, spec functions.
+      Executable functions cannot be called in ghost code.
+    module_type: chain_of_thought
