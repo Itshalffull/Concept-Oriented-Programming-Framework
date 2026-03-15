@@ -1,0 +1,18 @@
+# Run generated tests via Builder — Architecture doc Section 7.2
+# After TestGen successfully produces test files, trigger Builder
+# to execute the generated property tests.
+
+sync GeneratedTestsRunByBuilder [eager]
+  purpose { Run generated property tests via Builder after test generation completes. }
+when {
+  TestGen/generate: [ concept_ref: ?concept; language: ?lang; invariant_version: ?ver ]
+    => ok(generation: ?gen; generated_files: ?files; provider_used: ?provider)
+}
+then {
+  Builder/test: [
+    concept: ?concept;
+    language: ?lang;
+    mode: "property";
+    files: ?files
+  ]
+}

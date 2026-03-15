@@ -1,0 +1,20 @@
+# Compile concept invariants to generated test code — Architecture doc Section 7.1
+# When a .concept file is tracked or changed, dispatch to TestGen to
+# produce PBT properties and fuzz harnesses for each registered language.
+
+sync InvariantCompiledToTestGen [eager]
+  purpose { Compile concept invariants into generated PBT/fuzz tests via TestGen. }
+when {
+  Resource/track: [ path: ?path; type: "concept" ]
+    => ok(resource: ?res; content: ?content; version: ?ver)
+}
+where {
+  guard { matches(?path, "*.concept") }
+}
+then {
+  TestGen/generate: [
+    concept_ref: ?res;
+    language: "typescript";
+    invariant_version: ?ver
+  ]
+}
