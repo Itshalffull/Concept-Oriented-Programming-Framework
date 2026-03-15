@@ -1,0 +1,25 @@
+# Upgrade AI-validated property to gate severity on human approval — Architecture doc Section 9.1
+# When a developer approves a property through the human-review step,
+# upgrade the QualitySignal from warn (yellow) to pass/gate (green).
+
+sync HumanApprovalUpgradesProperty [eager]
+  purpose { Upgrade property quality signal from warn to gate severity on human approval. }
+when {
+  Approval/approve: [ work_item_type: "property-review"; entity_ref: ?prop ]
+    => ok(approver: ?approver; approved_at: ?at)
+}
+where {
+  FormalProperty: { ?prop target_symbol: ?target }
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?target;
+    dimension: "formal";
+    status: "pass";
+    severity: "gate";
+    summary: concat("Human-approved property (approved by ", ?approver, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: ?prop
+  ]
+}

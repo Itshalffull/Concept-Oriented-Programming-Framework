@@ -1,0 +1,20 @@
+# Compile concept invariants to conformance test vectors — Architecture doc Section 7.1
+# When a .concept file is tracked or changed, extract example invariants
+# and compile them into boundary test vectors for Conformance verification.
+
+sync InvariantCompiledToConformanceVectors [eager]
+  purpose { Compile example invariants from concept specs into conformance boundary vectors. }
+when {
+  Resource/track: [ path: ?path; type: "concept" ]
+    => ok(resource: ?res; content: ?content)
+}
+where {
+  guard { matches(?path, "*.concept") }
+}
+then {
+  Conformance/generate: [
+    concept: ?res;
+    specPath: ?path;
+    mode: "invariant-driven"
+  ]
+}

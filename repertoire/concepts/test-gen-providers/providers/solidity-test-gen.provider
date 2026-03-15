@@ -1,0 +1,31 @@
+# Solidity Test Generation Provider — Foundry fuzz + Echidna invariant tests
+# Compiles concept invariants into Solidity test files for Foundry and Echidna.
+
+provider TestGenSolidity implements TestGenPlugin {
+
+  registration {
+    id: "test-gen-solidity"
+    language: "solidity"
+    frameworks: ["foundry", "echidna"]
+    capabilities: ["pbt", "stateful", "fuzzing", "invariant-testing"]
+  }
+
+  implementation {
+    Compiles invariant constructs to Foundry/Echidna patterns:
+      forall/given   -> vm.assume() constraints in fuzz test functions
+      always         -> Echidna invariant_ functions or Foundry invariant tests
+      never          -> Echidna property_ functions with negated assertion
+      action req/ens -> vm.assume() for requires, assertEq() for ensures
+      example        -> test_ function with concrete calldata
+
+    Output files:
+      <concept>.fuzz.t.sol       — Foundry fuzz tests with vm.assume
+      <concept>.invariant.t.sol  — Echidna invariant/property tests
+
+    Runner: forge test + echidna-test.
+  }
+
+  targets {
+    solidity: "import 'forge-std/Test.sol';"
+  }
+}

@@ -76,6 +76,40 @@ syncs:
       name: ConformanceTriggersReverification
       description: "Conformance/monitor specChanged -> FormalProperty/invalidate"
 
+    # Workflow trigger syncs
+    - path: ./syncs/property-synthesis-starts-process.sync
+      name: PropertySynthesisStartsProcess
+      description: "FormalProperty/synthesize ok -> ProcessRun/start(property-synthesis-and-validation)"
+
+    - path: ./syncs/counterexample-starts-investigation.sync
+      name: CounterexampleStartsInvestigation
+      description: "FormalProperty/refute ok -> ProcessRun/start(counterexample-investigation)"
+
+    - path: ./syncs/solver-timeout-starts-escalation.sync
+      name: SolverTimeoutStartsEscalation
+      description: "FormalProperty/check timeout -> ProcessRun/start(solver-escalation)"
+
+    - path: ./syncs/new-concept-starts-onboarding.sync
+      name: NewConceptStartsOnboarding
+      description: "Resource/track new .concept -> ProcessRun/start(concept-onboarding-verification)"
+
+    - path: ./syncs/change-starts-reverification.sync
+      name: ChangeStartsReverification
+      description: "Conformance/monitor specChanged -> ProcessRun/start(reverification-cascade)"
+
+    # Multi-AI validation syncs
+    - path: ./syncs/ai-consensus-records-property.sync
+      name: AIConsensusRecordsProperty
+      description: "StepRun/complete(consensus, ai-validated) -> QualitySignal(warn)"
+
+    - path: ./syncs/human-approval-upgrades-property.sync
+      name: HumanApprovalUpgradesProperty
+      description: "Approval/approve -> QualitySignal(pass, gate)"
+
+    - path: ./syncs/path-b-request-starts-translation.sync
+      name: PathBRequestStartsTranslation
+      description: "FormalProperty/check(solver: path-b) -> ProcessRun/start(path-b-handler-verification)"
+
 uses:
   - suite: test
     concepts:
@@ -105,6 +139,15 @@ uses:
     optional: true
     concepts:
       - name: LLMProvider
+
+  - suite: process-foundation
+    optional: true
+    concepts:
+      - name: ProcessSpec
+      - name: ProcessRun
+      - name: StepRun
+      - name: FlowToken
+      - name: ProcessVariable
 
 widgets:
   - path: ./widgets/verification-status-badge.widget

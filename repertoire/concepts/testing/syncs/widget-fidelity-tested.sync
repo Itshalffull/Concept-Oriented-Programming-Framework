@@ -1,0 +1,17 @@
+# Verify generated widget fidelity via conformance — Architecture doc Section 8.2
+# When WidgetGen/generate completes, trigger Conformance to verify
+# the generated code matches the widget spec FSM transitions and bindings.
+
+sync WidgetFidelityTested [eager]
+  purpose { Run conformance tests on generated widget code to verify FSM and binding fidelity. }
+when {
+  WidgetGen/generate: [ widget: ?name; framework: ?fw; outputPath: ?out ]
+    => ok(files: ?files)
+}
+then {
+  Conformance/generate: [
+    concept: concat("clef/widget/", ?name);
+    specPath: concat("surface/", ?name, ".widget");
+    mode: "surface-fidelity"
+  ]
+}

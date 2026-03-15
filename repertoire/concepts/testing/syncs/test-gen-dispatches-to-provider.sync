@@ -1,0 +1,18 @@
+# Dispatch test generation to language-specific provider — Architecture doc Section 7.2
+# When TestGen/generate completes, look up the registered provider
+# for the target language via PluginRegistry and dispatch generation.
+
+sync TestGenDispatchesToProvider [eager]
+  purpose { Route test generation requests to the language-specific provider plugin. }
+when {
+  TestGen/generate: [ concept_ref: ?concept; language: ?lang; invariant_version: ?ver ]
+    => ok(generation: ?gen; generated_files: ?files; provider_used: ?provider)
+}
+then {
+  PluginRegistry/dispatch: [
+    category: "test-gen";
+    plugin_id: ?provider;
+    action: "generate";
+    payload: concat("{\"concept_ref\":\"", ?concept, "\",\"language\":\"", ?lang, "\",\"invariant_version\":\"", ?ver, "\"}")
+  ]
+}

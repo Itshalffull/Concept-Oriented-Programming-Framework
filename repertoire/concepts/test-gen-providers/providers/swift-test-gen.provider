@@ -1,0 +1,30 @@
+# Swift Test Generation Provider — SwiftCheck PBT
+# Compiles concept invariants into Swift test files using SwiftCheck.
+
+provider TestGenSwift implements TestGenPlugin {
+
+  registration {
+    id: "test-gen-swift"
+    language: "swift"
+    frameworks: ["SwiftCheck", "XCTest"]
+    capabilities: ["pbt", "stateful", "shrinking"]
+  }
+
+  implementation {
+    Compiles invariant constructs to SwiftCheck generators:
+      forall/given   -> forAll with Gen.fromElements / String.arbitrary
+      always         -> Custom state machine with transition checks
+      never          -> State machine with XCTAssertFalse
+      action req/ens -> precondition() for requires, XCTAssertEqual for ensures
+      example        -> XCTestCase function with concrete values
+
+    Output files:
+      <concept>PropertyTests.swift — SwiftCheck properties in XCTestCase
+
+    Runner: XCTest via swift test or xcodebuild test.
+  }
+
+  targets {
+    swift: "import SwiftCheck; import XCTest"
+  }
+}

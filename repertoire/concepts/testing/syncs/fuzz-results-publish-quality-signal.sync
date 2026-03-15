@@ -1,0 +1,43 @@
+# Publish fuzz test results to quality signal stream — Architecture doc Section 14
+# When Builder/test completes in fuzz mode, record a QualitySignal
+# with dimension "fuzz" and warn severity (fuzz findings are advisory).
+
+sync FuzzPassPublishesQualitySignal [eager]
+  purpose { Publish fuzz test pass to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; mode: "fuzz"; duration_s: ?dur ]
+    => ok(runs: ?runs; corpus_size: ?corpus)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "fuzz";
+    status: "pass";
+    severity: "warn";
+    summary: concat("Fuzz: ", ?runs, " runs, ", ?dur, "s, corpus=", ?corpus, " (", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync FuzzFailPublishesQualitySignal [eager]
+  purpose { Publish fuzz finding to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; mode: "fuzz"; duration_s: ?dur ]
+    => testFailure(crash_input: ?input; crash_trace: ?trace)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "fuzz";
+    status: "fail";
+    severity: "warn";
+    summary: concat("Fuzz crash found after ", ?dur, "s (", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

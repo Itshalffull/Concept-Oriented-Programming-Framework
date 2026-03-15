@@ -1,0 +1,87 @@
+@version(1)
+concept TestGen [T] {
+
+  purpose {
+    Coordinate automated test generation from concept invariants.
+    Routes to language-specific providers (TypeScript/fast-check,
+    Rust/proptest, Swift/SwiftCheck, Solidity/Foundry) via
+    PluginRegistry dispatch. Generates PBT properties, stateful
+    sequence tests, and fuzz harnesses from invariant constructs.
+  }
+
+  state {
+    generations: set T
+
+    concept_ref: T -> String
+    language: T -> String
+    provider_used: T -> String
+    generated_files: T -> String
+    invariant_version: T -> String
+    generated_at: T -> DateTime
+
+    config {
+      num_runs: T -> Int
+      fuzz_duration_s: T -> Int
+      shrink_enabled: T -> Bool
+      stateful_test_depth: T -> Int
+    }
+  }
+
+  actions {
+
+    action generate(concept_ref: String, language: String, invariant_version: String) {
+      -> ok(generation: T, generated_files: String, provider_used: String) {
+        Compile concept invariants into PBT properties, boundary
+        vectors, and fuzz harnesses for the target language. Uses
+        InvariantCompiler for mechanical translation, then dispatches
+        to the language-specific provider via PluginRegistry.
+      }
+      -> invalid(message: String) {
+        Concept has no parseable invariants, or no provider is
+        registered for the requested language.
+      }
+    }
+
+    action regenerate(generation: T) {
+      -> ok(generation: T, generated_files: String, provider_used: String) {
+        Re-generate from the same concept using current invariant
+        version. Replaces previous generated files.
+      }
+      -> notfound(generation: T) {
+        No generation record exists with this identifier.
+      }
+    }
+
+    action list(concept_ref: option String, language: option String) {
+      -> ok(generations: list T) {
+        Filtered listing of generation records. All params optional.
+      }
+    }
+
+    action configure(generation: T, num_runs: option Int, fuzz_duration_s: option Int, shrink_enabled: option Bool, stateful_test_depth: option Int) {
+      -> ok(generation: T) {
+        Update generation configuration for PBT run count, fuzz
+        duration, shrink behavior, or stateful test depth.
+      }
+      -> notfound(generation: T) {
+        No generation record exists with this identifier.
+      }
+    }
+
+    action coverage(concept_ref: String) {
+      -> ok(total_invariants: Int, covered: Int, uncovered: Int, coverage_pct: Float, languages: list String) {
+        Report how many invariant clauses have generated tests
+        across all languages for the given concept.
+      }
+    }
+  }
+
+  invariant {
+    after generate(concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1")
+      -> ok(generation: g, generated_files: files, provider_used: "TestGenTypeScript")
+    then list(concept_ref: "clef/concept/Password", language: "typescript")
+      -> ok(generations: gs)
+    and  coverage(concept_ref: "clef/concept/Password")
+      -> ok(total_invariants: 3, covered: 3, uncovered: 0, coverage_pct: 100.0, languages: ["typescript"])
+  }
+}

@@ -1,0 +1,43 @@
+# Publish property test results to quality signal stream — Architecture doc Section 14
+# When Builder/test completes in property mode, record a QualitySignal
+# with dimension "property-test" and gate severity.
+
+sync PropertyTestPassPublishesQualitySignal [eager]
+  purpose { Publish property test pass to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; mode: "property"; files: ?files ]
+    => ok(passed: ?passed; total: ?total)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "property-test";
+    status: "pass";
+    severity: "gate";
+    summary: concat("Property tests: ", ?passed, "/", ?total, " passed (", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}
+
+---
+
+sync PropertyTestFailPublishesQualitySignal [eager]
+  purpose { Publish property test failure to the quality signal stream. }
+when {
+  Builder/test: [ concept: ?concept; language: ?lang; mode: "property"; files: ?files ]
+    => testFailure(passed: ?passed; failed: ?failed; failures: ?failures)
+}
+then {
+  QualitySignal/record: [
+    target_symbol: ?concept;
+    dimension: "property-test";
+    status: "fail";
+    severity: "gate";
+    summary: concat("Property tests: ", ?failed, " failures (", ?lang, ")");
+    artifact_path: null;
+    artifact_hash: null;
+    run_ref: null
+  ]
+}

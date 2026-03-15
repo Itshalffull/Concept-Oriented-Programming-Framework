@@ -22,7 +22,9 @@ derived VerifiedConcept [T] {
     required: [
       property-from-intent-principles,
       verification-publishes-quality-signal,
-      run-records-evidence
+      run-records-evidence,
+      invariant-compiled-to-test-gen,
+      invariant-compiled-to-conformance-vectors
     ]
     recommended: [
       contract-from-sync-definitions,
@@ -45,6 +47,10 @@ derived VerifiedConcept [T] {
 
     query proofCoverage(target: String) {
       reads: FormalProperty/coverage(target_symbol: ?target)
+    }
+
+    query testCoverage(target: String) {
+      reads: TestGen/coverage(concept_ref: ?target)
     }
 
     query contracts(target: String) {

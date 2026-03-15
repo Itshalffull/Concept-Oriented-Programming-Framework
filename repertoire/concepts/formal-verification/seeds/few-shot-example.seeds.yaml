@@ -1,0 +1,41 @@
+# Few-shot examples for LLM verification prompts — Architecture doc Section 10.5
+# Bootstrap examples that grow over time as verifications succeed.
+
+concept: FewShotExample
+action: add
+entries:
+  - id: review-approve-example
+    signature_ref: property-review
+    input:
+      property_text: "forall p in passwords: len(p.hash) = 64"
+      original_invariant: "ensures ok: hash is 64 characters"
+      handler_source: "function hash(pw) { return sha256(pw); }"
+      solver_result: "satisfiable"
+    output:
+      verdict: "APPROVE"
+      confidence: 0.95
+      explanation: "Property correctly captures SHA-256 producing 64-char hex. Matches handler."
+
+  - id: review-concerns-example
+    signature_ref: property-review
+    input:
+      property_text: "forall p in passwords: len(p.hash) > 0"
+      original_invariant: "ensures ok: hash is 64 characters"
+      handler_source: "function hash(pw) { return sha256(pw); }"
+      solver_result: "satisfiable"
+    output:
+      verdict: "CONCERNS"
+      confidence: 0.7
+      explanation: "Too weak. Original says exactly 64 chars but property only requires non-empty."
+
+  - id: repair-assert-example
+    signature_ref: dafny-repair
+    input:
+      original_dafny: "method define(...) ensures r.Ok? ==> status[r.property] == Unproven { ... }"
+      error_diagnostic: "Error: postcondition might not hold on line 23"
+      failing_clause: "ensures r.Ok? ==> status[r.property] == Unproven"
+      handler_source: "function define(kind, text) { ... }"
+      attempt_number: 1
+    output:
+      repaired_dafny: "method define(...) { ... assert status[p] == Unproven; return Ok(p); }"
+      explanation: "Added assert before return to help prover track status through map update."

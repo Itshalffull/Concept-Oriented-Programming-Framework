@@ -1,0 +1,32 @@
+# TypeScript Test Generation Provider — fast-check PBT + fc.commands stateful tests
+# Compiles concept invariants into TypeScript test files using fast-check.
+
+provider TestGenTypeScript implements TestGenPlugin {
+
+  registration {
+    id: "test-gen-typescript"
+    language: "typescript"
+    frameworks: ["fast-check", "vitest"]
+    capabilities: ["pbt", "stateful", "shrinking", "model-based"]
+  }
+
+  implementation {
+    Compiles invariant constructs to fast-check generators:
+      forall/given   -> fc.property with fc.constantFrom / fc.string / fc.integer
+      always         -> fc.commands + fc.modelRun for stateful sequences
+      never          -> fc.commands + assert NOT predicate
+      action req/ens -> fc.pre() for requires, expect() for ensures
+      example        -> 1:1 test vector in describe block
+
+    Output files:
+      <concept>.property.test.ts   — PBT properties using fc.assert
+      <concept>.stateful.test.ts   — Stateful model-based tests using fc.commands
+
+    Runner: Vitest with fast-check integration.
+    Shrinking: Enabled by default via fast-check built-in shrinkers.
+  }
+
+  targets {
+    typescript: "import fc from 'fast-check'; import { describe, it, expect } from 'vitest';"
+  }
+}

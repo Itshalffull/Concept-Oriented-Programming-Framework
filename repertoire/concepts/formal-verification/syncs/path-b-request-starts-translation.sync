@@ -1,0 +1,19 @@
+# Start Path B handler verification when explicitly requested — Architecture doc Section 9.6
+# When FormalProperty/check is invoked with solver "path-b", trigger the
+# path-b-handler-verification ProcessSpec for direct translation verification.
+
+sync PathBRequestStartsTranslation [eager]
+  purpose { Start Path B direct handler translation verification workflow. }
+when {
+  FormalProperty/check: [ property: ?p; solver: "path-b"; timeout_ms: ?timeout ]
+    => ok(property: ?p; status: ?status)
+}
+where {
+  FormalProperty: { ?p target_symbol: ?target; property_text: ?text; formal_language: ?lang }
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "path-b-handler-verification";
+    variables: concat("{\"property_ref\":\"", ?p, "\",\"target_symbol\":\"", ?target, "\",\"formal_language\":\"", ?lang, "\"}")
+  ]
+}

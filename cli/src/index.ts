@@ -9,6 +9,7 @@ import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handle
 import { parseSyncFile } from '../../handlers/ts/framework/sync-parser.handler.js';
 import { syncScaffoldGenHandler } from '../../handlers/ts/framework/sync-scaffold-gen.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
+import { verifyCommand } from './verify/verify.command.js';
 import type { ConceptAST } from '../../runtime/types.js';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
@@ -235,6 +236,8 @@ export function buildCli(): Command {
       emitScaffoldFiles(result, Boolean(options.write));
     });
   program.addCommand(handlerScaffold);
+
+  program.addCommand(verifyCommand);
 
   return program;
 }
