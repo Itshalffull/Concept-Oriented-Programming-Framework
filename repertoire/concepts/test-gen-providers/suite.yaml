@@ -1,0 +1,34 @@
+# suites/test-gen-providers/suite.yaml
+suite:
+  name: test-gen-providers
+  version: 0.1.0
+  description: >
+    Language-specific test generation providers. Each provider compiles
+    concept invariants into PBT properties, stateful tests, and fuzz
+    harnesses for its target language and framework.
+
+providers:
+  TestGenTypeScript:
+    spec: ./providers/typescript-test-gen.provider
+    optional: false
+
+  TestGenRust:
+    spec: ./providers/rust-test-gen.provider
+    optional: false
+
+  TestGenSwift:
+    spec: ./providers/swift-test-gen.provider
+    optional: true
+
+  TestGenSolidity:
+    spec: ./providers/solidity-test-gen.provider
+    optional: true
+
+uses:
+  - suite: testing
+    concepts:
+      - name: TestGen
+
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry

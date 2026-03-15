@@ -1,0 +1,35 @@
+# Rust Test Generation Provider — proptest PBT + cargo-fuzz harnesses
+# Compiles concept invariants into Rust test files using proptest and libFuzzer.
+
+provider TestGenRust implements TestGenPlugin {
+
+  registration {
+    id: "test-gen-rust"
+    language: "rust"
+    frameworks: ["proptest", "cargo-fuzz"]
+    capabilities: ["pbt", "stateful", "shrinking", "fuzzing"]
+  }
+
+  implementation {
+    Compiles invariant constructs to proptest strategies:
+      forall/given   -> proptest! with prop_oneof![Just(...)] / any::<String>()
+      always         -> Custom state machine with proptest transitions
+      never          -> State machine with prop_assert!(NOT predicate)
+      action req/ens -> prop_assume!() for requires, prop_assert_eq!() for ensures
+      example        -> #[test] function with concrete values
+
+    Fuzz harnesses via cargo-fuzz (libFuzzer):
+      Generates fuzz_target! macros for action sequences.
+      Arbitrary trait implementations for concept state.
+
+    Output files:
+      <concept>_property_test.rs   — proptest properties
+      <concept>_fuzz.rs            — cargo-fuzz harness
+
+    Runner: cargo test + cargo fuzz.
+  }
+
+  targets {
+    rust: "use proptest::prelude::*; use libfuzzer_sys::fuzz_target;"
+  }
+}
