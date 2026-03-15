@@ -1,0 +1,19 @@
+# Start concept onboarding verification for new .concept files — Architecture doc Section 9.4
+# When a new .concept file is tracked, trigger the concept-onboarding-verification
+# ProcessSpec which generates tests, synthesizes properties, and establishes baseline.
+
+sync NewConceptStartsOnboarding [eager]
+  purpose { Start concept onboarding verification workflow when a new concept is tracked. }
+when {
+  Resource/track: [ path: ?path; type: "concept" ]
+    => ok(resource: ?res; content: ?content; isNew: true)
+}
+where {
+  guard { matches(?path, "*.concept") }
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "concept-onboarding-verification";
+    variables: concat("{\"concept_ref\":\"", ?res, "\",\"spec_path\":\"", ?path, "\"}")
+  ]
+}

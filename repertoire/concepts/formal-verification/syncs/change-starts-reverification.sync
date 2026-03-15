@@ -1,0 +1,16 @@
+# Start reverification cascade on spec change — Architecture doc Section 9.5
+# When Conformance detects a spec change, trigger the reverification-cascade
+# ProcessSpec which invalidates and re-verifies affected properties within budget.
+
+sync ChangeStartsReverification [eager]
+  purpose { Start reverification cascade when a concept spec change is detected. }
+when {
+  Conformance/monitor: [ concept: ?concept ]
+    => specChanged(concept: ?concept; changedFields: ?fields; version: ?ver)
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "reverification-cascade";
+    variables: concat("{\"concept_ref\":\"", ?concept, "\",\"changed_fields\":", ?fields, ",\"version\":\"", ?ver, "\"}")
+  ]
+}

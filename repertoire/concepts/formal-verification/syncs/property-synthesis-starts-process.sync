@@ -1,0 +1,16 @@
+# Start property synthesis workflow when FormalProperty/synthesize succeeds — Architecture doc Section 9.1
+# Triggers the property-synthesis-and-validation ProcessSpec which includes
+# CEGIS loop, solver check, multi-AI review, and human approval gates.
+
+sync PropertySynthesisStartsProcess [eager]
+  purpose { Start the property synthesis and validation workflow when properties are synthesized. }
+when {
+  FormalProperty/synthesize: [ target_symbol: ?target; intent_ref: ?intent ]
+    => ok(properties: ?props)
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "property-synthesis-and-validation";
+    variables: concat("{\"target_symbol\":\"", ?target, "\",\"properties\":", ?props, ",\"intent_ref\":\"", ?intent, "\"}")
+  ]
+}

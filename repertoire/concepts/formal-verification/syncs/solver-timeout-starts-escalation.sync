@@ -1,0 +1,16 @@
+# Start solver escalation chain on timeout — Architecture doc Section 9.3
+# When FormalProperty/check returns timeout, trigger the solver-escalation
+# ProcessSpec which tries progressively more expensive solvers.
+
+sync SolverTimeoutStartsEscalation [eager]
+  purpose { Start solver escalation chain when a property check times out. }
+when {
+  FormalProperty/check: [ property: ?p; solver: ?solver; timeout_ms: ?timeout ]
+    => timeout(property: ?p; elapsed_ms: ?elapsed)
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "solver-escalation";
+    variables: concat("{\"property_ref\":\"", ?p, "\",\"initial_solver\":\"", ?solver, "\",\"timeout_ms\":", ?timeout, "}")
+  ]
+}

@@ -1,0 +1,16 @@
+# Start counterexample investigation when a property is refuted — Architecture doc Section 9.2
+# Triggers the counterexample-investigation ProcessSpec which includes
+# minimization, LLM explanation, classification, and developer triage.
+
+sync CounterexampleStartsInvestigation [eager]
+  purpose { Start counterexample investigation workflow when a property is refuted. }
+when {
+  FormalProperty/refute: [ property: ?p; evidence_ref: ?ev ]
+    => ok(property: ?p; counterexample: ?cx)
+}
+then {
+  ProcessRun/start: [
+    spec_ref: "counterexample-investigation";
+    variables: concat("{\"property_ref\":\"", ?p, "\",\"evidence_ref\":\"", ?ev, "\",\"counterexample\":\"", ?cx, "\"}")
+  ]
+}
