@@ -6,12 +6,14 @@
 //   clef verify                     — Tier 3: verify existing manual properties
 //   clef verify --synthesize        — Tier 2: LLM-assisted CEGIS + multi-AI + human approval
 //   clef verify --status            — Show current verification status
+//   clef verify review              — Interactive one-by-one review of pending properties
 //   clef verify --approve <prop>    — Approve an AI-validated property (work item)
 //   clef verify --reject <prop>     — Reject an AI-validated property (work item)
 //   clef verify --list-pending      — List pending work items for human review
 //   clef verify --watch             — Watch mode for continuous reverification
 
 import { Command } from 'commander';
+import { createInterface } from 'node:readline';
 
 export const verifyCommand = new Command('verify')
   .description(
@@ -325,6 +327,440 @@ verifyCommand
     }
   });
 
+// ── clef verify review ───────────────────────────────────────────────
+// Interactive one-by-one review of pending properties (like git add -p).
+verifyCommand
+  .command('review')
+  .description(
+    'Interactive review of AI-validated properties. Walks through each pending ' +
+    'property one at a time showing full context: the property statement, solver ' +
+    'result, AI review summaries, and counterexamples. Prompts for approve, ' +
+    'reject, request-changes, or skip on each. Like `git add -p` for proofs.'
+  )
+  .option('--concept <concept>', 'Filter to a specific concept')
+  .option('--batch <n>', 'Review at most N properties then stop')
+  .action(async (opts) => {
+    // Fetch all pending properties (AI-validated, awaiting human approval)
+    const pendingResult = await globalThis.kernel.handleRequest({
+      concept: 'urn:clef/FormalProperty',
+      method: 'listPending',
+      target_symbol: opts.concept || '*',
+      status: 'ai-validated',
+    });
+
+    if (pendingResult.variant !== 'ok') {
+      console.error(`Failed to fetch pending properties: ${pendingResult.message || pendingResult.variant}`);
+      return;
+    }
+
+    const properties: PendingProperty[] = JSON.parse(pendingResult.properties || '[]');
+
+    if (properties.length === 0) {
+      console.log('No properties awaiting review.');
+      return;
+    }
+
+    const limit = opts.batch ? parseInt(opts.batch, 10) : properties.length;
+    const toReview = properties.slice(0, limit);
+
+    console.log(`${properties.length} properties pending review${limit < properties.length ? ` (reviewing first ${limit})` : ''}.`);
+    console.log('For each property: [a]pprove  [r]eject  [f]eedback  [s]kip  [d]etail  [q]uit');
+    console.log('');
+
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    const prompt = (question: string): Promise<string> =>
+      new Promise((resolve) => rl.question(question, resolve));
+
+    let approved = 0;
+    let rejected = 0;
+    let feedbackSent = 0;
+    let skipped = 0;
+
+    for (let i = 0; i < toReview.length; i++) {
+      const prop = toReview[i];
+
+      // ── Render property context ──
+      console.log(`─── Property ${i + 1}/${toReview.length} ───────────────────────────────────`);
+      console.log(`  ID:       ${prop.id}`);
+      console.log(`  Concept:  ${prop.concept}`);
+      console.log(`  Kind:     ${prop.kind || 'safety'}`);
+      console.log(`  Schema:   ${prop.schema || 'custom'}`);
+      console.log('');
+      console.log(`  Statement:`);
+      console.log(`    ${prop.statement}`);
+      console.log('');
+
+      // Show solver result
+      if (prop.solver_result) {
+        const sr = prop.solver_result;
+        const icon = sr.verdict === 'proved' ? '✓' : sr.verdict === 'refuted' ? '✗' : '?';
+        console.log(`  Solver:   ${icon} ${sr.verdict} by ${sr.solver} (${sr.duration_ms}ms)`);
+        if (sr.counterexample) {
+          console.log(`  Counter:  ${sr.counterexample}`);
+        }
+      }
+
+      // Show AI review summaries
+      if (prop.ai_reviews && prop.ai_reviews.length > 0) {
+        console.log('  AI Reviews:');
+        for (const review of prop.ai_reviews) {
+          const icon = review.verdict === 'accept' ? '✓' : review.verdict === 'reject' ? '✗' : '~';
+          console.log(`    ${icon} ${review.reviewer}: ${review.verdict} — ${review.summary}`);
+          if (review.concerns && review.concerns.length > 0) {
+            for (const concern of review.concerns) {
+              console.log(`      ! ${concern}`);
+            }
+          }
+        }
+      }
+
+      // Show consensus status
+      if (prop.consensus) {
+        console.log(`  Consensus: ${prop.consensus.status} (${prop.consensus.policy})`);
+      }
+
+      console.log('');
+
+      // ── Interactive prompt loop ──
+      let decided = false;
+      while (!decided) {
+        const answer = await prompt(`  [a]pprove  [r]eject  [f]eedback  [s]kip  [d]etail  [q]uit > `);
+        const choice = answer.trim().toLowerCase();
+
+        switch (choice) {
+          case 'a':
+          case 'approve': {
+            const result = await globalThis.kernel.handleRequest({
+              concept: 'urn:clef/Approval',
+              method: 'approve',
+              work_item_type: 'property-review',
+              entity_ref: prop.id,
+              comment: '',
+            });
+            if (result.variant === 'ok') {
+              console.log(`  ✓ Approved. Severity: warn → gate (yellow → green)`);
+              approved++;
+            } else {
+              console.log(`  ✗ Approval failed: ${result.message || result.variant}`);
+            }
+            decided = true;
+            break;
+          }
+
+          case 'r':
+          case 'reject': {
+            const reason = await prompt('  Rejection reason (optional): ');
+            const result = await globalThis.kernel.handleRequest({
+              concept: 'urn:clef/Approval',
+              method: 'reject',
+              work_item_type: 'property-review',
+              entity_ref: prop.id,
+              reason: reason.trim(),
+            });
+            if (result.variant === 'ok') {
+              console.log(`  ✗ Rejected.${reason.trim() ? ` Reason: ${reason.trim()}` : ''}`);
+              rejected++;
+            } else {
+              console.log(`  ✗ Rejection failed: ${result.message || result.variant}`);
+            }
+            decided = true;
+            break;
+          }
+
+          case 'f':
+          case 'feedback': {
+            const feedback = await prompt('  Your feedback: ');
+            if (!feedback.trim()) {
+              console.log('  (empty feedback, not sent)');
+              break;
+            }
+            // Send feedback as a work item comment — triggers re-synthesis
+            const result = await globalThis.kernel.handleRequest({
+              concept: 'urn:clef/WorkItem',
+              method: 'requestChanges',
+              work_item_type: 'property-review',
+              entity_ref: prop.id,
+              feedback: feedback.trim(),
+            });
+            if (result.variant === 'ok') {
+              console.log(`  → Feedback sent. Property will be re-synthesized with your guidance.`);
+              feedbackSent++;
+            } else {
+              console.log(`  ✗ Feedback failed: ${result.message || result.variant}`);
+            }
+            decided = true;
+            break;
+          }
+
+          case 's':
+          case 'skip':
+            console.log('  — Skipped.');
+            skipped++;
+            decided = true;
+            break;
+
+          case 'd':
+          case 'detail': {
+            // Fetch full property details including SMTLIB, Dafny source, etc.
+            const detail = await globalThis.kernel.handleRequest({
+              concept: 'urn:clef/FormalProperty',
+              method: 'detail',
+              property_id: prop.id,
+            });
+            if (detail.variant === 'ok') {
+              console.log('');
+              console.log('  ─── Full Detail ───');
+              if (detail.smtlib) {
+                console.log('  SMT-LIB:');
+                for (const line of (detail.smtlib as string).split('\n')) {
+                  console.log(`    ${line}`);
+                }
+              }
+              if (detail.dafny) {
+                console.log('  Dafny:');
+                for (const line of (detail.dafny as string).split('\n')) {
+                  console.log(`    ${line}`);
+                }
+              }
+              if (detail.invariant_ref) {
+                console.log(`  Source invariant: ${detail.invariant_ref}`);
+              }
+              if (detail.synthesis_trace) {
+                const trace = JSON.parse(detail.synthesis_trace as string);
+                console.log(`  CEGIS iterations: ${trace.length}`);
+                for (const step of trace) {
+                  console.log(`    ${step.iteration}: ${step.action} — ${step.outcome}`);
+                }
+              }
+              console.log('');
+            } else {
+              console.log(`  (detail unavailable: ${detail.message || detail.variant})`);
+            }
+            // Don't set decided — loop back to prompt
+            break;
+          }
+
+          case 'q':
+          case 'quit':
+            console.log('');
+            console.log(`Review session ended.`);
+            printReviewSummary(approved, rejected, feedbackSent, skipped, toReview.length - i - 1);
+            rl.close();
+            return;
+
+          default:
+            console.log('  ? Unknown action. Use: [a]pprove [r]eject [f]eedback [s]kip [d]etail [q]uit');
+            break;
+        }
+      }
+
+      console.log('');
+    }
+
+    console.log('Review complete.');
+    printReviewSummary(approved, rejected, feedbackSent, skipped, 0);
+    rl.close();
+  });
+
+// ── clef verify review-counterexamples ───────────────────────────────
+// Interactive triage of counterexamples, same one-by-one flow.
+verifyCommand
+  .command('review-counterexamples')
+  .description(
+    'Interactive triage of counterexamples. Walks through each counterexample ' +
+    'from failed verifications and prompts for classification: handler-bug, ' +
+    'spec-error, spurious, or needs-investigation.'
+  )
+  .option('--concept <concept>', 'Filter to a specific concept')
+  .action(async (opts) => {
+    const pendingResult = await globalThis.kernel.handleRequest({
+      concept: 'urn:clef/WorkItem',
+      method: 'listPending',
+      work_item_type: 'counterexample-triage',
+      entity_ref: opts.concept || '*',
+    });
+
+    if (pendingResult.variant !== 'ok') {
+      console.error(`Failed to fetch counterexamples: ${pendingResult.message || pendingResult.variant}`);
+      return;
+    }
+
+    const items: CounterexampleItem[] = JSON.parse(pendingResult.items || '[]');
+
+    if (items.length === 0) {
+      console.log('No counterexamples awaiting triage.');
+      return;
+    }
+
+    console.log(`${items.length} counterexamples to triage.`);
+    console.log('For each: [b]ug  [s]pec-error  [p]urious  [i]nvestigate  [d]etail  [q]uit');
+    console.log('');
+
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    const prompt = (question: string): Promise<string> =>
+      new Promise((resolve) => rl.question(question, resolve));
+
+    const triageCounts: Record<string, number> = {
+      'handler-bug': 0, 'spec-error': 0, 'spurious': 0, 'investigate': 0, 'skipped': 0,
+    };
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+
+      console.log(`─── Counterexample ${i + 1}/${items.length} ─────────────────────────────`);
+      console.log(`  ID:        ${item.id}`);
+      console.log(`  Property:  ${item.property_ref}`);
+      console.log(`  Concept:   ${item.concept}`);
+      console.log(`  Solver:    ${item.solver}`);
+      console.log('');
+      console.log(`  Witness:`);
+      if (item.witness) {
+        for (const [key, value] of Object.entries(item.witness)) {
+          console.log(`    ${key} = ${value}`);
+        }
+      }
+      if (item.trace) {
+        console.log(`  Trace:     ${item.trace}`);
+      }
+      console.log('');
+
+      let decided = false;
+      while (!decided) {
+        const answer = await prompt(`  [b]ug  [s]pec-error  [p]urious  [i]nvestigate  [d]etail  [q]uit > `);
+        const choice = answer.trim().toLowerCase();
+
+        const actionMap: Record<string, string> = {
+          b: 'handler-bug', bug: 'handler-bug',
+          s: 'spec-error', 'spec-error': 'spec-error',
+          p: 'spurious', spurious: 'spurious',
+          i: 'investigate', investigate: 'investigate',
+        };
+
+        if (choice === 'q' || choice === 'quit') {
+          console.log('');
+          console.log('Triage session ended.');
+          printTriageSummary(triageCounts, items.length - i - 1);
+          rl.close();
+          return;
+        }
+
+        if (choice === 'd' || choice === 'detail') {
+          const detail = await globalThis.kernel.handleRequest({
+            concept: 'urn:clef/FormalProperty',
+            method: 'detail',
+            property_id: item.property_ref,
+          });
+          if (detail.variant === 'ok') {
+            console.log('');
+            if (detail.statement) console.log(`  Statement: ${detail.statement}`);
+            if (detail.smtlib) {
+              console.log('  SMT-LIB:');
+              for (const line of (detail.smtlib as string).split('\n')) {
+                console.log(`    ${line}`);
+              }
+            }
+            console.log('');
+          }
+          continue;
+        }
+
+        const action = actionMap[choice];
+        if (!action) {
+          console.log('  ? Use: [b]ug [s]pec-error [p]urious [i]nvestigate [d]etail [q]uit');
+          continue;
+        }
+
+        const comment = await prompt('  Comment (optional): ');
+        const result = await globalThis.kernel.handleRequest({
+          concept: 'urn:clef/WorkItem',
+          method: 'complete',
+          work_item_type: 'counterexample-triage',
+          entity_ref: item.id,
+          action,
+          comment: comment.trim(),
+        });
+
+        const actionMessages: Record<string, string> = {
+          'handler-bug': 'Filed as handler bug.',
+          'spec-error': 'Property will be re-synthesized.',
+          'spurious': 'Marked spurious.',
+          'investigate': 'Escalated.',
+        };
+
+        if (result.variant === 'ok') {
+          console.log(`  ✓ ${actionMessages[action]}`);
+          triageCounts[action]++;
+        } else {
+          console.log(`  ✗ Failed: ${result.message || result.variant}`);
+        }
+        decided = true;
+      }
+
+      console.log('');
+    }
+
+    console.log('Triage complete.');
+    printTriageSummary(triageCounts, 0);
+    rl.close();
+  });
+
+// ── Types for interactive review ─────────────────────────────────────
+
+interface PendingProperty {
+  id: string;
+  concept: string;
+  kind?: string;
+  schema?: string;
+  statement: string;
+  solver_result?: {
+    verdict: string;
+    solver: string;
+    duration_ms: number;
+    counterexample?: string;
+  };
+  ai_reviews?: Array<{
+    reviewer: string;
+    verdict: string;
+    summary: string;
+    concerns?: string[];
+  }>;
+  consensus?: {
+    status: string;
+    policy: string;
+  };
+}
+
+interface CounterexampleItem {
+  id: string;
+  property_ref: string;
+  concept: string;
+  solver: string;
+  witness?: Record<string, unknown>;
+  trace?: string;
+}
+
+function printReviewSummary(
+  approved: number, rejected: number, feedback: number, skipped: number, remaining: number,
+): void {
+  console.log('');
+  console.log('Summary:');
+  if (approved > 0) console.log(`  ✓ ${approved} approved`);
+  if (rejected > 0) console.log(`  ✗ ${rejected} rejected`);
+  if (feedback > 0) console.log(`  → ${feedback} sent back with feedback`);
+  if (skipped > 0)  console.log(`  — ${skipped} skipped`);
+  if (remaining > 0) console.log(`  … ${remaining} remaining`);
+}
+
+function printTriageSummary(counts: Record<string, number>, remaining: number): void {
+  console.log('');
+  console.log('Summary:');
+  if (counts['handler-bug'] > 0) console.log(`  🐛 ${counts['handler-bug']} handler bugs filed`);
+  if (counts['spec-error'] > 0)  console.log(`  📝 ${counts['spec-error']} spec errors (re-synthesize)`);
+  if (counts['spurious'] > 0)    console.log(`  👻 ${counts['spurious']} spurious`);
+  if (counts['investigate'] > 0) console.log(`  🔍 ${counts['investigate']} escalated`);
+  if (remaining > 0)             console.log(`  … ${remaining} remaining`);
+}
+
 // ── clef verify triage ───────────────────────────────────────────────
 // Triage a counterexample from the investigation workflow.
 verifyCommand
@@ -459,6 +895,8 @@ export const verifyCommandTree = {
     { action: 'run', command: 'run' },
     { action: 'synthesize', command: 'synthesize' },
     { action: 'status', command: 'status' },
+    { action: 'review', command: 'review' },
+    { action: 'reviewCounterexamples', command: 'review-counterexamples' },
     { action: 'listPending', command: 'list-pending' },
     { action: 'approve', command: 'approve' },
     { action: 'reject', command: 'reject' },
