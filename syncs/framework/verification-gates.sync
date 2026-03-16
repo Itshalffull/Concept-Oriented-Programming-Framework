@@ -1,0 +1,57 @@
+# Verification → StatusGate syncs
+# Wire formal verification results and quality signals to StatusGate
+# so CI checks are reported automatically when verification completes.
+
+sync VerificationReportsGate [eager]
+  purpose: "Report formal verification coverage results to the configured status gate when a verification run completes"
+when {
+  FormalProperty/coverage: [ target_symbol: ?target ]
+    => [ coverage_pct: ?pct; proved: ?proved; refuted: ?refuted; unknown: ?unknown ]
+}
+where {
+  bind(concat(?proved, " proved, ", ?refuted, " refuted, ", ?unknown, " unknown (", ?pct, "%)") as ?summary)
+}
+then {
+  StatusGate/report: [
+    target: ?target;
+    context: "clef/verify/formal";
+    status: ?pct;
+    details: ?summary;
+    provider: "";
+    url: "" ]
+}
+
+sync QualitySignalReportsGate [eager]
+  purpose: "Report aggregated quality signal status to the configured status gate when a rollup completes"
+when {
+  QualitySignal/rollup: [ target_symbols: ?targets ]
+    => [ status: ?status; blocking: ?blocking ]
+}
+where {
+  bind(concat("Quality: ", ?status) as ?summary)
+}
+then {
+  StatusGate/report: [
+    target: ?targets;
+    context: "clef/verify/quality";
+    status: ?status;
+    details: ?summary;
+    provider: "";
+    url: "" ]
+}
+
+sync ApprovalCompletesGate [eager]
+  purpose: "Update the status gate to passing when a human approval is granted for a verification property"
+when {
+  Approval/approve: [ approval: ?approval; actor: ?actor ]
+    => [ step_ref: ?step_ref ]
+}
+then {
+  StatusGate/report: [
+    target: ?step_ref;
+    context: "clef/verify/approval";
+    status: "passing";
+    details: "Approved";
+    provider: "";
+    url: "" ]
+}

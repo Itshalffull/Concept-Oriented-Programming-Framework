@@ -12,7 +12,7 @@
 // for complex queries.
 // ============================================================
 
-import type { ConceptHandler, ConceptRegistry, CompiledSync } from './types.js';
+import type { ConceptHandler, ConceptStorage, ConceptRegistry, CompiledSync } from './types.js';
 import { createInMemoryStorage } from './adapters/storage.js';
 import { createInProcessAdapter } from './adapters/transport.js';
 
@@ -182,10 +182,13 @@ export function bootstrapScore(
   scoreApiHandler: ConceptHandler,
   scoreIndexHandler: ConceptHandler,
   registerSync: (sync: CompiledSync) => void,
+  makeStorage?: (name: string) => ConceptStorage,
 ): void {
   // Create shared storage instances (Score concepts share
   // a single index store via the ScoreApi → ScoreIndex delegation)
-  const scoreIndexStorage = createInMemoryStorage();
+  const scoreIndexStorage = makeStorage
+    ? makeStorage(SCORE_INDEX_URI)
+    : createInMemoryStorage();
   const scoreApiStorage = scoreIndexStorage; // Shared: ScoreApi reads from ScoreIndex's storage
 
   // Register Score concepts with in-process transport
