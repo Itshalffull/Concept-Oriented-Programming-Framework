@@ -39,11 +39,7 @@ surfaceComponentScaffoldGenCommand
 
 surfaceComponentScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SurfaceComponentScaffoldGen 
- inputKind : ComponentConfig 
- outputKind : SurfaceComponent 
- capabilities : [ widget , anatomy , machine , slots ]')
+  .description('Return static metadata for PluginRegistry name : SurfaceComponentScaffoldGen inputKind : ComponentConfig outputKind : SurfaceComponent capabilities : [ widget , anatomy , machine , slots ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

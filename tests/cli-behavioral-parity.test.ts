@@ -1100,6 +1100,13 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
   // ================================================================
 
   describe('Variant and output field consistency', () => {
+    // The kernel's invokeConcept adds a transport-level `flowId` field
+    // that direct handler calls do not produce. Filter it out when
+    // comparing output field parity, since flowId is a kernel annotation,
+    // not a handler output field.
+    function handlerKeys(result: Record<string, unknown>): string[] {
+      return Object.keys(result).filter(k => k !== 'flowId').sort();
+    }
 
     it('SpecParser ok variant output fields match between paths', async () => {
       const directStorage = createInMemoryStorage();
@@ -1117,8 +1124,8 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
       );
 
       // Both should have the same output field names
-      const directKeys = Object.keys(directResult).sort();
-      const kernelKeys = Object.keys(kernelResult).sort();
+      const directKeys = handlerKeys(directResult);
+      const kernelKeys = handlerKeys(kernelResult);
       expect(directKeys).toEqual(kernelKeys);
     });
 
@@ -1137,8 +1144,8 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         { source: INVALID_CONCEPT_SOURCE },
       );
 
-      const directKeys = Object.keys(directResult).sort();
-      const kernelKeys = Object.keys(kernelResult).sort();
+      const directKeys = handlerKeys(directResult);
+      const kernelKeys = handlerKeys(kernelResult);
       expect(directKeys).toEqual(kernelKeys);
     });
 
@@ -1163,8 +1170,8 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         { spec: 'password.concept', ast },
       );
 
-      const directKeys = Object.keys(directResult).sort();
-      const kernelKeys = Object.keys(kernelResult).sort();
+      const directKeys = handlerKeys(directResult);
+      const kernelKeys = handlerKeys(kernelResult);
       expect(directKeys).toEqual(kernelKeys);
     });
 
@@ -1183,8 +1190,8 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         { sync: 'TestSync', ast: VALID_SYNC_AST },
       );
 
-      const directKeys = Object.keys(directResult).sort();
-      const kernelKeys = Object.keys(kernelResult).sort();
+      const directKeys = handlerKeys(directResult);
+      const kernelKeys = handlerKeys(kernelResult);
       expect(directKeys).toEqual(kernelKeys);
     });
 
@@ -1203,8 +1210,8 @@ describe('CLI Behavioral Parity: Direct Handler vs Kernel Dispatch', () => {
         { sync: 'BadSync', ast: INVALID_SYNC_AST },
       );
 
-      const directKeys = Object.keys(directResult).sort();
-      const kernelKeys = Object.keys(kernelResult).sort();
+      const directKeys = handlerKeys(directResult);
+      const kernelKeys = handlerKeys(kernelResult);
       expect(directKeys).toEqual(kernelKeys);
     });
   });

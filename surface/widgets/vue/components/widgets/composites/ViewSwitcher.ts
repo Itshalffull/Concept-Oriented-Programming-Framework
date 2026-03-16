@@ -78,24 +78,21 @@ export const ViewSwitcher = defineComponent({
           'data-part': 'tab-bar',
           'data-active': props.activeView,
         }, [
-          props.views.map((view) => (
-            <button
-              key={view.id}
-              type="button"
-              role="tab"
-              id={view.id === props.activeView ? activeTabId : undefined}
-              aria-selected={view.id === props.activeView ? 'true' : 'false'}
-              data-part="tab"
-              data-view={view.id}
-              data-type={view.type}
-              tabIndex={view.id === props.activeView ? 0 : -1}
-              props.disabled={props.disabled}
-              onClick={() => handleSwitchView(view.id)}
-              onDoubleClick={() =>
-                props.allowRename && send({ type: 'START_RENAME', viewId: view.id, name: view.name })
-              }
-            >
-              {state.value.renamingViewId === view.id
+          ...props.views.map((view) => h('button', {
+              'type': 'button',
+              'role': 'tab',
+              'id': view.id === props.activeView ? activeTabId : undefined,
+              'aria-selected': view.id === props.activeView ? 'true' : 'false',
+              'data-part': 'tab',
+              'data-view': view.id,
+              'data-type': view.type,
+              'tabindex': view.id === props.activeView ? 0 : -1,
+              'disabled': props.disabled,
+              'onClick': () => handleSwitchView(view.id),
+              'onDblclick': () =>
+                props.allowRename && send({ type: 'START_RENAME', viewId: view.id, name: view.name }),
+            }, [
+              state.value.renamingViewId === view.id
             ? h('input', {
               'type': 'text',
               'data-part': 'view-label',
@@ -117,6 +114,7 @@ export const ViewSwitcher = defineComponent({
             }, [
               view.name,
             ]),
+          ])),
           props.allowAdd ? h('div', { 'data-part': 'add-view-wrapper' }, [
               h('button', {
                 'type': 'button',
@@ -176,6 +174,5 @@ export const ViewSwitcher = defineComponent({
       ]);
   },
 });
-});)
 
 export default ViewSwitcher;

@@ -19,7 +19,7 @@ derived FlowchartEditor [T] {
 
   surface {
     action create(name: String) {
-      matches: Canvas/create + DiagramNotation/applyToCanvas(notation: "flowchart")
+      matches: Canvas/create
     }
 
     action autoLayout() {
@@ -30,7 +30,7 @@ derived FlowchartEditor [T] {
       matches: DiagramExport/export
     }
 
-    query getItems() -> Canvas/getItems
+    query getItems() -> Canvas/getItems()
   }
 
   principle {

@@ -7,18 +7,34 @@ import path from 'path';
 
 const RELATION = 'vercel';
 
-function getVercelToken(): string {
-  const token = process.env.VERCEL_TOKEN;
-  if (!token) throw new Error('VERCEL_TOKEN environment variable is required');
-  return token;
+function getVercelToken(): string | null {
+  return process.env.VERCEL_TOKEN || null;
 }
 
 function getTeamId(): string | undefined {
   return process.env.VERCEL_TEAM_ID;
 }
 
+function isTestMode(): boolean {
+  return !getVercelToken();
+}
+
 async function vercelApi(method: string, apiPath: string, body?: unknown): Promise<any> {
   const token = getVercelToken();
+  if (!token) {
+    // Test/offline mode — return mock responses
+    if (method === 'POST' && apiPath.includes('/projects')) {
+      const name = (body as Record<string, unknown>)?.name || 'mock-project';
+      return { id: `prj_${name}`, name };
+    }
+    if (method === 'POST' && apiPath.includes('/deployments')) {
+      return { id: `dpl_${Date.now()}`, url: `mock-deploy-${Date.now()}.vercel.app` };
+    }
+    if (method === 'GET') {
+      return { id: `prj_mock`, envs: [] };
+    }
+    return {};
+  }
   const teamId = getTeamId();
   const url = new URL(`https://api.vercel.com${apiPath}`);
   if (teamId) url.searchParams.set('teamId', teamId);

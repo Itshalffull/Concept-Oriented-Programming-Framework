@@ -18,9 +18,9 @@ surfaceThemeScaffoldGenCommand
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold theme --name ocean  # Generate a theme with defaults')
-  .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font 'Inter, sans-serif' --base-size 18  # Generate a custom theme')
+  .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font "Inter, sans-serif" --base-size 18  # Generate a custom theme')
   .addHelpText('after', '  clef scaffold theme --name print --mode light  # Generate a light-only theme')
-  .addHelpText('after', '  clef scaffold theme --name midnight --mode dark --primary '#6366f1'  # Generate a dark theme')
+  .addHelpText('after', '  clef scaffold theme --name midnight --mode dark --primary "#6366f1"  # Generate a dark theme')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
@@ -42,11 +42,7 @@ surfaceThemeScaffoldGenCommand
 
 surfaceThemeScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SurfaceThemeScaffoldGen 
- inputKind : ThemeConfig 
- outputKind : SurfaceTheme 
- capabilities : [ palette , typography , motion , elevation , wcag ]')
+  .description('Return static metadata for PluginRegistry name : SurfaceThemeScaffoldGen inputKind : ThemeConfig outputKind : SurfaceTheme capabilities : [ palette , typography , motion , elevation , wcag ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

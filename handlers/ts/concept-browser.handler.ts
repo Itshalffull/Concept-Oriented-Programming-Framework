@@ -222,7 +222,8 @@ export const conceptBrowserHandler: ConceptHandler = {
 
     return {
       variant: 'ok',
-      results: results.map((pkg) => toPackageSummary(pkg as PackageRecord)),
+      results: results.map((pkg) => (pkg as PackageRecord).id),
+      details: results.map((pkg) => toPackageSummary(pkg as PackageRecord)),
     };
   },
 
@@ -337,7 +338,7 @@ export const conceptBrowserHandler: ConceptHandler = {
     });
 
     const installed = await storage.get('package', pkgId);
-    return { variant: 'ok', installed: toPackageSummary(installed as PackageRecord) };
+    return { variant: 'ok', installed: pkgId, details: toPackageSummary(installed as PackageRecord) };
   },
 
   async update(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -375,7 +376,7 @@ export const conceptBrowserHandler: ConceptHandler = {
     });
 
     const updated = await storage.get('package', pkgId);
-    return { variant: 'ok', updated: toPackageSummary(updated as PackageRecord) };
+    return { variant: 'ok', updated: pkgId, details: toPackageSummary(updated as PackageRecord) };
   },
 
   async remove(input: Record<string, unknown>, storage: ConceptStorage) {

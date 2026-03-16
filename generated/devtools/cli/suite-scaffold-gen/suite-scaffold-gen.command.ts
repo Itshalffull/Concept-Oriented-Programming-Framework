@@ -37,11 +37,7 @@ suiteScaffoldGenCommand
 
 suiteScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SuiteScaffoldGen 
- inputKind : KitConfig 
- outputKind : SuiteManifest 
- capabilities : [ kit-yaml , directory-structure ]')
+  .description('Return static metadata for PluginRegistry name : SuiteScaffoldGen inputKind : KitConfig outputKind : SuiteManifest capabilities : [ kit-yaml , directory-structure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

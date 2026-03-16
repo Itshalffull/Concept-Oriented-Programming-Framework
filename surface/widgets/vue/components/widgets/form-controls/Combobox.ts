@@ -116,7 +116,7 @@ export const Combobox = defineComponent({
   };
     const filteredOptions = computed(() => props.options.filter((o) =>
         o.label.toLowerCase().includes(props.inputValue.toLowerCase()),
-      );
+      ));
 
   // Close on outside click
   (() => {
@@ -149,6 +149,6 @@ export const Combobox = defineComponent({
         ]),
       ]);
   },
-});)
+});
 
 export default Combobox;

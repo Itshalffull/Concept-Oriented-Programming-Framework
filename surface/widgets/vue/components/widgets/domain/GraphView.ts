@@ -148,28 +148,26 @@ export const GraphView = defineComponent({
             'aria-label': 'Graph filters',
             'data-visible': 'true',
           }, [
-            props.filterPanel ?? (
-            <>
-              <div data-part="search-input" aria-label="Search nodes">
-                <input
-                  type="text"
-                  value={props.searchQuery}
-                  aria-label="Search nodes"
-                  placeholder="Search nodes..."
-                  onChange={(e) => {
+            props.filterPanel ?? [
+              h('div', { 'data-part': 'search-input', 'aria-label': 'Search nodes' }, [
+                h('input', {
+                  'type': 'text',
+                  'value': props.searchQuery,
+                  'aria-label': 'Search nodes',
+                  'placeholder': 'Search nodes...',
+                  'onChange': (e) => {
                     props.onSearch?.(e.target.value);
                     send({ type: e.target.value ? 'SEARCH' : 'CLEAR_SEARCH' });
-                  }}
-                />
-              </div>
-              <div data-part="type-toggles" role="group" aria-label="Node type filters" />
-              <div data-part="display-controls" role="group" aria-label="Display settings">
-                <div data-part="node-size-slider" aria-label="Node size" />
-                <div data-part="link-thickness-slider" aria-label="Link thickness" />
-              </div>
-              <div data-part="force-controls" role="group" aria-label="Force simulation controls" />
-            </>
-          ),
+                  },
+                }),
+              ]),
+              h('div', { 'data-part': 'type-toggles', 'role': 'group', 'aria-label': 'Node type filters' }),
+              h('div', { 'data-part': 'display-controls', 'role': 'group', 'aria-label': 'Display settings' }, [
+                h('div', { 'data-part': 'node-size-slider', 'aria-label': 'Node size' }),
+                h('div', { 'data-part': 'link-thickness-slider', 'aria-label': 'Link thickness' }),
+              ]),
+              h('div', { 'data-part': 'force-controls', 'role': 'group', 'aria-label': 'Force simulation controls' }),
+            ],
           ]) : null,
         props.selectedNodeId ? h('div', {
             'data-part': 'detail-panel',

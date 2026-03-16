@@ -19,14 +19,14 @@ derived ConceptMapEditor [T] {
 
   surface {
     action create(name: String) {
-      matches: Canvas/create + DiagramNotation/applyToCanvas(notation: "concept-map")
+      matches: Canvas/create
     }
 
     action autoLayout() {
       matches: Canvas/applyLayout(algorithm: "force-directed")
     }
 
-    query getPropositions() -> Reference/getRefs filtered by canvas scope
+    query getPropositions() -> Reference/getRefs()
   }
 
   principle {

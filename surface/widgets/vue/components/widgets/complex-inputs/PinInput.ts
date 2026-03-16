@@ -139,7 +139,7 @@ export const PinInput = defineComponent({
             'onPaste': handlePaste,
             'onKeyDown': (e) => handleKeyDown(e, index),
           })),
-        props.name && <input props.type="hidden" props.name={props.name} value={valuesRef.value.join('')} />,
+        props.name ? h('input', { type: 'hidden', name: props.name, value: valuesRef.value.join('') }) : null,
       ]);
   },
 });

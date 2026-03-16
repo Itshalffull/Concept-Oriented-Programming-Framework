@@ -857,8 +857,9 @@ describe('CLI Generation Regression', () => {
     it('index.ts imports all generated command files', () => {
       const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
       for (const [group] of generatedCommands) {
-        const pascal = group.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
-        expect(indexContent, `index.ts should import ${pascal}Command`).toContain(`${pascal}Command`);
+        // camelCase: spec-parser -> specParserCommand
+        const camel = group.split('-').map((w, i) => i === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)).join('');
+        expect(indexContent, `index.ts should import ${camel}Command`).toContain(`${camel}Command`);
       }
     });
 

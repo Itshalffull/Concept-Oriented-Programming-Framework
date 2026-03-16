@@ -18,15 +18,15 @@ derived MindMapEditor [T] {
 
   surface {
     action create(name: String, central_topic: String) {
-      matches: Canvas/create + Canvas/addItem + DiagramNotation/applyToCanvas(notation: "mind-map")
+      matches: Canvas/create(name: name)
     }
 
     action addBranch(parent: ID, topic: String) {
-      matches: Canvas/addItem + Outline/appendChild
+      matches: Canvas/addItem(canvas: parent, item: topic)
     }
 
     action autoLayout() {
-      matches: Canvas/applyLayout(algorithm: "tree")
+      matches: SpatialLayout/applyLayout(algorithm: "tree")
     }
   }
 

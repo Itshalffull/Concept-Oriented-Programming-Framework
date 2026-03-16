@@ -76,19 +76,17 @@ export const SchemaEditor = defineComponent({
         'data-disabled': props.disabled ? 'true' : 'false',
       }, [
         h('div', { 'data-part': 'field-list', 'data-count': effectiveFields.length }, [
-          effectiveFields.map((field) => (
-            <div
-              key={field.id}
-              role="listitem"
-              aria-label={`Field: ${field.name || 'Unnamed'}`}
-              aria-expanded={isExpanded(field.id) ? 'true' : 'false'}
-              data-part="field-row"
-              data-type={field.type}
-              data-state={isExpanded(field.id) ? 'expanded' : 'collapsed'}
-              data-dragging={state.value.draggingFieldId === field.id ? 'true' : 'false'}
-              data-valid={isDuplicateName(field) ? 'false' : 'true'}
-            >
-              {props.reorderable ? h('button', {
+          ...effectiveFields.map((field) => h('div', {
+              'role': 'listitem',
+              'aria-label': `Field: ${field.name || 'Unnamed'}`,
+              'aria-expanded': isExpanded(field.id) ? 'true' : 'false',
+              'data-part': 'field-row',
+              'data-type': field.type,
+              'data-state': isExpanded(field.id) ? 'expanded' : 'collapsed',
+              'data-dragging': state.value.draggingFieldId === field.id ? 'true' : 'false',
+              'data-valid': isDuplicateName(field) ? 'false' : 'true',
+            }, [
+              props.reorderable ? h('button', {
               'type': 'button',
               'data-part': 'drag-handle',
               'role': 'button',
@@ -104,6 +102,7 @@ export const SchemaEditor = defineComponent({
                     if (e.key === 'ArrowDown') handleMoveDown(field.id);
                   },
             }, '&#x2630;') : null,
+            ])),
         ]),
         h('button', {
           'type': 'button',
@@ -116,6 +115,5 @@ export const SchemaEditor = defineComponent({
       ]);
   },
 });
-});)
 
 export default SchemaEditor;

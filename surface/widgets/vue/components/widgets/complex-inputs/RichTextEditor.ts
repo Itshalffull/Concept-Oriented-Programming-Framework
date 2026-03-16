@@ -67,9 +67,9 @@ export const RichTextEditor = defineComponent({
     const machine = ref<any>({ content: props.defaultValue ? 'editing' : 'empty', interaction: 'idle', slashCommand: 'hidden', activeFormats: new Set(), });
     const send = (action: any) => { /* state machine dispatch */ };
     const editorRef = ref<any>(null);
-    const execCommand = (command: string, props.value?: string) => {
+    const execCommand = (command: string, val?: string) => {
       if (props.readOnly || props.disabled) return;
-      document.execCommand(command, false, props.value);
+      document.execCommand(command, false, val);
       editorRef.value?.focus();
     };
 

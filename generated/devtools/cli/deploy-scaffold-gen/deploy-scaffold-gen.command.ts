@@ -37,11 +37,7 @@ deployScaffoldGenCommand
 
 deployScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : DeployScaffoldGen 
- inputKind : DeployConfig 
- outputKind : DeployManifest 
- capabilities : [ deploy-yaml , runtime-config , infrastructure ]')
+  .description('Return static metadata for PluginRegistry name : DeployScaffoldGen inputKind : DeployConfig outputKind : DeployManifest capabilities : [ deploy-yaml , runtime-config , infrastructure ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

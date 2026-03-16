@@ -132,3 +132,67 @@ entities:
       actions:
         create: [id, name, description, content_type, body, variables]
         read: [id, name, description, content_type, body, variables]
+
+schemas:
+  Article:
+    manifest: content
+    fields:
+      title:
+        type: String
+        required: true
+        description: "Article title"
+      body:
+        type: RichText
+        required: true
+        description: "Article body content"
+      slug:
+        type: String
+        required: false
+        description: "URL-friendly identifier"
+      author:
+        type: Reference
+        required: false
+        description: "Reference to the article author"
+    from:
+      concept: Article
+      actions:
+        create: [title, body, slug, author]
+        read: [title, body, slug, author]
+
+  Page:
+    manifest: content
+    fields:
+      title:
+        type: String
+        required: true
+        description: "Page title"
+      body:
+        type: RichText
+        required: true
+        description: "Page body content"
+      path:
+        type: String
+        required: false
+        description: "URL path for the page"
+    from:
+      concept: Page
+      actions:
+        create: [title, body, path]
+        read: [title, body, path]
+
+  Role:
+    manifest: config
+    fields:
+      name:
+        type: String
+        required: true
+        description: "Role name"
+      permissions:
+        type: JSON
+        required: false
+        description: "Permissions granted to this role"
+    from:
+      concept: Role
+      actions:
+        create: [name, permissions]
+        read: [name, permissions]

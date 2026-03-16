@@ -66,16 +66,16 @@ export const Splitter = defineComponent({
 
         if (incrementKeys.includes(e.key)) {
           e.preventDefault();
-          dispatch({ type: 'RESIZE_INCREMENT', props.step, props.max });
+          dispatch({ type: 'RESIZE_INCREMENT', step: props.step, max: props.max });
         } else if (decrementKeys.includes(e.key)) {
           e.preventDefault();
-          dispatch({ type: 'RESIZE_DECREMENT', props.step, props.min });
+          dispatch({ type: 'RESIZE_DECREMENT', step: props.step, min: props.min });
         } else if (e.key === 'Home') {
           e.preventDefault();
-          dispatch({ type: 'RESIZE_MIN', props.min });
+          dispatch({ type: 'RESIZE_MIN', min: props.min });
         } else if (e.key === 'End') {
           e.preventDefault();
-          dispatch({ type: 'RESIZE_MAX', props.max });
+          dispatch({ type: 'RESIZE_MAX', max: props.max });
         }
       };
     const isDragging = state.value.interaction === 'dragging';

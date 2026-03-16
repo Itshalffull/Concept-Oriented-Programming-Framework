@@ -70,7 +70,7 @@ export const NotificationCenter = defineComponent({
 
   setup(props, { slots, emit }) {
     const uid = useUid();
-    const state = ref<any>({ panel: props.open ? 'open' : 'closed', loading: props.loading ? 'loading' : 'idle', unread: props.unreadCount > 0 ? 'hasUnread' : 'none', props.activeTab, });
+    const state = ref<any>({ panel: props.open ? 'open' : 'closed', loading: props.loading ? 'loading' : 'idle', unread: props.unreadCount > 0 ? 'hasUnread' : 'none', activeTab: props.activeTab, });
     const send = (action: any) => { /* state machine dispatch */ };
     const triggerRef = ref<any>(null);
     const panelRef = ref<any>(null);
@@ -185,21 +185,20 @@ export const NotificationCenter = defineComponent({
             'data-tab': state.activeTab,
             'data-state': props.loading ? 'loading' : filteredNotifications.length === 0 ? 'empty' : 'idle',
           }, [
-            filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                role="listitem"
-                data-part="notification-item"
-                data-read={notification.read ? 'true' : 'false'}
-                data-type={notification.type}
-                tabIndex={0}
-                onClick={() => props.onNavigate?.(notification.id)}
-                onFocus={() => props.onMarkRead?.(notification.id)}
-              >
-                <span data-part="notification-title">{notification.title}</span>
-                {notification.body ? h('span', { 'data-part': 'notification-body' }, [
-                notification.body,
-              ]) : null,
+            ...filteredNotifications.map((notification) => h('div', {
+                'role': 'listitem',
+                'data-part': 'notification-item',
+                'data-read': notification.read ? 'true' : 'false',
+                'data-type': notification.type,
+                'tabindex': 0,
+                'onClick': () => props.onNavigate?.(notification.id),
+                'onFocus': () => props.onMarkRead?.(notification.id),
+              }, [
+                h('span', { 'data-part': 'notification-title' }, [notification.title]),
+                notification.body ? h('span', { 'data-part': 'notification-body' }, [
+                  notification.body,
+                ]) : null,
+              ])),
           ]),
           !props.loading && filteredNotifications.length === 0 ? h('div', { 'data-part': 'empty-state' }, 'No notifications') : null,
           props.hasMore ? h('button', {
@@ -222,6 +221,5 @@ export const NotificationCenter = defineComponent({
       ]);
   },
 });
-});)
 
 export default NotificationCenter;

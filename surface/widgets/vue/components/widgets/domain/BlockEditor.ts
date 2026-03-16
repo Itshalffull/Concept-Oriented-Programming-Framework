@@ -87,19 +87,17 @@ export const BlockEditor = defineComponent({
           'onFocus': () => send({ type: 'FOCUS' }),
           'onBlur': () => send({ type: 'BLUR' }),
         }, [
-          props.blocks.map((block, index) => (
-          <div
-            key={block.id}
-            role="group"
-            aria-label={`Block ${index}: ${block.type}`}
-            aria-grabbed={state.value === 'dragging' ? true : undefined}
-            aria-roledescription="content block"
-            data-block-type={block.type}
-            data-block-id={block.id}
-            data-part="block"
-            tabIndex={0}
-          >
-            {!props.readOnly ? h('button', {
+          ...props.blocks.map((block, index) => h('div', {
+            'role': 'group',
+            'aria-label': `Block ${index}: ${block.type}`,
+            'aria-grabbed': state.value === 'dragging' ? true : undefined,
+            'aria-roledescription': 'content block',
+            'data-block-type': block.type,
+            'data-block-id': block.id,
+            'data-part': 'block',
+            'tabindex': 0,
+          }, [
+            !props.readOnly ? h('button', {
               'type': 'button',
               'role': 'button',
               'aria-label': 'Drag to reorder block',
@@ -110,6 +108,7 @@ export const BlockEditor = defineComponent({
               'onDragStart': () => send({ type: 'DRAG_START' }),
               'onDragEnd': () => send({ type: 'DROP' }),
             }, '&#x2630;') : null,
+          ])),
         ]),
         state.value === 'slashMenuOpen' ? h('div', {
             'data-part': 'slash-menu',
@@ -128,6 +127,5 @@ export const BlockEditor = defineComponent({
       ]);
   },
 });
-});)
 
 export default BlockEditor;

@@ -80,3 +80,73 @@ entities:
       actions:
         create: [id, file_reference, mime_type, alt_text, dimensions]
         read: [id, file_reference, mime_type, alt_text, dimensions, duration, thumbnail_url]
+
+schemas:
+  Media:
+    concept: MediaAsset
+    primary_set: assets
+    manifest: content
+    hooks:
+      on_apply: MediaAsset/initializeAsset
+      on_save: MediaAsset/processIfNeeded
+    fields:
+      file_reference:
+        type: Reference
+        required: true
+        from: file_reference
+        description: "Reference to the underlying file record"
+      mime_type:
+        type: String
+        required: true
+        from: mime_type
+        description: "MIME type of the media asset"
+      alt_text:
+        type: String
+        required: false
+        from: alt_text
+        description: "Accessibility alt text for the media"
+      dimensions:
+        type: JSON
+        required: false
+        from: dimensions
+        description: "Width and height for image/video assets"
+
+  File:
+    concept: FileManagement
+    primary_set: files
+    manifest: content
+    fields:
+      filename:
+        type: String
+        required: true
+        from: filename
+        description: "Original filename including extension"
+      mime_type:
+        type: String
+        required: true
+        from: mime_type
+        description: "MIME type of the file"
+      size_bytes:
+        type: Number
+        required: true
+        from: size_bytes
+        description: "File size in bytes"
+      storage_path:
+        type: String
+        required: true
+        from: storage_path
+        description: "Path or key in the storage backend"
+
+  Image:
+    includes:
+      - Media
+    manifest: content
+    fields:
+      width:
+        type: Number
+        required: false
+        description: "Image width in pixels"
+      height:
+        type: Number
+        required: false
+        description: "Image height in pixels"

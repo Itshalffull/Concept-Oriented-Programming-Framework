@@ -118,24 +118,23 @@ export const NavigationMenu = defineComponent({
                   if (item.type === 'trigger') handleClose();
                 },
       }, [
-        item.type === 'trigger' ? (
-                  <>
-                    <button
-                      id={triggerId}
-                      type="button"
-                      role="menuitem"
-                      aria-haspopup="true"
-                      aria-expanded={isOpen}
-                      aria-controls={contentId}
-                      data-part="trigger"
-                      data-state={itemState}
-                      tabIndex={0}
-                      onClick={() => handleItemClick(index)}
-                      onKeyDown={(e) => handleKeyDown(e, index, item)}
-                    >
-                      {item.label}
-                    </button>
-                    {isOpen && item.content ? h('div', {
+        item.type === 'trigger' ? [
+                    h('button', {
+                      'id': triggerId,
+                      'type': 'button',
+                      'role': 'menuitem',
+                      'aria-haspopup': 'true',
+                      'aria-expanded': isOpen,
+                      'aria-controls': contentId,
+                      'data-part': 'trigger',
+                      'data-state': itemState,
+                      'tabindex': 0,
+                      'onClick': () => handleItemClick(index),
+                      'onKeyDown': (e) => handleKeyDown(e, index, item),
+                    }, [
+                      item.label,
+                    ]),
+                    isOpen && item.content ? h('div', {
             'id': contentId,
             'role': 'menu',
             'aria-labelledby': triggerId,
@@ -145,9 +144,9 @@ export const NavigationMenu = defineComponent({
           }, [
             item.content,
           ]) : null,
+                  ] : null,
       ]);
   },
-});
 });
 
 export default NavigationMenu;

@@ -36,11 +36,7 @@ interfaceScaffoldGenCommand
 
 interfaceScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : InterfaceScaffoldGen 
- inputKind : InterfaceConfig 
- outputKind : InterfaceManifest 
- capabilities : [ interface-yaml , target-config , sdk-config ]')
+  .description('Return static metadata for PluginRegistry name : InterfaceScaffoldGen inputKind : InterfaceConfig outputKind : InterfaceManifest capabilities : [ interface-yaml , target-config , sdk-config ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

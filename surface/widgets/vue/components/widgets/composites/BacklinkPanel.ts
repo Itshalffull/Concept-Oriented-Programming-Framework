@@ -119,31 +119,28 @@ export const BacklinkPanel = defineComponent({
                   'data-part': 'linked-list',
                   'data-count': props.linkedReferences.length,
                 }, [
-                  props.linkedReferences.map((item) => (
-                    <div
-                      key={`${item.sourceId}-linked`}
-                      role="listitem"
-                      aria-label={`Reference from ${item.sourceTitle}`}
-                      data-part="linked-item"
-                      data-source={item.sourceId}
-                      tabIndex={0}
-                      onClick={() => handleNavigate(item.sourceId)}
-                      onKeyDown={(e) => {
+                  ...props.linkedReferences.map((item) => h('div', {
+                      'role': 'listitem',
+                      'aria-label': `Reference from ${item.sourceTitle}`,
+                      'data-part': 'linked-item',
+                      'data-source': item.sourceId,
+                      'tabindex': 0,
+                      'onClick': () => handleNavigate(item.sourceId),
+                      'onKeyDown': (e) => {
                         if (e.key === 'Enter') handleNavigate(item.sourceId);
-                      }}
-                    >
-                      <nav data-part="linked-item-breadcrumb">
-                        {item.sourcePath.map((segment, i) => (
-                          <span key={i}>
-                            {i > 0 && <span aria-hidden="true"> / </span>}
-                            {segment}
-                          </span>
-                        ))}
-                      </nav>
-                      <span data-part="linked-item-context">
-                        {truncate(item.contextSnippet)}
-                      </span>
-                      {item.highlightRange ? h('span', { 'data-part': 'linked-item-highlight', 'aria-hidden': 'true' }) : null,
+                      },
+                    }, [
+                      h('nav', { 'data-part': 'linked-item-breadcrumb' }, [
+                        ...item.sourcePath.map((segment, i) => h('span', {}, [
+                          i > 0 ? h('span', { 'aria-hidden': 'true' }, ' / ') : null,
+                          segment,
+                        ])),
+                      ]),
+                      h('span', { 'data-part': 'linked-item-context' }, [
+                        truncate(item.contextSnippet),
+                      ]),
+                      item.highlightRange ? h('span', { 'data-part': 'linked-item-highlight', 'aria-hidden': 'true' }) : null,
+                    ])),
                 ]) : null,
             ]) : null,
           state.value.panel === 'expanded' && props.showUnlinked ? h('div', {
@@ -200,6 +197,5 @@ export const BacklinkPanel = defineComponent({
       ]);
   },
 });
-});)
 
 export default BacklinkPanel;

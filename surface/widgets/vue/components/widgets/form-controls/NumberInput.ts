@@ -93,8 +93,7 @@ export const NumberInput = defineComponent({
       return clamped;
     };
 
-  const formatValue = (
-(v: number | undefined): string => {
+  const formatValue = (v: number | undefined): string => {
       if (v === undefined) return '';
       if (props.precision !== undefined) return v.toFixed(props.precision);
       return String(v);
@@ -185,6 +184,6 @@ export const NumberInput = defineComponent({
           ]) : null,
       ]);
   },
-});)
+});
 
 export default NumberInput;

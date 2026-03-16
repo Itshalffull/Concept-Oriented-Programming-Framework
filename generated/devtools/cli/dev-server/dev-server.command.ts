@@ -5,15 +5,11 @@
 import { Command } from 'commander';
 
 export const devServerCommand = new Command('dev-server')
-  .description('Run a local development server that watches concept specs 
- and syncs for changes , re compiles on save , and serves 
- the generated artifacts');
+  .description('Run a local development server that watches concept specs and syncs for changes , re compiles on save , and serves the generated artifacts');
 
 devServerCommand
   .command('start')
-  .description('Start the development server on the specified port 
- Watch the specs and syncs directories for changes 
- Auto recompile when files are modified')
+  .description('Start the development server on the specified port Watch the specs and syncs directories for changes Auto recompile when files are modified')
   .requiredOption('--port <port>', 'Port')
   .requiredOption('--specs <specs>', 'Specs')
   .requiredOption('--syncs <syncs>', 'Syncs')
@@ -45,8 +41,6 @@ devServerCommand
 
 export const devServerCommandTree = {
   group: 'dev-server',
-  description: 'Run a local development server that watches concept specs 
- and syncs for changes , re compiles on save , and serves 
- the generated artifacts',
+  description: 'Run a local development server that watches concept specs and syncs for changes , re compiles on save , and serves the generated artifacts',
   commands: [{ action: 'start', command: 'start' }, { action: 'stop', command: 'stop' }, { action: 'status', command: 'status' }],
 };

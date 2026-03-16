@@ -20,7 +20,7 @@ import {
   blocksToDataRows,
   type Block,
   type BlockType,
-} from '../clef-base/app/components/widgets/BlockEditor';
+} from '../clef-base/lib/block-serialization';
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 

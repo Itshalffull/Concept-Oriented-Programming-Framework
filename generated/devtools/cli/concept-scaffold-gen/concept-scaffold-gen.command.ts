@@ -19,7 +19,7 @@ conceptScaffoldGenCommand
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold concept --name User --actions create,update,delete  # Scaffold a basic concept')
   .addHelpText('after', '  clef scaffold concept --name Article --param A --category domain  # Scaffold with custom type parameter')
-  .addHelpText('after', '  clef scaffold concept --name Bookmark --purpose 'Save and organize references.'  # Scaffold with purpose')
+  .addHelpText('after', '  clef scaffold concept --name Bookmark --purpose "Save and organize references."  # Scaffold with purpose')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'generate', ...opts });
     console.log(opts.json ? JSON.stringify(result) : result);
@@ -41,11 +41,7 @@ conceptScaffoldGenCommand
 
 conceptScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : ConceptScaffoldGen 
- inputKind : ConceptConfig 
- outputKind : ConceptSpec 
- capabilities : [ concept-spec , state-fields , actions , invariants ]')
+  .description('Return static metadata for PluginRegistry name : ConceptScaffoldGen inputKind : ConceptConfig outputKind : ConceptSpec capabilities : [ concept-spec , state-fields , actions , invariants ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

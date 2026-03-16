@@ -147,9 +147,9 @@ describe('Version-space integration syncs suite (§5.6)', () => {
   });
 
   describe('Sync count verification', () => {
-    it('has exactly 5 sync files', () => {
+    it('has exactly 11 sync files', () => {
       const files = fs.readdirSync(SYNCS_DIR).filter(f => f.endsWith('.sync'));
-      expect(files).toHaveLength(5);
+      expect(files).toHaveLength(11);
     });
   });
 });

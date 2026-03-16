@@ -56,6 +56,7 @@ export async function loginAdminAction(
   });
 
   if (result.permissions.includes(ADMIN_PERMISSION)) {
+    navigate('/admin');
     return { error: '', message: 'admin' };
   }
 

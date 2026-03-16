@@ -89,7 +89,7 @@ export const PluginCard = defineComponent({
           'data-has-image': props.iconUrl ? 'true' : 'false',
           'aria-hidden': 'true',
         }, [
-          props.renderIcon ? props.renderIcon() : props.iconUrl ? <img src={props.iconUrl} alt="" /> : null,
+          props.renderIcon ? props.renderIcon() : props.iconUrl ? h('img', { src: props.iconUrl, alt: '' }) : null,
         ]),
         h('span', { 'data-part': 'name', 'id': nameId }, [
           props.pluginName,

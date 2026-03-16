@@ -58,7 +58,7 @@ export const Accordion = defineComponent({
     const handleToggle = (itemValue: string) => {
         if (props.disabled) return;
         if (!isControlled) {
-          dispatch({ type: 'TOGGLE', value: itemValue, props.multiple, props.collapsible });
+          dispatch({ type: 'TOGGLE', value: itemValue, multiple: props.multiple, collapsible: props.collapsible });
         }
         const isExpanded = expandedItems.includes(itemValue);
         let next: string[];

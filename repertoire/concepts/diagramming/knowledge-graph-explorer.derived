@@ -19,11 +19,11 @@ derived KnowledgeGraphExplorer [T] {
 
   surface {
     action explore(query: String) {
-      matches: View/query + Canvas/addItem per result + Canvas/surfaceExistingReferences
+      matches: View/query
     }
 
     action expandNode(node: ID) {
-      matches: Graph/getNeighbors + Canvas/addItem per neighbor + Canvas/surfaceExistingReferences
+      matches: Graph/getNeighbors
     }
 
     action autoLayout() {

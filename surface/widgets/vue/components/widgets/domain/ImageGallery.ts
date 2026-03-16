@@ -94,7 +94,7 @@ export const ImageGallery = defineComponent({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  };
+  })();
     const next = clampIndex(idx + 1);
     const prev = clampIndex(idx - 1);
 
@@ -116,7 +116,7 @@ export const ImageGallery = defineComponent({
           'style': {
           display: 'grid',
           gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          props.gap,
+          gap: props.gap,
         },
         }, [
           ...props.images.map((img, i) => h('button', {
@@ -134,7 +134,7 @@ export const ImageGallery = defineComponent({
                 'src': img.thumbnail ?? img.src,
                 'alt': img.alt,
                 'loading': props.lazyLoad ? 'lazy' : 'eager',
-                'style': { props.aspectRatio },
+                'style': { aspectRatio: props.aspectRatio },
               }),
             ])),
         ]),
@@ -190,6 +190,6 @@ export const ImageGallery = defineComponent({
           ]) : null,
       ]);
   },
-});)
+});
 
 export default ImageGallery;

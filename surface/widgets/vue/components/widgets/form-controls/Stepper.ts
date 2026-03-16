@@ -118,7 +118,7 @@ export const Stepper = defineComponent({
           'onClick': increment,
           'tabindex': 0,
         }, '+'),
-        props.name && <input type="hidden" props.name={props.name} value={value} />,
+        props.name ? h('input', { type: 'hidden', name: props.name, value: value }) : null,
       ]);
   },
 });

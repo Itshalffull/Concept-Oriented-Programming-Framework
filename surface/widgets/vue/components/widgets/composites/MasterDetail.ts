@@ -137,28 +137,27 @@ export const MasterDetail = defineComponent({
             'aria-activedescendant': effectiveSelectedId ? `item-${effectiveSelectedId}` : undefined,
             'data-part': 'list',
           }, [
-            filteredItems.map((item) => (
-              <div
-                key={item.id}
-                role="option"
-                aria-selected={item.id === effectiveSelectedId ? 'true' : 'false'}
-                data-part="list-item"
-                data-selected={item.id === effectiveSelectedId ? 'true' : 'false'}
-                id={`item-${item.id}`}
-                tabIndex={item.id === effectiveSelectedId ? 0 : -1}
-                onClick={() => handleSelect(item.id)}
-                onKeyDown={(e) => {
+            ...filteredItems.map((item) => h('div', {
+                'role': 'option',
+                'aria-selected': item.id === effectiveSelectedId ? 'true' : 'false',
+                'data-part': 'list-item',
+                'data-selected': item.id === effectiveSelectedId ? 'true' : 'false',
+                'id': `item-${item.id}`,
+                'tabindex': item.id === effectiveSelectedId ? 0 : -1,
+                'onClick': () => handleSelect(item.id),
+                'onKeyDown': (e) => {
                   if (e.key === 'Enter') handleSelect(item.id);
-                }}
-              >
-                {props.renderListItem ? (
-                  props.renderListItem(item)
-                ) : (
-                  <>
-                    <span data-part="list-item-title">{item.title}</span>
-                    {item.meta ? h('span', { 'data-part': 'list-item-meta', 'aria-hidden': 'true' }, [
-                item.meta,
-              ]) : null,
+                },
+              }, [
+                props.renderListItem
+                  ? props.renderListItem(item)
+                  : [
+                    h('span', { 'data-part': 'list-item-title' }, [item.title]),
+                    item.meta ? h('span', { 'data-part': 'list-item-meta', 'aria-hidden': 'true' }, [
+                      item.meta,
+                    ]) : null,
+                  ],
+              ])),
           ]),
         ]),
         props.resizable && state.value.layout === 'split' ? h('div', {
@@ -216,7 +215,5 @@ export const MasterDetail = defineComponent({
       ]);
   },
 });
-  },
-});))
 
 export default MasterDetail;

@@ -113,7 +113,7 @@ export const ComboboxMulti = defineComponent({
     };
     const filteredOptions = computed(() => props.options.filter((o) =>
           o.label.toLowerCase().includes(inputValue.toLowerCase()),
-        );
+        ));
 
     // Close on outside click
     (() => {
@@ -166,6 +166,6 @@ export const ComboboxMulti = defineComponent({
         ]),
       ]);
   },
-});)
+});
 
 export default ComboboxMulti;

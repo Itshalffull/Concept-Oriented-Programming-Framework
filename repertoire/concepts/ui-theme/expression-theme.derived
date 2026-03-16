@@ -32,15 +32,15 @@ derived ExpressionTheme [T] {
 
   syncs {
     required: [
-      SeedColorDerivesPalette,
-      SchemeActivatesTokens,
-      PreferenceNegotiatesTheme,
-      DensityAppliesMultiplier,
-      StructuralMotifResolvesLayout,
-      StructuralMotifResolvesShell,
-      TypeScaleGeneratesTypographyTokens,
-      MaterialSurfaceComputesShadow,
-      SpringPhysicsResolvesMotionToken
+      seed-color-derives-palette,
+      scheme-activates-tokens,
+      preference-negotiates-theme,
+      density-applies-multiplier,
+      structural-motif-resolves-layout,
+      structural-motif-resolves-shell,
+      type-scale-generates-typography-tokens,
+      material-surface-computes-shadow,
+      spring-physics-resolves-motion-token
     ]
   }
 

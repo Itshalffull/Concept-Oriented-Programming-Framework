@@ -6,8 +6,8 @@ export interface FileUploadProps {
 }
 
 export const FileUpload: React.FC<FileUploadProps> = (props) => {
-  const { accept, multiple, maxSize, maxFiles, disabled, onChange, style, style } = props;
-  return (<View style={[s.root, style]} accessibilityRole="button" accessibilityLabel="File upload"><View style={[s.dropzone, disabled && s.disabled]}><Text style={s.icon}>\u{1F4C1}</Text><Text style={s.label}>Tap to select files</Text><Text style={s.hint}>{accept ? `Accepts: ${accept}` : 'All file types'}</Text></View></View>);
+  const { accept, multiple, maxSize, maxFiles, disabled, onChange, style } = props;
+  return (<View style={[s.root, style]} accessibilityRole="button" accessibilityLabel="File upload"><View style={[s.dropzone, disabled && s.disabled]}><Text style={s.icon}>{'\u{1F4C1}'}</Text><Text style={s.label}>Tap to select files</Text><Text style={s.hint}>{accept ? `Accepts: ${accept}` : 'All file types'}</Text></View></View>);
 };
 
 const s = StyleSheet.create({
