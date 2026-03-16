@@ -2,7 +2,20 @@
 
 ## Design Philosophy
 
-Following Jackson's concept methodology: each concept below is **independently meaningful** with its own purpose. The monadic handler system is not one monolith — it decomposes into five independent concepts wired by syncs, composed into a derived concept, and integrated with the existing FlowTrace and FormalProperty infrastructure.
+Following Jackson's concept methodology: each concept below is **independently meaningful** with its own purpose. The monadic handler system decomposes into independent concepts wired by syncs, composed into a derived concept, and integrated with the existing FlowTrace and FormalProperty infrastructure.
+
+### Jackson Compliance
+
+Every concept in this plan has been validated against Jackson's six criteria:
+
+| Criterion | Rule |
+|-----------|------|
+| **Independence** | No concept references another in its state or actions |
+| **Single Purpose** | Each concept has exactly one reason to exist |
+| **Operational Principle** | Each has a clear "if you do X then Y" narrative |
+| **State Completeness** | All state fields are used by actions; no orphaned state |
+| **Action Richness** | Actions form a coherent lifecycle; no grab-bag methods |
+| **Familiarity** | Each maps to a well-known pattern or analog |
 
 ---
 
@@ -10,26 +23,28 @@ Following Jackson's concept methodology: each concept below is **independently m
 
 ### 1. `StorageProgram [P]` — The Free Monad
 
-**Purpose:** Represent a concept handler's storage operations as an inspectable, composable data structure — separating the *description* of effects from their *execution*.
+**Purpose:** Build sequences of storage instructions as inspectable, composable data — separating the *description* of effects from their *execution*.
 
 **Independent motivation:** Even without interpretation or verification, a StorageProgram is useful as a portable, serializable representation of "what a handler intends to do." It can be logged, diffed, replayed, or sent across a wire.
+
+**Familiarity:** SQL query builder, AST builder.
+
+**Operational principle:** Create a program, append instructions (get/put/find/del), optionally branch or compose with another program, then terminate with `pure`. The resulting program is data — no side effects occur until an interpreter runs it.
 
 ```
 concept StorageProgram [P] {
   purpose {
-    Represent storage operations as an inspectable, composable program
-    description. A StorageProgram is a sequence of storage instructions
-    (get, put, find, del) that can be analyzed, transformed, and
-    interpreted without executing side effects.
+    Build sequences of storage instructions as inspectable, composable
+    data. A StorageProgram describes what a handler intends to do
+    without executing side effects. Programs can be logged, diffed,
+    serialized, composed, and handed to an interpreter or analyzer.
   }
 
   state {
     programs: set P
     instructions: P -> list Instruction
-    readSet: P -> set String           // relations read by this program
-    writeSet: P -> set String          // relations written by this program
-    purity: P -> Purity               // pure | read-only | read-write
-    bindings: P -> list Binding        // variable bindings accumulated during build
+    bindings: P -> list Binding
+    terminated: P -> Bool
   }
 
   actions {
@@ -41,65 +56,60 @@ concept StorageProgram [P] {
     action get(program: P, relation: String, key: String, bindAs: String) {
       -> ok(program: P) {
         Append a Get instruction. The result will be bound to bindAs
-        when interpreted. Adds relation to the readSet.
+        when interpreted.
       }
       -> notfound() { Program does not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action find(program: P, relation: String, criteria: String, bindAs: String) {
       -> ok(program: P) {
         Append a Find instruction with criteria filter.
-        Adds relation to the readSet.
       }
       -> notfound() { Program does not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action put(program: P, relation: String, key: String, value: String) {
       -> ok(program: P) {
-        Append a Put instruction. Adds relation to the writeSet.
+        Append a Put instruction.
       }
       -> notfound() { Program does not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action del(program: P, relation: String, key: String) {
       -> ok(program: P) {
-        Append a Del instruction. Adds relation to the writeSet.
+        Append a Del instruction.
       }
       -> notfound() { Program does not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action branch(program: P, condition: String, thenBranch: P, elseBranch: P) {
       -> ok(program: P) {
         Append a conditional branch. Both branches are themselves
-        StoragePrograms. The readSet/writeSet is the union of both
-        branches (conservative approximation for static analysis).
+        StoragePrograms, enabling nested control flow.
       }
       -> notfound() { Program or branch programs do not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action pure(program: P, variant: String, output: String) {
       -> ok(program: P) {
         Terminate the program with a return value (variant + output fields).
-        No further instructions may be appended.
+        No further instructions may be appended after pure.
       }
       -> notfound() { Program does not exist. }
+      -> sealed() { Program already terminated with pure. }
     }
 
     action compose(first: P, second: P, bindAs: String) {
       -> ok(program: P) {
         Monadic bind: run first, bind its result to bindAs, then run second.
-        The composed program's readSet/writeSet is the union of both.
+        Creates a new composite program.
       }
       -> notfound() { One or both programs do not exist. }
-    }
-
-    action analyze(program: P) {
-      -> ok(readSet: String, writeSet: String, purity: String, branchCount: Int) {
-        Statically analyze the program's effects without executing it.
-        Returns the read/write sets, purity classification, and
-        number of conditional branches.
-      }
-      -> notfound() { Program does not exist. }
     }
   }
 
@@ -107,27 +117,37 @@ concept StorageProgram [P] {
     after create(program: p) -> ok()
     and get(program: p, relation: "users", key: "u1", bindAs: "user") -> ok(program: p)
     and put(program: p, relation: "users", key: "u1", value: "updated") -> ok(program: p)
-    and analyze(program: p) -> ok(readSet: rs, writeSet: ws, purity: purity, branchCount: bc)
-    then purity = "read-write"
+    and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
+    then p.terminated = true
   }
 
   invariant {
     after create(program: p) -> ok()
-    and get(program: p, relation: "users", key: "u1", bindAs: "user") -> ok(program: p)
     and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
-    and analyze(program: p) -> ok(readSet: rs, writeSet: ws, purity: purity, branchCount: bc)
-    then purity = "read-only"
+    then get(program: p, relation: "users", key: "u1", bindAs: "x") -> sealed()
   }
 }
 ```
+
+**Jackson check:**
+- Independence: No references to other concepts.
+- Single purpose: Build instruction sequences. Analysis removed (belongs to providers).
+- Operational principle: Create → append instructions → terminate with pure.
+- State completeness: `programs`, `instructions`, `bindings`, `terminated` — all used by actions.
+- Action richness: 8 actions forming a coherent builder lifecycle.
+- Familiarity: Query builder / AST builder.
 
 ---
 
 ### 2. `ProgramInterpreter [I]` — The Runner
 
-**Purpose:** Execute a StorageProgram against a real ConceptStorage backend, producing an ActionCompletion. This is the bridge between the functional world and the effectful world.
+**Purpose:** Execute a StorageProgram against a ConceptStorage backend, managing transaction boundaries and recording execution traces.
 
-**Independent motivation:** Interpretation is its own concern — you might interpret the same program against different backends (test storage, production storage, dry-run), or with different transaction semantics (optimistic, pessimistic, serializable).
+**Independent motivation:** Interpretation is its own concern — the same program can be interpreted against different backends (test storage, production storage, dry-run) or with different transaction semantics.
+
+**Familiarity:** Database transaction manager, virtual machine.
+
+**Operational principle:** Register an interpreter with a backend and mode, then execute programs against it. Live mode mutates storage; dry-run mode returns what *would* happen. Each execution produces a trace and an executionId that can be used for rollback.
 
 ```
 concept ProgramInterpreter [I] {
@@ -140,23 +160,26 @@ concept ProgramInterpreter [I] {
 
   state {
     interpreters: set I
-    backend: I -> String              // storage backend identifier
-    mode: I -> Mode                   // live | dry-run | replay
-    executions: I -> list Execution
+    backend: I -> String
+    mode: I -> String
+    executions: set String
+    executionTrace: String -> String
   }
 
   actions {
     action register(interpreter: I, backend: String, mode: String) {
       -> ok() { Interpreter registered with the given backend and mode. }
       -> exists() { Interpreter already registered. }
+      -> invalidMode() { Mode must be one of: live, dry-run, replay. }
     }
 
     action execute(interpreter: I, program: String, snapshot: String) {
-      -> ok(variant: String, output: String, trace: String) {
+      -> ok(executionId: String, variant: String, output: String, trace: String) {
         Run the program instruction-by-instruction against the backend.
         In live mode, mutations are applied to storage.
         In dry-run mode, mutations are applied to an in-memory snapshot only.
-        Returns the terminal variant, output fields, and an execution trace.
+        Returns an executionId for rollback, the terminal variant,
+        output fields, and an execution trace.
       }
       -> error(message: String, failedAt: Int) {
         Execution failed at instruction index failedAt.
@@ -167,7 +190,7 @@ concept ProgramInterpreter [I] {
     action dryRun(interpreter: I, program: String, snapshot: String) {
       -> ok(variant: String, output: String, mutations: String) {
         Execute against a snapshot without side effects.
-        Returns what *would* happen: the variant, output, and
+        Returns what would happen: the variant, output, and
         the list of mutations that would be applied.
       }
       -> error(message: String) { Dry run failed. }
@@ -177,8 +200,7 @@ concept ProgramInterpreter [I] {
     action rollback(interpreter: I, executionId: String) {
       -> ok() {
         Reverse the mutations from a previous execution using
-        compensating operations. Only available if the execution
-        trace was recorded.
+        compensating operations derived from the execution trace.
       }
       -> error(message: String) { Rollback failed. }
       -> notfound() { Interpreter or execution does not exist. }
@@ -186,86 +208,278 @@ concept ProgramInterpreter [I] {
   }
 
   invariant {
+    after register(interpreter: i, backend: "memory", mode: "live") -> ok()
+    and execute(interpreter: i, program: p, snapshot: s) -> ok(executionId: eid, variant: v, output: o, trace: t)
+    then rollback(interpreter: i, executionId: eid) -> ok()
+  }
+
+  invariant {
     after register(interpreter: i, backend: "memory", mode: "dry-run") -> ok()
-    and execute(interpreter: i, program: p, snapshot: s) -> ok(variant: v, output: o, trace: t)
+    and execute(interpreter: i, program: p, snapshot: s) -> ok(executionId: eid, variant: v, output: o, trace: t)
     then the storage backend is not modified
+  }
+}
+```
+
+**Jackson check:**
+- Independence: No references to other concepts.
+- Single purpose: Execute programs against backends.
+- Operational principle: Register → execute → optionally rollback.
+- State completeness: `interpreters`, `backend`, `mode`, `executions`, `executionTrace` — all used.
+- Action richness: 4 actions covering full execution lifecycle.
+- Familiarity: Transaction manager / VM.
+
+---
+
+### 3. `ProgramAnalysis [A]` — Analysis Dispatcher (Provider Pattern)
+
+**Purpose:** Dispatch named analysis queries to registered providers and return structured results. This is the hub concept; specific analysis algorithms are providers.
+
+**Independent motivation:** The dispatch registry is useful independent of any specific analysis — it provides a uniform interface for querying program properties regardless of the underlying algorithm.
+
+**Familiarity:** Plugin registry, analysis rule engine (mirrors `AnalysisRule` in `code-analysis/`).
+
+**Operational principle:** Register an analysis provider by name and kind, then run it against a program. The concept dispatches to the provider and returns the result. `runAll` dispatches to every registered provider.
+
+```
+concept ProgramAnalysis [A] {
+  purpose {
+    Dispatch named analysis queries against StoragePrograms to
+    registered providers and return structured results. Each provider
+    implements a specific analysis strategy; this concept provides
+    the uniform dispatch interface.
+  }
+
+  state {
+    providers: set String
+    providerKind: String -> String
+    results: set A
+    program: A -> String
+    provider: A -> String
+    result: A -> String
+  }
+
+  actions {
+    action registerProvider(name: String, kind: String) {
+      -> ok() { Analysis provider registered. }
+      -> exists() { Provider with this name already registered. }
+    }
+
+    action run(program: String, provider: String) {
+      -> ok(analysis: A, result: String) { Analysis completed by the named provider. }
+      -> providerNotFound() { No provider registered with this name. }
+      -> error(message: String) { Analysis failed. }
+    }
+
+    action runAll(program: String) {
+      -> ok(results: String) { All registered providers ran against the program. }
+      -> error(message: String) { One or more providers failed. }
+    }
+
+    action listProviders() {
+      -> ok(providers: String) { Return all registered provider names and kinds. }
+    }
+  }
+
+  invariant {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    and run(program: p, provider: "read-write-sets") -> ok(analysis: a, result: r)
+    then a.provider = "read-write-sets"
+  }
+
+  invariant {
+    after run(program: p, provider: "nonexistent") -> providerNotFound()
+    then no analysis result is stored
+  }
+}
+```
+
+**Jackson check:**
+- Independence: No references to other concepts.
+- Single purpose: Dispatch analysis to providers.
+- Operational principle: Register providers → run analyses → get results.
+- State completeness: All state fields referenced by actions.
+- Action richness: 4 actions — register, run, runAll, list.
+- Familiarity: Plugin registry / analysis engine.
+
+---
+
+### 3a. `ReadWriteSetProvider [R]` — Structural Effect Extraction
+
+**Purpose:** Extract which storage relations a StorageProgram reads and writes, and classify its purity (pure, read-only, read-write).
+
+**Independent motivation:** Read/write sets are the foundation for all other analyses (conflict detection, commutativity, caching eligibility). This is the "base layer" provider.
+
+**Familiarity:** Def-use analysis in compilers, taint tracking source identification.
+
+```
+concept ReadWriteSetProvider [R] {
+  purpose {
+    Extract the set of storage relations a program reads and writes
+    by walking its instruction sequence. Classify the program's purity
+    as pure (no storage access), read-only, or read-write.
+  }
+
+  state {
+    results: set R
+    readSet: R -> set String
+    writeSet: R -> set String
+    purity: R -> String
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: R, readSet: String, writeSet: String, purity: String) {
+        Walk the instruction tree. Get/Find contribute to readSet.
+        Put/Del contribute to writeSet. Branches union both sub-branches.
+        Purity: no ops = pure, only reads = read-only, any write = read-write.
+      }
+      -> error(message: String) { Program could not be parsed. }
+    }
+  }
+
+  invariant {
+    after analyze(program: "get(users, u1); put(users, u1, data)") -> ok(result: r, readSet: rs, writeSet: ws, purity: p)
+    then p = "read-write"
+  }
+
+  invariant {
+    after analyze(program: "get(users, u1)") -> ok(result: r, readSet: rs, writeSet: ws, purity: p)
+    then p = "read-only"
   }
 }
 ```
 
 ---
 
-### 3. `ProgramAnalyzer [A]` — Static Analysis
+### 3b. `CommutativityProvider [C]` — Parallel Safety
 
-**Purpose:** Inspect StoragePrograms *before* execution to extract properties useful for optimization, verification, and FlowTrace acceleration.
+**Purpose:** Determine whether two StoragePrograms can safely execute in parallel — i.e., they produce the same result regardless of execution order.
 
-**Independent motivation:** Analysis is valuable even without the interpreter — it supports linting, dead-branch detection, conflict prediction, and feeds into the formal verification pipeline.
+**Independent motivation:** Enables safe concurrent execution and FlowTrace parallel branch tracing. Useful anywhere two handlers might run simultaneously.
+
+**Familiarity:** Serializability analysis in databases, happens-before analysis in concurrent systems.
 
 ```
-concept ProgramAnalyzer [A] {
+concept CommutativityProvider [C] {
   purpose {
-    Statically analyze StoragePrograms to extract read/write sets,
-    detect conflicts between concurrent programs, identify dead
-    branches, compute complexity metrics, and determine whether
-    two programs commute (can safely run in parallel).
+    Determine whether two StoragePrograms commute — whether they
+    produce the same result regardless of execution order. Uses
+    read/write set analysis and optionally deeper semantic reasoning.
   }
 
   state {
-    analyses: set A
-    result: A -> AnalysisResult
+    results: set C
+    programA: C -> String
+    programB: C -> String
+    commutes: C -> Bool
+    reason: C -> String
   }
 
   actions {
-    action detectConflicts(programA: String, programB: String) {
-      -> ok(conflicts: String, disjoint: Bool) {
-        Compare write sets of two programs. If disjoint, they commute
-        and can execute in parallel. Otherwise, return the conflicting
-        relations and keys.
-      }
-      -> error(message: String) { Analysis failed. }
-    }
-
-    action findDeadBranches(program: String) {
-      -> ok(deadBranches: String, reachableBranches: Int, totalBranches: Int) {
-        Given type information and state constraints, identify branches
-        in the program that can never be taken. Useful for pruning
-        FlowTrace exploration.
-      }
-      -> error(message: String) { Analysis failed. }
-    }
-
-    action computeComplexity(program: String) {
-      -> ok(instructionCount: Int, branchDepth: Int, readCount: Int, writeCount: Int) {
-        Compute static complexity metrics for the program.
-      }
-      -> error(message: String) { Analysis failed. }
-    }
-
-    action checkCommutes(programA: String, programB: String) {
-      -> ok(commutes: Bool, reason: String) {
-        Determine if two programs produce the same result regardless
-        of execution order. Stronger than disjoint write sets —
-        considers read-write dependencies too.
-      }
-      -> error(message: String) { Analysis failed. }
-    }
-
-    action extractInvariants(program: String, conceptSpec: String) {
-      -> ok(invariants: String) {
-        Given a program and its concept spec, extract verifiable
-        properties: "if state S before execution, then state S'
-        after execution satisfies invariant I."
+    action check(programA: String, programB: String, readWriteSetsA: String, readWriteSetsB: String) {
+      -> ok(result: C, commutes: Bool, reason: String) {
+        If write sets are disjoint and neither program's write set
+        overlaps the other's read set, the programs commute.
+        Returns the reasoning for the determination.
       }
       -> error(message: String) { Analysis failed. }
     }
   }
 
   invariant {
-    after detectConflicts(
-      programA: "put(users, u1, data)",
-      programB: "get(users, u2, bindAs: x)"
-    ) -> ok(conflicts: c, disjoint: d)
-    then d = true
+    after check(
+      programA: "put(users, u1, data)", programB: "put(orders, o1, data)",
+      readWriteSetsA: "{w: [users]}", readWriteSetsB: "{w: [orders]}"
+    ) -> ok(result: c, commutes: true, reason: r)
+    then r contains "disjoint write sets"
+  }
+}
+```
+
+---
+
+### 3c. `DeadBranchProvider [D]` — Unreachable Branch Detection
+
+**Purpose:** Identify branches in a StorageProgram that can never be taken, given type constraints and state invariants.
+
+**Independent motivation:** Enables FlowTrace dead branch pruning and handler optimization. Useful for linting ("this error path is unreachable").
+
+**Familiarity:** Dead code elimination in compilers, unreachable state detection in model checkers.
+
+```
+concept DeadBranchProvider [D] {
+  purpose {
+    Identify conditional branches in a StorageProgram that can
+    never be taken, given type constraints and concept state invariants.
+    Reports which branches are unreachable and why.
+  }
+
+  state {
+    results: set D
+    deadBranches: D -> list String
+    reachableCount: D -> Int
+    totalCount: D -> Int
+  }
+
+  actions {
+    action analyze(program: String, constraints: String) {
+      -> ok(result: D, deadBranches: String, reachableCount: Int, totalCount: Int) {
+        Walk the program's branch tree. For each condition, check
+        whether the constraint set makes the branch unsatisfiable.
+        Return the list of dead branches with explanations.
+      }
+      -> error(message: String) { Analysis failed. }
+    }
+  }
+
+  invariant {
+    after analyze(program: "branch(true, thenP, elseP)", constraints: "{}") -> ok(result: d, deadBranches: db, reachableCount: rc, totalCount: tc)
+    then rc = 1
+    and tc = 2
+  }
+}
+```
+
+---
+
+### 3d. `InvariantExtractionProvider [I]` — Formal Property Extraction
+
+**Purpose:** Extract verifiable formal properties from a StorageProgram and its concept spec, producing FormalProperty candidates for the verification pipeline.
+
+**Independent motivation:** Bridges the gap between handler code and formal specifications. Useful for auto-generating proof obligations without manual specification effort.
+
+**Familiarity:** Weakest precondition calculus, design-by-contract extraction.
+
+```
+concept InvariantExtractionProvider [I] {
+  purpose {
+    Extract verifiable formal properties from a StorageProgram
+    given its concept specification. Produces property candidates
+    of the form "if state S before execution, then state S' after
+    execution satisfies invariant I."
+  }
+
+  state {
+    results: set I
+    properties: I -> list String
+    conceptRef: I -> String
+  }
+
+  actions {
+    action extract(program: String, conceptSpec: String) {
+      -> ok(result: I, properties: String) {
+        Analyze the program's instruction sequence against the concept's
+        declared invariants. For each invariant, derive a verifiable
+        property relating pre-state to post-state.
+      }
+      -> error(message: String) { Extraction failed. }
+    }
+  }
+
+  invariant {
+    after extract(program: p, conceptSpec: "User { invariant: email is unique }") -> ok(result: i, properties: props)
+    then props contains "post.users.email is unique"
   }
 }
 ```
@@ -276,7 +490,11 @@ concept ProgramAnalyzer [A] {
 
 **Purpose:** Cache the results of pure or read-only StorageProgram executions, keyed by program structure + storage state hash. Enables FlowTrace to skip re-executing unchanged subtrees.
 
-**Independent motivation:** Caching program results is useful for any repeated evaluation — not just FlowTrace. Handler idempotency checks, speculative execution, and test replay all benefit.
+**Independent motivation:** Caching program results is useful for any repeated evaluation — handler idempotency checks, speculative execution, and test replay all benefit.
+
+**Familiarity:** Content-addressable cache, HTTP cache, build cache, memo table.
+
+**Operational principle:** Store a result keyed by program hash + state hash, then lookup returns it. Invalidate by state or by program, then lookup misses.
 
 ```
 concept ProgramCache [C] {
@@ -343,13 +561,25 @@ concept ProgramCache [C] {
 }
 ```
 
+**Jackson check:**
+- Independence: No concept references.
+- Single purpose: Memoize program results.
+- Operational principle: store → lookup hits; invalidate → lookup misses.
+- State completeness: All fields used.
+- Action richness: 5 focused cache lifecycle actions.
+- Familiarity: Content-addressable cache.
+
 ---
 
-### 5. `FunctionalHandler [H]` — The Handler Contract
+### 5. `FunctionalHandler [H]` — The Handler Registry
 
-**Purpose:** Register concept handlers that return StoragePrograms instead of executing effects directly. This is the migration point — the concept that bridges existing imperative handlers with the new functional model.
+**Purpose:** Register concept handlers that return StoragePrograms instead of executing effects directly. The migration point between imperative and functional handler models.
 
-**Independent motivation:** The registry of which concepts have functional handlers is itself useful for governance, deployment decisions, and capability tracking — independent of whether programs are analyzed or cached.
+**Independent motivation:** The registry of which concepts have functional handlers is useful for governance, deployment decisions, and capability tracking — independent of whether programs are analyzed, cached, or verified.
+
+**Familiarity:** Service registry, dependency injection container.
+
+**Operational principle:** Register a handler for a concept/action pair declaring its purity, then build a program from input. The handler produces data, not effects.
 
 ```
 concept FunctionalHandler [H] {
@@ -364,14 +594,13 @@ concept FunctionalHandler [H] {
     handlers: set H
     concept: H -> String
     action: H -> String
-    programFactory: H -> String       // reference to the function that builds the StorageProgram
-    purity: H -> String               // declared purity: pure | read-only | read-write
-    verified: H -> Bool               // whether formal verification has passed
+    programFactory: H -> String
+    purity: H -> String
   }
 
   actions {
     action register(handler: H, concept: String, action: String, purity: String) {
-      -> ok() { Functional handler registered. }
+      -> ok() { Functional handler registered for this concept/action. }
       -> exists() { Handler for this concept/action already registered. }
     }
 
@@ -384,23 +613,10 @@ concept FunctionalHandler [H] {
       -> error(message: String) { Factory function threw during program construction. }
     }
 
-    action markVerified(handler: H, evidence: String) {
-      -> ok() { Handler marked as formally verified with evidence reference. }
-      -> notfound() { Handler does not exist. }
-    }
-
     action list(concept: String) {
       -> ok(handlers: String) {
         List all registered functional handlers for a concept.
       }
-    }
-
-    action checkPurity(handler: H) {
-      -> ok(declared: String, actual: String, consistent: Bool) {
-        Compare declared purity against static analysis of the
-        handler's built program. Flags mismatches.
-      }
-      -> notfound() { Handler does not exist. }
     }
   }
 
@@ -412,9 +628,122 @@ concept FunctionalHandler [H] {
 }
 ```
 
+**Jackson check:**
+- Independence: No concept references.
+- Single purpose: Register and invoke functional handlers.
+- Operational principle: Register → build → get program data.
+- State completeness: `handlers`, `concept`, `action`, `programFactory`, `purity` — all used.
+- Action richness: 3 crisp actions — register, build, list. No verification or analysis concerns.
+- Familiarity: Service registry.
+
 ---
 
 ## Syncs
+
+### Provider Registration
+
+Each analysis provider registers itself with ProgramAnalysis via a sync.
+
+```
+sync RegisterReadWriteSetProvider [eager]
+when {
+  ReadWriteSetProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "read-write-sets"; kind: "structural" ]
+}
+```
+
+```
+sync RegisterCommutativityProvider [eager]
+when {
+  CommutativityProvider/check: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "commutativity"; kind: "relational" ]
+}
+```
+
+```
+sync RegisterDeadBranchProvider [eager]
+when {
+  DeadBranchProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "dead-branches"; kind: "constraint" ]
+}
+```
+
+```
+sync RegisterInvariantExtractionProvider [eager]
+when {
+  InvariantExtractionProvider/extract: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "invariant-extraction"; kind: "formal" ]
+}
+```
+
+### Analysis Dispatch
+
+When ProgramAnalysis/run is called, dispatch to the appropriate provider.
+
+```
+sync DispatchReadWriteSets [eager]
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "read-write-sets" ]
+    => []
+}
+then {
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+}
+```
+
+```
+sync DispatchCommutativity [eager]
+when {
+  ProgramAnalysis/run: [ program: ?programA; provider: "commutativity" ]
+    => []
+}
+where {
+  bind(?programA as ?readWriteSetsA)
+  bind(?programA as ?readWriteSetsB)
+}
+then {
+  CommutativityProvider/check: [
+    programA: ?programA;
+    programB: ?programA;
+    readWriteSetsA: ?readWriteSetsA;
+    readWriteSetsB: ?readWriteSetsB
+  ]
+}
+```
+
+```
+sync DispatchDeadBranches [eager]
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "dead-branches" ]
+    => []
+}
+then {
+  DeadBranchProvider/analyze: [ program: ?program; constraints: "{}" ]
+}
+```
+
+```
+sync DispatchInvariantExtraction [eager]
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "invariant-extraction" ]
+    => []
+}
+then {
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: "" ]
+}
+```
 
 ### Core Execution Flow
 
@@ -425,7 +754,11 @@ when {
     => [ program: ?program ]
 }
 then {
-  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+  ProgramInterpreter/execute: [
+    interpreter: ?defaultInterpreter;
+    program: ?program;
+    snapshot: "current"
+  ]
 }
 ```
 
@@ -436,16 +769,18 @@ when {
     => [ program: ?program ]
 }
 then {
-  ProgramAnalyzer/computeComplexity: [ program: ?program ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
 }
 ```
+
+### Cache Integration
 
 ```
 sync CacheLookupBeforeExecute [eager]
 when {
   FunctionalHandler/build: [ handler: ?h ]
     => [ program: ?program ]
-  StorageProgram/analyze: [ program: ?program ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
     => [ purity: "read-only" ]
 }
 where {
@@ -462,7 +797,7 @@ sync CacheStoreAfterExecute [eager]
 when {
   ProgramInterpreter/execute: [ program: ?program ]
     => [ variant: ?variant; output: ?output ]
-  StorageProgram/analyze: [ program: ?program ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
     => [ purity: ?purity ]
 }
 where {
@@ -486,8 +821,8 @@ sync InvalidateCacheOnWrite [eager]
 when {
   ProgramInterpreter/execute: [ program: ?program ]
     => [ variant: ?variant ]
-  StorageProgram/analyze: [ program: ?program ]
-    => [ writeSet: ?writeSet; purity: "read-write" ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+    => [ purity: "read-write" ]
 }
 where {
   bind(stateHash() as ?stateHash)
@@ -499,37 +834,44 @@ then {
 
 ### Formal Verification Bridge
 
+These syncs are optional — only active when the `formal-verification` suite is present.
+
 ```
-sync ExtractPropertiesForVerification [eager]
+sync ExtractPropertiesOnRegister [eager]
 when {
   FunctionalHandler/register: [ handler: ?h; concept: ?concept; action: ?action ]
     => []
+  FunctionalHandler/build: [ handler: ?h ]
+    => [ program: ?program ]
 }
 then {
-  ProgramAnalyzer/extractInvariants: [ program: ?h; conceptSpec: ?concept ]
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: ?concept ]
 }
 ```
 
 ```
-sync VerificationResultToHandler [eager]
+sync PublishExtractedProperties [eager]
 when {
-  FormalProperty/prove: [ target_symbol: ?symbol ]
-    => [ status: "proved"; evidence_ref: ?evidence ]
-}
-where {
-  FunctionalHandler: { ?h concept: ?concept }
-  filter(?symbol = concat(?concept, "/", ?action))
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: ?concept ]
+    => [ properties: ?properties ]
 }
 then {
-  FunctionalHandler/markVerified: [ handler: ?h; evidence: ?evidence ]
+  FormalProperty/define: [
+    target_symbol: ?concept;
+    kind: "postcondition";
+    formula: ?properties;
+    language: "clef-invariant"
+  ]
 }
 ```
 
-### Conflict Detection for Concurrent Flows
+### FlowTrace Integration
 
 ```
-sync DetectConflictsBeforeParallelExecution [eager]
+sync FlowTraceParallelBranches [eager]
 when {
+  FlowTrace/build: [ flowId: ?flowId ]
+    => []
   FunctionalHandler/build: [ handler: ?hA ]
     => [ program: ?programA ]
   FunctionalHandler/build: [ handler: ?hB ]
@@ -539,14 +881,17 @@ where {
   filter(?hA != ?hB)
 }
 then {
-  ProgramAnalyzer/detectConflicts: [ programA: ?programA; programB: ?programB ]
+  CommutativityProvider/check: [
+    programA: ?programA;
+    programB: ?programB;
+    readWriteSetsA: "";
+    readWriteSetsB: ""
+  ]
 }
 ```
 
-### FlowTrace Integration
-
 ```
-sync FlowTraceUsesAnalysis [eager]
+sync FlowTraceDeadBranchPruning [eager]
 when {
   FlowTrace/build: [ flowId: ?flowId ]
     => []
@@ -554,7 +899,7 @@ when {
     => [ program: ?program ]
 }
 then {
-  ProgramAnalyzer/checkCommutes: [ programA: ?program; programB: ?program ]
+  DeadBranchProvider/analyze: [ program: ?program; constraints: "{}" ]
 }
 ```
 
@@ -568,15 +913,18 @@ derived MonadicConceptHandlers [T] {
   purpose {
     Compose the monadic handler infrastructure into a unified
     execution model where concept handlers return inspectable
-    StoragePrograms that are analyzed, cached, and interpreted —
-    enabling formal verification, FlowTrace optimization, and
-    safe concurrent execution.
+    StoragePrograms that are analyzed by pluggable providers,
+    cached, and interpreted — enabling formal verification,
+    FlowTrace optimization, and safe concurrent execution.
   }
 
   composes {
     StorageProgram [T]
     ProgramInterpreter [T]
-    ProgramAnalyzer [T]
+    ProgramAnalysis [T]
+    ReadWriteSetProvider [T]
+    CommutativityProvider [T]
+    DeadBranchProvider [T]
     ProgramCache [T]
     FunctionalHandler [T]
   }
@@ -585,15 +933,19 @@ derived MonadicConceptHandlers [T] {
     required: [
       build-and-execute,
       analyze-on-build,
-      invalidate-cache-on-write
+      invalidate-cache-on-write,
+      dispatch-read-write-sets,
+      register-read-write-set-provider
     ]
     recommended: [
       cache-lookup-before-execute,
       cache-store-after-execute,
-      extract-properties-for-verification,
-      verification-result-to-handler,
-      detect-conflicts-before-parallel-execution,
-      flow-trace-uses-analysis
+      register-commutativity-provider,
+      dispatch-commutativity,
+      register-dead-branch-provider,
+      dispatch-dead-branches,
+      flow-trace-parallel-branches,
+      flow-trace-dead-branch-pruning
     ]
   }
 
@@ -601,7 +953,7 @@ derived MonadicConceptHandlers [T] {
     action invoke(concept: String, action: String, input: String) {
       entry: FunctionalHandler/build matches on concept: ?concept, action: ?action
       triggers: [
-        StorageProgram/analyze(program: ?program),
+        ReadWriteSetProvider/analyze(program: ?program),
         ProgramInterpreter/execute(interpreter: "default", program: ?program, snapshot: "current")
       ]
     }
@@ -609,32 +961,32 @@ derived MonadicConceptHandlers [T] {
     action invokeWithDryRun(concept: String, action: String, input: String) {
       entry: FunctionalHandler/build matches on concept: ?concept, action: ?action
       triggers: [
-        StorageProgram/analyze(program: ?program),
+        ReadWriteSetProvider/analyze(program: ?program),
         ProgramInterpreter/dryRun(interpreter: "default", program: ?program, snapshot: "current")
       ]
     }
 
     query readWriteSets(concept: String, action: String) {
-      reads: StorageProgram/analyze(program: ?latestProgram)
+      reads: ReadWriteSetProvider/analyze(program: ?latestProgram)
     }
 
     query commutativity(conceptA: String, actionA: String, conceptB: String, actionB: String) {
-      reads: ProgramAnalyzer/checkCommutes(programA: ?pA, programB: ?pB)
+      reads: CommutativityProvider/check(programA: ?pA, programB: ?pB, readWriteSetsA: ?rwA, readWriteSetsB: ?rwB)
     }
 
     query cacheStats() {
       reads: ProgramCache/stats()
     }
 
-    query purityReport(concept: String) {
-      reads: FunctionalHandler/checkPurity(handler: ?h)
+    query analysisProviders() {
+      reads: ProgramAnalysis/listProviders()
     }
   }
 
   principle {
     after invoke(concept: c, action: a, input: i)
     then the handler builds a StorageProgram (no side effects)
-    and  the program is statically analyzed for read/write sets
+    and  the ReadWriteSetProvider extracts read/write sets
     and  the interpreter executes the program atomically
     and  if the program is read-only, the result is cached
     and  on re-invocation with same input and state, cache is hit
@@ -649,22 +1001,22 @@ derived MonadicConceptHandlers [T] {
 With MonadicConceptHandlers wired in, FlowTrace gains these specific optimizations:
 
 ### 1. Parallel Branch Tracing
-FlowTrace currently traces sync-triggered children **sequentially** because it can't know if they conflict. With `ProgramAnalyzer/checkCommutes`, it can determine disjoint write sets and trace branches **in parallel**.
+FlowTrace currently traces sync-triggered children **sequentially** because it can't know if they conflict. With `CommutativityProvider/check`, it can determine disjoint write sets and trace branches **in parallel**.
 
-**Where it happens:** `FlowTrace/build` consults `ProgramAnalyzer/detectConflicts` for sibling sync-triggered actions. If `disjoint: true`, children are traced concurrently.
+**Where it happens:** `FlowTraceParallelBranches` sync feeds commutativity data to FlowTrace. If `commutes: true`, children are traced concurrently.
 
 ### 2. Cached Subtree Reuse
 When re-tracing a flow (common during debugging), FlowTrace checks `ProgramCache/lookup` for each node. If the handler's program hash and storage state hash match a cached entry, the entire subtree is reused without re-execution.
 
-**Where it happens:** New sync `FlowTraceSubtreeCache` matches on `FlowTrace/build → ok` and `ProgramCache/lookup → hit` to short-circuit subtree reconstruction.
+**Where it happens:** `CacheLookupBeforeExecute` sync short-circuits execution for read-only programs with cached results.
 
 ### 3. Dead Branch Pruning
-FlowTrace currently evaluates every candidate sync to check if it fires. With `ProgramAnalyzer/findDeadBranches`, it can determine that certain variant branches are unreachable given current state, skipping entire sync subtrees.
+FlowTrace currently evaluates every candidate sync to check if it fires. With `DeadBranchProvider/analyze`, it can determine that certain variant branches are unreachable given current state, skipping entire sync subtrees.
 
-**Where it happens:** Before walking child syncs, FlowTrace calls `findDeadBranches` on the handler's program. Syncs that only trigger on dead-branch variants are marked `fired: false, reason: "unreachable variant"` without evaluation.
+**Where it happens:** `FlowTraceDeadBranchPruning` sync runs dead branch analysis for each handler in the flow. Syncs that only trigger on dead-branch variants are marked `fired: false, reason: "unreachable variant"` without evaluation.
 
 ### 4. Speculative "What-If" Traces
-Since handlers are now data, FlowTrace can build traces for **hypothetical** inputs — "what if User/create returned `exists` instead of `ok`?" — without executing anything. It just walks the program's branch structure.
+Since handlers are now data, FlowTrace can build traces for **hypothetical** inputs — "what if User/create returned `exists` instead of `ok`?" — without executing anything. It walks the program's branch structure.
 
 **Where it happens:** New action `FlowTrace/speculate(flowId, overrides)` that substitutes variant overrides into the program tree and follows the sync chain symbolically.
 
@@ -678,8 +1030,8 @@ suite:
   version: "1.0.0"
   description: >
     Monadic concept handler infrastructure — StoragePrograms as inspectable
-    data, interpreted execution, static analysis, memoization, and formal
-    verification integration.
+    data, interpreted execution, pluggable static analysis providers,
+    memoization, and formal verification integration.
 
 concepts:
   StorageProgram:
@@ -690,10 +1042,26 @@ concepts:
     spec: specs/monadic/program-interpreter.concept
     params:
       I: { as: InterpreterId, description: "Interpreter instance identifier" }
-  ProgramAnalyzer:
-    spec: specs/monadic/program-analyzer.concept
+  ProgramAnalysis:
+    spec: specs/monadic/program-analysis.concept
     params:
       A: { as: AnalysisId, description: "Analysis result identifier" }
+  ReadWriteSetProvider:
+    spec: specs/monadic/providers/read-write-set-provider.concept
+    params:
+      R: { as: ResultId, description: "Read/write set analysis result" }
+  CommutativityProvider:
+    spec: specs/monadic/providers/commutativity-provider.concept
+    params:
+      C: { as: ResultId, description: "Commutativity analysis result" }
+  DeadBranchProvider:
+    spec: specs/monadic/providers/dead-branch-provider.concept
+    params:
+      D: { as: ResultId, description: "Dead branch analysis result" }
+  InvariantExtractionProvider:
+    spec: specs/monadic/providers/invariant-extraction-provider.concept
+    params:
+      I: { as: ResultId, description: "Invariant extraction result" }
   ProgramCache:
     spec: specs/monadic/program-cache.concept
     params:
@@ -708,9 +1076,13 @@ syncs:
     - path: syncs/monadic/build-and-execute.sync
       description: "Execute a handler's StorageProgram after build"
     - path: syncs/monadic/analyze-on-build.sync
-      description: "Statically analyze every built program"
+      description: "Run ReadWriteSetProvider on every built program"
     - path: syncs/monadic/invalidate-cache-on-write.sync
       description: "Invalidate memoized results when storage mutates"
+    - path: syncs/monadic/dispatch-read-write-sets.sync
+      description: "Dispatch read-write-set analysis to provider"
+    - path: syncs/monadic/register-read-write-set-provider.sync
+      description: "Register the ReadWriteSetProvider with ProgramAnalysis"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute
@@ -718,15 +1090,24 @@ syncs:
     - path: syncs/monadic/cache-store-after-execute.sync
       name: CacheStoreAfterExecute
       description: "Memoize results of pure/read-only executions"
-    - path: syncs/monadic/extract-properties-for-verification.sync
-      name: ExtractPropertiesForVerification
-      description: "Feed handler programs into formal verification pipeline"
-    - path: syncs/monadic/detect-conflicts.sync
-      name: DetectConflictsBeforeParallelExecution
-      description: "Check concurrent programs for storage conflicts"
-    - path: syncs/monadic/flow-trace-uses-analysis.sync
-      name: FlowTraceUsesAnalysis
-      description: "Provide FlowTrace with commutativity data for parallel tracing"
+    - path: syncs/monadic/register-commutativity-provider.sync
+      name: RegisterCommutativityProvider
+      description: "Register the CommutativityProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-commutativity.sync
+      name: DispatchCommutativity
+      description: "Dispatch commutativity analysis to provider"
+    - path: syncs/monadic/register-dead-branch-provider.sync
+      name: RegisterDeadBranchProvider
+      description: "Register the DeadBranchProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-dead-branches.sync
+      name: DispatchDeadBranches
+      description: "Dispatch dead branch analysis to provider"
+    - path: syncs/monadic/flow-trace-parallel-branches.sync
+      name: FlowTraceParallelBranches
+      description: "Feed commutativity data to FlowTrace for parallel tracing"
+    - path: syncs/monadic/flow-trace-dead-branch-pruning.sync
+      name: FlowTraceDeadBranchPruning
+      description: "Feed dead branch data to FlowTrace for pruning"
 
 uses:
   - suite: formal-verification
@@ -735,13 +1116,14 @@ uses:
       - name: FormalProperty
         params: { P: { as: PropertyId } }
     syncs:
-      - path: syncs/monadic/verification-result-to-handler.sync
-        description: "Mark handlers verified when formal proofs complete"
-  - suite: infrastructure
-    optional: true
-    concepts:
-      - name: Cache
-        params: { C: { as: CacheId } }
+      - path: syncs/monadic/extract-properties-on-register.sync
+        description: "Extract invariants from handler programs on registration"
+      - path: syncs/monadic/publish-extracted-properties.sync
+        description: "Publish extracted invariants as FormalProperties"
+      - path: syncs/monadic/register-invariant-extraction-provider.sync
+        description: "Register InvariantExtractionProvider with ProgramAnalysis"
+      - path: syncs/monadic/dispatch-invariant-extraction.sync
+        description: "Dispatch invariant extraction to provider"
 
 dependencies:
   - name: clef-kernel
@@ -752,19 +1134,17 @@ dependencies:
 
 ## Migration Path
 
-### Phase approach (by logical scope, not ordering):
+Each scope is independently deployable and independently valuable.
 
-**Scope A — Foundation:** Create StorageProgram and ProgramInterpreter concepts, handlers, and the `build-and-execute` sync. This gives the basic "handlers as data → interpreted execution" loop. Existing imperative handlers continue working unchanged.
+**Scope A — Foundation:** Create StorageProgram, FunctionalHandler, ProgramInterpreter, and the `build-and-execute` sync. This gives the basic "handlers as data → interpreted execution" loop. Existing imperative handlers continue working unchanged.
 
-**Scope B — Analysis:** Add ProgramAnalyzer and wire it via `analyze-on-build`. This enables read/write set extraction and commutativity checks but doesn't change execution behavior.
+**Scope B — Base Analysis:** Add ProgramAnalysis, ReadWriteSetProvider, and the `analyze-on-build` sync. Every built program gets read/write set extraction. No behavior change — just information.
 
 **Scope C — Caching:** Add ProgramCache and the cache syncs. Pure/read-only programs start getting memoized. FlowTrace begins benefiting from cached subtrees.
 
-**Scope D — Verification Bridge:** Wire to formal-verification suite. Handler programs get automatically converted to FormalProperties. Verification results flow back as `markVerified`.
+**Scope D — Advanced Analysis Providers:** Add CommutativityProvider and DeadBranchProvider. These are recommended syncs — they enhance FlowTrace with parallel tracing and dead branch pruning. Deployments that don't need these skip them.
 
-**Scope E — FlowTrace Integration:** Add the FlowTrace-specific syncs and the `speculate` action. This is where the full performance gains materialize — parallel tracing, dead branch pruning, speculative what-if.
-
-Each scope is independently deployable and independently valuable. The recommended syncs in the suite manifest reflect this — `build-and-execute` is required, everything else is recommended and additive.
+**Scope E — Formal Verification Bridge:** Add InvariantExtractionProvider and wire to the `formal-verification` suite. Handler programs get automatically converted to FormalProperties. Only active when formal-verification suite is present (optional `uses` dependency).
 
 ---
 
@@ -796,9 +1176,14 @@ Note: no `storage` parameter. The handler never sees storage — it only builds 
 specs/monadic/
   storage-program.concept
   program-interpreter.concept
-  program-analyzer.concept
+  program-analysis.concept
   program-cache.concept
   functional-handler.concept
+  providers/
+    read-write-set-provider.concept
+    commutativity-provider.concept
+    dead-branch-provider.concept
+    invariant-extraction-provider.concept
 
 syncs/monadic/
   build-and-execute.sync
@@ -806,19 +1191,32 @@ syncs/monadic/
   cache-lookup-before-execute.sync
   cache-store-after-execute.sync
   invalidate-cache-on-write.sync
-  extract-properties-for-verification.sync
-  verification-result-to-handler.sync
-  detect-conflicts.sync
-  flow-trace-uses-analysis.sync
+  dispatch-read-write-sets.sync
+  dispatch-commutativity.sync
+  dispatch-dead-branches.sync
+  dispatch-invariant-extraction.sync
+  register-read-write-set-provider.sync
+  register-commutativity-provider.sync
+  register-dead-branch-provider.sync
+  register-invariant-extraction-provider.sync
+  extract-properties-on-register.sync
+  publish-extracted-properties.sync
+  flow-trace-parallel-branches.sync
+  flow-trace-dead-branch-pruning.sync
 
 derived/monadic-concept-handlers.derived
 
 handlers/ts/monadic/
   storage-program.handler.ts
   program-interpreter.handler.ts
-  program-analyzer.handler.ts
+  program-analysis.handler.ts
   program-cache.handler.ts
   functional-handler.handler.ts
+  providers/
+    read-write-set-provider.handler.ts
+    commutativity-provider.handler.ts
+    dead-branch-provider.handler.ts
+    invariant-extraction-provider.handler.ts
 
 runtime/
   storage-program.ts          # StorageProgram<A> type + builder DSL
