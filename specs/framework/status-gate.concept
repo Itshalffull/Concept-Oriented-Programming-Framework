@@ -1,0 +1,118 @@
+@version(1)
+concept StatusGate [G] {
+
+  purpose {
+    Report verification and quality status to an external gate that
+    controls whether a code change is accepted. Provider-agnostic:
+    the same report action works for CI exit codes, GitHub status
+    checks, GitLab commit statuses, or webhook endpoints.
+  }
+
+  state {
+    gates: set G
+    target: G -> String
+    provider: G -> String
+    status: G -> String                   // pending | passing | failing | error
+    context: G -> String                  // e.g. "clef/verify" or "clef/verify/formal"
+    details: G -> option String           // human-readable summary
+    reported_at: G -> DateTime
+    updated_at: G -> option DateTime
+    completed: G -> Bool
+    url: G -> option String               // link to full results (e.g. Score dashboard)
+
+    config {
+      default_provider: option String     // from .clef/config.yaml gate.provider
+      default_url: option String          // from .clef/config.yaml gate.url
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action report(target: String, context: String, status: String, details: String, provider: String, url: String) {
+      -> ok(gate: G, target: String, provider: String) {
+        Create a new gate entry for the given target (commit SHA, branch, PR number)
+        and dispatch the status to the configured provider. If provider is empty,
+        uses the default_provider from config, falling back to "exit-code".
+      }
+      -> provider_error(provider: String, message: String) {
+        The provider failed to accept the status report. The gate entry is still
+        created locally with status "error" so it can be retried.
+      }
+    }
+
+    action update(gate: G, status: String, details: String) {
+      -> ok(gate: G, status: String) {
+        Update the status of an existing gate. Dispatches the new status to
+        the same provider used for the initial report.
+      }
+      -> not_found(gate: G) {
+        No gate exists with this identifier.
+      }
+      -> already_completed(gate: G) {
+        The gate has already been marked complete and cannot be updated.
+      }
+    }
+
+    action complete(gate: G, final_status: String, details: String) {
+      -> ok(gate: G, accepted: Bool) {
+        Mark the gate as complete with a final status. Returns whether
+        the change is accepted (final_status is "passing"). Once completed,
+        no further updates are allowed.
+      }
+      -> not_found(gate: G) {
+        No gate exists with this identifier.
+      }
+      -> already_completed(gate: G) {
+        The gate was already completed previously.
+      }
+    }
+
+    action configure(provider: String, url: String) {
+      -> ok(provider: String) {
+        Set the default provider and optional results URL for all future
+        gate reports. Persisted in concept state so it survives across
+        CLI invocations.
+      }
+    }
+
+    action get_status(gate: G) {
+      -> ok(gate: G, target: String, status: String, provider: String, details: String, completed: Bool) {
+        Return the current state of a gate entry.
+      }
+      -> not_found(gate: G) {
+        No gate exists with this identifier.
+      }
+    }
+
+    action list(target: String) {
+      -> ok(gates: Bytes) {
+        Return all gate entries for a given target (e.g. all checks
+        for a specific commit SHA), serialized as a JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after report(target: "abc123", context: "clef/verify", status: "passing", details: "3 proved", provider: "exit-code", url: "")
+      -> ok(gate: g, target: "abc123", provider: "exit-code")
+    then get_status(gate: g)
+      -> ok(gate: g, target: "abc123", status: "passing", provider: "exit-code", details: "3 proved", completed: false)
+  }
+
+  invariant {
+    after report(target: "abc123", context: "clef/verify", status: "passing", details: "all green", provider: "exit-code", url: "")
+      -> ok(gate: g, target: "abc123", provider: "exit-code")
+    then complete(gate: g, final_status: "passing", details: "done")
+      -> ok(gate: g, accepted: true)
+  }
+
+  invariant {
+    after complete(gate: g, final_status: "passing", details: "done")
+      -> ok(gate: g, accepted: true)
+    then update(gate: g, status: "failing", details: "late failure")
+      -> already_completed(gate: g)
+  }
+}
