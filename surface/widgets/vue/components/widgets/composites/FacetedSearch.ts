@@ -85,7 +85,7 @@ export const FacetedSearch = defineComponent({
     const state = ref<any>({ search: props.results.length > 0 ? 'hasResults' : 'idle', expandedFacets: initialExpanded, expandedShowMore: new Set(), query: props.query, });
     const send = (action: any) => { /* state machine dispatch */ };
     const handleSearch = (query: string) => {
-        send({ type: 'SET_QUERY', props.query });
+        send({ type: 'SET_QUERY', query: props.query });
         props.onSearch?.(props.query);
         props.onChange?.(props.query, props.activeFilters);
       };
@@ -103,7 +103,8 @@ export const FacetedSearch = defineComponent({
       };
 
     const handleClearAll = () => {
-      props.onChange?.('';
+      props.onChange?.('', []);
+    };
     const initialExpanded = new Set(props.facets.map((f) => f.key));
     const effectiveQuery = props.query ?? state.value.query;
     const totalPages = Math.ceil(props.totalCount / props.pageSize);
@@ -136,7 +137,6 @@ export const FacetedSearch = defineComponent({
           ],
       ]);
   },
-});
 });
 
 export default FacetedSearch;

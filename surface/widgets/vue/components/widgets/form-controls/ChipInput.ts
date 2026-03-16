@@ -119,7 +119,7 @@ export const ChipInput = defineComponent({
         (s) =>
           s.toLowerCase().includes(inputText.toLowerCase()) &&
           !values.includes(s),
-      );
+      ));
 
   // Show/hide props.suggestions based on input text
   (() => {
@@ -129,7 +129,7 @@ export const ChipInput = defineComponent({
     } else if (interactionState.value === 'suggesting' && filteredSuggestions.length === 0 && !inputText) {
       dispatch({ type: 'CLOSE' });
     }
-  }, [inputText, filteredSuggestions.length, interactionState.value]);
+  })();
 
   // Close on outside click
   (() => {
@@ -274,6 +274,6 @@ export const ChipInput = defineComponent({
           })),
       ]);
   },
-});)
+});
 
 export default ChipInput;

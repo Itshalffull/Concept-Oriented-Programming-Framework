@@ -35,11 +35,7 @@ transportAdapterScaffoldGenCommand
 
 transportAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : TransportAdapterScaffoldGen 
- inputKind : TransportConfig 
- outputKind : TransportAdapter 
- capabilities : [ http , websocket , worker , in-process ]')
+  .description('Return static metadata for PluginRegistry name : TransportAdapterScaffoldGen inputKind : TransportConfig outputKind : TransportAdapter capabilities : [ http , websocket , worker , in-process ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

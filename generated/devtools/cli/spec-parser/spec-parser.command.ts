@@ -9,9 +9,7 @@ export const specParserCommand = new Command('spec-parser')
 
 specParserCommand
   .command('check')
-  .description('Tokenize the source string , then run the recursive descent 
- parser to produce a ConceptAST Assign a unique spec ID 
- Store the spec reference and its AST')
+  .description('Tokenize the source string, then run the recursive descent parser to produce a ConceptAST. Assign a unique spec ID. Store the spec reference and its AST.')
   .argument('<source>', 'Source')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {

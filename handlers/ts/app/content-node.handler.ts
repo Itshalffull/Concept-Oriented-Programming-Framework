@@ -34,6 +34,7 @@ function expandNodeRecord(record: Record<string, unknown>): Record<string, unkno
 export const contentNodeHandler: ConceptHandler = {
   async create(input, storage) {
     const node = input.node as string;
+    const type = (input.type as string | undefined) ?? '';
     const content = (input.content as string | undefined) ?? '';
     const metadata = (input.metadata as string | undefined) ?? '';
     const createdBy = (input.createdBy as string | undefined) ?? 'system';
@@ -42,6 +43,7 @@ export const contentNodeHandler: ConceptHandler = {
     const now = new Date().toISOString();
     await storage.put('node', node, {
       node,
+      type,
       content,
       metadata,
       createdBy,

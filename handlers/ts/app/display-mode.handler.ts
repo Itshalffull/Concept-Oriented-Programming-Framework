@@ -170,6 +170,58 @@ export const displayModeHandler: ConceptHandler = {
     return { variant: 'ok', modes: JSON.stringify(matching) };
   },
 
+  async configureFieldDisplay(input, storage) {
+    const mode = input.mode as string;
+    const field = input.field as string;
+    const config = input.config as string;
+
+    let record = await storage.get('displayMode', mode);
+    if (!record) {
+      // Auto-create mode record when configuring field display directly
+      record = {
+        mode,
+        name: mode,
+        mode_id: mode,
+        schema: 'ContentNode',
+        layout: null,
+        component_mapping: null,
+        placements: '[]',
+        role_visibility: null,
+        cacheable: null,
+      };
+    }
+
+    const placements = record.placements
+      ? (typeof record.placements === 'string' ? JSON.parse(record.placements as string) : record.placements) as Array<Record<string, unknown>>
+      : [];
+    const idx = placements.findIndex((p: Record<string, unknown>) => p.field === field);
+    if (idx >= 0) {
+      placements[idx] = { field, config };
+    } else {
+      placements.push({ field, config });
+    }
+
+    await storage.put('displayMode', mode, {
+      ...record,
+      placements: JSON.stringify(placements),
+    });
+
+    return { variant: 'ok', mode };
+  },
+
+  async renderInMode(input, storage) {
+    const mode = input.mode as string;
+    const entity = input.entity as string;
+
+    const record = await storage.get('displayMode', mode);
+    const placements = record?.placements
+      ? (typeof record.placements === 'string' ? JSON.parse(record.placements as string) : record.placements) as Array<Record<string, unknown>>
+      : [];
+
+    const output = JSON.stringify({ entity, mode, placements });
+    return { variant: 'ok', output };
+  },
+
   // Backward-compat shim: old seeds call defineMode
   async defineMode(input, storage) {
     const mode = input.mode as string;

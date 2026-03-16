@@ -284,6 +284,7 @@ export const deploymentHealthHandler: ConceptHandler = {
       windowA: { snapshots: inA.length, errorRate: errorRateA, avgAlerts: alertRateA },
       windowB: { snapshots: inB.length, errorRate: errorRateB, avgAlerts: alertRateB },
       regressions,
+      runtimeChanges: [] as string[],
     };
 
     return { variant: 'ok', comparison: JSON.stringify(comparison) };

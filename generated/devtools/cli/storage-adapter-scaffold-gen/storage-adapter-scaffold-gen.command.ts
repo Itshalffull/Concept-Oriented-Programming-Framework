@@ -35,11 +35,7 @@ storageAdapterScaffoldGenCommand
 
 storageAdapterScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : StorageAdapterScaffoldGen 
- inputKind : StorageConfig 
- outputKind : StorageAdapter 
- capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]')
+  .description('Return static metadata for PluginRegistry name : StorageAdapterScaffoldGen inputKind : StorageConfig outputKind : StorageAdapter capabilities : [ sqlite , postgresql , redis , dynamodb , memory ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

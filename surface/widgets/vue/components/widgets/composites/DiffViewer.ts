@@ -161,35 +161,29 @@ export const DiffViewer = defineComponent({
           'data-mode': modeDisplay,
           'tabindex': 0,
         }, [
-          state.value.mode === 'sideBySide' ? (
-            <div data-part="side-by-side-container">
-              <div data-part="left-header">Original</div>
-              <div data-part="right-header">Modified</div>
-              <div role="region" aria-label="Original version" data-part="left-pane">
-                {diffLines
+          state.value.mode === 'sideBySide' ? h('div', { 'data-part': 'side-by-side-container' }, [
+              h('div', { 'data-part': 'left-header' }, 'Original'),
+              h('div', { 'data-part': 'right-header' }, 'Modified'),
+              h('div', { 'role': 'region', 'aria-label': 'Original version', 'data-part': 'left-pane' }, [
+                ...diffLines
                   .filter((l) => l.type !== 'added')
-                  .map((line, i) => (
-                    <div
-                      key={`left-${i}`}
-                      data-part={
-                        line.type === 'removed' ? 'removed-line' : 'unchanged-line'
-                      }
-                      data-line={line.oldLineNumber}
-                      aria-label={
-                        line.type === 'removed'
+                  .map((line, i) => h('div', {
+                      'data-part': line.type === 'removed' ? 'removed-line' : 'unchanged-line',
+                      'data-line': line.oldLineNumber,
+                      'aria-label': line.type === 'removed'
                           ? `Removed line ${line.oldLineNumber}: ${line.content}`
-                          : `Line ${line.oldLineNumber}`
-                      }
-                    >
-                      {props.showLineNumbers ? h('span', { 'data-part': 'line-number', 'aria-hidden': 'true' }, [
-              line.oldLineNumber,
+                          : `Line ${line.oldLineNumber}`,
+                    }, [
+                      props.showLineNumbers ? h('span', { 'data-part': 'line-number', 'aria-hidden': 'true' }, [
+                        line.oldLineNumber,
+                      ]) : null,
+                    ])),
+              ]),
             ]) : null,
         ]),
         slots.default?.(),
       ]);
   },
 });
-  },
-});))
 
 export default DiffViewer;

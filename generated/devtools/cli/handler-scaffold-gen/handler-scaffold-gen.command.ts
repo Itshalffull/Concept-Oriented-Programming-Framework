@@ -34,11 +34,7 @@ handlerScaffoldGenCommand
 
 handlerScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : HandlerScaffoldGen 
- inputKind : HandlerConfig 
- outputKind : HandlerImpl 
- capabilities : [ impl-ts , conformance-test , storage-patterns ]')
+  .description('Return static metadata for PluginRegistry name : HandlerScaffoldGen inputKind : HandlerConfig outputKind : HandlerImpl capabilities : [ impl-ts , conformance-test , storage-patterns ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

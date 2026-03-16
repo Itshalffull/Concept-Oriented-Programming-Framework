@@ -5,14 +5,11 @@
 import { Command } from 'commander';
 
 export const syncParserCommand = new Command('sync-parser')
-  .description('Parse sync files into structured ASTs and validate 
- against concept manifests');
+  .description('Parse sync files into structured ASTs and validate against concept manifests');
 
 syncParserCommand
   .command('parse')
-  .description('Tokenize and parse the sync source Resolve all 
- concept and action references against the provided 
- manifests Store the sync reference and its AST')
+  .description('Tokenize and parse the sync source Resolve all concept and action references against the provided manifests Store the sync reference and its AST')
   .requiredOption('--source <source>', 'Source')
   .requiredOption('--manifests <manifests>', 'Manifests')
   .option('--json', 'Output as JSON')
@@ -23,7 +20,6 @@ syncParserCommand
 
 export const syncParserCommandTree = {
   group: 'sync-parser',
-  description: 'Parse sync files into structured ASTs and validate 
- against concept manifests',
+  description: 'Parse sync files into structured ASTs and validate against concept manifests',
   commands: [{ action: 'parse', command: 'parse' }],
 };

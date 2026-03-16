@@ -117,21 +117,21 @@ export const ConditionBuilder = defineComponent({
             'data-row-index': index,
             'aria-label': `Field for condition ${index}`,
           }, [
-            ...props.renderFieldSelector ? props.renderFieldSelector(index, row.field) : (
-                      <select
-                        value={row.field ?? ''}
-                        aria-label={`Field for condition ${index}`}
-                        onChange={(e) => {
+            props.renderFieldSelector ? props.renderFieldSelector(index, row.field) : h('select', {
+                        'value': row.field ?? '',
+                        'aria-label': `Field for condition ${index}`,
+                        'onChange': (e) => {
                           const next = [...conditions];
                           next[index] = { field: e.target.value, operator: undefined, value: undefined };
                           props.onConditionsChange?.(next);
                           send({ type: 'CHANGE_FIELD' });
-                        }}
-                      >
-                        <option value="">Select field...</option>
-                        {props.fields.map((f) => h('option', { 'value': f.name }, [
+                        },
+                      }, [
+                        h('option', { value: '' }, 'Select field...'),
+                        ...props.fields.map((f) => h('option', { 'value': f.name }, [
                 f.name,
               ])),
+                      ]),
           ]),
           h('div', {
             'data-part': 'operator-selector',
@@ -139,22 +139,22 @@ export const ConditionBuilder = defineComponent({
             'data-field-type': fieldDef?.type,
             'aria-label': `Operator for condition ${index}`,
           }, [
-            ...props.renderOperatorSelector ? props.renderOperatorSelector(index, row.field, row.operator) : (
-                      <select
-                        value={row.operator ?? ''}
-                        aria-label={`Operator for condition ${index}`}
-                        disabled={!row.field}
-                        onChange={(e) => {
+            props.renderOperatorSelector ? props.renderOperatorSelector(index, row.field, row.operator) : h('select', {
+                        'value': row.operator ?? '',
+                        'aria-label': `Operator for condition ${index}`,
+                        'disabled': !row.field,
+                        'onChange': (e) => {
                           const next = [...conditions];
                           next[index] = { ...next[index], operator: e.target.value };
                           props.onConditionsChange?.(next);
                           send({ type: 'CHANGE_OPERATOR' });
-                        }}
-                      >
-                        <option value="">Operator...</option>
-                        {(fieldDef?.operators ?? []).map((op) => h('option', { 'value': op }, [
+                        },
+                      }, [
+                        h('option', { value: '' }, 'Operator...'),
+                        ...(fieldDef?.operators ?? []).map((op) => h('option', { 'value': op }, [
                 op,
               ])),
+                      ]),
           ]),
           h('div', {
             'data-part': 'value-input',
@@ -163,21 +163,19 @@ export const ConditionBuilder = defineComponent({
             'data-operator': row.operator,
             'aria-label': `Value for condition ${index}`,
           }, [
-            props.renderValueInput ? props.renderValueInput(index, row.field, row.operator, row.value) : (
-                      <input
-                        type="text"
-                        value={row.value ?? ''}
-                        placeholder="Value..."
-                        aria-label={`Value for condition ${index}`}
-                        disabled={!row.operator}
-                        onChange={(e) => {
+            props.renderValueInput ? props.renderValueInput(index, row.field, row.operator, row.value) : h('input', {
+                        'type': 'text',
+                        'value': row.value ?? '',
+                        'placeholder': 'Value...',
+                        'aria-label': `Value for condition ${index}`,
+                        'disabled': !row.operator,
+                        'onChange': (e) => {
                           const next = [...conditions];
                           next[index] = { ...next[index], value: e.target.value };
                           props.onConditionsChange?.(next);
                           send({ type: 'CHANGE_VALUE' });
-                        }}
-                      />
-                    ),
+                        },
+                      }),
           ]),
           !props.readOnly && props.conditions.length > 1 ? h('button', {
               'type': 'button',
@@ -191,7 +189,5 @@ export const ConditionBuilder = defineComponent({
       ]);
   },
 });
-  },
-});)
 
 export default ConditionBuilder;

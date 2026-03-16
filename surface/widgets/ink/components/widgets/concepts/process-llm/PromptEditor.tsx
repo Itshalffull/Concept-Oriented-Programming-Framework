@@ -134,7 +134,7 @@ export function PromptEditor({
           <Text color="gray">Variables: </Text>
           {uniqueVars.map((v, i) => (
             <Text key={v}>
-              <Text color="magenta">{'{{'}}{v}{{'}}'}}</Text>
+              <Text color="magenta">{`{{${v}}}`}</Text>
               {i < uniqueVars.length - 1 && <Text color="gray"> </Text>}
             </Text>
           ))}

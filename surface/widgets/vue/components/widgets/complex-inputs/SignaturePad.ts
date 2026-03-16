@@ -164,7 +164,7 @@ export const SignaturePad = defineComponent({
           'style': {
           width: `${width}px`,
           height: `${height}px`,
-          props.backgroundColor,
+          backgroundColor: props.backgroundColor,
           cursor: props.disabled ? 'not-allowed' : 'crosshair',
           touchAction: 'none',
         },
@@ -184,7 +184,7 @@ export const SignaturePad = defineComponent({
           'data-visible': machine.value.content !== 'empty' ? 'true' : 'false',
           'onClick': clearCanvas,
         }, 'Clear'),
-        props.name && <input type="hidden" props.name={props.name} value={dataUrlRef.value ?? ''} />,
+        props.name ? h('input', { type: 'hidden', name: props.name, value: dataUrlRef.value ?? '' }) : null,
       ]);
   },
 });

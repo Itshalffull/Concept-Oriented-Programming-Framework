@@ -24,40 +24,40 @@ derived GraphAnalysisExplorer [T] {
 
   surface {
     action analyze(algorithm: String, config: option String) {
-      matches: GraphAnalysis/analyze + AnalysisOverlay/apply + AnalysisReport/generate
+      matches: GraphAnalysis/analyze
     }
 
     action showOverlay(kind: String) {
-      matches: AnalysisOverlay/apply with selected overlay kind
+      matches: AnalysisOverlay/apply(kind: kind)
     }
 
     action hideOverlay(overlay: ID) {
-      matches: AnalysisOverlay/toggle to hide
+      matches: AnalysisOverlay/toggle(overlay: overlay)
     }
 
     action viewReport(format: String) {
-      matches: AnalysisReport/generate with selected format
+      matches: AnalysisReport/generate(format: format)
     }
 
     action compareRuns(results: list ID) {
-      matches: AnalysisReport/compare across multiple analysis results
+      matches: AnalysisReport/compare(results: results)
     }
 
-    query listAlgorithms(category: option String) -> {
-      reads: GraphAnalysis/listAlgorithms
+    query listAlgorithms(category: option String) {
+      reads: GraphAnalysis/listAlgorithms(category: category)
     }
 
-    query listOverlays(canvas: ID) -> {
-      reads: AnalysisOverlay/listOverlays
+    query listOverlays(canvas: ID) {
+      reads: AnalysisOverlay/listOverlays(canvas: canvas)
     }
 
-    query listReports(result: option ID) -> {
-      reads: AnalysisReport/listReports
+    query listReports(result: option ID) {
+      reads: AnalysisReport/listReports(result: result)
     }
   }
 
   principle {
-    after analyze("pagerank") then canvas nodes are sized by importance
-    and a ranked score table is available in the report panel
+    after analyze(algorithm: pagerank)
+    then showOverlay(kind: importance) produces visual overlay
   }
 }

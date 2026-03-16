@@ -1,4 +1,4 @@
-derived RuntimeAssembly {
+derived RuntimeAssembly [R] {
   purpose {
     Provide a reusable assembly boundary for bringing up a ui-app shell
     from declarative runtime profiles, destination catalogs, platform
@@ -18,24 +18,22 @@ derived RuntimeAssembly {
 
   syncs {
     required: [
-      NavigatorGoMountsHost
-      NavigatorGoUnmountsPrevious
-      HostMountCreatesBinding
-      HostUnmountDestroysMachines
+      navigator-go-mounts-host
+      navigator-go-unmounts-previous
+      host-mount-creates-binding
+      host-unmount-destroys-machines
     ]
     recommended: [
-      NavigatorToPlatform
-      PlatformEventToNavigator
-      ShellInitCreatesRootSurface
+      navigator-to-platform
+      platform-event-to-navigator
+      shell-init-creates-root-surface
     ]
   }
 
   surface {
-    queries {
-      query profile(name: String) -> RuntimeProfile/resolve(name: name)
-      query destinations() -> DestinationCatalog/list()
-      query bindings(platform: String) -> PlatformBindingCatalog/list(platform: platform)
-    }
+    query profile(name: String) -> RuntimeProfile/resolve(name: name)
+    query destinations() -> DestinationCatalog/list()
+    query bindings(platform: String) -> PlatformBindingCatalog/list(platform: platform)
   }
 
   principle {

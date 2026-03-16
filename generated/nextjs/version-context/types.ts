@@ -96,4 +96,4 @@ export const getNoContext = (user: string): VersionContextGetOutput =>
   ({ variant: 'no_context', user } as VersionContextGetOutput);
 
 export const resolveForOk = (fields: string, source_space: string): VersionContextResolveForOutput =>
-  ({ variant: 'ok', fields, source_space } as VersionContextResolveForOutput);
+  ({ variant: 'ok', fields, source_space, source: source_space } as VersionContextResolveForOutput);

@@ -142,9 +142,10 @@ describe('Coordination Concepts', () => {
     expect(ast.name).toBe('Runtime');
     expect(ast.typeParams).toEqual(['I']);
     expect(ast.version).toBe(1);
-    expect(ast.actions).toHaveLength(6);
+    expect(ast.actions).toHaveLength(9);
     expect(ast.actions.map(a => a.name)).toEqual([
-      'provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy', 'healthCheck',
+      'provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy',
+      'updateEndpoint', 'getEndpoint', 'configureDependencies', 'healthCheck',
     ]);
     // provision has 3 variants: ok, alreadyProvisioned, provisionFailed
     expect(ast.actions[0].variants).toHaveLength(3);
@@ -304,7 +305,7 @@ describe('Provider Concepts', () => {
     const ast = readProvider('vercel-runtime.concept');
     expect(ast.name).toBe('VercelRuntime');
     expect(ast.typeParams).toEqual(['V']);
-    expect(ast.actions).toHaveLength(5);
+    expect(ast.actions).toHaveLength(6);
     expect(ast.actions[0].variants).toHaveLength(2);
     expect(ast.actions[1].variants).toHaveLength(2);
     expect(ast.invariants).toHaveLength(1);
@@ -913,7 +914,7 @@ describe('Suite YAML', () => {
 
     // Verify all concept spec paths reference existing files
     const specPaths = content.match(/spec:\s+\.\/[\w/.-]+\.concept/g) || [];
-    expect(specPaths.length).toBe(41);
+    expect(specPaths.length).toBe(43);
     for (const match of specPaths) {
       const relPath = match.replace('spec: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);
@@ -922,7 +923,7 @@ describe('Suite YAML', () => {
 
     // Verify all sync paths reference existing files
     const syncPaths = content.match(/path:\s+\.\/syncs\/[\w/.-]+\.sync/g) || [];
-    expect(syncPaths.length).toBe(95);
+    expect(syncPaths.length).toBe(98);
     for (const match of syncPaths) {
       const relPath = match.replace('path: ', '').trim();
       const fullPath = resolve(DEPLOY_DIR, relPath);

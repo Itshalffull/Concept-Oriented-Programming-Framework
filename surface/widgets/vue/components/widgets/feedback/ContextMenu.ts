@@ -42,7 +42,7 @@ export const ContextMenu = defineComponent({
   name: 'ContextMenu',
 
   props: {
-    items: { type: Array as PropType<any[]>, default: () => ([], onSelect, children, ...rest) },
+    items: { type: Array as PropType<any[]>, default: () => [] },
   },
 
   emits: ['select'],
@@ -129,7 +129,7 @@ export const ContextMenu = defineComponent({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  };
+  })();
 
     return (): VNode =>
       h('div', {
@@ -147,6 +147,6 @@ export const ContextMenu = defineComponent({
         item.label,
       ]);
   },
-});)
+});
 
 export default ContextMenu;

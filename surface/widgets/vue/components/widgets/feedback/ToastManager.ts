@@ -59,13 +59,13 @@ export const ToastManager = defineComponent({
         'data-placement': props.placement,
         'data-surface-widget': '',
         'data-widget-name': 'toast-manager',
-        'style': { props.gap },
+        'style': { gap: `${props.gap}px` },
       }, [
         h('div', {
           'data-part': 'list',
           'data-placement': props.placement,
           'data-count': visibleToasts.length,
-          'style': { display: 'flex', flexDirection: 'column', props.gap },
+          'style': { display: 'flex', flexDirection: 'column', gap: `${props.gap}px` },
         }, [
           ...visibleToasts.map((item, index) => h('div', { 'data-part': 'item', 'data-index': index }, [
               props.renderToast

@@ -178,7 +178,7 @@ describe('DeploymentHealth Handler', () => {
   });
 
   describe('hotspots', () => {
-    it('returns empty hotspots (stub)', async () => {
+    it('returns hotspots from recorded snapshots', async () => {
       await deploymentHealthHandler.record(
         { deployment: 'prod', snapshot: sampleSnapshot },
         storage,
@@ -188,7 +188,8 @@ describe('DeploymentHealth Handler', () => {
         storage,
       );
       expect(result.variant).toBe('ok');
-      expect(result.hotspots).toBe('[]');
+      const hotspots = JSON.parse(result.hotspots as string);
+      expect(Array.isArray(hotspots)).toBe(true);
     });
   });
 

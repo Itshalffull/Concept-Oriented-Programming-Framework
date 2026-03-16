@@ -36,11 +36,7 @@ syncScaffoldGenCommand
 
 syncScaffoldGenCommand
   .command('register')
-  .description('Return static metadata for PluginRegistry 
- name : SyncScaffoldGen 
- inputKind : SyncConfig 
- outputKind : SyncSpec 
- capabilities : [ sync-spec , when-clause , where-clause , then-clause ]')
+  .description('Return static metadata for PluginRegistry name : SyncScaffoldGen inputKind : SyncConfig outputKind : SyncSpec capabilities : [ sync-spec , when-clause , where-clause , then-clause ]')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     const result = await globalThis.kernel.handleRequest({ method: 'register', ...opts });

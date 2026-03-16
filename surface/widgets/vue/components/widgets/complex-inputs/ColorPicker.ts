@@ -65,7 +65,7 @@ export const ColorPicker = defineComponent({
     const commitColor = () => {
     const hex = hslToHex(machine.value.hue, machine.value.saturation, machine.value.lightness);
     setColorValue(hex);
-  }, [machine.value.hue, machine.value.saturation, machine.value.lightness, setColorValue]);
+  };
 
   const handleAreaPointer = (e: PointerEvent) => {
       const area = areaRef.value;
@@ -138,8 +138,7 @@ export const ColorPicker = defineComponent({
       send({ type: 'SET_LIGHTNESS', value: hsl.l });
     };
 
-  const handleEyedropper = (
-async () => {
+  const handleEyedropper = async () => {
     if (typeof window === 'undefined') return;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -176,7 +175,7 @@ async () => {
             'style': { backgroundColor: colorValue },
           }),
         ]),
-        props.name && <input type="hidden" props.name={props.name} props.value={colorValue} />,
+        props.name ? h('input', { type: 'hidden', name: props.name, value: colorValue }) : null,
         isOpen ? h('div', {
             'data-part': 'positioner',
             'data-state': 'open',

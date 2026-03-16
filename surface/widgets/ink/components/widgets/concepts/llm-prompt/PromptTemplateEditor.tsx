@@ -155,7 +155,7 @@ export function PromptTemplateEditor({
           <Text color="gray">Variables: </Text>
           {variables.map((v, i) => (
             <Text key={v.name}>
-              <Text color="magenta">{'{{'}}{v.name}{{'}}'}}</Text>
+              <Text color="magenta">{`{{${v.name}}}`}</Text>
               {i < variables.length - 1 && <Text color="gray"> </Text>}
             </Text>
           ))}

@@ -91,9 +91,8 @@ export const FilterBuilder = defineComponent({
         'data-logic': effectiveLogic,
         'data-disabled': props.disabled ? 'true' : 'false',
       }, [
-        effectiveFilters.map((filter, index) => (
-          <div key={filter.id}>
-            {index > 0 ? h('button', {
+        ...effectiveFilters.map((filter, index) => h('div', {}, [
+            index > 0 ? h('button', {
             'type': 'button',
             'data-part': 'logic-toggle',
             'data-logic': filter.logic ?? effectiveLogic,
@@ -105,6 +104,7 @@ export const FilterBuilder = defineComponent({
           }, [
             (filter.logic ?? effectiveLogic).toUpperCase(),
           ]) : null,
+          ])),
         h('button', {
           'type': 'button',
           'data-part': 'add-button',
@@ -116,6 +116,5 @@ export const FilterBuilder = defineComponent({
       ]);
   },
 });
-});)
 
 export default FilterBuilder;

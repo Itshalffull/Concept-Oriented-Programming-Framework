@@ -126,20 +126,18 @@ export const CronEditor = defineComponent({
               'aria-label': 'Frequency',
               'data-value': props.frequency,
             }, [
-              props.frequencySelect ?? (
-              <select
-                value={props.frequency}
-                aria-label="Frequency"
-                disabled={props.readOnly}
-                onChange={(e) => props.onFrequencyChange?.(e.target.value)}
-              >
-                <option value="minutely">Every props.minute</option>
-                <option value="hourly">Hourly</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            ),
+              props.frequencySelect ?? h('select', {
+                'value': props.frequency,
+                'aria-label': 'Frequency',
+                'disabled': props.readOnly,
+                'onChange': (e) => props.onFrequencyChange?.(e.target.value),
+              }, [
+                h('option', { value: 'minutely' }, 'Every minute'),
+                h('option', { value: 'hourly' }, 'Hourly'),
+                h('option', { value: 'daily' }, 'Daily'),
+                h('option', { value: 'weekly' }, 'Weekly'),
+                h('option', { value: 'monthly' }, 'Monthly'),
+              ]),
             ]),
             props.frequency !== 'minutely' ? h('div', {
                 'data-part': 'time-input',
@@ -148,9 +146,13 @@ export const CronEditor = defineComponent({
                 'data-minute': props.minute,
                 'data-visible': 'true',
               }, [
-                props.timeInput ?? (
-                <input type="time" value={`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`} aria-label="Time of day" disabled={props.readOnly} props.readOnly />
-              ),
+                props.timeInput ?? h('input', {
+                  'type': 'time',
+                  'value': `${String(props.hour).padStart(2, '0')}:${String(props.minute).padStart(2, '0')}`,
+                  'aria-label': 'Time of day',
+                  'disabled': props.readOnly,
+                  'readOnly': props.readOnly,
+                }),
               ]) : null,
             (props.frequency === 'weekly' || props.frequency === 'monthly') ? h('div', {
                 'data-part': 'day-select',

@@ -169,7 +169,7 @@ export const PluginDetailPage = defineComponent({
               'v',
               props.version,
             ]),
-            props.author && <span>by {props.author}</span>,
+            props.author ? h('span', {}, ['by ', props.author]) : null,
             h('span', {}, [
               props.downloads.toLocaleString(),
               'downloads',
@@ -200,9 +200,7 @@ export const PluginDetailPage = defineComponent({
           'role': 'tablist',
           'aria-label': 'Plugin content',
         }, [
-          ...props.tabs ?? (
-          <>
-            {(['description', 'screenshots', 'reviews', 'changelog'] as const).map((t) => h('button', {
+          ...props.tabs ?? (['description', 'screenshots', 'reviews', 'changelog'] as const).map((t) => h('button', {
               'type': 'button',
               'role': 'tab',
               'aria-selected': currentTab === t,
@@ -218,9 +216,7 @@ export const PluginDetailPage = defineComponent({
           'data-visible': currentTab === 'description' ? 'true' : 'false',
           'hidden': currentTab !== 'description',
         }, [
-          props.descriptionContent ?? (
-          <div dangerouslySetInnerHTML={{ __html: props.description }} />
-        ),
+          props.descriptionContent ?? h('div', { 'innerHTML': props.description }),
         ]),
         h('div', {
           'data-part': 'screenshots-tab',
@@ -267,14 +263,13 @@ export const PluginDetailPage = defineComponent({
               '-',
               entry.date,
               h('ul', {}, [
-                ...entry.changes.map((c, ci) => <li key={ci}>{c}</li>),
+                ...entry.changes.map((c, ci) => h('li', {}, [c])),
               ]),
             ])),
         ]),
         slots.default?.(),
       ]);
   },
-});
 });
 
 export default PluginDetailPage;

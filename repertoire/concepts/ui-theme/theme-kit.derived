@@ -14,14 +14,15 @@ derived ThemeKit [T] {
 
   syncs {
     required: [
-      ParsedColorSpaceRegistered,
-      ParsedColorSchemeRegistered,
-      ParsedDensityRegistered,
-      ParsedStructuralMotifRegistered
+      parsed-color-space-registered,
+      parsed-color-scheme-registered,
+      parsed-density-registered,
+      parsed-structural-motif-registered
     ]
   }
 
   surface {
+    query resolveTheme(name: String) -> ThemeParser/resolve(name: name)
   }
 
   principle {

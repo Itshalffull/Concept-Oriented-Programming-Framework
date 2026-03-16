@@ -130,24 +130,22 @@ export const MentionInput = defineComponent({
           'data-visible': isSuggesting ? 'true' : 'false',
           'data-trigger': machine.value.activeTriggerChar,
         }, [
-          isSuggesting && suggestions.map((suggestion, index) => (
-          <div
-            key={suggestion.id}
-            id={`mention-suggestion-${suggestion.id}`}
-            role="option"
-            aria-selected={index === activeIndex ? 'true' : 'false'}
-            aria-label={suggestion.label}
-            data-part="suggestion"
-            data-active={index === activeIndex ? 'true' : 'false'}
-            data-index={index}
-            onClick={() => selectSuggestion(suggestion)}
-            onMouseEnter={() => send({ type: 'HIGHLIGHT', index })}
-          >
-            {suggestion.icon ? h('span', { 'data-part': 'suggestion-icon', 'aria-hidden': 'true' }) : null,
+          ...isSuggesting ? suggestions.map((suggestion: any, index: number) => h('div', {
+              'id': `mention-suggestion-${suggestion.id}`,
+              'role': 'option',
+              'aria-selected': index === activeIndex ? 'true' : 'false',
+              'aria-label': suggestion.label,
+              'data-part': 'suggestion',
+              'data-active': index === activeIndex ? 'true' : 'false',
+              'data-index': index,
+              'onClick': () => selectSuggestion(suggestion),
+              'onMouseEnter': () => send({ type: 'HIGHLIGHT', index }),
+            }, [
+              suggestion.icon ? h('span', { 'data-part': 'suggestion-icon', 'aria-hidden': 'true' }) : null,
+            ])) : [],
         ]),
       ]);
   },
 });
-});)
 
 export default MentionInput;

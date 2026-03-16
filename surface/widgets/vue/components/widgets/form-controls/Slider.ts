@@ -69,8 +69,7 @@ export const Slider = defineComponent({
 
   const percent = ((value - props.min) / (props.max - props.min)) * 100;
 
-  const getValueFromPointer = (
-(clientX: number, clientY: number): number => {
+  const getValueFromPointer = (clientX: number, clientY: number): number => {
       if (!trackRef.value) return value;
       const rect = trackRef.value.getBoundingClientRect();
       const ratio =
@@ -155,9 +154,9 @@ export const Slider = defineComponent({
         }, [
           value,
         ]),
-        props.name && <input type="hidden" props.name={props.name} value={value} />,
+        props.name ? h('input', { type: 'hidden', name: props.name, value: value }) : null,
       ]);
   },
-});)
+});
 
 export default Slider;

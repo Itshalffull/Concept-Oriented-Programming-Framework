@@ -41,23 +41,31 @@ export const queryHandler: ConceptHandler = {
     const filters: string[] = JSON.parse((record.filters as string) || '[]');
     const sorts: string[] = JSON.parse((record.sorts as string) || '[]');
 
-    // Parse expression: "Concept/action" or "Concept/action?param=value"
+    // Parse expression: "Concept/action", "Concept/action?param=value", or a
+    // filter expression like "status = 'active'".
     const parts = expression.split('/');
-    if (parts.length < 2) {
-      return { variant: 'error', message: `Invalid expression format: "${expression}". Expected "Concept/action"` };
-    }
-
-    const concept = parts[0];
-    const actionPart = parts[1];
-    const [action, queryString] = actionPart.split('?');
-
-    // Parse query string params if present
+    let concept: string;
+    let action: string;
     const params: Record<string, unknown> = {};
-    if (queryString) {
-      for (const pair of queryString.split('&')) {
-        const [key, value] = pair.split('=');
-        if (key) params[decodeURIComponent(key)] = decodeURIComponent(value ?? '');
+
+    if (parts.length >= 2) {
+      concept = parts[0];
+      const actionPart = parts[1];
+      const [actionName, queryString] = actionPart.split('?');
+      action = actionName;
+
+      // Parse query string params if present
+      if (queryString) {
+        for (const pair of queryString.split('&')) {
+          const [key, value] = pair.split('=');
+          if (key) params[decodeURIComponent(key)] = decodeURIComponent(value ?? '');
+        }
       }
+    } else {
+      // Treat as a filter expression (e.g., "status = 'active'")
+      concept = 'filter';
+      action = 'query';
+      params.expression = expression;
     }
 
     // Return the parsed query info. The actual invocation happens at the

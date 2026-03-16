@@ -110,15 +110,13 @@ export const Sidebar = defineComponent({
           'aria-label': 'Sidebar navigation',
           'data-part': 'content',
         }, [
-          props.groups.map((group, gi) => (
-            <div
-              key={`group-${gi}`}
-              role="group"
-              aria-labelledby={group.label ? `sidebar-group-${gi}` : undefined}
-              data-part="group"
-              data-state={dataState}
-            >
-              {group.label ? h('span', {
+          ...props.groups.map((group, gi) => h('div', {
+              'role': 'group',
+              'aria-labelledby': group.label ? `sidebar-group-${gi}` : undefined,
+              'data-part': 'group',
+              'data-state': dataState,
+            }, [
+              group.label ? h('span', {
               'id': `sidebar-group-${gi}`,
               'data-part': 'group-label',
               'aria-hidden': !isExpanded ? 'true' : 'false',
@@ -126,6 +124,7 @@ export const Sidebar = defineComponent({
             }, [
               group.label,
             ]) : null,
+            ])),
         ]),
         props.footer ? h('div', { 'data-part': 'footer', 'data-state': dataState }, [
             props.footer,
@@ -145,6 +144,5 @@ export const Sidebar = defineComponent({
       ]);
   },
 });
-});)
 
 export default Sidebar;

@@ -49,17 +49,14 @@ export const Skeleton = defineComponent({
         'data-state': state.value,
         'data-size': props.size,
       }, [
-        props.variant === 'text' ? Array.from({ length: props.lines }, (_, i) => (
-            <div
-              key={i}
-              data-part="line"
-              data-props.variant="text"
-              data-visible="true"
-              data-count={props.lines}
-              aria-hidden="true"
-              style={{ width: resolvedWidth, height: resolvedHeight }}
-            />
-          )) : null,
+        props.variant === 'text' ? Array.from({ length: props.lines }, (_, i) => h('div', {
+              'data-part': 'line',
+              'data-variant': 'text',
+              'data-visible': 'true',
+              'data-count': props.lines,
+              'aria-hidden': 'true',
+              'style': { width: resolvedWidth, height: resolvedHeight },
+            })) : null,
         props.variant === 'circular' ? h('div', {
             'data-part': 'circle',
             'data-variant': 'circular',

@@ -187,31 +187,28 @@ export const FileUpload = defineComponent({
             'aria-live': 'polite',
             'data-part': 'file-list',
           }, [
-            machine.value.files.map((file) => (
-            <div
-              key={file.id}
-              role="listitem"
-              aria-label={`${file.name} - ${file.state}`}
-              data-part="file-item"
-              data-state={file.state}
-            >
-              <span data-part="file-icon" data-type={file.type} aria-hidden="true" />
-              <span data-part="file-name">{file.name}</span>
-              <span data-part="file-size">{formatFileSize(file.size)}</span>
-
-              {file.state === 'uploading' ? h('div', {
-                'role': 'progressbar',
-                'aria-valuenow': file.progress,
-                'aria-valuemin': 0,
-                'aria-valuemax': 100,
-                'aria-label': `Uploading ${file.name}`,
-                'data-part': 'file-progress',
-                'data-visible': 'true',
-              }) : null,
+            ...machine.value.files.map((file: any) => h('div', {
+                'role': 'listitem',
+                'aria-label': `${file.name} - ${file.state}`,
+                'data-part': 'file-item',
+                'data-state': file.state,
+              }, [
+                h('span', { 'data-part': 'file-icon', 'data-type': file.type, 'aria-hidden': 'true' }),
+                h('span', { 'data-part': 'file-name' }, [file.name]),
+                h('span', { 'data-part': 'file-size' }, [formatFileSize(file.size)]),
+                file.state === 'uploading' ? h('div', {
+                  'role': 'progressbar',
+                  'aria-valuenow': file.progress,
+                  'aria-valuemin': 0,
+                  'aria-valuemax': 100,
+                  'aria-label': `Uploading ${file.name}`,
+                  'data-part': 'file-progress',
+                  'data-visible': 'true',
+                }) : null,
+              ])),
           ]) : null,
       ]);
   },
 });
-});)
 
 export default FileUpload;

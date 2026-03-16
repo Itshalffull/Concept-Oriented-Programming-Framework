@@ -242,6 +242,6 @@ export const FormulaEditor = defineComponent({
         ]),
       ]);
   },
-});)
+});
 
 export default FormulaEditor;

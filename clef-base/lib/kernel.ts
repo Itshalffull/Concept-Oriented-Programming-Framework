@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { existsSync } from 'fs';
 import { bootKernel } from '../../handlers/ts/framework/kernel-boot.handler';
 import type { ConceptRegistration, RegEntry } from '../../handlers/ts/framework/kernel-boot.handler';
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
@@ -20,7 +21,19 @@ let _seedPromise: Promise<void> | null = null;
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
 // resolves inside .next/server/ at runtime, so we can't use it.
-const CLEF_BASE_ROOT = process.cwd();
+// When running from the project root (e.g., during tests), detect
+// and resolve to the clef-base subdirectory for seed/suite paths.
+const _cwd = process.cwd();
+const CLEF_BASE_ROOT = existsSync(resolve(_cwd, 'seeds'))
+  ? _cwd
+  : existsSync(resolve(_cwd, 'clef-base', 'seeds'))
+    ? resolve(_cwd, 'clef-base')
+    : _cwd;
+
+// Project root for resolving sync file paths from kernel-registry.ts
+const PROJECT_ROOT = existsSync(resolve(_cwd, 'clef-base'))
+  ? _cwd
+  : resolve(_cwd, '..');
 
 function makeStorage(conceptName: string) {
   return createStorageFromEnv(`clef-base:${conceptName}`) ?? createInMemoryStorage();
@@ -41,7 +54,7 @@ export function getKernel(): Kernel {
     storageType: entry.storageType,
   }));
 
-  const syncFiles = SYNC_FILES.map(p => resolve(CLEF_BASE_ROOT, p));
+  const syncFiles = SYNC_FILES.map(p => resolve(PROJECT_ROOT, p));
 
   const result = bootKernel({
     concepts,

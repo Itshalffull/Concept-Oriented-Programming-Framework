@@ -48,7 +48,7 @@ export const Pagination = defineComponent({
     const goToPage = (target: number) => {
         if (props.disabled) return;
         if (!isControlled) {
-          dispatch({ type: 'NAVIGATE_TO', page: target, props.totalPages });
+          dispatch({ type: 'NAVIGATE_TO', page: target, totalPages: props.totalPages });
         }
         props.onPageChange?.(target);
       };
