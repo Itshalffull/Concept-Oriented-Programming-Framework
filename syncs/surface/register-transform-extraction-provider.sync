@@ -1,0 +1,9 @@
+sync RegisterTransformExtractionProvider [eager]
+  purpose: "Register the TransformExtractionProvider with ProgramAnalysis on first use."
+when {
+  TransformExtractionProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "transform-extraction"; kind: "provenance" ]
+}

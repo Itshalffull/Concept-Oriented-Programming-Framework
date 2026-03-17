@@ -28,6 +28,14 @@ concepts:
     spec: specs/surface/providers/theme-compliance-provider.concept
     params:
       T: { as: CheckId, description: "Theme compliance check result identifier" }
+  RenderTransform:
+    spec: specs/surface/render-transform.concept
+    params:
+      X: { as: TransformId, description: "Render transform identifier" }
+  TransformExtractionProvider:
+    spec: specs/surface/providers/transform-extraction-provider.concept
+    params:
+      E: { as: ResultId, description: "Transform extraction analysis result" }
 
 syncs:
   required:
@@ -49,6 +57,14 @@ syncs:
       description: "Route RenderInterpreter delegation to React provider"
     - path: syncs/surface/delegate-to-svelte-interpreter.sync
       description: "Route RenderInterpreter delegation to Svelte provider"
+    - path: syncs/surface/register-transform-extraction-provider.sync
+      description: "Register TransformExtractionProvider with ProgramAnalysis"
+    - path: syncs/surface/dispatch-transform-extraction.sync
+      description: "Dispatch transform-extraction analysis to provider"
+    - path: syncs/surface/extract-transforms-on-render.sync
+      description: "Extract applied transforms from rendered programs"
+    - path: syncs/surface/apply-theme-transform-on-activate.sync
+      description: "Apply theme token-remap transforms on theme activation"
   recommended:
     - path: syncs/surface/cache-lookup-before-render.sync
       name: CacheLookupBeforeRender

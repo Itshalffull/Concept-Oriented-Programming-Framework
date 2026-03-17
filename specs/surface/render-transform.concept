@@ -1,0 +1,99 @@
+@version(1)
+concept RenderTransform [X] {
+
+  purpose {
+    Apply named transformation functions to RenderProgram instruction
+    sequences, producing new RenderPrograms with modified token
+    references, accessibility attributes, or binding expressions —
+    the functorial mapping that makes theme switching, a11y variants,
+    and style adaptations composable first-class operations on the
+    program itself rather than side-channel mutations.
+  }
+
+  state {
+    transforms: set X
+    name: X -> String
+    kind: X -> String
+    spec: X -> String
+    appliedLog: X -> list String
+  }
+
+  actions {
+    action register(name: String, kind: String, spec: String) {
+      -> ok(transform: X) {
+        Register a named transform with a kind (token-remap,
+        a11y-adapt, bind-rewrite, custom) and a serialized
+        rewrite specification. The spec is a JSON object whose
+        structure depends on the kind:
+        - token-remap: { mappings: { oldPath: newPath, ... } }
+        - a11y-adapt: { additions: [...], modifications: [...] }
+        - bind-rewrite: { rewrites: { oldExpr: newExpr, ... } }
+        - custom: { match: { tag: ... }, replace: { ... } }
+      }
+      -> duplicate(transform: X) {
+        A transform with this name is already registered.
+        Returns the existing transform.
+      }
+    }
+
+    action apply(program: String, transform: String) {
+      -> ok(result: String, appliedTransforms: String) {
+        Walk the instruction sequence and apply the transform's
+        rewrite spec. For token-remap, rewrite token path instructions.
+        For a11y-adapt, add or modify aria/focus/keyboard instructions.
+        For bind-rewrite, rewrite binding expressions. Returns the
+        new serialized program and the list of transforms applied
+        (including any previously applied transforms from the input).
+        Satisfies the functor identity law: apply(p, id) = p.
+      }
+      -> notfound(message: String) {
+        No transform is registered with the given name.
+      }
+      -> error(message: String) {
+        The program or transform spec could not be parsed.
+      }
+    }
+
+    action compose(transforms: String) {
+      -> ok(composed: X, name: String) {
+        Combine multiple named transforms into a single composite
+        transform. The result applies all transforms in sequence.
+        Satisfies the functor composition law:
+        apply(p, compose([f, g])) = apply(apply(p, f), g).
+      }
+      -> error(message: String) {
+        One or more named transforms do not exist, or the
+        transforms are incompatible for composition.
+      }
+    }
+
+    action list() {
+      -> ok(transforms: String) {
+        Return all registered transforms as a serialized JSON
+        array of { name, kind } objects.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(transform: X, kind: String, spec: String) {
+        Return the full details of a registered transform.
+      }
+      -> notfound(message: String) {
+        No transform is registered with the given name.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}")
+      -> ok(transform: t)
+    then get(name: "dark-theme") -> ok(transform: t, kind: k, spec: s)
+  }
+
+  invariant {
+    after register(name: "dark-theme", kind: "token-remap", spec: "{}")
+      -> ok(transform: t)
+    then register(name: "dark-theme", kind: "token-remap", spec: "{}")
+      -> duplicate(transform: t)
+  }
+}
