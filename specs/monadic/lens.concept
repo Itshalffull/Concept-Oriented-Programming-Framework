@@ -1,0 +1,148 @@
+@version(1)
+concept Lens [L] {
+
+  purpose {
+    Name and compose paths into structured concept state, making
+    field access a first-class, inspectable, invertible value.
+    A lens describes WHERE data lives — relation, key, field —
+    without coupling to HOW storage retrieves it.
+  }
+
+  state {
+    lenses: set L
+    relation: L -> String
+    key: L -> option String
+    field: L -> option String
+    parent: L -> option L
+    children: L -> list L
+    path: L -> list String
+    inverted: L -> option L
+  }
+
+  actions {
+    action create(lens: L, relation: String, key: String, field: String) {
+      -> ok(lens: L) {
+        Register a new lens targeting the given relation, key, and field.
+        The path is computed as [relation, key, field] with empty segments
+        omitted.
+      }
+      -> exists() {
+        A lens with this identifier has already been registered.
+      }
+    }
+
+    action createRelation(lens: L, relation: String) {
+      -> ok(lens: L) {
+        Register a lens targeting an entire relation (no key or field).
+        Useful as a root for composition chains.
+      }
+      -> exists() {
+        A lens with this identifier has already been registered.
+      }
+    }
+
+    action focus(lens: L, child: L, field: String) {
+      -> ok(child: L) {
+        Create a new lens that narrows an existing lens to a specific
+        field within the record at the parent lens's path. The child
+        inherits the parent's relation and key but adds the field
+        segment.
+      }
+      -> notfound() {
+        The parent lens does not exist.
+      }
+      -> exists() {
+        The child lens identifier has already been registered.
+      }
+    }
+
+    action compose(result: L, outer: L, inner: L) {
+      -> ok(result: L) {
+        Combine two lenses into a single lens whose path is the
+        concatenation of the outer and inner paths. The outer lens
+        determines the relation; the inner lens provides the
+        remaining segments.
+      }
+      -> notfound() {
+        One or both of the source lenses do not exist.
+      }
+      -> exists() {
+        The result lens identifier has already been registered.
+      }
+    }
+
+    action invert(lens: L, inverted: L) {
+      -> ok(inverted: L) {
+        Create a lens that reverses the path of the source lens.
+        An inverted lens can be used for reverse lookups and
+        migration script generation.
+      }
+      -> notfound() {
+        The source lens does not exist.
+      }
+      -> exists() {
+        The inverted lens identifier has already been registered.
+      }
+    }
+
+    action resolve(lens: L) {
+      -> ok(lens: L, relation: String, key: String, field: String, path: list String) {
+        Return the fully resolved path components for this lens,
+        including any composed or focused segments.
+      }
+      -> notfound() {
+        No lens exists with this identifier.
+      }
+    }
+
+    action get(lens: L) {
+      -> ok(lens: L, relation: String, path: list String) {
+        Return the lens definition including its full path.
+      }
+      -> notfound() {
+        No lens exists with this identifier.
+      }
+    }
+
+    action delete(lens: L) {
+      -> ok() {
+        Remove a lens and detach it from its parent's children list.
+      }
+      -> notfound() {
+        No lens exists with this identifier.
+      }
+      -> haschildren() {
+        The lens has child lenses that must be deleted first.
+      }
+    }
+  }
+
+  invariant {
+    after create(lens: x, relation: "users", key: "u1", field: "email") -> ok(lens: x)
+    then resolve(lens: x) -> ok(lens: x, relation: "users", key: "u1", field: "email", path: ["users", "u1", "email"])
+  }
+
+  invariant {
+    after createRelation(lens: r, relation: "users") -> ok(lens: r)
+    and focus(lens: r, child: c, field: "email") -> ok(child: c)
+    then resolve(lens: c) -> ok(lens: c, relation: "users", key: "", field: "email", path: ["users", "email"])
+  }
+
+  invariant {
+    after create(lens: a, relation: "users", key: "u1", field: "profile") -> ok(lens: a)
+    and create(lens: b, relation: "profiles", key: "p1", field: "avatar") -> ok(lens: b)
+    and compose(result: ab, outer: a, inner: b) -> ok(result: ab)
+    then resolve(lens: ab) -> ok(lens: ab, relation: "users", key: "u1", field: "avatar", path: ["users", "u1", "profile", "profiles", "p1", "avatar"])
+  }
+
+  invariant {
+    after create(lens: x, relation: "users", key: "u1", field: "email") -> ok(lens: x)
+    and invert(lens: x, inverted: xi) -> ok(inverted: xi)
+    then resolve(lens: xi) -> ok(lens: xi, relation: "email", key: "u1", field: "users", path: ["email", "u1", "users"])
+  }
+
+  invariant {
+    after create(lens: x, relation: "users", key: "u1", field: "email") -> ok(lens: x)
+    then create(lens: x, relation: "posts", key: "p1", field: "title") -> exists()
+  }
+}
