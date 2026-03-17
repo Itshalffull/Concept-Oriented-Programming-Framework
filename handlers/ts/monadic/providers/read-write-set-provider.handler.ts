@@ -5,8 +5,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 
 /**
- * Parse a serialized StorageProgram instruction list and extract
- * which relations are read (get/find) and written (put/del).
+ * Parse a serialized StorageProgram and extract read/write sets.
+ *
+ * Fast path: if the serialized program includes structural effects
+ * (accumulated during construction), use those directly — O(1).
+ *
+ * Fallback: walk the instruction list for programs that lack
+ * structural effects (e.g., deserialized from older format or
+ * built outside the DSL).
  */
 function extractSets(programStr: string): { readSet: string[]; writeSet: string[] } {
   const readSet = new Set<string>();
@@ -14,6 +20,15 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
 
   try {
     const parsed = JSON.parse(programStr);
+
+    // Fast path: structural effects from the program itself
+    if (parsed.effects) {
+      const reads: string[] = Array.isArray(parsed.effects.reads) ? parsed.effects.reads : [];
+      const writes: string[] = Array.isArray(parsed.effects.writes) ? parsed.effects.writes : [];
+      return { readSet: reads, writeSet: writes };
+    }
+
+    // Fallback: instruction walk
     const instructions = parsed.instructions || parsed.input || [];
     if (typeof instructions === 'string') {
       const ops = instructions.split(';').map((s: string) => s.trim());
@@ -51,6 +66,10 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
  *
  * Analyzes a serialized program and returns a StorageProgram that
  * stores the analysis result and returns read/write sets + purity.
+ *
+ * Prefers structural effects from the program's built-in effect
+ * tracking (accumulated during construction). Falls back to
+ * instruction-walk for programs without structural effects.
  */
 export const readWriteSetProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {

@@ -66,6 +66,8 @@ syncs:
       description: "Route functional ProgramCache StoragePrograms to the interpreter"
     - path: syncs/monadic/interpret-provider-programs.sync
       description: "Route functional provider handler StoragePrograms to the interpreter"
+    - path: syncs/monadic/validate-purity-on-build.sync
+      description: "Validate built program effects against handler's declared purity"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute
