@@ -1,0 +1,46 @@
+concept DeadPartProvider [D] {
+
+  purpose {
+    Detect anatomy parts declared in a RenderProgram that are
+    never connected to data bindings, text content, or composition
+    slots — identifying dead code in widget specifications before
+    any target interpreter runs.
+  }
+
+  state {
+    analyses: set D
+    program: D -> String
+    deadParts: D -> set String
+    unreachableStates: D -> set String
+  }
+
+  actions {
+    action analyze(analysis: D, program: String, parts: set String, instructions: list String) {
+      -> ok(analysis: D, deadParts: set String, unreachableStates: set String) {
+        Scan the instruction list for bind, text, and compose
+        references to each declared part. Parts with no references
+        are dead. Also detect FSM states with no inbound transitions
+        that are not marked as initial.
+      }
+      -> error(message: String) {
+        The program data is malformed or missing required fields
+        for dead part analysis.
+      }
+    }
+
+    action getResults(analysis: D) {
+      -> ok(analysis: D, deadParts: set String, unreachableStates: set String) {
+        Return the stored dead part and unreachable state sets for
+        a previously analyzed program.
+      }
+      -> notfound() {
+        No analysis result exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(analysis: d, program: "p1", parts: ["root", "unused"], instructions: ["element:root:container", "text:root:hello"]) -> ok(analysis: d, deadParts: dp, unreachableStates: us)
+    then getResults(analysis: d) -> ok(analysis: d, deadParts: dp2, unreachableStates: us2)
+  }
+}

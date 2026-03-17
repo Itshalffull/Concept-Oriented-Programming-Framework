@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Compose provider
+
+sync DelegateToComposeInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the compose target, route the execution to the RenderInterpreterCompose provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterCompose")
+}
+then {
+  RenderInterpreterCompose/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

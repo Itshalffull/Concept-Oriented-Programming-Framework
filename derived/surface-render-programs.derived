@@ -1,0 +1,91 @@
+derived SurfaceRenderPrograms [T] {
+
+  purpose {
+    Compose the surface rendering pipeline into a unified model
+    where widget and theme handlers return inspectable RenderProgram
+    data that is analyzed for accessibility, dead parts, and theme
+    compliance — then interpreted into target-specific code with
+    caching and dry-run support via the monadic infrastructure.
+  }
+
+  composes {
+    RenderProgram [T]
+    RenderInterpreter [T]
+    A11yAuditProvider [T]
+    DeadPartProvider [T]
+    ThemeComplianceProvider [T]
+  }
+
+  uses {
+    ProgramAnalysis [T]
+    ProgramCache [T]
+    FunctionalHandler [T]
+  }
+
+  syncs {
+    required: [
+      build-and-render,
+      analyze-on-build,
+      dispatch-a11y-audit,
+      register-a11y-audit-provider,
+      interpret-render-programs
+    ]
+    recommended: [
+      cache-lookup-before-render,
+      cache-store-after-render,
+      dispatch-dead-parts,
+      register-dead-part-provider,
+      dispatch-theme-compliance,
+      register-theme-compliance-provider
+    ]
+  }
+
+  surface {
+    action render(widget: String, target: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: "widget", action: ?widget
+      triggers: [
+        RenderInterpreter/execute(interpreter: ?target, program: ?program, snapshot: "current")
+      ]
+    }
+
+    action renderWithAudit(widget: String, target: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: "widget", action: ?widget
+      triggers: [
+        A11yAuditProvider/audit(audit: ?auditId, program: ?program, instructions: ?instructions, parts: ?parts),
+        RenderInterpreter/execute(interpreter: ?target, program: ?program, snapshot: "current")
+      ]
+    }
+
+    action dryRun(widget: String, target: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: "widget", action: ?widget
+      triggers: [
+        RenderInterpreter/dryRun(interpreter: ?target, program: ?program)
+      ]
+    }
+
+    query auditResults(audit: String) {
+      reads: A11yAuditProvider/getFindings(audit: ?audit)
+    }
+
+    query deadParts(analysis: String) {
+      reads: DeadPartProvider/getResults(analysis: ?analysis)
+    }
+
+    query themeCompliance(check: String) {
+      reads: ThemeComplianceProvider/getResults(check: ?check)
+    }
+
+    query targets() {
+      reads: RenderInterpreter/listTargets()
+    }
+  }
+
+  principle {
+    after render(widget: w, target: t, input: i)
+    then the handler builds a RenderProgram without side effects
+    and  the A11yAuditProvider checks for accessibility gaps
+    and  the RenderInterpreter produces target-specific code
+    and  if the program was previously rendered the cache is hit
+    and  on re-render with same widget and state the output is identical
+  }
+}

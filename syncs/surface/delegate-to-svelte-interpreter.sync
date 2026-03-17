@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Svelte provider
+
+sync DelegateToSvelteInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the svelte target, route the execution to the RenderInterpreterSvelte provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterSvelte")
+}
+then {
+  RenderInterpreterSvelte/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

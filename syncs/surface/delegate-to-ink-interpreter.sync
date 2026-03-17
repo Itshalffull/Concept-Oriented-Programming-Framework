@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Ink provider
+
+sync DelegateToInkInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the ink target, route the execution to the RenderInterpreterInk provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterInk")
+}
+then {
+  RenderInterpreterInk/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

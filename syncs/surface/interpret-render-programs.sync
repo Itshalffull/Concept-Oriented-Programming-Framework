@@ -1,0 +1,11 @@
+# Route completed render programs to the interpreter
+
+sync InterpretRenderPrograms [eager]
+  purpose: "Execute a sealed RenderProgram through the appropriate target interpreter."
+when {
+  RenderProgram/pure: [ program: ?program; output: ?output ]
+    => [ program: ?program ]
+}
+then {
+  RenderInterpreter/execute: [ interpreter: ?targetInterpreter; program: ?program; snapshot: "current" ]
+}

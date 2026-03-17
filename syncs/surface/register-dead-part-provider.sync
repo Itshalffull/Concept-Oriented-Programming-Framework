@@ -1,0 +1,11 @@
+# Register the DeadPartProvider with ProgramAnalysis on first use
+
+sync RegisterDeadPartProvider [eager]
+  purpose: "Register the DeadPartProvider with ProgramAnalysis so it can be dispatched by name."
+when {
+  DeadPartProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "dead-parts"; kind: "structural" ]
+}

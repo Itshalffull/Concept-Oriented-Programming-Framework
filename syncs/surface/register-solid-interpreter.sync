@@ -1,0 +1,11 @@
+# Auto-register the Solid render-interpreter provider on first use
+
+sync RegisterSolidInterpreterProvider [eager]
+  purpose: "Self-register the Solid target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterSolid/interpret: []
+    => []
+}
+then {
+  RenderInterpreterSolid/initialize: []
+}

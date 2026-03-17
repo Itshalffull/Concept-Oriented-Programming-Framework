@@ -561,6 +561,20 @@ export interface WidgetAccessibility {
   keyboard: { key: string; action: string }[];
   focus: { trap?: boolean; initial?: string; roving?: boolean };
   ariaAttrs?: { name: string; value: string; dynamic?: boolean }[];
+  /** Per-part ARIA attribute declarations from `aria { part -> { ... } }` blocks. */
+  ariaBindings?: WidgetAriaBinding[];
+}
+
+/** Per-part ARIA attribute declaration. */
+export interface WidgetAriaBinding {
+  part: string;
+  attrs: { name: string; value: string }[];
+}
+
+/** Per-part data binding from the `connect` block. */
+export interface WidgetConnectBinding {
+  part: string;
+  attrs: { name: string; value: string }[];
 }
 
 /** Affordance declaration binding a widget to concept state. */
@@ -591,6 +605,10 @@ export interface WidgetManifest {
   accessibility: WidgetAccessibility;
   affordance?: WidgetAffordance;
   composedWidgets: string[];
+  /** Per-part data bindings from the `connect` block. */
+  connect?: WidgetConnectBinding[];
+  /** Prose invariants from the `invariant` block. */
+  invariants?: string[];
 }
 
 // --- Theme Manifest (Surface IR) ---

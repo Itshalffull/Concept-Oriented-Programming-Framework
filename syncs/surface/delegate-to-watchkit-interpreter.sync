@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Watchkit provider
+
+sync DelegateToWatchkitInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the watchkit target, route the execution to the RenderInterpreterWatchkit provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterWatchkit")
+}
+then {
+  RenderInterpreterWatchkit/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

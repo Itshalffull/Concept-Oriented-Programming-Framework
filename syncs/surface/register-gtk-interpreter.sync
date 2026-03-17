@@ -1,0 +1,11 @@
+# Auto-register the Gtk render-interpreter provider on first use
+
+sync RegisterGtkInterpreterProvider [eager]
+  purpose: "Self-register the Gtk target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterGtk/interpret: []
+    => []
+}
+then {
+  RenderInterpreterGtk/initialize: []
+}

@@ -1,0 +1,11 @@
+# Register the ThemeComplianceProvider with ProgramAnalysis on first use
+
+sync RegisterThemeComplianceProvider [eager]
+  purpose: "Register the ThemeComplianceProvider with ProgramAnalysis so it can be dispatched by name."
+when {
+  ThemeComplianceProvider/verify: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "theme-compliance"; kind: "design-system" ]
+}

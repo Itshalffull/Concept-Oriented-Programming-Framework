@@ -1,0 +1,11 @@
+# Store rendered output in cache after successful execution
+
+sync CacheStoreAfterRender [eager] [idempotent]
+  purpose: "Memoize the RenderInterpreter output in ProgramCache after successful code generation."
+when {
+  RenderInterpreter/execute: [ interpreter: ?i; program: ?program ]
+    => [ output: ?output ]
+}
+then {
+  ProgramCache/store: [ key: ?program; stateHash: ?stateHash; result: ?output ]
+}

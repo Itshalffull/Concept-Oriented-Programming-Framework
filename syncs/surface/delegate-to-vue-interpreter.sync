@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Vue provider
+
+sync DelegateToVueInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the vue target, route the execution to the RenderInterpreterVue provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterVue")
+}
+then {
+  RenderInterpreterVue/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

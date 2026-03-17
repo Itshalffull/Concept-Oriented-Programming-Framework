@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Wear provider
+
+sync DelegateToWearInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the wear target, route the execution to the RenderInterpreterWear provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterWear")
+}
+then {
+  RenderInterpreterWear/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

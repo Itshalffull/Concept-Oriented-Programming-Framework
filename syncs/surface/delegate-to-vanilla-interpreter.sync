@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Vanilla provider
+
+sync DelegateToVanillaInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the vanilla target, route the execution to the RenderInterpreterVanilla provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterVanilla")
+}
+then {
+  RenderInterpreterVanilla/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

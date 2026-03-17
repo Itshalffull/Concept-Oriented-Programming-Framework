@@ -1,0 +1,46 @@
+concept ThemeComplianceProvider [T] {
+
+  purpose {
+    Verify that every theme design token referenced in a
+    RenderProgram resolves to a valid key in the active theme
+    manifest, catching missing tokens, deprecated paths, and
+    type mismatches before code generation.
+  }
+
+  state {
+    checks: set T
+    program: T -> String
+    missingTokens: T -> set String
+    deprecatedTokens: T -> set String
+    passed: T -> Bool
+  }
+
+  actions {
+    action verify(check: T, program: String, tokens: set String, manifest: String) {
+      -> ok(check: T, missingTokens: set String, deprecatedTokens: set String, passed: Bool) {
+        Resolve each token path against the theme manifest. Report
+        tokens that do not exist, tokens marked deprecated, and
+        tokens whose type does not match their usage context.
+      }
+      -> error(message: String) {
+        The theme manifest is malformed or could not be parsed
+        for token resolution.
+      }
+    }
+
+    action getResults(check: T) {
+      -> ok(check: T, missingTokens: set String, deprecatedTokens: set String, passed: Bool) {
+        Return the stored compliance results for a previously
+        verified program.
+      }
+      -> notfound() {
+        No compliance check exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after verify(check: c, program: "p1", tokens: ["color.primary", "spacing.md"], manifest: "default-theme") -> ok(check: c, missingTokens: mt, deprecatedTokens: dt, passed: p)
+    then getResults(check: c) -> ok(check: c, missingTokens: mt2, deprecatedTokens: dt2, passed: p2)
+  }
+}

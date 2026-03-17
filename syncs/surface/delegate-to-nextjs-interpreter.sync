@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Nextjs provider
+
+sync DelegateToNextjsInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the nextjs target, route the execution to the RenderInterpreterNextjs provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterNextjs")
+}
+then {
+  RenderInterpreterNextjs/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

@@ -1,0 +1,11 @@
+# Auto-register the ReactNative render-interpreter provider on first use
+
+sync RegisterReactNativeInterpreterProvider [eager]
+  purpose: "Self-register the ReactNative target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterReactNative/interpret: []
+    => []
+}
+then {
+  RenderInterpreterReactNative/initialize: []
+}

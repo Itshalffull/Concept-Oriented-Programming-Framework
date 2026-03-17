@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Nativescript provider
+
+sync DelegateToNativescriptInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the nativescript target, route the execution to the RenderInterpreterNativescript provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterNativescript")
+}
+then {
+  RenderInterpreterNativescript/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

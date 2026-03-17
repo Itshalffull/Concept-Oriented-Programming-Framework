@@ -1,0 +1,213 @@
+concept RenderProgram [R] {
+
+  purpose {
+    Build sequences of UI rendering instructions as inspectable,
+    composable data. A RenderProgram describes what a widget or
+    theme should produce — anatomy parts, data bindings, state
+    machines, accessibility attributes, theme token references —
+    without emitting framework-specific code. Programs can be
+    analyzed for accessibility gaps, dead parts, and theme
+    compliance before any target interpreter runs.
+  }
+
+  state {
+    programs: set R
+    instructions: R -> list String
+    parts: R -> set String
+    tokens: R -> set String
+    props: R -> set String
+    terminated: R -> Bool
+  }
+
+  actions {
+    action create(program: R) {
+      -> ok() {
+        Initialize an empty render program with no instructions,
+        ready to receive rendering directives.
+      }
+      -> exists() {
+        A render program with this identifier already exists.
+      }
+    }
+
+    action element(program: R, part: String, role: String) {
+      -> ok(program: R) {
+        Append an anatomy part element with the given semantic
+        role (container, text, action, presentation, interactive)
+        and register the part name for dead-part analysis.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action text(program: R, part: String, content: String) {
+      -> ok(program: R) {
+        Append a text content instruction within the named
+        anatomy part.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action prop(program: R, name: String, propType: String, defaultValue: String) {
+      -> ok(program: R) {
+        Declare a typed component prop with an optional default
+        value, registering it for prop coverage analysis.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action bind(program: R, part: String, attr: String, expr: String) {
+      -> ok(program: R) {
+        Wire a data attribute on the named part to a binding
+        expression, connecting the anatomy to live data.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action stateDef(program: R, name: String, initial: Bool) {
+      -> ok(program: R) {
+        Declare a named state in the widget finite state machine,
+        marking whether it is the initial state.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action transition(program: R, fromState: String, event: String, toState: String) {
+      -> ok(program: R) {
+        Add a state machine transition triggered by the given
+        event, defining how the widget moves between states.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action aria(program: R, part: String, attr: String, value: String) {
+      -> ok(program: R) {
+        Attach an ARIA accessibility attribute to the named
+        anatomy part for screen reader and assistive technology
+        support.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action keyboard(program: R, key: String, event: String) {
+      -> ok(program: R) {
+        Map a keyboard key to a state machine event, enabling
+        keyboard-driven interaction with the widget.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action focus(program: R, strategy: String, initialPart: String) {
+      -> ok(program: R) {
+        Configure focus management with a strategy (trap, roving,
+        activedescendant) and the part that receives initial focus.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action compose(program: R, widget: String, slot: String) {
+      -> ok(program: R) {
+        Nest another widget within this program at the named
+        slot, enabling hierarchical composition.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action token(program: R, path: String, fallback: String) {
+      -> ok(program: R) {
+        Reference a theme design token by its dot-notation path,
+        registering it for theme compliance verification.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program has been terminated with pure and cannot
+        accept further instructions.
+      }
+    }
+
+    action pure(program: R, output: String) {
+      -> ok(program: R) {
+        Terminate the render program with a final output payload,
+        sealing it against further instruction appending.
+      }
+      -> notfound() {
+        No render program exists with this identifier.
+      }
+      -> sealed() {
+        The program was already terminated by a previous pure call.
+      }
+    }
+  }
+
+  invariant {
+    after create(program: p) -> ok()
+    then element(program: p, part: "root", role: "container") -> ok(program: p)
+  }
+
+  invariant {
+    after create(program: p) -> ok()
+    then pure(program: p, output: "done") -> ok(program: p)
+    and  element(program: p, part: "x", role: "text") -> sealed()
+  }
+}

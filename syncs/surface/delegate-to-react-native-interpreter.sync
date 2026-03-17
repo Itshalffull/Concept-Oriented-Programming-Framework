@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the ReactNative provider
+
+sync DelegateToReactNativeInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the react-native target, route the execution to the RenderInterpreterReactNative provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterReactNative")
+}
+then {
+  RenderInterpreterReactNative/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

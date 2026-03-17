@@ -1,0 +1,84 @@
+suite:
+  name: surface-render-programs
+  version: "1.0.0"
+  description: >
+    Surface rendering pipeline — monadic/functional pattern applied to widget
+    and theme codegen. Handlers return inspectable RenderProgram data instead
+    of directly producing code strings, enabling dry-run generation, caching,
+    cross-target analysis, and accessibility auditing before code emission.
+
+concepts:
+  RenderProgram:
+    spec: specs/surface/render-program.concept
+    params:
+      R: { as: ProgramId, description: "Render program identifier" }
+  RenderInterpreter:
+    spec: specs/surface/render-interpreter.concept
+    params:
+      I: { as: InterpreterId, description: "Interpreter instance identifier" }
+  A11yAuditProvider:
+    spec: specs/surface/providers/a11y-audit-provider.concept
+    params:
+      A: { as: AuditId, description: "Accessibility audit result identifier" }
+  DeadPartProvider:
+    spec: specs/surface/providers/dead-part-provider.concept
+    params:
+      D: { as: AnalysisId, description: "Dead part analysis result identifier" }
+  ThemeComplianceProvider:
+    spec: specs/surface/providers/theme-compliance-provider.concept
+    params:
+      T: { as: CheckId, description: "Theme compliance check result identifier" }
+
+syncs:
+  required:
+    - path: syncs/surface/build-and-render.sync
+      description: "Execute a RenderProgram through interpreter after handler build"
+    - path: syncs/surface/analyze-on-build.sync
+      description: "Trigger a11y audit on every built render program"
+    - path: syncs/surface/dispatch-a11y-audit.sync
+      description: "Route a11y-audit analysis from ProgramAnalysis to provider"
+    - path: syncs/surface/register-a11y-audit-provider.sync
+      description: "Register A11yAuditProvider with ProgramAnalysis"
+    - path: syncs/surface/interpret-render-programs.sync
+      description: "Execute sealed render programs through the target interpreter"
+    - path: syncs/surface/register-react-interpreter.sync
+      description: "Self-register React interpreter provider in plugin-registry"
+    - path: syncs/surface/register-svelte-interpreter.sync
+      description: "Self-register Svelte interpreter provider in plugin-registry"
+    - path: syncs/surface/delegate-to-react-interpreter.sync
+      description: "Route RenderInterpreter delegation to React provider"
+    - path: syncs/surface/delegate-to-svelte-interpreter.sync
+      description: "Route RenderInterpreter delegation to Svelte provider"
+  recommended:
+    - path: syncs/surface/cache-lookup-before-render.sync
+      name: CacheLookupBeforeRender
+      description: "Check ProgramCache before executing render interpreter"
+    - path: syncs/surface/cache-store-after-render.sync
+      name: CacheStoreAfterRender
+      description: "Memoize render interpreter output in ProgramCache"
+    - path: syncs/surface/dispatch-dead-parts.sync
+      name: DispatchDeadParts
+      description: "Route dead-parts analysis from ProgramAnalysis to provider"
+    - path: syncs/surface/register-dead-part-provider.sync
+      name: RegisterDeadPartProvider
+      description: "Register DeadPartProvider with ProgramAnalysis"
+    - path: syncs/surface/dispatch-theme-compliance.sync
+      name: DispatchThemeCompliance
+      description: "Route theme-compliance analysis from ProgramAnalysis to provider"
+    - path: syncs/surface/register-theme-compliance-provider.sync
+      name: RegisterThemeComplianceProvider
+      description: "Register ThemeComplianceProvider with ProgramAnalysis"
+
+uses:
+  - suite: monadic-handlers
+    concepts:
+      - name: ProgramAnalysis
+        params: { A: { as: AnalysisId } }
+      - name: ProgramCache
+        params: { C: { as: CacheEntryId } }
+      - name: FunctionalHandler
+        params: { H: { as: HandlerId } }
+
+dependencies:
+  - name: monadic-handlers
+    version: ">=1.0.0"
