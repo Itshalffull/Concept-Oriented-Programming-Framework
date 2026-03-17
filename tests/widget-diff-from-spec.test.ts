@@ -26,10 +26,12 @@ describe('WidgetImplementationEntity diffFromSpec (Monadic)', () => {
   // Helper: seed a widget entity
   async function seedWidget(name: string, opts: {
     parts?: Array<{ name: string }>;
-    states?: Array<{ name: string }>;
+    states?: Array<{ name: string; transitions?: Array<{ event: string; target: string }> }>;
     props?: Array<{ name: string }>;
     slots?: string[];
     accessibilityRole?: string;
+    composedWidgets?: Array<string | { name: string }>;
+    keyboardBindings?: Array<{ key: string; action: string }>;
   } = {}) {
     await storage.put('widget-entity', `widget:${name}`, {
       id: `widget:${name}`,
@@ -39,6 +41,8 @@ describe('WidgetImplementationEntity diffFromSpec (Monadic)', () => {
       props: JSON.stringify(opts.props || []),
       slots: JSON.stringify(opts.slots || []),
       accessibilityRole: opts.accessibilityRole || '',
+      composedWidgets: JSON.stringify(opts.composedWidgets || []),
+      keyboardBindings: JSON.stringify(opts.keyboardBindings || []),
     });
   }
 
@@ -49,6 +53,9 @@ describe('WidgetImplementationEntity diffFromSpec (Monadic)', () => {
     stateBindings?: Array<{ name: string }>;
     slotImplementations?: Array<{ name: string }>;
     accessibilityAttrs?: Array<{ attr: string; value?: string }>;
+    eventHandlers?: Array<string | { name: string; event?: string }>;
+    composedComponents?: Array<string | { name: string }>;
+    keyboardHandlers?: Array<{ key: string }>;
   } = {}) {
     await storage.put('widget-implementations', `impl:${id}`, {
       id,
@@ -59,6 +66,9 @@ describe('WidgetImplementationEntity diffFromSpec (Monadic)', () => {
       stateBindings: JSON.stringify(opts.stateBindings || []),
       slotImplementations: JSON.stringify(opts.slotImplementations || []),
       accessibilityAttrs: JSON.stringify(opts.accessibilityAttrs || []),
+      eventHandlers: JSON.stringify(opts.eventHandlers || []),
+      composedComponents: JSON.stringify(opts.composedComponents || []),
+      keyboardHandlers: JSON.stringify(opts.keyboardHandlers || []),
     });
   }
 
@@ -208,6 +218,159 @@ describe('WidgetImplementationEntity diffFromSpec (Monadic)', () => {
 
       const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
         impl: 'impl-6',
+      }));
+
+      expect(result.variant).toBe('inSync');
+    });
+  });
+
+  // ----------------------------------------------------------
+  // Event / transition gaps
+  // ----------------------------------------------------------
+
+  describe('event checking', () => {
+    it('detects missing event handlers for spec transitions', async () => {
+      await seedWidget('Toggle', {
+        parts: [{ name: 'root' }],
+        states: [
+          { name: 'off', transitions: [{ event: 'toggle', target: 'on' }] },
+          { name: 'on', transitions: [{ event: 'toggle', target: 'off' }, { event: 'reset', target: 'off' }] },
+        ],
+      });
+      await seedImpl('impl-evt-1', 'Toggle', {
+        renderedParts: [{ name: 'root' }],
+        stateBindings: [{ name: 'off' }, { name: 'on' }],
+        eventHandlers: ['toggle'], // missing 'reset'
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-evt-1',
+      }));
+
+      expect(result.variant).toBe('ok');
+      const diffs = JSON.parse(result.differences as string);
+      const missingEvents = diffs.filter((d: any) => d.kind === 'missing_event');
+      expect(missingEvents).toHaveLength(1);
+      expect(missingEvents[0].specValue).toBe('reset');
+      expect(result.missing_events).toBe(1);
+    });
+
+    it('reports inSync when all events are handled', async () => {
+      await seedWidget('Switch', {
+        parts: [{ name: 'root' }],
+        states: [
+          { name: 'off', transitions: [{ event: 'flip', target: 'on' }] },
+          { name: 'on', transitions: [{ event: 'flip', target: 'off' }] },
+        ],
+      });
+      await seedImpl('impl-evt-2', 'Switch', {
+        renderedParts: [{ name: 'root' }],
+        stateBindings: [{ name: 'off' }, { name: 'on' }],
+        eventHandlers: ['flip'],
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-evt-2',
+      }));
+
+      expect(result.variant).toBe('inSync');
+    });
+  });
+
+  // ----------------------------------------------------------
+  // Compose checking
+  // ----------------------------------------------------------
+
+  describe('compose checking', () => {
+    it('detects missing composed widget references', async () => {
+      await seedWidget('Toolbar', {
+        parts: [{ name: 'root' }],
+        composedWidgets: ['Button', 'Separator', 'Menu'],
+      });
+      await seedImpl('impl-comp-1', 'Toolbar', {
+        renderedParts: [{ name: 'root' }],
+        composedComponents: ['Button'],
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-comp-1',
+      }));
+
+      expect(result.variant).toBe('ok');
+      const diffs = JSON.parse(result.differences as string);
+      const missingCompose = diffs.filter((d: any) => d.kind === 'missing_compose');
+      expect(missingCompose).toHaveLength(2);
+      expect(missingCompose.map((d: any) => d.specValue)).toContain('Separator');
+      expect(missingCompose.map((d: any) => d.specValue)).toContain('Menu');
+      expect(result.missing_compose).toBe(2);
+    });
+
+    it('detects extra composed widgets in implementation', async () => {
+      await seedWidget('Panel', {
+        parts: [{ name: 'root' }],
+        composedWidgets: ['Header'],
+      });
+      await seedImpl('impl-comp-2', 'Panel', {
+        renderedParts: [{ name: 'root' }],
+        composedComponents: ['Header', 'Footer'],
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-comp-2',
+      }));
+
+      expect(result.variant).toBe('ok');
+      const diffs = JSON.parse(result.differences as string);
+      const extraCompose = diffs.filter((d: any) => d.kind === 'extra_compose');
+      expect(extraCompose).toHaveLength(1);
+      expect(extraCompose[0].implValue).toBe('Footer');
+      expect(result.extra_compose).toBe(1);
+    });
+  });
+
+  // ----------------------------------------------------------
+  // Keyboard binding gaps
+  // ----------------------------------------------------------
+
+  describe('keyboard binding checking', () => {
+    it('detects missing keyboard handlers when spec declares bindings', async () => {
+      await seedWidget('Menu', {
+        parts: [{ name: 'root' }],
+        keyboardBindings: [
+          { key: 'ArrowDown', action: 'next' },
+          { key: 'ArrowUp', action: 'prev' },
+          { key: 'Enter', action: 'select' },
+        ],
+      });
+      await seedImpl('impl-kb-1', 'Menu', {
+        renderedParts: [{ name: 'root' }],
+        keyboardHandlers: [], // no keyboard handlers
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-kb-1',
+      }));
+
+      expect(result.variant).toBe('ok');
+      const diffs = JSON.parse(result.differences as string);
+      const kbGaps = diffs.filter((d: any) => d.kind === 'missing_keyboard');
+      expect(kbGaps).toHaveLength(1);
+      expect(kbGaps[0].specValue).toContain('3 keyboard binding(s)');
+      expect(result.missing_keyboard).toBe(1);
+    });
+
+    it('passes when keyboard handlers are present', async () => {
+      await seedWidget('Nav', {
+        parts: [{ name: 'root' }],
+        keyboardBindings: [{ key: 'Tab', action: 'next' }],
+      });
+      await seedImpl('impl-kb-2', 'Nav', {
+        renderedParts: [{ name: 'root' }],
+        keyboardHandlers: [{ key: 'Tab' }],
+      });
+
+      const result = await run(widgetDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-kb-2',
       }));
 
       expect(result.variant).toBe('inSync');

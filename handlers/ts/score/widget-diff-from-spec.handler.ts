@@ -2,7 +2,8 @@
 //
 // Compares a generated widget implementation against its widget spec to find
 // drift: missing anatomy parts, extra parts, missing props, state mismatches,
-// slot gaps, and accessibility omissions. Returns a StorageProgram for full
+// slot gaps, accessibility omissions, event/transition gaps, compose
+// discrepancies, and keyboard binding gaps. Returns a StorageProgram for full
 // traceability through the monadic analysis pipeline.
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
@@ -15,7 +16,8 @@ type Result = { variant: string; [key: string]: unknown };
 
 type Difference = {
   kind: 'missing_part' | 'extra_part' | 'missing_prop' | 'extra_prop'
-      | 'missing_state' | 'extra_state' | 'missing_slot' | 'accessibility_gap';
+      | 'missing_state' | 'extra_state' | 'missing_slot' | 'accessibility_gap'
+      | 'missing_event' | 'missing_compose' | 'extra_compose' | 'missing_keyboard';
   specValue: string;
   implValue: string;
 };
@@ -172,6 +174,80 @@ export const widgetDiffFromSpecHandler: FunctionalConceptHandler = {
             });
           }
 
+          // --- Events / Transitions ---
+          // Extract events from spec states' transitions
+          const specEventsSet = new Set<string>();
+          for (const state of specStates) {
+            const stateObj = state as unknown as Record<string, unknown>;
+            const transitions = (stateObj.transitions || []) as Array<{ event?: string; on?: string }>;
+            for (const t of transitions) {
+              const event = t.event || t.on;
+              if (event) specEventsSet.add(event);
+            }
+          }
+
+          // Parse impl event handlers
+          const implEvents: string[] = (() => {
+            try { return JSON.parse(impl.eventHandlers as string || '[]'); }
+            catch { return []; }
+          })();
+          const implEventNames = new Set(
+            implEvents.map((e: string | { name: string; event?: string }) =>
+              typeof e === 'string' ? e : (e.event || e.name))
+          );
+
+          for (const event of specEventsSet) {
+            if (!implEventNames.has(event)) {
+              differences.push({ kind: 'missing_event', specValue: event, implValue: '' });
+            }
+          }
+
+          // --- Composed widgets ---
+          const specComposed: Array<string | { name: string }> = (() => {
+            try { return JSON.parse(widgetEntity.composedWidgets as string || '[]'); }
+            catch { return []; }
+          })();
+          const specComposeNames = new Set(
+            specComposed.map(c => typeof c === 'string' ? c : c.name)
+          );
+
+          const implComposed: Array<string | { name: string }> = (() => {
+            try { return JSON.parse(impl.composedComponents as string || '[]'); }
+            catch { return []; }
+          })();
+          const implComposeNames = new Set(
+            implComposed.map(c => typeof c === 'string' ? c : c.name)
+          );
+
+          for (const name of specComposeNames) {
+            if (!implComposeNames.has(name)) {
+              differences.push({ kind: 'missing_compose', specValue: name, implValue: '' });
+            }
+          }
+          for (const name of implComposeNames) {
+            if (!specComposeNames.has(name)) {
+              differences.push({ kind: 'extra_compose', specValue: '', implValue: name });
+            }
+          }
+
+          // --- Keyboard bindings ---
+          const specKeyboard: Array<{ key?: string; keys?: string }> = (() => {
+            try { return JSON.parse(widgetEntity.keyboardBindings as string || '[]'); }
+            catch { return []; }
+          })();
+          const implKeyboard: Array<{ key?: string; keys?: string }> = (() => {
+            try { return JSON.parse(impl.keyboardHandlers as string || '[]'); }
+            catch { return []; }
+          })();
+
+          if (specKeyboard.length > 0 && implKeyboard.length === 0) {
+            differences.push({
+              kind: 'missing_keyboard',
+              specValue: `${specKeyboard.length} keyboard binding(s)`,
+              implValue: '',
+            });
+          }
+
           if (differences.length === 0) {
             return { variant: 'inSync' };
           }
@@ -182,6 +258,10 @@ export const widgetDiffFromSpecHandler: FunctionalConceptHandler = {
             missing_parts: differences.filter(d => d.kind === 'missing_part').length,
             extra_parts: differences.filter(d => d.kind === 'extra_part').length,
             missing_props: differences.filter(d => d.kind === 'missing_prop').length,
+            missing_events: differences.filter(d => d.kind === 'missing_event').length,
+            missing_compose: differences.filter(d => d.kind === 'missing_compose').length,
+            extra_compose: differences.filter(d => d.kind === 'extra_compose').length,
+            missing_keyboard: differences.filter(d => d.kind === 'missing_keyboard').length,
             accessibility_gaps: differences.filter(d => d.kind === 'accessibility_gap').length,
             total_differences: differences.length,
           };

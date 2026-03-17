@@ -31,6 +31,8 @@ describe('ThemeImplementationEntity diffFromSpec (Monadic)', () => {
     motion?: Record<string, string>;
     elevation?: Record<string, string>;
     radius?: Record<string, string>;
+    spacing?: Record<string, string>;
+    extendsTheme?: string;
   } = {}) {
     await storage.put('theme-entity', `theme:${name}`, {
       id: `theme:${name}`,
@@ -41,6 +43,8 @@ describe('ThemeImplementationEntity diffFromSpec (Monadic)', () => {
       motionCurves: JSON.stringify(opts.motion || {}),
       elevationLevels: JSON.stringify(opts.elevation || {}),
       radiusValues: JSON.stringify(opts.radius || {}),
+      spacingValues: JSON.stringify(opts.spacing || {}),
+      extendsTheme: opts.extendsTheme || '',
     });
   }
 
@@ -230,6 +234,116 @@ describe('ThemeImplementationEntity diffFromSpec (Monadic)', () => {
       }));
 
       expect(result.variant).toBe('inSync');
+    });
+  });
+
+  // ----------------------------------------------------------
+  // Extends chain / inheritance
+  // ----------------------------------------------------------
+
+  describe('extends chain', () => {
+    it('detects missing inherited tokens from parent theme', async () => {
+      // Parent theme defines base tokens
+      await seedTheme('base-theme', {
+        palette: { primary: '#3b82f6', secondary: '#6366f1', bg: '#ffffff' },
+        radius: { sm: '4px', md: '8px' },
+      });
+
+      // Child theme extends parent, overrides primary, adds accent
+      await seedTheme('child-theme', {
+        palette: { primary: '#ef4444', accent: '#f59e0b' },
+        extendsTheme: 'base-theme',
+      });
+
+      // Implementation only has child's own tokens, missing inherited ones
+      await seedImpl('impl-ext-1', 'child-theme', [
+        { path: 'palette.primary', resolvedValue: '#ef4444' },
+        { path: 'palette.accent', resolvedValue: '#f59e0b' },
+        // missing inherited: palette.secondary, palette.bg, radius.sm, radius.md
+      ]);
+
+      const result = await run(themeDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-ext-1',
+      }));
+
+      expect(result.variant).toBe('ok');
+      const diffs = JSON.parse(result.differences as string);
+      const inherited = diffs.filter((d: any) => d.kind === 'missing_inherited_token');
+      expect(inherited).toHaveLength(4);
+      expect(inherited.map((d: any) => d.token)).toContain('palette.secondary');
+      expect(inherited.map((d: any) => d.token)).toContain('palette.bg');
+      expect(inherited.map((d: any) => d.token)).toContain('radius.sm');
+      expect(inherited.map((d: any) => d.token)).toContain('radius.md');
+      expect(result.missing_inherited).toBe(4);
+    });
+
+    it('reports inSync when inherited tokens are present in impl', async () => {
+      await seedTheme('parent', {
+        palette: { primary: '#000' },
+        radius: { sm: '2px' },
+      });
+
+      await seedTheme('child', {
+        palette: { accent: '#f00' },
+        extendsTheme: 'parent',
+      });
+
+      await seedImpl('impl-ext-2', 'child', [
+        { path: 'palette.accent', resolvedValue: '#f00' },
+        { path: 'palette.primary', resolvedValue: '#000' },
+        { path: 'radius.sm', resolvedValue: '2px' },
+      ]);
+
+      const result = await run(themeDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-ext-2',
+      }));
+
+      expect(result.variant).toBe('inSync');
+    });
+
+    it('does not flag overridden parent tokens as inherited gaps', async () => {
+      await seedTheme('base', {
+        palette: { primary: '#old-blue' },
+      });
+
+      await seedTheme('override', {
+        palette: { primary: '#new-red' },
+        extendsTheme: 'base',
+      });
+
+      await seedImpl('impl-ext-3', 'override', [
+        { path: 'palette.primary', resolvedValue: '#new-red' },
+      ]);
+
+      const result = await run(themeDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-ext-3',
+      }));
+
+      expect(result.variant).toBe('inSync');
+    });
+  });
+
+  // ----------------------------------------------------------
+  // Spacing tokens
+  // ----------------------------------------------------------
+
+  describe('spacing tokens', () => {
+    it('detects missing spacing tokens', async () => {
+      await seedTheme('spaced', {
+        spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px' },
+      });
+      await seedImpl('impl-sp-1', 'spaced', [
+        { path: 'spacing.xs', resolvedValue: '4px' },
+        { path: 'spacing.sm', resolvedValue: '8px' },
+        // missing md and lg
+      ]);
+
+      const result = await run(themeDiffFromSpecHandler.diffFromSpec({
+        impl: 'impl-sp-1',
+      }));
+
+      expect(result.variant).toBe('ok');
+      expect(result.missing_tokens).toBe(2);
     });
   });
 });
