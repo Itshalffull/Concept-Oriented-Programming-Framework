@@ -3,7 +3,7 @@
 // ============================================================
 
 import type { ConceptStorage } from './types.ts';
-import type { StorageProgram, Instruction, Bindings } from './storage-program.ts';
+import type { StorageProgram, Bindings } from './storage-program.ts';
 
 /** Result of executing a StorageProgram. */
 export interface ExecutionResult {
@@ -49,9 +49,11 @@ export async function interpret(
   program: StorageProgram<unknown>,
   storage: ConceptStorage,
   executionId?: string,
+  parentBindings?: Bindings,
 ): Promise<ExecutionResult> {
   const eid = executionId ?? `exec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const bindings: Bindings = {};
+  // Share bindings with parent so branch sub-programs can read and contribute bindings
+  const bindings: Bindings = parentBindings ?? {};
   const steps: ExecutionStep[] = [];
   const mutations: Mutation[] = [];
   const start = Date.now();
@@ -82,6 +84,15 @@ export async function interpret(
         steps.push({ index: i, instruction: 'put', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
         break;
       }
+      case 'merge': {
+        const existing = await storage.get(instr.relation, instr.key);
+        const merged = existing ? { ...existing, ...instr.fields } : { ...instr.fields };
+        const previousValue = existing;
+        await storage.put(instr.relation, instr.key, merged);
+        mutations.push({ tag: 'put', relation: instr.relation, key: instr.key, value: merged, previousValue });
+        steps.push({ index: i, instruction: 'merge', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
+        break;
+      }
       case 'del': {
         const previousValue = await storage.get(instr.relation, instr.key);
         await storage.del(instr.relation, instr.key);
@@ -89,10 +100,42 @@ export async function interpret(
         steps.push({ index: i, instruction: 'del', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
         break;
       }
+      case 'delFrom': {
+        const resolvedKey = instr.keyFn(bindings);
+        const previousValue = await storage.get(instr.relation, resolvedKey);
+        await storage.del(instr.relation, resolvedKey);
+        mutations.push({ tag: 'del', relation: instr.relation, key: resolvedKey, previousValue });
+        steps.push({ index: i, instruction: 'delFrom', relation: instr.relation, key: resolvedKey, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'putFrom': {
+        const value = instr.valueFn(bindings);
+        const previousValue = await storage.get(instr.relation, instr.key);
+        await storage.put(instr.relation, instr.key, value);
+        mutations.push({ tag: 'put', relation: instr.relation, key: instr.key, value, previousValue });
+        steps.push({ index: i, instruction: 'putFrom', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'mergeFrom': {
+        const fields = instr.fieldsFn(bindings);
+        const existing = await storage.get(instr.relation, instr.key);
+        const merged = existing ? { ...existing, ...fields } : { ...fields };
+        const previousValue = existing;
+        await storage.put(instr.relation, instr.key, merged);
+        mutations.push({ tag: 'put', relation: instr.relation, key: instr.key, value: merged, previousValue });
+        steps.push({ index: i, instruction: 'mergeFrom', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'mapBindings': {
+        const derived = instr.fn(bindings);
+        bindings[instr.bindAs] = derived;
+        steps.push({ index: i, instruction: 'mapBindings', result: derived, durationMs: Date.now() - stepStart });
+        break;
+      }
       case 'branch': {
         const taken = instr.condition(bindings);
         const branchProgram = taken ? instr.thenBranch : instr.elseBranch;
-        const branchResult = await interpret(branchProgram, storage, eid);
+        const branchResult = await interpret(branchProgram, storage, eid, bindings);
         steps.push({ index: i, instruction: `branch:${taken ? 'then' : 'else'}`, durationMs: Date.now() - stepStart });
         steps.push(...branchResult.trace.steps);
         if (branchResult.variant !== '__continue') {
@@ -104,6 +147,12 @@ export async function interpret(
         const val = instr.value as { variant: string; [key: string]: unknown };
         result = val;
         steps.push({ index: i, instruction: 'pure', result: val, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'pureFrom': {
+        const val = instr.fn(bindings) as { variant: string; [key: string]: unknown };
+        result = val;
+        steps.push({ index: i, instruction: 'pureFrom', result: val, durationMs: Date.now() - stepStart });
         break;
       }
       case 'bind': {

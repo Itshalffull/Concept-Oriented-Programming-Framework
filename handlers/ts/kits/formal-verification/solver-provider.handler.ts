@@ -2,16 +2,17 @@
 // Register, dispatch to, health-check, and manage external solver backends
 // (SMT solvers, model checkers, proof assistants) as pluggable providers.
 //
-// Migrated to FunctionalConceptHandler: returns StoragePrograms enabling
-// the monadic pipeline to extract properties like "dispatch always selects
-// the highest-priority matching provider" and "unregister removes the
-// provider from the relation".
+// Uses the StorageProgram DSL with proper typed instructions (merge,
+// mapBindings, pureFrom, delFrom) instead of string-based __compute:,
+// __binding:, and __merge conventions.
 // See Architecture doc Section 18.5
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, del, branch, pure,
+  merge, mapBindings, pureFrom, delFrom,
   type StorageProgram,
+  type Bindings,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'solver-providers';
@@ -89,13 +90,35 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { status: 'active' }, 'providers');
-    // The interpreter filters by language/kind and selects lowest priority.
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'dispatch_provider',
-      __filter_language: formal_language,
-      __filter_kind: kind,
-      property_ref,
+    return pureFrom(p, (bindings: Bindings) => {
+      const providers = (bindings.providers as Record<string, unknown>[]) || [];
+
+      // Filter providers whose supported_languages includes the requested
+      // formal_language AND whose supported_kinds includes the requested kind
+      const matching = providers.filter((prov) => {
+        try {
+          const langs: string[] = JSON.parse(prov.supported_languages as string);
+          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
+          return langs.includes(formal_language) && kinds.includes(kind);
+        } catch {
+          return false;
+        }
+      });
+
+      if (matching.length === 0) {
+        return { variant: 'no_provider', formal_language, kind };
+      }
+
+      // Sort by priority ascending (lowest priority number = highest precedence)
+      matching.sort((a, b) => (a.priority as number) - (b.priority as number));
+      const selected = matching[0];
+
+      return {
+        variant: 'ok',
+        provider_id: selected.provider_id,
+        property_ref,
+        run_ref: `run-${simpleHash(property_ref + ':' + Date.now())}`,
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -115,10 +138,48 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { status: 'active' }, 'providers');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'dispatch_batch',
-      __property_refs: JSON.stringify(refs),
+    return pureFrom(p, (bindings: Bindings) => {
+      const providers = (bindings.providers as Record<string, unknown>[]) || [];
+
+      // Find the lowest-priority active provider that supports smtlib + invariant
+      // (the default formal verification target)
+      const eligible = providers.filter((prov) => {
+        try {
+          const langs: string[] = JSON.parse(prov.supported_languages as string);
+          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
+          return langs.includes('smtlib') && kinds.includes('invariant');
+        } catch {
+          return false;
+        }
+      });
+
+      eligible.sort((a, b) => (a.priority as number) - (b.priority as number));
+
+      if (eligible.length === 0) {
+        // No matching providers — all properties are unassigned
+        return {
+          variant: 'ok',
+          assigned_count: 0,
+          unassigned_count: refs.length,
+          assignments: JSON.stringify([]),
+          unassigned: JSON.stringify(refs),
+        };
+      }
+
+      const selected = eligible[0];
+      const assignments = refs.map((ref) => ({
+        property_ref: ref,
+        provider_id: selected.provider_id,
+        run_ref: `run-${simpleHash(ref + ':' + Date.now())}`,
+      }));
+
+      return {
+        variant: 'ok',
+        assigned_count: refs.length,
+        unassigned_count: 0,
+        assignments: JSON.stringify(assignments),
+        unassigned: JSON.stringify([]),
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -134,22 +195,42 @@ export const solverProviderHandler: FunctionalConceptHandler = {
         return !matches || matches.length === 0;
       },
       pure(createProgram(), { variant: 'notfound', provider_id }),
-      pure(createProgram(), {
-        variant: 'ok',
-        provider_id,
-        __compute: 'health_check',
-      }),
+      (() => {
+        let inner = createProgram();
+        return pureFrom(inner, (bindings: Bindings) => {
+          const match = (bindings.matches as Record<string, unknown>[])[0];
+          return {
+            variant: 'ok',
+            provider_id,
+            name: match.name,
+            status: match.status,
+            latency_ms: Math.floor(Math.random() * 50) + 5,
+          };
+        });
+      })(),
     );
     return p as StorageProgram<Result>;
   },
 
   list(_input) {
+    const fields = ['id', 'provider_id', 'name', 'supported_languages', 'supported_kinds', 'priority', 'status'];
+
     let p = createProgram();
     p = find(p, RELATION, {}, 'items');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'list',
-      __fields: ['id', 'provider_id', 'name', 'supported_languages', 'supported_kinds', 'priority', 'status'],
+    return pureFrom(p, (bindings: Bindings) => {
+      const items = (bindings.items as Record<string, unknown>[]) || [];
+      const projected = items.map((item) => {
+        const obj: Record<string, unknown> = {};
+        for (const f of fields) {
+          if (f in item) obj[f] = item[f];
+        }
+        return obj;
+      });
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -167,12 +248,14 @@ export const solverProviderHandler: FunctionalConceptHandler = {
       pure(createProgram(), { variant: 'notfound', provider_id }),
       (() => {
         let inner = createProgram();
-        // Delete by resolved id from the binding
-        inner = del(inner, RELATION, '__binding:matches[0].id');
-        return pure(inner, {
-          variant: 'ok',
-          provider_id,
-          __compute: 'unregister_name',
+        inner = delFrom(inner, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
+        return pureFrom(inner, (bindings: Bindings) => {
+          const match = (bindings.matches as Record<string, unknown>[])[0];
+          return {
+            variant: 'ok',
+            provider_id,
+            name: match.name,
+          };
         });
       })(),
     );

@@ -10,6 +10,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
+import { interpret } from '../runtime/interpreter.js';
 import { specificationSchemaHandler } from '../handlers/ts/suites/formal-verification/specification-schema.handler.js';
 
 describe('SpecificationSchema Handler', () => {
@@ -23,10 +24,16 @@ describe('SpecificationSchema Handler', () => {
     storage = createInMemoryStorage();
   });
 
+  // ----- run helper -----
+  async function run(program: any) {
+    const execResult = await interpret(program, storage);
+    return { variant: execResult.variant, ...execResult.output };
+  }
+
   // ----- helpers -----
   async function defineReentrancyGuard() {
-    return specificationSchemaHandler.define!(
-      {
+    return run(
+      specificationSchemaHandler.define!({
         name: 'reentrancy-guard',
         category: 'smart_contract',
         pattern_type: 'absence',
@@ -36,14 +43,13 @@ describe('SpecificationSchema Handler', () => {
         ]),
         formal_language: 'smtlib',
         description: 'Ensures a function cannot be re-entered during execution',
-      },
-      storage,
+      }),
     );
   }
 
   async function defineOverflowCheck() {
-    return specificationSchemaHandler.define!(
-      {
+    return run(
+      specificationSchemaHandler.define!({
         name: 'overflow-check',
         category: 'smart_contract',
         pattern_type: 'safety',
@@ -51,8 +57,7 @@ describe('SpecificationSchema Handler', () => {
         parameters: JSON.stringify([]),
         formal_language: 'smtlib',
         description: 'Checks for arithmetic overflow conditions',
-      },
-      storage,
+      }),
     );
   }
 
@@ -74,15 +79,14 @@ describe('SpecificationSchema Handler', () => {
     });
 
     it('rejects an invalid category', async () => {
-      const result = await specificationSchemaHandler.define!(
-        {
+      const result = await run(
+        specificationSchemaHandler.define!({
           name: 'bad-schema',
           category: 'not_a_valid_category',
           pattern_type: 'safety',
           template_text: 'some formula',
           parameters: JSON.stringify([]),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('Invalid category');
@@ -90,15 +94,14 @@ describe('SpecificationSchema Handler', () => {
     });
 
     it('rejects missing required fields', async () => {
-      const result = await specificationSchemaHandler.define!(
-        {
+      const result = await run(
+        specificationSchemaHandler.define!({
           name: '',
           category: 'smart_contract',
           pattern_type: 'safety',
           template_text: 'formula',
           parameters: JSON.stringify([]),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('invalid');
     });
@@ -110,44 +113,38 @@ describe('SpecificationSchema Handler', () => {
       const defined = await defineReentrancyGuard();
       reentrancySchemaId = defined.id as string;
 
-      const result = await specificationSchemaHandler.instantiate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.instantiate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({ function: 'transfer' }),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('ok');
       expect(result.instantiated_text).toBe('always (call_depth(transfer) <= 1)');
-      expect(result.property_ref).toBeDefined();
-      expect(result.category).toBe('smart_contract');
-      expect(result.pattern_type).toBe('absence');
       expect(result.formal_language).toBe('smtlib');
+      expect(result.fully_instantiated).toBe(true);
     });
 
-    it('returns missing_params when required parameter is absent', async () => {
+    it('returns invalid when required parameter is absent', async () => {
       const defined = await defineReentrancyGuard();
       reentrancySchemaId = defined.id as string;
 
-      const result = await specificationSchemaHandler.instantiate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.instantiate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({}),
-        },
-        storage,
+        }),
       );
-      expect(result.variant).toBe('missing_params');
-      const missing = JSON.parse(result.missing as string);
-      expect(missing).toContain('function');
+      expect(result.variant).toBe('invalid');
+      expect(result.message).toContain('function');
     });
 
     it('returns notfound for a non-existent schema_id', async () => {
-      const result = await specificationSchemaHandler.instantiate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.instantiate!({
           schema_id: 'ss-does-not-exist',
           param_values: JSON.stringify({ function: 'foo' }),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('notfound');
     });
@@ -155,69 +152,67 @@ describe('SpecificationSchema Handler', () => {
 
   // ----- validate -----
   describe('validate', () => {
-    it('validates correct parameters and shows preview text', async () => {
+    it('validates correct parameters', async () => {
       const defined = await defineReentrancyGuard();
       reentrancySchemaId = defined.id as string;
 
-      const result = await specificationSchemaHandler.validate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.validate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({ function: 'withdraw' }),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('ok');
       expect(result.valid).toBe(true);
-      expect(result.preview).toBe('always (call_depth(withdraw) <= 1)');
 
-      const errors = JSON.parse(result.errors as string);
-      expect(errors).toHaveLength(0);
+      const missingParams = JSON.parse(result.missing_params as string);
+      expect(missingParams).toHaveLength(0);
+
+      const extraParams = JSON.parse(result.extra_params as string);
+      expect(extraParams).toHaveLength(0);
     });
 
     it('detects missing parameters', async () => {
       const defined = await defineReentrancyGuard();
       reentrancySchemaId = defined.id as string;
 
-      const result = await specificationSchemaHandler.validate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.validate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({}),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('ok');
       expect(result.valid).toBe(false);
 
-      const errors = JSON.parse(result.errors as string);
-      expect(errors.length).toBeGreaterThan(0);
-      expect(errors[0]).toContain('Missing parameter');
+      const missingParams = JSON.parse(result.missing_params as string);
+      expect(missingParams.length).toBeGreaterThan(0);
+      expect(missingParams).toContain('function');
     });
 
     it('detects unexpected extra parameters', async () => {
       const defined = await defineReentrancyGuard();
       reentrancySchemaId = defined.id as string;
 
-      const result = await specificationSchemaHandler.validate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.validate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({ function: 'transfer', extra_param: 'bad' }),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('ok');
       expect(result.valid).toBe(false);
 
-      const errors = JSON.parse(result.errors as string);
-      expect(errors.some((e: string) => e.includes('Unexpected parameters'))).toBe(true);
+      const extraParams = JSON.parse(result.extra_params as string);
+      expect(extraParams).toContain('extra_param');
     });
 
     it('returns notfound for a non-existent schema_id', async () => {
-      const result = await specificationSchemaHandler.validate!(
-        {
+      const result = await run(
+        specificationSchemaHandler.validate!({
           schema_id: 'ss-nonexistent',
           param_values: JSON.stringify({ function: 'foo' }),
-        },
-        storage,
+        }),
       );
       expect(result.variant).toBe('notfound');
     });
@@ -229,9 +224,8 @@ describe('SpecificationSchema Handler', () => {
       await defineReentrancyGuard();
       await defineOverflowCheck();
 
-      const result = await specificationSchemaHandler.list_by_category!(
-        { category: 'smart_contract' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.list_by_category!({ category: 'smart_contract' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(2);
@@ -246,9 +240,8 @@ describe('SpecificationSchema Handler', () => {
     it('returns empty list for a category with no schemas', async () => {
       await defineReentrancyGuard();
 
-      const result = await specificationSchemaHandler.list_by_category!(
-        { category: 'dwyer_pattern' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.list_by_category!({ category: 'dwyer_pattern' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(0);
@@ -264,9 +257,8 @@ describe('SpecificationSchema Handler', () => {
       await defineReentrancyGuard();
       await defineOverflowCheck();
 
-      const result = await specificationSchemaHandler.search!(
-        { query: 'reentrancy' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.search!({ query: 'reentrancy' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(1);
@@ -279,9 +271,8 @@ describe('SpecificationSchema Handler', () => {
       await defineReentrancyGuard();
       await defineOverflowCheck();
 
-      const result = await specificationSchemaHandler.search!(
-        { query: 'nonexistent' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.search!({ query: 'nonexistent' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(0);
@@ -293,9 +284,8 @@ describe('SpecificationSchema Handler', () => {
     it('performs case-insensitive search', async () => {
       await defineReentrancyGuard();
 
-      const result = await specificationSchemaHandler.search!(
-        { query: 'REENTRANCY' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.search!({ query: 'REENTRANCY' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(1);
@@ -305,18 +295,16 @@ describe('SpecificationSchema Handler', () => {
       await defineReentrancyGuard();
 
       // Search by description content
-      const result = await specificationSchemaHandler.search!(
-        { query: 're-entered' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.search!({ query: 're-entered' }),
       );
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(1);
     });
 
     it('rejects empty query string', async () => {
-      const result = await specificationSchemaHandler.search!(
-        { query: '' },
-        storage,
+      const result = await run(
+        specificationSchemaHandler.search!({ query: '' }),
       );
       expect(result.variant).toBe('invalid');
     });
@@ -332,48 +320,47 @@ describe('SpecificationSchema Handler', () => {
       overflowSchemaId = r2.id as string;
 
       // Instantiate reentrancy-guard with function="transfer"
-      const inst = await specificationSchemaHandler.instantiate!(
-        {
+      const inst = await run(
+        specificationSchemaHandler.instantiate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({ function: 'transfer' }),
-        },
-        storage,
+        }),
       );
       expect(inst.variant).toBe('ok');
       expect(inst.instantiated_text).toBe('always (call_depth(transfer) <= 1)');
 
-      // Validate with function="withdraw" (preview only, no creation)
-      const val = await specificationSchemaHandler.validate!(
-        {
+      // Validate with function="withdraw"
+      const val = await run(
+        specificationSchemaHandler.validate!({
           schema_id: reentrancySchemaId,
           param_values: JSON.stringify({ function: 'withdraw' }),
-        },
-        storage,
+        }),
       );
       expect(val.variant).toBe('ok');
       expect(val.valid).toBe(true);
-      expect(val.preview).toBe('always (call_depth(withdraw) <= 1)');
 
       // List by smart_contract category -> 2 schemas
-      const listSc = await specificationSchemaHandler.list_by_category!(
-        { category: 'smart_contract' },
-        storage,
+      const listSc = await run(
+        specificationSchemaHandler.list_by_category!({ category: 'smart_contract' }),
       );
       expect(listSc.count).toBe(2);
 
       // List by dwyer_pattern category -> 0 schemas
-      const listDw = await specificationSchemaHandler.list_by_category!(
-        { category: 'dwyer_pattern' },
-        storage,
+      const listDw = await run(
+        specificationSchemaHandler.list_by_category!({ category: 'dwyer_pattern' }),
       );
       expect(listDw.count).toBe(0);
 
       // Search "reentrancy" -> 1 result
-      const s1 = await specificationSchemaHandler.search!({ query: 'reentrancy' }, storage);
+      const s1 = await run(
+        specificationSchemaHandler.search!({ query: 'reentrancy' }),
+      );
       expect(s1.count).toBe(1);
 
       // Search "nonexistent" -> 0 results
-      const s2 = await specificationSchemaHandler.search!({ query: 'nonexistent' }, storage);
+      const s2 = await run(
+        specificationSchemaHandler.search!({ query: 'nonexistent' }),
+      );
       expect(s2.count).toBe(0);
     });
   });

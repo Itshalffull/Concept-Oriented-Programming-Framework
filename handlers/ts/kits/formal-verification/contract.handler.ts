@@ -10,7 +10,8 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, pure,
+  createProgram, get, find, put, branch, pure, merge, mapBindings, pureFrom,
+  mergeFrom, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -88,17 +89,31 @@ export const contractHandler: FunctionalConceptHandler = {
       (bindings) => bindings.contract == null,
       pure(createProgram(), { variant: 'notfound', id }),
       (() => {
-        // Verify: check guarantees are non-empty. Real impl checks formal entailment.
+        // Derive verification status from contract guarantees
         let inner = createProgram();
-        inner = put(inner, RELATION, id, {
-          __merge: true,
-          __compute: 'verify_compatibility',
-          updated_at: now,
+        inner = mapBindings(inner, (bindings) => {
+          const contract = bindings.contract as Record<string, unknown>;
+          const guarantees: string[] = JSON.parse(contract.guarantees as string);
+          const missingGuarantees = guarantees.filter(g => g === '');
+          const status = missingGuarantees.length > 0 ? 'incompatible' : 'compatible';
+          return { status, missing_guarantees: missingGuarantees };
+        }, 'verification');
+        inner = mergeFrom(inner, RELATION, id, (bindings) => {
+          const v = bindings.verification as { status: string };
+          return { compatibility_status: v.status, updated_at: now };
         });
-        return pure(inner, {
-          variant: 'ok',
-          id,
-          __compute: 'verify_result',
+        return pureFrom(inner, (bindings) => {
+          const contract = bindings.contract as Record<string, unknown>;
+          const v = bindings.verification as { status: string; missing_guarantees: string[] };
+          const assumptions: string[] = JSON.parse(contract.assumptions as string);
+          const guarantees: string[] = JSON.parse(contract.guarantees as string);
+          return {
+            variant: 'ok', id,
+            compatibility_status: v.status,
+            missing_guarantees: JSON.stringify(v.missing_guarantees),
+            assumption_count: assumptions.length,
+            guarantee_count: guarantees.length,
+          };
         });
       })(),
     );
@@ -140,20 +155,87 @@ export const contractHandler: FunctionalConceptHandler = {
         const now = new Date().toISOString();
 
         let inner = createProgram();
-        inner = put(inner, RELATION, composedId, {
-          id: composedId,
-          __compute: 'compose_contracts',
-          __contract_ids: JSON.stringify(ids),
-          composition_chain: JSON.stringify(ids),
-          compatibility_status: 'unchecked',
-          created_at: now,
-          updated_at: now,
+
+        // Derive composed contract fields from all fetched contracts
+        inner = mapBindings(inner, (bindings) => {
+          const allAssumptions: string[] = [];
+          const allGuarantees: string[] = [];
+          let firstSource = '';
+          let lastTarget = '';
+
+          for (let i = 0; i < ids.length; i++) {
+            const contract = bindings[`contract_${i}`] as Record<string, unknown>;
+            const assumptions: string[] = JSON.parse(contract.assumptions as string);
+            const guarantees: string[] = JSON.parse(contract.guarantees as string);
+            allAssumptions.push(...assumptions);
+            allGuarantees.push(...guarantees);
+            if (i === 0) firstSource = contract.source_concept as string;
+            if (i === ids.length - 1) lastTarget = contract.target_concept as string;
+          }
+
+          // Discharged = assumptions that appear in any contract's guarantees
+          const guaranteeSet = new Set(allGuarantees);
+          const discharged = allAssumptions.filter(a => guaranteeSet.has(a));
+          const dischargedSet = new Set(discharged);
+          const remaining = allAssumptions.filter(a => !dischargedSet.has(a));
+
+          return {
+            name: `composed:${ids.join('+')}`,
+            source_concept: firstSource,
+            target_concept: lastTarget,
+            assumptions: remaining,
+            guarantees: allGuarantees,
+            discharged_assumptions: discharged,
+          };
+        }, 'composed');
+
+        inner = putFrom(inner, RELATION, composedId, (bindings) => {
+          const c = bindings.composed as {
+            name: string;
+            source_concept: string;
+            target_concept: string;
+            assumptions: string[];
+            guarantees: string[];
+            discharged_assumptions: string[];
+          };
+          return {
+            id: composedId,
+            name: c.name,
+            source_concept: c.source_concept,
+            target_concept: c.target_concept,
+            assumptions: JSON.stringify(c.assumptions),
+            guarantees: JSON.stringify(c.guarantees),
+            discharged_assumptions: JSON.stringify(c.discharged_assumptions),
+            compatibility_status: 'unchecked',
+            composition_chain: JSON.stringify(ids),
+            created_at: now,
+            updated_at: now,
+          };
         });
-        return pure(inner, {
-          variant: 'ok',
-          id: composedId,
-          __compute: 'compose_result',
-          composition_chain: JSON.stringify(ids),
+
+        return pureFrom(inner, (bindings) => {
+          const c = bindings.composed as {
+            name: string;
+            source_concept: string;
+            target_concept: string;
+            assumptions: string[];
+            guarantees: string[];
+            discharged_assumptions: string[];
+          };
+          return {
+            variant: 'ok',
+            id: composedId,
+            name: c.name,
+            source_concept: c.source_concept,
+            target_concept: c.target_concept,
+            assumptions: JSON.stringify(c.assumptions),
+            guarantees: JSON.stringify(c.guarantees),
+            discharged_assumptions: JSON.stringify(c.discharged_assumptions),
+            remaining_assumptions: JSON.stringify(c.assumptions),
+            discharged_count: c.discharged_assumptions.length,
+            total_guarantees: c.guarantees.length,
+            composition_chain: JSON.stringify(ids),
+          };
         });
       })(),
     );
@@ -172,7 +254,7 @@ export const contractHandler: FunctionalConceptHandler = {
       (bindings) => bindings.contract == null,
       pure(createProgram(), { variant: 'notfound', id }),
       (() => {
-        // Check assumption exists and not already discharged
+        // Check assumption exists and is not already discharged
         return branch(
           createProgram(),
           (bindings) => {
@@ -192,17 +274,38 @@ export const contractHandler: FunctionalConceptHandler = {
               pure(createProgram(), { variant: 'already_discharged', id, assumption_ref }),
               (() => {
                 let inner = createProgram();
-                inner = put(inner, RELATION, id, {
-                  __merge: true,
-                  __compute: 'discharge_assumption',
-                  __assumption_ref: assumption_ref,
-                  updated_at: now,
+
+                // Compute the updated discharged list and remaining count
+                inner = mapBindings(inner, (bindings) => {
+                  const contract = bindings.contract as Record<string, unknown>;
+                  const discharged: string[] = JSON.parse(contract.discharged_assumptions as string);
+                  const updated = [...discharged, assumption_ref];
+                  const assumptions: string[] = JSON.parse(contract.assumptions as string);
+                  const updatedSet = new Set(updated);
+                  const remaining = assumptions.filter(a => !updatedSet.has(a)).length;
+                  return {
+                    discharged_assumptions: JSON.stringify(updated),
+                    remaining_count: remaining,
+                  };
+                }, 'discharge_info');
+
+                inner = mergeFrom(inner, RELATION, id, (bindings) => {
+                  const info = bindings.discharge_info as { discharged_assumptions: string };
+                  return { discharged_assumptions: info.discharged_assumptions, updated_at: now };
                 });
-                return pure(inner, {
-                  variant: 'ok',
-                  id,
-                  discharged_assumption: assumption_ref,
-                  __compute: 'discharge_result',
+
+                return pureFrom(inner, (bindings) => {
+                  const info = bindings.discharge_info as {
+                    discharged_assumptions: string;
+                    remaining_count: number;
+                  };
+                  return {
+                    variant: 'ok',
+                    id,
+                    discharged_assumption: assumption_ref,
+                    remaining_count: info.remaining_count,
+                    discharged_assumptions: info.discharged_assumptions,
+                  };
                 });
               })(),
             );
@@ -223,10 +326,20 @@ export const contractHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, criteria, 'items');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'list',
-      __fields: ['id', 'name', 'source_concept', 'target_concept', 'compatibility_status'],
+    return pureFrom(p, (bindings) => {
+      const items = (bindings.items as Record<string, unknown>[]) || [];
+      const projected = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        source_concept: item.source_concept,
+        target_concept: item.target_concept,
+        compatibility_status: item.compatibility_status,
+      }));
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+      };
     }) as StorageProgram<Result>;
   },
 };

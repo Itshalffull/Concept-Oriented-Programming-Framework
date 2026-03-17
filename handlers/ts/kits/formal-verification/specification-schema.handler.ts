@@ -3,14 +3,14 @@
 // templates (Dwyer patterns, smart contract patterns, distributed system
 // invariants, etc.) for generating formal properties from parameterized schemas.
 //
-// Migrated to FunctionalConceptHandler: returns StoragePrograms enabling
-// the monadic pipeline to extract properties like "instantiate always
-// substitutes all template parameters" and "define validates category".
+// FunctionalConceptHandler: each action returns a StorageProgram — pure data
+// describing storage effects. No async, no side effects, fully inspectable
+// by the monadic analysis pipeline.
 // See Architecture doc Section 18.6
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, pure,
+  createProgram, get, find, put, branch, pure, pureFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -121,16 +121,30 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
       p,
       (bindings) => bindings.schema == null,
       pure(createProgram(), { variant: 'notfound', schema_id }),
-      (() => {
-        // Substitution and param checking happen in interpreter via __compute.
-        // We encode the values for the interpreter to resolve against the binding.
-        return pure(createProgram(), {
+      pureFrom(createProgram(), (bindings) => {
+        const schema = bindings.schema as Record<string, unknown>;
+        const templateText = schema.template_text as string;
+        const paramDefs: Array<{ name: string; type: string }> = JSON.parse(schema.parameters as string);
+
+        // Check all required params are provided
+        const requiredNames = paramDefs.map(p => p.name);
+        const missing = requiredNames.filter(n => !(n in values));
+        if (missing.length > 0) {
+          return { variant: 'invalid', message: `Missing parameters: ${missing.join(', ')}` };
+        }
+
+        const instantiated = substituteParams(templateText, values);
+        const remainingParams = extractParamNames(instantiated);
+
+        return {
           variant: 'ok',
           schema_id,
-          __compute: 'instantiate_schema',
-          __param_values: JSON.stringify(values),
-        });
-      })(),
+          instantiated_text: instantiated,
+          formal_language: schema.formal_language || '',
+          fully_instantiated: remainingParams.length === 0,
+          remaining_params: JSON.stringify(remainingParams),
+        };
+      }),
     );
     return p as StorageProgram<Result>;
   },
@@ -152,11 +166,23 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
       p,
       (bindings) => bindings.schema == null,
       pure(createProgram(), { variant: 'notfound', schema_id }),
-      pure(createProgram(), {
-        variant: 'ok',
-        schema_id,
-        __compute: 'validate_params',
-        __param_values: JSON.stringify(values),
+      pureFrom(createProgram(), (bindings) => {
+        const schema = bindings.schema as Record<string, unknown>;
+        const paramDefs: Array<{ name: string; type: string }> = JSON.parse(schema.parameters as string);
+        const requiredNames = paramDefs.map(p => p.name);
+
+        const provided = Object.keys(values);
+        const missing = requiredNames.filter(n => !provided.includes(n));
+        const extra = provided.filter(n => !requiredNames.includes(n));
+        const valid = missing.length === 0 && extra.length === 0;
+
+        return {
+          variant: 'ok',
+          schema_id,
+          valid,
+          missing_params: JSON.stringify(missing),
+          extra_params: JSON.stringify(extra),
+        };
       }),
     );
     return p as StorageProgram<Result>;
@@ -167,11 +193,20 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { category }, 'items');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'list',
-      __fields: ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'],
-      category,
+    return pureFrom(p, (bindings) => {
+      const items = (bindings.items as Record<string, unknown>[]) || [];
+      const fields = ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'];
+      const projected = items.map(item => {
+        const result: Record<string, unknown> = {};
+        for (const f of fields) result[f] = item[f];
+        return result;
+      });
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+        category,
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -182,14 +217,34 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
       return pure(createProgram(), { variant: 'invalid', message: 'query must be non-empty' }) as StorageProgram<Result>;
     }
 
+    const lowerQuery = query.toLowerCase();
+
     let p = createProgram();
     p = find(p, RELATION, {}, 'all_schemas');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'search',
-      __query: query,
-      __search_fields: ['name', 'template_text', 'description'],
-      __result_fields: ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'],
+    return pureFrom(p, (bindings) => {
+      const allSchemas = (bindings.all_schemas as Record<string, unknown>[]) || [];
+      const searchFields = ['name', 'template_text', 'description'];
+      const resultFields = ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'];
+
+      const matches = allSchemas.filter(schema =>
+        searchFields.some(field => {
+          const val = schema[field];
+          return typeof val === 'string' && val.toLowerCase().includes(lowerQuery);
+        }),
+      );
+
+      const projected = matches.map(item => {
+        const result: Record<string, unknown> = {};
+        for (const f of resultFields) result[f] = item[f];
+        return result;
+      });
+
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+        query,
+      };
     }) as StorageProgram<Result>;
   },
 };

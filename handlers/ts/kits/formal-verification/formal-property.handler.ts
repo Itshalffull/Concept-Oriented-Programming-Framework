@@ -2,16 +2,14 @@
 // Define, prove, refute, and track formal properties (invariants, pre/postconditions,
 // temporal/safety/liveness properties) across multiple formal languages and solvers.
 //
-// Migrated to FunctionalConceptHandler: each action returns a StorageProgram
-// instead of directly executing storage effects. This enables the monadic
-// analysis pipeline (InvariantExtractionProvider, ReadWriteSetProvider,
-// CommutativityProvider, DeadBranchProvider) to analyze and verify these
-// handlers — the FV suite verifying itself.
+// FunctionalConceptHandler: each action returns a StorageProgram — pure data
+// describing storage effects. No async, no side effects, fully inspectable
+// by the monadic analysis pipeline.
 // See Architecture doc Section 18.1
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, pure,
+  createProgram, get, find, put, merge, branch, mapBindings, pure, pureFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -43,7 +41,6 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     const target_symbol = input.target_symbol as string;
     const scope = input.scope as string;
     const priority = input.priority as string;
-    // Also accept formula+language from publish-extracted-properties sync
     const formula = input.formula as string | undefined;
     const language = input.language as string | undefined;
 
@@ -98,12 +95,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       pure(createProgram(), { variant: 'notfound', id }),
       (() => {
         let inner = createProgram();
-        inner = put(inner, RELATION, id, {
-          __merge: true,
-          status: 'proved',
-          evidence_ref,
-          updated_at: now,
-        });
+        inner = merge(inner, RELATION, id, { status: 'proved', evidence_ref, updated_at: now });
         return pure(inner, { variant: 'ok', id, status: 'proved', evidence_ref });
       })(),
     );
@@ -123,12 +115,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       pure(createProgram(), { variant: 'notfound', id }),
       (() => {
         let inner = createProgram();
-        inner = put(inner, RELATION, id, {
-          __merge: true,
-          status: 'refuted',
-          evidence_ref,
-          updated_at: now,
-        });
+        inner = merge(inner, RELATION, id, { status: 'refuted', evidence_ref, updated_at: now });
         return pure(inner, { variant: 'ok', id, status: 'refuted', evidence_ref });
       })(),
     );
@@ -145,18 +132,18 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       p,
       (bindings) => bindings.property == null,
       pure(createProgram(), { variant: 'notfound', id }),
-      (() => {
-        // Mock: simulate solver dispatch. Real impl dispatches via SolverProvider.
+      pureFrom(createProgram(), (bindings) => {
+        const prop = bindings.property as Record<string, unknown>;
         const mockStatuses = ['proved', 'refuted', 'unknown'] as const;
         const simulated = mockStatuses[Math.abs(simpleHash(id + (solver || '')).charCodeAt(7)) % 3];
-        return pure(createProgram(), {
+        return {
           variant: 'ok',
           id,
-          current_status: '__binding:property.status',
+          current_status: prop.status,
           check_result: simulated,
           solver: solver || 'mock',
-        });
-      })(),
+        };
+      }),
     );
     return p as StorageProgram<Result>;
   },
@@ -210,13 +197,22 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, {}, 'all_properties');
-    // The interpreter resolves the binding and applies the filter+aggregation.
-    // We encode the computation as a pure return referencing the binding.
-    return pure(p, {
-      variant: 'ok',
-      target_symbol,
-      __compute: 'coverage',
-      __filter: { target_symbol },
+    return pureFrom(p, (bindings) => {
+      const allProps = (bindings.all_properties as Record<string, unknown>[]) || [];
+      const filtered = allProps.filter(prop => prop.target_symbol === target_symbol);
+      const total = filtered.length;
+      const proved = filtered.filter(prop => prop.status === 'proved').length;
+      const refuted = filtered.filter(prop => prop.status === 'refuted').length;
+      const unproven = total - proved - refuted;
+      return {
+        variant: 'ok',
+        target_symbol,
+        total,
+        proved,
+        refuted,
+        unproven,
+        coverage_pct: total === 0 ? 0 : proved / total,
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -232,10 +228,19 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, criteria, 'items');
-    return pure(p, {
-      variant: 'ok',
-      __compute: 'list',
-      __fields: ['id', 'name', 'kind', 'formal_language', 'target_symbol', 'status', 'priority'],
+    return pureFrom(p, (bindings) => {
+      const items = (bindings.items as Record<string, unknown>[]) || [];
+      const fields = ['id', 'name', 'kind', 'formal_language', 'target_symbol', 'status', 'priority'];
+      const projected = items.map(item => {
+        const result: Record<string, unknown> = {};
+        for (const f of fields) result[f] = item[f];
+        return result;
+      });
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+      };
     }) as StorageProgram<Result>;
   },
 
@@ -250,27 +255,28 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       (bindings) => bindings.property == null,
       pure(createProgram(), { variant: 'notfound', id }),
       (() => {
-        // Branch again on status — only proved/refuted can be invalidated
-        let inner = createProgram();
-        inner = branch(
-          inner,
+        return branch(
+          createProgram(),
           (bindings) => {
             const prop = bindings.property as Record<string, unknown>;
             return prop.status !== 'proved' && prop.status !== 'refuted';
           },
-          pure(createProgram(), { variant: 'unchanged', id, status: '__binding:property.status', message: 'Property is already unproven' }),
+          pureFrom(createProgram(), (bindings) => {
+            const prop = bindings.property as Record<string, unknown>;
+            return { variant: 'unchanged', id, status: prop.status, message: 'Property is already unproven' };
+          }),
           (() => {
             let write = createProgram();
-            write = put(write, RELATION, id, {
-              __merge: true,
-              status: 'unproven',
-              evidence_ref: '',
-              updated_at: now,
+            write = mapBindings(write, (bindings) => {
+              const prop = bindings.property as Record<string, unknown>;
+              return prop.status;
+            }, 'previousStatus');
+            write = merge(write, RELATION, id, { status: 'unproven', evidence_ref: '', updated_at: now });
+            return pureFrom(write, (bindings) => {
+              return { variant: 'ok', id, previous_status: bindings.previousStatus, status: 'unproven' };
             });
-            return pure(write, { variant: 'ok', id, previous_status: '__binding:property.status', status: 'unproven' });
           })(),
         );
-        return inner;
       })(),
     );
     return p as StorageProgram<Result>;

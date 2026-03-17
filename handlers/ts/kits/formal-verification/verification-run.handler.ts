@@ -11,7 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, pure,
+  createProgram, get, find, put, merge, mapBindings, pureFrom, delFrom, branch, pure,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -106,8 +106,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
           pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot complete' }),
           (() => {
             let inner = createProgram();
-            inner = put(inner, RELATION, id, {
-              __merge: true,
+            inner = merge(inner, RELATION, id, {
               status: 'completed',
               results: JSON.stringify(resultsMap),
               resource_usage: resource_usage || '',
@@ -148,19 +147,22 @@ export const verificationRunHandler: FunctionalConceptHandler = {
           pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot timeout' }),
           (() => {
             let inner = createProgram();
-            inner = put(inner, RELATION, id, {
-              __merge: true,
+            inner = merge(inner, RELATION, id, {
               status: 'timeout',
               partial_results: JSON.stringify(partialMap),
               ended_at: now,
             });
-            return pure(inner, {
-              variant: 'ok', id, status: 'timeout',
-              completed_count: completedCount,
-              remaining_count: '__binding:run.total_count - ' + completedCount,
-              total_count: '__binding:run.total_count',
-              ended_at: now,
-            });
+            return pureFrom(inner, (bindings) => {
+              const run = bindings.run as Record<string, unknown>;
+              const totalCount = run.total_count as number;
+              return {
+                variant: 'ok', id, status: 'timeout',
+                completed_count: completedCount,
+                remaining_count: totalCount - completedCount,
+                total_count: totalCount,
+                ended_at: now,
+              };
+            }) as StorageProgram<Result>;
           })(),
         );
       })(),
@@ -185,8 +187,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
           pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot cancel' }),
           (() => {
             let inner = createProgram();
-            inner = put(inner, RELATION, id, {
-              __merge: true,
+            inner = merge(inner, RELATION, id, {
               status: 'cancelled',
               ended_at: now,
             });
@@ -207,11 +208,28 @@ export const verificationRunHandler: FunctionalConceptHandler = {
       p,
       (bindings) => bindings.run == null,
       pure(createProgram(), { variant: 'notfound', id }),
-      pure(createProgram(), {
-        variant: 'ok',
-        id,
-        __compute: 'run_status',
-      }),
+      pureFrom(createProgram(), (bindings) => {
+        const run = bindings.run as Record<string, unknown>;
+        const resultsRaw = run.results as string;
+        let completedCount = 0;
+        try {
+          completedCount = Object.keys(JSON.parse(resultsRaw)).length;
+        } catch {
+          // empty or invalid results
+        }
+        const totalCount = run.total_count as number;
+        const progress = totalCount > 0 ? completedCount / totalCount : 0;
+        return {
+          variant: 'ok',
+          id,
+          status: run.status,
+          completed_count: completedCount,
+          total_count: totalCount,
+          progress,
+          started_at: run.started_at,
+          ended_at: run.ended_at,
+        };
+      }) as StorageProgram<Result>,
     );
     return p as StorageProgram<Result>;
   },
@@ -232,12 +250,50 @@ export const verificationRunHandler: FunctionalConceptHandler = {
           createProgram(),
           (bindings) => bindings.runB == null,
           pure(createProgram(), { variant: 'notfound', id: run_id_b }),
-          pure(createProgram(), {
-            variant: 'ok',
-            run_id_a,
-            run_id_b,
-            __compute: 'compare_runs',
-          }),
+          pureFrom(createProgram(), (bindings) => {
+            const runA = bindings.runA as Record<string, unknown>;
+            const runB = bindings.runB as Record<string, unknown>;
+
+            let resultsA: Record<string, string> = {};
+            let resultsB: Record<string, string> = {};
+            try { resultsA = JSON.parse(runA.results as string); } catch { /* empty */ }
+            try { resultsB = JSON.parse(runB.results as string); } catch { /* empty */ }
+
+            const allProperties = new Set([
+              ...Object.keys(resultsA),
+              ...Object.keys(resultsB),
+            ]);
+
+            const regressions: string[] = [];
+            const improvements: string[] = [];
+            const unchanged: string[] = [];
+
+            for (const prop of allProperties) {
+              const statusA = resultsA[prop] || 'unknown';
+              const statusB = resultsB[prop] || 'unknown';
+              if (statusA === statusB) {
+                unchanged.push(prop);
+              } else if (statusA === 'proved' && statusB !== 'proved') {
+                regressions.push(prop);
+              } else if (statusA !== 'proved' && statusB === 'proved') {
+                improvements.push(prop);
+              } else {
+                unchanged.push(prop);
+              }
+            }
+
+            return {
+              variant: 'ok',
+              run_id_a,
+              run_id_b,
+              regressions: JSON.stringify(regressions),
+              improvements: JSON.stringify(improvements),
+              unchanged: JSON.stringify(unchanged),
+              regression_count: regressions.length,
+              improvement_count: improvements.length,
+              unchanged_count: unchanged.length,
+            };
+          }) as StorageProgram<Result>,
         );
       })(),
     );
