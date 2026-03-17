@@ -1,0 +1,9 @@
+sync DispatchParallelism [eager]
+  purpose: "Dispatch a parallelism analysis request to the ParallelismProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "parallelism" ]
+    => []
+}
+then {
+  ParallelismProvider/analyze: [ program: ?program ]
+}
