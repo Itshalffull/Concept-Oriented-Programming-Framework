@@ -16,6 +16,10 @@ derived SurfaceRenderPrograms [T] {
     ThemeComplianceProvider [T]
     RenderTransform [T]
     TransformExtractionProvider [T]
+    TokenRemapProvider [T]
+    A11yAdaptProvider [T]
+    BindRewriteProvider [T]
+    CustomTransformProvider [T]
   }
 
   uses {
@@ -34,7 +38,15 @@ derived SurfaceRenderPrograms [T] {
       register-transform-extraction-provider,
       dispatch-transform-extraction,
       extract-transforms-on-render,
-      apply-theme-transform-on-activate
+      apply-theme-transform-on-activate,
+      register-token-remap-provider,
+      dispatch-token-remap,
+      register-a11y-adapt-provider,
+      dispatch-a11y-adapt,
+      register-bind-rewrite-provider,
+      dispatch-bind-rewrite,
+      register-custom-transform-provider,
+      dispatch-custom-transform
     ]
     recommended: [
       cache-lookup-before-render,
@@ -85,10 +97,10 @@ derived SurfaceRenderPrograms [T] {
       reads: RenderInterpreter/listTargets()
     }
 
-    action renderWithTransform(widget: String, target: String, transform: String, input: String) {
+    action renderWithTransform(widget: String, target: String, kind: String, spec: String, input: String) {
       entry: FunctionalHandler/build matches on concept: "widget", action: ?widget
       triggers: [
-        RenderTransform/apply(program: ?program, transform: ?transform),
+        RenderTransform/apply(program: ?program, kind: ?kind, spec: ?spec),
         RenderInterpreter/execute(interpreter: ?target, program: ?transformedProgram, snapshot: "current")
       ]
     }

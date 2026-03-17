@@ -1,0 +1,9 @@
+sync DispatchA11yAdapt [eager]
+  purpose: "Route a11y-adapt transform application from RenderTransform to A11yAdaptProvider."
+when {
+  RenderTransform/apply: [ program: ?program; kind: "a11y-adapt"; spec: ?spec ]
+    => []
+}
+then {
+  A11yAdaptProvider/apply: [ program: ?program; spec: ?spec ]
+}

@@ -1,0 +1,13 @@
+sync RegisterBindRewriteProvider [eager]
+  purpose: "Register the BindRewriteProvider with PluginRegistry as a render-transform-provider on first use."
+when {
+  BindRewriteProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "render-transform-provider";
+    name: ?name;
+    metadata: { kind: ?kind; capabilities: ?caps }
+  ]
+}

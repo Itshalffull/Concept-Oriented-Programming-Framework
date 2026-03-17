@@ -1,0 +1,9 @@
+sync DispatchCustomTransform [eager]
+  purpose: "Route custom transform application from RenderTransform to CustomTransformProvider."
+when {
+  RenderTransform/apply: [ program: ?program; kind: "custom"; spec: ?spec ]
+    => []
+}
+then {
+  CustomTransformProvider/apply: [ program: ?program; spec: ?spec ]
+}

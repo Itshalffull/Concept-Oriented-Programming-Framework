@@ -1,0 +1,50 @@
+@version(1)
+concept A11yAdaptProvider [V] {
+
+  purpose {
+    Apply accessibility adaptations to RenderProgram instruction
+    sequences — modifying existing ARIA attributes and injecting
+    new keyboard, focus, and ARIA instructions so that a11y
+    variants become composable program transformations.
+  }
+
+  state {
+    results: set V
+    inputProgram: V -> String
+    outputProgram: V -> String
+    additionCount: V -> Int
+    modificationCount: V -> Int
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "A11yAdaptProvider"
+        kind: "a11y-adapt"
+        capabilities: ["aria-modification", "aria-injection", "keyboard-adapt", "focus-adapt"]
+      }
+    }
+
+    action apply(program: String, spec: String) {
+      -> ok(result: V, transformed: String, appliedTransforms: String) {
+        Apply modifications to matching instructions first, then
+        insert additions before the terminal pure instruction.
+        Modifications match on partial instruction patterns and
+        merge new fields. Additions are complete instructions
+        injected into the sequence. Returns the new serialized
+        program and the updated list of applied transforms.
+      }
+      -> error(message: String) {
+        The program or spec JSON could not be parsed.
+      }
+    }
+  }
+
+  invariant {
+    after apply(program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}")
+      -> ok(result: r, transformed: t, appliedTransforms: a)
+    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}")
+      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+  }
+}

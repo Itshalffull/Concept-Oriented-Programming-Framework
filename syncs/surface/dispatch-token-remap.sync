@@ -1,0 +1,9 @@
+sync DispatchTokenRemap [eager]
+  purpose: "Route token-remap transform application from RenderTransform to TokenRemapProvider."
+when {
+  RenderTransform/apply: [ program: ?program; kind: "token-remap"; spec: ?spec ]
+    => []
+}
+then {
+  TokenRemapProvider/apply: [ program: ?program; spec: ?spec ]
+}

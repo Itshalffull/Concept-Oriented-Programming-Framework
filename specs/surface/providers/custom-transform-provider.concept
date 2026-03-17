@@ -1,0 +1,49 @@
+@version(1)
+concept CustomTransformProvider [V] {
+
+  purpose {
+    Apply generic pattern-match-and-replace transformations to
+    RenderProgram instruction sequences — matching arbitrary
+    instruction field patterns and merging replacement fields,
+    serving as the extensibility escape hatch for transform
+    kinds not covered by specialized providers.
+  }
+
+  state {
+    results: set V
+    inputProgram: V -> String
+    outputProgram: V -> String
+    matchCount: V -> Int
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: list String) {
+        Return static metadata for PluginRegistry.
+        name: "CustomTransformProvider"
+        kind: "custom"
+        capabilities: ["pattern-match", "field-replace", "generic-transform"]
+      }
+    }
+
+    action apply(program: String, spec: String) {
+      -> ok(result: V, transformed: String, appliedTransforms: String) {
+        Walk the instruction sequence. For each instruction matching
+        all fields in the match pattern, merge the replace fields
+        into the instruction. Non-matching instructions pass through
+        unchanged. Returns the new serialized program and the updated
+        list of applied transforms.
+      }
+      -> error(message: String) {
+        The program or spec JSON could not be parsed.
+      }
+    }
+  }
+
+  invariant {
+    after apply(program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}")
+      -> ok(result: r, transformed: t, appliedTransforms: a)
+    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}")
+      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+  }
+}

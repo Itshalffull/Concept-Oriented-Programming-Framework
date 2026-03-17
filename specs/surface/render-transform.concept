@@ -1,13 +1,12 @@
-@version(1)
+@version(2)
 concept RenderTransform [X] {
 
   purpose {
-    Apply named transformation functions to RenderProgram instruction
-    sequences, producing new RenderPrograms with modified token
-    references, accessibility attributes, or binding expressions —
-    the functorial mapping that makes theme switching, a11y variants,
-    and style adaptations composable first-class operations on the
-    program itself rather than side-channel mutations.
+    Registry and dispatcher for composable render program transformations.
+    Manages named transforms with kind-based routing to provider concepts
+    through sync wiring — the functorial mapping hub that makes theme
+    switching, a11y variants, and style adaptations composable first-class
+    operations without hardcoding transform logic.
   }
 
   state {
@@ -16,19 +15,26 @@ concept RenderTransform [X] {
     kind: X -> String
     spec: X -> String
     appliedLog: X -> list String
+    registeredKinds: set String
   }
 
   actions {
+    action registerKind(kind: String) {
+      -> ok(kind: String) {
+        Register a transform kind provider. Called by provider
+        registration syncs to declare that a provider exists for
+        this kind (token-remap, a11y-adapt, bind-rewrite, custom).
+      }
+      -> duplicate(kind: String) {
+        This kind is already registered.
+      }
+    }
+
     action register(name: String, kind: String, spec: String) {
       -> ok(transform: X) {
-        Register a named transform with a kind (token-remap,
-        a11y-adapt, bind-rewrite, custom) and a serialized
-        rewrite specification. The spec is a JSON object whose
-        structure depends on the kind:
-        - token-remap: { mappings: { oldPath: newPath, ... } }
-        - a11y-adapt: { additions: [...], modifications: [...] }
-        - bind-rewrite: { rewrites: { oldExpr: newExpr, ... } }
-        - custom: { match: { tag: ... }, replace: { ... } }
+        Register a named transform with a kind and a serialized
+        rewrite specification. The spec structure is defined by
+        the provider for that kind.
       }
       -> duplicate(transform: X) {
         A transform with this name is already registered.
@@ -36,21 +42,15 @@ concept RenderTransform [X] {
       }
     }
 
-    action apply(program: String, transform: String) {
+    action apply(program: String, kind: String, spec: String) {
       -> ok(result: String, appliedTransforms: String) {
-        Walk the instruction sequence and apply the transform's
-        rewrite spec. For token-remap, rewrite token path instructions.
-        For a11y-adapt, add or modify aria/focus/keyboard instructions.
-        For bind-rewrite, rewrite binding expressions. Returns the
-        new serialized program and the list of transforms applied
-        (including any previously applied transforms from the input).
-        Satisfies the functor identity law: apply(p, id) = p.
-      }
-      -> notfound(message: String) {
-        No transform is registered with the given name.
+        Dispatch the transform application to the appropriate
+        provider based on kind. The provider applies the spec to
+        the program and returns the transformed result. Satisfies
+        the functor identity law: apply(p, kind, emptySpec) = p.
       }
       -> error(message: String) {
-        The program or transform spec could not be parsed.
+        The program could not be parsed or the kind is unknown.
       }
     }
 
@@ -95,5 +95,10 @@ concept RenderTransform [X] {
       -> ok(transform: t)
     then register(name: "dark-theme", kind: "token-remap", spec: "{}")
       -> duplicate(transform: t)
+  }
+
+  invariant {
+    after registerKind(kind: "token-remap") -> ok(kind: k)
+    then registerKind(kind: "token-remap") -> duplicate(kind: k)
   }
 }
