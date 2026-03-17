@@ -3,10 +3,11 @@
 concept HandlerScaffoldGen [H] {
 
   purpose {
-    Generate TypeScript concept handler (.impl.ts) implementation
+    Generate TypeScript concept handler (.handler.ts) implementation
     scaffolds from provided configuration including concept name,
-    action signatures, and storage patterns. Optionally generates
-    a conformance test file.
+    action signatures, and storage patterns. Defaults to functional
+    (StorageProgram) style; falls back to imperative style only when
+    explicitly requested. Optionally generates a conformance test file.
   }
 
   state {
@@ -15,11 +16,12 @@ concept HandlerScaffoldGen [H] {
   }
 
   actions {
-    action generate(conceptName: String, actions: list ActionDef) {
+    action generate(conceptName: String, actions: list ActionDef, style: String) {
       description {
-        Generate a handler implementation with register(), typed
-        action methods, input extraction, storage patterns, and
-        an optional conformance test.
+        Generate a handler implementation with typed action methods,
+        input extraction, and storage patterns. Defaults to functional
+        (StorageProgram) style; pass style="imperative" for the
+        imperative fallback. Optionally generates a conformance test.
       }
       -> ok(files: list File, filesGenerated: Int) {
         Handler scaffold and optional test generated.
