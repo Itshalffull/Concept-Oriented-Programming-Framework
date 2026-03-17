@@ -49,8 +49,9 @@ describe('TypeScriptGen Concept', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    // types + handler + adapter + conformance test (Password has invariants)
-    expect(files).toHaveLength(4);
+    // types + handler + adapter + dsl-runtime + conformance test (Password has invariants)
+    expect(files).toHaveLength(5);
+    expect(files.find(f => f.path === 'storage-program.dsl.stub.ts')).toBeDefined();
 
     // Types file
     const typesFile = files.find(f => f.path === 'password.types.stub.ts');

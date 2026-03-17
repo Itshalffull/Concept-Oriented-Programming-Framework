@@ -314,10 +314,12 @@ describe('Pipeline Integration', () => {
     const tsFiles = tsResult.files as { path: string; content: string }[];
     const rustFiles = rustResult.files as { path: string; content: string }[];
 
-    // TS: types, handler, adapter, conformance
-    expect(tsFiles).toHaveLength(4);
-    // Rust: types, handler, adapter, conformance
-    expect(rustFiles).toHaveLength(4);
+    // TS: types, handler, adapter, dsl-runtime, conformance
+    expect(tsFiles).toHaveLength(5);
+    expect(tsFiles.find(f => f.path === 'storage-program.dsl.stub.ts')).toBeDefined();
+    // Rust: types, handler, adapter, dsl-runtime, conformance
+    expect(rustFiles).toHaveLength(5);
+    expect(rustFiles.find(f => f.path === 'storage_program_dsl.stub.rs')).toBeDefined();
 
     // Both produce type definitions, handler, adapter, and conformance
     expect(tsFiles.find(f => f.path.includes('types'))).toBeDefined();
@@ -352,7 +354,7 @@ describe('Pipeline Integration', () => {
     );
     expect(tsResult.variant).toBe('ok');
     const tsFiles = tsResult.files as { path: string; content: string }[];
-    expect(tsFiles.length).toBe(4); // types, handler, adapter, conformance
+    expect(tsFiles.length).toBe(5); // types, handler, adapter, dsl-runtime, conformance
 
     // Step 3b: RustGen consumes the SAME manifest (in parallel)
     const rustStorage = createInMemoryStorage();
@@ -362,7 +364,7 @@ describe('Pipeline Integration', () => {
     );
     expect(rustResult.variant).toBe('ok');
     const rustFiles = rustResult.files as { path: string; content: string }[];
-    expect(rustFiles.length).toBe(4); // types, handler, adapter, conformance
+    expect(rustFiles.length).toBe(5); // types, handler, adapter, dsl-runtime, conformance
 
     // Generators return files directly; BuildCache handles storage
     expect(tsFiles.length).toBeGreaterThan(0);

@@ -319,6 +319,212 @@ function generateStepCode(
   return lines;
 }
 
+// --- StorageProgram DSL Runtime File ---
+
+function generateDslRuntimeFile(): string {
+  return `// generated: storage-program.dsl.stub.ts
+//
+// StorageProgram DSL — Free Monad for Concept Handlers
+// Provides typed lenses/optics, effect tracking, algebraic effects,
+// transport effects, and functorial mapping for render programs.
+
+// ── Lens Types ──────────────────────────────────────────────
+
+export type LensSegment =
+  | { kind: 'relation'; name: string }
+  | { kind: 'key'; value: string }
+  | { kind: 'field'; name: string };
+
+export interface StateLens {
+  readonly segments: readonly LensSegment[];
+  readonly sourceType: string;
+  readonly focusType: string;
+}
+
+// ── Lens Builders ───────────────────────────────────────────
+
+export function relation(name: string): StateLens {
+  return { segments: [{ kind: 'relation', name }], sourceType: 'store', focusType: \`relation<\${name}>\` };
+}
+
+export function at(lens: StateLens, key: string): StateLens {
+  return { segments: [...lens.segments, { kind: 'key', value: key }], sourceType: lens.sourceType, focusType: 'record' };
+}
+
+export function field(lens: StateLens, name: string): StateLens {
+  return { segments: [...lens.segments, { kind: 'field', name }], sourceType: lens.sourceType, focusType: name };
+}
+
+export function composeLens(outer: StateLens, inner: StateLens): StateLens {
+  return { segments: [...outer.segments, ...inner.segments], sourceType: outer.sourceType, focusType: inner.focusType };
+}
+
+// ── Effect Set ──────────────────────────────────────────────
+
+export interface EffectSet {
+  readonly reads: ReadonlySet<string>;
+  readonly writes: ReadonlySet<string>;
+  readonly completionVariants: ReadonlySet<string>;
+  readonly performs: ReadonlySet<string>;
+}
+
+export type Purity = 'pure' | 'read-only' | 'read-write';
+
+export function emptyEffects(): EffectSet {
+  return { reads: new Set(), writes: new Set(), completionVariants: new Set(), performs: new Set() };
+}
+
+export function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
+  return {
+    reads: new Set([...a.reads, ...b.reads]),
+    writes: new Set([...a.writes, ...b.writes]),
+    completionVariants: new Set([...a.completionVariants, ...b.completionVariants]),
+    performs: new Set([...a.performs, ...b.performs]),
+  };
+}
+
+export function purityOf(effects: EffectSet): Purity {
+  if (effects.writes.size > 0) return 'read-write';
+  if (effects.reads.size > 0) return 'read-only';
+  return 'pure';
+}
+
+// ── Instruction Types ───────────────────────────────────────
+
+export type Bindings = Record<string, unknown>;
+
+export type Instruction =
+  | { tag: 'get'; relation: string; key: string; bindAs: string }
+  | { tag: 'find'; relation: string; criteria: Record<string, unknown>; bindAs: string }
+  | { tag: 'put'; relation: string; key: string; value: Record<string, unknown> }
+  | { tag: 'merge'; relation: string; key: string; fields: Record<string, unknown> }
+  | { tag: 'del'; relation: string; key: string }
+  | { tag: 'getLens'; lens: StateLens; bindAs: string }
+  | { tag: 'putLens'; lens: StateLens; value: Record<string, unknown> }
+  | { tag: 'modifyLens'; lens: StateLens; fn: (bindings: Bindings) => Record<string, unknown> }
+  | { tag: 'perform'; protocol: string; operation: string; payload: Record<string, unknown>; bindAs: string }
+  | { tag: 'branch'; condition: (bindings: Bindings) => boolean; thenBranch: StorageProgram<unknown>; elseBranch: StorageProgram<unknown> }
+  | { tag: 'pure'; value: unknown }
+  | { tag: 'pureFrom'; fn: (bindings: Bindings) => unknown }
+  | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> };
+
+// ── StorageProgram ──────────────────────────────────────────
+
+export interface StorageProgram<A> {
+  readonly instructions: Instruction[];
+  readonly terminated: boolean;
+  readonly effects: EffectSet;
+}
+
+// ── Program Builders ────────────────────────────────────────
+
+export function createProgram(): StorageProgram<void> {
+  return { instructions: [], terminated: false, effects: emptyEffects() };
+}
+
+export function get(p: StorageProgram<unknown>, relation: string, key: string, bindAs: string): StorageProgram<unknown> {
+  const reads = new Set(p.effects.reads); reads.add(relation);
+  return { instructions: [...p.instructions, { tag: 'get', relation, key, bindAs }], terminated: false, effects: { ...p.effects, reads } };
+}
+
+export function put(p: StorageProgram<unknown>, relation: string, key: string, value: Record<string, unknown>): StorageProgram<void> {
+  const writes = new Set(p.effects.writes); writes.add(relation);
+  return { instructions: [...p.instructions, { tag: 'put', relation, key, value }], terminated: false, effects: { ...p.effects, writes } };
+}
+
+export function getLens(p: StorageProgram<unknown>, lens: StateLens, bindAs: string): StorageProgram<unknown> {
+  const rel = (lens.segments[0] as { name: string }).name;
+  const reads = new Set(p.effects.reads); reads.add(rel);
+  return { instructions: [...p.instructions, { tag: 'getLens', lens, bindAs }], terminated: false, effects: { ...p.effects, reads } };
+}
+
+export function putLens(p: StorageProgram<unknown>, lens: StateLens, value: Record<string, unknown>): StorageProgram<void> {
+  const rel = (lens.segments[0] as { name: string }).name;
+  const writes = new Set(p.effects.writes); writes.add(rel);
+  return { instructions: [...p.instructions, { tag: 'putLens', lens, value }], terminated: false, effects: { ...p.effects, writes } };
+}
+
+export function modifyLens(p: StorageProgram<unknown>, lens: StateLens, fn: (b: Bindings) => Record<string, unknown>): StorageProgram<void> {
+  const rel = (lens.segments[0] as { name: string }).name;
+  const reads = new Set(p.effects.reads); reads.add(rel);
+  const writes = new Set(p.effects.writes); writes.add(rel);
+  return { instructions: [...p.instructions, { tag: 'modifyLens', lens, fn }], terminated: false, effects: { ...p.effects, reads, writes } };
+}
+
+export function perform(p: StorageProgram<unknown>, protocol: string, operation: string, payload: Record<string, unknown>, bindAs: string): StorageProgram<unknown> {
+  const performs = new Set(p.effects.performs); performs.add(\`\${protocol}:\${operation}\`);
+  return { instructions: [...p.instructions, { tag: 'perform', protocol, operation, payload, bindAs }], terminated: false, effects: { ...p.effects, performs } };
+}
+
+export function pure<A>(p: StorageProgram<unknown>, value: A): StorageProgram<A> {
+  return { instructions: [...p.instructions, { tag: 'pure', value }], terminated: true, effects: p.effects };
+}
+
+export function complete<A extends Record<string, unknown>>(p: StorageProgram<unknown>, variant: string, output: A): StorageProgram<{ variant: string } & A> {
+  const completionVariants = new Set(p.effects.completionVariants); completionVariants.add(variant);
+  return { instructions: [...p.instructions, { tag: 'pure', value: { variant, ...output } }], terminated: true, effects: { ...p.effects, completionVariants } };
+}
+
+export function branch<A>(p: StorageProgram<unknown>, condition: (b: Bindings) => boolean, then_: StorageProgram<A>, else_: StorageProgram<A>): StorageProgram<A> {
+  return { instructions: [...p.instructions, { tag: 'branch', condition, thenBranch: then_, elseBranch: else_ }], terminated: false, effects: mergeEffects(p.effects, mergeEffects(then_.effects, else_.effects)) };
+}
+
+// ── Analysis Helpers ────────────────────────────────────────
+
+export function extractCompletionVariants(p: StorageProgram<unknown>): Set<string> {
+  const variants = new Set<string>();
+  for (const i of p.instructions) {
+    if (i.tag === 'pure' && i.value && typeof i.value === 'object' && 'variant' in (i.value as Record<string, unknown>))
+      variants.add((i.value as Record<string, unknown>).variant as string);
+    if (i.tag === 'branch') { for (const v of extractCompletionVariants(i.thenBranch)) variants.add(v); for (const v of extractCompletionVariants(i.elseBranch)) variants.add(v); }
+    if (i.tag === 'bind') { for (const v of extractCompletionVariants(i.first)) variants.add(v); for (const v of extractCompletionVariants(i.second)) variants.add(v); }
+  }
+  return variants;
+}
+
+export function extractPerformSet(p: StorageProgram<unknown>): Set<string> {
+  const performs = new Set<string>();
+  for (const i of p.instructions) {
+    if (i.tag === 'perform') performs.add(\`\${i.protocol}:\${i.operation}\`);
+    if (i.tag === 'branch') { for (const v of extractPerformSet(i.thenBranch)) performs.add(v); for (const v of extractPerformSet(i.elseBranch)) performs.add(v); }
+    if (i.tag === 'bind') { for (const v of extractPerformSet(i.first)) performs.add(v); for (const v of extractPerformSet(i.second)) performs.add(v); }
+  }
+  return performs;
+}
+
+export function validatePurity(p: StorageProgram<unknown>, declared: Purity): string | null {
+  if (declared === 'pure' && (p.effects.reads.size > 0 || p.effects.writes.size > 0))
+    return \`Declared pure but has storage effects\`;
+  if (declared === 'read-only' && p.effects.writes.size > 0)
+    return \`Declared read-only but writes to: \${[...p.effects.writes].join(', ')}\`;
+  return null;
+}
+
+// ── Render Program (Functorial Mapping) ─────────────────────
+
+export type RenderInstruction =
+  | { tag: 'token'; path: string; value: unknown }
+  | { tag: 'aria'; role?: string; label?: string; attributes?: Record<string, string> }
+  | { tag: 'bind'; field: string; expr: string }
+  | { tag: 'element'; name: string; attributes?: Record<string, string> }
+  | { tag: 'focus'; strategy: string; target?: string }
+  | { tag: 'keyboard'; key: string; action: string; modifiers?: string[] }
+  | { tag: 'pure'; value: unknown };
+
+export interface RenderProgram {
+  readonly instructions: RenderInstruction[];
+  readonly terminated: boolean;
+}
+
+export function mapRenderProgram(
+  program: RenderProgram,
+  transform: (instr: RenderInstruction) => RenderInstruction,
+): RenderProgram {
+  return { instructions: program.instructions.map(transform), terminated: program.terminated };
+}
+`;
+}
+
 // --- Handler ---
 
 export const typescriptGenHandler: ConceptHandler = {
@@ -328,7 +534,7 @@ export const typescriptGenHandler: ConceptHandler = {
       name: 'TypeScriptGen',
       inputKind: 'ConceptManifest',
       outputKind: 'TypeScriptSource',
-      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
     };
   },
 
@@ -346,6 +552,7 @@ export const typescriptGenHandler: ConceptHandler = {
         { path: `${lowerName}.types.stub.ts`, content: generateTypesFile(manifest) },
         { path: `${lowerName}.handler.stub.ts`, content: generateHandlerFile(manifest) },
         { path: `${lowerName}.adapter.stub.ts`, content: generateAdapterFile(manifest) },
+        { path: `storage-program.dsl.stub.ts`, content: generateDslRuntimeFile() },
       ];
 
       // Add conformance tests if the manifest has invariants (Section 7.4)
