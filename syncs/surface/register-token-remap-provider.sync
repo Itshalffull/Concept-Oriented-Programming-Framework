@@ -1,0 +1,13 @@
+sync RegisterTokenRemapProvider [eager]
+  purpose: "Register the TokenRemapProvider with PluginRegistry as a render-transform-provider on first use."
+when {
+  TokenRemapProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "render-transform-provider";
+    name: ?name;
+    metadata: { kind: ?kind; capabilities: ?caps }
+  ]
+}

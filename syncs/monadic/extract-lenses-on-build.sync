@@ -1,0 +1,9 @@
+sync ExtractLensesOnBuild [eager]
+  purpose: "Run lens extraction analysis on every built StorageProgram."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  LensExtractionProvider/analyze: [ program: ?program ]
+}

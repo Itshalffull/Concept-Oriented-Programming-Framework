@@ -14,6 +14,12 @@ derived SurfaceRenderPrograms [T] {
     A11yAuditProvider [T]
     DeadPartProvider [T]
     ThemeComplianceProvider [T]
+    RenderTransform [T]
+    TransformExtractionProvider [T]
+    TokenRemapProvider [T]
+    A11yAdaptProvider [T]
+    BindRewriteProvider [T]
+    CustomTransformProvider [T]
   }
 
   uses {
@@ -28,7 +34,19 @@ derived SurfaceRenderPrograms [T] {
       analyze-on-build,
       dispatch-a11y-audit,
       register-a11y-audit-provider,
-      interpret-render-programs
+      interpret-render-programs,
+      register-transform-extraction-provider,
+      dispatch-transform-extraction,
+      extract-transforms-on-render,
+      apply-theme-transform-on-activate,
+      register-token-remap-provider,
+      dispatch-token-remap,
+      register-a11y-adapt-provider,
+      dispatch-a11y-adapt,
+      register-bind-rewrite-provider,
+      dispatch-bind-rewrite,
+      register-custom-transform-provider,
+      dispatch-custom-transform
     ]
     recommended: [
       cache-lookup-before-render,
@@ -77,6 +95,22 @@ derived SurfaceRenderPrograms [T] {
 
     query targets() {
       reads: RenderInterpreter/listTargets()
+    }
+
+    action renderWithTransform(widget: String, target: String, kind: String, spec: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: "widget", action: ?widget
+      triggers: [
+        RenderTransform/apply(program: ?program, kind: ?kind, spec: ?spec),
+        RenderInterpreter/execute(interpreter: ?target, program: ?transformedProgram, snapshot: "current")
+      ]
+    }
+
+    query registeredTransforms() {
+      reads: RenderTransform/list()
+    }
+
+    query appliedTransforms(program: String) {
+      reads: TransformExtractionProvider/analyze(program: ?program)
     }
   }
 

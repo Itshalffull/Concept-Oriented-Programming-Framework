@@ -122,7 +122,9 @@ describe('Self-Validation', () => {
       );
       expect(genResult.variant).toBe('ok');
       const files = genResult.files as { path: string; content: string }[];
-      expect(files).toHaveLength(4);
+      // types + handler + adapter + dsl-runtime + conformance
+      expect(files).toHaveLength(5);
+      expect(files.find(f => f.path === 'storage-program.dsl.stub.ts')).toBeDefined();
       // Verify each file has content
       for (const file of files) {
         expect(file.content.length).toBeGreaterThan(0);

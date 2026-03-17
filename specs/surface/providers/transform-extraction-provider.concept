@@ -1,0 +1,42 @@
+@version(1)
+concept TransformExtractionProvider [E] {
+
+  purpose {
+    Extract the list of transforms that have been applied to a
+    RenderProgram by reading its appliedTransforms metadata —
+    enabling provenance queries ("what transformations produced
+    this output?") and compliance verification ("was the a11y
+    transform applied before rendering?").
+  }
+
+  state {
+    results: set E
+    appliedTransforms: E -> list String
+    transformCount: E -> Int
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: E, appliedTransforms: String, transformCount: Int) {
+        Parse the program and extract its appliedTransforms
+        metadata. Return the list of transform names that were
+        applied, in order of application, plus the total count.
+      }
+      -> error(message: String) {
+        The program string could not be parsed.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}")
+      -> ok(result: r, appliedTransforms: t, transformCount: c)
+    then c = 2
+  }
+
+  invariant {
+    after analyze(program: "{\"instructions\":[]}")
+      -> ok(result: r, appliedTransforms: t, transformCount: c)
+    then c = 0
+  }
+}

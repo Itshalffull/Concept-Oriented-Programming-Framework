@@ -1,0 +1,44 @@
+derived LensMigration [T] {
+
+  purpose {
+    Automatically compute bidirectional schema migration patches when
+    a concept's state declarations change, using lens-based structural
+    diffing through the existing Diff-Patch pipeline so data can
+    migrate forward and backward between schema versions.
+  }
+
+  composes {
+    Lens [T]
+    Diff [T]
+    Patch [T]
+    SchemaEvolution [T]
+  }
+
+  syncs {
+    required: [
+      register-lens-structural-diff-provider
+    ]
+  }
+
+  surface {
+    action migrate(concept: String, fromVersion: Int, toVersion: Int) {
+      entry: SchemaEvolution/getSchema matches on subject: ?concept, version: ?fromVersion
+      triggers: [
+        Diff/diff(contentA: ?oldSchema, contentB: ?newSchema, algorithm: "lens-structural-diff"),
+        Patch/create(base: ?oldHash, target: ?newHash, effect: ?editScript),
+        Patch/invert(patchId: ?forwardPatch)
+      ]
+    }
+
+    query migrationPath(concept: String, v1: Int, v2: Int) {
+      reads: Patch/apply(patchId: ?patchChain, content: ?data)
+    }
+  }
+
+  principle {
+    after migrate(concept: "User", fromVersion: 1, toVersion: 2)
+    then a forward patch exists that transforms v1 data to v2
+    and  a backward patch exists (via Patch/invert) that transforms v2 data to v1
+    and  Patch/compose of forward then backward yields identity
+  }
+}

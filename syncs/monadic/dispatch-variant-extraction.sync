@@ -1,0 +1,9 @@
+sync DispatchVariantExtraction [eager]
+  purpose: "Route variant-extraction analysis requests to the VariantExtractionProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "variant-extraction" ]
+    => []
+}
+then {
+  VariantExtractionProvider/analyze: [ program: ?program ]
+}

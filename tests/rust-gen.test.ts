@@ -206,8 +206,9 @@ describe('RustGen Type Mapping', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    // types, handler, adapter — but no conformance since no invariants
-    expect(files).toHaveLength(3);
+    // types, handler, adapter, dsl-runtime — but no conformance since no invariants
+    expect(files).toHaveLength(4);
+    expect(files.find(f => f.path === 'storage_program_dsl.stub.rs')).toBeDefined();
     expect(files.find(f => f.path.endsWith('conformance.stub.rs'))).toBeUndefined();
   });
 

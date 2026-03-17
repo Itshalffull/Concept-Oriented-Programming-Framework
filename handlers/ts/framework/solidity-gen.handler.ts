@@ -400,6 +400,162 @@ function generateSolidityStepCode(step: InvariantStep): string[] {
   return lines;
 }
 
+// --- StorageProgram DSL Runtime File (Solidity) ---
+
+function generateDslRuntimeFile(): string {
+  return `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title StorageProgramDSL
+/// @notice Free Monad DSL for Concept Handlers (Solidity)
+/// @dev Provides on-chain equivalents of typed lenses, effect tracking,
+///      algebraic effects, and render program structures.
+///      Solidity cannot express higher-kinded types or closures natively,
+///      so this library uses structs + enums with ABI encoding.
+
+// ── Lens Types ──────────────────────────────────────────────
+
+enum LensSegmentKind { Relation, Key, Field }
+
+struct LensSegment {
+    LensSegmentKind kind;
+    string value; // name for Relation/Field, key for Key
+}
+
+struct StateLens {
+    LensSegment[] segments;
+    string sourceType;
+    string focusType;
+}
+
+library LensLib {
+    function relation(string memory name) internal pure returns (StateLens memory) {
+        LensSegment[] memory segs = new LensSegment[](1);
+        segs[0] = LensSegment(LensSegmentKind.Relation, name);
+        return StateLens(segs, "store", string(abi.encodePacked("relation<", name, ">")));
+    }
+
+    function at(StateLens memory lens, string memory key) internal pure returns (StateLens memory) {
+        uint256 len = lens.segments.length;
+        LensSegment[] memory segs = new LensSegment[](len + 1);
+        for (uint256 i = 0; i < len; i++) { segs[i] = lens.segments[i]; }
+        segs[len] = LensSegment(LensSegmentKind.Key, key);
+        return StateLens(segs, lens.sourceType, "record");
+    }
+
+    function field(StateLens memory lens, string memory name) internal pure returns (StateLens memory) {
+        uint256 len = lens.segments.length;
+        LensSegment[] memory segs = new LensSegment[](len + 1);
+        for (uint256 i = 0; i < len; i++) { segs[i] = lens.segments[i]; }
+        segs[len] = LensSegment(LensSegmentKind.Field, name);
+        return StateLens(segs, lens.sourceType, name);
+    }
+}
+
+// ── Effect Set ──────────────────────────────────────────────
+
+enum PurityLevel { Pure, ReadOnly, ReadWrite }
+
+struct EffectSet {
+    string[] reads;
+    string[] writes;
+    string[] completionVariants;
+    string[] performs;
+}
+
+library EffectLib {
+    function purityOf(EffectSet memory e) internal pure returns (PurityLevel) {
+        if (e.writes.length > 0) return PurityLevel.ReadWrite;
+        if (e.reads.length > 0) return PurityLevel.ReadOnly;
+        return PurityLevel.Pure;
+    }
+
+    function validatePurity(EffectSet memory e, PurityLevel declared) internal pure returns (bool, string memory) {
+        PurityLevel actual = purityOf(e);
+        if (declared == PurityLevel.Pure && (e.reads.length > 0 || e.writes.length > 0))
+            return (false, "Declared pure but has storage effects");
+        if (declared == PurityLevel.ReadOnly && e.writes.length > 0)
+            return (false, "Declared read-only but writes");
+        return (true, "");
+    }
+}
+
+// ── Instruction Types ───────────────────────────────────────
+
+enum InstructionTag { Get, Put, Del, GetLens, PutLens, Perform, Pure }
+
+struct Instruction {
+    InstructionTag tag;
+    string relation;
+    string key;
+    bytes value;
+    string protocol;
+    string operation;
+    string bindAs;
+}
+
+// ── StorageProgram ──────────────────────────────────────────
+
+struct StorageProgram {
+    Instruction[] instructions;
+    bool terminated;
+    EffectSet effects;
+}
+
+/// @notice Builder library for constructing StoragePrograms on-chain
+library StorageProgramLib {
+    function complete(
+        StorageProgram memory p,
+        string memory variant,
+        bytes memory output
+    ) internal pure returns (StorageProgram memory) {
+        // Track completion variant
+        string[] memory newVariants = new string[](p.effects.completionVariants.length + 1);
+        for (uint256 i = 0; i < p.effects.completionVariants.length; i++) {
+            newVariants[i] = p.effects.completionVariants[i];
+        }
+        newVariants[p.effects.completionVariants.length] = variant;
+        p.effects.completionVariants = newVariants;
+        p.terminated = true;
+        return p;
+    }
+
+    function perform(
+        StorageProgram memory p,
+        string memory protocol,
+        string memory operation,
+        bytes memory payload
+    ) internal pure returns (StorageProgram memory) {
+        string memory effect = string(abi.encodePacked(protocol, ":", operation));
+        string[] memory newPerforms = new string[](p.effects.performs.length + 1);
+        for (uint256 i = 0; i < p.effects.performs.length; i++) {
+            newPerforms[i] = p.effects.performs[i];
+        }
+        newPerforms[p.effects.performs.length] = effect;
+        p.effects.performs = newPerforms;
+        return p;
+    }
+}
+
+// ── Render Program (Functorial Mapping) ─────────────────────
+
+enum RenderInstructionTag { Token, Aria, Bind, Element, Focus, Keyboard, RenderPure }
+
+struct RenderInstruction {
+    RenderInstructionTag tag;
+    string path;       // token path or field name
+    bytes value;       // ABI-encoded payload
+    string action;     // keyboard action
+    string strategy;   // focus strategy
+}
+
+struct RenderProgram {
+    RenderInstruction[] instructions;
+    bool terminated;
+}
+`;
+}
+
 // --- Handler ---
 
 export const solidityGenHandler: ConceptHandler = {
@@ -409,7 +565,7 @@ export const solidityGenHandler: ConceptHandler = {
       name: 'SolidityGen',
       inputKind: 'ConceptManifest',
       outputKind: 'SoliditySource',
-      capabilities: JSON.stringify(['contract', 'events', 'foundry-tests']),
+      capabilities: JSON.stringify(['contract', 'events', 'foundry-tests', 'dsl-runtime']),
     };
   },
 
@@ -424,6 +580,7 @@ export const solidityGenHandler: ConceptHandler = {
     try {
       const files: { path: string; content: string }[] = [
         { path: `src/${manifest.name}.stub.sol`, content: generateContractFile(manifest) },
+        { path: `src/StorageProgramDSL.stub.sol`, content: generateDslRuntimeFile() },
       ];
 
       // Add Foundry tests if the manifest has invariants

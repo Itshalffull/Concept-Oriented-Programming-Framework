@@ -28,6 +28,30 @@ concepts:
     spec: specs/surface/providers/theme-compliance-provider.concept
     params:
       T: { as: CheckId, description: "Theme compliance check result identifier" }
+  RenderTransform:
+    spec: specs/surface/render-transform.concept
+    params:
+      X: { as: TransformId, description: "Render transform identifier" }
+  TransformExtractionProvider:
+    spec: specs/surface/providers/transform-extraction-provider.concept
+    params:
+      E: { as: ResultId, description: "Transform extraction analysis result" }
+  TokenRemapProvider:
+    spec: specs/surface/providers/token-remap-provider.concept
+    params:
+      V: { as: TokenRemapResultId, description: "Token remap transform result" }
+  A11yAdaptProvider:
+    spec: specs/surface/providers/a11y-adapt-provider.concept
+    params:
+      V: { as: A11yAdaptResultId, description: "A11y adapt transform result" }
+  BindRewriteProvider:
+    spec: specs/surface/providers/bind-rewrite-provider.concept
+    params:
+      V: { as: BindRewriteResultId, description: "Bind rewrite transform result" }
+  CustomTransformProvider:
+    spec: specs/surface/providers/custom-transform-provider.concept
+    params:
+      V: { as: CustomTransformResultId, description: "Custom transform result" }
 
 syncs:
   required:
@@ -49,6 +73,30 @@ syncs:
       description: "Route RenderInterpreter delegation to React provider"
     - path: syncs/surface/delegate-to-svelte-interpreter.sync
       description: "Route RenderInterpreter delegation to Svelte provider"
+    - path: syncs/surface/register-transform-extraction-provider.sync
+      description: "Register TransformExtractionProvider with ProgramAnalysis"
+    - path: syncs/surface/dispatch-transform-extraction.sync
+      description: "Dispatch transform-extraction analysis to provider"
+    - path: syncs/surface/extract-transforms-on-render.sync
+      description: "Extract applied transforms from rendered programs"
+    - path: syncs/surface/apply-theme-transform-on-activate.sync
+      description: "Apply theme token-remap transforms on theme activation"
+    - path: syncs/surface/register-token-remap-provider.sync
+      description: "Register TokenRemapProvider with RenderTransform as kind token-remap"
+    - path: syncs/surface/dispatch-token-remap.sync
+      description: "Route token-remap transforms to TokenRemapProvider"
+    - path: syncs/surface/register-a11y-adapt-provider.sync
+      description: "Register A11yAdaptProvider with RenderTransform as kind a11y-adapt"
+    - path: syncs/surface/dispatch-a11y-adapt.sync
+      description: "Route a11y-adapt transforms to A11yAdaptProvider"
+    - path: syncs/surface/register-bind-rewrite-provider.sync
+      description: "Register BindRewriteProvider with RenderTransform as kind bind-rewrite"
+    - path: syncs/surface/dispatch-bind-rewrite.sync
+      description: "Route bind-rewrite transforms to BindRewriteProvider"
+    - path: syncs/surface/register-custom-transform-provider.sync
+      description: "Register CustomTransformProvider with RenderTransform as kind custom"
+    - path: syncs/surface/dispatch-custom-transform.sync
+      description: "Route custom transforms to CustomTransformProvider"
   recommended:
     - path: syncs/surface/cache-lookup-before-render.sync
       name: CacheLookupBeforeRender

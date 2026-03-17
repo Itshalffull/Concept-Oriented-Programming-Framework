@@ -1,0 +1,44 @@
+@version(1)
+concept VariantExtractionProvider [V] {
+
+  purpose {
+    Extract the set of completion variant tags reachable from a
+    StorageProgram's branch structure by walking its instruction
+    tree — enabling static verification of sync coverage against
+    the handler's actual behavior.
+  }
+
+  state {
+    results: set V
+    variants: V -> set String
+    branchCount: V -> Int
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: V, variants: String, branchCount: Int) {
+        Walk the instruction tree. For each pure/pureFrom terminal,
+        extract the variant tag. For branch instructions, recurse
+        into both arms and union the variant sets. Return the set
+        of all reachable variant tags as a serialized JSON array,
+        plus the total branch count for complexity analysis.
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid
+        instruction tree or contains no recognizable terminals.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}")
+      -> ok(result: r, variants: v, branchCount: b)
+    then b = 0
+  }
+
+  invariant {
+    after analyze(program: "not valid json{{{")
+      -> error(message: m)
+    then m != ""
+  }
+}

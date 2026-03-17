@@ -161,8 +161,9 @@ describe('Extensibility Validation', () => {
     );
 
     const files = result.files as { path: string; content: string }[];
-    // Same 4 files as before
-    expect(files).toHaveLength(4);
+    // Same 5 files as before (types, handler, adapter, dsl-runtime, conformance)
+    expect(files).toHaveLength(5);
+    expect(files.find(f => f.path === 'storage-program.dsl.stub.ts')).toBeDefined();
     expect(files.find(f => f.path === 'password.types.stub.ts')).toBeDefined();
     expect(files.find(f => f.path === 'password.handler.stub.ts')).toBeDefined();
     expect(files.find(f => f.path === 'password.adapter.stub.ts')).toBeDefined();

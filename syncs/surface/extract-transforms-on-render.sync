@@ -1,0 +1,9 @@
+sync ExtractTransformsOnRender [eager]
+  purpose: "Extract applied transforms from every rendered program for provenance tracking."
+when {
+  RenderTransform/apply: [ program: ?program; transform: ?transform ]
+    => [ result: ?result ]
+}
+then {
+  TransformExtractionProvider/analyze: [ program: ?result ]
+}

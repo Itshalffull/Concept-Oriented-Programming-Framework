@@ -1,0 +1,13 @@
+sync RegisterCustomTransformProvider [eager]
+  purpose: "Register the CustomTransformProvider with PluginRegistry as a render-transform-provider on first use."
+when {
+  CustomTransformProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "render-transform-provider";
+    name: ?name;
+    metadata: { kind: ?kind; capabilities: ?caps }
+  ]
+}

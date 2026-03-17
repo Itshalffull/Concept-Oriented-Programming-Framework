@@ -411,6 +411,215 @@ function generateSwiftStepCode(
   return lines;
 }
 
+// --- StorageProgram DSL Runtime File (Swift) ---
+
+function generateDslRuntimeFile(): string {
+  return `// generated: StorageProgramDSL.stub.swift
+//
+// StorageProgram DSL — Free Monad for Concept Handlers (Swift)
+// Provides typed lenses/optics, effect tracking, algebraic effects,
+// transport effects, and functorial mapping for render programs.
+
+import Foundation
+
+// MARK: - Lens Types
+
+public enum LensSegment: Codable, Equatable {
+    case relation(name: String)
+    case key(value: String)
+    case field(name: String)
+}
+
+public struct StateLens: Codable, Equatable {
+    public var segments: [LensSegment]
+    public var sourceType: String
+    public var focusType: String
+
+    public static func relation(_ name: String) -> StateLens {
+        StateLens(segments: [.relation(name: name)], sourceType: "store", focusType: "relation<\\(name)>")
+    }
+
+    public func at(_ key: String) -> StateLens {
+        var copy = self
+        copy.segments.append(.key(value: key))
+        copy.focusType = "record"
+        return copy
+    }
+
+    public func field(_ name: String) -> StateLens {
+        var copy = self
+        copy.segments.append(.field(name: name))
+        copy.focusType = name
+        return copy
+    }
+
+    public func compose(_ inner: StateLens) -> StateLens {
+        StateLens(segments: segments + inner.segments, sourceType: sourceType, focusType: inner.focusType)
+    }
+
+    public var relationName: String? {
+        guard case .relation(let name) = segments.first else { return nil }
+        return name
+    }
+}
+
+// MARK: - Effect Set
+
+public enum Purity: String, Codable {
+    case pure
+    case readOnly = "read-only"
+    case readWrite = "read-write"
+}
+
+public struct EffectSet: Codable {
+    public var reads: Set<String>
+    public var writes: Set<String>
+    public var completionVariants: Set<String>
+    public var performs: Set<String>
+
+    public static func empty() -> EffectSet {
+        EffectSet(reads: [], writes: [], completionVariants: [], performs: [])
+    }
+
+    public func merged(with other: EffectSet) -> EffectSet {
+        EffectSet(
+            reads: reads.union(other.reads),
+            writes: writes.union(other.writes),
+            completionVariants: completionVariants.union(other.completionVariants),
+            performs: performs.union(other.performs)
+        )
+    }
+
+    public var purity: Purity {
+        if !writes.isEmpty { return .readWrite }
+        if !reads.isEmpty { return .readOnly }
+        return .pure
+    }
+
+    public func validatePurity(declared: Purity) -> String? {
+        switch declared {
+        case .pure where !reads.isEmpty || !writes.isEmpty:
+            return "Declared pure but has storage effects"
+        case .readOnly where !writes.isEmpty:
+            return "Declared read-only but writes to: \\(writes.sorted().joined(separator: ", "))"
+        default:
+            return nil
+        }
+    }
+}
+
+// MARK: - Instruction Types
+
+public typealias Bindings = [String: Any]
+
+public enum Instruction: Codable {
+    case get(relation: String, key: String, bindAs: String)
+    case find(relation: String, criteria: Data, bindAs: String)
+    case put(relation: String, key: String, value: Data)
+    case merge(relation: String, key: String, fields: Data)
+    case del(relation: String, key: String)
+    case getLens(lens: StateLens, bindAs: String)
+    case putLens(lens: StateLens, value: Data)
+    case perform(protocol: String, operation: String, payload: Data, bindAs: String)
+    case pure(value: Data)
+}
+
+// MARK: - StorageProgram
+
+public struct StorageProgram: Codable {
+    public var instructions: [Instruction]
+    public var terminated: Bool
+    public var effects: EffectSet
+
+    public static func create() -> StorageProgram {
+        StorageProgram(instructions: [], terminated: false, effects: .empty())
+    }
+
+    public mutating func get(relation: String, key: String, bindAs: String) {
+        effects.reads.insert(relation)
+        instructions.append(.get(relation: relation, key: key, bindAs: bindAs))
+    }
+
+    public mutating func put(relation: String, key: String, value: Data) {
+        effects.writes.insert(relation)
+        instructions.append(.put(relation: relation, key: key, value: value))
+    }
+
+    public mutating func getLens(_ lens: StateLens, bindAs: String) {
+        if let rel = lens.relationName { effects.reads.insert(rel) }
+        instructions.append(.getLens(lens: lens, bindAs: bindAs))
+    }
+
+    public mutating func putLens(_ lens: StateLens, value: Data) {
+        if let rel = lens.relationName { effects.writes.insert(rel) }
+        instructions.append(.putLens(lens: lens, value: value))
+    }
+
+    public mutating func perform(protocol proto: String, operation: String, payload: Data, bindAs: String) {
+        effects.performs.insert("\\(proto):\\(operation)")
+        instructions.append(.perform(protocol: proto, operation: operation, payload: payload, bindAs: bindAs))
+    }
+
+    public mutating func pure(value: Data) {
+        instructions.append(.pure(value: value))
+        terminated = true
+    }
+
+    public mutating func complete(variant: String, output: [String: Any]) {
+        effects.completionVariants.insert(variant)
+        var merged = output
+        merged["variant"] = variant
+        let data = (try? JSONSerialization.data(withJSONObject: merged)) ?? Data()
+        instructions.append(.pure(value: data))
+        terminated = true
+    }
+
+    public func extractCompletionVariants() -> Set<String> {
+        var variants = Set<String>()
+        for instr in instructions {
+            if case .pure(let data) = instr,
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let v = obj["variant"] as? String {
+                variants.insert(v)
+            }
+        }
+        return variants
+    }
+
+    public func extractPerformSet() -> Set<String> {
+        var performs = Set<String>()
+        for instr in instructions {
+            if case .perform(let proto, let op, _, _) = instr {
+                performs.insert("\\(proto):\\(op)")
+            }
+        }
+        return performs
+    }
+}
+
+// MARK: - Render Program (Functorial Mapping)
+
+public enum RenderInstruction: Codable {
+    case token(path: String, value: Data)
+    case aria(role: String?, label: String?, attributes: [String: String]?)
+    case bind(field: String, expr: String)
+    case element(name: String, attributes: [String: String]?)
+    case focus(strategy: String, target: String?)
+    case keyboard(key: String, action: String, modifiers: [String]?)
+    case renderPure(value: Data)
+}
+
+public struct RenderProgram: Codable {
+    public var instructions: [RenderInstruction]
+    public var terminated: Bool
+
+    public func map(_ transform: (RenderInstruction) -> RenderInstruction) -> RenderProgram {
+        RenderProgram(instructions: instructions.map(transform), terminated: terminated)
+    }
+}
+`;
+}
+
 // --- Handler ---
 
 export const swiftGenHandler: ConceptHandler = {
@@ -420,7 +629,7 @@ export const swiftGenHandler: ConceptHandler = {
       name: 'SwiftGen',
       inputKind: 'ConceptManifest',
       outputKind: 'SwiftSource',
-      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
     };
   },
 
@@ -437,6 +646,7 @@ export const swiftGenHandler: ConceptHandler = {
         { path: `${manifest.name}/Types.stub.swift`, content: generateTypesFile(manifest) },
         { path: `${manifest.name}/Handler.stub.swift`, content: generateHandlerFile(manifest) },
         { path: `${manifest.name}/Adapter.stub.swift`, content: generateAdapterFile(manifest) },
+        { path: `StorageProgramDSL.stub.swift`, content: generateDslRuntimeFile() },
       ];
 
       // Add conformance tests if the manifest has invariants

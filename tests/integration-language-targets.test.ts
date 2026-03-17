@@ -221,11 +221,12 @@ describe('Language Target Integration — File Structure', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files).toHaveLength(4);
+    expect(files).toHaveLength(5);
     expect(files.find(f => f.path.endsWith('.types.stub.ts'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('.handler.stub.ts'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('.adapter.stub.ts'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('.conformance.stub.test.ts'))).toBeDefined();
+    expect(files.find(f => f.path.includes('storage-program.dsl'))).toBeDefined();
   });
 
   it('RustGen produces types, handler, adapter, and conformance for Password', async () => {
@@ -239,11 +240,12 @@ describe('Language Target Integration — File Structure', () => {
 
     expect(result.variant).toBe('ok');
     const files = result.files as { path: string; content: string }[];
-    expect(files).toHaveLength(4);
+    expect(files).toHaveLength(5);
     expect(files.find(f => f.path.endsWith('types.stub.rs'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('handler.stub.rs'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('adapter.stub.rs'))).toBeDefined();
     expect(files.find(f => f.path.endsWith('conformance.stub.rs'))).toBeDefined();
+    expect(files.find(f => f.path.includes('storage_program_dsl'))).toBeDefined();
   });
 
   it('SolidityGen produces contract and test harness for Password', async () => {

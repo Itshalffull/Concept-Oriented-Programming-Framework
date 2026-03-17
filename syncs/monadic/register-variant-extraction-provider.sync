@@ -1,0 +1,9 @@
+sync RegisterVariantExtractionProvider [eager]
+  purpose: "Register the VariantExtractionProvider with ProgramAnalysis on first use."
+when {
+  VariantExtractionProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "variant-extraction"; kind: "structural" ]
+}

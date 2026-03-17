@@ -1,0 +1,69 @@
+@version(1)
+concept EffectHandler [E] {
+
+  purpose {
+    Register and resolve protocol-level effect handlers that the
+    interpreter uses to execute abstract perform instructions —
+    the bridge between a handler's declared transport effects and
+    concrete transport implementations.
+  }
+
+  state {
+    handlers: set E
+    protocol: E -> String
+    operation: E -> String
+    status: E -> String
+  }
+
+  actions {
+    action register(protocol: String, operation: String) {
+      -> ok(handler: E) {
+        Register a handler for the given protocol:operation pair,
+        making it available for the interpreter to resolve perform
+        instructions at execution time.
+      }
+      -> duplicate(handler: E) {
+        A handler for this protocol:operation pair is already
+        registered. Returns the existing handler ID.
+      }
+    }
+
+    action resolve(protocol: String, operation: String) {
+      -> ok(handler: E) {
+        Return the registered handler for this protocol:operation
+        pair, confirming the effect can be interpreted.
+      }
+      -> unresolved(protocol: String, operation: String) {
+        No handler is registered for this protocol:operation pair.
+        The perform instruction cannot be executed.
+      }
+    }
+
+    action listByProtocol(protocol: String) {
+      -> ok(handlers: String) {
+        Return all registered handlers for the given protocol as
+        a serialized JSON array of handler objects.
+      }
+    }
+
+    action deregister(protocol: String, operation: String) {
+      -> ok(handler: E) {
+        Remove the handler registration for this protocol:operation
+        pair.
+      }
+      -> notfound(message: String) {
+        No handler is registered for this protocol:operation pair.
+      }
+    }
+  }
+
+  invariant {
+    after register(protocol: "http", operation: "GET") -> ok(handler: h)
+    then resolve(protocol: "http", operation: "GET") -> ok(handler: h)
+  }
+
+  invariant {
+    after resolve(protocol: "grpc", operation: "invoke") -> unresolved(protocol: p, operation: o)
+    then p = "grpc"
+  }
+}

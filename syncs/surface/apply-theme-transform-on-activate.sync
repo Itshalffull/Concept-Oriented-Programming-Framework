@@ -1,0 +1,14 @@
+# When a theme is activated, apply its token-remap transform to pending render programs
+
+sync ApplyThemeTransformOnActivate [eager]
+  purpose: "Apply theme-specific token-remap transforms when a theme is activated, enabling theme switching as a functorial mapping over render programs."
+when {
+  Theme/activate: [ theme: ?theme; priority: ?priority ]
+    => ok(theme: ?theme)
+}
+where {
+  RenderTransform: { ?transform kind: "token-remap" }
+}
+then {
+  RenderTransform/apply: [ program: ?pendingProgram; transform: ?transform ]
+}

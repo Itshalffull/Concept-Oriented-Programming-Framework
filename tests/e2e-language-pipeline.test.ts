@@ -86,11 +86,12 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     );
     expect(tsResult.variant).toBe('ok');
     const tsFiles = tsResult.files as { path: string; content: string }[];
-    expect(tsFiles).toHaveLength(4);
+    expect(tsFiles).toHaveLength(5);
     expect(tsFiles.find(f => f.path.endsWith('.types.stub.ts'))!.content).toContain('PasswordSetInput');
     expect(tsFiles.find(f => f.path.endsWith('.handler.stub.ts'))!.content).toContain('PasswordHandler');
     expect(tsFiles.find(f => f.path.endsWith('.adapter.stub.ts'))!.content).toContain('createPasswordLiteAdapter');
     expect(tsFiles.find(f => f.path.endsWith('.conformance.stub.test.ts'))!.content).toContain('u-test-invariant-001');
+    expect(tsFiles.find(f => f.path.includes('storage-program.dsl'))!.content).toContain('StorageProgram');
 
     // Step 3b: Rust generation
     const rsStorage = createInMemoryStorage();
@@ -100,7 +101,7 @@ describe('E2E Language Pipeline — Source to Multi-Target', () => {
     );
     expect(rsResult.variant).toBe('ok');
     const rsFiles = rsResult.files as { path: string; content: string }[];
-    expect(rsFiles).toHaveLength(4);
+    expect(rsFiles).toHaveLength(5);
     expect(rsFiles.find(f => f.path.endsWith('types.stub.rs'))!.content).toContain('pub struct PasswordSetInput');
     expect(rsFiles.find(f => f.path.endsWith('handler.stub.rs'))!.content).toContain('pub trait PasswordHandler');
     expect(rsFiles.find(f => f.path.endsWith('adapter.stub.rs'))!.content).toContain('pub struct PasswordAdapter');

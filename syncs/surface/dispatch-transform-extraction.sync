@@ -1,0 +1,9 @@
+sync DispatchTransformExtraction [eager]
+  purpose: "Route transform-extraction analysis requests to the TransformExtractionProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "transform-extraction" ]
+    => []
+}
+then {
+  TransformExtractionProvider/analyze: [ program: ?program ]
+}

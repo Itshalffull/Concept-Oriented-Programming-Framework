@@ -1,0 +1,9 @@
+sync DispatchBindRewrite [eager]
+  purpose: "Route bind-rewrite transform application from RenderTransform to BindRewriteProvider."
+when {
+  RenderTransform/apply: [ program: ?program; kind: "bind-rewrite"; spec: ?spec ]
+    => []
+}
+then {
+  BindRewriteProvider/apply: [ program: ?program; spec: ?spec ]
+}

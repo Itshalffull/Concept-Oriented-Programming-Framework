@@ -36,7 +36,9 @@ export const conceptEntityHandler: ConceptHandler = {
     let capabilitiesList = '[]';
     let typeParams = '[]';
     let actionsRef = '[]';
+    let actionsDetailRef = '[]';
     let stateFieldsRef = '[]';
+    let stateFieldsDetailRef = '[]';
     let suite = '';
 
     try {
@@ -47,7 +49,22 @@ export const conceptEntityHandler: ConceptHandler = {
       capabilitiesList = JSON.stringify(parsed.capabilities || []);
       typeParams = JSON.stringify(parsed.typeParams || []);
       actionsRef = JSON.stringify((parsed.actions || []).map((a: Record<string, unknown>) => a.name));
+      // Rich action detail: name + variant tags for each action
+      actionsDetailRef = JSON.stringify((parsed.actions || []).map((a: Record<string, unknown>) => ({
+        name: a.name,
+        variants: ((a.variants || []) as Array<Record<string, unknown>>).map(v => v.name),
+        params: ((a.params || []) as Array<Record<string, unknown>>).map(p => p.name),
+      })));
       stateFieldsRef = JSON.stringify((parsed.state || []).map((s: Record<string, unknown>) => s.name));
+      // Rich state field detail: name + type expression + cardinality
+      stateFieldsDetailRef = JSON.stringify((parsed.state || []).map((s: Record<string, unknown>) => ({
+        name: s.name,
+        type: typeof s.type === 'object' ? (s.type as Record<string, unknown>).kind || 'unknown' : String(s.type || 'unknown'),
+        cardinality: typeof s.type === 'object' ? ((s.type as Record<string, unknown>).kind === 'set' ? 'set' :
+          (s.type as Record<string, unknown>).kind === 'list' ? 'list' :
+          (s.type as Record<string, unknown>).kind === 'option' ? 'option' :
+          (s.type as Record<string, unknown>).kind === 'relation' ? 'relation' : 'one') : 'one',
+      })));
       suite = parsed.suite || '';
     } catch {
       // AST may be empty or non-JSON; store defaults
@@ -64,7 +81,9 @@ export const conceptEntityHandler: ConceptHandler = {
       capabilitiesList,
       typeParams,
       actionsRef,
+      actionsDetailRef,
       stateFieldsRef,
+      stateFieldsDetailRef,
       suite,
     });
 

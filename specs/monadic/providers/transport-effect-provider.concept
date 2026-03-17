@@ -1,0 +1,44 @@
+@version(1)
+concept TransportEffectProvider [T] {
+
+  purpose {
+    Extract the set of transport effects (protocol:operation pairs)
+    from a StorageProgram's instruction tree — enabling static
+    verification that every declared transport effect has a
+    registered EffectHandler before execution.
+  }
+
+  state {
+    results: set T
+    performs: T -> set String
+    performCount: T -> Int
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: T, performs: String, performCount: Int) {
+        Walk the instruction tree. For each perform/performFrom
+        instruction, extract the protocol:operation tag. For
+        branch instructions, recurse into both arms and union the
+        sets. Return all reachable transport effects as a serialized
+        JSON array, plus the total perform count.
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid
+        instruction tree.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}")
+      -> ok(result: r, performs: p, performCount: c)
+    then c = 1
+  }
+
+  invariant {
+    after analyze(program: "not valid json{{{")
+      -> error(message: m)
+    then m != ""
+  }
+}

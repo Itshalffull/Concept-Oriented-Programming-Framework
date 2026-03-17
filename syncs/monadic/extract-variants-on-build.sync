@@ -1,0 +1,9 @@
+sync ExtractVariantsOnBuild [eager]
+  purpose: "Extract completion variant tags from every built StorageProgram."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  VariantExtractionProvider/analyze: [ program: ?program ]
+}

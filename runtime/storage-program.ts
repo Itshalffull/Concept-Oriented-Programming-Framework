@@ -7,6 +7,25 @@
 // using the DSL functions below; the interpreter in interpreter.ts
 // executes them against a real ConceptStorage backend.
 
+// --- Lens Types ---
+
+/** A single segment in a lens path. */
+export type LensSegment =
+  | { kind: 'relation'; name: string }
+  | { kind: 'key'; value: string }
+  | { kind: 'field'; name: string };
+
+/**
+ * A typed, composable reference to a location within concept state.
+ * Replaces untyped string-based relation/key/field access with a
+ * first-class optic that can be composed, decomposed, and validated.
+ */
+export interface StateLens {
+  readonly segments: readonly LensSegment[];
+  readonly sourceType: string;
+  readonly focusType: string;
+}
+
 /** A single storage instruction in the program tree. */
 export type Instruction =
   | { tag: 'get'; relation: string; key: string; bindAs: string }
@@ -17,6 +36,11 @@ export type Instruction =
   | { tag: 'delFrom'; relation: string; keyFn: (bindings: Bindings) => string }
   | { tag: 'putFrom'; relation: string; key: string; valueFn: (bindings: Bindings) => Record<string, unknown> }
   | { tag: 'mergeFrom'; relation: string; key: string; fieldsFn: (bindings: Bindings) => Record<string, unknown> }
+  | { tag: 'getLens'; lens: StateLens; bindAs: string }
+  | { tag: 'putLens'; lens: StateLens; value: Record<string, unknown> }
+  | { tag: 'modifyLens'; lens: StateLens; fn: (bindings: Bindings) => Record<string, unknown> }
+  | { tag: 'perform'; protocol: string; operation: string; payload: Record<string, unknown>; bindAs: string }
+  | { tag: 'performFrom'; protocol: string; operation: string; payloadFn: (bindings: Bindings) => Record<string, unknown>; bindAs: string }
   | { tag: 'branch'; condition: (bindings: Bindings) => boolean; thenBranch: StorageProgram<unknown>; elseBranch: StorageProgram<unknown> }
   | { tag: 'mapBindings'; fn: (bindings: Bindings) => unknown; bindAs: string }
   | { tag: 'pure'; value: unknown }
@@ -26,10 +50,12 @@ export type Instruction =
 /** Runtime bindings accumulated during interpretation. */
 export type Bindings = Record<string, unknown>;
 
-/** Effect set tracking which relations a program reads and writes. */
+/** Effect set tracking storage, transport, and completion effects structurally. */
 export interface EffectSet {
   readonly reads: ReadonlySet<string>;
   readonly writes: ReadonlySet<string>;
+  readonly completionVariants: ReadonlySet<string>;
+  readonly performs: ReadonlySet<string>;
 }
 
 /** Purity level derived from effect set. */
@@ -59,14 +85,16 @@ export function purityOf(program: StorageProgram<unknown>): Purity {
 
 /** Create a new empty effect set. */
 function emptyEffects(): EffectSet {
-  return { reads: new Set(), writes: new Set() };
+  return { reads: new Set(), writes: new Set(), completionVariants: new Set(), performs: new Set() };
 }
 
-/** Merge two effect sets (union of reads, union of writes). */
+/** Merge two effect sets (union of all dimensions). */
 function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
   return {
     reads: new Set([...a.reads, ...b.reads]),
     writes: new Set([...a.writes, ...b.writes]),
+    completionVariants: new Set([...a.completionVariants, ...b.completionVariants]),
+    performs: new Set([...a.performs, ...b.performs]),
   };
 }
 
@@ -74,14 +102,14 @@ function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
 function addRead(effects: EffectSet, relation: string): EffectSet {
   const reads = new Set(effects.reads);
   reads.add(relation);
-  return { reads, writes: effects.writes };
+  return { reads, writes: effects.writes, completionVariants: effects.completionVariants, performs: effects.performs };
 }
 
 /** Add a write relation to an effect set. */
 function addWrite(effects: EffectSet, relation: string): EffectSet {
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads: effects.reads, writes };
+  return { reads: effects.reads, writes, completionVariants: effects.completionVariants, performs: effects.performs };
 }
 
 /** Add both a read and write relation (for merge/mergeFrom). */
@@ -90,7 +118,68 @@ function addReadWrite(effects: EffectSet, relation: string): EffectSet {
   reads.add(relation);
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads, writes };
+  return { reads, writes, completionVariants: effects.completionVariants, performs: effects.performs };
+}
+
+/** Add a completion variant tag to an effect set. */
+function addCompletionVariant(effects: EffectSet, variant: string): EffectSet {
+  const completionVariants = new Set(effects.completionVariants);
+  completionVariants.add(variant);
+  return { reads: effects.reads, writes: effects.writes, completionVariants, performs: effects.performs };
+}
+
+/** Add a transport effect (protocol:operation) to an effect set. */
+function addPerform(effects: EffectSet, protocol: string, operation: string): EffectSet {
+  const performs = new Set(effects.performs);
+  performs.add(`${protocol}:${operation}`);
+  return { reads: effects.reads, writes: effects.writes, completionVariants: effects.completionVariants, performs };
+}
+
+// --- Lens Builders ---
+
+/** Extract the relation name from the first segment of a lens. */
+function lensRelation(lens: StateLens): string {
+  const first = lens.segments[0];
+  if (!first || first.kind !== 'relation') {
+    throw new Error('Lens must start with a relation segment');
+  }
+  return first.name;
+}
+
+/** Create a relation-level lens focusing on an entire storage relation. */
+export function relation(name: string): StateLens {
+  return {
+    segments: [{ kind: 'relation', name }],
+    sourceType: 'store',
+    focusType: `relation<${name}>`,
+  };
+}
+
+/** Compose two lenses by concatenating their segments. */
+export function composeLens(outer: StateLens, inner: StateLens): StateLens {
+  return {
+    segments: [...outer.segments, ...inner.segments],
+    sourceType: outer.sourceType,
+    focusType: inner.focusType,
+  };
+}
+
+/** Narrow a lens to a specific record by key. */
+export function at(lens: StateLens, key: string): StateLens {
+  return {
+    segments: [...lens.segments, { kind: 'key', value: key }],
+    sourceType: lens.sourceType,
+    focusType: `record`,
+  };
+}
+
+/** Narrow a lens to a specific field within a record. */
+export function field(lens: StateLens, name: string): StateLens {
+  return {
+    segments: [...lens.segments, { kind: 'field', name }],
+    sourceType: lens.sourceType,
+    focusType: name,
+  };
 }
 
 // --- Builder DSL ---
@@ -218,6 +307,89 @@ export function mergeFrom(
   };
 }
 
+/** Append a GetLens instruction — read through a lens. Adds lens relation to read effects. */
+export function getLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  bindAs: string,
+): StorageProgram<Record<string, unknown> | null> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'getLens', lens, bindAs }],
+    terminated: false,
+    effects: addRead(program.effects, lensRelation(lens)),
+  };
+}
+
+/** Append a PutLens instruction — write through a lens. Adds lens relation to write effects. */
+export function putLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  value: Record<string, unknown>,
+): StorageProgram<void> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'putLens', lens, value }],
+    terminated: false,
+    effects: addWrite(program.effects, lensRelation(lens)),
+  };
+}
+
+/** Append a ModifyLens instruction — read-modify-write through a lens. Adds lens relation to both effects. */
+export function modifyLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  fn: (bindings: Bindings) => Record<string, unknown>,
+): StorageProgram<void> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'modifyLens', lens, fn }],
+    terminated: false,
+    effects: addReadWrite(program.effects, lensRelation(lens)),
+  };
+}
+
+/**
+ * Append a Perform instruction — an abstract transport effect.
+ * The handler declares "I need to call protocol:operation" without knowing
+ * the concrete transport implementation. The interpreter resolves it
+ * through a registered EffectHandler at execution time.
+ * Adds protocol:operation to the performs effect set.
+ */
+export function perform(
+  program: StorageProgram<unknown>,
+  protocol: string,
+  operation: string,
+  payload: Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<Record<string, unknown>> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'perform', protocol, operation, payload, bindAs }],
+    terminated: false,
+    effects: addPerform(program.effects, protocol, operation),
+  };
+}
+
+/**
+ * Append a Perform instruction with payload derived from bindings at runtime.
+ * Adds protocol:operation to the performs effect set.
+ */
+export function performFrom(
+  program: StorageProgram<unknown>,
+  protocol: string,
+  operation: string,
+  payloadFn: (bindings: Bindings) => Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<Record<string, unknown>> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'performFrom', protocol, operation, payloadFn, bindAs }],
+    terminated: false,
+    effects: addPerform(program.effects, protocol, operation),
+  };
+}
+
 /** Append a conditional branch. Merges effects from both branches (conservative). */
 export function branch<A>(
   program: StorageProgram<unknown>,
@@ -279,6 +451,24 @@ export function pureFrom(
   };
 }
 
+/**
+ * Terminate the program with a named variant completion, tracking the variant
+ * in the structural effect set. This is the algebraic-effect-aware terminal —
+ * use it instead of pure() when you want exhaustiveness checking of sync coverage.
+ */
+export function complete<A extends Record<string, unknown>>(
+  program: StorageProgram<unknown>,
+  variant: string,
+  output: A,
+): StorageProgram<{ variant: string } & A> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'pure', value: { variant, ...output } }],
+    terminated: true,
+    effects: addCompletionVariant(program.effects, variant),
+  };
+}
+
 /** Monadic bind: run first, bind result to bindAs, then run second. Merges effects from both programs. */
 export function compose<A, B>(
   first: StorageProgram<A>,
@@ -299,8 +489,10 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
   const reads = new Set<string>();
   for (const instr of program.instructions) {
     if (instr.tag === 'get' || instr.tag === 'find') reads.add(instr.relation);
-    // merge/mergeFrom reads the existing record before writing
+    if (instr.tag === 'getLens') reads.add(lensRelation(instr.lens));
+    // merge/mergeFrom/modifyLens reads the existing record before writing
     if (instr.tag === 'merge' || instr.tag === 'mergeFrom') reads.add(instr.relation);
+    if (instr.tag === 'modifyLens') reads.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const r of extractReadSet(instr.thenBranch)) reads.add(r);
       for (const r of extractReadSet(instr.elseBranch)) reads.add(r);
@@ -318,6 +510,7 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
   const writes = new Set<string>();
   for (const instr of program.instructions) {
     if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
+    if (instr.tag === 'putLens' || instr.tag === 'modifyLens') writes.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const w of extractWriteSet(instr.thenBranch)) writes.add(w);
       for (const w of extractWriteSet(instr.elseBranch)) writes.add(w);
@@ -328,6 +521,44 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
     }
   }
   return writes;
+}
+
+/** Extract the set of completion variant tags reachable from the program's instruction tree. */
+export function extractCompletionVariants(program: StorageProgram<unknown>): Set<string> {
+  const variants = new Set<string>();
+  for (const instr of program.instructions) {
+    if (instr.tag === 'pure' && instr.value && typeof instr.value === 'object' && 'variant' in (instr.value as Record<string, unknown>)) {
+      variants.add((instr.value as Record<string, unknown>).variant as string);
+    }
+    if (instr.tag === 'branch') {
+      for (const v of extractCompletionVariants(instr.thenBranch)) variants.add(v);
+      for (const v of extractCompletionVariants(instr.elseBranch)) variants.add(v);
+    }
+    if (instr.tag === 'bind') {
+      for (const v of extractCompletionVariants(instr.first)) variants.add(v);
+      for (const v of extractCompletionVariants(instr.second)) variants.add(v);
+    }
+  }
+  return variants;
+}
+
+/** Extract the set of transport effects (protocol:operation) from the program's instruction tree. */
+export function extractPerformSet(program: StorageProgram<unknown>): Set<string> {
+  const performs = new Set<string>();
+  for (const instr of program.instructions) {
+    if (instr.tag === 'perform' || instr.tag === 'performFrom') {
+      performs.add(`${instr.protocol}:${instr.operation}`);
+    }
+    if (instr.tag === 'branch') {
+      for (const p of extractPerformSet(instr.thenBranch)) performs.add(p);
+      for (const p of extractPerformSet(instr.elseBranch)) performs.add(p);
+    }
+    if (instr.tag === 'bind') {
+      for (const p of extractPerformSet(instr.first)) performs.add(p);
+      for (const p of extractPerformSet(instr.second)) performs.add(p);
+    }
+  }
+  return performs;
 }
 
 /**
@@ -371,12 +602,20 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
           second: serializeProgram(instr.second),
         };
       }
+      if (instr.tag === 'modifyLens') {
+        return { ...instr, fn: instr.fn.toString() };
+      }
+      if (instr.tag === 'performFrom') {
+        return { ...instr, payloadFn: instr.payloadFn.toString() };
+      }
       return instr;
     }),
     terminated: program.terminated,
     effects: {
       reads: [...(program.effects?.reads || [])],
       writes: [...(program.effects?.writes || [])],
+      completionVariants: [...(program.effects?.completionVariants || [])],
+      performs: [...(program.effects?.performs || [])],
     },
   });
 }

@@ -47,6 +47,34 @@ concepts:
     spec: specs/monadic/functional-handler.concept
     params:
       H: { as: HandlerId, description: "Handler registration identifier" }
+  Lens:
+    spec: specs/monadic/lens.concept
+    params:
+      L: { as: LensId, description: "Lens identifier" }
+  LensExtractionProvider:
+    spec: specs/monadic/providers/lens-extraction-provider.concept
+    params:
+      E: { as: ResultId, description: "Lens extraction analysis result" }
+  LensStructuralDiffProvider:
+    spec: specs/monadic/providers/lens-structural-diff-provider.concept
+    params:
+      D: { as: ResultId, description: "Lens structural diff analysis result" }
+  VariantExtractionProvider:
+    spec: specs/monadic/providers/variant-extraction-provider.concept
+    params:
+      V: { as: ResultId, description: "Variant extraction analysis result" }
+  CompletionCoverage:
+    spec: specs/monadic/completion-coverage.concept
+    params:
+      C: { as: ReportId, description: "Coverage report identifier" }
+  EffectHandler:
+    spec: specs/monadic/effect-handler.concept
+    params:
+      E: { as: HandlerId, description: "Effect handler registration identifier" }
+  TransportEffectProvider:
+    spec: specs/monadic/providers/transport-effect-provider.concept
+    params:
+      T: { as: ResultId, description: "Transport effect analysis result" }
 
 syncs:
   required:
@@ -68,6 +96,30 @@ syncs:
       description: "Route functional provider handler StoragePrograms to the interpreter"
     - path: syncs/monadic/validate-purity-on-build.sync
       description: "Validate built program effects against handler's declared purity"
+    - path: syncs/monadic/register-lens-extraction-provider.sync
+      description: "Register LensExtractionProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-lens-extraction.sync
+      description: "Dispatch lens-extraction analysis to provider"
+    - path: syncs/monadic/extract-lenses-on-build.sync
+      description: "Run lens extraction on every built StorageProgram"
+    - path: syncs/monadic/register-lens-structural-diff-provider.sync
+      description: "Register LensStructuralDiffProvider with Diff"
+    - path: syncs/monadic/register-variant-extraction-provider.sync
+      description: "Register VariantExtractionProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-variant-extraction.sync
+      description: "Dispatch variant-extraction analysis to provider"
+    - path: syncs/monadic/extract-variants-on-build.sync
+      description: "Run variant extraction on every built StorageProgram"
+    - path: syncs/monadic/validate-completion-coverage.sync
+      description: "Validate completion variant coverage against sync registrations"
+    - path: syncs/monadic/register-transport-effect-provider.sync
+      description: "Register TransportEffectProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-transport-effects.sync
+      description: "Dispatch transport-effects analysis to provider"
+    - path: syncs/monadic/extract-transport-effects-on-build.sync
+      description: "Extract transport effects from every built StorageProgram"
+    - path: syncs/monadic/validate-effect-handlers.sync
+      description: "Verify transport effects have registered EffectHandlers"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute

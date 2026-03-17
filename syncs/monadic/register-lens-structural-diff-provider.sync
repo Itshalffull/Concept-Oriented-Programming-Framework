@@ -1,0 +1,9 @@
+sync RegisterLensStructuralDiffProvider [eager]
+  purpose: "Register the LensStructuralDiffProvider with the Diff concept's provider mechanism."
+when {
+  LensStructuralDiffProvider/analyze: []
+    => []
+}
+then {
+  Diff/registerProvider: [ name: "lens-structural-diff"; contentTypes: "application/concept-schema" ]
+}

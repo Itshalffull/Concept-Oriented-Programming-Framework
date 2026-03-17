@@ -1,0 +1,36 @@
+@version(1)
+concept LensExtractionProvider [E] {
+
+  purpose {
+    Extract implicit lens references from StorageProgram instruction
+    trees, converting string-based storage access patterns into
+    first-class typed StateLens values for traceability and analysis.
+  }
+
+  state {
+    results: set E
+    lenses: E -> String
+    accessPattern: E -> String
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: E, lenses: String, accessPattern: String) {
+        Walk the instruction tree and convert each get/put/del/merge
+        instruction into an explicit StateLens reference. Instructions
+        that already use getLens/putLens/modifyLens are passed through.
+        Returns extracted lenses as JSON and a per-lens access pattern
+        classification (read, write, or read-write).
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid
+        instruction tree.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}") -> ok(result: r, lenses: l, accessPattern: a)
+    then r != ""
+  }
+}

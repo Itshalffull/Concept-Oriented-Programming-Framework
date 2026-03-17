@@ -1,0 +1,9 @@
+sync DispatchTransportEffects [eager]
+  purpose: "Route transport-effects analysis requests to the TransportEffectProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "transport-effects" ]
+    => []
+}
+then {
+  TransportEffectProvider/analyze: [ program: ?program ]
+}

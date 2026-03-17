@@ -1,0 +1,104 @@
+@version(2)
+concept RenderTransform [X] {
+
+  purpose {
+    Registry and dispatcher for composable render program transformations.
+    Manages named transforms with kind-based routing to provider concepts
+    through sync wiring — the functorial mapping hub that makes theme
+    switching, a11y variants, and style adaptations composable first-class
+    operations without hardcoding transform logic.
+  }
+
+  state {
+    transforms: set X
+    name: X -> String
+    kind: X -> String
+    spec: X -> String
+    appliedLog: X -> list String
+    registeredKinds: set String
+  }
+
+  actions {
+    action registerKind(kind: String) {
+      -> ok(kind: String) {
+        Register a transform kind provider. Called by provider
+        registration syncs to declare that a provider exists for
+        this kind (token-remap, a11y-adapt, bind-rewrite, custom).
+      }
+      -> duplicate(kind: String) {
+        This kind is already registered.
+      }
+    }
+
+    action register(name: String, kind: String, spec: String) {
+      -> ok(transform: X) {
+        Register a named transform with a kind and a serialized
+        rewrite specification. The spec structure is defined by
+        the provider for that kind.
+      }
+      -> duplicate(transform: X) {
+        A transform with this name is already registered.
+        Returns the existing transform.
+      }
+    }
+
+    action apply(program: String, kind: String, spec: String) {
+      -> ok(result: String, appliedTransforms: String) {
+        Dispatch the transform application to the appropriate
+        provider based on kind. The provider applies the spec to
+        the program and returns the transformed result. Satisfies
+        the functor identity law: apply(p, kind, emptySpec) = p.
+      }
+      -> error(message: String) {
+        The program could not be parsed or the kind is unknown.
+      }
+    }
+
+    action compose(transforms: String) {
+      -> ok(composed: X, name: String) {
+        Combine multiple named transforms into a single composite
+        transform. The result applies all transforms in sequence.
+        Satisfies the functor composition law:
+        apply(p, compose([f, g])) = apply(apply(p, f), g).
+      }
+      -> error(message: String) {
+        One or more named transforms do not exist, or the
+        transforms are incompatible for composition.
+      }
+    }
+
+    action list() {
+      -> ok(transforms: String) {
+        Return all registered transforms as a serialized JSON
+        array of { name, kind } objects.
+      }
+    }
+
+    action get(name: String) {
+      -> ok(transform: X, kind: String, spec: String) {
+        Return the full details of a registered transform.
+      }
+      -> notfound(message: String) {
+        No transform is registered with the given name.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}")
+      -> ok(transform: t)
+    then get(name: "dark-theme") -> ok(transform: t, kind: k, spec: s)
+  }
+
+  invariant {
+    after register(name: "dark-theme", kind: "token-remap", spec: "{}")
+      -> ok(transform: t)
+    then register(name: "dark-theme", kind: "token-remap", spec: "{}")
+      -> duplicate(transform: t)
+  }
+
+  invariant {
+    after registerKind(kind: "token-remap") -> ok(kind: k)
+    then registerKind(kind: "token-remap") -> duplicate(kind: k)
+  }
+}

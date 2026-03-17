@@ -1,0 +1,76 @@
+@version(1)
+concept CompletionCoverage [C] {
+
+  purpose {
+    Verify that every variant a handler can produce is matched by
+    at least one sync when-pattern, and that every sync when-pattern
+    with a variant filter matches a variant that actually exists —
+    the static bridge between handler behavior and sync wiring.
+  }
+
+  state {
+    reports: set C
+    concept: C -> String
+    action: C -> String
+    declaredVariants: C -> set String
+    extractedVariants: C -> set String
+    coveredVariants: C -> set String
+    uncoveredVariants: C -> set String
+    orphanedPatterns: C -> set String
+    status: C -> String
+  }
+
+  actions {
+    action check(concept: String, action: String,
+                 declaredVariants: String, extractedVariants: String,
+                 syncPatterns: String) {
+      -> covered(report: C) {
+        Every declared variant has at least one sync when-pattern
+        matching it, and every sync when-pattern for this
+        concept/action references an existing variant. Full
+        bidirectional coverage — no sync wiring gaps.
+      }
+      -> uncovered(report: C, uncoveredVariants: String, orphanedPatterns: String) {
+        One or more declared variants have no sync matching them,
+        and/or one or more sync when-patterns reference variants
+        not declared by the concept spec. Returns both diagnostic
+        sets for targeted remediation.
+      }
+      -> error(message: String) {
+        Input data could not be parsed as valid JSON arrays.
+      }
+    }
+
+    action report(concept: String) {
+      -> ok(reports: String) {
+        Return all coverage reports for the given concept,
+        serialized as a JSON array of report objects.
+      }
+    }
+
+    action listUncovered() {
+      -> ok(uncovered: String) {
+        Return all concept/action pairs across the entire system
+        that have at least one uncovered variant.
+      }
+    }
+  }
+
+  invariant {
+    after check(concept: "User", action: "register",
+                declaredVariants: "[\"ok\",\"error\"]",
+                extractedVariants: "[\"ok\",\"error\"]",
+                syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]")
+      -> covered(report: r)
+    then report(concept: "User") -> ok(reports: reps)
+  }
+
+  invariant {
+    after check(concept: "User", action: "register",
+                declaredVariants: "[\"ok\",\"error\"]",
+                extractedVariants: "[\"ok\"]",
+                syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
+      -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+    then uv != "[]"
+  }
+}

@@ -1,0 +1,13 @@
+sync RegisterA11yAdaptProvider [eager]
+  purpose: "Register the A11yAdaptProvider with PluginRegistry as a render-transform-provider on first use."
+when {
+  A11yAdaptProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "render-transform-provider";
+    name: ?name;
+    metadata: { kind: ?kind; capabilities: ?caps }
+  ]
+}

@@ -1,0 +1,11 @@
+sync ValidateEffectHandlers [eager]
+  purpose: "Verify that every transport effect in a built program has a registered EffectHandler."
+when {
+  TransportEffectProvider/analyze: [ program: ?program ]
+    => [ performs: ?performs ]
+  EffectHandler/resolve: [ protocol: ?protocol; operation: ?operation ]
+    => []
+}
+then {
+  EffectHandler/resolve: [ protocol: ?protocol; operation: ?operation ]
+}

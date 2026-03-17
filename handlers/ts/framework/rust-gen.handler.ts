@@ -460,6 +460,273 @@ function generateRustStepCode(
   return lines;
 }
 
+// --- StorageProgram DSL Runtime File (Rust) ---
+
+function generateDslRuntimeFile(): string {
+  return `// generated: storage_program.dsl.stub.rs
+//
+// StorageProgram DSL — Free Monad for Concept Handlers (Rust)
+// Provides typed lenses/optics, effect tracking, algebraic effects,
+// transport effects, and functorial mapping for render programs.
+
+use std::collections::HashSet;
+use serde::{Serialize, Deserialize};
+use serde_json::Value;
+
+// ── Lens Types ──────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind")]
+pub enum LensSegment {
+    #[serde(rename = "relation")]
+    Relation { name: String },
+    #[serde(rename = "key")]
+    Key { value: String },
+    #[serde(rename = "field")]
+    Field { name: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct StateLens {
+    pub segments: Vec<LensSegment>,
+    pub source_type: String,
+    pub focus_type: String,
+}
+
+impl StateLens {
+    pub fn relation(name: &str) -> Self {
+        Self {
+            segments: vec![LensSegment::Relation { name: name.to_string() }],
+            source_type: "store".to_string(),
+            focus_type: format!("relation<{}>", name),
+        }
+    }
+
+    pub fn at(mut self, key: &str) -> Self {
+        self.segments.push(LensSegment::Key { value: key.to_string() });
+        self.focus_type = "record".to_string();
+        self
+    }
+
+    pub fn field(mut self, name: &str) -> Self {
+        self.segments.push(LensSegment::Field { name: name.to_string() });
+        self.focus_type = name.to_string();
+        self
+    }
+
+    pub fn compose(mut self, inner: StateLens) -> Self {
+        self.segments.extend(inner.segments);
+        self.focus_type = inner.focus_type;
+        self
+    }
+
+    pub fn relation_name(&self) -> Option<&str> {
+        match self.segments.first()? {
+            LensSegment::Relation { name } => Some(name.as_str()),
+            _ => None,
+        }
+    }
+}
+
+// ── Effect Set ──────────────────────────────────────────────
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EffectSet {
+    pub reads: HashSet<String>,
+    pub writes: HashSet<String>,
+    pub completion_variants: HashSet<String>,
+    pub performs: HashSet<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Purity {
+    Pure,
+    ReadOnly,
+    ReadWrite,
+}
+
+impl EffectSet {
+    pub fn new() -> Self { Self::default() }
+
+    pub fn merge(&self, other: &EffectSet) -> Self {
+        Self {
+            reads: self.reads.union(&other.reads).cloned().collect(),
+            writes: self.writes.union(&other.writes).cloned().collect(),
+            completion_variants: self.completion_variants.union(&other.completion_variants).cloned().collect(),
+            performs: self.performs.union(&other.performs).cloned().collect(),
+        }
+    }
+
+    pub fn purity(&self) -> Purity {
+        if !self.writes.is_empty() { Purity::ReadWrite }
+        else if !self.reads.is_empty() { Purity::ReadOnly }
+        else { Purity::Pure }
+    }
+
+    pub fn validate_purity(&self, declared: Purity) -> Option<String> {
+        match declared {
+            Purity::Pure if !self.reads.is_empty() || !self.writes.is_empty() =>
+                Some("Declared pure but has storage effects".to_string()),
+            Purity::ReadOnly if !self.writes.is_empty() =>
+                Some(format!("Declared read-only but writes to: {}", self.writes.iter().cloned().collect::<Vec<_>>().join(", "))),
+            _ => None,
+        }
+    }
+}
+
+// ── Instruction Types ───────────────────────────────────────
+
+pub type Bindings = serde_json::Map<String, Value>;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "tag")]
+pub enum Instruction {
+    #[serde(rename = "get")]
+    Get { relation: String, key: String, bind_as: String },
+    #[serde(rename = "find")]
+    Find { relation: String, criteria: Value, bind_as: String },
+    #[serde(rename = "put")]
+    Put { relation: String, key: String, value: Value },
+    #[serde(rename = "merge")]
+    Merge { relation: String, key: String, fields: Value },
+    #[serde(rename = "del")]
+    Del { relation: String, key: String },
+    #[serde(rename = "getLens")]
+    GetLens { lens: StateLens, bind_as: String },
+    #[serde(rename = "putLens")]
+    PutLens { lens: StateLens, value: Value },
+    #[serde(rename = "perform")]
+    Perform { protocol: String, operation: String, payload: Value, bind_as: String },
+    #[serde(rename = "pure")]
+    Pure { value: Value },
+}
+
+// ── StorageProgram ──────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StorageProgram {
+    pub instructions: Vec<Instruction>,
+    pub terminated: bool,
+    pub effects: EffectSet,
+}
+
+impl StorageProgram {
+    pub fn new() -> Self {
+        Self { instructions: vec![], terminated: false, effects: EffectSet::new() }
+    }
+
+    pub fn get(mut self, relation: &str, key: &str, bind_as: &str) -> Self {
+        self.effects.reads.insert(relation.to_string());
+        self.instructions.push(Instruction::Get { relation: relation.to_string(), key: key.to_string(), bind_as: bind_as.to_string() });
+        self
+    }
+
+    pub fn put(mut self, relation: &str, key: &str, value: Value) -> Self {
+        self.effects.writes.insert(relation.to_string());
+        self.instructions.push(Instruction::Put { relation: relation.to_string(), key: key.to_string(), value });
+        self
+    }
+
+    pub fn get_lens(mut self, lens: StateLens, bind_as: &str) -> Self {
+        if let Some(rel) = lens.relation_name() { self.effects.reads.insert(rel.to_string()); }
+        self.instructions.push(Instruction::GetLens { lens, bind_as: bind_as.to_string() });
+        self
+    }
+
+    pub fn put_lens(mut self, lens: StateLens, value: Value) -> Self {
+        if let Some(rel) = lens.relation_name() { self.effects.writes.insert(rel.to_string()); }
+        self.instructions.push(Instruction::PutLens { lens, value });
+        self
+    }
+
+    pub fn perform(mut self, protocol: &str, operation: &str, payload: Value, bind_as: &str) -> Self {
+        self.effects.performs.insert(format!("{}:{}", protocol, operation));
+        self.instructions.push(Instruction::Perform { protocol: protocol.to_string(), operation: operation.to_string(), payload, bind_as: bind_as.to_string() });
+        self
+    }
+
+    pub fn pure(mut self, value: Value) -> Self {
+        self.instructions.push(Instruction::Pure { value });
+        self.terminated = true;
+        self
+    }
+
+    pub fn complete(mut self, variant: &str, output: Value) -> Self {
+        self.effects.completion_variants.insert(variant.to_string());
+        let mut map = match output {
+            Value::Object(m) => m,
+            _ => serde_json::Map::new(),
+        };
+        map.insert("variant".to_string(), Value::String(variant.to_string()));
+        self.instructions.push(Instruction::Pure { value: Value::Object(map) });
+        self.terminated = true;
+        self
+    }
+
+    pub fn extract_completion_variants(&self) -> HashSet<String> {
+        let mut variants = HashSet::new();
+        for instr in &self.instructions {
+            if let Instruction::Pure { value } = instr {
+                if let Some(v) = value.get("variant").and_then(|v| v.as_str()) {
+                    variants.insert(v.to_string());
+                }
+            }
+        }
+        variants
+    }
+
+    pub fn extract_perform_set(&self) -> HashSet<String> {
+        let mut performs = HashSet::new();
+        for instr in &self.instructions {
+            if let Instruction::Perform { protocol, operation, .. } = instr {
+                performs.insert(format!("{}:{}", protocol, operation));
+            }
+        }
+        performs
+    }
+}
+
+// ── Render Program (Functorial Mapping) ─────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "tag")]
+pub enum RenderInstruction {
+    #[serde(rename = "token")]
+    Token { path: String, value: Value },
+    #[serde(rename = "aria")]
+    Aria { role: Option<String>, label: Option<String>, attributes: Option<Value> },
+    #[serde(rename = "bind")]
+    Bind { field: String, expr: String },
+    #[serde(rename = "element")]
+    Element { name: String, attributes: Option<Value> },
+    #[serde(rename = "focus")]
+    Focus { strategy: String, target: Option<String> },
+    #[serde(rename = "keyboard")]
+    Keyboard { key: String, action: String, modifiers: Option<Vec<String>> },
+    #[serde(rename = "pure")]
+    RenderPure { value: Value },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RenderProgram {
+    pub instructions: Vec<RenderInstruction>,
+    pub terminated: bool,
+}
+
+impl RenderProgram {
+    pub fn map<F>(&self, transform: F) -> Self
+    where
+        F: Fn(&RenderInstruction) -> RenderInstruction,
+    {
+        Self {
+            instructions: self.instructions.iter().map(|i| transform(i)).collect(),
+            terminated: self.terminated,
+        }
+    }
+}
+`;
+}
+
 // --- Handler ---
 
 export const rustGenHandler: ConceptHandler = {
@@ -469,7 +736,7 @@ export const rustGenHandler: ConceptHandler = {
       name: 'RustGen',
       inputKind: 'ConceptManifest',
       outputKind: 'RustSource',
-      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests']),
+      capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
     };
   },
 
@@ -487,6 +754,7 @@ export const rustGenHandler: ConceptHandler = {
         { path: `${modName}/types.stub.rs`, content: generateTypesFile(manifest) },
         { path: `${modName}/handler.stub.rs`, content: generateHandlerFile(manifest) },
         { path: `${modName}/adapter.stub.rs`, content: generateAdapterFile(manifest) },
+        { path: `storage_program_dsl.stub.rs`, content: generateDslRuntimeFile() },
       ];
 
       // Add conformance tests if the manifest has invariants

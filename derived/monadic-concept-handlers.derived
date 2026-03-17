@@ -17,6 +17,13 @@ derived MonadicConceptHandlers [T] {
     DeadBranchProvider [T]
     ProgramCache [T]
     FunctionalHandler [T]
+    Lens [T]
+    LensExtractionProvider [T]
+    LensStructuralDiffProvider [T]
+    VariantExtractionProvider [T]
+    CompletionCoverage [T]
+    EffectHandler [T]
+    TransportEffectProvider [T]
   }
 
   syncs {
@@ -28,7 +35,19 @@ derived MonadicConceptHandlers [T] {
       register-read-write-set-provider,
       interpret-analysis-program,
       interpret-cache-program,
-      interpret-provider-programs
+      interpret-provider-programs,
+      register-lens-extraction-provider,
+      dispatch-lens-extraction,
+      extract-lenses-on-build,
+      register-lens-structural-diff-provider,
+      register-variant-extraction-provider,
+      dispatch-variant-extraction,
+      extract-variants-on-build,
+      validate-completion-coverage,
+      register-transport-effect-provider,
+      dispatch-transport-effects,
+      extract-transport-effects-on-build,
+      validate-effect-handlers
     ]
     recommended: [
       cache-lookup-before-execute,
@@ -73,6 +92,34 @@ derived MonadicConceptHandlers [T] {
 
     query analysisProviders() {
       reads: ProgramAnalysis/listProviders()
+    }
+
+    query extractedLenses(concept: String, action: String) {
+      reads: LensExtractionProvider/analyze(program: ?latestProgram)
+    }
+
+    query lensMetadata(lensId: String) {
+      reads: Lens/get(lens: ?lensId)
+    }
+
+    query extractedVariants(concept: String, action: String) {
+      reads: VariantExtractionProvider/analyze(program: ?latestProgram)
+    }
+
+    query completionCoverage(concept: String) {
+      reads: CompletionCoverage/report(concept: ?concept)
+    }
+
+    query uncoveredVariants() {
+      reads: CompletionCoverage/listUncovered()
+    }
+
+    query extractedTransportEffects(concept: String, action: String) {
+      reads: TransportEffectProvider/analyze(program: ?latestProgram)
+    }
+
+    query registeredEffectHandlers(protocol: String) {
+      reads: EffectHandler/listByProtocol(protocol: ?protocol)
     }
   }
 
