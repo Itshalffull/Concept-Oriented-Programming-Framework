@@ -3,5 +3,5 @@
 
 
 [mcp_servers.clef_devtools]
-command = "npx"
-args = ["tsx","./.claude/mcp/tools.ts","examples/devtools/devtools.interface.yaml"]
+command = "bash"
+args = ["-c","{ npm install --prefer-offline --no-audit --no-fund || npm install; } >/dev/null 2>&1; exec npx tsx ./.claude/mcp/tools.ts examples/devtools/devtools.interface.yaml"]
