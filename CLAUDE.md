@@ -69,9 +69,36 @@ elevation, radius tokens. Support `extends` for theme variants.
 - Parser: `handlers/ts/framework/theme-parser.ts`
 
 **Handlers** (`.handler.ts` files in `handlers/ts/`)
-TypeScript implementations of concept actions. Each handler implements
-`register()` plus the concept's action methods, using `ConceptStorage`
-for persistence.
+TypeScript implementations of concept actions. Two styles:
+- **Imperative** (`ConceptHandler`): Each action is an async method receiving
+  `input` and `storage`, directly calling storage operations.
+- **Functional** (`FunctionalConceptHandler`): Each action returns a
+  `StorageProgram<A>` — a free monad describing storage operations as pure
+  data. The interpreter executes the program later. Enables static effect
+  analysis, purity validation, caching, and applicative parallelism.
+- Runtime: `runtime/storage-program.ts` (DSL), `runtime/functional-handler.ts` (types)
+
+**StorageProgram Monad** (`runtime/storage-program.ts`)
+Free monad DSL for building inspectable storage operation descriptions.
+Key concepts:
+- **Instructions**: `get`, `find`, `put`, `merge`, `del`, `branch`, `pure`,
+  `complete`, `perform` (transport effects), `getLens`/`putLens`/`modifyLens`
+- **Structural Effect Tracking**: `EffectSet` tracks reads, writes,
+  completion variants, and transport effects accumulated during construction.
+  Purity (`pure | read-only | read-write`) is a first-class build-time property.
+- **Lenses** (`StateLens`): Typed, composable references to state locations
+  replacing raw string keys. Composed via `relation()`, `at()`, `field()`.
+- **Analysis Providers** (`specs/monadic/providers/`): Pluggable analyses —
+  commutativity, parallelism (Haxl/Stitch), dead branch detection, lens
+  extraction, variant extraction, transport effect verification.
+- **Completion Coverage** (`specs/monadic/completion-coverage.concept`):
+  Verifies every completion variant has a matching sync handler.
+
+**Render Transforms** (`specs/surface/render-transform.concept`)
+Functorial composition layer for Surface rendering. Theme switching,
+a11y adaptations, and bind rewrites are composable transformations over
+render programs — satisfying functor identity and composition laws.
+Providers: `token-remap`, `a11y-adapt`, `bind-rewrite`, `custom`.
 
 **Suites** (`suite.yaml` manifests)
 Packages of related concepts and syncs with required/recommended tiers,
@@ -99,8 +126,11 @@ building new concepts.
 
 ```
 specs/              # Concept specifications (.concept)
+specs/monadic/      # StorageProgram monad & functional handler specs
+specs/surface/      # Render transform & Surface provider specs
 syncs/              # Synchronization rules (.sync)
 handlers/ts/        # TypeScript handler implementations (.handler.ts)
+runtime/            # StorageProgram DSL, interpreter, functional handler types
 surface/            # Widget and theme specs (.widget, .theme)
 repertoire/         # Reusable app-level suites
 score/              # Code-as-data analysis suites

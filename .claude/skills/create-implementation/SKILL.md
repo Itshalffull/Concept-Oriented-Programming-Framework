@@ -368,10 +368,120 @@ This `LoginResponse` sync is a projection — it combines JWT output (`?token`) 
 
 See the `/create-sync` skill for the full projection sync pattern and examples.
 
+## Alternative: Functional Handler Style (StorageProgram Monad)
+
+Instead of imperative handlers that call `storage` directly, you can write **functional handlers** that return a `StorageProgram<A>` — a pure data description of storage operations. The interpreter executes the program later. This enables static analysis, purity checking, caching, and applicative parallelism.
+
+### When to Use Functional Handlers
+
+| Use functional handlers when... | Use imperative handlers when... |
+|---|----|
+| You need static effect analysis (read/write sets) | Simple CRUD with no analysis needs |
+| You want build-time purity validation | Rapid prototyping |
+| You need applicative parallelism (Haxl/Stitch pattern) | Performance-critical paths needing manual optimization |
+| You want algebraic effect coverage checking | Legacy concepts that can't be migrated yet |
+| You need lens-based state access for impact analysis | |
+
+### FunctionalConceptHandler Interface
+
+```typescript
+import type { FunctionalConceptHandler } from '../runtime/functional-handler';
+import { createProgram, get, find, put, merge, del, branch, complete, pure,
+         relation, at, field, getLens, putLens, modifyLens } from '../runtime/storage-program';
+
+export const myHandler: FunctionalConceptHandler = {
+  actionName(input) {
+    // Note: NO storage parameter — build a program instead
+    const id = input.id as string;
+    let p = createProgram();
+    p = get(p, 'item', id, 'existing');
+    return branch(p,
+      (b) => b.existing != null,
+      complete(createProgram(), 'error', { message: 'already exists' }),
+      complete(put(createProgram(), 'item', id, { name: input.name }), 'ok', { item: id }),
+    );
+  },
+};
+```
+
+### Key Differences from Imperative Style
+
+1. **No `storage` parameter** — handlers never see storage; they build programs
+2. **No `async/await`** — program construction is synchronous
+3. **Return `StorageProgram<{variant, ...}>` instead of `Promise<{variant, ...}>`**
+4. **Use `complete()` instead of plain object returns** — tracks variant in the effect set
+5. **Use `branch()` instead of `if/else`** — both arms' effects are merged conservatively
+
+### StorageProgram DSL Quick Reference
+
+| Operation | DSL Function | Effect |
+|-----------|-------------|--------|
+| Read one | `get(p, relation, key, bindAs)` | reads += relation |
+| Query | `find(p, relation, criteria, bindAs)` | reads += relation |
+| Write | `put(p, relation, key, value)` | writes += relation |
+| Partial update | `merge(p, relation, key, fields)` | reads+writes += relation |
+| Delete | `del(p, relation, key)` | writes += relation |
+| Conditional | `branch(p, condition, thenProg, elseProg)` | union of both arms |
+| Terminate | `complete(p, variant, output)` | completionVariants += variant |
+| Monadic bind | `compose(first, bindAs, second)` | union of both programs |
+
+### Lens-Based State Access
+
+Use typed, composable lenses instead of raw string keys:
+
+```typescript
+const userLens = at(relation('user'), userId);       // user[userId]
+const emailLens = field(userLens, 'email');           // user[userId].email
+
+let p = createProgram();
+p = getLens(p, userLens, 'record');                   // read through lens
+p = modifyLens(p, emailLens, () => ({ email: newEmail })); // modify through lens
+return complete(p, 'ok', { user: userId });
+```
+
+Lenses enable: impact analysis, automatic migration scripts, schema diff detection, and composable state references.
+
+### Registering Functional Handlers
+
+```typescript
+import type { FunctionalHandlerRegistration } from '../runtime/functional-handler';
+
+const registration: FunctionalHandlerRegistration = {
+  id: 'user-create',
+  concept: 'User',
+  action: 'create',
+  purity: 'read-write',               // Must match actual effects
+  declaredVariants: ['ok', 'error'],   // For algebraic effect coverage
+  factory: myHandler.create,
+};
+```
+
+The `purity` field is validated against the program's structural effects at build time — declaring `read-only` for a handler that writes will produce an error.
+
+### Testing Functional Handlers
+
+```typescript
+import { classifyPurity, extractCompletionVariants, validatePurity } from '../runtime/storage-program';
+
+it('has correct purity', () => {
+  const program = myHandler.create({ id: '1', name: 'Test' });
+  expect(classifyPurity(program)).toBe('read-write');
+  expect(validatePurity(program, 'read-write')).toBeNull();
+});
+
+it('covers all declared variants', () => {
+  const program = myHandler.create({ id: '1', name: 'Test' });
+  const variants = extractCompletionVariants(program);
+  expect(variants).toContain('ok');
+  expect(variants).toContain('error');
+});
+```
+
 ## Checklist
 
 Before considering the implementation complete:
 
+**For imperative handlers (ConceptHandler):**
 - [ ] One async method per action in the spec
 - [ ] All input fields extracted with correct type casts
 - [ ] Every variant from the spec is returned on the appropriate code path
@@ -382,6 +492,14 @@ Before considering the implementation complete:
 - [ ] No references to other concepts (all coordination via syncs)
 - [ ] Handler exported as `const <name>Handler: ConceptHandler`
 - [ ] Capabilities imported if spec declares them
+
+**For functional handlers (FunctionalConceptHandler) — all of the above, plus:**
+- [ ] Handler returns `StorageProgram`, never calls storage directly
+- [ ] Uses `complete()` for all terminal values (not plain `pure()`)
+- [ ] Declared purity matches actual structural effects
+- [ ] Lens-based access used where possible (not raw string keys)
+- [ ] Independent reads identified for applicative parallelism
+- [ ] All completion variants reachable in the program tree
 
 ## Quick Reference
 

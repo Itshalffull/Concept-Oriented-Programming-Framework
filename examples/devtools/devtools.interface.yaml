@@ -165,6 +165,32 @@ concepts:
   # Interface suite additional (bind/)
   - bind/interface/concepts/action-guide.concept
   - bind/interface/concepts/enrichment-renderer.concept
+  # Monadic storage program suite (specs/monadic/)
+  - specs/monadic/storage-program.concept
+  - specs/monadic/functional-handler.concept
+  - specs/monadic/program-interpreter.concept
+  - specs/monadic/program-analysis.concept
+  - specs/monadic/program-cache.concept
+  - specs/monadic/lens.concept
+  - specs/monadic/effect-handler.concept
+  - specs/monadic/completion-coverage.concept
+  # Monadic analysis providers (specs/monadic/providers/)
+  - specs/monadic/providers/read-write-set-provider.concept
+  - specs/monadic/providers/commutativity-provider.concept
+  - specs/monadic/providers/parallelism-provider.concept
+  - specs/monadic/providers/dead-branch-provider.concept
+  - specs/monadic/providers/invariant-extraction-provider.concept
+  - specs/monadic/providers/lens-extraction-provider.concept
+  - specs/monadic/providers/lens-structural-diff-provider.concept
+  - specs/monadic/providers/variant-extraction-provider.concept
+  - specs/monadic/providers/transport-effect-provider.concept
+  # Surface render transform suite (specs/surface/)
+  - specs/surface/render-transform.concept
+  - specs/surface/providers/token-remap-provider.concept
+  - specs/surface/providers/a11y-adapt-provider.concept
+  - specs/surface/providers/bind-rewrite-provider.concept
+  - specs/surface/providers/custom-transform-provider.concept
+  - specs/surface/providers/transform-extraction-provider.concept
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -4037,6 +4063,345 @@ workflows:
         good: |
           # Right: find syncs that connect User and Profile
           score listSyncs --involves User,Profile
+
+  # ─── StorageProgram: functional-handler-builder ─────
+  functional-handler-builder:
+    concept: StorageProgram
+    steps:
+      - action: create
+        title: "Build a Storage Program"
+        prose: "Construct a StorageProgram<A> using the free monad DSL — a pure data description of storage operations with no side effects."
+      - action: get
+        title: "Read State via Get/Find"
+        prose: "Append get() or find() instructions to read from concept storage. Each binds a result name for downstream use."
+      - action: put
+        title: "Write State via Put/Merge/Del"
+        prose: "Append put(), merge(), or del() instructions to write concept storage. Write effects are tracked structurally."
+      - action: getLens
+        title: "Access State via Lenses"
+        prose: "Use typed, composable lenses instead of raw string keys: relation('users').at(id).field('email'). Lenses enable impact analysis and automatic migration scripts."
+      - action: branch
+        title: "Branch on Conditions"
+        prose: "Use branch() for conditional logic — effects from both arms are merged conservatively for purity analysis."
+      - action: complete
+        title: "Terminate with Variant Completion"
+        prose: "Use complete(variant, output) to terminate the program with a tracked completion variant for algebraic effect coverage."
+      - action: compose
+        title: "Compose Programs (Monadic Bind)"
+        prose: "Use compose(first, bindAs, second) for monadic bind — run first, bind result, then run second. Effects are merged."
+    checklists:
+      create:
+        - "Program uses the DSL (createProgram, get, put, etc.) — never calls storage directly?"
+        - "All read operations bind a result name for downstream use?"
+        - "Program terminates with complete() or pure()?"
+        - "Declared purity matches actual effects (pure < read-only < read-write)?"
+        - "Completion variants match the concept spec's declared variants?"
+        - "Lenses used for state field access where possible?"
+        - "Independent reads identified for applicative parallelism?"
+    design-principles:
+      - title: "Programs Are Data, Not Effects"
+        rule: "A StorageProgram is a pure data structure describing operations. No side effects occur until the interpreter executes it. This enables inspection, analysis, caching, and replay."
+      - title: "Structural Effect Tracking"
+        rule: "Effects (reads, writes, completions, transport) are accumulated during DSL construction in O(1). Purity is a first-class, build-time property — not a post-hoc analysis."
+      - title: "Lens Over Strings"
+        rule: "Use typed lenses (relation/at/field) instead of raw string keys. Lenses compose, invert, and enable DataFlowPath analysis, schema migration, and change impact detection."
+      - title: "Applicative Parallelism (Haxl/Stitch Pattern)"
+        rule: "Independent get/find operations that don't share bindings can be batched into a single round-trip. The ParallelismProvider detects these automatically."
+      - title: "Algebraic Effect Coverage"
+        rule: "Use complete() instead of pure() for terminal values. This tracks completion variants structurally, enabling CompletionCoverage to verify every variant has a matching sync handler."
+    references:
+      - path: references/storage-program-dsl.md
+        label: "StorageProgram DSL reference"
+        tier: reference
+        content: |
+          # StorageProgram — Free Monad DSL Reference
+
+          A `StorageProgram<A>` is a pure data description of storage operations
+          that produces a value of type `A` when interpreted. Handlers build
+          programs using DSL functions; the interpreter executes them against
+          a real ConceptStorage backend.
+
+          ## Core DSL Functions
+
+          | Function | Effect | Description |
+          |----------|--------|-------------|
+          | `createProgram()` | — | Create empty program |
+          | `get(p, relation, key, bindAs)` | read | Read one record |
+          | `find(p, relation, criteria, bindAs)` | read | Query by criteria |
+          | `put(p, relation, key, value)` | write | Create/update record |
+          | `merge(p, relation, key, fields)` | read+write | Partial update |
+          | `del(p, relation, key)` | write | Delete record |
+          | `branch(p, condition, then, else)` | both | Conditional logic |
+          | `pure(p, value)` | — | Terminate with value |
+          | `complete(p, variant, output)` | — | Terminate with tracked variant |
+          | `compose(first, bindAs, second)` | both | Monadic bind |
+
+          ## Lens Functions
+
+          | Function | Description |
+          |----------|-------------|
+          | `relation(name)` | Lens focusing on a storage relation |
+          | `at(lens, key)` | Narrow to a specific record |
+          | `field(lens, name)` | Narrow to a specific field |
+          | `composeLens(outer, inner)` | Compose two lenses |
+          | `getLens(p, lens, bindAs)` | Read through a lens |
+          | `putLens(p, lens, value)` | Write through a lens |
+          | `modifyLens(p, lens, fn)` | Read-modify-write through a lens |
+
+          ## Transport Effects
+
+          | Function | Description |
+          |----------|-------------|
+          | `perform(p, protocol, op, payload, bindAs)` | Abstract transport effect |
+          | `performFrom(p, protocol, op, payloadFn, bindAs)` | Transport from bindings |
+
+          ## Binding-Aware Variants
+
+          | Function | Description |
+          |----------|-------------|
+          | `putFrom(p, relation, key, valueFn)` | Put with value from bindings |
+          | `mergeFrom(p, relation, key, fieldsFn)` | Merge with fields from bindings |
+          | `delFrom(p, relation, keyFn)` | Delete with key from bindings |
+          | `mapBindings(p, fn, bindAs)` | Pure computation on bindings |
+          | `pureFrom(p, fn)` | Terminate with value from bindings |
+
+          ## Effect Set & Purity
+
+          ```typescript
+          interface EffectSet {
+            reads: ReadonlySet<string>;       // Relations read
+            writes: ReadonlySet<string>;      // Relations written
+            completionVariants: ReadonlySet<string>; // Variant tags
+            performs: ReadonlySet<string>;     // protocol:operation pairs
+          }
+
+          type Purity = 'pure' | 'read-only' | 'read-write';
+          ```
+
+          - `purityOf(program)` — derive purity from structural effects
+          - `classifyPurity(program)` — with fallback for deserialized programs
+          - `validatePurity(program, declared)` — check declared vs actual
+
+          ## Example: Functional Create Handler
+
+          ```typescript
+          import { createProgram, find, put, branch, complete } from '../runtime/storage-program';
+
+          const createUser = (input: Record<string, unknown>) => {
+            const name = input.name as string;
+            const email = input.email as string;
+            const id = input.user as string;
+
+            let p = createProgram();
+            p = find(p, 'user', { email }, 'existing');
+
+            const alreadyExists = createProgram();
+            const done = complete(alreadyExists, 'error', { message: 'email taken' });
+
+            const doCreate = createProgram();
+            const created = put(doCreate, 'user', id, { name, email });
+            const ok = complete(created, 'ok', { user: id });
+
+            return branch(p, (b) => (b.existing as unknown[]).length > 0, done, ok);
+          };
+          ```
+
+          ## Example: Lens-Based Access
+
+          ```typescript
+          import { createProgram, getLens, modifyLens, complete, relation, at, field } from '../runtime/storage-program';
+
+          const updateEmail = (input: Record<string, unknown>) => {
+            const userId = input.user as string;
+            const newEmail = input.email as string;
+            const userLens = at(relation('user'), userId);
+            const emailLens = field(userLens, 'email');
+
+            let p = createProgram();
+            p = getLens(p, userLens, 'current');
+            p = modifyLens(p, emailLens, () => ({ email: newEmail }));
+            return complete(p, 'ok', { user: userId });
+          };
+          ```
+      - path: references/monadic-analysis.md
+        label: "Program analysis providers"
+        tier: reference
+        content: |
+          # Monadic Program Analysis Providers
+
+          Pluggable analysis providers registered with ProgramAnalysis
+          and dispatched by sync wiring.
+
+          ## ReadWriteSetProvider
+          Extracts the set of relations read and written by a program.
+          Used by CommutativityProvider and purity validation.
+
+          ## CommutativityProvider
+          Determines whether two StoragePrograms commute:
+          `!(A.writes ∩ B.reads) && !(B.writes ∩ A.reads) && !(A.writes ∩ B.writes)`
+
+          ## ParallelismProvider (Applicative Analysis)
+          Analyzes instruction dependency graphs to find independent
+          operations that can execute concurrently (Haxl/Stitch pattern).
+          Returns: layers, dependency edges, critical path, max parallelism,
+          speedup ratio.
+
+          ## DeadBranchProvider
+          Identifies unreachable branches in a program's branch tree.
+
+          ## InvariantExtractionProvider
+          Extracts properties suitable for formal verification.
+
+          ## LensExtractionProvider
+          Extracts implicit lenses from get/put/del string-based access patterns.
+
+          ## LensStructuralDiffProvider
+          Computes structural diffs between lens schemas for migration.
+
+          ## VariantExtractionProvider
+          Extracts completion variant tags reachable from branch structure.
+          Enables dead-variant detection and sync coverage analysis.
+
+          ## TransportEffectProvider
+          Extracts protocol:operation pairs from perform instructions.
+          Enables static verification that every transport effect has
+          a registered EffectHandler.
+    validation-commands:
+      - label: "Run monadic handler tests"
+        command: "npx vitest run tests/monadic-handlers.test.ts"
+      - label: "Run effect typing tests"
+        command: "npx vitest run tests/effect-typing.test.ts"
+      - label: "Run parallelism provider tests"
+        command: "npx vitest run tests/parallelism-provider.test.ts"
+      - label: "Run lens tests"
+        command: "npx vitest run tests/lens.test.ts"
+      - label: "Run algebraic effects tests"
+        command: "npx vitest run tests/algebraic-effects.test.ts"
+    quick-reference:
+      heading: "StorageProgram DSL Quick Reference"
+      body: |
+        | Operation | DSL Function | Effect Tracking |
+        |-----------|-------------|-----------------|
+        | Read one | `get(p, rel, key, bind)` | reads += rel |
+        | Query | `find(p, rel, criteria, bind)` | reads += rel |
+        | Write | `put(p, rel, key, value)` | writes += rel |
+        | Partial update | `merge(p, rel, key, fields)` | reads += rel, writes += rel |
+        | Delete | `del(p, rel, key)` | writes += rel |
+        | Lens read | `getLens(p, lens, bind)` | reads += lens.relation |
+        | Lens write | `putLens(p, lens, value)` | writes += lens.relation |
+        | Lens modify | `modifyLens(p, lens, fn)` | reads += rel, writes += rel |
+        | Branch | `branch(p, cond, then, else)` | union of both arms |
+        | Transport | `perform(p, proto, op, payload, bind)` | performs += proto:op |
+        | Complete | `complete(p, variant, out)` | completionVariants += variant |
+        | Bind | `compose(first, bind, second)` | union of both programs |
+    related-workflows:
+      - name: implementation-builder
+        description: "Imperative handler style (ConceptHandler with async/await)"
+      - name: concept-designer
+        description: "Design the concept spec that functional handlers implement"
+      - name: sync-designer
+        description: "Write syncs — CompletionCoverage verifies all variants have sync handlers"
+      - name: score-navigator
+        description: "Score queries for navigating monadic handler entities"
+    anti-patterns:
+      - title: "Calling storage directly in a functional handler"
+        description: "Functional handlers must return StoragePrograms, never call storage.get()/put() directly."
+        bad: |
+          const createUser: FunctionalConceptHandler = {
+            create(input) {
+              // WRONG: directly calling storage
+              const existing = await storage.find('user', { email });
+              await storage.put('user', id, data);
+              return { variant: 'ok', user: id };
+            },
+          };
+        good: |
+          const createUser: FunctionalConceptHandler = {
+            create(input) {
+              let p = createProgram();
+              p = find(p, 'user', { email }, 'existing');
+              return branch(p,
+                (b) => (b.existing as unknown[]).length > 0,
+                complete(createProgram(), 'error', { message: 'email taken' }),
+                complete(put(createProgram(), 'user', id, data), 'ok', { user: id })
+              );
+            },
+          };
+      - title: "Declaring wrong purity level"
+        description: "Claiming read-only but the program actually writes — purity validation catches this at build time."
+        bad: |
+          { id: 'user-create', concept: 'User', action: 'create',
+            purity: 'read-only',  // WRONG: create writes!
+            factory: createUser }
+        good: |
+          { id: 'user-create', concept: 'User', action: 'create',
+            purity: 'read-write',  // Correct: create writes user relation
+            factory: createUser }
+      - title: "Using string keys instead of lenses"
+        description: "Raw string keys lose type safety, composability, and impact analysis."
+        bad: |
+          p = get(p, 'user', userId, 'record');
+          // No type checking, no migration support, no impact analysis
+        good: |
+          const userLens = at(relation('user'), userId);
+          p = getLens(p, userLens, 'record');
+          // Typed, composable, enables automatic migration scripts
+
+  # ─── RenderTransform: functorial-render ────────────
+  functorial-render:
+    concept: RenderTransform
+    steps:
+      - action: registerKind
+        title: "Register Transform Kind"
+        prose: "Register a transform kind provider (token-remap, a11y-adapt, bind-rewrite, custom)."
+      - action: register
+        title: "Register a Named Transform"
+        prose: "Register a named transform instance with a kind and spec configuration."
+      - action: apply
+        title: "Apply Transform (Functor fmap)"
+        prose: "Apply a transform to a render program. Satisfies functor identity law: apply(p, kind, emptySpec) = p."
+      - action: compose
+        title: "Compose Transforms (Functor Composition)"
+        prose: "Compose multiple transforms. Satisfies functor composition law: apply(p, compose([f, g])) = apply(apply(p, f), g)."
+    checklists:
+      apply:
+        - "Transform satisfies functor identity law (empty spec = identity)?"
+        - "Composed transforms satisfy functor composition law?"
+        - "Accessibility transforms preserve WCAG compliance?"
+        - "Theme token remaps cover all referenced tokens?"
+    design-principles:
+      - title: "Functorial Composition"
+        rule: "Theme switching and a11y variants are composable transformations over render programs — not separate code paths. apply(p, compose([f,g])) = apply(apply(p, f), g)."
+      - title: "Provider Dispatch via Syncs"
+        rule: "Transform kinds (token-remap, a11y-adapt, etc.) are registered as providers and dispatched through sync wiring — zero hardcoding."
+    references:
+      - path: references/render-transform-providers.md
+        label: "Render transform provider reference"
+        tier: reference
+        content: |
+          # Render Transform Providers
+
+          ## TokenRemapProvider
+          Maps design tokens from one palette to another. Used for
+          theme switching: `palette.primary → palette.primary-dark`.
+
+          ## A11yAdaptProvider
+          Accessibility adaptations: high contrast mode, reduced motion,
+          focus indicators. Transforms preserve WCAG compliance.
+
+          ## BindRewriteProvider
+          Rewrites data bindings in render programs. Used when concept
+          state field names change but the widget spec hasn't been updated.
+
+          ## CustomTransformProvider
+          Arbitrary transformations via user-supplied functions.
+
+          ## TransformExtractionProvider
+          Extracts which transforms have been applied to a render program
+          for auditing and debugging.
+    related-workflows:
+      - name: functional-handler-builder
+        description: "StorageProgram monad — the handler-side equivalent of render program transforms"
 
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
