@@ -11,7 +11,25 @@ Write a TypeScript handler for the concept **$ARGUMENTS** that implements every 
 
 ## What is a Concept Implementation?
 
-A concept implementation is a **handler object** that provides one async function per action declared in the concept spec. Each function receives untyped `input` and a `storage` interface, and returns a **variant completion** (a discriminated union like `{ variant: 'ok', ... }` or `{ variant: 'error', ... }`).
+A concept implementation is a **handler object** that provides one function per action declared in the concept spec. Each function receives untyped `input` and returns a **variant completion** (a discriminated union like `{ variant: 'ok', ... }` or `{ variant: 'error', ... }`).
+
+**The default and preferred style is functional** — handlers return a `StorageProgram<A>` (a free monad) describing storage operations as pure data, rather than executing them directly. This enables static effect analysis, purity validation, caching, and applicative parallelism.
+
+```typescript
+import type { FunctionalConceptHandler } from '../runtime/functional-handler';
+import { createProgram, get, put, branch, complete } from '../runtime/storage-program';
+
+export const myHandler: FunctionalConceptHandler = {
+  actionName(input) {
+    const field = input.field as string;
+    let p = createProgram();
+    p = put(p, 'item', field, { field });
+    return complete(p, 'ok', { field });
+  },
+};
+```
+
+For cases where functional style cannot be supported (language limitations, legacy concepts, direct FFI/system calls), use the **imperative fallback**:
 
 ```typescript
 import type { ConceptHandler } from '@clef/kernel';
@@ -76,7 +94,19 @@ handlers/ts/app/<name>.handler.ts        # App concepts
 handlers/ts/framework/<name>.handler.ts   # Framework concepts
 ```
 
-Start with the imports and handler skeleton:
+Start with the imports and handler skeleton. **Default to functional style:**
+
+```typescript
+import type { FunctionalConceptHandler } from '../runtime/functional-handler';
+import { createProgram, get, find, put, merge, del, branch, complete, pure,
+         relation, at, field, getLens, putLens, modifyLens } from '../runtime/storage-program';
+
+export const <name>Handler: FunctionalConceptHandler = {
+  // One method per action from the spec (no async — program construction is synchronous)
+};
+```
+
+Only use the imperative skeleton when functional style cannot be supported:
 
 ```typescript
 import type { ConceptHandler } from '@clef/kernel';
@@ -88,7 +118,28 @@ export const <name>Handler: ConceptHandler = {
 
 ### Step 3: Implement Each Action
 
-For each action in the spec, write an async method on the handler object. Follow this pattern:
+For each action in the spec, write a method on the handler object. **Functional style (default):**
+
+```typescript
+actionName(input) {
+  // 1. Extract input fields with type assertions
+  const id = input.id as string;
+  const name = input.name as string;
+
+  // 2. Build the storage program
+  let p = createProgram();
+  p = get(p, 'item', id, 'existing');
+
+  // 3. Use branch for conditionals, complete for terminal values
+  return branch(p,
+    (b) => b.existing != null,
+    complete(createProgram(), 'error', { message: 'already exists' }),
+    complete(put(createProgram(), 'item', id, { name }), 'ok', { item: id }),
+  );
+},
+```
+
+**Imperative fallback** (only when functional is not feasible):
 
 ```typescript
 async actionName(input, storage) {
@@ -368,19 +419,21 @@ This `LoginResponse` sync is a projection — it combines JWT output (`?token`) 
 
 See the `/create-sync` skill for the full projection sync pattern and examples.
 
-## Alternative: Functional Handler Style (StorageProgram Monad)
+## Functional Handler Style (StorageProgram Monad) — The Default
 
-Instead of imperative handlers that call `storage` directly, you can write **functional handlers** that return a `StorageProgram<A>` — a pure data description of storage operations. The interpreter executes the program later. This enables static analysis, purity checking, caching, and applicative parallelism.
+Functional handlers are the **default and preferred style**. They return a `StorageProgram<A>` — a pure data description of storage operations. The interpreter executes the program later. This enables static analysis, purity checking, caching, and applicative parallelism.
 
-### When to Use Functional Handlers
+### When to Use Imperative Handlers Instead
 
-| Use functional handlers when... | Use imperative handlers when... |
+Imperative handlers are a **fallback** for cases where functional style cannot be supported:
+
+| Always use functional (default) | Fall back to imperative only when... |
 |---|----|
-| You need static effect analysis (read/write sets) | Simple CRUD with no analysis needs |
-| You want build-time purity validation | Rapid prototyping |
-| You need applicative parallelism (Haxl/Stitch pattern) | Performance-critical paths needing manual optimization |
-| You want algebraic effect coverage checking | Legacy concepts that can't be migrated yet |
-| You need lens-based state access for impact analysis | |
+| All new concepts | Language target lacks higher-kinded types or monadic composition |
+| Concepts needing static effect analysis | Concept requires direct FFI or system calls incompatible with the monad |
+| Concepts needing purity validation | Legacy concepts not yet migrated (temporary) |
+| Concepts needing applicative parallelism | |
+| Concepts needing lens-based state access | |
 
 ### FunctionalConceptHandler Interface
 
@@ -481,7 +534,23 @@ it('covers all declared variants', () => {
 
 Before considering the implementation complete:
 
-**For imperative handlers (ConceptHandler):**
+**For functional handlers (FunctionalConceptHandler) — the default:**
+- [ ] One method per action in the spec (synchronous — no async)
+- [ ] All input fields extracted with correct type casts
+- [ ] Every variant from the spec is returned on the appropriate code path
+- [ ] Storage relation names match the spec's state section
+- [ ] Handler returns `StorageProgram`, never calls storage directly
+- [ ] Uses `complete()` for all terminal values (not plain `pure()`)
+- [ ] Uses `branch()` for conditionals (not if/else)
+- [ ] Declared purity matches actual structural effects
+- [ ] Lens-based access used where possible (not raw string keys)
+- [ ] Independent reads identified for applicative parallelism
+- [ ] All completion variants reachable in the program tree
+- [ ] No references to other concepts (all coordination via syncs)
+- [ ] Handler exported as `const <name>Handler: FunctionalConceptHandler`
+- [ ] Capabilities imported if spec declares them
+
+**For imperative handlers (ConceptHandler) — fallback only:**
 - [ ] One async method per action in the spec
 - [ ] All input fields extracted with correct type casts
 - [ ] Every variant from the spec is returned on the appropriate code path
@@ -492,14 +561,6 @@ Before considering the implementation complete:
 - [ ] No references to other concepts (all coordination via syncs)
 - [ ] Handler exported as `const <name>Handler: ConceptHandler`
 - [ ] Capabilities imported if spec declares them
-
-**For functional handlers (FunctionalConceptHandler) — all of the above, plus:**
-- [ ] Handler returns `StorageProgram`, never calls storage directly
-- [ ] Uses `complete()` for all terminal values (not plain `pure()`)
-- [ ] Declared purity matches actual structural effects
-- [ ] Lens-based access used where possible (not raw string keys)
-- [ ] Independent reads identified for applicative parallelism
-- [ ] All completion variants reachable in the program tree
 
 ## Quick Reference
 
