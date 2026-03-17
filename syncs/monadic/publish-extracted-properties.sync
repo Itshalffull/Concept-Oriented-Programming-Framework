@@ -1,0 +1,14 @@
+sync PublishExtractedProperties [eager]
+  purpose: "Publish extracted invariants as FormalProperties for the verification pipeline."
+when {
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: ?concept ]
+    => [ properties: ?properties ]
+}
+then {
+  FormalProperty/define: [
+    target_symbol: ?concept;
+    kind: "postcondition";
+    formula: ?properties;
+    language: "clef-invariant"
+  ]
+}

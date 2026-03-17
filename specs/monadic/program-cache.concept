@@ -1,0 +1,65 @@
+@version(1)
+concept ProgramCache [C] {
+
+  purpose {
+    Memoize StorageProgram execution results keyed by program
+    fingerprint and storage state hash. Enables incremental
+    re-evaluation where only changed programs or changed state
+    invalidates cached results.
+  }
+
+  state {
+    entries: set C
+    programHash: C -> String
+    stateHash: C -> String
+    result: C -> String
+    hits: C -> Int
+    staleSince: C -> String
+  }
+
+  actions {
+    action lookup(programHash: String, stateHash: String) {
+      -> hit(entry: C, result: String) {
+        A cached result exists for this program and state combination.
+      }
+      -> miss() { No cached result exists for this program and state combination. }
+    }
+
+    action store(programHash: String, stateHash: String, result: String) {
+      -> ok(entry: C) { Result cached under the given program and state hashes. }
+      -> exists() { An entry with these hashes already exists; no duplicate stored. }
+    }
+
+    action invalidateByState(stateHash: String) {
+      -> ok(evicted: Int) {
+        Remove all entries whose stateHash matches, returning the count
+        of evicted entries. Called when storage state changes.
+      }
+    }
+
+    action invalidateByProgram(programHash: String) {
+      -> ok(evicted: Int) {
+        Remove all entries for the given program hash, returning the
+        count of evicted entries. Called when handler code is redeployed.
+      }
+    }
+
+    action stats() {
+      -> ok(totalEntries: Int, hitRate: String, memoryBytes: Int) {
+        Return aggregate cache statistics: total entries, hit rate
+        as a percentage string, and approximate memory usage.
+      }
+    }
+  }
+
+  invariant {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    then lookup(programHash: "abc", stateHash: "def") -> hit(entry: c, result: "ok")
+  }
+
+  invariant {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    and invalidateByState(stateHash: "def") -> ok(evicted: n)
+    then lookup(programHash: "abc", stateHash: "def") -> miss()
+  }
+}

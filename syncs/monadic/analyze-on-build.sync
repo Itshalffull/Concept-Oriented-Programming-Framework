@@ -1,0 +1,9 @@
+sync AnalyzeOnBuild [eager]
+  purpose: "Run read/write set analysis on every built StorageProgram."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+}

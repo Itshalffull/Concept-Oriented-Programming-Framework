@@ -1,0 +1,20 @@
+sync CacheStoreAfterExecute [eager]
+  purpose: "Memoize execution results of pure or read-only programs."
+when {
+  ProgramInterpreter/execute: [ program: ?program ]
+    => [ variant: ?variant; output: ?output ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+    => [ purity: ?purity ]
+}
+where {
+  filter(?purity != "read-write")
+  bind(hash(?program) as ?programHash)
+  bind(stateHash() as ?stateHash)
+}
+then {
+  ProgramCache/store: [
+    programHash: ?programHash;
+    stateHash: ?stateHash;
+    result: ?output
+  ]
+}

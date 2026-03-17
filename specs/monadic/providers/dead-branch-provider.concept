@@ -1,0 +1,34 @@
+@version(1)
+concept DeadBranchProvider [D] {
+
+  purpose {
+    Identify conditional branches in a StorageProgram that can
+    never be taken given type constraints and concept state invariants.
+    Enables FlowTrace pruning and handler optimization.
+  }
+
+  state {
+    results: set D
+    deadBranches: D -> list String
+    reachableCount: D -> Int
+    totalCount: D -> Int
+  }
+
+  actions {
+    action analyze(program: String, constraints: String) {
+      -> ok(result: D, deadBranches: String, reachableCount: Int, totalCount: Int) {
+        Walk the program's branch tree and check each condition against
+        the constraint set. Branches whose conditions are unsatisfiable
+        under the constraints are reported as dead, along with the total
+        and reachable branch counts.
+      }
+      -> error(message: String) { The program or constraints could not be parsed for analysis. }
+    }
+  }
+
+  invariant {
+    after analyze(program: "branch(false, thenP, elseP)", constraints: "{}") -> ok(result: d, deadBranches: db, reachableCount: rc, totalCount: tc)
+    then rc = 1
+    and tc = 2
+  }
+}

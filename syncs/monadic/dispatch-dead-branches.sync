@@ -1,0 +1,9 @@
+sync DispatchDeadBranches [eager]
+  purpose: "Dispatch a dead-branches analysis request to the DeadBranchProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "dead-branches" ]
+    => []
+}
+then {
+  DeadBranchProvider/analyze: [ program: ?program; constraints: "{}" ]
+}

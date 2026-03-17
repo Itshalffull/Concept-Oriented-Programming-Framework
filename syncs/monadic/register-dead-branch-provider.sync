@@ -1,0 +1,9 @@
+sync RegisterDeadBranchProvider [eager]
+  purpose: "Register the DeadBranchProvider with ProgramAnalysis on first use."
+when {
+  DeadBranchProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "dead-branches"; kind: "constraint" ]
+}

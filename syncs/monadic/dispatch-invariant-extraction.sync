@@ -1,0 +1,9 @@
+sync DispatchInvariantExtraction [eager]
+  purpose: "Dispatch an invariant-extraction analysis request to the InvariantExtractionProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "invariant-extraction" ]
+    => []
+}
+then {
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: "" ]
+}

@@ -1,0 +1,11 @@
+sync ExtractPropertiesOnRegister [eager]
+  purpose: "Extract formal invariants from a handler's program when it is first registered and built."
+when {
+  FunctionalHandler/register: [ handler: ?h; concept: ?concept; action: ?action ]
+    => []
+  FunctionalHandler/build: [ handler: ?h ]
+    => [ program: ?program ]
+}
+then {
+  InvariantExtractionProvider/extract: [ program: ?program; conceptSpec: ?concept ]
+}

@@ -1,0 +1,68 @@
+@version(1)
+concept ProgramInterpreter [I] {
+
+  purpose {
+    Execute a StorageProgram against a ConceptStorage backend,
+    managing transaction boundaries, producing completions, and
+    recording execution traces for rollback.
+  }
+
+  state {
+    interpreters: set I
+    backend: I -> String
+    mode: I -> String
+    executions: set String
+    executionTrace: String -> String
+  }
+
+  actions {
+    action register(interpreter: I, backend: String, mode: String) {
+      -> ok() {
+        Register an interpreter bound to the named storage backend
+        operating in the given mode (live, dry-run, or replay).
+      }
+      -> exists() { An interpreter with this identifier is already registered. }
+      -> invalidMode() { The mode must be one of: live, dry-run, replay. }
+    }
+
+    action execute(interpreter: I, program: String, snapshot: String) {
+      -> ok(executionId: String, variant: String, output: String, trace: String) {
+        Run the program instruction-by-instruction against the backend.
+        In live mode mutations are applied to storage; in dry-run mode
+        they are applied to an in-memory snapshot only. Returns an
+        executionId usable for rollback, the terminal variant, output
+        fields, and a full execution trace.
+      }
+      -> error(message: String, failedAt: Int) {
+        Execution halted at instruction index failedAt due to a
+        storage error or constraint violation.
+      }
+      -> notfound() { No interpreter is registered with this identifier. }
+    }
+
+    action dryRun(interpreter: I, program: String, snapshot: String) {
+      -> ok(variant: String, output: String, mutations: String) {
+        Execute the program against a snapshot without persisting any
+        mutations. Returns the terminal variant, output, and the list
+        of mutations that would have been applied.
+      }
+      -> error(message: String) { The dry run failed during program evaluation. }
+      -> notfound() { No interpreter is registered with this identifier. }
+    }
+
+    action rollback(interpreter: I, executionId: String) {
+      -> ok() {
+        Reverse the mutations from a previous execution by applying
+        compensating operations derived from its execution trace.
+      }
+      -> error(message: String) { Rollback failed because compensating operations could not be applied. }
+      -> notfound() { The interpreter or executionId does not exist. }
+    }
+  }
+
+  invariant {
+    after register(interpreter: i, backend: "memory", mode: "live") -> ok()
+    and execute(interpreter: i, program: "get(users, u1)", snapshot: "current") -> ok(executionId: eid, variant: v, output: o, trace: t)
+    then rollback(interpreter: i, executionId: eid) -> ok()
+  }
+}

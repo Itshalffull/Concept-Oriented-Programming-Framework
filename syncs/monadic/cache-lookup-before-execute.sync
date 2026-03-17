@@ -1,0 +1,15 @@
+sync CacheLookupBeforeExecute [eager]
+  purpose: "Check the memoization cache before executing a read-only program."
+when {
+  FunctionalHandler/build: [ handler: ?h ]
+    => [ program: ?program ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+    => [ purity: "read-only" ]
+}
+where {
+  bind(hash(?program) as ?programHash)
+  bind(stateHash() as ?stateHash)
+}
+then {
+  ProgramCache/lookup: [ programHash: ?programHash; stateHash: ?stateHash ]
+}

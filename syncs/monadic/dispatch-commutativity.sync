@@ -1,0 +1,14 @@
+sync DispatchCommutativity [eager]
+  purpose: "Dispatch a commutativity analysis request to the CommutativityProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "commutativity" ]
+    => []
+}
+then {
+  CommutativityProvider/check: [
+    programA: ?program;
+    programB: ?program;
+    readWriteSetsA: "";
+    readWriteSetsB: ""
+  ]
+}

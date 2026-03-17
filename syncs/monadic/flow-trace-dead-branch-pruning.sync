@@ -1,0 +1,11 @@
+sync FlowTraceDeadBranchPruning [eager]
+  purpose: "Feed dead branch data to FlowTrace so unreachable variant paths can be pruned without evaluation."
+when {
+  FlowTrace/build: [ flowId: ?flowId ]
+    => []
+  FunctionalHandler/build: [ handler: ?h ]
+    => [ program: ?program ]
+}
+then {
+  DeadBranchProvider/analyze: [ program: ?program; constraints: "{}" ]
+}
