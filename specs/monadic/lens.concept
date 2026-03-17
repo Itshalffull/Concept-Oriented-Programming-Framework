@@ -1,0 +1,109 @@
+@version(1)
+concept Lens [L] {
+
+  purpose {
+    Typed, composable reference to a location within concept state,
+    replacing untyped string-based storage access with first-class
+    optics that can be composed into paths, decomposed into segments,
+    and validated against concept state declarations.
+  }
+
+  state {
+    lenses: set L
+    segments: L -> list String
+    sourceType: L -> String
+    focusType: L -> String
+    kind: L -> String
+  }
+
+  actions {
+    action create(lens: L, relation: String, key: String, field: String) {
+      -> ok(lens: L) {
+        Construct a lens from up to three path segments: relation (required),
+        key (optional — focus on a specific record), and field (optional —
+        focus on a field within that record). The kind is inferred from
+        which segments are provided: relation-only, record, or field.
+      }
+      -> exists() { A lens with this identifier has already been created. }
+    }
+
+    action fromRelation(lens: L, relation: String) {
+      -> ok(lens: L) {
+        Construct a relation-level lens that focuses on an entire
+        storage relation (a set or map of records). This is the
+        broadest focus — composing with at() or field() narrows it.
+      }
+      -> exists() { A lens with this identifier has already been created. }
+    }
+
+    action compose(outer: L, inner: L) {
+      -> ok(lens: L) {
+        Create a new lens by composing outer and inner, concatenating
+        their path segments. The resulting lens focuses through the
+        outer lens first, then applies the inner lens to the result.
+        Composition is associative: compose(a, compose(b, c)) equals
+        compose(compose(a, b), c).
+      }
+      -> notfound() { One or both of the source lenses do not exist. }
+      -> incompatible(message: String) {
+        The outer lens's focus type does not match the inner lens's
+        source type, so composition would produce an invalid path.
+      }
+    }
+
+    action get(lens: L) {
+      -> ok(lens: L, segments: String, sourceType: String, focusType: String, kind: String) {
+        Retrieve the lens metadata including its path segments,
+        source and focus types, and kind classification.
+      }
+      -> notfound() { No lens exists with this identifier. }
+    }
+
+    action decompose(lens: L) {
+      -> ok(segments: String) {
+        Break the lens into its constituent path segments as a
+        JSON array of {type, value} objects. Each segment is one
+        of: relation, key, or field.
+      }
+      -> notfound() { No lens exists with this identifier. }
+    }
+
+    action validate(lens: L, conceptSpec: String) {
+      -> valid(lens: L) {
+        The lens path segments reference valid state declarations
+        in the given concept specification. The relation exists,
+        the key type is compatible, and the field is declared.
+      }
+      -> invalid(lens: L, message: String) {
+        The lens references a relation, key type, or field that
+        does not exist or is incompatible with the concept's
+        declared state schema.
+      }
+      -> notfound() { No lens exists with this identifier. }
+    }
+
+    action list() {
+      -> ok(lenses: String) {
+        Return all registered lenses with their metadata as
+        a serialized JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after create(lens: l, relation: "users", key: "u1", field: "email") -> ok(lens: l)
+    then get(lens: l) -> ok(lens: l, segments: s, sourceType: st, focusType: ft, kind: "field")
+  }
+
+  invariant {
+    after fromRelation(lens: r, relation: "users") -> ok(lens: r)
+    then decompose(lens: r) -> ok(segments: s)
+  }
+
+  invariant {
+    after create(lens: a, relation: "users", key: "", field: "") -> ok(lens: a)
+    and create(lens: b, relation: "users", key: "u1", field: "email") -> ok(lens: b)
+    then get(lens: a) -> ok(lens: a, segments: sa, sourceType: sta, focusType: fta, kind: "relation")
+    and get(lens: b) -> ok(lens: b, segments: sb, sourceType: stb, focusType: ftb, kind: "field")
+  }
+}
