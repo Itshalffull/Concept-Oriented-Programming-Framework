@@ -168,6 +168,79 @@ function buildHierarchicalEntries(conceptName: string): McpEntry[] {
   ];
 }
 
+// --- Tool Catalog Entry (for lazy loading) ---
+
+interface ToolCatalogEntry {
+  name: string;
+  briefDescription: string;
+  category: string;
+  concept: string;
+  action: string;
+  alwaysLoaded: boolean;
+}
+
+/** Well-known tools that should always be loaded with full schemas */
+const ALWAYS_LOADED_TOOLS = new Set([
+  'score_query', 'score_show', 'score_list', 'score_back', 'score_traverse',
+  'score_api_status', 'score_api_explain', 'score_api_reindex',
+  'score_api_search', 'score_api_list_concepts', 'score_api_list_syncs',
+]);
+
+/**
+ * Generate a brief one-line description for tool catalog.
+ * Strips multi-line prose to first sentence, max 80 chars.
+ */
+function toBriefDescription(fullDesc: string): string {
+  // Remove the "Action concept —" prefix pattern
+  const stripped = fullDesc.replace(/^[A-Z][a-z]+ [a-z]+ —\s*/, '');
+  // Take first sentence
+  const firstSentence = stripped.split(/\.\s/)[0];
+  if (firstSentence.length <= 80) return firstSentence.endsWith('.') ? firstSentence : firstSentence + '.';
+  return firstSentence.slice(0, 77) + '...';
+}
+
+function generateToolCatalog(
+  manifest: ConceptManifest,
+  conceptName: string,
+  overrides: Record<string, Record<string, unknown>>,
+  hierConfig?: HierarchicalConfig,
+): ToolCatalogEntry[] {
+  const catalog: ToolCatalogEntry[] = [];
+  const snake = toSnakeCase(conceptName);
+
+  for (const action of manifest.actions) {
+    const actionOverride = overrides[action.name] || {};
+    const overrideType = actionOverride.type as string | undefined;
+    const mcpType = overrideType || inferMcpType(action.name);
+
+    // Only tools are relevant for lazy loading (resources/templates are read-only)
+    if (mcpType !== 'tool') continue;
+
+    const toolName = `${snake}_${toSnakeCase(action.name)}`;
+    const desc = (actionOverride.description as string)
+      || action.variants[0]?.prose
+      || `Execute ${action.name}`;
+
+    catalog.push({
+      name: toolName,
+      briefDescription: toBriefDescription(desc),
+      category: conceptName,
+      concept: conceptName,
+      action: action.name,
+      alwaysLoaded: ALWAYS_LOADED_TOOLS.has(toolName),
+    });
+  }
+
+  if (hierConfig) {
+    catalog.push(
+      { name: `${snake}_list_children`, briefDescription: `List children of a ${conceptName} node.`, category: conceptName, concept: conceptName, action: 'listChildren', alwaysLoaded: false },
+      { name: `${snake}_get_ancestors`, briefDescription: `Get ancestor chain for a ${conceptName} node.`, category: conceptName, concept: conceptName, action: 'getAncestors', alwaysLoaded: false },
+    );
+  }
+
+  return catalog;
+}
+
 // --- Generate Tools File ---
 
 function generateToolsFile(
@@ -341,6 +414,15 @@ export const mcpTargetHandler: ConceptHandler = {
         content,
       },
     ];
+
+    // Emit tool catalog for lazy loading (brief descriptions, no schemas)
+    const catalog = generateToolCatalog(manifest, name, overrides, hierConfig);
+    if (catalog.length > 0) {
+      files.push({
+        path: `${kebab}/${kebab}.catalog.json`,
+        content: JSON.stringify(catalog, null, 2) + '\n',
+      });
+    }
 
     // Emit enrichment-driven MCP help documentation if available
     const helpMd = generateMcpHelpMd(manifest, name, parsedManifestYaml);
