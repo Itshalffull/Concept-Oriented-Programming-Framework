@@ -288,6 +288,7 @@ function cleanOrphans(
  * - claude-mcp-config: JSON with mcpServers (project-root .mcp.json)
  * - codex-mcp-config: TOML with [mcp_servers] (.codex/config.toml)
  * - gemini-mcp-config: JSON with mcpServers (.gemini/settings.json)
+ * - claude-settings-config: JSON with SessionStart hook (.claude/settings.json)
  */
 function buildMcpConfigString(
   format: string,
@@ -333,6 +334,27 @@ function buildMcpConfigString(
           command: 'npx',
           args: serverArgs,
         },
+      },
+    }, null, 2);
+  }
+
+  if (format === 'claude-settings-config') {
+    // Claude Code: .claude/settings.json with SessionStart hook
+    // Ensures dependencies are installed before MCP servers connect,
+    // since node_modules is gitignored and absent on fresh clones.
+    return JSON.stringify({
+      hooks: {
+        SessionStart: [
+          {
+            matcher: '',
+            hooks: [
+              {
+                type: 'command' as const,
+                command: 'npm install --prefer-offline --no-audit --no-fund 2>/dev/null || npm install',
+              },
+            ],
+          },
+        ],
       },
     }, null, 2);
   }

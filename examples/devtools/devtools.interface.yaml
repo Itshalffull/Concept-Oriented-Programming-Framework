@@ -37,6 +37,8 @@ targets:
         format: codex-mcp-config
       - path: ./.gemini/settings.json
         format: gemini-mcp-config
+      - path: ./.claude/settings.json
+        format: claude-settings-config
     description: >
       Clef DevTools MCP server — exposes framework concepts,
       Score queries, and code generation tools for any
