@@ -39,6 +39,8 @@ export type Instruction =
   | { tag: 'getLens'; lens: StateLens; bindAs: string }
   | { tag: 'putLens'; lens: StateLens; value: Record<string, unknown> }
   | { tag: 'modifyLens'; lens: StateLens; fn: (bindings: Bindings) => Record<string, unknown> }
+  | { tag: 'perform'; protocol: string; operation: string; payload: Record<string, unknown>; bindAs: string }
+  | { tag: 'performFrom'; protocol: string; operation: string; payloadFn: (bindings: Bindings) => Record<string, unknown>; bindAs: string }
   | { tag: 'branch'; condition: (bindings: Bindings) => boolean; thenBranch: StorageProgram<unknown>; elseBranch: StorageProgram<unknown> }
   | { tag: 'mapBindings'; fn: (bindings: Bindings) => unknown; bindAs: string }
   | { tag: 'pure'; value: unknown }
@@ -48,11 +50,12 @@ export type Instruction =
 /** Runtime bindings accumulated during interpretation. */
 export type Bindings = Record<string, unknown>;
 
-/** Effect set tracking which relations a program reads/writes and which variants it can complete with. */
+/** Effect set tracking storage, transport, and completion effects structurally. */
 export interface EffectSet {
   readonly reads: ReadonlySet<string>;
   readonly writes: ReadonlySet<string>;
   readonly completionVariants: ReadonlySet<string>;
+  readonly performs: ReadonlySet<string>;
 }
 
 /** Purity level derived from effect set. */
@@ -82,15 +85,16 @@ export function purityOf(program: StorageProgram<unknown>): Purity {
 
 /** Create a new empty effect set. */
 function emptyEffects(): EffectSet {
-  return { reads: new Set(), writes: new Set(), completionVariants: new Set() };
+  return { reads: new Set(), writes: new Set(), completionVariants: new Set(), performs: new Set() };
 }
 
-/** Merge two effect sets (union of reads, writes, and completion variants). */
+/** Merge two effect sets (union of all dimensions). */
 function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
   return {
     reads: new Set([...a.reads, ...b.reads]),
     writes: new Set([...a.writes, ...b.writes]),
     completionVariants: new Set([...a.completionVariants, ...b.completionVariants]),
+    performs: new Set([...a.performs, ...b.performs]),
   };
 }
 
@@ -98,14 +102,14 @@ function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
 function addRead(effects: EffectSet, relation: string): EffectSet {
   const reads = new Set(effects.reads);
   reads.add(relation);
-  return { reads, writes: effects.writes, completionVariants: effects.completionVariants };
+  return { reads, writes: effects.writes, completionVariants: effects.completionVariants, performs: effects.performs };
 }
 
 /** Add a write relation to an effect set. */
 function addWrite(effects: EffectSet, relation: string): EffectSet {
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads: effects.reads, writes, completionVariants: effects.completionVariants };
+  return { reads: effects.reads, writes, completionVariants: effects.completionVariants, performs: effects.performs };
 }
 
 /** Add both a read and write relation (for merge/mergeFrom). */
@@ -114,14 +118,21 @@ function addReadWrite(effects: EffectSet, relation: string): EffectSet {
   reads.add(relation);
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads, writes, completionVariants: effects.completionVariants };
+  return { reads, writes, completionVariants: effects.completionVariants, performs: effects.performs };
 }
 
 /** Add a completion variant tag to an effect set. */
 function addCompletionVariant(effects: EffectSet, variant: string): EffectSet {
   const completionVariants = new Set(effects.completionVariants);
   completionVariants.add(variant);
-  return { reads: effects.reads, writes: effects.writes, completionVariants };
+  return { reads: effects.reads, writes: effects.writes, completionVariants, performs: effects.performs };
+}
+
+/** Add a transport effect (protocol:operation) to an effect set. */
+function addPerform(effects: EffectSet, protocol: string, operation: string): EffectSet {
+  const performs = new Set(effects.performs);
+  performs.add(`${protocol}:${operation}`);
+  return { reads: effects.reads, writes: effects.writes, completionVariants: effects.completionVariants, performs };
 }
 
 // --- Lens Builders ---
@@ -338,6 +349,47 @@ export function modifyLens(
   };
 }
 
+/**
+ * Append a Perform instruction — an abstract transport effect.
+ * The handler declares "I need to call protocol:operation" without knowing
+ * the concrete transport implementation. The interpreter resolves it
+ * through a registered EffectHandler at execution time.
+ * Adds protocol:operation to the performs effect set.
+ */
+export function perform(
+  program: StorageProgram<unknown>,
+  protocol: string,
+  operation: string,
+  payload: Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<Record<string, unknown>> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'perform', protocol, operation, payload, bindAs }],
+    terminated: false,
+    effects: addPerform(program.effects, protocol, operation),
+  };
+}
+
+/**
+ * Append a Perform instruction with payload derived from bindings at runtime.
+ * Adds protocol:operation to the performs effect set.
+ */
+export function performFrom(
+  program: StorageProgram<unknown>,
+  protocol: string,
+  operation: string,
+  payloadFn: (bindings: Bindings) => Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<Record<string, unknown>> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'performFrom', protocol, operation, payloadFn, bindAs }],
+    terminated: false,
+    effects: addPerform(program.effects, protocol, operation),
+  };
+}
+
 /** Append a conditional branch. Merges effects from both branches (conservative). */
 export function branch<A>(
   program: StorageProgram<unknown>,
@@ -490,6 +542,25 @@ export function extractCompletionVariants(program: StorageProgram<unknown>): Set
   return variants;
 }
 
+/** Extract the set of transport effects (protocol:operation) from the program's instruction tree. */
+export function extractPerformSet(program: StorageProgram<unknown>): Set<string> {
+  const performs = new Set<string>();
+  for (const instr of program.instructions) {
+    if (instr.tag === 'perform' || instr.tag === 'performFrom') {
+      performs.add(`${instr.protocol}:${instr.operation}`);
+    }
+    if (instr.tag === 'branch') {
+      for (const p of extractPerformSet(instr.thenBranch)) performs.add(p);
+      for (const p of extractPerformSet(instr.elseBranch)) performs.add(p);
+    }
+    if (instr.tag === 'bind') {
+      for (const p of extractPerformSet(instr.first)) performs.add(p);
+      for (const p of extractPerformSet(instr.second)) performs.add(p);
+    }
+  }
+  return performs;
+}
+
 /**
  * Classify program purity. Prefers structural effects accumulated during
  * construction (O(1)). Falls back to instruction-walk for deserialized
@@ -534,6 +605,9 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
       if (instr.tag === 'modifyLens') {
         return { ...instr, fn: instr.fn.toString() };
       }
+      if (instr.tag === 'performFrom') {
+        return { ...instr, payloadFn: instr.payloadFn.toString() };
+      }
       return instr;
     }),
     terminated: program.terminated,
@@ -541,6 +615,7 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
       reads: [...(program.effects?.reads || [])],
       writes: [...(program.effects?.writes || [])],
       completionVariants: [...(program.effects?.completionVariants || [])],
+      performs: [...(program.effects?.performs || [])],
     },
   });
 }

@@ -22,6 +22,8 @@ derived MonadicConceptHandlers [T] {
     LensStructuralDiffProvider [T]
     VariantExtractionProvider [T]
     CompletionCoverage [T]
+    EffectHandler [T]
+    TransportEffectProvider [T]
   }
 
   syncs {
@@ -41,7 +43,11 @@ derived MonadicConceptHandlers [T] {
       register-variant-extraction-provider,
       dispatch-variant-extraction,
       extract-variants-on-build,
-      validate-completion-coverage
+      validate-completion-coverage,
+      register-transport-effect-provider,
+      dispatch-transport-effects,
+      extract-transport-effects-on-build,
+      validate-effect-handlers
     ]
     recommended: [
       cache-lookup-before-execute,
@@ -106,6 +112,14 @@ derived MonadicConceptHandlers [T] {
 
     query uncoveredVariants() {
       reads: CompletionCoverage/listUncovered()
+    }
+
+    query extractedTransportEffects(concept: String, action: String) {
+      reads: TransportEffectProvider/analyze(program: ?latestProgram)
+    }
+
+    query registeredEffectHandlers(protocol: String) {
+      reads: EffectHandler/listByProtocol(protocol: ?protocol)
     }
   }
 

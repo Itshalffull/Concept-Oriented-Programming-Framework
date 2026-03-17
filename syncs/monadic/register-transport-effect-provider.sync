@@ -1,0 +1,9 @@
+sync RegisterTransportEffectProvider [eager]
+  purpose: "Register the TransportEffectProvider with ProgramAnalysis on first use."
+when {
+  TransportEffectProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "transport-effects"; kind: "structural" ]
+}

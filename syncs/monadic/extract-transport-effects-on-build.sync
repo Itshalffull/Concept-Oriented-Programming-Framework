@@ -1,0 +1,9 @@
+sync ExtractTransportEffectsOnBuild [eager]
+  purpose: "Extract transport effects from every built StorageProgram."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  TransportEffectProvider/analyze: [ program: ?program ]
+}

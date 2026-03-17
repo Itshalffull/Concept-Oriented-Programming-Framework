@@ -67,6 +67,14 @@ concepts:
     spec: specs/monadic/completion-coverage.concept
     params:
       C: { as: ReportId, description: "Coverage report identifier" }
+  EffectHandler:
+    spec: specs/monadic/effect-handler.concept
+    params:
+      E: { as: HandlerId, description: "Effect handler registration identifier" }
+  TransportEffectProvider:
+    spec: specs/monadic/providers/transport-effect-provider.concept
+    params:
+      T: { as: ResultId, description: "Transport effect analysis result" }
 
 syncs:
   required:
@@ -104,6 +112,14 @@ syncs:
       description: "Run variant extraction on every built StorageProgram"
     - path: syncs/monadic/validate-completion-coverage.sync
       description: "Validate completion variant coverage against sync registrations"
+    - path: syncs/monadic/register-transport-effect-provider.sync
+      description: "Register TransportEffectProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-transport-effects.sync
+      description: "Dispatch transport-effects analysis to provider"
+    - path: syncs/monadic/extract-transport-effects-on-build.sync
+      description: "Extract transport effects from every built StorageProgram"
+    - path: syncs/monadic/validate-effect-handlers.sync
+      description: "Verify transport effects have registered EffectHandlers"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute
