@@ -41,6 +41,14 @@ syncs:
       description: "Register A11yAuditProvider with ProgramAnalysis"
     - path: syncs/surface/interpret-render-programs.sync
       description: "Execute sealed render programs through the target interpreter"
+    - path: syncs/surface/register-react-interpreter.sync
+      description: "Self-register React interpreter provider in plugin-registry"
+    - path: syncs/surface/register-svelte-interpreter.sync
+      description: "Self-register Svelte interpreter provider in plugin-registry"
+    - path: syncs/surface/delegate-to-react-interpreter.sync
+      description: "Route RenderInterpreter delegation to React provider"
+    - path: syncs/surface/delegate-to-svelte-interpreter.sync
+      description: "Route RenderInterpreter delegation to Svelte provider"
   recommended:
     - path: syncs/surface/cache-lookup-before-render.sync
       name: CacheLookupBeforeRender

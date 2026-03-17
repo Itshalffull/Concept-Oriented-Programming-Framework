@@ -3,76 +3,20 @@ import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 /**
  * RenderInterpreter handler — imperative (bootstrap).
  *
- * Executes a RenderProgram against a registered target framework,
- * producing framework-specific code. Supports dry-run for preview
- * without persisting execution state.
+ * Discovers registered render-interpreter-provider plugins via the
+ * plugin-registry and delegates interpretation to the matching target
+ * provider. The interpreter itself has no knowledge of any specific
+ * target — providers self-register via syncs.
  */
-
-type RenderInstruction = {
-  tag: string;
-  [key: string]: unknown;
-};
-
-function interpretInstructions(instructions: RenderInstruction[], target: string, template: string): { output: string; trace: string[] } {
-  const trace: string[] = [];
-  const outputParts: string[] = [];
-
-  for (const instr of instructions) {
-    trace.push(`[${target}] ${instr.tag}: ${JSON.stringify(instr)}`);
-
-    switch (instr.tag) {
-      case 'element':
-        outputParts.push(`<${instr.part} role="${instr.role}">`);
-        break;
-      case 'text':
-        outputParts.push(`  ${instr.content}`);
-        break;
-      case 'prop':
-        outputParts.push(`prop ${instr.name}: ${instr.propType} = ${instr.defaultValue}`);
-        break;
-      case 'bind':
-        outputParts.push(`  ${instr.part}.${instr.attr} = {${instr.expr}}`);
-        break;
-      case 'stateDef':
-        outputParts.push(`state ${instr.name}${instr.initial ? ' (initial)' : ''}`);
-        break;
-      case 'transition':
-        outputParts.push(`${instr.fromState} --[${instr.event}]--> ${instr.toState}`);
-        break;
-      case 'aria':
-        outputParts.push(`  ${instr.part}[aria-${instr.attr}="${instr.value}"]`);
-        break;
-      case 'keyboard':
-        outputParts.push(`key ${instr.key} => ${instr.event}`);
-        break;
-      case 'focus':
-        outputParts.push(`focus: ${instr.strategy} on ${instr.initialPart}`);
-        break;
-      case 'compose':
-        outputParts.push(`  <${instr.widget} slot="${instr.slot}" />`);
-        break;
-      case 'token':
-        outputParts.push(`token(${instr.path}, fallback: ${instr.fallback})`);
-        break;
-      case 'pure':
-        trace.push(`[${target}] terminated with output: ${instr.output}`);
-        break;
-    }
-  }
-
-  return { output: outputParts.join('\n'), trace };
-}
-
 export const renderInterpreterHandler: ConceptHandler = {
   async register(input: Record<string, unknown>, storage: ConceptStorage) {
     const interpreter = input.interpreter as string;
     const target = input.target as string;
-    const template = input.template as string;
 
     const existing = await storage.get('interpreters', interpreter);
     if (existing) return { variant: 'exists' };
 
-    await storage.put('interpreters', interpreter, { target, template });
+    await storage.put('interpreters', interpreter, { target });
     return { variant: 'ok', interpreter };
   },
 
@@ -84,29 +28,44 @@ export const renderInterpreterHandler: ConceptHandler = {
     const interp = await storage.get('interpreters', interpreter);
     if (!interp) return { variant: 'notfound' };
 
-    let instructions: RenderInstruction[];
-    try {
-      const parsed = JSON.parse(program);
-      instructions = parsed.instructions || [];
-    } catch {
-      return { variant: 'error', message: `Invalid program data: could not parse instructions` };
+    const target = interp.target as string;
+
+    // Discover provider from plugin-registry
+    const providers = await storage.find('plugin-registry', { pluginKind: 'render-interpreter-provider' });
+    const matchingProvider = providers.find(
+      (p: Record<string, unknown>) => p.target === target,
+    );
+
+    if (!matchingProvider) {
+      const registered = providers.map((p: Record<string, unknown>) => p.target as string).sort();
+      return {
+        variant: 'error',
+        message: `No render-interpreter-provider registered for target "${target}". Registered: ${registered.join(', ') || '(none)'}`,
+      };
     }
 
-    const target = interp.target as string;
-    const template = interp.template as string;
-    const { output, trace } = interpretInstructions(instructions, target, template);
-
+    // Delegate to the provider — return delegation record so the sync
+    // engine routes to the actual provider's interpret action
     const executionId = `render-exec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await storage.put('executions', executionId, {
       interpreterId: interpreter,
+      target,
       program,
       snapshot,
-      output,
-      trace: JSON.stringify(trace),
-      completedAt: new Date().toISOString(),
+      status: 'delegated',
+      providerRef: matchingProvider.providerRef,
     });
 
-    return { variant: 'ok', interpreter, output, trace: JSON.stringify(trace) };
+    return {
+      variant: 'ok',
+      interpreter,
+      executionId,
+      delegateTo: {
+        concept: `RenderInterpreter${capitalize(target)}`,
+        action: 'interpret',
+        input: { executionId, program, componentName: input.componentName || 'Widget' },
+      },
+    };
   },
 
   async dryRun(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -116,24 +75,35 @@ export const renderInterpreterHandler: ConceptHandler = {
     const interp = await storage.get('interpreters', interpreter);
     if (!interp) return { variant: 'notfound' };
 
-    let instructions: RenderInstruction[];
-    try {
-      const parsed = JSON.parse(program);
-      instructions = parsed.instructions || [];
-    } catch {
-      instructions = [];
+    const target = interp.target as string;
+
+    const providers = await storage.find('plugin-registry', { pluginKind: 'render-interpreter-provider' });
+    const matchingProvider = providers.find(
+      (p: Record<string, unknown>) => p.target === target,
+    );
+
+    if (!matchingProvider) {
+      return { variant: 'error', message: `No provider for target "${target}"` };
     }
 
-    const target = interp.target as string;
-    const template = interp.template as string;
-    const { output, trace } = interpretInstructions(instructions, target, template);
-
-    return { variant: 'ok', interpreter, preview: output, trace: JSON.stringify(trace) };
+    return {
+      variant: 'ok',
+      interpreter,
+      delegateTo: {
+        concept: `RenderInterpreter${capitalize(target)}`,
+        action: 'interpret',
+        input: { program, componentName: input.componentName || 'Widget', dryRun: true },
+      },
+    };
   },
 
   async listTargets(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const all = await storage.find('interpreters', {});
-    const targets = (all || []).map((entry: Record<string, unknown>) => entry.target as string);
+    const providers = await storage.find('plugin-registry', { pluginKind: 'render-interpreter-provider' });
+    const targets = providers.map((p: Record<string, unknown>) => p.target as string);
     return { variant: 'ok', targets: JSON.stringify(targets) };
   },
 };
+
+function capitalize(s: string): string {
+  return s.replace(/(^|[-])(\w)/g, (_, __, c: string) => c.toUpperCase());
+}

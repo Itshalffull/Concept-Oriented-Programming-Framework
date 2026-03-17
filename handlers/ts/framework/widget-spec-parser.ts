@@ -11,6 +11,8 @@ import type {
   WidgetAccessibility,
   WidgetAffordance,
   WidgetProp,
+  WidgetAriaBinding,
+  WidgetConnectBinding,
 } from '../../../runtime/types.js';
 
 // --- Token Types ---
@@ -32,6 +34,11 @@ type TokenType =
   | 'LPAREN'
   | 'RPAREN'
   | 'AT'
+  | 'EQUALS'
+  | 'PIPE'
+  | 'DOT'
+  | 'QUESTION'
+  | 'PLUS'
   | 'EOF';
 
 interface Token {
@@ -44,10 +51,10 @@ interface Token {
 const KEYWORDS = new Set([
   'widget', 'purpose', 'requires', 'anatomy', 'states', 'accessibility',
   'affordance', 'props', 'connect', 'compose', 'invariant',
-  'on', 'entry', 'exit', 'role', 'keyboard', 'focus', 'aria',
+  'on', 'entry', 'exit', 'role', 'keyboard', 'focus', 'aria', 'modal',
   'serves', 'specificity', 'when', 'bind',
   'true', 'false', 'initial',
-  'container', 'text', 'presentation', 'interactive',
+  'container', 'text', 'presentation', 'interactive', 'action', 'widget',
   'fields', 'actions',
 ]);
 
@@ -113,6 +120,11 @@ function tokenize(source: string): Token[] {
       case ',': tokens.push({ type: 'COMMA', value: ',', line, col }); i++; col++; continue;
       case ';': tokens.push({ type: 'SEMICOLON', value: ';', line, col }); i++; col++; continue;
       case '@': tokens.push({ type: 'AT', value: '@', line, col }); i++; col++; continue;
+      case '=': tokens.push({ type: 'EQUALS', value: '=', line, col }); i++; col++; continue;
+      case '|': tokens.push({ type: 'PIPE', value: '|', line, col }); i++; col++; continue;
+      case '.': tokens.push({ type: 'DOT', value: '.', line, col }); i++; col++; continue;
+      case '?': tokens.push({ type: 'QUESTION', value: '?', line, col }); i++; col++; continue;
+      case '+': tokens.push({ type: 'PLUS', value: '+', line, col }); i++; col++; continue;
     }
 
     if (source[i] === '-' && source[i + 1] === '>') {
@@ -267,13 +279,13 @@ class WidgetSpecParser {
         manifest.props = this.parseProps();
       } else if (tok.type === 'KEYWORD' && tok.value === 'connect') {
         this.advance();
-        this.skipBraceBlock();
+        manifest.connect = this.parseConnect();
       } else if (tok.type === 'KEYWORD' && tok.value === 'compose') {
         this.advance();
         manifest.composedWidgets = this.parseCompose();
       } else if (tok.type === 'KEYWORD' && tok.value === 'invariant') {
         this.advance();
-        this.skipBraceBlock();
+        manifest.invariants = this.parseInvariant();
       } else {
         this.advance();
       }
@@ -324,11 +336,22 @@ class WidgetSpecParser {
   private parseStates(): WidgetState[] {
     const states: WidgetState[] = [];
     this.expect('LBRACE');
+    this.parseStatesInner(states, '');
+    if (this.match('RBRACE')) this.advance();
+    return states;
+  }
 
+  /**
+   * Parse state declarations within a brace-delimited block.
+   * Supports nested state groups: `row { unselected [initial] { ... } selected { ... } }`
+   * Nested states are flattened with a prefix: `row.unselected`, `row.selected`.
+   */
+  private parseStatesInner(states: WidgetState[], prefix: string): void {
     while (!this.match('RBRACE') && !this.match('EOF')) {
       const tok = this.peek();
       if (tok.type === 'IDENT' || (tok.type === 'KEYWORD' && !['on', 'entry', 'exit'].includes(tok.value))) {
-        const name = this.advance().value;
+        const rawName = this.advance().value;
+        const name = prefix ? `${prefix}.${rawName}` : rawName;
         let initial = false;
         if (this.match('LBRACKET')) {
           this.advance();
@@ -344,56 +367,106 @@ class WidgetSpecParser {
         const exitActions: string[] = [];
 
         this.expect('LBRACE');
-        while (!this.match('RBRACE') && !this.match('EOF')) {
-          if (this.match('KEYWORD', 'on')) {
-            this.advance();
-            const event = this.advance().value;
-            this.expect('ARROW');
-            const target = this.advance().value;
-            transitions.push({ event, target });
-            if (this.match('SEMICOLON')) this.advance();
-          } else if (this.match('KEYWORD', 'entry')) {
-            this.advance();
-            if (this.match('LBRACKET')) {
-              this.advance();
-              while (!this.match('RBRACKET') && !this.match('EOF')) {
-                entryActions.push(this.advance().value);
-                if (this.match('SEMICOLON')) this.advance();
-              }
-              if (this.match('RBRACKET')) this.advance();
-            }
-            if (this.match('SEMICOLON')) this.advance();
-          } else if (this.match('KEYWORD', 'exit')) {
-            this.advance();
-            if (this.match('LBRACKET')) {
-              this.advance();
-              while (!this.match('RBRACKET') && !this.match('EOF')) {
-                exitActions.push(this.advance().value);
-                if (this.match('SEMICOLON')) this.advance();
-              }
-              if (this.match('RBRACKET')) this.advance();
-            }
-            if (this.match('SEMICOLON')) this.advance();
-          } else {
-            this.advance();
-          }
-        }
-        if (this.match('RBRACE')) this.advance();
 
-        states.push({
-          name,
-          initial,
-          transitions,
-          entryActions: entryActions.length ? entryActions : undefined,
-          exitActions: exitActions.length ? exitActions : undefined,
-        });
+        // Peek ahead to determine if this is a state group (contains sub-states)
+        // or a leaf state (contains on/entry/exit directives).
+        // A state group's first meaningful token is an IDENT/KEYWORD followed by
+        // either [ (for [initial]) or { (for the state body), not 'on'/'entry'/'exit'.
+        const isGroup = this.isStateGroup();
+
+        if (isGroup) {
+          // Recurse: nested state group
+          this.parseStatesInner(states, name);
+          if (this.match('RBRACE')) this.advance();
+        } else {
+          // Leaf state: parse transitions, entry, exit
+          while (!this.match('RBRACE') && !this.match('EOF')) {
+            if (this.match('KEYWORD', 'on')) {
+              this.advance();
+              const event = this.advance().value;
+              this.expect('ARROW');
+              const target = this.advance().value;
+              transitions.push({ event, target });
+              if (this.match('SEMICOLON')) this.advance();
+            } else if (this.match('KEYWORD', 'entry')) {
+              this.advance();
+              if (this.match('LBRACKET')) {
+                this.advance();
+                while (!this.match('RBRACKET') && !this.match('EOF')) {
+                  entryActions.push(this.advance().value);
+                  if (this.match('SEMICOLON')) this.advance();
+                }
+                if (this.match('RBRACKET')) this.advance();
+              }
+              if (this.match('SEMICOLON')) this.advance();
+            } else if (this.match('KEYWORD', 'exit')) {
+              this.advance();
+              if (this.match('LBRACKET')) {
+                this.advance();
+                while (!this.match('RBRACKET') && !this.match('EOF')) {
+                  exitActions.push(this.advance().value);
+                  if (this.match('SEMICOLON')) this.advance();
+                }
+                if (this.match('RBRACKET')) this.advance();
+              }
+              if (this.match('SEMICOLON')) this.advance();
+            } else {
+              this.advance();
+            }
+          }
+          if (this.match('RBRACE')) this.advance();
+
+          states.push({
+            name,
+            initial,
+            transitions,
+            entryActions: entryActions.length ? entryActions : undefined,
+            exitActions: exitActions.length ? exitActions : undefined,
+          });
+        }
       } else {
         this.advance();
       }
     }
+  }
 
-    if (this.match('RBRACE')) this.advance();
-    return states;
+  /**
+   * Look ahead to determine if the current brace block contains sub-state
+   * declarations (state group) or on/entry/exit directives (leaf state).
+   */
+  private isStateGroup(): boolean {
+    // Save position for lookahead
+    const saved = this.pos;
+    let depth = 0;
+
+    // Check the first meaningful content inside the block
+    while (this.pos < this.tokens.length) {
+      const tok = this.peek();
+      if (tok.type === 'EOF') break;
+
+      // If first token is on/entry/exit, it's a leaf state
+      if (tok.type === 'KEYWORD' && ['on', 'entry', 'exit'].includes(tok.value)) {
+        this.pos = saved;
+        return false;
+      }
+
+      // If first token is an ident/keyword followed by [ or {, it's a group
+      if (tok.type === 'IDENT' || (tok.type === 'KEYWORD' && !['on', 'entry', 'exit'].includes(tok.value))) {
+        const next = this.tokens[this.pos + 1];
+        if (next && (next.type === 'LBRACKET' || next.type === 'LBRACE')) {
+          this.pos = saved;
+          return true;
+        }
+        // Not followed by [ or {, unknown — treat as leaf
+        this.pos = saved;
+        return false;
+      }
+
+      break;
+    }
+
+    this.pos = saved;
+    return false;
   }
 
   private parseAccessibility(): WidgetAccessibility {
@@ -410,15 +483,25 @@ class WidgetSpecParser {
         this.advance();
         this.expect('LBRACE');
         while (!this.match('RBRACE') && !this.match('EOF')) {
-          const key = this.advance().value;
-          if (this.match('COLON')) {
+          // Collect the key name — may be compound like "Shift+Tab"
+          const keyParts: string[] = [];
+          while (
+            !this.match('ARROW') && !this.match('COLON') &&
+            !this.match('RBRACE') && !this.match('EOF')
+          ) {
+            keyParts.push(this.advance().value);
+          }
+          const key = keyParts.join('');
+          if (!key) { this.advance(); continue; }
+
+          // Accept both -> and : as separator
+          if (this.match('ARROW') || this.match('COLON')) {
             this.advance();
-            // Read until semicolon or next key
             const actionParts: string[] = [];
             while (!this.match('SEMICOLON') && !this.match('RBRACE') && !this.match('EOF')) {
               actionParts.push(this.advance().value);
             }
-            a11y.keyboard.push({ key, action: actionParts.join(' ') });
+            a11y.keyboard.push({ key: key.trim(), action: actionParts.join(' ').trim() });
             if (this.match('SEMICOLON')) this.advance();
           }
         }
@@ -438,9 +521,15 @@ class WidgetSpecParser {
           }
         }
         if (this.match('RBRACE')) this.advance();
+      } else if (this.match('KEYWORD', 'modal')) {
+        // modal: true/false — skip, not yet in the type
+        this.advance();
+        if (this.match('COLON')) this.advance();
+        this.advance(); // value
+        if (this.match('SEMICOLON')) this.advance();
       } else if (this.match('KEYWORD', 'aria')) {
         this.advance();
-        this.skipBraceBlock();
+        a11y.ariaBindings = this.parseAriaBindings();
       } else {
         this.advance();
       }
@@ -507,12 +596,49 @@ class WidgetSpecParser {
         const name = this.advance().value;
         if (this.match('COLON')) {
           this.advance();
-          const type = this.advance().value;
+          // Collect full type expression until = or newline-level token or }
+          const typeParts: string[] = [];
+          while (
+            !this.match('EOF') && !this.match('RBRACE') &&
+            !this.match('SEMICOLON') && !this.match('EQUALS')
+          ) {
+            // Stop if we hit an IDENT that looks like the next prop name
+            // (followed by COLON) — peek ahead
+            if (
+              (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD') &&
+              this.tokens[this.pos + 1]?.type === 'COLON' &&
+              typeParts.length > 0
+            ) {
+              break;
+            }
+            typeParts.push(this.advance().value);
+          }
+          const type = typeParts.join(' ').trim();
+
           let defaultValue: string | undefined;
-          // Check for (default: value) or = value
+          // Handle = value default
+          if (this.match('EQUALS')) {
+            this.advance(); // skip =
+            const valParts: string[] = [];
+            while (
+              !this.match('EOF') && !this.match('RBRACE') &&
+              !this.match('SEMICOLON')
+            ) {
+              // Stop if next token looks like a new prop declaration
+              if (
+                (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD') &&
+                this.tokens[this.pos + 1]?.type === 'COLON' &&
+                valParts.length > 0
+              ) {
+                break;
+              }
+              valParts.push(this.advance().value);
+            }
+            defaultValue = valParts.join(' ').trim();
+          }
+          // Handle (default: value) syntax
           if (this.match('LPAREN')) {
             this.advance();
-            // skip "default:"
             if (this.peek().value === 'default') {
               this.advance();
               if (this.match('COLON')) this.advance();
@@ -540,9 +666,40 @@ class WidgetSpecParser {
     while (!this.match('RBRACE') && !this.match('EOF')) {
       const tok = this.peek();
       if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
-        widgets.push(this.advance().value);
-        if (this.match('LBRACE')) this.skipBraceBlock();
-        if (this.match('SEMICOLON')) this.advance();
+        const slotName = this.advance().value;
+
+        // Handle both `slotName: widget("type", { ... });` and `widgetName { desc }`
+        if (this.match('COLON')) {
+          this.advance();
+          // Expect widget("type", { ... })
+          if (this.match('KEYWORD', 'widget') || this.match('IDENT')) {
+            const widgetRef = this.advance().value;
+            if (widgetRef === 'widget' && this.match('LPAREN')) {
+              this.advance();
+              // First arg is the widget type string
+              if (this.match('STRING_LIT')) {
+                const widgetType = this.advance().value;
+                widgets.push(widgetType);
+              }
+              // Skip remaining args until )
+              let parenDepth = 1;
+              while (parenDepth > 0 && !this.match('EOF')) {
+                if (this.match('LPAREN')) parenDepth++;
+                if (this.match('RPAREN')) parenDepth--;
+                if (parenDepth > 0) this.advance();
+              }
+              if (this.match('RPAREN')) this.advance();
+            } else {
+              widgets.push(widgetRef);
+            }
+          }
+          if (this.match('SEMICOLON')) this.advance();
+        } else {
+          // Simple form: widgetName { description }
+          widgets.push(slotName);
+          if (this.match('LBRACE')) this.skipBraceBlock();
+          if (this.match('SEMICOLON')) this.advance();
+        }
       } else {
         this.advance();
       }
@@ -550,6 +707,126 @@ class WidgetSpecParser {
 
     if (this.match('RBRACE')) this.advance();
     return widgets;
+  }
+
+  /**
+   * Parse `aria { partName -> { attr: value; ... }; ... }`
+   * Grammar: partName ARROW LBRACE (attrName COLON value SEMICOLON)* RBRACE SEMICOLON
+   */
+  private parseAriaBindings(): WidgetAriaBinding[] {
+    const bindings: WidgetAriaBinding[] = [];
+    this.expect('LBRACE');
+
+    while (!this.match('RBRACE') && !this.match('EOF')) {
+      const tok = this.peek();
+      if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+        const part = this.advance().value;
+        if (this.match('ARROW')) {
+          this.advance();
+          const attrs = this.parseAttrBlock();
+          bindings.push({ part, attrs });
+          if (this.match('SEMICOLON')) this.advance();
+        } else {
+          // skip unexpected tokens
+          this.advance();
+        }
+      } else {
+        this.advance();
+      }
+    }
+
+    if (this.match('RBRACE')) this.advance();
+    return bindings;
+  }
+
+  /**
+   * Parse `connect { partName -> { attr: value; ... } ... }`
+   * Same grammar as aria bindings.
+   */
+  private parseConnect(): WidgetConnectBinding[] {
+    const bindings: WidgetConnectBinding[] = [];
+    this.expect('LBRACE');
+
+    while (!this.match('RBRACE') && !this.match('EOF')) {
+      const tok = this.peek();
+      if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+        const part = this.advance().value;
+        if (this.match('ARROW')) {
+          this.advance();
+          const attrs = this.parseAttrBlock();
+          bindings.push({ part, attrs });
+          if (this.match('SEMICOLON')) this.advance();
+        } else {
+          this.advance();
+        }
+      } else {
+        this.advance();
+      }
+    }
+
+    if (this.match('RBRACE')) this.advance();
+    return bindings;
+  }
+
+  /**
+   * Parse a `{ name: value; name: value; }` attribute block.
+   * Values are collected as raw strings — they may contain expressions
+   * like `if state.display == "badge" then "collapsed" else "expanded"`,
+   * `concat(...)`, `send(TAP)`, `?prop.field`, etc.
+   */
+  private parseAttrBlock(): { name: string; value: string }[] {
+    const attrs: { name: string; value: string }[] = [];
+    this.expect('LBRACE');
+
+    while (!this.match('RBRACE') && !this.match('EOF')) {
+      const tok = this.peek();
+      if (tok.type === 'IDENT' || tok.type === 'KEYWORD' || tok.type === 'STRING_LIT') {
+        const name = this.advance().value;
+        if (this.match('COLON')) {
+          this.advance();
+          // Collect everything until ; or }
+          const valueParts: string[] = [];
+          let parenDepth = 0;
+          while (!this.match('EOF')) {
+            if (this.match('SEMICOLON') && parenDepth === 0) break;
+            if (this.match('RBRACE') && parenDepth === 0) break;
+            if (this.match('LPAREN')) parenDepth++;
+            if (this.match('RPAREN')) parenDepth--;
+            valueParts.push(this.advance().value);
+          }
+          attrs.push({ name, value: valueParts.join(' ').trim() });
+          if (this.match('SEMICOLON')) this.advance();
+        } else {
+          // No colon — skip
+        }
+      } else {
+        this.advance();
+      }
+    }
+
+    if (this.match('RBRACE')) this.advance();
+    return attrs;
+  }
+
+  /**
+   * Parse `invariant { "string"; "string"; ... }`
+   * Collects prose invariant strings.
+   */
+  private parseInvariant(): string[] {
+    const invariants: string[] = [];
+    this.expect('LBRACE');
+
+    while (!this.match('RBRACE') && !this.match('EOF')) {
+      if (this.match('STRING_LIT')) {
+        invariants.push(this.advance().value);
+        if (this.match('SEMICOLON')) this.advance();
+      } else {
+        this.advance();
+      }
+    }
+
+    if (this.match('RBRACE')) this.advance();
+    return invariants;
   }
 }
 

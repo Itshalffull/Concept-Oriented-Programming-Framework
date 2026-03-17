@@ -1,0 +1,11 @@
+# Auto-register the Svelte render-interpreter provider on first use
+
+sync RegisterSvelteInterpreterProvider [eager]
+  purpose: "Self-register the Svelte target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterSvelte/interpret: []
+    => []
+}
+then {
+  RenderInterpreterSvelte/initialize: []
+}

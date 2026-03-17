@@ -1,0 +1,11 @@
+# Auto-register the React render-interpreter provider on first use
+
+sync RegisterReactInterpreterProvider [eager]
+  purpose: "Self-register the React target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterReact/interpret: []
+    => []
+}
+then {
+  RenderInterpreterReact/initialize: []
+}

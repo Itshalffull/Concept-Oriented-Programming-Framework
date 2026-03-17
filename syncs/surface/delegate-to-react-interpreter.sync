@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the React provider
+
+sync DelegateToReactInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the react target, route the execution to the RenderInterpreterReact provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterReact")
+}
+then {
+  RenderInterpreterReact/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

@@ -3,9 +3,12 @@ import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import type { ConceptStorage } from '../runtime/types.js';
 import { renderProgramHandler } from '../handlers/ts/surface/render-program.handler.js';
 import { renderInterpreterHandler } from '../handlers/ts/surface/render-interpreter.handler.js';
+import { renderInterpreterReactHandler, resetRenderInterpreterReactCounter } from '../handlers/ts/surface/providers/render-interpreter-react.handler.js';
+import { renderInterpreterSvelteHandler, resetRenderInterpreterSvelteCounter } from '../handlers/ts/surface/providers/render-interpreter-svelte.handler.js';
 import { a11yAuditProviderHandler } from '../handlers/ts/surface/providers/a11y-audit-provider.handler.js';
 import { deadPartProviderHandler } from '../handlers/ts/surface/providers/dead-part-provider.handler.js';
 import { themeComplianceProviderHandler } from '../handlers/ts/surface/providers/theme-compliance-provider.handler.js';
+import { buildRenderProgram } from '../handlers/ts/surface/render-program-builder.js';
 import { extractReadSet, extractWriteSet, classifyPurity, type StorageProgram } from '../runtime/storage-program.js';
 
 // Helper to extract the pure terminator value from a StorageProgram
@@ -220,9 +223,9 @@ describe('RenderProgram handler', () => {
 });
 
 // ============================================================
-// RenderInterpreter — imperative handler tests
+// RenderInterpreter — dispatcher with provider delegation
 // ============================================================
-describe('RenderInterpreter handler', () => {
+describe('RenderInterpreter handler (provider delegation)', () => {
   let storage: ConceptStorage;
 
   beforeEach(() => {
@@ -231,62 +234,88 @@ describe('RenderInterpreter handler', () => {
 
   describe('register', () => {
     it('registers a new interpreter for a target', async () => {
-      const result = await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
+      const result = await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
       expect(result.variant).toBe('ok');
       expect(result.interpreter).toBe('react-i');
     });
 
     it('returns exists for duplicate registration', async () => {
-      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
-      const result = await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'svelte', template: 'tmpl' }, storage);
+      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
+      const result = await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'svelte' }, storage);
       expect(result.variant).toBe('exists');
     });
   });
 
-  describe('execute', () => {
-    it('interprets render program instructions', async () => {
-      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
+  describe('execute with provider discovery', () => {
+    it('delegates to the matching provider via plugin-registry', async () => {
+      // Register interpreter
+      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
 
-      const program = JSON.stringify({
-        instructions: [
-          { tag: 'element', part: 'root', role: 'container' },
-          { tag: 'text', part: 'root', content: 'Hello World' },
-          { tag: 'aria', part: 'root', attr: 'role', value: 'dialog' },
-          { tag: 'pure', output: 'done' },
-        ],
+      // Simulate provider self-registration in plugin-registry
+      await storage.put('plugin-registry', 'render-interpreter-provider:react', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'react',
+        providerRef: 'render-interpreter-provider:react',
       });
 
-      const result = await renderInterpreterHandler.execute({ interpreter: 'react-i', program, snapshot: 'current' }, storage);
+      const program = JSON.stringify([
+        { tag: 'element', part: 'root', role: 'container' },
+        { tag: 'pure', output: 'done' },
+      ]);
+
+      const result = await renderInterpreterHandler.execute({
+        interpreter: 'react-i',
+        program,
+        snapshot: 'current',
+      }, storage);
+
       expect(result.variant).toBe('ok');
-      expect(result.output).toContain('<root role="container">');
-      expect(result.output).toContain('Hello World');
+      expect(result.delegateTo).toBeDefined();
+      expect((result.delegateTo as Record<string, unknown>).concept).toBe('RenderInterpreterReact');
+      expect((result.delegateTo as Record<string, unknown>).action).toBe('interpret');
     });
 
     it('returns notfound for missing interpreter', async () => {
-      const result = await renderInterpreterHandler.execute({ interpreter: 'missing', program: '{}', snapshot: 'current' }, storage);
+      const result = await renderInterpreterHandler.execute({
+        interpreter: 'missing',
+        program: '{}',
+        snapshot: 'current',
+      }, storage);
       expect(result.variant).toBe('notfound');
     });
 
-    it('returns error for invalid program JSON', async () => {
-      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
-      const result = await renderInterpreterHandler.execute({ interpreter: 'react-i', program: 'not-json', snapshot: 'current' }, storage);
+    it('returns error when no provider is registered for target', async () => {
+      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
+
+      const result = await renderInterpreterHandler.execute({
+        interpreter: 'react-i',
+        program: '[]',
+        snapshot: 'current',
+      }, storage);
       expect(result.variant).toBe('error');
+      expect((result.message as string)).toContain('No render-interpreter-provider');
     });
   });
 
-  describe('dryRun', () => {
-    it('previews output without persisting', async () => {
-      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
-      const program = JSON.stringify({
-        instructions: [
-          { tag: 'element', part: 'button', role: 'action' },
-          { tag: 'prop', name: 'label', propType: 'String', defaultValue: 'Click' },
-        ],
+  describe('dryRun with provider discovery', () => {
+    it('returns delegation record without persisting execution', async () => {
+      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
+      await storage.put('plugin-registry', 'render-interpreter-provider:react', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'react',
+        providerRef: 'render-interpreter-provider:react',
       });
 
-      const result = await renderInterpreterHandler.dryRun({ interpreter: 'react-i', program }, storage);
+      const result = await renderInterpreterHandler.dryRun({
+        interpreter: 'react-i',
+        program: '[]',
+      }, storage);
+
       expect(result.variant).toBe('ok');
-      expect(result.preview).toContain('<button role="action">');
+      expect(result.delegateTo).toBeDefined();
+      const delegation = result.delegateTo as Record<string, unknown>;
+      expect(delegation.concept).toBe('RenderInterpreterReact');
+      expect((delegation.input as Record<string, unknown>).dryRun).toBe(true);
 
       // No execution persisted
       const executions = await storage.find('executions', {});
@@ -295,15 +324,193 @@ describe('RenderInterpreter handler', () => {
   });
 
   describe('listTargets', () => {
-    it('returns all registered targets', async () => {
-      await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
-      await renderInterpreterHandler.register({ interpreter: 'svelte-i', target: 'svelte', template: 'tmpl' }, storage);
+    it('returns all registered provider targets', async () => {
+      await storage.put('plugin-registry', 'rip:react', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'react',
+      });
+      await storage.put('plugin-registry', 'rip:svelte', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'svelte',
+      });
 
       const result = await renderInterpreterHandler.listTargets({}, storage);
       expect(result.variant).toBe('ok');
       const targets = JSON.parse(result.targets as string);
       expect(targets).toContain('react');
       expect(targets).toContain('svelte');
+    });
+  });
+});
+
+// ============================================================
+// RenderInterpreterReact — self-registering provider tests
+// ============================================================
+describe('RenderInterpreterReact provider', () => {
+  let storage: ConceptStorage;
+
+  beforeEach(() => {
+    storage = createInMemoryStorage();
+    resetRenderInterpreterReactCounter();
+  });
+
+  describe('initialize', () => {
+    it('self-registers in plugin-registry', async () => {
+      const result = await renderInterpreterReactHandler.initialize({}, storage);
+      expect(result.variant).toBe('ok');
+
+      const entries = await storage.find('plugin-registry', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'react',
+      });
+      expect(entries.length).toBe(1);
+      expect(entries[0].target).toBe('react');
+    });
+
+    it('is idempotent', async () => {
+      await renderInterpreterReactHandler.initialize({}, storage);
+      const result = await renderInterpreterReactHandler.initialize({}, storage);
+      expect(result.variant).toBe('ok');
+
+      const entries = await storage.find('plugin-registry', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'react',
+      });
+      expect(entries.length).toBe(1);
+    });
+  });
+
+  describe('interpret', () => {
+    it('produces a React functional component from instructions', async () => {
+      const instructions = [
+        { tag: 'prop', name: 'label', propType: 'String', defaultValue: 'Click' },
+        { tag: 'element', part: 'root', role: 'container' },
+        { tag: 'element', part: 'btn', role: 'action' },
+        { tag: 'aria', part: 'root', attr: 'role', value: 'button' },
+        { tag: 'stateDef', name: 'idle', initial: true },
+        { tag: 'stateDef', name: 'pressed', initial: false },
+        { tag: 'transition', fromState: 'idle', event: 'press', toState: 'pressed' },
+        { tag: 'keyboard', key: 'Enter', event: 'press' },
+        { tag: 'pure', output: 'Button' },
+      ];
+
+      const result = await renderInterpreterReactHandler.interpret({
+        executionId: 'exec-1',
+        instructions,
+        componentName: 'MyButton',
+      }, storage);
+
+      expect(result.variant).toBe('ok');
+      const output = result.output as string;
+      expect(output).toContain('export function MyButton');
+      expect(output).toContain('useState');
+      expect(output).toContain('data-part="root"');
+      expect(output).toContain('data-part="btn"');
+      expect(output).toContain('role="button"');
+      expect(output).toContain('handleKeyDown');
+      expect(output).toContain("case 'Enter'");
+
+      // Execution persisted
+      const exec = await storage.get('executions', 'exec-1');
+      expect(exec).not.toBeNull();
+      expect(exec!.status).toBe('completed');
+      expect(exec!.target).toBe('react');
+    });
+
+    it('supports JSON-serialised instructions via program field', async () => {
+      const instructions = [
+        { tag: 'element', part: 'root', role: 'container' },
+        { tag: 'pure', output: 'Widget' },
+      ];
+
+      const result = await renderInterpreterReactHandler.interpret({
+        program: JSON.stringify(instructions),
+        componentName: 'Widget',
+      }, storage);
+
+      expect(result.variant).toBe('ok');
+      expect((result.output as string)).toContain('export function Widget');
+    });
+
+    it('supports dry run without persisting', async () => {
+      const result = await renderInterpreterReactHandler.interpret({
+        instructions: [{ tag: 'element', part: 'root', role: 'container' }],
+        componentName: 'Widget',
+        dryRun: true,
+      }, storage);
+
+      expect(result.variant).toBe('ok');
+      expect(result.dryRun).toBe(true);
+      const executions = await storage.find('executions', {});
+      expect(executions).toHaveLength(0);
+    });
+
+    it('returns error for missing instructions', async () => {
+      const result = await renderInterpreterReactHandler.interpret({
+        componentName: 'Widget',
+      }, storage);
+      expect(result.variant).toBe('error');
+    });
+  });
+});
+
+// ============================================================
+// RenderInterpreterSvelte — self-registering provider tests
+// ============================================================
+describe('RenderInterpreterSvelte provider', () => {
+  let storage: ConceptStorage;
+
+  beforeEach(() => {
+    storage = createInMemoryStorage();
+    resetRenderInterpreterSvelteCounter();
+  });
+
+  describe('initialize', () => {
+    it('self-registers in plugin-registry', async () => {
+      const result = await renderInterpreterSvelteHandler.initialize({}, storage);
+      expect(result.variant).toBe('ok');
+
+      const entries = await storage.find('plugin-registry', {
+        pluginKind: 'render-interpreter-provider',
+        target: 'svelte',
+      });
+      expect(entries.length).toBe(1);
+      expect(entries[0].target).toBe('svelte');
+    });
+  });
+
+  describe('interpret', () => {
+    it('produces a Svelte component from instructions', async () => {
+      const instructions = [
+        { tag: 'prop', name: 'title', propType: 'String', defaultValue: '' },
+        { tag: 'element', part: 'root', role: 'container' },
+        { tag: 'stateDef', name: 'open', initial: true },
+        { tag: 'stateDef', name: 'closed', initial: false },
+        { tag: 'transition', fromState: 'open', event: 'close', toState: 'closed' },
+        { tag: 'keyboard', key: 'Escape', event: 'close' },
+        { tag: 'pure', output: 'Dialog' },
+      ];
+
+      const result = await renderInterpreterSvelteHandler.interpret({
+        executionId: 'exec-svelte-1',
+        instructions,
+        componentName: 'MyDialog',
+      }, storage);
+
+      expect(result.variant).toBe('ok');
+      const output = result.output as string;
+      expect(output).toContain('<script lang="ts">');
+      expect(output).toContain('export let title');
+      expect(output).toContain('data-part="root"');
+      expect(output).toContain("case 'Escape'");
+      expect(output).toContain('function send');
+    });
+
+    it('returns error for missing instructions', async () => {
+      const result = await renderInterpreterSvelteHandler.interpret({
+        componentName: 'Widget',
+      }, storage);
+      expect(result.variant).toBe('error');
     });
   });
 });
@@ -582,17 +789,19 @@ describe('ThemeComplianceProvider handler (functional)', () => {
 });
 
 // ============================================================
-// Integration: Full render pipeline
+// Integration: Full render pipeline with provider delegation
 // ============================================================
 describe('Surface render pipeline integration', () => {
   let storage: ConceptStorage;
 
   beforeEach(() => {
     storage = createInMemoryStorage();
+    resetRenderInterpreterReactCounter();
+    resetRenderInterpreterSvelteCounter();
   });
 
-  it('builds a render program, audits it, detects dead parts, checks compliance, and interprets', async () => {
-    // Step 1: Build a render program
+  it('builds a render program, audits it, detects dead parts, checks compliance, and delegates to React provider', async () => {
+    // Step 1: Build a render program imperatively
     await renderProgramHandler.create({ program: 'dialog' }, storage);
     await renderProgramHandler.element({ program: 'dialog', part: 'root', role: 'container' }, storage);
     await renderProgramHandler.element({ program: 'dialog', part: 'title', role: 'text' }, storage);
@@ -639,8 +848,6 @@ describe('Surface render pipeline integration', () => {
     });
     const deadVal = getPureValue(deadResult);
     expect(deadVal!.variant).toBe('ok');
-    // 'root' has aria but no text/bind; 'footer' has no text/bind either
-    // title has text, body has bind — those are connected
 
     // Step 4: Theme compliance
     const complianceResult = themeComplianceProviderHandler.verify({
@@ -653,15 +860,102 @@ describe('Surface render pipeline integration', () => {
     expect(complianceVal!.variant).toBe('ok');
     expect(complianceVal!.passed).toBe(true);
 
-    // Step 5: Interpret through React target
-    await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react', template: 'jsx' }, storage);
-    const renderResult = await renderInterpreterHandler.execute({
+    // Step 5: React provider self-registers in plugin-registry
+    await renderInterpreterReactHandler.initialize({}, storage);
+
+    // Step 6: RenderInterpreter dispatches to the React provider
+    await renderInterpreterHandler.register({ interpreter: 'react-i', target: 'react' }, storage);
+    const dispatchResult = await renderInterpreterHandler.execute({
       interpreter: 'react-i',
-      program: JSON.stringify({ instructions: prog!.instructions }),
+      program: JSON.stringify(prog!.instructions),
       snapshot: 'current',
+      componentName: 'Dialog',
     }, storage);
-    expect(renderResult.variant).toBe('ok');
-    expect(renderResult.output).toContain('<root role="container">');
-    expect(renderResult.output).toContain('{props.heading}');
+    expect(dispatchResult.variant).toBe('ok');
+    expect(dispatchResult.delegateTo).toBeDefined();
+
+    const delegation = dispatchResult.delegateTo as Record<string, unknown>;
+    expect(delegation.concept).toBe('RenderInterpreterReact');
+
+    // Step 7: React provider interprets the instructions (simulating sync delegation)
+    const delegatedInput = delegation.input as Record<string, unknown>;
+    const reactResult = await renderInterpreterReactHandler.interpret({
+      executionId: delegatedInput.executionId,
+      instructions: prog!.instructions,
+      componentName: delegatedInput.componentName,
+    }, storage);
+
+    expect(reactResult.variant).toBe('ok');
+    const output = reactResult.output as string;
+    expect(output).toContain('export function Dialog');
+    expect(output).toContain('useState');
+    expect(output).toContain('data-part="root"');
+    expect(output).toContain('role="dialog"');
+    expect(output).toContain("case 'Escape'");
+    expect(output).toContain('focus-trap');
+  });
+
+  it('end-to-end: buildRenderProgram from WidgetManifest then interpret via Svelte provider', async () => {
+    // Build a WidgetManifest programmatically (mimicking what the parser produces)
+    const manifest = {
+      name: 'Toggle',
+      props: [
+        { name: 'checked', type: 'Bool', defaultValue: 'false' },
+        { name: 'label', type: 'String', defaultValue: '' },
+      ],
+      anatomy: [
+        { name: 'root', role: 'interactive', children: [
+          { name: 'thumb', role: 'presentation', children: [] },
+        ] },
+      ],
+      states: [
+        { name: 'off', initial: true, transitions: [{ event: 'TOGGLE', target: 'on' }] },
+        { name: 'on', initial: false, transitions: [{ event: 'TOGGLE', target: 'off' }] },
+      ],
+      accessibility: {
+        role: 'switch',
+        keyboard: [
+          { key: 'Enter', action: 'TOGGLE' },
+          { key: 'Space', action: 'TOGGLE' },
+        ],
+        focus: { initial: 'root' },
+        ariaBindings: [
+          { part: 'root', attrs: [{ name: 'aria-checked', value: 'state == on' }] },
+        ],
+      },
+      connect: [
+        { part: 'root', attrs: [{ name: 'onClick', value: 'send(TOGGLE)' }] },
+      ],
+      composedWidgets: [],
+      invariants: [],
+      affordance: [],
+    };
+
+    // Build RenderProgram from manifest
+    const built = buildRenderProgram(manifest as any);
+    expect(built.name).toBe('Toggle');
+    expect(built.parts).toContain('root');
+    expect(built.parts).toContain('thumb');
+    expect(built.props).toContain('checked');
+    expect(built.props).toContain('label');
+
+    // Svelte provider self-registers and interprets
+    await renderInterpreterSvelteHandler.initialize({}, storage);
+
+    const svelteResult = await renderInterpreterSvelteHandler.interpret({
+      executionId: 'toggle-svelte',
+      instructions: built.instructions,
+      componentName: 'Toggle',
+    }, storage);
+
+    expect(svelteResult.variant).toBe('ok');
+    const svelteOutput = svelteResult.output as string;
+    expect(svelteOutput).toContain('<script lang="ts">');
+    expect(svelteOutput).toContain('export let checked');
+    expect(svelteOutput).toContain('export let label');
+    expect(svelteOutput).toContain('data-part="root"');
+    expect(svelteOutput).toContain('data-part="thumb"');
+    expect(svelteOutput).toContain('function send');
+    expect(svelteOutput).toContain("case 'Enter'");
   });
 });
