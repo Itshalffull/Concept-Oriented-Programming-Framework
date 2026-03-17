@@ -1,0 +1,11 @@
+# Register the A11yAuditProvider with ProgramAnalysis on first use
+
+sync RegisterA11yAuditProvider [eager]
+  purpose: "Register the A11yAuditProvider with ProgramAnalysis so it can be dispatched by name."
+when {
+  A11yAuditProvider/audit: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "a11y-audit"; kind: "accessibility" ]
+}

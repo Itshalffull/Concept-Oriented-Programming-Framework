@@ -1,0 +1,11 @@
+# Check cache before executing a render program
+
+sync CacheLookupBeforeRender [eager] [idempotent]
+  purpose: "Check ProgramCache for a previously rendered output before executing the RenderInterpreter."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  ProgramCache/lookup: [ key: ?program; stateHash: ?stateHash ]
+}

@@ -1,0 +1,11 @@
+# Dispatch a11y audit requests through ProgramAnalysis
+
+sync DispatchA11yAudit [eager]
+  purpose: "Route a11y-audit analysis requests from ProgramAnalysis to the A11yAuditProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "a11y-audit" ]
+    => []
+}
+then {
+  A11yAuditProvider/audit: [ audit: ?auditId; program: ?program; instructions: ?instructions; parts: ?parts ]
+}

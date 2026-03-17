@@ -1,0 +1,14 @@
+# Surface rendering pipeline — build widget/theme handler output, then interpret
+
+sync BuildAndRender [eager]
+  purpose: "Execute a RenderProgram through the RenderInterpreter after a widget or theme handler builds it."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+where {
+  RenderProgram: { ?program terminated: true }
+}
+then {
+  RenderInterpreter/execute: [ interpreter: ?targetInterpreter; program: ?program; snapshot: "current" ]
+}

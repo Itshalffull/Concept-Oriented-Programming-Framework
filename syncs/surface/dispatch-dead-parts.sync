@@ -1,0 +1,11 @@
+# Dispatch dead-parts analysis through ProgramAnalysis
+
+sync DispatchDeadParts [eager]
+  purpose: "Route dead-parts analysis requests from ProgramAnalysis to the DeadPartProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "dead-parts" ]
+    => []
+}
+then {
+  DeadPartProvider/analyze: [ analysis: ?analysisId; program: ?program; parts: ?parts; instructions: ?instructions ]
+}

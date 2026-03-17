@@ -1,0 +1,72 @@
+concept RenderInterpreter [I] {
+
+  purpose {
+    Execute a RenderProgram against a target framework, producing
+    framework-specific code with execution tracing. Supports dry-run
+    mode for preview without side effects, and multiple simultaneous
+    target registrations for cross-platform generation.
+  }
+
+  state {
+    interpreters: set I
+    target: I -> String
+    template: I -> String
+    executions: I -> list String
+    traces: I -> list String
+  }
+
+  actions {
+    action register(interpreter: I, target: String, template: String) {
+      -> ok(interpreter: I) {
+        Register a new interpreter for the given target framework
+        (react, svelte, swiftui, css-variables, etc.) with its
+        code generation template.
+      }
+      -> exists() {
+        An interpreter is already registered for this target.
+      }
+    }
+
+    action execute(interpreter: I, program: String, snapshot: String) {
+      -> ok(interpreter: I, output: String, trace: list String) {
+        Interpret the render program instructions against the target
+        template, producing framework-specific code and an execution
+        trace showing each instruction processed.
+      }
+      -> notfound() {
+        No interpreter is registered with this identifier.
+      }
+      -> error(message: String) {
+        The render program contains instructions incompatible with
+        this target framework.
+      }
+    }
+
+    action dryRun(interpreter: I, program: String) {
+      -> ok(interpreter: I, preview: String, trace: list String) {
+        Preview the output that would be produced without persisting
+        any execution state, useful for caching decisions and UI
+        previews.
+      }
+      -> notfound() {
+        No interpreter is registered with this identifier.
+      }
+    }
+
+    action listTargets() {
+      -> ok(targets: list String) {
+        Return all registered target framework identifiers.
+      }
+    }
+  }
+
+  invariant {
+    after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
+    then execute(interpreter: i, program: "p1", snapshot: "current") -> ok(interpreter: i, output: o, trace: t)
+  }
+
+  invariant {
+    after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
+    then register(interpreter: i, target: "svelte", template: "tmpl") -> exists()
+  }
+}

@@ -1,0 +1,11 @@
+# Dispatch theme-compliance analysis through ProgramAnalysis
+
+sync DispatchThemeCompliance [eager]
+  purpose: "Route theme-compliance analysis requests from ProgramAnalysis to the ThemeComplianceProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "theme-compliance" ]
+    => []
+}
+then {
+  ThemeComplianceProvider/verify: [ check: ?checkId; program: ?program; tokens: ?tokens; manifest: ?manifest ]
+}

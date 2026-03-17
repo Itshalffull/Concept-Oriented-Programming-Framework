@@ -1,0 +1,11 @@
+# Run accessibility audit on every built render program
+
+sync AnalyzeOnBuild [eager]
+  purpose: "Trigger an accessibility audit on every widget render program after build completes."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  A11yAuditProvider/audit: [ audit: ?auditId; program: ?program; instructions: ?instructions; parts: ?parts ]
+}
