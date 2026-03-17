@@ -1,0 +1,41 @@
+# Interpretation bridge for functional ProgramCache handler actions
+
+sync InterpretCacheLookup [eager]
+  purpose: "Route ProgramCache/lookup StorageProgram to the interpreter so cache reads execute against storage"
+when {
+  ProgramCache/lookup: [ programHash: ?ph; stateHash: ?sh ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretCacheStore [eager]
+  purpose: "Route ProgramCache/store StorageProgram to the interpreter so cache writes persist"
+when {
+  ProgramCache/store: [ programHash: ?ph; stateHash: ?sh; result: ?r ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretCacheInvalidateByState [eager]
+  purpose: "Route ProgramCache/invalidateByState StorageProgram to the interpreter for cache eviction"
+when {
+  ProgramCache/invalidateByState: [ stateHash: ?sh ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretCacheInvalidateByProgram [eager]
+  purpose: "Route ProgramCache/invalidateByProgram StorageProgram to the interpreter for program-scoped eviction"
+when {
+  ProgramCache/invalidateByProgram: [ programHash: ?ph ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}

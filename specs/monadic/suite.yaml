@@ -56,6 +56,12 @@ syncs:
       description: "Dispatch read-write-set analysis to provider"
     - path: syncs/monadic/register-read-write-set-provider.sync
       description: "Register the ReadWriteSetProvider with ProgramAnalysis"
+    - path: syncs/monadic/interpret-analysis-program.sync
+      description: "Route functional ProgramAnalysis StoragePrograms to the interpreter"
+    - path: syncs/monadic/interpret-cache-program.sync
+      description: "Route functional ProgramCache StoragePrograms to the interpreter"
+    - path: syncs/monadic/interpret-provider-programs.sync
+      description: "Route functional provider handler StoragePrograms to the interpreter"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute

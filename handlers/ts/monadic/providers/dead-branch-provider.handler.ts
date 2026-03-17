@@ -1,24 +1,31 @@
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
-export const deadBranchProviderHandler: ConceptHandler = {
-  async analyze(input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * DeadBranchProvider — functional handler.
+ *
+ * Analyzes a program for unreachable branches by evaluating literal
+ * conditions statically. Returns a StorageProgram describing the result.
+ */
+export const deadBranchProviderHandler: FunctionalConceptHandler = {
+  analyze(input: Record<string, unknown>) {
     const program = input.program as string;
-    const constraints = input.constraints as string;
 
     try {
       const deadBranches: string[] = [];
       let totalCount = 0;
       let reachableCount = 0;
 
-      // Parse the program to find branch instructions
       try {
         const parsed = JSON.parse(program);
         const instructions = parsed.instructions || [];
         for (const instr of instructions) {
           if (instr.tag === 'branch') {
-            totalCount += 2; // then + else
+            totalCount += 2;
             const condition = instr.condition;
-            // Static evaluation of literal conditions
             if (condition === 'true' || condition === true) {
               reachableCount += 1;
               deadBranches.push(`else-branch at condition "${condition}" is unreachable`);
@@ -26,13 +33,11 @@ export const deadBranchProviderHandler: ConceptHandler = {
               reachableCount += 1;
               deadBranches.push(`then-branch at condition "${condition}" is unreachable`);
             } else {
-              // Cannot determine statically — both are reachable
               reachableCount += 2;
             }
           }
         }
       } catch {
-        // Try textual format: "branch(condition, thenP, elseP)"
         const branchMatches = program.matchAll(/branch\((\w+)/g);
         for (const match of branchMatches) {
           totalCount += 2;
@@ -50,17 +55,22 @@ export const deadBranchProviderHandler: ConceptHandler = {
       }
 
       const resultId = `db-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await storage.put('results', resultId, { deadBranches, reachableCount, totalCount });
-
-      return {
+      let p = createProgram();
+      p = put(p, 'results', resultId, { deadBranches, reachableCount, totalCount });
+      p = pure(p, {
         variant: 'ok',
         result: resultId,
         deadBranches: JSON.stringify(deadBranches),
         reachableCount,
         totalCount,
-      };
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      return { variant: 'error', message: `Dead branch analysis failed: ${(e as Error).message}` };
+      const p = pure(createProgram(), {
+        variant: 'error',
+        message: `Dead branch analysis failed: ${(e as Error).message}`,
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 };

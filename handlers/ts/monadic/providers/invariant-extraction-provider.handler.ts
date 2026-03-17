@@ -1,14 +1,23 @@
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
-export const invariantExtractionProviderHandler: ConceptHandler = {
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * InvariantExtractionProvider — functional handler.
+ *
+ * Extracts formal properties (postconditions, frame conditions) from a
+ * program's instruction set. Returns a StorageProgram that stores and
+ * returns the extracted invariants.
+ */
+export const invariantExtractionProviderHandler: FunctionalConceptHandler = {
+  extract(input: Record<string, unknown>) {
     const program = input.program as string;
     const conceptSpec = input.conceptSpec as string;
 
     try {
       const properties: string[] = [];
-
-      // Extract basic properties from instruction patterns
       const readRelations = new Set<string>();
       const writeRelations = new Set<string>();
 
@@ -19,8 +28,6 @@ export const invariantExtractionProviderHandler: ConceptHandler = {
           if (instr.tag === 'get' || instr.tag === 'find') readRelations.add(instr.relation);
           if (instr.tag === 'put') {
             writeRelations.add(instr.relation);
-            // For every put, generate a postcondition:
-            // "after execution, relation[key] contains the written value"
             properties.push(
               `postcondition: after execution, ${instr.relation}[${instr.key}] contains the written value`,
             );
@@ -33,7 +40,6 @@ export const invariantExtractionProviderHandler: ConceptHandler = {
           }
         }
       } catch {
-        // Textual format extraction
         const putMatches = program.matchAll(/put\((\w+),\s*(\w+)/g);
         for (const match of putMatches) {
           properties.push(`postcondition: after execution, ${match[1]}[${match[2]}] contains the written value`);
@@ -44,7 +50,7 @@ export const invariantExtractionProviderHandler: ConceptHandler = {
         }
       }
 
-      // If we have a concept spec, add frame conditions
+      // Frame conditions: relations read but not written
       if (conceptSpec) {
         for (const rel of readRelations) {
           if (!writeRelations.has(rel)) {
@@ -54,15 +60,20 @@ export const invariantExtractionProviderHandler: ConceptHandler = {
       }
 
       const resultId = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await storage.put('results', resultId, { properties, conceptRef: conceptSpec });
-
-      return {
+      let p = createProgram();
+      p = put(p, 'results', resultId, { properties, conceptRef: conceptSpec });
+      p = pure(p, {
         variant: 'ok',
         result: resultId,
         properties: JSON.stringify(properties),
-      };
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      return { variant: 'error', message: `Invariant extraction failed: ${(e as Error).message}` };
+      const p = pure(createProgram(), {
+        variant: 'error',
+        message: `Invariant extraction failed: ${(e as Error).message}`,
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 };

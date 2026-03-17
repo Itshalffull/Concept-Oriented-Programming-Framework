@@ -25,7 +25,10 @@ derived MonadicConceptHandlers [T] {
       analyze-on-build,
       invalidate-cache-on-write,
       dispatch-read-write-sets,
-      register-read-write-set-provider
+      register-read-write-set-provider,
+      interpret-analysis-program,
+      interpret-cache-program,
+      interpret-provider-programs
     ]
     recommended: [
       cache-lookup-before-execute,

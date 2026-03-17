@@ -1,4 +1,8 @@
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
 /**
  * Parse a serialized StorageProgram instruction list and extract
@@ -12,7 +16,6 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
     const parsed = JSON.parse(programStr);
     const instructions = parsed.instructions || parsed.input || [];
     if (typeof instructions === 'string') {
-      // Simple textual program format: "get(rel, key); put(rel, key, val)"
       const ops = instructions.split(';').map((s: string) => s.trim());
       for (const op of ops) {
         const match = op.match(/^(get|find|put|del)\((\w+)/);
@@ -29,7 +32,6 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
       }
     }
   } catch {
-    // Try simple textual format
     const ops = programStr.split(';').map(s => s.trim());
     for (const op of ops) {
       const match = op.match(/^(get|find|put|del)\((\w+)/);
@@ -44,8 +46,14 @@ function extractSets(programStr: string): { readSet: string[]; writeSet: string[
   return { readSet: [...readSet], writeSet: [...writeSet] };
 }
 
-export const readWriteSetProviderHandler: ConceptHandler = {
-  async analyze(input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * ReadWriteSetProvider — functional handler.
+ *
+ * Analyzes a serialized program and returns a StorageProgram that
+ * stores the analysis result and returns read/write sets + purity.
+ */
+export const readWriteSetProviderHandler: FunctionalConceptHandler = {
+  analyze(input: Record<string, unknown>) {
     const program = input.program as string;
 
     try {
@@ -56,21 +64,26 @@ export const readWriteSetProviderHandler: ConceptHandler = {
       else purity = 'pure';
 
       const resultId = `rws-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await storage.put('results', resultId, {
+      let p = createProgram();
+      p = put(p, 'results', resultId, {
         readSet: JSON.stringify(readSet),
         writeSet: JSON.stringify(writeSet),
         purity,
       });
-
-      return {
+      p = pure(p, {
         variant: 'ok',
         result: resultId,
         readSet: JSON.stringify(readSet),
         writeSet: JSON.stringify(writeSet),
         purity,
-      };
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      return { variant: 'error', message: `Failed to analyze program: ${(e as Error).message}` };
+      const p = pure(createProgram(), {
+        variant: 'error',
+        message: `Failed to analyze program: ${(e as Error).message}`,
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 };

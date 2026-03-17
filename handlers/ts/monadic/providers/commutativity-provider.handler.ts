@@ -1,7 +1,17 @@
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
-export const commutativityProviderHandler: ConceptHandler = {
-  async check(input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * CommutativityProvider — functional handler.
+ *
+ * Checks whether two programs commute based on their read/write sets.
+ * Returns a StorageProgram that stores the result and returns commutativity info.
+ */
+export const commutativityProviderHandler: FunctionalConceptHandler = {
+  check(input: Record<string, unknown>) {
     const readWriteSetsA = input.readWriteSetsA as string;
     const readWriteSetsB = input.readWriteSetsB as string;
 
@@ -13,10 +23,11 @@ export const commutativityProviderHandler: ConceptHandler = {
         rwA = JSON.parse(readWriteSetsA);
         rwB = JSON.parse(readWriteSetsB);
       } catch {
-        // If no pre-computed sets provided, assume non-commutative
         const resultId = `comm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        await storage.put('results', resultId, { commutes: false, reason: 'no read/write sets provided' });
-        return { variant: 'ok', result: resultId, commutes: false, reason: 'no read/write sets provided' };
+        let p = createProgram();
+        p = put(p, 'results', resultId, { commutes: false, reason: 'no read/write sets provided' });
+        p = pure(p, { variant: 'ok', result: resultId, commutes: false, reason: 'no read/write sets provided' });
+        return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 
       const readsA = new Set(rwA.r || []);
@@ -24,9 +35,6 @@ export const commutativityProviderHandler: ConceptHandler = {
       const readsB = new Set(rwB.r || []);
       const writesB = new Set(rwB.w || []);
 
-      // Two programs commute if:
-      // 1. Their write sets are disjoint
-      // 2. Neither program's write set overlaps the other's read set
       let commutes = true;
       const conflicts: string[] = [];
 
@@ -40,11 +48,17 @@ export const commutativityProviderHandler: ConceptHandler = {
 
       const reason = commutes ? 'disjoint read/write sets' : conflicts.join('; ');
       const resultId = `comm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await storage.put('results', resultId, { commutes, reason });
 
-      return { variant: 'ok', result: resultId, commutes, reason };
+      let p = createProgram();
+      p = put(p, 'results', resultId, { commutes, reason });
+      p = pure(p, { variant: 'ok', result: resultId, commutes, reason });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      return { variant: 'error', message: `Commutativity check failed: ${(e as Error).message}` };
+      const p = pure(createProgram(), {
+        variant: 'error',
+        message: `Commutativity check failed: ${(e as Error).message}`,
+      });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },
 };
