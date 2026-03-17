@@ -102,7 +102,7 @@ async function findRelated(
     const allSuites = await storage.find('suiteManifests');
     const memberSuites = allSuites.filter(s =>
       ((s.suiteConcepts as string[]) || []).some(c =>
-        c.toLowerCase() === conceptName.toLowerCase(),
+        typeof c === 'string' && c.toLowerCase() === conceptName.toLowerCase(),
       ),
     );
     if (memberSuites.length > 0) {

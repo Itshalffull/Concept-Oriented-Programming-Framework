@@ -112,15 +112,29 @@ async function resolveField(
     return { error: `Unknown root: ${field.name}. Available: ${Object.keys(COLLECTION_MAP).join(', ')}` };
   }
 
-  // Build filter criteria from args
+  // Separate query control args from filter criteria
+  const CONTROL_ARGS = new Set(['limit', 'offset', 'orderBy', 'order']);
   const criteria: Record<string, unknown> = {};
+  const limit = field.args.limit ? parseInt(field.args.limit, 10) : 0;
+  const offset = field.args.offset ? parseInt(field.args.offset, 10) : 0;
+
   for (const [k, v] of Object.entries(field.args)) {
-    criteria[k] = v;
+    if (!CONTROL_ARGS.has(k)) {
+      criteria[k] = v;
+    }
   }
 
-  const rows = Object.keys(criteria).length > 0
+  let rows = Object.keys(criteria).length > 0
     ? await storage.find(collection, criteria)
     : await storage.find(collection);
+
+  // Apply offset and limit
+  if (offset > 0) {
+    rows = rows.slice(offset);
+  }
+  if (limit > 0) {
+    rows = rows.slice(0, limit);
+  }
 
   // If no child fields requested, return all fields
   if (field.children.length === 0) {
