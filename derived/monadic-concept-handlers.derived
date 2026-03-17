@@ -17,6 +17,9 @@ derived MonadicConceptHandlers [T] {
     DeadBranchProvider [T]
     ProgramCache [T]
     FunctionalHandler [T]
+    Lens [T]
+    LensExtractionProvider [T]
+    LensStructuralDiffProvider [T]
   }
 
   syncs {
@@ -28,7 +31,11 @@ derived MonadicConceptHandlers [T] {
       register-read-write-set-provider,
       interpret-analysis-program,
       interpret-cache-program,
-      interpret-provider-programs
+      interpret-provider-programs,
+      register-lens-extraction-provider,
+      dispatch-lens-extraction,
+      extract-lenses-on-build,
+      register-lens-structural-diff-provider
     ]
     recommended: [
       cache-lookup-before-execute,
@@ -73,6 +80,14 @@ derived MonadicConceptHandlers [T] {
 
     query analysisProviders() {
       reads: ProgramAnalysis/listProviders()
+    }
+
+    query extractedLenses(concept: String, action: String) {
+      reads: LensExtractionProvider/analyze(program: ?latestProgram)
+    }
+
+    query lensMetadata(lensId: String) {
+      reads: Lens/get(lens: ?lensId)
     }
   }
 

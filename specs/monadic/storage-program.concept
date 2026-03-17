@@ -87,6 +87,35 @@ concept StorageProgram [P] {
       }
       -> notfound() { One or both of the source programs do not exist. }
     }
+
+    action getLens(program: P, lens: String, bindAs: String) {
+      -> ok(program: P) {
+        Append a GetLens instruction that reads through a typed lens
+        reference. The lens encodes relation, key, and field segments
+        as a StateLens. The fetched value is bound to bindAs.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action putLens(program: P, lens: String, value: String) {
+      -> ok(program: P) {
+        Append a PutLens instruction that writes through a typed lens
+        reference. The lens encodes the target location as a StateLens.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action modifyLens(program: P, lens: String, fn: String) {
+      -> ok(program: P) {
+        Append a ModifyLens instruction that reads through a lens,
+        applies a transformation function, and writes back through
+        the same lens. This is a read-modify-write operation.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
   }
 
   invariant {

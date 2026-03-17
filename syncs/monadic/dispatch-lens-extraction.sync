@@ -1,0 +1,9 @@
+sync DispatchLensExtraction [eager]
+  purpose: "Dispatch a lens-extraction analysis request to the LensExtractionProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "lens-extraction" ]
+    => []
+}
+then {
+  LensExtractionProvider/analyze: [ program: ?program ]
+}

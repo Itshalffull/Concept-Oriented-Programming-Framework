@@ -7,6 +7,25 @@
 // using the DSL functions below; the interpreter in interpreter.ts
 // executes them against a real ConceptStorage backend.
 
+// --- Lens Types ---
+
+/** A single segment in a lens path. */
+export type LensSegment =
+  | { kind: 'relation'; name: string }
+  | { kind: 'key'; value: string }
+  | { kind: 'field'; name: string };
+
+/**
+ * A typed, composable reference to a location within concept state.
+ * Replaces untyped string-based relation/key/field access with a
+ * first-class optic that can be composed, decomposed, and validated.
+ */
+export interface StateLens {
+  readonly segments: readonly LensSegment[];
+  readonly sourceType: string;
+  readonly focusType: string;
+}
+
 /** A single storage instruction in the program tree. */
 export type Instruction =
   | { tag: 'get'; relation: string; key: string; bindAs: string }
@@ -17,6 +36,9 @@ export type Instruction =
   | { tag: 'delFrom'; relation: string; keyFn: (bindings: Bindings) => string }
   | { tag: 'putFrom'; relation: string; key: string; valueFn: (bindings: Bindings) => Record<string, unknown> }
   | { tag: 'mergeFrom'; relation: string; key: string; fieldsFn: (bindings: Bindings) => Record<string, unknown> }
+  | { tag: 'getLens'; lens: StateLens; bindAs: string }
+  | { tag: 'putLens'; lens: StateLens; value: Record<string, unknown> }
+  | { tag: 'modifyLens'; lens: StateLens; fn: (bindings: Bindings) => Record<string, unknown> }
   | { tag: 'branch'; condition: (bindings: Bindings) => boolean; thenBranch: StorageProgram<unknown>; elseBranch: StorageProgram<unknown> }
   | { tag: 'mapBindings'; fn: (bindings: Bindings) => unknown; bindAs: string }
   | { tag: 'pure'; value: unknown }
@@ -91,6 +113,53 @@ function addReadWrite(effects: EffectSet, relation: string): EffectSet {
   const writes = new Set(effects.writes);
   writes.add(relation);
   return { reads, writes };
+}
+
+// --- Lens Builders ---
+
+/** Extract the relation name from the first segment of a lens. */
+function lensRelation(lens: StateLens): string {
+  const first = lens.segments[0];
+  if (!first || first.kind !== 'relation') {
+    throw new Error('Lens must start with a relation segment');
+  }
+  return first.name;
+}
+
+/** Create a relation-level lens focusing on an entire storage relation. */
+export function relation(name: string): StateLens {
+  return {
+    segments: [{ kind: 'relation', name }],
+    sourceType: 'store',
+    focusType: `relation<${name}>`,
+  };
+}
+
+/** Compose two lenses by concatenating their segments. */
+export function composeLens(outer: StateLens, inner: StateLens): StateLens {
+  return {
+    segments: [...outer.segments, ...inner.segments],
+    sourceType: outer.sourceType,
+    focusType: inner.focusType,
+  };
+}
+
+/** Narrow a lens to a specific record by key. */
+export function at(lens: StateLens, key: string): StateLens {
+  return {
+    segments: [...lens.segments, { kind: 'key', value: key }],
+    sourceType: lens.sourceType,
+    focusType: `record`,
+  };
+}
+
+/** Narrow a lens to a specific field within a record. */
+export function field(lens: StateLens, name: string): StateLens {
+  return {
+    segments: [...lens.segments, { kind: 'field', name }],
+    sourceType: lens.sourceType,
+    focusType: name,
+  };
 }
 
 // --- Builder DSL ---
@@ -218,6 +287,48 @@ export function mergeFrom(
   };
 }
 
+/** Append a GetLens instruction — read through a lens. Adds lens relation to read effects. */
+export function getLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  bindAs: string,
+): StorageProgram<Record<string, unknown> | null> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'getLens', lens, bindAs }],
+    terminated: false,
+    effects: addRead(program.effects, lensRelation(lens)),
+  };
+}
+
+/** Append a PutLens instruction — write through a lens. Adds lens relation to write effects. */
+export function putLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  value: Record<string, unknown>,
+): StorageProgram<void> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'putLens', lens, value }],
+    terminated: false,
+    effects: addWrite(program.effects, lensRelation(lens)),
+  };
+}
+
+/** Append a ModifyLens instruction — read-modify-write through a lens. Adds lens relation to both effects. */
+export function modifyLens(
+  program: StorageProgram<unknown>,
+  lens: StateLens,
+  fn: (bindings: Bindings) => Record<string, unknown>,
+): StorageProgram<void> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'modifyLens', lens, fn }],
+    terminated: false,
+    effects: addReadWrite(program.effects, lensRelation(lens)),
+  };
+}
+
 /** Append a conditional branch. Merges effects from both branches (conservative). */
 export function branch<A>(
   program: StorageProgram<unknown>,
@@ -299,8 +410,10 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
   const reads = new Set<string>();
   for (const instr of program.instructions) {
     if (instr.tag === 'get' || instr.tag === 'find') reads.add(instr.relation);
-    // merge/mergeFrom reads the existing record before writing
+    if (instr.tag === 'getLens') reads.add(lensRelation(instr.lens));
+    // merge/mergeFrom/modifyLens reads the existing record before writing
     if (instr.tag === 'merge' || instr.tag === 'mergeFrom') reads.add(instr.relation);
+    if (instr.tag === 'modifyLens') reads.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const r of extractReadSet(instr.thenBranch)) reads.add(r);
       for (const r of extractReadSet(instr.elseBranch)) reads.add(r);
@@ -318,6 +431,7 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
   const writes = new Set<string>();
   for (const instr of program.instructions) {
     if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
+    if (instr.tag === 'putLens' || instr.tag === 'modifyLens') writes.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const w of extractWriteSet(instr.thenBranch)) writes.add(w);
       for (const w of extractWriteSet(instr.elseBranch)) writes.add(w);
@@ -370,6 +484,9 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
           first: serializeProgram(instr.first),
           second: serializeProgram(instr.second),
         };
+      }
+      if (instr.tag === 'modifyLens') {
+        return { ...instr, fn: instr.fn.toString() };
       }
       return instr;
     }),

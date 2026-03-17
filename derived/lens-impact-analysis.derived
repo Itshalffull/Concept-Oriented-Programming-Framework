@@ -1,0 +1,43 @@
+derived LensImpactAnalysis [T] {
+
+  purpose {
+    Given a lens pointing at a specific state field, compute all
+    concepts, actions, syncs, and generated files affected by
+    changing that field — enabling safe schema evolution by showing
+    the full blast radius before any change is made.
+  }
+
+  composes {
+    Lens [T]
+    derived DependenceGraph [T]
+    DataFlowPath [T]
+  }
+
+  syncs {
+    required: [
+      register-lens-extraction-provider
+    ]
+  }
+
+  surface {
+    action impact(lensId: T) {
+      entry: Lens/validate matches on lens: ?lensId
+      triggers: [
+        DependenceGraph/computeDependencies(artifact: ?stateField, artifactType: "state-field"),
+        DataFlowPath/trace(source: ?stateField, sink: "*")
+      ]
+    }
+
+    query affectedEntities(lensId: T) {
+      reads: DependenceGraph/analyzeImpact(changed: ?stateField)
+    }
+  }
+
+  principle {
+    after impact(lensId: emailLens)
+    then affectedEntities(lensId: emailLens) includes all concepts
+         whose actions read or write the field targeted by emailLens
+    and  affectedEntities(lensId: emailLens) includes all syncs
+         that wire those actions
+  }
+}

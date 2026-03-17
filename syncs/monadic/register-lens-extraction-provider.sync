@@ -1,0 +1,9 @@
+sync RegisterLensExtractionProvider [eager]
+  purpose: "Register the LensExtractionProvider with ProgramAnalysis on first use."
+when {
+  LensExtractionProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "lens-extraction"; kind: "structural" ]
+}
