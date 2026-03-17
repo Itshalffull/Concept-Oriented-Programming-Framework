@@ -13,13 +13,16 @@ concept FunctionalHandler [H] {
     action: H -> String
     programFactory: H -> String
     purity: H -> String
+    declaredVariants: H -> String
   }
 
   actions {
-    action register(handler: H, concept: String, action: String, purity: String) {
+    action register(handler: H, concept: String, action: String, purity: String, variants: String) {
       -> ok() {
         Register a functional handler for the given concept and action,
-        declaring its purity level (pure, read-only, or read-write).
+        declaring its purity level (pure, read-only, or read-write) and
+        the set of completion variant tags (serialized JSON array) that
+        the handler may produce.
       }
       -> exists() { A handler for this concept/action pair is already registered. }
     }

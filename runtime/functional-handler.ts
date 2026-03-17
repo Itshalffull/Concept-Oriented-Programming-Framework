@@ -33,6 +33,8 @@ export interface FunctionalHandlerRegistration {
   action: string;
   /** Declared purity level. */
   purity: 'pure' | 'read-only' | 'read-write';
+  /** Declared completion variant tags for algebraic effect coverage checking. */
+  declaredVariants?: string[];
   /** The factory function that builds programs. */
   factory: (input: Record<string, unknown>) => StorageProgram<{ variant: string; [key: string]: unknown }>;
 }

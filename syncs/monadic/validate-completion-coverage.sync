@@ -1,0 +1,20 @@
+sync ValidateCompletionCoverage [eager]
+  purpose: "Validate that extracted program variants are covered by sync when-patterns."
+when {
+  FunctionalHandler/register: [ handler: ?h; concept: ?concept; action: ?action; variants: ?declaredVariants ]
+    => []
+  VariantExtractionProvider/analyze: [ program: ?program ]
+    => [ variants: ?extractedVariants ]
+}
+where {
+  SyncEngine: { ?s concept: ?concept; action: ?action }
+}
+then {
+  CompletionCoverage/check: [
+    concept: ?concept;
+    action: ?action;
+    declaredVariants: ?declaredVariants;
+    extractedVariants: ?extractedVariants;
+    syncPatterns: ?s
+  ]
+}

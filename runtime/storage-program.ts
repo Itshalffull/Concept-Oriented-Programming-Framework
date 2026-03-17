@@ -48,10 +48,11 @@ export type Instruction =
 /** Runtime bindings accumulated during interpretation. */
 export type Bindings = Record<string, unknown>;
 
-/** Effect set tracking which relations a program reads and writes. */
+/** Effect set tracking which relations a program reads/writes and which variants it can complete with. */
 export interface EffectSet {
   readonly reads: ReadonlySet<string>;
   readonly writes: ReadonlySet<string>;
+  readonly completionVariants: ReadonlySet<string>;
 }
 
 /** Purity level derived from effect set. */
@@ -81,14 +82,15 @@ export function purityOf(program: StorageProgram<unknown>): Purity {
 
 /** Create a new empty effect set. */
 function emptyEffects(): EffectSet {
-  return { reads: new Set(), writes: new Set() };
+  return { reads: new Set(), writes: new Set(), completionVariants: new Set() };
 }
 
-/** Merge two effect sets (union of reads, union of writes). */
+/** Merge two effect sets (union of reads, writes, and completion variants). */
 function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
   return {
     reads: new Set([...a.reads, ...b.reads]),
     writes: new Set([...a.writes, ...b.writes]),
+    completionVariants: new Set([...a.completionVariants, ...b.completionVariants]),
   };
 }
 
@@ -96,14 +98,14 @@ function mergeEffects(a: EffectSet, b: EffectSet): EffectSet {
 function addRead(effects: EffectSet, relation: string): EffectSet {
   const reads = new Set(effects.reads);
   reads.add(relation);
-  return { reads, writes: effects.writes };
+  return { reads, writes: effects.writes, completionVariants: effects.completionVariants };
 }
 
 /** Add a write relation to an effect set. */
 function addWrite(effects: EffectSet, relation: string): EffectSet {
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads: effects.reads, writes };
+  return { reads: effects.reads, writes, completionVariants: effects.completionVariants };
 }
 
 /** Add both a read and write relation (for merge/mergeFrom). */
@@ -112,7 +114,14 @@ function addReadWrite(effects: EffectSet, relation: string): EffectSet {
   reads.add(relation);
   const writes = new Set(effects.writes);
   writes.add(relation);
-  return { reads, writes };
+  return { reads, writes, completionVariants: effects.completionVariants };
+}
+
+/** Add a completion variant tag to an effect set. */
+function addCompletionVariant(effects: EffectSet, variant: string): EffectSet {
+  const completionVariants = new Set(effects.completionVariants);
+  completionVariants.add(variant);
+  return { reads: effects.reads, writes: effects.writes, completionVariants };
 }
 
 // --- Lens Builders ---
@@ -390,6 +399,24 @@ export function pureFrom(
   };
 }
 
+/**
+ * Terminate the program with a named variant completion, tracking the variant
+ * in the structural effect set. This is the algebraic-effect-aware terminal —
+ * use it instead of pure() when you want exhaustiveness checking of sync coverage.
+ */
+export function complete<A extends Record<string, unknown>>(
+  program: StorageProgram<unknown>,
+  variant: string,
+  output: A,
+): StorageProgram<{ variant: string } & A> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'pure', value: { variant, ...output } }],
+    terminated: true,
+    effects: addCompletionVariant(program.effects, variant),
+  };
+}
+
 /** Monadic bind: run first, bind result to bindAs, then run second. Merges effects from both programs. */
 export function compose<A, B>(
   first: StorageProgram<A>,
@@ -444,6 +471,25 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
   return writes;
 }
 
+/** Extract the set of completion variant tags reachable from the program's instruction tree. */
+export function extractCompletionVariants(program: StorageProgram<unknown>): Set<string> {
+  const variants = new Set<string>();
+  for (const instr of program.instructions) {
+    if (instr.tag === 'pure' && instr.value && typeof instr.value === 'object' && 'variant' in (instr.value as Record<string, unknown>)) {
+      variants.add((instr.value as Record<string, unknown>).variant as string);
+    }
+    if (instr.tag === 'branch') {
+      for (const v of extractCompletionVariants(instr.thenBranch)) variants.add(v);
+      for (const v of extractCompletionVariants(instr.elseBranch)) variants.add(v);
+    }
+    if (instr.tag === 'bind') {
+      for (const v of extractCompletionVariants(instr.first)) variants.add(v);
+      for (const v of extractCompletionVariants(instr.second)) variants.add(v);
+    }
+  }
+  return variants;
+}
+
 /**
  * Classify program purity. Prefers structural effects accumulated during
  * construction (O(1)). Falls back to instruction-walk for deserialized
@@ -494,6 +540,7 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
     effects: {
       reads: [...(program.effects?.reads || [])],
       writes: [...(program.effects?.writes || [])],
+      completionVariants: [...(program.effects?.completionVariants || [])],
     },
   });
 }

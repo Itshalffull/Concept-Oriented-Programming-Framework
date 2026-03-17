@@ -6,6 +6,7 @@ export const functionalHandlerHandler: ConceptHandler = {
     const concept = input.concept as string;
     const action = input.action as string;
     const purity = input.purity as string;
+    const variants = (input.variants as string) || '[]';
 
     const existing = await storage.get('handlers', handler);
     if (existing) return { variant: 'exists' };
@@ -18,6 +19,7 @@ export const functionalHandlerHandler: ConceptHandler = {
       concept,
       action,
       purity,
+      declaredVariants: variants,
       registeredAt: new Date().toISOString(),
     });
     return { variant: 'ok' };
