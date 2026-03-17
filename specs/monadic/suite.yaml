@@ -35,6 +35,10 @@ concepts:
     spec: specs/monadic/providers/invariant-extraction-provider.concept
     params:
       I: { as: ResultId, description: "Invariant extraction result" }
+  ParallelismProvider:
+    spec: specs/monadic/providers/parallelism-provider.concept
+    params:
+      P: { as: ResultId, description: "Parallelism analysis result" }
   ProgramCache:
     spec: specs/monadic/program-cache.concept
     params:
@@ -62,6 +66,8 @@ syncs:
       description: "Route functional ProgramCache StoragePrograms to the interpreter"
     - path: syncs/monadic/interpret-provider-programs.sync
       description: "Route functional provider handler StoragePrograms to the interpreter"
+    - path: syncs/monadic/validate-purity-on-build.sync
+      description: "Validate built program effects against handler's declared purity"
   recommended:
     - path: syncs/monadic/cache-lookup-before-execute.sync
       name: CacheLookupBeforeExecute
@@ -87,6 +93,12 @@ syncs:
     - path: syncs/monadic/flow-trace-dead-branch-pruning.sync
       name: FlowTraceDeadBranchPruning
       description: "Feed dead branch data to FlowTrace for pruning"
+    - path: syncs/monadic/register-parallelism-provider.sync
+      name: RegisterParallelismProvider
+      description: "Register the ParallelismProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-parallelism.sync
+      name: DispatchParallelism
+      description: "Dispatch parallelism analysis to provider"
 
 uses:
   - suite: formal-verification

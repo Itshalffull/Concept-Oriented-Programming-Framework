@@ -9,11 +9,17 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/index.js';
+import { interpret } from '../runtime/interpreter.js';
 import { formalPropertyHandler } from '../handlers/ts/suites/formal-verification/formal-property.handler.js';
 import type { ConceptStorage } from '../runtime/types.js';
 
 describe('FormalProperty Handler', () => {
   let storage: ConceptStorage;
+
+  async function run(program: any) {
+    const execResult = await interpret(program, storage);
+    return { variant: execResult.variant, ...execResult.output };
+  }
 
   beforeEach(() => {
     storage = createInMemoryStorage();
@@ -25,7 +31,7 @@ describe('FormalProperty Handler', () => {
 
   describe('define', () => {
     it('creates a valid formal property and returns ok', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'balance-non-negative',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -33,7 +39,7 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Account',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.id).toBeTruthy();
@@ -46,7 +52,7 @@ describe('FormalProperty Handler', () => {
       const kinds = ['invariant', 'precondition', 'postcondition', 'temporal', 'safety', 'liveness'];
 
       for (const kind of kinds) {
-        const result = await formalPropertyHandler.define({
+        const result = await run(formalPropertyHandler.define({
           name: `prop-${kind}`,
           kind,
           formal_language: 'smtlib',
@@ -54,7 +60,7 @@ describe('FormalProperty Handler', () => {
           target_symbol: 'Target',
           scope: 'local',
           priority: 'optional',
-        }, storage);
+        }));
         expect(result.variant).toBe('ok');
         expect(result.kind).toBe(kind);
       }
@@ -64,7 +70,7 @@ describe('FormalProperty Handler', () => {
       const languages = ['smtlib', 'tlaplus', 'alloy', 'lean', 'dafny', 'cvl'];
 
       for (const lang of languages) {
-        const result = await formalPropertyHandler.define({
+        const result = await run(formalPropertyHandler.define({
           name: `prop-${lang}`,
           kind: 'invariant',
           formal_language: lang,
@@ -72,13 +78,13 @@ describe('FormalProperty Handler', () => {
           target_symbol: 'Target',
           scope: 'local',
           priority: 'optional',
-        }, storage);
+        }));
         expect(result.variant).toBe('ok');
       }
     });
 
     it('rejects an invalid kind', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'bad-kind',
         kind: 'hypothesis',
         formal_language: 'smtlib',
@@ -86,7 +92,7 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Target',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('kind');
@@ -94,7 +100,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('rejects an invalid formal_language', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'bad-lang',
         kind: 'invariant',
         formal_language: 'coq',
@@ -102,7 +108,7 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Target',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('formal_language');
@@ -110,7 +116,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('rejects an invalid scope', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'bad-scope',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -118,14 +124,14 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Target',
         scope: 'module',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('scope');
     });
 
     it('rejects an invalid priority', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'bad-priority',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -133,7 +139,7 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Target',
         scope: 'local',
         priority: 'critical',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('priority');
@@ -146,7 +152,7 @@ describe('FormalProperty Handler', () => {
 
   describe('prove', () => {
     it('transitions a property status to proved with evidence', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'prov-test',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -154,12 +160,12 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Prover',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.prove({
+      const result = await run(formalPropertyHandler.prove({
         id: defined.id as string,
         evidence_ref: 'proof://z3-output-abc',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.id).toBe(defined.id);
@@ -168,10 +174,10 @@ describe('FormalProperty Handler', () => {
     });
 
     it('returns notfound for a nonexistent property', async () => {
-      const result = await formalPropertyHandler.prove({
+      const result = await run(formalPropertyHandler.prove({
         id: 'fp-does-not-exist',
         evidence_ref: 'proof://missing',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('notfound');
       expect(result.id).toBe('fp-does-not-exist');
@@ -184,7 +190,7 @@ describe('FormalProperty Handler', () => {
 
   describe('refute', () => {
     it('transitions a property status to refuted with counterexample', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'refute-test',
         kind: 'postcondition',
         formal_language: 'lean',
@@ -192,12 +198,12 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Refuter',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.refute({
+      const result = await run(formalPropertyHandler.refute({
         id: defined.id as string,
         evidence_ref: 'counterexample://lean-ce-42',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.id).toBe(defined.id);
@@ -206,10 +212,10 @@ describe('FormalProperty Handler', () => {
     });
 
     it('returns notfound for a nonexistent property', async () => {
-      const result = await formalPropertyHandler.refute({
+      const result = await run(formalPropertyHandler.refute({
         id: 'fp-nonexistent',
         evidence_ref: 'counterexample://none',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('notfound');
     });
@@ -221,7 +227,7 @@ describe('FormalProperty Handler', () => {
 
   describe('check', () => {
     it('dispatches solver check and returns a result', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'check-test',
         kind: 'safety',
         formal_language: 'tlaplus',
@@ -229,12 +235,12 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Checker',
         scope: 'global',
         priority: 'required',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.check({
+      const result = await run(formalPropertyHandler.check({
         id: defined.id as string,
         solver: 'z3',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.id).toBe(defined.id);
@@ -244,7 +250,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('uses mock solver when no solver is specified', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'check-default-solver',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -252,20 +258,20 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'DefaultSolver',
         scope: 'local',
         priority: 'optional',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.check({
+      const result = await run(formalPropertyHandler.check({
         id: defined.id as string,
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.solver).toBe('mock');
     });
 
     it('returns notfound for a nonexistent property', async () => {
-      const result = await formalPropertyHandler.check({
+      const result = await run(formalPropertyHandler.check({
         id: 'fp-ghost',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('notfound');
     });
@@ -277,11 +283,11 @@ describe('FormalProperty Handler', () => {
 
   describe('synthesize', () => {
     it('generates properties from an intent reference', async () => {
-      const result = await formalPropertyHandler.synthesize({
+      const result = await run(formalPropertyHandler.synthesize({
         intent_ref: 'intent://transfer-funds',
         target_symbol: 'TransferService',
         formal_language: 'smtlib',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.intent_ref).toBe('intent://transfer-funds');
@@ -302,10 +308,10 @@ describe('FormalProperty Handler', () => {
     });
 
     it('defaults to smtlib when formal_language is not provided', async () => {
-      const result = await formalPropertyHandler.synthesize({
+      const result = await run(formalPropertyHandler.synthesize({
         intent_ref: 'intent://default-lang',
         target_symbol: 'DefaultLang',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       const propertyIds = JSON.parse(result.property_ids as string) as string[];
@@ -321,7 +327,7 @@ describe('FormalProperty Handler', () => {
   describe('coverage', () => {
     it('reports correct coverage stats after define and prove', async () => {
       // Define two properties for the same target
-      const p1 = await formalPropertyHandler.define({
+      const p1 = await run(formalPropertyHandler.define({
         name: 'cov-prop-1',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -329,9 +335,9 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'CovTarget',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      const p2 = await formalPropertyHandler.define({
+      const p2 = await run(formalPropertyHandler.define({
         name: 'cov-prop-2',
         kind: 'precondition',
         formal_language: 'smtlib',
@@ -339,17 +345,17 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'CovTarget',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       // Prove one of them
-      await formalPropertyHandler.prove({
+      await run(formalPropertyHandler.prove({
         id: p1.id as string,
         evidence_ref: 'proof://z3-1',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.coverage({
+      const result = await run(formalPropertyHandler.coverage({
         target_symbol: 'CovTarget',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.target_symbol).toBe('CovTarget');
@@ -361,7 +367,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('reports 100% coverage when all properties are proved', async () => {
-      const p1 = await formalPropertyHandler.define({
+      const p1 = await run(formalPropertyHandler.define({
         name: 'all-proved-1',
         kind: 'invariant',
         formal_language: 'lean',
@@ -369,16 +375,16 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'FullCov',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      await formalPropertyHandler.prove({
+      await run(formalPropertyHandler.prove({
         id: p1.id as string,
         evidence_ref: 'proof://lean-1',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.coverage({
+      const result = await run(formalPropertyHandler.coverage({
         target_symbol: 'FullCov',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.total).toBe(1);
@@ -387,9 +393,9 @@ describe('FormalProperty Handler', () => {
     });
 
     it('reports 0 total when no properties exist for the target', async () => {
-      const result = await formalPropertyHandler.coverage({
+      const result = await run(formalPropertyHandler.coverage({
         target_symbol: 'NoPropTarget',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.total).toBe(0);
@@ -404,7 +410,7 @@ describe('FormalProperty Handler', () => {
   describe('list', () => {
     beforeEach(async () => {
       // Seed several properties with different attributes
-      await formalPropertyHandler.define({
+      await run(formalPropertyHandler.define({
         name: 'list-inv-alpha',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -412,9 +418,9 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Alpha',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      await formalPropertyHandler.define({
+      await run(formalPropertyHandler.define({
         name: 'list-pre-alpha',
         kind: 'precondition',
         formal_language: 'lean',
@@ -422,9 +428,9 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Alpha',
         scope: 'local',
         priority: 'optional',
-      }, storage);
+      }));
 
-      const betaProp = await formalPropertyHandler.define({
+      const betaProp = await run(formalPropertyHandler.define({
         name: 'list-inv-beta',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -432,26 +438,26 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'Beta',
         scope: 'global',
         priority: 'required',
-      }, storage);
+      }));
 
       // Prove the Beta property to create a different status
-      await formalPropertyHandler.prove({
+      await run(formalPropertyHandler.prove({
         id: betaProp.id as string,
         evidence_ref: 'proof://beta',
-      }, storage);
+      }));
     });
 
     it('lists all properties when no filters provided', async () => {
-      const result = await formalPropertyHandler.list({}, storage);
+      const result = await run(formalPropertyHandler.list({}));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(3);
     });
 
     it('filters by target_symbol', async () => {
-      const result = await formalPropertyHandler.list({
+      const result = await run(formalPropertyHandler.list({
         target_symbol: 'Alpha',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(2);
@@ -460,9 +466,9 @@ describe('FormalProperty Handler', () => {
     });
 
     it('filters by kind', async () => {
-      const result = await formalPropertyHandler.list({
+      const result = await run(formalPropertyHandler.list({
         kind: 'invariant',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(2);
@@ -471,9 +477,9 @@ describe('FormalProperty Handler', () => {
     });
 
     it('filters by status', async () => {
-      const result = await formalPropertyHandler.list({
+      const result = await run(formalPropertyHandler.list({
         status: 'proved',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(1);
@@ -483,19 +489,19 @@ describe('FormalProperty Handler', () => {
     });
 
     it('combines multiple filters', async () => {
-      const result = await formalPropertyHandler.list({
+      const result = await run(formalPropertyHandler.list({
         target_symbol: 'Alpha',
         kind: 'invariant',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(1);
     });
 
     it('returns empty list when no properties match', async () => {
-      const result = await formalPropertyHandler.list({
+      const result = await run(formalPropertyHandler.list({
         target_symbol: 'NonexistentTarget',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(0);
@@ -508,7 +514,7 @@ describe('FormalProperty Handler', () => {
 
   describe('invalidate', () => {
     it('resets a proved property to unproven', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'invalidate-test',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -516,16 +522,16 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'InvalidateTarget',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      await formalPropertyHandler.prove({
+      await run(formalPropertyHandler.prove({
         id: defined.id as string,
         evidence_ref: 'proof://z3-inv',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.invalidate({
+      const result = await run(formalPropertyHandler.invalidate({
         id: defined.id as string,
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.previous_status).toBe('proved');
@@ -533,7 +539,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('resets a refuted property to unproven', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'invalidate-refuted',
         kind: 'postcondition',
         formal_language: 'dafny',
@@ -541,16 +547,16 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'RefutedTarget',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
-      await formalPropertyHandler.refute({
+      await run(formalPropertyHandler.refute({
         id: defined.id as string,
         evidence_ref: 'counterexample://dafny-ce',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.invalidate({
+      const result = await run(formalPropertyHandler.invalidate({
         id: defined.id as string,
-      }, storage);
+      }));
 
       expect(result.variant).toBe('ok');
       expect(result.previous_status).toBe('refuted');
@@ -558,7 +564,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('returns unchanged when property is already unproven', async () => {
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'already-unproven',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -566,20 +572,20 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'UnprovenTarget',
         scope: 'local',
         priority: 'optional',
-      }, storage);
+      }));
 
-      const result = await formalPropertyHandler.invalidate({
+      const result = await run(formalPropertyHandler.invalidate({
         id: defined.id as string,
-      }, storage);
+      }));
 
       expect(result.variant).toBe('unchanged');
       expect(result.status).toBe('unproven');
     });
 
     it('returns notfound for a nonexistent property', async () => {
-      const result = await formalPropertyHandler.invalidate({
+      const result = await run(formalPropertyHandler.invalidate({
         id: 'fp-nonexistent',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('notfound');
     });
@@ -592,7 +598,7 @@ describe('FormalProperty Handler', () => {
   describe('property lifecycle flow', () => {
     it('defines, proves, checks coverage, invalidates, and verifies coverage drops', async () => {
       // Define a property
-      const defined = await formalPropertyHandler.define({
+      const defined = await run(formalPropertyHandler.define({
         name: 'lifecycle-invariant',
         kind: 'invariant',
         formal_language: 'smtlib',
@@ -600,47 +606,47 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'LifecycleModule',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(defined.variant).toBe('ok');
       const propId = defined.id as string;
 
       // Coverage before proving: 0%
-      const covBefore = await formalPropertyHandler.coverage({
+      const covBefore = await run(formalPropertyHandler.coverage({
         target_symbol: 'LifecycleModule',
-      }, storage);
+      }));
       expect(covBefore.total).toBe(1);
       expect(covBefore.proved).toBe(0);
       expect(covBefore.coverage_pct).toBe(0);
 
       // Prove the property
-      const proved = await formalPropertyHandler.prove({
+      const proved = await run(formalPropertyHandler.prove({
         id: propId,
         evidence_ref: 'proof://lifecycle-z3',
-      }, storage);
+      }));
       expect(proved.variant).toBe('ok');
       expect(proved.status).toBe('proved');
 
       // Coverage after proving: 100%
-      const covAfter = await formalPropertyHandler.coverage({
+      const covAfter = await run(formalPropertyHandler.coverage({
         target_symbol: 'LifecycleModule',
-      }, storage);
+      }));
       expect(covAfter.total).toBe(1);
       expect(covAfter.proved).toBe(1);
       expect(covAfter.coverage_pct).toBe(1);
 
       // Invalidate the property
-      const invalidated = await formalPropertyHandler.invalidate({
+      const invalidated = await run(formalPropertyHandler.invalidate({
         id: propId,
-      }, storage);
+      }));
       expect(invalidated.variant).toBe('ok');
       expect(invalidated.previous_status).toBe('proved');
       expect(invalidated.status).toBe('unproven');
 
       // Coverage after invalidation: back to 0%
-      const covFinal = await formalPropertyHandler.coverage({
+      const covFinal = await run(formalPropertyHandler.coverage({
         target_symbol: 'LifecycleModule',
-      }, storage);
+      }));
       expect(covFinal.total).toBe(1);
       expect(covFinal.proved).toBe(0);
       expect(covFinal.unproven).toBe(1);
@@ -648,7 +654,7 @@ describe('FormalProperty Handler', () => {
     });
 
     it('defines invalid kind and receives invalid variant', async () => {
-      const result = await formalPropertyHandler.define({
+      const result = await run(formalPropertyHandler.define({
         name: 'bad-kind-flow',
         kind: 'theorem',
         formal_language: 'smtlib',
@@ -656,7 +662,7 @@ describe('FormalProperty Handler', () => {
         target_symbol: 'BadKind',
         scope: 'local',
         priority: 'required',
-      }, storage);
+      }));
 
       expect(result.variant).toBe('invalid');
       expect(result.message).toContain('kind');

@@ -1,0 +1,9 @@
+sync ValidatePurityOnBuild [eager]
+  purpose: "Validate that a built program's structural effects match the handler's declared purity."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  FunctionalHandler/validatePurity: [ handler: ?h; program: ?program ]
+}

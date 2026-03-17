@@ -13,6 +13,8 @@ concept StorageProgram [P] {
     instructions: P -> list String
     bindings: P -> list String
     terminated: P -> Bool
+    readSet: P -> set String
+    writeSet: P -> set String
   }
 
   actions {

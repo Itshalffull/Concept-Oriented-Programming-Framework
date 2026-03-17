@@ -1,0 +1,57 @@
+@version(1)
+concept ParallelismProvider [P] {
+
+  purpose {
+    Analyze a StorageProgram's instruction list to identify independent
+    instruction groups that can execute concurrently. Builds a dependency
+    graph from binding writes (bindAs) to binding reads (closure functions),
+    partitions instructions into parallel layers via topological sort,
+    and reports the maximum parallelism and theoretical speedup ratio.
+  }
+
+  state {
+    results: set P
+    layers: P -> String
+    dependencyEdges: P -> String
+    criticalPathLength: P -> Int
+    maxParallelism: P -> Int
+    speedupRatio: P -> Float
+  }
+
+  actions {
+    action analyze(program: String) {
+      -> ok(result: P, layers: String, dependencyEdges: String,
+            criticalPathLength: Int, maxParallelism: Int,
+            speedupRatio: Float) {
+        Walk the instruction list. Track which instructions write bindings
+        (get/find/mapBindings via bindAs). Track which instructions read
+        bindings (branch condition, pureFrom fn, putFrom valueFn, mergeFrom
+        fieldsFn, delFrom keyFn — conservatively assume these read ALL
+        previously written bindings). Build dependency edges. Partition
+        into parallel layers via topological sort. Report layers, critical
+        path length, max parallelism, and speedup ratio.
+      }
+      -> sequential(result: P, reason: String) {
+        All instructions are dependent — no parallelism possible.
+        Reason explains why (e.g., linear binding chain).
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid instruction tree.
+      }
+    }
+  }
+
+  invariant {
+    after analyze(program: "get(users, u1, userResult); get(orders, o1, orderResult)")
+      -> ok(result: p, layers: l, dependencyEdges: e,
+            criticalPathLength: cpl, maxParallelism: mp, speedupRatio: sr)
+    then mp >= 2
+  }
+
+  invariant {
+    after analyze(program: "get(users, u1, userResult); pureFrom(fn)")
+      -> ok(result: p, layers: l, dependencyEdges: e,
+            criticalPathLength: cpl, maxParallelism: mp, speedupRatio: sr)
+    then cpl = 2
+  }
+}

@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../runtime/adapters/storage.js';
 import { solverProviderHandler } from '../handlers/ts/suites/formal-verification/solver-provider.handler.js';
+import { interpret } from '../runtime/interpreter.js';
 
 describe('SolverProvider Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
@@ -18,9 +19,15 @@ describe('SolverProvider Handler', () => {
     storage = createInMemoryStorage();
   });
 
+  // ----- run helper -----
+  async function run(program: any) {
+    const execResult = await interpret(program, storage);
+    return { variant: execResult.variant, ...execResult.output };
+  }
+
   // ----- helpers -----
   async function registerZ3() {
-    return solverProviderHandler.register!(
+    return run(solverProviderHandler.register!(
       {
         provider_id: 'z3',
         name: 'Z3 SMT Solver',
@@ -29,12 +36,11 @@ describe('SolverProvider Handler', () => {
         endpoint: 'http://localhost:9001',
         priority: 1,
       },
-      storage,
-    );
+    ));
   }
 
   async function registerAlloy() {
-    return solverProviderHandler.register!(
+    return run(solverProviderHandler.register!(
       {
         provider_id: 'alloy',
         name: 'Alloy Analyzer',
@@ -43,12 +49,11 @@ describe('SolverProvider Handler', () => {
         endpoint: 'http://localhost:9002',
         priority: 1,
       },
-      storage,
-    );
+    ));
   }
 
   async function registerCVC5() {
-    return solverProviderHandler.register!(
+    return run(solverProviderHandler.register!(
       {
         provider_id: 'cvc5',
         name: 'CVC5 SMT Solver',
@@ -57,8 +62,7 @@ describe('SolverProvider Handler', () => {
         endpoint: 'http://localhost:9003',
         priority: 2,
       },
-      storage,
-    );
+    ));
   }
 
   // ----- register -----
@@ -94,10 +98,9 @@ describe('SolverProvider Handler', () => {
       await registerZ3();
       await registerCVC5();
 
-      const result = await solverProviderHandler.dispatch!(
+      const result = await run(solverProviderHandler.dispatch!(
         { formal_language: 'smtlib', kind: 'invariant', property_ref: 'fp-001' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.provider_id).toBe('z3');
       expect(result.property_ref).toBe('fp-001');
@@ -108,10 +111,9 @@ describe('SolverProvider Handler', () => {
       await registerZ3();
       await registerAlloy();
 
-      const result = await solverProviderHandler.dispatch!(
+      const result = await run(solverProviderHandler.dispatch!(
         { formal_language: 'alloy', kind: 'temporal', property_ref: 'fp-002' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.provider_id).toBe('alloy');
     });
@@ -120,10 +122,9 @@ describe('SolverProvider Handler', () => {
       await registerZ3();
       await registerAlloy();
 
-      const result = await solverProviderHandler.dispatch!(
+      const result = await run(solverProviderHandler.dispatch!(
         { formal_language: 'tlaplus', kind: 'liveness', property_ref: 'fp-003' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('no_provider');
       expect(result.formal_language).toBe('tlaplus');
       expect(result.kind).toBe('liveness');
@@ -137,12 +138,11 @@ describe('SolverProvider Handler', () => {
       await registerAlloy();
       await registerCVC5();
 
-      const result = await solverProviderHandler.dispatch_batch!(
+      const result = await run(solverProviderHandler.dispatch_batch!(
         {
           property_refs: JSON.stringify(['fp-batch-1', 'fp-batch-2', 'fp-batch-3']),
         },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.assigned_count).toBe(3);
 
@@ -157,12 +157,11 @@ describe('SolverProvider Handler', () => {
 
     it('reports unassigned properties when no provider matches', async () => {
       // No providers registered at all
-      const result = await solverProviderHandler.dispatch_batch!(
+      const result = await run(solverProviderHandler.dispatch_batch!(
         {
           property_refs: JSON.stringify(['fp-orphan-1', 'fp-orphan-2']),
         },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.assigned_count).toBe(0);
       expect(result.unassigned_count).toBe(2);
@@ -178,10 +177,9 @@ describe('SolverProvider Handler', () => {
     it('returns ok with status and latency for a registered provider', async () => {
       await registerZ3();
 
-      const result = await solverProviderHandler.health_check!(
+      const result = await run(solverProviderHandler.health_check!(
         { provider_id: 'z3' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.provider_id).toBe('z3');
       expect(result.name).toBe('Z3 SMT Solver');
@@ -190,10 +188,9 @@ describe('SolverProvider Handler', () => {
     });
 
     it('returns notfound for an unregistered provider', async () => {
-      const result = await solverProviderHandler.health_check!(
+      const result = await run(solverProviderHandler.health_check!(
         { provider_id: 'nonexistent-solver' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('notfound');
     });
   });
@@ -205,7 +202,7 @@ describe('SolverProvider Handler', () => {
       await registerAlloy();
       await registerCVC5();
 
-      const result = await solverProviderHandler.list!({}, storage);
+      const result = await run(solverProviderHandler.list!({}));
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(3);
 
@@ -217,7 +214,7 @@ describe('SolverProvider Handler', () => {
     });
 
     it('returns empty list when no providers exist', async () => {
-      const result = await solverProviderHandler.list!({}, storage);
+      const result = await run(solverProviderHandler.list!({}));
       expect(result.variant).toBe('ok');
       expect(result.count).toBe(0);
     });
@@ -230,15 +227,14 @@ describe('SolverProvider Handler', () => {
       await registerAlloy();
       await registerCVC5();
 
-      const result = await solverProviderHandler.unregister!(
+      const result = await run(solverProviderHandler.unregister!(
         { provider_id: 'cvc5' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('ok');
       expect(result.provider_id).toBe('cvc5');
 
       // Confirm list shrinks
-      const listResult = await solverProviderHandler.list!({}, storage);
+      const listResult = await run(solverProviderHandler.list!({}));
       expect(listResult.count).toBe(2);
       const items = JSON.parse(listResult.items as string);
       const ids = items.map((i: any) => i.provider_id);
@@ -246,10 +242,9 @@ describe('SolverProvider Handler', () => {
     });
 
     it('returns notfound when unregistering an unknown provider', async () => {
-      const result = await solverProviderHandler.unregister!(
+      const result = await run(solverProviderHandler.unregister!(
         { provider_id: 'not-registered' },
-        storage,
-      );
+      ));
       expect(result.variant).toBe('notfound');
     });
   });
@@ -263,30 +258,28 @@ describe('SolverProvider Handler', () => {
       await registerCVC5();
 
       // Dispatch smtlib invariant -> Z3 (priority 1 < 2)
-      const d1 = await solverProviderHandler.dispatch!(
+      const d1 = await run(solverProviderHandler.dispatch!(
         { formal_language: 'smtlib', kind: 'invariant', property_ref: 'fp-flow-1' },
-        storage,
-      );
+      ));
       expect(d1.variant).toBe('ok');
       expect(d1.provider_id).toBe('z3');
 
       // Unregister CVC5
-      await solverProviderHandler.unregister!({ provider_id: 'cvc5' }, storage);
+      await run(solverProviderHandler.unregister!({ provider_id: 'cvc5' }));
 
       // List should show 2
-      const list = await solverProviderHandler.list!({}, storage);
+      const list = await run(solverProviderHandler.list!({}));
       expect(list.count).toBe(2);
 
       // Health check Z3
-      const hc = await solverProviderHandler.health_check!({ provider_id: 'z3' }, storage);
+      const hc = await run(solverProviderHandler.health_check!({ provider_id: 'z3' }));
       expect(hc.variant).toBe('ok');
       expect(hc.status).toBe('active');
 
       // Batch dispatch with remaining providers
-      const batch = await solverProviderHandler.dispatch_batch!(
+      const batch = await run(solverProviderHandler.dispatch_batch!(
         { property_refs: JSON.stringify(['fp-b1', 'fp-b2']) },
-        storage,
-      );
+      ));
       expect(batch.variant).toBe('ok');
       expect(batch.assigned_count).toBe(2);
     });

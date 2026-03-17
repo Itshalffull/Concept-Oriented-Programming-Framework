@@ -1,8 +1,19 @@
 // SolverProvider Concept Implementation — Formal Verification Suite
 // Register, dispatch to, health-check, and manage external solver backends
 // (SMT solvers, model checkers, proof assistants) as pluggable providers.
+//
+// Uses the StorageProgram DSL with proper typed instructions (merge,
+// mapBindings, pureFrom, delFrom) instead of string-based __compute:,
+// __binding:, and __merge conventions.
 // See Architecture doc Section 18.5
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, pure,
+  merge, mapBindings, pureFrom, delFrom,
+  type StorageProgram,
+  type Bindings,
+} from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'solver-providers';
 
@@ -16,17 +27,19 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const solverProviderHandler: ConceptHandler = {
-  async register(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+export const solverProviderHandler: FunctionalConceptHandler = {
+  register(input) {
     const provider_id = input.provider_id as string;
     const name = input.name as string;
-    const supported_languages = input.supported_languages as string;  // JSON array
-    const supported_kinds = input.supported_kinds as string;          // JSON array
+    const supported_languages = input.supported_languages as string;
+    const supported_kinds = input.supported_kinds as string;
     const endpoint = input.endpoint as string | undefined;
     const priority = input.priority as number | undefined;
 
     if (!provider_id || !name) {
-      return { variant: 'invalid', message: 'provider_id and name are required' };
+      return pure(createProgram(), { variant: 'invalid', message: 'provider_id and name are required' }) as StorageProgram<Result>;
     }
 
     let languages: string[];
@@ -35,183 +48,217 @@ export const solverProviderHandler: ConceptHandler = {
       languages = JSON.parse(supported_languages);
       kinds = JSON.parse(supported_kinds);
     } catch {
-      return { variant: 'invalid', message: 'supported_languages and supported_kinds must be valid JSON arrays' };
-    }
-
-    // Check for duplicate provider_id
-    const existing = await storage.find(RELATION);
-    const duplicate = existing.find((p: any) => p.provider_id === provider_id);
-    if (duplicate) {
-      return { variant: 'duplicate', provider_id, message: `Provider "${provider_id}" is already registered` };
+      return pure(createProgram(), { variant: 'invalid', message: 'supported_languages and supported_kinds must be valid JSON arrays' }) as StorageProgram<Result>;
     }
 
     const id = `sp-${simpleHash(provider_id + ':' + name)}`;
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
-      id,
-      provider_id,
-      name,
-      supported_languages: JSON.stringify(languages),
-      supported_kinds: JSON.stringify(kinds),
-      endpoint: endpoint || '',
-      priority: priority ?? 100,
-      status: 'active',
-      registered_at: now,
-    });
-
-    return { variant: 'ok', id, provider_id, name, status: 'active' };
+    // Check for duplicate via find, then branch
+    let p = createProgram();
+    p = find(p, RELATION, { provider_id }, 'existing');
+    p = branch(
+      p,
+      (bindings) => {
+        const existing = bindings.existing as unknown[];
+        return existing && existing.length > 0;
+      },
+      pure(createProgram(), { variant: 'duplicate', provider_id, message: `Provider "${provider_id}" is already registered` }),
+      (() => {
+        let inner = createProgram();
+        inner = put(inner, RELATION, id, {
+          id,
+          provider_id,
+          name,
+          supported_languages: JSON.stringify(languages),
+          supported_kinds: JSON.stringify(kinds),
+          endpoint: endpoint || '',
+          priority: priority ?? 100,
+          status: 'active',
+          registered_at: now,
+        });
+        return pure(inner, { variant: 'ok', id, provider_id, name, status: 'active' });
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async dispatch(input, storage) {
+  dispatch(input) {
     const formal_language = input.formal_language as string;
     const kind = input.kind as string;
     const property_ref = input.property_ref as string;
 
-    const all = await storage.find(RELATION);
+    let p = createProgram();
+    p = find(p, RELATION, { status: 'active' }, 'providers');
+    return pureFrom(p, (bindings: Bindings) => {
+      const providers = (bindings.providers as Record<string, unknown>[]) || [];
 
-    // Find providers matching both formal_language and kind
-    const matching = all.filter((p: any) => {
-      if (p.status !== 'active') return false;
-      const languages: string[] = JSON.parse(p.supported_languages as string);
-      const kinds: string[] = JSON.parse(p.supported_kinds as string);
-      return languages.includes(formal_language) && kinds.includes(kind);
-    });
+      // Filter providers whose supported_languages includes the requested
+      // formal_language AND whose supported_kinds includes the requested kind
+      const matching = providers.filter((prov) => {
+        try {
+          const langs: string[] = JSON.parse(prov.supported_languages as string);
+          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
+          return langs.includes(formal_language) && kinds.includes(kind);
+        } catch {
+          return false;
+        }
+      });
 
-    if (matching.length === 0) {
+      if (matching.length === 0) {
+        return { variant: 'no_provider', formal_language, kind };
+      }
+
+      // Sort by priority ascending (lowest priority number = highest precedence)
+      matching.sort((a, b) => (a.priority as number) - (b.priority as number));
+      const selected = matching[0];
+
       return {
-        variant: 'no_provider',
-        formal_language,
-        kind,
-        message: `No active provider found for language="${formal_language}", kind="${kind}"`,
+        variant: 'ok',
+        provider_id: selected.provider_id,
+        property_ref,
+        run_ref: `run-${simpleHash(property_ref + ':' + Date.now())}`,
       };
-    }
-
-    // Select the provider with the lowest priority value (highest precedence)
-    matching.sort((a: any, b: any) => (a.priority as number) - (b.priority as number));
-    const selected = matching[0];
-
-    // Create a mock run reference
-    const run_ref = `run-${simpleHash(property_ref + ':' + selected.provider_id + ':' + Date.now().toString())}`;
-
-    return {
-      variant: 'ok',
-      provider_id: selected.provider_id as string,
-      provider_name: selected.name as string,
-      run_ref,
-      property_ref,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async dispatch_batch(input, storage) {
-    const property_refs = input.property_refs as string;  // JSON array of property ref strings
+  dispatch_batch(input) {
+    const property_refs = input.property_refs as string;
 
     let refs: string[];
     try {
       refs = JSON.parse(property_refs);
     } catch {
-      return { variant: 'invalid', message: 'property_refs must be a valid JSON array' };
+      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(refs) || refs.length === 0) {
-      return { variant: 'invalid', message: 'property_refs must be a non-empty array' };
+      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a non-empty array' }) as StorageProgram<Result>;
     }
 
-    const allProviders = await storage.find(RELATION);
-    const activeProviders = allProviders.filter((p: any) => p.status === 'active');
+    let p = createProgram();
+    p = find(p, RELATION, { status: 'active' }, 'providers');
+    return pureFrom(p, (bindings: Bindings) => {
+      const providers = (bindings.providers as Record<string, unknown>[]) || [];
 
-    // Group properties by language+kind (mock: use property_ref prefix or defaults)
-    // In a real implementation, we would look up property metadata from FormalProperty storage.
-    const assignments: Array<{ property_ref: string; provider_id: string; run_ref: string }> = [];
-    const unassigned: string[] = [];
-
-    for (const ref of refs) {
-      // Mock: derive language and kind from the property ref hash for grouping,
-      // or use defaults. Real implementation looks up property metadata.
-      const defaultLanguage = 'smtlib';
-      const defaultKind = 'invariant';
-
-      const matching = activeProviders.filter((p: any) => {
-        const languages: string[] = JSON.parse(p.supported_languages as string);
-        const kinds: string[] = JSON.parse(p.supported_kinds as string);
-        return languages.includes(defaultLanguage) && kinds.includes(defaultKind);
+      // Find the lowest-priority active provider that supports smtlib + invariant
+      // (the default formal verification target)
+      const eligible = providers.filter((prov) => {
+        try {
+          const langs: string[] = JSON.parse(prov.supported_languages as string);
+          const kinds: string[] = JSON.parse(prov.supported_kinds as string);
+          return langs.includes('smtlib') && kinds.includes('invariant');
+        } catch {
+          return false;
+        }
       });
 
-      if (matching.length > 0) {
-        matching.sort((a: any, b: any) => (a.priority as number) - (b.priority as number));
-        const selected = matching[0];
-        const run_ref = `run-${simpleHash(ref + ':' + selected.provider_id + ':batch')}`;
-        assignments.push({
-          property_ref: ref,
-          provider_id: selected.provider_id as string,
-          run_ref,
-        });
-      } else {
-        unassigned.push(ref);
+      eligible.sort((a, b) => (a.priority as number) - (b.priority as number));
+
+      if (eligible.length === 0) {
+        // No matching providers — all properties are unassigned
+        return {
+          variant: 'ok',
+          assigned_count: 0,
+          unassigned_count: refs.length,
+          assignments: JSON.stringify([]),
+          unassigned: JSON.stringify(refs),
+        };
       }
-    }
 
-    return {
-      variant: 'ok',
-      assignments: JSON.stringify(assignments),
-      assigned_count: assignments.length,
-      unassigned: JSON.stringify(unassigned),
-      unassigned_count: unassigned.length,
-    };
+      const selected = eligible[0];
+      const assignments = refs.map((ref) => ({
+        property_ref: ref,
+        provider_id: selected.provider_id,
+        run_ref: `run-${simpleHash(ref + ':' + Date.now())}`,
+      }));
+
+      return {
+        variant: 'ok',
+        assigned_count: refs.length,
+        unassigned_count: 0,
+        assignments: JSON.stringify(assignments),
+        unassigned: JSON.stringify([]),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async health_check(input, storage) {
+  health_check(input) {
     const provider_id = input.provider_id as string;
 
-    const all = await storage.find(RELATION);
-    const provider = all.find((p: any) => p.provider_id === provider_id);
-
-    if (!provider) {
-      return { variant: 'notfound', provider_id };
-    }
-
-    // Mock health check: simulate latency and status
-    const mockLatencyMs = Math.abs(simpleHash(provider_id + Date.now().toString()).charCodeAt(8) % 200) + 10;
-    const status = provider.status as string;
-
-    return {
-      variant: 'ok',
-      provider_id,
-      name: provider.name as string,
-      status,
-      latency_ms: mockLatencyMs,
-      endpoint: provider.endpoint as string,
-    };
+    let p = createProgram();
+    p = find(p, RELATION, { provider_id }, 'matches');
+    p = branch(
+      p,
+      (bindings) => {
+        const matches = bindings.matches as unknown[];
+        return !matches || matches.length === 0;
+      },
+      pure(createProgram(), { variant: 'notfound', provider_id }),
+      (() => {
+        let inner = createProgram();
+        return pureFrom(inner, (bindings: Bindings) => {
+          const match = (bindings.matches as Record<string, unknown>[])[0];
+          return {
+            variant: 'ok',
+            provider_id,
+            name: match.name,
+            status: match.status,
+            latency_ms: Math.floor(Math.random() * 50) + 5,
+          };
+        });
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async list(input, storage) {
-    const all = await storage.find(RELATION);
+  list(_input) {
+    const fields = ['id', 'provider_id', 'name', 'supported_languages', 'supported_kinds', 'priority', 'status'];
 
-    const items = all.map((p: any) => ({
-      id: p.id,
-      provider_id: p.provider_id,
-      name: p.name,
-      supported_languages: p.supported_languages,
-      supported_kinds: p.supported_kinds,
-      priority: p.priority,
-      status: p.status,
-    }));
-
-    return { variant: 'ok', items: JSON.stringify(items), count: items.length };
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'items');
+    return pureFrom(p, (bindings: Bindings) => {
+      const items = (bindings.items as Record<string, unknown>[]) || [];
+      const projected = items.map((item) => {
+        const obj: Record<string, unknown> = {};
+        for (const f of fields) {
+          if (f in item) obj[f] = item[f];
+        }
+        return obj;
+      });
+      return {
+        variant: 'ok',
+        count: projected.length,
+        items: JSON.stringify(projected),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async unregister(input, storage) {
+  unregister(input) {
     const provider_id = input.provider_id as string;
 
-    const all = await storage.find(RELATION);
-    const provider = all.find((p: any) => p.provider_id === provider_id);
-
-    if (!provider) {
-      return { variant: 'notfound', provider_id };
-    }
-
-    await storage.del(RELATION, provider.id as string);
-
-    return { variant: 'ok', provider_id, name: provider.name as string };
+    let p = createProgram();
+    p = find(p, RELATION, { provider_id }, 'matches');
+    p = branch(
+      p,
+      (bindings) => {
+        const matches = bindings.matches as unknown[];
+        return !matches || matches.length === 0;
+      },
+      pure(createProgram(), { variant: 'notfound', provider_id }),
+      (() => {
+        let inner = createProgram();
+        inner = delFrom(inner, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
+        return pureFrom(inner, (bindings: Bindings) => {
+          const match = (bindings.matches as Record<string, unknown>[])[0];
+          return {
+            variant: 'ok',
+            provider_id,
+            name: match.name,
+          };
+        });
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 };

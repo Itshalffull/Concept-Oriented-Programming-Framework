@@ -1,0 +1,9 @@
+sync RegisterParallelismProvider [eager]
+  purpose: "Register the ParallelismProvider with ProgramAnalysis on first use."
+when {
+  ParallelismProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "parallelism"; kind: "structural" ]
+}

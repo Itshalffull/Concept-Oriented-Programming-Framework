@@ -192,6 +192,26 @@ concept HandlerEntity [H] {
       }
     }
 
+    action diffFromSpec(concept: String) {
+      -> ok(differences: String) {
+        Compare the handler implementation against its concept spec
+        to find drift — missing actions, extra actions not in spec,
+        variant mismatches, and storage collection discrepancies.
+        Result as serialized JSON array of { kind, specValue, implValue }.
+        kind is one of: missing_action, extra_action, missing_variant,
+        extra_variant, storage_mismatch.
+      }
+      -> inSync(actionCount: Int) {
+        Implementation matches the concept spec exactly.
+      }
+      -> noHandler() {
+        No handler is registered for this concept.
+      }
+      -> noSpec() {
+        No concept entity is registered for this concept name.
+      }
+    }
+
     action findByError(errorSymbol: String, since: String) {
       -> ok(handlers: String) {
         Return handlers correlated with errors on the given entity

@@ -1,0 +1,32 @@
+# Self-verification: when a FV handler's extracted properties change,
+# reverify the FV suite's own properties.
+#
+# This creates the self-referential loop: the FV pipeline extracts
+# invariants from its own handlers (via InvariantExtractionProvider),
+# publishes them as FormalProperties (via publish-extracted-properties),
+# and this sync triggers reverification when those properties are
+# invalidated by a handler change.
+
+sync FvSelfVerificationOnChange [eager]
+  purpose: "Trigger reverification of FV-suite properties when an FV handler changes and its extracted properties are invalidated."
+when {
+  FormalProperty/invalidate: [ id: ?propertyId ]
+    => ok(id: ?propertyId; previous_status: ?prevStatus; status: "unproven")
+}
+where {
+  FormalProperty: { ?propertyId target_symbol: ?target }
+  guard(startsWith(?target, "FormalProperty") or
+        startsWith(?target, "VerificationRun") or
+        startsWith(?target, "Evidence") or
+        startsWith(?target, "Contract") or
+        startsWith(?target, "SolverProvider") or
+        startsWith(?target, "SpecificationSchema"))
+}
+then {
+  VerificationRun/start: [
+    name: concat("self-verify:", ?target);
+    property_ids: concat("[\"", ?propertyId, "\"]");
+    solver_provider: null;
+    timeout_ms: 60000
+  ]
+}

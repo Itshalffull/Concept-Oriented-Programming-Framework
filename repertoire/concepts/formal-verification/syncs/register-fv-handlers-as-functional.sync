@@ -1,0 +1,52 @@
+# Register FV concept handlers as FunctionalHandlers for monadic analysis
+#
+# When the formal-verification suite boots, register each FV handler with
+# the FunctionalHandler concept so the monadic analysis pipeline
+# (InvariantExtractionProvider, ReadWriteSetProvider, CommutativityProvider,
+# DeadBranchProvider) can analyze and extract properties from the FV
+# handlers themselves — enabling the FV suite to verify itself.
+
+sync RegisterFvHandlersAsFunctional [eager]
+  purpose: "Register all formal verification handlers as FunctionalHandlers so the monadic analysis pipeline can extract properties from them."
+when {
+  KernelBoot/boot: [ projectRoot: ?root ]
+    => ok()
+}
+then {
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:define"; concept: "FormalProperty"; action: "define"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:prove"; concept: "FormalProperty"; action: "prove"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:refute"; concept: "FormalProperty"; action: "refute"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:check"; concept: "FormalProperty"; action: "check"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:synthesize"; concept: "FormalProperty"; action: "synthesize"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:coverage"; concept: "FormalProperty"; action: "coverage"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:list"; concept: "FormalProperty"; action: "list"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:FormalProperty:invalidate"; concept: "FormalProperty"; action: "invalidate"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:start"; concept: "VerificationRun"; action: "start"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:complete"; concept: "VerificationRun"; action: "complete"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:timeout"; concept: "VerificationRun"; action: "timeout"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:cancel"; concept: "VerificationRun"; action: "cancel"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:get_status"; concept: "VerificationRun"; action: "get_status"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:VerificationRun:compare"; concept: "VerificationRun"; action: "compare"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:record"; concept: "Evidence"; action: "record"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:validate"; concept: "Evidence"; action: "validate"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:retrieve"; concept: "Evidence"; action: "retrieve"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:compare"; concept: "Evidence"; action: "compare"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:minimize"; concept: "Evidence"; action: "minimize"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Evidence:list"; concept: "Evidence"; action: "list"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:Contract:define"; concept: "Contract"; action: "define"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Contract:verify"; concept: "Contract"; action: "verify"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Contract:compose"; concept: "Contract"; action: "compose"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Contract:discharge"; concept: "Contract"; action: "discharge"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:Contract:list"; concept: "Contract"; action: "list"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:register"; concept: "SolverProvider"; action: "register"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:dispatch"; concept: "SolverProvider"; action: "dispatch"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:dispatch_batch"; concept: "SolverProvider"; action: "dispatch_batch"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:health_check"; concept: "SolverProvider"; action: "health_check"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:list"; concept: "SolverProvider"; action: "list"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SolverProvider:unregister"; concept: "SolverProvider"; action: "unregister"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:SpecificationSchema:define"; concept: "SpecificationSchema"; action: "define"; purity: "read-write" ]
+  FunctionalHandler/register: [ handler: "fv:SpecificationSchema:instantiate"; concept: "SpecificationSchema"; action: "instantiate"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SpecificationSchema:validate"; concept: "SpecificationSchema"; action: "validate"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SpecificationSchema:list_by_category"; concept: "SpecificationSchema"; action: "list_by_category"; purity: "read-only" ]
+  FunctionalHandler/register: [ handler: "fv:SpecificationSchema:search"; concept: "SpecificationSchema"; action: "search"; purity: "read-only" ]
+}
