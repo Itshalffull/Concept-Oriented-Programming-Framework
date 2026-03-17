@@ -286,6 +286,21 @@ function inferAction(toolName: string): string {
   return parts[parts.length - 1];
 }
 
+// ─── Lazy Loading Configuration ──────────────────────────
+// Tools marked as always-loaded get full schemas in the upfront
+// tool list. All other tools are deferred — only name + brief
+// description are sent. The LLM discovers deferred tools via
+// search_tools and loads full schemas via describe_tools.
+
+const ALWAYS_LOADED_TOOLS = new Set([
+  // Score core tools — always available
+  'score_query', 'score_show', 'score_list', 'score_back', 'score_traverse',
+  'score_api_status', 'score_api_explain', 'score_api_reindex',
+  'score_api_search', 'score_api_list_concepts', 'score_api_list_syncs',
+  // Discovery meta-tools — always available
+  'search_tools', 'describe_tools', 'list_tool_categories', 'get_tool_category',
+]);
+
 // ─── Standalone MCP server entry point ───────────────────
 // This is called when the file is run directly via `npx tsx`
 
@@ -298,6 +313,7 @@ export async function bootMcpServer(manifestPath: string) {
   const path = await import('path');
   const yaml = await import('yaml');
   const { createInMemoryStorage } = await import('../../../runtime/adapters/storage.js');
+  const { toolDiscoveryHandler } = await import('./tool-discovery.handler.js');
 
   // Read manifest
   const resolved = path.resolve(manifestPath);
@@ -310,14 +326,18 @@ export async function bootMcpServer(manifestPath: string) {
     process.exit(1);
   }
 
+  // Check if lazy loading is explicitly disabled in manifest
+  const lazyLoading = mcpTarget.lazyLoading !== false;
+
   // outputDir in manifest is relative to project root (cwd), not manifest file
   const outputDir = path.resolve(
     process.cwd(),
     mcpTarget.outputDir || './.claude/mcp',
   );
 
-  // Discover tool files
+  // Discover tool files and catalog files
   const toolFiles: string[] = [];
+  const catalogFiles: string[] = [];
   function walkDir(dir: string) {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -325,12 +345,14 @@ export async function bootMcpServer(manifestPath: string) {
         walkDir(path.join(dir, entry.name));
       } else if (entry.name.endsWith('.tools.ts')) {
         toolFiles.push(path.join(dir, entry.name));
+      } else if (entry.name.endsWith('.catalog.json')) {
+        catalogFiles.push(path.join(dir, entry.name));
       }
     }
   }
   walkDir(outputDir);
 
-  // Import all tools from Bind-generated files
+  // Import all tools from Bind-generated files into the full registry
   const allTools: RegisteredTool[] = [];
   for (const toolFile of toolFiles) {
     try {
@@ -358,7 +380,6 @@ export async function bootMcpServer(manifestPath: string) {
   }
 
   // Also register the ScoreQuery and ScoreNavigator tools directly
-  // (these are the devtools-specific tools from our concepts)
   const devtools: Array<{ name: string; desc: string; concept: string; action: string; schema: Record<string, unknown> }> = [
     {
       name: 'score_query',
@@ -407,11 +428,159 @@ export async function bootMcpServer(manifestPath: string) {
 
   // Start Score seeding in the background so initialize can complete quickly.
   const sharedStorage = createInMemoryStorage();
-  const conceptsNeedingScoreSeed = new Set(['ScoreApi', 'ScoreIndex', 'ScoreNavigator', 'ScoreQuery']);
+  const conceptsNeedingScoreSeed = new Set(['ScoreApi', 'ScoreIndex', 'ScoreNavigator', 'ScoreQuery', 'ToolDiscovery']);
   const scoreSeedPromise = seedScoreIndex(sharedStorage).catch((err) => {
     console.error('Failed to seed Score index for MCP server:', err);
     throw err;
   });
+
+  // ─── Populate ToolDiscovery catalog ────────────────────
+  // Register all tools in the discovery catalog for lazy loading.
+  // Load brief descriptions from catalog files if available,
+  // otherwise derive from full descriptions.
+  const catalogEntries = new Map<string, { briefDescription: string; category: string }>();
+
+  for (const catalogFile of catalogFiles) {
+    try {
+      const content = fs.readFileSync(catalogFile, 'utf-8');
+      const entries = JSON.parse(content) as Array<{
+        name: string;
+        briefDescription: string;
+        category: string;
+        alwaysLoaded?: boolean;
+      }>;
+      for (const entry of entries) {
+        catalogEntries.set(entry.name, {
+          briefDescription: entry.briefDescription,
+          category: entry.category,
+        });
+        // Add always-loaded tools from catalog
+        if (entry.alwaysLoaded) {
+          ALWAYS_LOADED_TOOLS.add(entry.name);
+        }
+      }
+    } catch {
+      // skip malformed catalog files
+    }
+  }
+
+  // Register all tools in the ToolDiscovery handler's storage
+  for (const tool of allTools) {
+    const catalog = catalogEntries.get(tool.name);
+    const briefDesc = catalog?.briefDescription
+      || tool.description.split(/\.\s/)[0].slice(0, 80);
+    const category = catalog?.category
+      || tool.concept;
+
+    await toolDiscoveryHandler.register({
+      name: tool.name,
+      briefDescription: briefDesc,
+      fullDescription: tool.description,
+      category,
+      concept: tool.concept,
+      action: tool.action,
+      inputSchema: JSON.stringify(tool.inputSchema),
+      alwaysLoaded: ALWAYS_LOADED_TOOLS.has(tool.name),
+    }, sharedStorage);
+  }
+
+  // ─── Add discovery meta-tools ──────────────────────────
+  const discoveryTools: RegisteredTool[] = [
+    {
+      name: 'search_tools',
+      description: 'Search for MCP tools by natural language query. Returns tool names and brief descriptions — call describe_tools to load full schemas before calling a tool. Use this when you need a capability not covered by the always-loaded tools.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Natural language search query (e.g. "deploy", "generate handler", "theme tokens")' },
+          limit: { type: 'integer', description: 'Max results to return (default: 10)' },
+        },
+        required: ['query'],
+      },
+      type: 'tool' as const,
+      concept: 'ToolDiscovery',
+      action: 'searchTools',
+    },
+    {
+      name: 'describe_tools',
+      description: 'Load full tool definitions (including input schemas) for specific tools by name. Call this after search_tools to get the schema you need before calling a deferred tool.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tools: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of tool names to describe (e.g. ["deploy_orchestrator_deploy", "handler_scaffold_gen_generate"])',
+          },
+        },
+        required: ['tools'],
+      },
+      type: 'tool' as const,
+      concept: 'ToolDiscovery',
+      action: 'describeTools',
+    },
+    {
+      name: 'list_tool_categories',
+      description: 'List all tool categories with tool counts. Each concept becomes a category. Use to browse available capabilities.',
+      inputSchema: { type: 'object', properties: {}, required: [] },
+      type: 'tool' as const,
+      concept: 'ToolDiscovery',
+      action: 'listCategories',
+    },
+    {
+      name: 'get_tool_category',
+      description: 'List all tools in a specific category with their brief descriptions.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          category: { type: 'string', description: 'Category name (typically a concept name like "ScoreApi", "DeployOrchestrator")' },
+        },
+        required: ['category'],
+      },
+      type: 'tool' as const,
+      concept: 'ToolDiscovery',
+      action: 'getCategory',
+    },
+  ];
+
+  for (const dt of discoveryTools) {
+    allTools.push(dt);
+    toolRegistry.set(dt.name, dt);
+  }
+
+  // ─── Build the tools list for ListToolsRequestSchema ───
+  // In lazy loading mode: always-loaded tools get full schemas,
+  // deferred tools get description-only entries (empty schema).
+  // The LLM discovers deferred tools via search_tools/describe_tools.
+
+  const upfrontTools: Array<{ name: string; description: string; inputSchema: Record<string, unknown> }> = [];
+
+  if (lazyLoading) {
+    // Always-loaded tools: full schema
+    for (const tool of allTools) {
+      if (ALWAYS_LOADED_TOOLS.has(tool.name)) {
+        upfrontTools.push({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+        });
+      }
+    }
+
+    // Log stats
+    const deferredCount = allTools.length - upfrontTools.length;
+    console.error(`[clef-mcp] Lazy loading: ${upfrontTools.length} always-loaded, ${deferredCount} deferred (use search_tools to discover)`);
+  } else {
+    // Legacy mode: all tools get full schemas
+    for (const tool of allTools) {
+      upfrontTools.push({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      });
+    }
+    console.error(`[clef-mcp] Static loading: ${upfrontTools.length} tools`);
+  }
 
   // Create MCP server
   const server = new Server(
@@ -419,16 +588,14 @@ export async function bootMcpServer(manifestPath: string) {
     { capabilities: { tools: {} } },
   );
 
-  // Handle tools/list
+  // Handle tools/list — only return upfront tools (always-loaded + meta-tools)
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: allTools.map(t => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: t.inputSchema,
-    })),
+    tools: upfrontTools,
   }));
 
   // Handle tools/call — route to concept handlers
+  // ALL tools remain callable (both always-loaded and deferred).
+  // The LLM just needs to discover deferred tools first via search_tools.
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const toolName = request.params.name;
     const args = (request.params.arguments || {}) as Record<string, unknown>;

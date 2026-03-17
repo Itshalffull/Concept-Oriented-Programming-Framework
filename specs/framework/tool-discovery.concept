@@ -1,0 +1,110 @@
+@version(1)
+concept ToolDiscovery [T] {
+
+  purpose {
+    Enable on-demand discovery of MCP tools so that only a small
+    set of always-loaded tools consumes context window tokens
+    upfront, while the full tool library remains searchable and
+    describable on demand. Reduces upfront token usage by 95%+
+    for servers with many tools.
+  }
+
+  state {
+    tools: set T
+    toolName: T -> String
+    briefDescription: T -> String
+    fullDescription: T -> String
+    category: T -> String
+    concept: T -> String
+    action: T -> String
+    inputSchema: T -> String
+    alwaysLoaded: T -> Bool
+  }
+
+  actions {
+    action register(name: String, briefDescription: String, fullDescription: String,
+                    category: String, concept: String, action: String,
+                    inputSchema: String, alwaysLoaded: Bool) {
+      -> ok(tool: T) {
+        Add a tool to the discovery catalog with its full schema
+        stored for on-demand retrieval. If alwaysLoaded is true,
+        this tool's full schema will be included in the upfront
+        tool list sent to the LLM.
+      }
+      -> duplicate(name: String) {
+        A tool with this name already exists in the catalog.
+      }
+    }
+
+    action searchTools(query: String, limit: Int) {
+      -> ok(tools: list { name: String, description: String, category: String }) {
+        Return tools whose name or description matches the query,
+        ranked by relevance. Only returns name and brief description
+        — call describeTools to load full schemas. Limit defaults
+        to 10 if not specified.
+      }
+      -> empty(query: String) {
+        No tools matched the search query.
+      }
+    }
+
+    action describeTools(tools: list String) {
+      -> ok(tools: list { name: String, description: String, inputSchema: String, concept: String, action: String }) {
+        Return full tool definitions including input schemas for the
+        requested tool names. This is the lazy-loading mechanism —
+        the LLM calls this only when it needs a specific tool's
+        full schema to make a call.
+      }
+    }
+
+    action listCategories() {
+      -> ok(categories: list { name: String, toolCount: Int, description: String }) {
+        Return all tool categories with the number of tools in each.
+        Categories are derived from concept groupings — each concept
+        becomes a category.
+      }
+    }
+
+    action getCategory(category: String) {
+      -> ok(tools: list { name: String, description: String }) {
+        Return all tools in the given category with their brief
+        descriptions. Does not include full schemas.
+      }
+      -> notfound(category: String) {
+        No category exists with this name.
+      }
+    }
+
+    action getAlwaysLoaded() {
+      -> ok(tools: list { name: String, description: String, inputSchema: String, concept: String, action: String }) {
+        Return all tools marked as always-loaded with their full
+        schemas. These are the core tools that should be included
+        in the upfront tool list sent to the LLM at session start.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "score_query", briefDescription: "Run GraphQL queries",
+                   fullDescription: "Run a GraphQL query against the Score index",
+                   category: "score", concept: "ScoreQuery", action: "query",
+                   inputSchema: "{}", alwaysLoaded: true) -> ok(tool: t)
+    then searchTools(query: "query", limit: 5) -> ok(tools: results)
+  }
+
+  invariant {
+    after register(name: "score_query", briefDescription: "Run GraphQL queries",
+                   fullDescription: "Run a GraphQL query against the Score index",
+                   category: "score", concept: "ScoreQuery", action: "query",
+                   inputSchema: "{}", alwaysLoaded: true) -> ok(tool: t)
+    then describeTools(tools: ["score_query"]) -> ok(tools: details)
+  }
+
+  invariant {
+    after register(name: "score_query", briefDescription: "Run GraphQL queries",
+                   fullDescription: "Run a GraphQL query against the Score index",
+                   category: "score", concept: "ScoreQuery", action: "query",
+                   inputSchema: "{}", alwaysLoaded: true) -> ok(tool: t)
+    then getAlwaysLoaded() -> ok(tools: loaded)
+  }
+}

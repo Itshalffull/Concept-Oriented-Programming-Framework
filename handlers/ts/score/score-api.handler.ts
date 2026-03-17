@@ -666,6 +666,101 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'notFound', symbol };
   },
 
+  // ─── Implementation Queries ─────────────────────────────
+
+  async implementationGaps(_input, storage) {
+    const allConcepts = await storage.find('concepts');
+    const allHandlers = await storage.find('handlers');
+
+    const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
+
+    for (const concept of allConcepts) {
+      const conceptName = concept.conceptName as string;
+      const actions = (concept.actions as string[]) || [];
+      const file = concept.file as string;
+
+      // Find handler for this concept
+      const handler = allHandlers.find(h =>
+        typeof h.handlerConcept === 'string' &&
+        h.handlerConcept.toLowerCase() === conceptName.toLowerCase(),
+      );
+
+      if (!handler) {
+        // No handler at all — every action is a gap
+        for (const action of actions) {
+          gaps.push({ concept: conceptName, action, declaredIn: file });
+        }
+        continue;
+      }
+
+      // Compare declared actions against implemented ones
+      const implementedActions: string[] = (() => {
+        try {
+          const parsed = JSON.parse(handler.actionMethods as string || '[]');
+          return parsed.map((m: { name: string }) => m.name);
+        } catch {
+          return (handler.handlerActions as string[]) || [];
+        }
+      })();
+
+      for (const action of actions) {
+        if (!implementedActions.some(impl =>
+          impl.toLowerCase() === action.toLowerCase(),
+        )) {
+          gaps.push({ concept: conceptName, action, declaredIn: file });
+        }
+      }
+    }
+
+    if (gaps.length === 0) {
+      return { variant: 'ok', gaps: [] };
+    }
+
+    return { variant: 'ok', gaps };
+  },
+
+  async resolveStackTrace(input, storage) {
+    const stackTrace = input.stackTrace as string;
+    if (!stackTrace) {
+      return { variant: 'ok', frames: [] };
+    }
+
+    const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
+    const frames: Array<Record<string, unknown>> = [];
+    let match: RegExpExecArray | null;
+    const allHandlers = await storage.find('handlers');
+
+    while ((match = frameRegex.exec(stackTrace)) !== null) {
+      const file = match[1];
+      const line = parseInt(match[2], 10);
+      const col = parseInt(match[3], 10);
+
+      const handler = allHandlers.find(h => h.handlerFile === file || h.sourceFile === file);
+
+      frames.push({
+        file,
+        line,
+        col,
+        handler: handler ? handler.id : null,
+        concept: handler ? (handler.handlerConcept || handler.concept) : null,
+        actionMethod: null,
+        astNode: null,
+        symbol: handler ? handler.symbol : file.split('/').pop(),
+      });
+    }
+
+    return { variant: 'ok', frames };
+  },
+
+  async traceEndpoint(input, storage) {
+    const target = input.target as string;
+    const path = input.path as string;
+    const method = input.method as string;
+
+    // Stub — delegates to InterfaceEntity in production
+    return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
+  },
+
   // ─── Index Management ─────────────────────────────────
 
   async status(_input, storage) {

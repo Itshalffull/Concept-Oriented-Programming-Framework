@@ -1,4 +1,4 @@
-@version(2)
+@version(3)
 concept McpTarget [M] {
 
   purpose {
@@ -6,11 +6,10 @@ concept McpTarget [M] {
     from concept projections. Owns tool/resource/template
     classification, input schema derivation, description
     generation for LLM comprehension, transport setup
-    (stdio, SSE, HTTP), and hierarchical tool grouping. When
-    @hierarchical trait is present, generates path-based resource
-    URIs and list-children/get-ancestors tool variants.
-    Enrichment content from Projection is passed through for
-    tool description enhancement.
+    (stdio, SSE, HTTP), hierarchical tool grouping, and tool
+    catalog generation for lazy loading. Generates both full
+    .tools.ts files and .catalog.json files with brief
+    descriptions for on-demand tool discovery.
     See Architecture doc Section 2.5.
   }
 
