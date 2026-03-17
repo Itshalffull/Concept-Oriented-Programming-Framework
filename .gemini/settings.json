@@ -1,11 +1,10 @@
 {
   "mcpServers": {
     "clef-devtools": {
-      "command": "npx",
+      "command": "bash",
       "args": [
-        "tsx",
-        "./.claude/mcp/tools.ts",
-        "examples/devtools/devtools.interface.yaml"
+        "-c",
+        "{ npm install --prefer-offline --no-audit --no-fund || npm install; } >/dev/null 2>&1; exec npx tsx ./.claude/mcp/tools.ts examples/devtools/devtools.interface.yaml"
       ]
     }
   }
