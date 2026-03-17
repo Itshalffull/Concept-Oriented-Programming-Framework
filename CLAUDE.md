@@ -70,12 +70,16 @@ elevation, radius tokens. Support `extends` for theme variants.
 
 **Handlers** (`.handler.ts` files in `handlers/ts/`)
 TypeScript implementations of concept actions. Two styles:
-- **Imperative** (`ConceptHandler`): Each action is an async method receiving
-  `input` and `storage`, directly calling storage operations.
-- **Functional** (`FunctionalConceptHandler`): Each action returns a
+- **Functional (default)** (`FunctionalConceptHandler`): Each action returns a
   `StorageProgram<A>` — a free monad describing storage operations as pure
   data. The interpreter executes the program later. Enables static effect
   analysis, purity validation, caching, and applicative parallelism.
+  **This is the default and preferred style for all new handlers.**
+- **Imperative (fallback)** (`ConceptHandler`): Each action is an async method
+  receiving `input` and `storage`, directly calling storage operations.
+  **Use only when functional style cannot be supported** — e.g., language
+  targets that lack higher-kinded types, legacy concepts not yet migrated,
+  or concepts requiring direct FFI/system calls.
 - Runtime: `runtime/storage-program.ts` (DSL), `runtime/functional-handler.ts` (types)
 
 **StorageProgram Monad** (`runtime/storage-program.ts`)
@@ -126,11 +130,8 @@ building new concepts.
 
 ```
 specs/              # Concept specifications (.concept)
-specs/monadic/      # StorageProgram monad & functional handler specs
-specs/surface/      # Render transform & Surface provider specs
 syncs/              # Synchronization rules (.sync)
 handlers/ts/        # TypeScript handler implementations (.handler.ts)
-runtime/            # StorageProgram DSL, interpreter, functional handler types
 surface/            # Widget and theme specs (.widget, .theme)
 repertoire/         # Reusable app-level suites
 score/              # Code-as-data analysis suites

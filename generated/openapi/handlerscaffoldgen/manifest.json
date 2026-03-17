@@ -65,6 +65,13 @@
               "primitive": "ActionDef"
             }
           }
+        },
+        {
+          "name": "style",
+          "type": {
+            "kind": "primitive",
+            "primitive": "String"
+          }
         }
       ],
       "variants": [
@@ -105,7 +112,7 @@
           "prose": "Generation failed"
         }
       ],
-      "description": "Generate a handler implementation with register ( ) , typed \n action methods , input extraction , storage patterns , and \n an optional conformance test"
+      "description": "Generate a handler implementation with typed action methods , \n input extraction , and storage patterns Defaults to functional \n ( StorageProgram ) style ; pass style = imperative for the \n imperative fallback Optionally generates a conformance test"
     },
     {
       "name": "preview",
@@ -248,6 +255,10 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "style": {
+                "type": "string",
+                "description": "Handler style: 'functional' (default) or 'imperative' (fallback)"
               }
             },
             "required": [
@@ -498,7 +509,7 @@
     }
   },
   "capabilities": [],
-  "purpose": "Generate TypeScript concept handler ( impl ts ) implementation \n scaffolds from provided configuration including concept name , \n action signatures , and storage patterns Optionally generates \n a conformance test file",
+  "purpose": "Generate TypeScript concept handler ( handler ts ) implementation \n scaffolds from provided configuration including concept name , \n action signatures , and storage patterns Defaults to functional \n ( StorageProgram ) style ; falls back to imperative style only when \n explicitly requested Optionally generates a conformance test file",
   "category": "devtools",
   "visibility": "public"
 }

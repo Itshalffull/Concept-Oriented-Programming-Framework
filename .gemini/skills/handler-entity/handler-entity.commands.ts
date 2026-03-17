@@ -12,4 +12,4 @@ export async function handleHandlerEntitySkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const handlerEntitySkillCommands = ['register', 'get', 'getByFile', 'findByConcept', 'findByLanguage', 'getActionMethod', 'implementationGaps', 'getDependencies', 'getStorageUsage', 'resolveStackFrame', 'resolveToAstNode', 'resolveStackTrace', 'traceToVariantReturn', 'traceToStorageCalls', 'findByError', 'sourceForAction'];
+export const handlerEntitySkillCommands = ['register', 'get', 'getByFile', 'findByConcept', 'findByLanguage', 'getActionMethod', 'implementationGaps', 'getDependencies', 'getStorageUsage', 'resolveStackFrame', 'resolveToAstNode', 'resolveStackTrace', 'traceToVariantReturn', 'traceToStorageCalls', 'diffFromSpec', 'findByError', 'sourceForAction'];

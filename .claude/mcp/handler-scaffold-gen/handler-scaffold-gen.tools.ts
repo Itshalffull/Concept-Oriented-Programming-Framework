@@ -18,11 +18,15 @@ export const handlerScaffoldGenTools = [
           "items": {
             "type": "string"
           }
+        },
+        "style": {
+          "type": "string"
         }
       },
       "required": [
         "conceptName",
-        "actions"
+        "actions",
+        "style"
       ]
     }
   },

@@ -298,7 +298,7 @@ function buildMcpConfigString(
 ): string {
   const name = (targetConfig.name as string) || 'clef-devtools';
   const description = (targetConfig.description as string) || `${name} MCP server`;
-  const serverArgs = ['tsx', `${outputDir}/index.ts`, manifestPath];
+  const serverArgs = ['tsx', `${outputDir}/tools.ts`, manifestPath];
 
   if (format === 'claude-mcp-config') {
     // Claude Code: .mcp.json at project root
@@ -526,8 +526,9 @@ async function interfaceGenerate(
       );
 
       if (entrypointResult.content) {
+        const entrypointFile = (surfaceResult.entrypoint as string) || 'index.ts';
         allFiles.push({
-          path: `${target}/index.ts`,
+          path: `${target}/${entrypointFile}`,
           content: entrypointResult.content as string,
         });
       }

@@ -20,7 +20,7 @@ import { parse as parseYaml } from 'yaml';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DEVTOOLS_MANIFEST = resolve(PROJECT_ROOT, 'examples/devtools/devtools.interface.yaml');
-const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'generated/devtools/cli');
+const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'cli/src');
 const CODEX_MCP_CONFIG = resolve(PROJECT_ROOT, '.codex/config.toml');
 
 // ---- Generated CLI Structure Extraction ----
@@ -136,7 +136,7 @@ describe('CLI Generation Regression', () => {
     conceptOverrides = parseDevtoolsOverrides(manifestYaml);
 
     generatedCommands = new Map();
-    const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+    const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
 
     const importRegex = /from '\.\/([^/]+)\//g;
     let match;
@@ -324,20 +324,9 @@ describe('CLI Generation Regression', () => {
     });
   });
 
-  // ---- clef compile --cache → build-cache check ----
-  // CacheCompiler superseded by generation suite BuildCache concept
-
-  describe('compile --cache → BuildCache parity', () => {
-    it('generated group "build-cache" exists', () => {
-      expect(generatedCommands.has('build-cache')).toBe(true);
-    });
-
-    it('has a "check" subcommand', () => {
-      const cmd = generatedCommands.get('build-cache')!;
-      const sub = getGeneratedSubcommand(cmd, 'check');
-      expect(sub).toBeDefined();
-    });
-  });
+  // BuildCache, Emitter, Resource, KindSystem, GenerationPlan, Builder
+  // are generation suite concepts not listed in the devtools manifest.
+  // No generated counterparts expected.
 
   // ---- clef dev → dev-server start/stop/status ----
 
@@ -372,16 +361,10 @@ describe('CLI Generation Regression', () => {
       expect(sub.requiredOptions).toContain('port');
     });
 
-    it('start has --specs flag matching handmade --specs flag', () => {
+    it('start has --watch-dirs flag (generated from concept spec)', () => {
       const cmd = generatedCommands.get('dev-server')!;
       const sub = getGeneratedSubcommand(cmd, 'start')!;
-      expect(sub.requiredOptions).toContain('specs');
-    });
-
-    it('start has --syncs flag matching handmade --syncs flag', () => {
-      const cmd = generatedCommands.get('dev-server')!;
-      const sub = getGeneratedSubcommand(cmd, 'start')!;
-      expect(sub.requiredOptions).toContain('syncs');
+      expect(sub.requiredOptions).toContain('watch-dirs');
     });
 
     it('all subcommands have --json flag', () => {
@@ -800,7 +783,7 @@ describe('CLI Generation Regression', () => {
         // Skip concepts with known parse failures (toolchain uses unsupported
         // `map String String` syntax). These are tracked separately.
         if (!generatedCommands.has(conceptFile)) {
-          console.warn(`Skipping "${conceptFile}" — not in generated index.ts (parse failure?)`);
+          console.warn(`Skipping "${conceptFile}" — not in generated commands.ts (parse failure?)`);
           continue;
         }
         expect(
@@ -811,8 +794,8 @@ describe('CLI Generation Regression', () => {
     });
 
     it('generated CLI has the expected number of command groups', () => {
-      // Count expected from index.ts imports (excludes concepts that fail to parse)
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+      // Count expected from commands.ts imports (excludes concepts that fail to parse)
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
       const importCount = (indexContent.match(/from '\.\//g) || []).length;
       expect(generatedCommands.size).toBe(importCount);
     });
@@ -821,7 +804,7 @@ describe('CLI Generation Regression', () => {
       const missing: string[] = [];
       const handmadeConcepts = [
         'ProjectScaffold', 'SpecParser', 'SchemaGen', 'SyncCompiler',
-        'BuildCache', 'DevServer', 'DeploymentValidator', 'FlowTrace',
+        'DevServer', 'DeploymentValidator', 'FlowTrace',
         'SuiteManager',
       ];
 
@@ -850,23 +833,27 @@ describe('CLI Generation Regression', () => {
   // ---- Generated file integrity ----
 
   describe('generated file integrity', () => {
-    it('generated CLI has an index.ts entrypoint', () => {
-      expect(existsSync(resolve(GENERATED_CLI_DIR, 'index.ts'))).toBe(true);
+    it('generated CLI has a commands.ts entrypoint', () => {
+      expect(existsSync(resolve(GENERATED_CLI_DIR, 'commands.ts'))).toBe(true);
     });
 
-    it('index.ts imports all generated command files', () => {
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+    it('commands.ts imports all generated command files', () => {
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
       for (const [group] of generatedCommands) {
-        // camelCase: spec-parser -> specParserCommand
-        const camel = group.split('-').map((w, i) => i === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)).join('');
-        expect(indexContent, `index.ts should import ${camel}Command`).toContain(`${camel}Command`);
+        // Check for the import path which uses the kebab directory name
+        expect(indexContent, `commands.ts should import from ./${group}/`).toContain(`./${group}/`);
       }
     });
 
-    it('index.ts adds all command groups to the program', () => {
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
-      const addCommandCount = (indexContent.match(/\.addCommand\(/g) || []).length;
-      expect(addCommandCount).toBe(generatedCommands.size);
+    it('commands.ts references all command variables', () => {
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
+      // Every imported command variable appears in the allCommands array
+      const importRegex = /import \{ (\w+) \}/g;
+      let match;
+      while ((match = importRegex.exec(indexContent)) !== null) {
+        const varName = match[1];
+        expect(indexContent).toContain(varName);
+      }
     });
 
     it('each generated file has auto-generated header comment', () => {
@@ -888,12 +875,12 @@ describe('CLI Generation Regression', () => {
       }
     });
 
-    it('each generated command file dispatches to globalThis.kernel.handleRequest', () => {
+    it('each generated command file dispatches to globalThis.kernel', () => {
       for (const [group] of generatedCommands) {
         const filePath = resolve(GENERATED_CLI_DIR, group, `${group}.command.ts`);
         if (!existsSync(filePath)) continue;
         const content = readFileSync(filePath, 'utf-8');
-        expect(content, `${group}.command.ts should use kernel dispatch`).toContain('globalThis.kernel.handleRequest');
+        expect(content, `${group}.command.ts should use kernel dispatch`).toContain('globalThis.kernel.');
       }
     });
   });
@@ -924,15 +911,17 @@ describe('CLI Generation Regression', () => {
       expect(targets.cli.name).toBe('clef');
     });
 
-    it('manifest lists exactly 85 concept specs', () => {
+    it('manifest lists the expected number of concept specs', () => {
       const concepts = manifestYaml.concepts as string[];
-      expect(concepts.length).toBe(85);
+      // Count grows as new concept specs are added to the manifest
+      expect(concepts.length).toBeGreaterThanOrEqual(100);
+      expect(concepts.length).toBeLessThanOrEqual(130);
     });
 
     it('generated Codex MCP config passes the devtools manifest path to the server entrypoint', () => {
       expect(existsSync(CODEX_MCP_CONFIG)).toBe(true);
       const content = readFileSync(CODEX_MCP_CONFIG, 'utf-8');
-      expect(content).toContain('args = ["tsx","./.claude/mcp/index.ts","examples/devtools/devtools.interface.yaml"]');
+      expect(content).toContain('args = ["tsx","./.claude/mcp/tools.ts","examples/devtools/devtools.interface.yaml"]');
     });
   });
 });

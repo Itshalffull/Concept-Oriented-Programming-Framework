@@ -31,25 +31,30 @@ export function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function boot(): Promise<void> {
+  // Try the generated CLI entrypoint (commands.ts, written by the
+  // interface generator to cli/src/). It contains all concept commands
+  // with merge logic for shared command groups (e.g. scaffold-*).
   try {
-    const generatedCli = await import('../../generated/devtools/cli/index.ts');
-    const program = (generatedCli.default ?? generatedCli.program) as { parseAsync?: (argv: string[]) => Promise<void> };
+    const generatedCli = await import('./commands.ts');
+    const program = (generatedCli.default ?? generatedCli.program) as
+      | { parseAsync?: (argv: string[]) => Promise<void>; addCommand?: (cmd: unknown) => void }
+      | undefined;
 
     if (program?.parseAsync) {
+      // Register hand-written commands (interface, etc.) on the generated program
+      try {
+        const { interfaceCliCommand } = await import('./commands/interface-cli.command.ts');
+        if (program.addCommand) program.addCommand(interfaceCliCommand);
+      } catch { /* interface command not available */ }
+
       await program.parseAsync(process.argv);
       return;
     }
-  } catch (err) {
-    const importError =
-      err instanceof Error &&
-      ('code' in err) &&
-      (err as Error & { code?: string }).code === 'ERR_MODULE_NOT_FOUND';
-
-    if (!importError) {
-      throw err;
-    }
+  } catch {
+    // Generated entrypoint not available yet — fall through to legacy CLI
   }
 
+  // Fallback: hand-written CLI with basic commands
   const fallbackCli = await import('./index.ts');
   await fallbackCli.runCli(process.argv);
 }

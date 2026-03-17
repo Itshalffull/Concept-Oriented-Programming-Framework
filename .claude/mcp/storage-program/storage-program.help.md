@@ -1,0 +1,135 @@
+# storage_program — MCP Tool Guide
+
+Build sequences of storage instructions as inspectable , composable data . A StorageProgram describes what a handler intends to do without executing side effects . Programs can be logged , diffed , serialized , composed , and handed to an interpreter or analyzer
+
+## Design Principles
+
+- **Programs Are Data, Not Effects:** A StorageProgram is a pure data structure describing operations. No side effects occur until the interpreter executes it. This enables inspection, analysis, caching, and replay.
+- **Structural Effect Tracking:** Effects (reads, writes, completions, transport) are accumulated during DSL construction in O(1). Purity is a first-class, build-time property — not a post-hoc analysis.
+- **Lens Over Strings:** Use typed lenses (relation/at/field) instead of raw string keys. Lenses compose, invert, and enable DataFlowPath analysis, schema migration, and change impact detection.
+- **Applicative Parallelism (Haxl/Stitch Pattern):** Independent get/find operations that don't share bindings can be batched into a single round-trip. The ParallelismProvider detects these automatically.
+- **Algebraic Effect Coverage:** Use complete() instead of pure() for terminal values. This tracks completion variants structurally, enabling CompletionCoverage to verify every variant has a matching sync handler.
+**create:**
+- [ ] Program uses the DSL (createProgram, get, put, etc.) — never calls storage directly?
+- [ ] All read operations bind a result name for downstream use?
+- [ ] Program terminates with complete() or pure()?
+- [ ] Declared purity matches actual effects (pure < read-only < read-write)?
+- [ ] Completion variants match the concept spec's declared variants?
+- [ ] Lenses used for state field access where possible?
+- [ ] Independent reads identified for applicative parallelism?
+## References
+
+- [StorageProgram DSL reference](references/storage-program-dsl.md)
+- [Program analysis providers](references/monadic-analysis.md)
+## StorageProgram DSL Quick Reference
+
+| Operation | DSL Function | Effect Tracking |
+|-----------|-------------|-----------------|
+| Read one | `get(p, rel, key, bind)` | reads += rel |
+| Query | `find(p, rel, criteria, bind)` | reads += rel |
+| Write | `put(p, rel, key, value)` | writes += rel |
+| Partial update | `merge(p, rel, key, fields)` | reads += rel, writes += rel |
+| Delete | `del(p, rel, key)` | writes += rel |
+| Lens read | `getLens(p, lens, bind)` | reads += lens.relation |
+| Lens write | `putLens(p, lens, value)` | writes += lens.relation |
+| Lens modify | `modifyLens(p, lens, fn)` | reads += rel, writes += rel |
+| Branch | `branch(p, cond, then, else)` | union of both arms |
+| Transport | `perform(p, proto, op, payload, bind)` | performs += proto:op |
+| Complete | `complete(p, variant, out)` | completionVariants += variant |
+| Bind | `compose(first, bind, second)` | union of both programs |
+
+
+## Anti-Patterns
+
+### Calling storage directly in a functional handler
+Functional handlers must return StoragePrograms, never call storage.get()/put() directly.
+
+**Bad:**
+```
+const createUser: FunctionalConceptHandler = {
+  create(input) {
+    // WRONG: directly calling storage
+    const existing = await storage.find('user', { email });
+    await storage.put('user', id, data);
+    return { variant: 'ok', user: id };
+  },
+};
+
+```
+
+**Good:**
+```
+const createUser: FunctionalConceptHandler = {
+  create(input) {
+    let p = createProgram();
+    p = find(p, 'user', { email }, 'existing');
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      complete(createProgram(), 'error', { message: 'email taken' }),
+      complete(put(createProgram(), 'user', id, data), 'ok', { user: id })
+    );
+  },
+};
+
+```
+
+### Declaring wrong purity level
+Claiming read-only but the program actually writes — purity validation catches this at build time.
+
+**Bad:**
+```
+{ id: 'user-create', concept: 'User', action: 'create',
+  purity: 'read-only',  // WRONG: create writes!
+  factory: createUser }
+
+```
+
+**Good:**
+```
+{ id: 'user-create', concept: 'User', action: 'create',
+  purity: 'read-write',  // Correct: create writes user relation
+  factory: createUser }
+
+```
+
+### Using string keys instead of lenses
+Raw string keys lose type safety, composability, and impact analysis.
+
+**Bad:**
+```
+p = get(p, 'user', userId, 'record');
+// No type checking, no migration support, no impact analysis
+
+```
+
+**Good:**
+```
+const userLens = at(relation('user'), userId);
+p = getLens(p, userLens, 'record');
+// Typed, composable, enables automatic migration scripts
+
+```
+## Validation
+
+*Run monadic handler tests:*
+```bash
+npx vitest run tests/monadic-handlers.test.ts
+```
+*Run effect typing tests:*
+```bash
+npx vitest run tests/effect-typing.test.ts
+```
+*Run parallelism provider tests:*
+```bash
+npx vitest run tests/parallelism-provider.test.ts
+```
+*Run lens tests:*
+```bash
+npx vitest run tests/lens.test.ts
+```
+*Run algebraic effects tests:*
+```bash
+npx vitest run tests/algebraic-effects.test.ts
+```
+**Related tools:** [object Object], [object Object], [object Object], [object Object]
+
