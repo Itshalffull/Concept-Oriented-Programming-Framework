@@ -1,0 +1,9 @@
+sync BuildAndExecute [eager]
+  purpose: "Execute a handler's StorageProgram against the default interpreter after build completes."
+when {
+  FunctionalHandler/build: [ handler: ?h; input: ?input ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}

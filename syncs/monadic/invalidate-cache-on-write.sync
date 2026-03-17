@@ -1,0 +1,14 @@
+sync InvalidateCacheOnWrite [eager]
+  purpose: "Invalidate memoized results when a read-write program mutates storage."
+when {
+  ProgramInterpreter/execute: [ program: ?program ]
+    => [ variant: ?variant ]
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+    => [ purity: "read-write" ]
+}
+where {
+  bind(stateHash() as ?stateHash)
+}
+then {
+  ProgramCache/invalidateByState: [ stateHash: ?stateHash ]
+}

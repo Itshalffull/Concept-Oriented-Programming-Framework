@@ -1,0 +1,109 @@
+suite:
+  name: monadic-handlers
+  version: "1.0.0"
+  description: >
+    Monadic concept handler infrastructure — StoragePrograms as inspectable
+    data, interpreted execution, pluggable static analysis providers,
+    memoization, and formal verification integration.
+
+concepts:
+  StorageProgram:
+    spec: specs/monadic/storage-program.concept
+    params:
+      P: { as: ProgramId, description: "Unique program identifier" }
+  ProgramInterpreter:
+    spec: specs/monadic/program-interpreter.concept
+    params:
+      I: { as: InterpreterId, description: "Interpreter instance identifier" }
+  ProgramAnalysis:
+    spec: specs/monadic/program-analysis.concept
+    params:
+      A: { as: AnalysisId, description: "Analysis result identifier" }
+  ReadWriteSetProvider:
+    spec: specs/monadic/providers/read-write-set-provider.concept
+    params:
+      R: { as: ResultId, description: "Read/write set analysis result" }
+  CommutativityProvider:
+    spec: specs/monadic/providers/commutativity-provider.concept
+    params:
+      C: { as: ResultId, description: "Commutativity analysis result" }
+  DeadBranchProvider:
+    spec: specs/monadic/providers/dead-branch-provider.concept
+    params:
+      D: { as: ResultId, description: "Dead branch analysis result" }
+  InvariantExtractionProvider:
+    spec: specs/monadic/providers/invariant-extraction-provider.concept
+    params:
+      I: { as: ResultId, description: "Invariant extraction result" }
+  ProgramCache:
+    spec: specs/monadic/program-cache.concept
+    params:
+      C: { as: CacheEntryId, description: "Cache entry identifier" }
+  FunctionalHandler:
+    spec: specs/monadic/functional-handler.concept
+    params:
+      H: { as: HandlerId, description: "Handler registration identifier" }
+
+syncs:
+  required:
+    - path: syncs/monadic/build-and-execute.sync
+      description: "Execute a handler's StorageProgram after build"
+    - path: syncs/monadic/analyze-on-build.sync
+      description: "Run ReadWriteSetProvider on every built program"
+    - path: syncs/monadic/invalidate-cache-on-write.sync
+      description: "Invalidate memoized results when storage mutates"
+    - path: syncs/monadic/dispatch-read-write-sets.sync
+      description: "Dispatch read-write-set analysis to provider"
+    - path: syncs/monadic/register-read-write-set-provider.sync
+      description: "Register the ReadWriteSetProvider with ProgramAnalysis"
+    - path: syncs/monadic/interpret-analysis-program.sync
+      description: "Route functional ProgramAnalysis StoragePrograms to the interpreter"
+    - path: syncs/monadic/interpret-cache-program.sync
+      description: "Route functional ProgramCache StoragePrograms to the interpreter"
+    - path: syncs/monadic/interpret-provider-programs.sync
+      description: "Route functional provider handler StoragePrograms to the interpreter"
+  recommended:
+    - path: syncs/monadic/cache-lookup-before-execute.sync
+      name: CacheLookupBeforeExecute
+      description: "Check cache before executing read-only programs"
+    - path: syncs/monadic/cache-store-after-execute.sync
+      name: CacheStoreAfterExecute
+      description: "Memoize results of pure/read-only executions"
+    - path: syncs/monadic/register-commutativity-provider.sync
+      name: RegisterCommutativityProvider
+      description: "Register the CommutativityProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-commutativity.sync
+      name: DispatchCommutativity
+      description: "Dispatch commutativity analysis to provider"
+    - path: syncs/monadic/register-dead-branch-provider.sync
+      name: RegisterDeadBranchProvider
+      description: "Register the DeadBranchProvider with ProgramAnalysis"
+    - path: syncs/monadic/dispatch-dead-branches.sync
+      name: DispatchDeadBranches
+      description: "Dispatch dead branch analysis to provider"
+    - path: syncs/monadic/flow-trace-parallel-branches.sync
+      name: FlowTraceParallelBranches
+      description: "Feed commutativity data to FlowTrace for parallel tracing"
+    - path: syncs/monadic/flow-trace-dead-branch-pruning.sync
+      name: FlowTraceDeadBranchPruning
+      description: "Feed dead branch data to FlowTrace for pruning"
+
+uses:
+  - suite: formal-verification
+    optional: true
+    concepts:
+      - name: FormalProperty
+        params: { P: { as: PropertyId } }
+    syncs:
+      - path: syncs/monadic/extract-properties-on-register.sync
+        description: "Extract invariants from handler programs on registration"
+      - path: syncs/monadic/publish-extracted-properties.sync
+        description: "Publish extracted invariants as FormalProperties"
+      - path: syncs/monadic/register-invariant-extraction-provider.sync
+        description: "Register InvariantExtractionProvider with ProgramAnalysis"
+      - path: syncs/monadic/dispatch-invariant-extraction.sync
+        description: "Dispatch invariant extraction to provider"
+
+dependencies:
+  - name: clef-kernel
+    version: ">=1.0.0"

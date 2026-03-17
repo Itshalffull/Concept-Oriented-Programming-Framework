@@ -1,0 +1,9 @@
+sync RegisterReadWriteSetProvider [eager]
+  purpose: "Register the ReadWriteSetProvider with ProgramAnalysis on first use."
+when {
+  ReadWriteSetProvider/analyze: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "read-write-sets"; kind: "structural" ]
+}

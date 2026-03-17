@@ -1,0 +1,21 @@
+sync FlowTraceParallelBranches [eager]
+  purpose: "Feed commutativity data to FlowTrace so sibling actions with disjoint effects can be traced in parallel."
+when {
+  FlowTrace/build: [ flowId: ?flowId ]
+    => []
+  FunctionalHandler/build: [ handler: ?hA ]
+    => [ program: ?programA ]
+  FunctionalHandler/build: [ handler: ?hB ]
+    => [ program: ?programB ]
+}
+where {
+  filter(?hA != ?hB)
+}
+then {
+  CommutativityProvider/check: [
+    programA: ?programA;
+    programB: ?programB;
+    readWriteSetsA: "";
+    readWriteSetsB: ""
+  ]
+}

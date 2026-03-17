@@ -1,0 +1,57 @@
+@version(1)
+concept ProgramAnalysis [A] {
+
+  purpose {
+    Dispatch named analysis queries against StoragePrograms to
+    registered providers and return structured results. Each provider
+    implements a specific analysis strategy; this concept provides
+    the uniform dispatch and result tracking interface.
+  }
+
+  state {
+    providers: set String
+    providerKind: String -> String
+    results: set A
+    program: A -> String
+    provider: A -> String
+    result: A -> String
+  }
+
+  actions {
+    action registerProvider(name: String, kind: String) {
+      -> ok() { Analysis provider registered under the given name and kind classification. }
+      -> exists() { A provider with this name is already registered. }
+    }
+
+    action run(program: String, provider: String) {
+      -> ok(analysis: A, result: String) {
+        Dispatch the analysis to the named provider and return the
+        structured result. The result format depends on the provider.
+      }
+      -> providerNotFound() { No provider is registered under the given name. }
+      -> error(message: String) { The analysis provider returned an error. }
+    }
+
+    action runAll(program: String) {
+      -> ok(results: String) {
+        Run every registered provider against the program and return
+        all results keyed by provider name.
+      }
+      -> error(message: String) { One or more providers failed during analysis. }
+    }
+
+    action listProviders() {
+      -> ok(providers: String) { Return all registered provider names and their kind classifications. }
+    }
+  }
+
+  invariant {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    then run(program: "get(users, u1)", provider: "read-write-sets") -> ok(analysis: a, result: r)
+  }
+
+  invariant {
+    after run(program: "get(users, u1)", provider: "nonexistent") -> providerNotFound()
+    then listProviders() -> ok(providers: p)
+  }
+}

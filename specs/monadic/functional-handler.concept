@@ -1,0 +1,55 @@
+@version(1)
+concept FunctionalHandler [H] {
+
+  purpose {
+    Register concept handlers that produce StoragePrograms instead
+    of directly executing storage effects. A FunctionalHandler is
+    the migration point between imperative and monadic handler models.
+  }
+
+  state {
+    handlers: set H
+    concept: H -> String
+    action: H -> String
+    programFactory: H -> String
+    purity: H -> String
+  }
+
+  actions {
+    action register(handler: H, concept: String, action: String, purity: String) {
+      -> ok() {
+        Register a functional handler for the given concept and action,
+        declaring its purity level (pure, read-only, or read-write).
+      }
+      -> exists() { A handler for this concept/action pair is already registered. }
+    }
+
+    action build(handler: H, input: String) {
+      -> ok(program: String) {
+        Invoke the handler's factory function with the given input and
+        return the resulting StorageProgram as serialized data. No
+        storage side effects occur during build.
+      }
+      -> notfound() { No handler is registered with this identifier. }
+      -> error(message: String) { The factory function threw an exception during program construction. }
+    }
+
+    action list(concept: String) {
+      -> ok(handlers: String) {
+        Return all registered functional handlers for the named concept,
+        including their action names and declared purity levels.
+      }
+    }
+  }
+
+  invariant {
+    after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
+    and build(handler: h, input: "{ name: 'Alice' }") -> ok(program: p)
+    then p != ""
+  }
+
+  invariant {
+    after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
+    then register(handler: h, concept: "User", action: "create", purity: "read-write") -> exists()
+  }
+}

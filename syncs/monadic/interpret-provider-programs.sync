@@ -1,0 +1,42 @@
+# Interpretation bridges for all functional analysis provider handlers
+# Each provider returns a StorageProgram that must be interpreted against storage.
+
+sync InterpretReadWriteSetAnalysis [eager] [idempotent]
+  purpose: "Route ReadWriteSetProvider/analyze StorageProgram to the interpreter so analysis results persist"
+when {
+  ReadWriteSetProvider/analyze: [ program: ?prog ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretCommutativityCheck [eager] [idempotent]
+  purpose: "Route CommutativityProvider/check StorageProgram to the interpreter so commutativity results persist"
+when {
+  CommutativityProvider/check: [ readWriteSetsA: ?a; readWriteSetsB: ?b ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretDeadBranchAnalysis [eager] [idempotent]
+  purpose: "Route DeadBranchProvider/analyze StorageProgram to the interpreter so dead branch results persist"
+when {
+  DeadBranchProvider/analyze: [ program: ?prog ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretInvariantExtraction [eager] [idempotent]
+  purpose: "Route InvariantExtractionProvider/extract StorageProgram to the interpreter so invariants persist"
+when {
+  InvariantExtractionProvider/extract: [ program: ?prog; conceptSpec: ?spec ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}

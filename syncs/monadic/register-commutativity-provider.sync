@@ -1,0 +1,9 @@
+sync RegisterCommutativityProvider [eager]
+  purpose: "Register the CommutativityProvider with ProgramAnalysis on first use."
+when {
+  CommutativityProvider/check: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "commutativity"; kind: "relational" ]
+}

@@ -1,0 +1,87 @@
+derived MonadicConceptHandlers [T] {
+
+  purpose {
+    Compose the monadic handler infrastructure into a unified
+    execution model where concept handlers return inspectable
+    StoragePrograms that are analyzed by pluggable providers,
+    cached, and interpreted — enabling formal verification,
+    FlowTrace optimization, and safe concurrent execution.
+  }
+
+  composes {
+    StorageProgram [T]
+    ProgramInterpreter [T]
+    ProgramAnalysis [T]
+    ReadWriteSetProvider [T]
+    CommutativityProvider [T]
+    DeadBranchProvider [T]
+    ProgramCache [T]
+    FunctionalHandler [T]
+  }
+
+  syncs {
+    required: [
+      build-and-execute,
+      analyze-on-build,
+      invalidate-cache-on-write,
+      dispatch-read-write-sets,
+      register-read-write-set-provider,
+      interpret-analysis-program,
+      interpret-cache-program,
+      interpret-provider-programs
+    ]
+    recommended: [
+      cache-lookup-before-execute,
+      cache-store-after-execute,
+      register-commutativity-provider,
+      dispatch-commutativity,
+      register-dead-branch-provider,
+      dispatch-dead-branches,
+      flow-trace-parallel-branches,
+      flow-trace-dead-branch-pruning
+    ]
+  }
+
+  surface {
+    action invoke(concept: String, action: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: ?concept, action: ?action
+      triggers: [
+        ReadWriteSetProvider/analyze(program: ?program),
+        ProgramInterpreter/execute(interpreter: "default", program: ?program, snapshot: "current")
+      ]
+    }
+
+    action invokeWithDryRun(concept: String, action: String, input: String) {
+      entry: FunctionalHandler/build matches on concept: ?concept, action: ?action
+      triggers: [
+        ReadWriteSetProvider/analyze(program: ?program),
+        ProgramInterpreter/dryRun(interpreter: "default", program: ?program, snapshot: "current")
+      ]
+    }
+
+    query readWriteSets(concept: String, action: String) {
+      reads: ReadWriteSetProvider/analyze(program: ?latestProgram)
+    }
+
+    query commutativity(conceptA: String, actionA: String, conceptB: String, actionB: String) {
+      reads: CommutativityProvider/check(programA: ?pA, programB: ?pB, readWriteSetsA: ?rwA, readWriteSetsB: ?rwB)
+    }
+
+    query cacheStats() {
+      reads: ProgramCache/stats()
+    }
+
+    query analysisProviders() {
+      reads: ProgramAnalysis/listProviders()
+    }
+  }
+
+  principle {
+    after invoke(concept: c, action: a, input: i)
+    then the handler builds a StorageProgram without side effects
+    and  the ReadWriteSetProvider extracts read and write sets
+    and  the interpreter executes the program atomically
+    and  if the program is read-only the result is cached
+    and  on re-invocation with same input and state the cache is hit
+  }
+}

@@ -1,0 +1,9 @@
+sync DispatchReadWriteSets [eager]
+  purpose: "Dispatch a read-write-sets analysis request to the ReadWriteSetProvider."
+when {
+  ProgramAnalysis/run: [ program: ?program; provider: "read-write-sets" ]
+    => []
+}
+then {
+  ReadWriteSetProvider/analyze: [ program: ?program ]
+}

@@ -1,0 +1,31 @@
+# Interpretation bridge for functional ProgramAnalysis handler actions
+
+sync InterpretAnalysisRegister [eager] [idempotent]
+  purpose: "Route ProgramAnalysis/registerProvider StorageProgram output to the interpreter for execution against storage"
+when {
+  ProgramAnalysis/registerProvider: [ name: ?name; kind: ?kind ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretAnalysisRun [eager]
+  purpose: "Route ProgramAnalysis/run StorageProgram output to the interpreter when dispatching a specific provider"
+when {
+  ProgramAnalysis/run: [ program: ?prog; provider: ?provider ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}
+
+sync InterpretAnalysisRunAll [eager]
+  purpose: "Route ProgramAnalysis/runAll StorageProgram output to the interpreter for batch provider dispatch"
+when {
+  ProgramAnalysis/runAll: [ program: ?prog ]
+    => [ program: ?program ]
+}
+then {
+  ProgramInterpreter/execute: [ interpreter: ?defaultInterpreter; program: ?program; snapshot: "current" ]
+}

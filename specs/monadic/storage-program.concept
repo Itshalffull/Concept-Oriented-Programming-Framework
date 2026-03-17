@@ -1,0 +1,103 @@
+@version(1)
+concept StorageProgram [P] {
+
+  purpose {
+    Build sequences of storage instructions as inspectable, composable
+    data. A StorageProgram describes what a handler intends to do
+    without executing side effects. Programs can be logged, diffed,
+    serialized, composed, and handed to an interpreter or analyzer.
+  }
+
+  state {
+    programs: set P
+    instructions: P -> list String
+    bindings: P -> list String
+    terminated: P -> Bool
+  }
+
+  actions {
+    action create(program: P) {
+      -> ok() { Initialize an empty program ready to receive instructions. }
+      -> exists() { A program with this identifier has already been created. }
+    }
+
+    action get(program: P, relation: String, key: String, bindAs: String) {
+      -> ok(program: P) {
+        Append a Get instruction that reads a single record by key.
+        The fetched value will be bound to the bindAs name during
+        interpretation.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action find(program: P, relation: String, criteria: String, bindAs: String) {
+      -> ok(program: P) {
+        Append a Find instruction that queries records matching the
+        criteria filter. Results are bound to bindAs during interpretation.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action put(program: P, relation: String, key: String, value: String) {
+      -> ok(program: P) {
+        Append a Put instruction that writes a record to the given
+        relation at the given key.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action del(program: P, relation: String, key: String) {
+      -> ok(program: P) {
+        Append a Del instruction that removes a record from the given
+        relation at the given key.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action branch(program: P, condition: String, thenBranch: P, elseBranch: P) {
+      -> ok(program: P) {
+        Append a conditional branch whose arms are themselves
+        StoragePrograms, enabling nested control flow within
+        a single program tree.
+      }
+      -> notfound() { The program or one of the branch programs does not exist. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action pure(program: P, variant: String, output: String) {
+      -> ok(program: P) {
+        Terminate the program with a return value consisting of a
+        variant tag and output fields. No further instructions may
+        be appended after pure.
+      }
+      -> notfound() { No program exists with this identifier. }
+      -> sealed() { The program has already been terminated with pure. }
+    }
+
+    action compose(first: P, second: P, bindAs: String) {
+      -> ok(program: P) {
+        Monadic bind: create a new program that runs first, binds its
+        terminal value to bindAs, then continues with second.
+      }
+      -> notfound() { One or both of the source programs do not exist. }
+    }
+  }
+
+  invariant {
+    after create(program: p) -> ok()
+    and get(program: p, relation: "users", key: "u1", bindAs: "user") -> ok(program: p)
+    and put(program: p, relation: "users", key: "u1", value: "updated") -> ok(program: p)
+    and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
+    then p.terminated = true
+  }
+
+  invariant {
+    after create(program: p) -> ok()
+    and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
+    then get(program: p, relation: "users", key: "u1", bindAs: "x") -> sealed()
+  }
+}

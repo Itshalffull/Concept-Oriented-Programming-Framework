@@ -1,0 +1,44 @@
+@version(1)
+concept CommutativityProvider [C] {
+
+  purpose {
+    Determine whether two StoragePrograms commute, meaning they
+    produce the same result regardless of execution order. Enables
+    safe concurrent execution and parallel FlowTrace branch tracing.
+  }
+
+  state {
+    results: set C
+    programA: C -> String
+    programB: C -> String
+    commutes: C -> Bool
+    reason: C -> String
+  }
+
+  actions {
+    action check(programA: String, programB: String, readWriteSetsA: String, readWriteSetsB: String) {
+      -> ok(result: C, commutes: Bool, reason: String) {
+        Compare the read and write sets of both programs. If neither
+        program's write set overlaps the other's read or write set,
+        the programs commute. Returns the determination and reasoning.
+      }
+      -> error(message: String) { The read/write set data could not be parsed for comparison. }
+    }
+  }
+
+  invariant {
+    after check(
+      programA: "put(users, u1, data)", programB: "put(orders, o1, data)",
+      readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [], w: [orders]}"
+    ) -> ok(result: c, commutes: comm, reason: r)
+    then comm = true
+  }
+
+  invariant {
+    after check(
+      programA: "put(users, u1, data)", programB: "get(users, u1)",
+      readWriteSetsA: "{r: [], w: [users]}", readWriteSetsB: "{r: [users], w: []}"
+    ) -> ok(result: c, commutes: comm, reason: r)
+    then comm = false
+  }
+}

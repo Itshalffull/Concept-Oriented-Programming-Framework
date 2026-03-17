@@ -1,0 +1,9 @@
+sync RegisterInvariantExtractionProvider [eager]
+  purpose: "Register the InvariantExtractionProvider with ProgramAnalysis on first use."
+when {
+  InvariantExtractionProvider/extract: []
+    => []
+}
+then {
+  ProgramAnalysis/registerProvider: [ name: "invariant-extraction"; kind: "formal" ]
+}
