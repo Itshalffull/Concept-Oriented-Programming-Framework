@@ -193,10 +193,20 @@ function generateSkillMd(
     }
   }
 
-  // Tool permissions from annotation
+  // Tool permissions from annotation, with sensible defaults
   const toolPerms = contentKey<string[]>(annot?.concept, 'tool-permissions');
   if (toolPerms && toolPerms.length > 0) {
     lines.push(`allowed-tools: ${toolPerms.join(', ')}`);
+  } else {
+    // Default: read-only tools for query/entity concepts,
+    // read+write for scaffold-gen/create concepts
+    const groupKebab = toKebabCase(group.name);
+    const isWriteSkill = groupKebab.includes('scaffold') || groupKebab.startsWith('create')
+      || groupKebab.includes('deploy') || groupKebab.includes('project-scaffold');
+    const defaultTools = isWriteSkill
+      ? 'Read, Grep, Glob, Edit, Write, Bash'
+      : 'Read, Grep, Glob, Bash';
+    lines.push(`allowed-tools: ${defaultTools}`);
   }
 
   lines.push('---');

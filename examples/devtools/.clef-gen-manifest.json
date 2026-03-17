@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-17T22:58:35.793Z",
+  "generatedAt": "2026-03-17T23:09:13.402Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -262,7 +262,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/kernel-boot/SKILL.md",
       "relativePath": "claude-skills/kernel-boot/SKILL.md",
-      "hash": "74ff1f4d9a3f875f886994dbd5b04b13fac853ec3c6d3bb4c931930b9cf1d59b",
+      "hash": "b2d184c2bf3c1fef7387ab7dd75e6124f4b663a51aa021b9ddd7814cb0315351",
       "target": "claude-skills"
     },
     {
@@ -274,7 +274,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deploy-plan/SKILL.md",
       "relativePath": "claude-skills/deploy-plan/SKILL.md",
-      "hash": "7f60b69aab25deb7200eda05ca40296ee3e8cbb86ae0ded52a2b6415a3a615ab",
+      "hash": "e05d0c5419147ef33663b6fc053ad75a94a632d0737f09b55bb4777de9f23985",
       "target": "claude-skills"
     },
     {
@@ -286,7 +286,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/vercel-runtime/SKILL.md",
       "relativePath": "claude-skills/vercel-runtime/SKILL.md",
-      "hash": "c4f618c666cc496f7408649768e423610424faf797496d85d74c97b6312e8fcd",
+      "hash": "90f125af4379ea8f849b27bdc4dc48900859cccbdc439b964d0692b70ed0d809",
       "target": "claude-skills"
     },
     {
@@ -298,7 +298,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deploy-orchestrator/SKILL.md",
       "relativePath": "claude-skills/deploy-orchestrator/SKILL.md",
-      "hash": "90bc455d3fc8b8b82c5809230d00cc1e7d27dc87648ccd8853cfa8c405760920",
+      "hash": "724a125d6eb1c7dd7423e8b61c6bfc40f29dc1dd8f8ef3f6dacd50cc45614858",
       "target": "claude-skills"
     },
     {
@@ -592,7 +592,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/generator/SKILL.md",
       "relativePath": "claude-skills/generator/SKILL.md",
-      "hash": "20bbbfab472edf197fcd99d21ce1de76dd72032d9c5f96125e7fa842a6426072",
+      "hash": "25b914bf414669971ae07857adb1d405e59f652c25603c1ee242be917ab5ed17",
       "target": "claude-skills"
     },
     {
@@ -604,7 +604,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/projection/SKILL.md",
       "relativePath": "claude-skills/projection/SKILL.md",
-      "hash": "988446f70ac2fa8592a58333fd609e48dab24c6e530a1f1d497cb9dac65108fa",
+      "hash": "f2ac43031522208d5e1555a952cea5724bddd8da1ee08c1b90367c094bfb4aa5",
       "target": "claude-skills"
     },
     {
@@ -616,7 +616,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/api-surface/SKILL.md",
       "relativePath": "claude-skills/api-surface/SKILL.md",
-      "hash": "aefddd2759fe4e4e715260ff1f98a5f12c87bf70df9cabd1c7d669935a1a69b1",
+      "hash": "afb145b96b5109b11f7e6fa7d5fbde0134fa5a1471d373b2e537bae95184fb02",
       "target": "claude-skills"
     },
     {
@@ -628,7 +628,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/symbol/SKILL.md",
       "relativePath": "claude-skills/symbol/SKILL.md",
-      "hash": "ad3ee5aa5a000bbe1f611603df35af588863eab49cf3eee4937200b6c9903302",
+      "hash": "50753181ed74ed858e860d3cc0246ac08a44d19a1720c23159e8e206ac2ae7cc",
       "target": "claude-skills"
     },
     {
@@ -640,7 +640,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/symbol-occurrence/SKILL.md",
       "relativePath": "claude-skills/symbol-occurrence/SKILL.md",
-      "hash": "9cdcdd99b901b2b6fb56dd492104a38d20c6b5bee9fbfa9aeb7bfbf425ad8194",
+      "hash": "68461c6a6570ceac219505dfcb65666ed1911be7cf6c06a17180fbef5b0b681b",
       "target": "claude-skills"
     },
     {
@@ -652,7 +652,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/scope-graph/SKILL.md",
       "relativePath": "claude-skills/scope-graph/SKILL.md",
-      "hash": "8d1bf52593d1927386c8072c1f9158faa1441cbac7f830e9f49c4de387ec8e38",
+      "hash": "523bc77d8b8d2e5221450fcf57344d4d008e09c43a4ec4d0877737d74efe809e",
       "target": "claude-skills"
     },
     {
@@ -664,7 +664,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/symbol-relationship/SKILL.md",
       "relativePath": "claude-skills/symbol-relationship/SKILL.md",
-      "hash": "5710279e798faf50e8315028abd54251574c5d77acec7e247e850e0b4e3ff3e0",
+      "hash": "ad77f570d1b7efe433c13b17a9cbdd62e791afaf86598d3318354180d8f010c2",
       "target": "claude-skills"
     },
     {
@@ -676,7 +676,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/concept-entity/SKILL.md",
       "relativePath": "claude-skills/concept-entity/SKILL.md",
-      "hash": "9e12a658ec50e4f71a4aa5b225fbf19ffe056ecf3660a406f14042a9f8b67b17",
+      "hash": "5b1e86d0e98a9eb1deb1ce8feb4340db61388176ca531e867cf145c15e42cab0",
       "target": "claude-skills"
     },
     {
@@ -688,7 +688,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/action-entity/SKILL.md",
       "relativePath": "claude-skills/action-entity/SKILL.md",
-      "hash": "3d5be7a787a8c7f61b26cdc0279938e2f4f21a28b9300645550340ae1f5ceff8",
+      "hash": "c4a23b018f869c563e73e52f7e0c2116d448bf6b3121467e2b52ad082f82a744",
       "target": "claude-skills"
     },
     {
@@ -700,7 +700,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/variant-entity/SKILL.md",
       "relativePath": "claude-skills/variant-entity/SKILL.md",
-      "hash": "42e99fd37c8c12a28ffdb8ff81b41b841937bd0ad56ae63cf3e5bb1b8245738d",
+      "hash": "bec1d1df8f8d63a63d441dfe20da03d26a946b5cb5bcd8634bd1349a823991b2",
       "target": "claude-skills"
     },
     {
@@ -712,7 +712,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/state-field/SKILL.md",
       "relativePath": "claude-skills/state-field/SKILL.md",
-      "hash": "3d95ea1d94b37939b149260036aba2fc7418112307fcfaaae49f97c2b0cc8fd6",
+      "hash": "27bc129fdec111dd4c7dcbbb756f85f7e79b2e997affa259366fca9b49a6de4d",
       "target": "claude-skills"
     },
     {
@@ -724,7 +724,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/sync-entity/SKILL.md",
       "relativePath": "claude-skills/sync-entity/SKILL.md",
-      "hash": "c549abd3d2b32b05d79e25decdd5b62f1d98e17e0a4ed4f9f07c0eba182a8933",
+      "hash": "3279dc78d82eb8bed11b5f746a5431bb83477e41549b5b626122d5804c9ba4cd",
       "target": "claude-skills"
     },
     {
@@ -736,7 +736,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/widget-entity/SKILL.md",
       "relativePath": "claude-skills/widget-entity/SKILL.md",
-      "hash": "0a22f41e71f1ebe2fca9b73625dbc2d4b7058dc6bc30d13c2ffddf059fb85ae6",
+      "hash": "4d849b1c8be020230ec721dd2a8195f7bc47897ec3e75b2731c30cae3ddc6c96",
       "target": "claude-skills"
     },
     {
@@ -748,7 +748,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/anatomy-part-entity/SKILL.md",
       "relativePath": "claude-skills/anatomy-part-entity/SKILL.md",
-      "hash": "2019bbbf55c30a605fc439d8214262bcc540f6aee8294aa125a8e7bf1d619215",
+      "hash": "78e48856b6d1f060ec16e2d97fc795b5cbae317d9a499a830a9779d4614fd41b",
       "target": "claude-skills"
     },
     {
@@ -760,7 +760,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/widget-state-entity/SKILL.md",
       "relativePath": "claude-skills/widget-state-entity/SKILL.md",
-      "hash": "0a4cdd9ff9543d1243027096749a63e8366776e9ca0430536588d39b2376b2fc",
+      "hash": "7eeab6e06dd89922482cddb969a93f5b46c0b39a860620105b479af937b5d878",
       "target": "claude-skills"
     },
     {
@@ -772,7 +772,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/widget-prop-entity/SKILL.md",
       "relativePath": "claude-skills/widget-prop-entity/SKILL.md",
-      "hash": "e280baecd18993ecd2f9806f345d9d2e00a1f1ff145906daab9901516d1bfb69",
+      "hash": "bc6326801d5b061399113d5af71e6bc7dfd3c678b140495b85b7e17ccdcdcaf8",
       "target": "claude-skills"
     },
     {
@@ -784,7 +784,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/theme-entity/SKILL.md",
       "relativePath": "claude-skills/theme-entity/SKILL.md",
-      "hash": "871398d96f9bc8a512f9c6e42548e2ee8fafd6b83459546eccf3fbbc34a685f6",
+      "hash": "56963be52690dce947499260cb84cb27b1d94e463368fa155bfe3da7fdf4ae59",
       "target": "claude-skills"
     },
     {
@@ -796,7 +796,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/interactor-entity/SKILL.md",
       "relativePath": "claude-skills/interactor-entity/SKILL.md",
-      "hash": "ec0ac239f5f998c1bda311485e5d6e303611049b7b6333fb107512eff71cb5a9",
+      "hash": "e038042d9ef728f8764238517dec193c4b4e29824a4f9dac283d94901aa4877b",
       "target": "claude-skills"
     },
     {
@@ -808,7 +808,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/runtime-flow/SKILL.md",
       "relativePath": "claude-skills/runtime-flow/SKILL.md",
-      "hash": "f19f06b38b49115866aa0da40c406fdad9de67f90735e55996c96ce6a6395e86",
+      "hash": "27d0b08659c4a68653ffc242a216b5aaa5578f4334b0cf0ace7e36d54aa8c5a1",
       "target": "claude-skills"
     },
     {
@@ -820,7 +820,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/runtime-coverage/SKILL.md",
       "relativePath": "claude-skills/runtime-coverage/SKILL.md",
-      "hash": "10abc33e283dfa131715a1bdcaa635abbb16b1967f32e180928b50fc59755386",
+      "hash": "8ff3a2f9888a5334867338d08a5f6c7036848bf3f1a27165e5162d18741c9ae2",
       "target": "claude-skills"
     },
     {
@@ -832,7 +832,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/performance-profile/SKILL.md",
       "relativePath": "claude-skills/performance-profile/SKILL.md",
-      "hash": "26de8f9a520b444d2b6438fbf898cca4866563ca7c731268049ef3e256d0fe34",
+      "hash": "7b06bcb72f608087d18b8f56817b540ef4af07390f4143b3015e5388ac45c45e",
       "target": "claude-skills"
     },
     {
@@ -844,7 +844,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/error-correlation/SKILL.md",
       "relativePath": "claude-skills/error-correlation/SKILL.md",
-      "hash": "279cac471a5a2d78cdaf3dac137f49790ceb3a7c89bcfd71198227936505bba4",
+      "hash": "2da46bcf8dd8203d16fa7ef99cdd94dcc393527e8081a1fc60c8f0fc2351301d",
       "target": "claude-skills"
     },
     {
@@ -856,7 +856,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/derived-entity/SKILL.md",
       "relativePath": "claude-skills/derived-entity/SKILL.md",
-      "hash": "329b5830c9243f906daf32fa82fea6df9a7ef6a4ac2368ca91c208d5e9561377",
+      "hash": "df94bc155b81f9f035172987a1eb935ce71924f6bb41094c2dd7220b7834323d",
       "target": "claude-skills"
     },
     {
@@ -868,7 +868,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/handler-entity/SKILL.md",
       "relativePath": "claude-skills/handler-entity/SKILL.md",
-      "hash": "9678b04d6afa4eac178e07757d292e70fc733f65f3c8a70c8d10073f643519ff",
+      "hash": "49f27c3952288b655fe9170f8c056c364aee38080a500b47df13886622b9e87f",
       "target": "claude-skills"
     },
     {
@@ -880,7 +880,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/widget-implementation-entity/SKILL.md",
       "relativePath": "claude-skills/widget-implementation-entity/SKILL.md",
-      "hash": "6abda4b1d30323acb33a25e5977fb21a152d3144b117f506f8a9fb1d6515ac43",
+      "hash": "3e566809e9068476474fd809b301c99853c1a7f272af62c31c6371bbf9027fac",
       "target": "claude-skills"
     },
     {
@@ -892,7 +892,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/theme-implementation-entity/SKILL.md",
       "relativePath": "claude-skills/theme-implementation-entity/SKILL.md",
-      "hash": "f0b3ce13f6b39529a3203acfbfa8d663bf58f260aa9749902e00944be10fdefe",
+      "hash": "c5e36a6e7e81d7098ce54c510943711c838b57dab1178c888e95310574a6a97f",
       "target": "claude-skills"
     },
     {
@@ -904,7 +904,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deployment-entity/SKILL.md",
       "relativePath": "claude-skills/deployment-entity/SKILL.md",
-      "hash": "e6813721ad2a1ff392b9618f895c152c113b220fa0d7ce2322397e8396d0fb12",
+      "hash": "839c4be6f67597c790a0817cbcffcf7f5b18f98bd60f4799f9c0b74a6184d51d",
       "target": "claude-skills"
     },
     {
@@ -916,7 +916,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/suite-manifest-entity/SKILL.md",
       "relativePath": "claude-skills/suite-manifest-entity/SKILL.md",
-      "hash": "538bc32c0f7d6babcdaf7487355c2221be01536c7a2e9fc0c9a9c25980ee33eb",
+      "hash": "e4a320dca1674abc3a20ae9860e8a54545328d02a4e05e53cbe3590caa734840",
       "target": "claude-skills"
     },
     {
@@ -928,7 +928,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/interface-entity/SKILL.md",
       "relativePath": "claude-skills/interface-entity/SKILL.md",
-      "hash": "e069a93dd2112b639c8e83afa14bc58e4c601fbf481c33718a6c53a0674f57ca",
+      "hash": "4a384713351bd2823d4c83c116f2de4de7fa4e93c022b060524ee53dac95a507",
       "target": "claude-skills"
     },
     {
@@ -940,7 +940,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deployment-health/SKILL.md",
       "relativePath": "claude-skills/deployment-health/SKILL.md",
-      "hash": "2094837f30d5ba75048322b5c9a4e85eae989712173a16258ef4bbba2ce85bd1",
+      "hash": "e38d9966b60f9b123fd4bb75d585503e97bf372aefaef08808008abe291fe8d0",
       "target": "claude-skills"
     },
     {
@@ -952,7 +952,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/infrastructure-entity/SKILL.md",
       "relativePath": "claude-skills/infrastructure-entity/SKILL.md",
-      "hash": "84bc06bd02827fcd346be52e879db76f4043b07aaed8d3dc706479623603f372",
+      "hash": "7e25e077f9f94a19abc0c968da44a3e643109a708ac26b01660bf603d03c5f1f",
       "target": "claude-skills"
     },
     {
@@ -964,7 +964,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/generation-provenance/SKILL.md",
       "relativePath": "claude-skills/generation-provenance/SKILL.md",
-      "hash": "fdeaa745a69544e73484f19761452936f5df220ca06da5dc048d22844ae0a6b6",
+      "hash": "5a7b844680fc50767494f0a04baa254f1698d62d1b1afeaada3909ba0bfe471d",
       "target": "claude-skills"
     },
     {
@@ -976,7 +976,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/test-entity/SKILL.md",
       "relativePath": "claude-skills/test-entity/SKILL.md",
-      "hash": "6e30a0c6034b5a1edd876c797e38e6085b0665831192a2557b47b2fb2c691035",
+      "hash": "b964b1b0f5f337d7edb8f1581d35bff53d6840b16d48a715d13d04013869b8af",
       "target": "claude-skills"
     },
     {
@@ -988,7 +988,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/environment-entity/SKILL.md",
       "relativePath": "claude-skills/environment-entity/SKILL.md",
-      "hash": "2dd5add0db3e0094b315ddb652afce5b930f56df2d91c8a3438ffd1f49c0ca5e",
+      "hash": "def3783e037c3715dbc8f9dbf81e3aca0f8b0a3bdda59cd9e30f34b8a0169221",
       "target": "claude-skills"
     },
     {
@@ -1000,7 +1000,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/dependence-graph/SKILL.md",
       "relativePath": "claude-skills/dependence-graph/SKILL.md",
-      "hash": "0bb689c730cbc588d760783d59dbbaf4f903198621d8a4be2e328d0c755a5c91",
+      "hash": "7eff820ab5f5e5aa3c98187a970e73e32fd1e852937711cac99a4afb089720b9",
       "target": "claude-skills"
     },
     {
@@ -1012,7 +1012,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/data-flow-path/SKILL.md",
       "relativePath": "claude-skills/data-flow-path/SKILL.md",
-      "hash": "5f0b45e0a6cc1c95659226eaf6e4f6e4151682e9189e37eb33ee2238d9403994",
+      "hash": "b0a280d431a59f5373e7f6a3f3dfa2d5ac98f1640761052659f794e070944f73",
       "target": "claude-skills"
     },
     {
@@ -1024,7 +1024,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/program-slice/SKILL.md",
       "relativePath": "claude-skills/program-slice/SKILL.md",
-      "hash": "a1ba76af1735339bea87908619180c51b1797d31f949b75c67c716485f56bd09",
+      "hash": "5ac7d12c1fba990288892b53805e973dd8e09bf51100a408925209d93303a4e7",
       "target": "claude-skills"
     },
     {
@@ -1036,7 +1036,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/analysis-rule/SKILL.md",
       "relativePath": "claude-skills/analysis-rule/SKILL.md",
-      "hash": "44ce3ae52e0eb92ce6ed896ca5a284e6e4c75b49d23ef5e12b968d7b71f4e723",
+      "hash": "9ced33813bc6c6a70f4188656e87d07a9dd55313d0705196f52a31e2df765185",
       "target": "claude-skills"
     },
     {
@@ -1048,7 +1048,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/semantic-embedding/SKILL.md",
       "relativePath": "claude-skills/semantic-embedding/SKILL.md",
-      "hash": "c3c3669ef9363c9c6b3d0b16b245c25768c50d409288613a8a1f7da12eb706cf",
+      "hash": "644d0f1b4ab8396a302de696d12227a4ba267f1dcaaa80f19bb54bf5fae18583",
       "target": "claude-skills"
     },
     {
@@ -1060,7 +1060,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/score-api/SKILL.md",
       "relativePath": "claude-skills/score-api/SKILL.md",
-      "hash": "f3dd4618207b104057e9d5f7ab8ab891301c6694da5a035d91a4e79ea1dea57e",
+      "hash": "c43d289e4492fb2dbe59f59c3e92b6f76062b7edc38847e99fbf551d3ab67976",
       "target": "claude-skills"
     },
     {
@@ -1072,7 +1072,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/score-index/SKILL.md",
       "relativePath": "claude-skills/score-index/SKILL.md",
-      "hash": "bfb6d71baebf60920443188d9b4b3e56c0d138e095c46d2f140ee36ff9303c36",
+      "hash": "9f4ae59802ec53695c3256c256ebbaeec119edbefc753f6ac2c32ef2a6db8b4b",
       "target": "claude-skills"
     },
     {
@@ -1084,7 +1084,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/branch/SKILL.md",
       "relativePath": "claude-skills/branch/SKILL.md",
-      "hash": "e4febcd4d56a5bd54de96dba6777dc2e88b4bf3632445a4071396be565ae4af0",
+      "hash": "237730bc5c34132a35491f4f338197dba22335cc3af258d2cc270a1c8e4850fd",
       "target": "claude-skills"
     },
     {
@@ -1096,7 +1096,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/change-stream/SKILL.md",
       "relativePath": "claude-skills/change-stream/SKILL.md",
-      "hash": "009747bfa825105e9e17e455c93d36e76354989324690bc4fa87b90198c778e8",
+      "hash": "e3a7254a1081a56022211e6e4676d4cc2eef01eaab917fa1ac1b860a87976d00",
       "target": "claude-skills"
     },
     {
@@ -1108,7 +1108,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/content-hash/SKILL.md",
       "relativePath": "claude-skills/content-hash/SKILL.md",
-      "hash": "0176ec3cc92be9b3bd521e6116bcc9eaccf386098683ff9ab05080a8fb603556",
+      "hash": "76a40dd75d7fa47c14169219e2ef6c9093f241b2c81d8d3ce3d9ffa0c92f4f1e",
       "target": "claude-skills"
     },
     {
@@ -1120,7 +1120,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/daghistory/SKILL.md",
       "relativePath": "claude-skills/daghistory/SKILL.md",
-      "hash": "d187e3423c9c45b919c9dc6d31f95342178f832c2b64c433338449d65aa85968",
+      "hash": "26f89cfa3d4dd72c1996747a2750c7995c1f79ad23e8137e34ff4315d4b06f20",
       "target": "claude-skills"
     },
     {
@@ -1132,7 +1132,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/diff/SKILL.md",
       "relativePath": "claude-skills/diff/SKILL.md",
-      "hash": "b4702003a821b1b58a4b79f36e1186b81a67dafaf2d2b6e49a6fb95adbf59434",
+      "hash": "f1ee2e996c6d80f0297d4c3c56c504a6f8584144357f3f4228ce0ffd0d9c7afb",
       "target": "claude-skills"
     },
     {
@@ -1144,7 +1144,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/merge/SKILL.md",
       "relativePath": "claude-skills/merge/SKILL.md",
-      "hash": "754bc8ff65e7c2e2176258e48b4a64f625fc915ee0832a5254573b2e235a744b",
+      "hash": "e0216520f2567f4be0a1143c706565131d0e74812cfe78f00fd41f65d806ca00",
       "target": "claude-skills"
     },
     {
@@ -1156,7 +1156,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/patch/SKILL.md",
       "relativePath": "claude-skills/patch/SKILL.md",
-      "hash": "2032a177989756b2215945d11b82c58e4643cbc475b33cb7b93939c03c283463",
+      "hash": "92d98906860ee7c90faded945ab6f48aed1c313a741dccec7b1ff00a16ff1274",
       "target": "claude-skills"
     },
     {
@@ -1168,7 +1168,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/ref/SKILL.md",
       "relativePath": "claude-skills/ref/SKILL.md",
-      "hash": "98b832289314c636cc17cfd111344fc1b415394b45dce3e18fa4eb4de29a05e5",
+      "hash": "b0a63cc4303820991c65d17609e6a905f548cb80bbb0b3757838481e0ae07c52",
       "target": "claude-skills"
     },
     {
@@ -1180,7 +1180,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/retention-policy/SKILL.md",
       "relativePath": "claude-skills/retention-policy/SKILL.md",
-      "hash": "bd5939e44498cdd899b0cdaa9d675f2b9887e682cb5ca7e44f6bcec5443fcd53",
+      "hash": "ef325f3fcb34646a2d0fe2d69eecc400e72b6f2d76825a7f891868d861e9e774",
       "target": "claude-skills"
     },
     {
@@ -1192,7 +1192,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/schema-evolution/SKILL.md",
       "relativePath": "claude-skills/schema-evolution/SKILL.md",
-      "hash": "f3d4f76b73356b5cdfcbde6f0fbd1d5c75a6bab22a2657fa7a579d6e2ffe0105",
+      "hash": "4df23bbc612888c90b76975fbf031b7ad78b6820db32bfff6630d15314e695cb",
       "target": "claude-skills"
     },
     {
@@ -1204,7 +1204,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/temporal-version/SKILL.md",
       "relativePath": "claude-skills/temporal-version/SKILL.md",
-      "hash": "b0aeaf49f1e55e385a4d710b264a4ab592ad54d024c4e2e430a45cb4e149c099",
+      "hash": "29beed9c21f0e2fe361fec569bc1b0d527e60d978aaadb7e7ce0f7461cdc534b",
       "target": "claude-skills"
     },
     {
@@ -1216,7 +1216,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/attribution/SKILL.md",
       "relativePath": "claude-skills/attribution/SKILL.md",
-      "hash": "c0c64e249f91f593b51b20f13de2e332589a2f7a02f07096ecfd7b98afbd34a2",
+      "hash": "65ba7dc9c51e0c28d67563081cab8a43b5154d6e52cf4eb8baed607bf3f9faf0",
       "target": "claude-skills"
     },
     {
@@ -1228,7 +1228,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/causal-clock/SKILL.md",
       "relativePath": "claude-skills/causal-clock/SKILL.md",
-      "hash": "965bc7b3c2c79a1e472d6c61622e435c2ed71f20658504bf308847f846ccdbc2",
+      "hash": "b5ddea460f38e591cecfa1f2665a3b4633fb642b795d019dc22f2ae8f2c58451",
       "target": "claude-skills"
     },
     {
@@ -1240,7 +1240,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/conflict-resolution/SKILL.md",
       "relativePath": "claude-skills/conflict-resolution/SKILL.md",
-      "hash": "b973d1ab8cc2a2515aadf34b2f51cc774f4d378392cfd1c5027ea93592f166ea",
+      "hash": "dd0313c1ffff393061d0059781ca6be80b23f35daaf60ec6698578083d0acfe0",
       "target": "claude-skills"
     },
     {
@@ -1252,7 +1252,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/inline-annotation/SKILL.md",
       "relativePath": "claude-skills/inline-annotation/SKILL.md",
-      "hash": "411326d2058a1c2b872b4dff3ab1205b758ea6a95aad91c114b75f0af9da9ab7",
+      "hash": "f756cec80e3e6ea0844b416be60072fc9eac343c855931715a1a00b0121d6e9c",
       "target": "claude-skills"
     },
     {
@@ -1264,7 +1264,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/pessimistic-lock/SKILL.md",
       "relativePath": "claude-skills/pessimistic-lock/SKILL.md",
-      "hash": "f10e1be6d63c2da82cb6c0aec4835fd361925ca6b1788fd1634c8a9a22d845b2",
+      "hash": "37cca860a21572b58f794464189ae8858e7a65f293ab01684ddb7efa861a1fa6",
       "target": "claude-skills"
     },
     {
@@ -1276,7 +1276,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/replica/SKILL.md",
       "relativePath": "claude-skills/replica/SKILL.md",
-      "hash": "d5240c95e8663ee443055e33fb2cce39aac9f0c739e833099a1cc4562707131f",
+      "hash": "8b6acda3253f9a49bcdead830ad7253913c243c5be203c0e2fe90db43972b6ab",
       "target": "claude-skills"
     },
     {
@@ -1288,7 +1288,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/signature/SKILL.md",
       "relativePath": "claude-skills/signature/SKILL.md",
-      "hash": "928ddb6b184a879cfcd8ae6b93d2fdc439638f88689507367c3011c74146404f",
+      "hash": "8521dde74bec5ac45e2d8c62cf9ff50d108f9a5463853c4ba5f39d2a6f75b8bd",
       "target": "claude-skills"
     },
     {
@@ -1300,7 +1300,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/action-guide/SKILL.md",
       "relativePath": "claude-skills/action-guide/SKILL.md",
-      "hash": "1c23c1ab8bbf29cd5bb73a1fac09abdd52a01cfa1da54bfe2ae44c969d06035a",
+      "hash": "f254d30d5fa03264dbda343f5418624a6824ef2eacf56b9dc2095e6f3803b6b2",
       "target": "claude-skills"
     },
     {
@@ -1312,7 +1312,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/enrichment-renderer/SKILL.md",
       "relativePath": "claude-skills/enrichment-renderer/SKILL.md",
-      "hash": "6d92dbf9112eb5cf0f689f5bb5dc5a483c592774cd20ded3c289148b579e494c",
+      "hash": "903fd0ac571e91f1cfd3de6d07dc786d2d39df64ed672843878a00ef4ab42903",
       "target": "claude-skills"
     },
     {
@@ -1324,7 +1324,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/storage-program/SKILL.md",
       "relativePath": "claude-skills/storage-program/SKILL.md",
-      "hash": "4b9ce23f0b5718008a0a408e6a2879e8f52029047e805f02ee5065ddd86c2aca",
+      "hash": "fda6b82e357658fe325565c782021b9cf84afc610a734eca25ca47baa2fe100b",
       "target": "claude-skills"
     },
     {
@@ -1348,7 +1348,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/functional-handler/SKILL.md",
       "relativePath": "claude-skills/functional-handler/SKILL.md",
-      "hash": "a4c37ae8f13d232779c4ac6d22353a1b2f286080887368e93586ce6d4732a6de",
+      "hash": "935c46b78da4e8b406413344f643638ce82f748dedd477db8ac122927cc2dbc8",
       "target": "claude-skills"
     },
     {
@@ -1360,7 +1360,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/program-interpreter/SKILL.md",
       "relativePath": "claude-skills/program-interpreter/SKILL.md",
-      "hash": "13b20962457b54be0853c8d81c673db3a7e06a6801dd11cd1c7750a72409edbc",
+      "hash": "eac2af426c34e8b874807df5ee93e3a4aa2dc28e54617e7618283be71e75eb3d",
       "target": "claude-skills"
     },
     {
@@ -1372,7 +1372,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/program-analysis/SKILL.md",
       "relativePath": "claude-skills/program-analysis/SKILL.md",
-      "hash": "093235d3c57817d914baf41b61d69a9a8875ef94ed02f84666e449ae999282c6",
+      "hash": "2e88deb6ad43cc0852f06f856fbb0857cddd1d714bb804ffa4af4fe6283543d1",
       "target": "claude-skills"
     },
     {
@@ -1384,7 +1384,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/program-cache/SKILL.md",
       "relativePath": "claude-skills/program-cache/SKILL.md",
-      "hash": "be67af708f70b52ffd6949b410a59ed2c4759b076931a3f62015f5bf5599a714",
+      "hash": "42099d924f0ead3f81289f0a56ed0458518193a2df5db018cc32a7b4ac71885f",
       "target": "claude-skills"
     },
     {
@@ -1396,7 +1396,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/lens/SKILL.md",
       "relativePath": "claude-skills/lens/SKILL.md",
-      "hash": "319a66c33c73810974f2ce74ff5876d727ff7b907bb17678104457f12512ae20",
+      "hash": "543fb430410a2aeb93af5e326fab1439eee4056f167ce455440a8648dc48ccef",
       "target": "claude-skills"
     },
     {
@@ -1408,7 +1408,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/effect-handler/SKILL.md",
       "relativePath": "claude-skills/effect-handler/SKILL.md",
-      "hash": "ab108dbcfdc526f8560380ec4f8466646308fb5260c67dc0f9612518e0fe5a62",
+      "hash": "8450b39f23911e790b9a96ee4af871b572424b0fc050dac26725ff733b9fa01a",
       "target": "claude-skills"
     },
     {
@@ -1420,7 +1420,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/completion-coverage/SKILL.md",
       "relativePath": "claude-skills/completion-coverage/SKILL.md",
-      "hash": "b3a4753dd59c049f809b5cca52c089986fa8750eb3348bc22504bde18c13af44",
+      "hash": "e58ba77a78dc99eb4cf2014ecde31a7d0b7982570c10055ca6173b01627e16c2",
       "target": "claude-skills"
     },
     {
@@ -1432,7 +1432,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/read-write-set-provider/SKILL.md",
       "relativePath": "claude-skills/read-write-set-provider/SKILL.md",
-      "hash": "9550208a615e0b6b52324f7e1c85d3eeee03e440c6b0525f91be87e5a6bb3139",
+      "hash": "5ab06de2558513a05cac25e7cd2c16001ac84c7e747f43962b71b2ff31cd40c9",
       "target": "claude-skills"
     },
     {
@@ -1444,7 +1444,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/commutativity-provider/SKILL.md",
       "relativePath": "claude-skills/commutativity-provider/SKILL.md",
-      "hash": "cf12556b4383d677571543b0c4b187a5ef340d930fce07954031b0dc86054e35",
+      "hash": "36c75988b807d06a039f444d49e9fa1cc00a666d6c370124b1c75de940681ad9",
       "target": "claude-skills"
     },
     {
@@ -1456,7 +1456,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/parallelism-provider/SKILL.md",
       "relativePath": "claude-skills/parallelism-provider/SKILL.md",
-      "hash": "83655086a9a5d38efff9b5a05759dd92213eb92d212575a0a3ad42f4defd8cab",
+      "hash": "6d6d0662182b0be0ed86a0dd3652f10f5d59ac3ab78a687a4be6129a97dfed25",
       "target": "claude-skills"
     },
     {
@@ -1468,7 +1468,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/dead-branch-provider/SKILL.md",
       "relativePath": "claude-skills/dead-branch-provider/SKILL.md",
-      "hash": "ea0e13462fd7cbcb42b3be8efc2dd50e4b5a02e896eacdb425e8770325f6a5f0",
+      "hash": "52b4e1ad5601bcde919a13a75dd2345156aaac67838f47c608405e26eb8d7da3",
       "target": "claude-skills"
     },
     {
@@ -1480,7 +1480,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/invariant-extraction-provider/SKILL.md",
       "relativePath": "claude-skills/invariant-extraction-provider/SKILL.md",
-      "hash": "1d85c72003541d5b52a3872544c3add08d1e9a5d1f02276cbad99a30e660eada",
+      "hash": "7a2a553105837daa4e033b17341565d0d83e09220c68f91d6b4ee44790bec631",
       "target": "claude-skills"
     },
     {
@@ -1492,7 +1492,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/lens-extraction-provider/SKILL.md",
       "relativePath": "claude-skills/lens-extraction-provider/SKILL.md",
-      "hash": "c6adf50e05b9dbb47dbc934edf6bb514650546d456476db01d44c9ee8f35e336",
+      "hash": "2d184e356974d5a67e78becc37877bdf2d11dba3fd0b5dae0530b4a27369534b",
       "target": "claude-skills"
     },
     {
@@ -1504,7 +1504,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/variant-extraction-provider/SKILL.md",
       "relativePath": "claude-skills/variant-extraction-provider/SKILL.md",
-      "hash": "a801eef0003d3ccf2423e87d21d73cb36ac6eb83b187fc5f6fca13a09e1f80e2",
+      "hash": "67840690ebfc2af7b0a6f25b6b58ed552ea0564b5e70e0821f5da7c565fd8af2",
       "target": "claude-skills"
     },
     {
@@ -1516,7 +1516,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/transport-effect-provider/SKILL.md",
       "relativePath": "claude-skills/transport-effect-provider/SKILL.md",
-      "hash": "262bfda533e9c760395c3b0a0081423293f1507f69e054e644640eb046a3f2c0",
+      "hash": "59bd06d22003bf73d696b4d59abeac06d55cab5398460ea7bcaa833189b928e2",
       "target": "claude-skills"
     },
     {
@@ -1528,7 +1528,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/render-transform/SKILL.md",
       "relativePath": "claude-skills/render-transform/SKILL.md",
-      "hash": "c15463db207a39fe762f9da4cca452c5e1ad4ced480b235bbfe777304bcb87ce",
+      "hash": "d7eca434fd0035583b7d154c32c0e6ad2802d356f73cff145873c3af1f010e66",
       "target": "claude-skills"
     },
     {
@@ -1546,7 +1546,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/token-remap-provider/SKILL.md",
       "relativePath": "claude-skills/token-remap-provider/SKILL.md",
-      "hash": "e9e15053a910fbc443f18d97f232bc8010d7f2e473c656859af4b1ad0f9ae509",
+      "hash": "0cc56c46ab50cf6b5f0bb4912977e53b986a39cb6df8026b718700c8469c11aa",
       "target": "claude-skills"
     },
     {
@@ -1558,7 +1558,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/a11y-adapt-provider/SKILL.md",
       "relativePath": "claude-skills/a11y-adapt-provider/SKILL.md",
-      "hash": "911e9c68eead0a4a5d2c610c8ab8b18291277d2999f5f2ce3c9eea635fac42f8",
+      "hash": "f4330c586d9d2c41baa9619a193089a3e6704662ce993b0f6d4ec922b4d74499",
       "target": "claude-skills"
     },
     {
@@ -1570,7 +1570,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/bind-rewrite-provider/SKILL.md",
       "relativePath": "claude-skills/bind-rewrite-provider/SKILL.md",
-      "hash": "71e89b588175a19bb98c3ff750a3c667a265b15545f06f901c1dfbc4064ce009",
+      "hash": "694072f6673af160add75a2441e3aa4f98335219dd62602d1efa3cefcb52c763",
       "target": "claude-skills"
     },
     {
@@ -1582,7 +1582,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/custom-transform-provider/SKILL.md",
       "relativePath": "claude-skills/custom-transform-provider/SKILL.md",
-      "hash": "bd6458e37943ceee04c2a9866881a063a273e3f46e6c9a12726f7d970770a6df",
+      "hash": "4297eccd7ed25790ab7ca6165fc88216c48f67baf33ac2439e7241347f11dc94",
       "target": "claude-skills"
     },
     {
@@ -1594,7 +1594,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/transform-extraction-provider/SKILL.md",
       "relativePath": "claude-skills/transform-extraction-provider/SKILL.md",
-      "hash": "bfb31041f6f1d0bf7a5f1d4c6c240e67e7c212162bc124e498c27365e147abf6",
+      "hash": "82e8cc28d0ad5c2d072332ea71cb833193221c99cf2a2e0ca52c5f96fe92d389",
       "target": "claude-skills"
     },
     {

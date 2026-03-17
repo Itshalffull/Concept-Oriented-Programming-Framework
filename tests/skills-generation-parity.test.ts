@@ -222,8 +222,8 @@ describe('Claude Skills Generation Parity', () => {
       expect(existsSync(GENERATED_SKILLS_DIR)).toBe(true);
     });
 
-    it('index.ts entrypoint exists', () => {
-      expect(existsSync(resolve(GENERATED_SKILLS_DIR, 'index.ts'))).toBe(true);
+    it('claude-skills.ts entrypoint exists', () => {
+      expect(existsSync(resolve(GENERATED_SKILLS_DIR, 'claude-skills.ts'))).toBe(true);
     });
 
     it('every annotated concept has a generated SKILL.md', () => {
@@ -250,16 +250,16 @@ describe('Claude Skills Generation Parity', () => {
       expect(missing, `Missing .commands.ts:\n  ${missing.join('\n  ')}`).toEqual([]);
     });
 
-    it('index.ts imports all successfully generated concept skill modules', () => {
-      const indexContent = readFileSync(resolve(GENERATED_SKILLS_DIR, 'index.ts'), 'utf-8');
+    it('claude-skills.ts imports all successfully generated concept skill modules', () => {
+      const indexContent = readFileSync(resolve(GENERATED_SKILLS_DIR, 'claude-skills.ts'), 'utf-8');
       for (const name of conceptNames) {
         // Skip concepts that failed to parse during generation (e.g. Toolchain
         // uses unsupported `map String String` syntax in its concept spec).
         if (!indexContent.includes(name)) {
-          console.warn(`Skipping "${name}" — not in generated index.ts (parse failure?)`);
+          console.warn(`Skipping "${name}" — not in generated claude-skills.ts (parse failure?)`);
           continue;
         }
-        expect(indexContent, `index.ts should reference ${name}`).toContain(name);
+        expect(indexContent, `claude-skills.ts should reference ${name}`).toContain(name);
       }
     });
 
