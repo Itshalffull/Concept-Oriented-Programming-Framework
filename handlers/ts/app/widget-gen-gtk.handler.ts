@@ -1,23 +1,60 @@
-// WidgetGenGtk — GTK widget generation provider
-// Produces C GtkWidget factory functions with signal connections.
+// WidgetGenGtk — GTK4 C widget implementations
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to gtk code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretGtk } from '../../ts/surface/interpreter-targets/gtk.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-gtk-${++idCounter}`; }
 
-function toCType(type: string): string {
-  switch (type) {
-    case 'string': return 'const gchar*';
-    case 'number': return 'gdouble';
-    case 'boolean': return 'gboolean';
-    case 'int': case 'integer': return 'gint';
-    default: return 'gpointer';
-  }
-}
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
 
-function toSnakeCase(name: string): string {
-  return name.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
+  }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenGtkHandler: ConceptHandler = {
@@ -51,24 +88,15 @@ export const widgetGenGtkHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const snakeName = toSnakeCase(componentName);
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const params = props.map(p => `${toCType(p.type)} ${p.name}`).join(', ');
-    const paramList = params ? `, ${params}` : '';
 
-    const lines: string[] = [];
-    lines.push('#include <gtk/gtk.h>');
-    lines.push('');
-    lines.push(`GtkWidget* ${snakeName}_new(GtkWidget* parent${paramList}) {`);
-    lines.push('    GtkWidget* widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);');
-    lines.push(`    GtkWidget* label = gtk_label_new("${componentName}");`);
-    lines.push('    gtk_box_append(GTK_BOX(widget), label);');
-    lines.push('    return widget;');
-    lines.push('}');
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    const output = lines.join('\n');
+    // Interpret instructions into gtk code
+    const { output, trace } = interpretGtk(built.instructions, componentName);
 
-    return { variant: 'ok', output };
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

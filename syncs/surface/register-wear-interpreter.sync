@@ -1,0 +1,11 @@
+# Auto-register the Wear render-interpreter provider on first use
+
+sync RegisterWearInterpreterProvider [eager]
+  purpose: "Self-register the Wear target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterWear/interpret: []
+    => []
+}
+then {
+  RenderInterpreterWear/initialize: []
+}

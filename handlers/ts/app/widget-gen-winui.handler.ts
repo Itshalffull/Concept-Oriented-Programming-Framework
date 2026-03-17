@@ -1,19 +1,60 @@
-// WidgetGenWinUI — WinUI 3 widget generation provider
-// Produces C# sealed partial UserControl classes for Windows desktop.
+// WidgetGenWinUI — WinUI 3 C# UserControl classes
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to winui code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretWinUI } from '../../ts/surface/interpreter-targets/winui.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-winui-${++idCounter}`; }
 
-function toCSharpType(type: string): string {
-  switch (type) {
-    case 'string': return 'string';
-    case 'number': return 'double';
-    case 'boolean': return 'bool';
-    case 'int': case 'integer': return 'int';
-    default: return 'object';
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
   }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenWinUIHandler: ConceptHandler = {
@@ -47,12 +88,15 @@ export const widgetGenWinUIHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const fields = props.map(p => `        public ${toCSharpType(p.type)} ${p.name.charAt(0).toUpperCase() + p.name.slice(1)} { get; set; }`).join('\n');
 
-    const output = `using Microsoft.UI.Xaml.Controls;\n\nnamespace Widgets\n{\n    public sealed partial class ${componentName} : UserControl\n    {\n${fields}\n\n        public ${componentName}()\n        {\n            this.InitializeComponent();\n        }\n    }\n}`;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    return { variant: 'ok', output };
+    // Interpret instructions into winui code
+    const { output, trace } = interpretWinUI(built.instructions, componentName);
+
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

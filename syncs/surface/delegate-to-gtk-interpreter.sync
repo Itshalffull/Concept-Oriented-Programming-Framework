@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Gtk provider
+
+sync DelegateToGtkInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the gtk target, route the execution to the RenderInterpreterGtk provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterGtk")
+}
+then {
+  RenderInterpreterGtk/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

@@ -1,19 +1,60 @@
-// WidgetGenCompose — Jetpack Compose widget generation provider
-// Produces Kotlin @Composable functions with Modifier parameters.
+// WidgetGenCompose — Jetpack Compose @Composable functions
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to compose code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretCompose } from '../../ts/surface/interpreter-targets/compose.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-compose-${++idCounter}`; }
 
-function toKotlinType(type: string): string {
-  switch (type) {
-    case 'string': return 'String';
-    case 'number': return 'Double';
-    case 'boolean': return 'Boolean';
-    case 'int': case 'integer': return 'Int';
-    default: return 'Any';
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
   }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenComposeHandler: ConceptHandler = {
@@ -47,13 +88,15 @@ export const widgetGenComposeHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const params = props.map(p => `    ${p.name}: ${toKotlinType(p.type)}`).join(',\n');
-    const modifierParam = props.length > 0 ? ',\n    modifier: Modifier = Modifier' : '    modifier: Modifier = Modifier';
 
-    const output = `import androidx.compose.runtime.Composable\nimport androidx.compose.ui.Modifier\nimport androidx.compose.foundation.layout.Column\nimport androidx.compose.material3.Text\n\n@Composable\nfun ${componentName}(\n${params}${modifierParam}\n) {\n    Column(modifier = modifier) {\n        Text("${componentName}")\n    }\n}`;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    return { variant: 'ok', output };
+    // Interpret instructions into compose code
+    const { output, trace } = interpretCompose(built.instructions, componentName);
+
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

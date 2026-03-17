@@ -1,0 +1,11 @@
+# Auto-register the Compose render-interpreter provider on first use
+
+sync RegisterComposeInterpreterProvider [eager]
+  purpose: "Self-register the Compose target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterCompose/interpret: []
+    => []
+}
+then {
+  RenderInterpreterCompose/initialize: []
+}

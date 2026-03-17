@@ -1,18 +1,60 @@
-// WidgetGenSwiftUI — SwiftUI widget generation provider
-// Produces Swift View structs with typed properties.
+// WidgetGenSwiftUI — SwiftUI View structs
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to swiftui code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretSwiftUI } from '../../ts/surface/interpreter-targets/swiftui.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-swiftui-${++idCounter}`; }
 
-function toSwiftType(type: string): string {
-  switch (type) {
-    case 'string': return 'String';
-    case 'number': return 'Int';
-    case 'boolean': return 'Bool';
-    default: return 'Any';
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
   }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenSwiftUIHandler: ConceptHandler = {
@@ -46,12 +88,15 @@ export const widgetGenSwiftUIHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const swiftProps = props.map(p => `    var ${p.name}: ${toSwiftType(p.type)}`).join('\n');
 
-    const output = `struct ${componentName}: View {\n${swiftProps}\n\n    var body: some View {\n        Text("${componentName}")\n    }\n}`;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    return { variant: 'ok', output };
+    // Interpret instructions into swiftui code
+    const { output, trace } = interpretSwiftUI(built.instructions, componentName);
+
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

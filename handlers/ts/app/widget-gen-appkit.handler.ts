@@ -1,115 +1,60 @@
-// WidgetGenAppKit — macOS AppKit widget generation provider
-// Produces NSView subclasses with configure methods, target-action wiring,
-// accessibility roles, and anatomy factories using APPKIT_WIDGET_MAP.
+// WidgetGenAppKit — AppKit NSView subclasses for macOS
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to appkit code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
-import { APPKIT_WIDGET_MAP } from './appkit-adapter.handler';
-import type { WidgetMapping } from './appkit-adapter.handler';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretAppKit } from '../../ts/surface/interpreter-targets/appkit.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-appkit-${++idCounter}`; }
 
-function toSwiftType(type: string): string {
-  switch (type) {
-    case 'string': return 'String';
-    case 'number': return 'Double';
-    case 'boolean': return 'Bool';
-    case 'int': case 'integer': return 'Int';
-    default: return 'Any';
-  }
-}
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
 
-function generateAppKit(
-  componentName: string,
-  props: Array<{ name: string; type: string }>,
-  mapping: WidgetMapping | undefined,
-): string {
-  const viewClass = mapping?.viewClass ?? 'NSView';
-  const accessRole = mapping?.accessibilityRole ?? 'AXGroup';
-  const viewProps = mapping?.viewProperties ?? {};
-  const eventMap = mapping?.eventMap ?? {};
-  const anatomy = mapping?.anatomy ?? {};
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
 
-  const lines: string[] = [];
-  lines.push('import AppKit');
-  lines.push('');
-  lines.push(`class ${componentName}: ${viewClass} {`);
-
-  for (const p of props) {
-    lines.push(`    var ${p.name}: ${toSwiftType(p.type)}`);
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
   }
 
-  if (props.length > 0) lines.push('');
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
 
-  const initParams = props.map(p => `${p.name}: ${toSwiftType(p.type)}`).join(', ');
-  lines.push(`    init(${initParams}) {`);
-  for (const p of props) {
-    lines.push(`        self.${p.name} = ${p.name}`);
-  }
-  lines.push('        super.init(frame: .zero)');
-  lines.push('        configure()');
-  lines.push('    }');
-  lines.push('');
-  lines.push('    required init?(coder: NSCoder) {');
-  lines.push('        fatalError("init(coder:) has not been implemented")');
-  lines.push('    }');
-  lines.push('');
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
 
-  lines.push('    private func configure() {');
-
-  for (const [key, value] of Object.entries(viewProps)) {
-    if (key.startsWith('layer.')) {
-      const layerProp = key.slice(6);
-      lines.push('        wantsLayer = true');
-      if (typeof value === 'string') {
-        lines.push(`        layer?.${layerProp} = ${value === 'half' ? 'bounds.height / 2' : `"${value}"`}`);
-      } else {
-        lines.push(`        layer?.${layerProp} = ${JSON.stringify(value)}`);
-      }
-    } else if (typeof value === 'string') {
-      if (value.includes('|')) {
-        const parts = value.split('|').map(v => `.${v.trim()}`);
-        lines.push(`        ${key} = [${parts.join(', ')}]`);
-      } else {
-        lines.push(`        ${key} = .${value}`);
-      }
-    } else if (typeof value === 'boolean') {
-      lines.push(`        ${key} = ${value}`);
-    } else if (typeof value === 'number') {
-      lines.push(`        ${key} = ${value}`);
-    }
-  }
-
-  lines.push(`        setAccessibilityRole(.${accessRole.replace('AX', '').charAt(0).toLowerCase() + accessRole.replace('AX', '').slice(1)})`);
-  lines.push('    }');
-
-  if (Object.keys(eventMap).length > 0) {
-    lines.push('');
-    lines.push('    // MARK: - Actions');
-    for (const [event, selector] of Object.entries(eventMap)) {
-      const methodName = selector.replace(/:/g, '');
-      lines.push('');
-      lines.push(`    @objc func ${methodName}(_ sender: Any?) {`);
-      lines.push(`        // Handle ${event} event`);
-      lines.push('    }');
-    }
-  }
-
-  const anatomyParts = Object.entries(anatomy).filter(([k]) => k !== 'root');
-  if (anatomyParts.length > 0) {
-    lines.push('');
-    lines.push('    // MARK: - Anatomy');
-    for (const [part, partClass] of anatomyParts) {
-      lines.push('');
-      lines.push(`    private(set) lazy var ${part}: ${partClass} = {`);
-      lines.push(`        let view = ${partClass}()`);
-      lines.push('        return view');
-      lines.push('    }()');
-    }
-  }
-
-  lines.push('}');
-  return lines.join('\n');
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenAppKitHandler: ConceptHandler = {
@@ -143,15 +88,15 @@ export const widgetGenAppKitHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
 
-    const widgetType = (ast.widget as string) || (ast.type as string) || '';
-    const mapKey = widgetType.replace(/[-_\s]/g, '').toLowerCase();
-    const mapping: WidgetMapping | undefined = mapKey ? APPKIT_WIDGET_MAP[mapKey] : undefined;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    const output = generateAppKit(componentName, props, mapping);
+    // Interpret instructions into appkit code
+    const { output, trace } = interpretAppKit(built.instructions, componentName);
 
-    return { variant: 'ok', output };
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Solid provider
+
+sync DelegateToSolidInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the solid target, route the execution to the RenderInterpreterSolid provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterSolid")
+}
+then {
+  RenderInterpreterSolid/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

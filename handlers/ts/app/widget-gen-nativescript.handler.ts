@@ -1,12 +1,63 @@
-// WidgetGenNativeScript — NativeScript widget generation provider
-// Produces TypeScript View subclasses with createNativeView lifecycle methods.
+// WidgetGenNativescript — NativeScript View subclasses
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to nativescript code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretNativescript } from '../../ts/surface/interpreter-targets/nativescript.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-nativescript-${++idCounter}`; }
 
-export const widgetGenNativeScriptHandler: ConceptHandler = {
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
+  }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
+}
+
+export const widgetGenNativescriptHandler: ConceptHandler = {
   async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
     const id = nextId();
     const providerRef = 'widget-gen-provider:nativescript';
@@ -37,15 +88,16 @@ export const widgetGenNativeScriptHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const fields = props.map(p => `  ${p.name}: ${p.type || 'any'};`).join('\n');
-    const ctorAssignments = props.map(p => `    this.${p.name} = ${p.name};`).join('\n');
-    const ctorParams = props.map(p => `${p.name}: ${p.type || 'any'}`).join(', ');
 
-    const output = `import { View } from '@nativescript/core';\n\nexport class ${componentName} extends View {\n${fields}\n\n  constructor(${ctorParams}) {\n    super();\n${ctorAssignments}\n  }\n\n  createNativeView(): Object {\n    return super.createNativeView();\n  }\n\n  disposeNativeView(): void {\n    super.disposeNativeView();\n  }\n}`;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    return { variant: 'ok', output };
+    // Interpret instructions into nativescript code
+    const { output, trace } = interpretNativescript(built.instructions, componentName);
+
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 
-export function resetWidgetGenNativeScriptCounter(): void { idCounter = 0; }
+export function resetWidgetGenNativescriptCounter(): void { idCounter = 0; }

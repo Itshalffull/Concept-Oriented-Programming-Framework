@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Appkit provider
+
+sync DelegateToAppkitInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the appkit target, route the execution to the RenderInterpreterAppkit provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterAppkit")
+}
+then {
+  RenderInterpreterAppkit/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

@@ -1,0 +1,11 @@
+# Auto-register the Appkit render-interpreter provider on first use
+
+sync RegisterAppkitInterpreterProvider [eager]
+  purpose: "Self-register the Appkit target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterAppkit/interpret: []
+    => []
+}
+then {
+  RenderInterpreterAppkit/initialize: []
+}

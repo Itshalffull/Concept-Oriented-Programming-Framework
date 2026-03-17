@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Winui provider
+
+sync DelegateToWinuiInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the winui target, route the execution to the RenderInterpreterWinui provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterWinui")
+}
+then {
+  RenderInterpreterWinui/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

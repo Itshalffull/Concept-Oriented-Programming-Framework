@@ -1,13 +1,60 @@
-// WidgetGenVanilla — Vanilla Web Components widget generation provider
-// Produces HTMLElement subclasses registered via customElements.define.
+// WidgetGenVanilla — Web Components with Custom Elements and Shadow DOM
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to vanilla code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretVanilla } from '../../ts/surface/interpreter-targets/vanilla.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-vanilla-${++idCounter}`; }
 
-function toKebabCase(name: string): string {
-  return name.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
+  }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
 }
 
 export const widgetGenVanillaHandler: ConceptHandler = {
@@ -41,16 +88,15 @@ export const widgetGenVanillaHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const tagName = `x-${toKebabCase(componentName)}`;
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
-    const observedAttrs = props.map(p => `'${p.name}'`).join(', ');
-    const getters = props.map(p =>
-      `  get ${p.name}(): ${p.type || 'string'} {\n    return this.getAttribute('${p.name}') ?? '';\n  }`
-    ).join('\n\n');
 
-    const output = `class ${componentName} extends HTMLElement {\n  static get observedAttributes() {\n    return [${observedAttrs}];\n  }\n\n  constructor() {\n    super();\n    this.attachShadow({ mode: 'open' });\n  }\n\n${getters}\n\n  connectedCallback() {\n    this.render();\n  }\n\n  attributeChangedCallback() {\n    this.render();\n  }\n\n  private render() {\n    this.shadowRoot!.innerHTML = \`<div>${componentName}</div>\`;\n  }\n}\n\ncustomElements.define('${tagName}', ${componentName});`;
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    return { variant: 'ok', output };
+    // Interpret instructions into vanilla code
+    const { output, trace } = interpretVanilla(built.instructions, componentName);
+
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 

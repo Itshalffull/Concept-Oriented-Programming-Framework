@@ -1,0 +1,18 @@
+# Route RenderInterpreter delegation to the Swiftui provider
+
+sync DelegateToSwiftuiInterpreter [eager]
+  purpose: "When the RenderInterpreter delegates to the swiftui target, route the execution to the RenderInterpreterSwiftui provider."
+when {
+  RenderInterpreter/execute: [ interpreter: ?interpreter ]
+    => [ delegateTo: ?delegation ]
+}
+where {
+  filter(?delegation.concept == "RenderInterpreterSwiftui")
+}
+then {
+  RenderInterpreterSwiftui/interpret: [
+    executionId: ?delegation.input.executionId;
+    program: ?delegation.input.program;
+    componentName: ?delegation.input.componentName
+  ]
+}

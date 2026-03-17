@@ -1,0 +1,11 @@
+# Auto-register the Vue render-interpreter provider on first use
+
+sync RegisterVueInterpreterProvider [eager]
+  purpose: "Self-register the Vue target interpreter in plugin-registry so the RenderInterpreter dispatcher can discover it."
+when {
+  RenderInterpreterVue/interpret: []
+    => []
+}
+then {
+  RenderInterpreterVue/initialize: []
+}

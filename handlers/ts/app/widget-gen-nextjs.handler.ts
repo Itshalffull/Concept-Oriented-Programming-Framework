@@ -1,10 +1,61 @@
-// WidgetGenNextjs — Next.js widget generation provider
-// Produces TypeScript/JSX client components with 'use client' directive.
+// WidgetGenNextjs — Next.js client components with use client directive
+// Uses the RenderProgram pipeline: parses widget AST -> builds instructions -> interprets to nextjs code.
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import { buildRenderProgram } from '../../ts/surface/render-program-builder.js';
+import { interpretNextjs } from '../../ts/surface/interpreter-targets/nextjs.js';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-nextjs-${++idCounter}`; }
+
+function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
+  const props = ((ast.props || []) as Array<Record<string, unknown>>).map(p => ({
+    name: p.name as string,
+    type: p.type as string || 'string',
+    defaultValue: p.defaultValue as string || p.default as string || '',
+  }));
+
+  const anatomy = ((ast.anatomy || ast.parts || []) as Array<Record<string, unknown>>).map(function mapPart(p: Record<string, unknown>): Record<string, unknown> {
+    return {
+      name: p.name as string || p.part as string,
+      role: p.role as string || 'container',
+      children: ((p.children || []) as Array<Record<string, unknown>>).map(mapPart),
+    };
+  });
+
+  // If no anatomy but we have a name, create a root part
+  if (anatomy.length === 0) {
+    anatomy.push({ name: 'root', role: 'container', children: [] });
+  }
+
+  const states = ((ast.states || []) as Array<Record<string, unknown>>).map(s => ({
+    name: s.name as string,
+    initial: s.initial as boolean || false,
+    transitions: ((s.transitions || []) as Array<Record<string, unknown>>).map(t => ({
+      event: t.event as string,
+      target: t.target as string,
+    })),
+  }));
+
+  const accessibility = ast.accessibility as Record<string, unknown> || {};
+
+  return {
+    name: ast.name as string || 'Widget',
+    props,
+    anatomy,
+    states,
+    accessibility: {
+      role: accessibility.role as string || null,
+      keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>,
+      focus: accessibility.focus as Record<string, unknown> || {},
+      ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [],
+      ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [],
+    },
+    connect: ast.connect as Array<Record<string, unknown>> || [],
+    composedWidgets: ast.composedWidgets as string[] || [],
+    invariants: ast.invariants as string[] || [],
+  };
+}
 
 export const widgetGenNextjsHandler: ConceptHandler = {
   async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
@@ -37,15 +88,15 @@ export const widgetGenNextjsHandler: ConceptHandler = {
     }
 
     const componentName = (ast.name as string) || 'Widget';
-    const props = (ast.props || []) as Array<{ name: string; type: string }>;
 
-    const propsType = props.length > 0
-      ? `interface ${componentName}Props {\n${props.map(p => `  ${p.name}: ${p.type || 'any'};`).join('\n')}\n}\n\n`
-      : '';
+    // Build a WidgetManifest-compatible structure and produce RenderProgram instructions
+    const manifest = astToManifest(ast);
+    const built = buildRenderProgram(manifest as any);
 
-    const output = `'use client';\n\n${propsType}export function ${componentName}(${props.length > 0 ? `props: ${componentName}Props` : ''}) {\n  return <div>${componentName}</div>;\n}`;
+    // Interpret instructions into nextjs code
+    const { output, trace } = interpretNextjs(built.instructions, componentName);
 
-    return { variant: 'ok', output };
+    return { variant: 'ok', output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) };
   },
 };
 
