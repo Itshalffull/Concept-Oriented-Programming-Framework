@@ -526,8 +526,9 @@ async function interfaceGenerate(
       );
 
       if (entrypointResult.content) {
+        const entrypointFile = (surfaceResult.entrypoint as string) || 'index.ts';
         allFiles.push({
-          path: `${target}/index.ts`,
+          path: `${target}/${entrypointFile}`,
           content: entrypointResult.content as string,
         });
       }

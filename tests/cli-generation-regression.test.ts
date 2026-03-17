@@ -20,7 +20,7 @@ import { parse as parseYaml } from 'yaml';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DEVTOOLS_MANIFEST = resolve(PROJECT_ROOT, 'examples/devtools/devtools.interface.yaml');
-const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'generated/devtools/cli');
+const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'cli/src');
 const CODEX_MCP_CONFIG = resolve(PROJECT_ROOT, '.codex/config.toml');
 
 // ---- Generated CLI Structure Extraction ----
@@ -136,7 +136,7 @@ describe('CLI Generation Regression', () => {
     conceptOverrides = parseDevtoolsOverrides(manifestYaml);
 
     generatedCommands = new Map();
-    const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+    const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
 
     const importRegex = /from '\.\/([^/]+)\//g;
     let match;
@@ -800,7 +800,7 @@ describe('CLI Generation Regression', () => {
         // Skip concepts with known parse failures (toolchain uses unsupported
         // `map String String` syntax). These are tracked separately.
         if (!generatedCommands.has(conceptFile)) {
-          console.warn(`Skipping "${conceptFile}" — not in generated index.ts (parse failure?)`);
+          console.warn(`Skipping "${conceptFile}" — not in generated commands.ts (parse failure?)`);
           continue;
         }
         expect(
@@ -811,8 +811,8 @@ describe('CLI Generation Regression', () => {
     });
 
     it('generated CLI has the expected number of command groups', () => {
-      // Count expected from index.ts imports (excludes concepts that fail to parse)
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+      // Count expected from commands.ts imports (excludes concepts that fail to parse)
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
       const importCount = (indexContent.match(/from '\.\//g) || []).length;
       expect(generatedCommands.size).toBe(importCount);
     });
@@ -850,23 +850,26 @@ describe('CLI Generation Regression', () => {
   // ---- Generated file integrity ----
 
   describe('generated file integrity', () => {
-    it('generated CLI has an index.ts entrypoint', () => {
-      expect(existsSync(resolve(GENERATED_CLI_DIR, 'index.ts'))).toBe(true);
+    it('generated CLI has a commands.ts entrypoint', () => {
+      expect(existsSync(resolve(GENERATED_CLI_DIR, 'commands.ts'))).toBe(true);
     });
 
-    it('index.ts imports all generated command files', () => {
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
+    it('commands.ts imports all generated command files', () => {
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
       for (const [group] of generatedCommands) {
         // camelCase: spec-parser -> specParserCommand
         const camel = group.split('-').map((w, i) => i === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)).join('');
-        expect(indexContent, `index.ts should import ${camel}Command`).toContain(`${camel}Command`);
+        expect(indexContent, `commands.ts should import ${camel}Command`).toContain(`${camel}Command`);
       }
     });
 
-    it('index.ts adds all command groups to the program', () => {
-      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'index.ts'), 'utf-8');
-      const addCommandCount = (indexContent.match(/\.addCommand\(/g) || []).length;
-      expect(addCommandCount).toBe(generatedCommands.size);
+    it('commands.ts registers all command groups on the program', () => {
+      const indexContent = readFileSync(resolve(GENERATED_CLI_DIR, 'commands.ts'), 'utf-8');
+      // Count commands in the allCommands array (merged entrypoint pattern)
+      for (const [group] of generatedCommands) {
+        const camel = group.split('-').map((w, i) => i === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)).join('');
+        expect(indexContent).toContain(`${camel}Command`);
+      }
     });
 
     it('each generated file has auto-generated header comment', () => {

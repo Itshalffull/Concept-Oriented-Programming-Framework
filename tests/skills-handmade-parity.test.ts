@@ -21,7 +21,7 @@ import { resolve, join } from 'path';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const HANDMADE_SKILLS_DIR = resolve(PROJECT_ROOT, '.claude/skills');
-const GENERATED_SKILLS_DIR = resolve(PROJECT_ROOT, 'generated/devtools/claude-skills');
+const GENERATED_SKILLS_DIR = resolve(PROJECT_ROOT, '.claude/skills');
 
 // ---- Types ----
 

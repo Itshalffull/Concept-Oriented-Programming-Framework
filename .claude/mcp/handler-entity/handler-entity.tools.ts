@@ -116,7 +116,7 @@ export const handlerEntityTools = [
   {
     "type": "tool",
     "name": "handler_entity_resolve_to_ast_node",
-    "description": "Resolve to ast node handlerentity — Resolve a position within a handler to the innermost AST node \n and its ancestor chain up to the action method root . node is \n serialized JSON { kind , startLine , startCol , endLine , endCol , \n text } . ancestors is serialized JSON array of { kind , startLine , \n endLine } from innermost to outermost . This enables precise \n mapping : the error occurred in the `await storage.put()` call\r\n        inside the `if (!existing)` branch of the `create` method.",
+    "description": "Resolve to ast node handlerentity — Resolve a position within a handler to the innermost AST node \n and its ancestor chain up to the action method root . node is \n serialized JSON { kind , startLine , startCol , endLine , endCol , \n text } . ancestors is serialized JSON array of { kind , startLine , \n endLine } from innermost to outermost . This enables precise \n mapping : the error occurred in the `await storage.put()` call\n        inside the `if (!existing)` branch of the `create` method.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -190,6 +190,22 @@ export const handlerEntityTools = [
       "required": [
         "handler",
         "actionName"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "handler_entity_diff_from_spec",
+    "description": "Diff from spec handlerentity — Compare the handler implementation against its concept spec \n to find drift missing actions , extra actions not in spec , \n variant mismatches , and storage collection discrepancies . \n Result as serialized JSON array of { kind , specValue , implValue } . \n kind is one of : missing_action , extra_action , missing_variant , \n extra_variant , storage_mismatch .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "concept": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "concept"
       ]
     }
   },

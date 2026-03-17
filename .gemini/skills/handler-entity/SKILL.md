@@ -129,6 +129,16 @@ Find all storage operations in an action method
 
 **Arguments:** `$0` **handler** (H), `$1` **actionName** (string)
 
+### diffFromSpec
+Compare the handler implementation against its concept spec 
+ to find drift missing actions , extra actions not in spec , 
+ variant mismatches , and storage collection discrepancies . 
+ Result as serialized JSON array of { kind , specValue , implValue } . 
+ kind is one of : missing_action , extra_action , missing_variant , 
+ extra_variant , storage_mismatch .
+
+**Arguments:** `$0` **concept** (string)
+
 ### findByError
 Return handlers correlated with errors on the given entity 
  symbol . Cross references ErrorCorrelation to find handlers 

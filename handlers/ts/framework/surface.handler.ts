@@ -204,15 +204,34 @@ function generateEntrypointContent(
           return `import { ${camel}Command } from './${kebab}/${kebab}.command';`;
         })
         .join('\n');
-      const commands = conceptNames
-        .map(c => `  program.addCommand(${toCamelCase(c)}Command);`)
-        .join('\n');
+      const varNames = conceptNames.map(c => `${toCamelCase(c)}Command`);
       return (
         header +
         `import { Command } from 'commander';\n` +
         `${imports}\n\n` +
         `const program = new Command();\n\n` +
-        `${commands}\n\n` +
+        `// Merge commands that share the same name (e.g. multiple scaffold-gen\n` +
+        `// concepts all produce a Command('scaffold') with different subcommands).\n` +
+        `const allCommands = [${varNames.join(', ')}];\n` +
+        `const merged = new Map<string, Command>();\n` +
+        `for (const cmd of allCommands) {\n` +
+        `  const name = cmd.name();\n` +
+        `  const existing = merged.get(name);\n` +
+        `  if (existing) {\n` +
+        `    // Move subcommands from duplicate into the first instance\n` +
+        `    for (const sub of cmd.commands) {\n` +
+        `      // Skip if the subcommand name already exists on the target\n` +
+        `      if (!existing.commands.some((e: Command) => e.name() === sub.name())) {\n` +
+        `        existing.addCommand(sub);\n` +
+        `      }\n` +
+        `    }\n` +
+        `  } else {\n` +
+        `    merged.set(name, cmd);\n` +
+        `  }\n` +
+        `}\n` +
+        `for (const cmd of merged.values()) {\n` +
+        `  program.addCommand(cmd);\n` +
+        `}\n\n` +
         `export default program;\n`
       );
     }

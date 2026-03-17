@@ -1,6 +1,6 @@
 ---
 name: handler-scaffold-gen
-description: Generate TypeScript concept handler ( . impl . ts ) implementation scaffolds from provided configuration including concept name , action signatures , and storage patterns . Optionally generates a conformance test file
+description: Generate TypeScript concept handler ( . handler . ts ) implementation scaffolds from provided configuration including concept name , action signatures , and storage patterns . Defaults to functional ( StorageProgram ) style ; falls back to imperative style only when explicitly requested . Optionally generates a conformance test file
 argument-hint: --concept <ConceptName>
 allowed-tools: Read, Write, Bash
 ---
@@ -44,11 +44,12 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 
 ### Step 3: Generate Handler Implementation
 
-Generate a handler implementation with register ( ) , typed 
- action methods , input extraction , storage patterns , and 
- an optional conformance test .
+Generate a handler implementation with typed action methods , 
+ input extraction , and storage patterns . Defaults to functional 
+ ( StorageProgram ) style ; pass style = imperative for the 
+ imperative fallback . Optionally generates a conformance test .
 
-**Arguments:** `$0` **conceptName** (string), `$1` **actions** (actiondef[])
+**Arguments:** `$0` **conceptName** (string), `$1` **actions** (actiondef[]), `$2` **style** (string)
 
 **Checklist:**
 - [ ] Handler export name follows convention (camelCase + 'Handler')?

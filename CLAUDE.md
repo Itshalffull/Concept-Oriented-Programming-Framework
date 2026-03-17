@@ -130,11 +130,8 @@ building new concepts.
 
 ```
 specs/              # Concept specifications (.concept)
-specs/monadic/      # StorageProgram monad & functional handler specs
-specs/surface/      # Render transform & Surface provider specs
 syncs/              # Synchronization rules (.sync)
 handlers/ts/        # TypeScript handler implementations (.handler.ts)
-runtime/            # StorageProgram DSL, interpreter, functional handler types
 surface/            # Widget and theme specs (.widget, .theme)
 repertoire/         # Reusable app-level suites
 score/              # Code-as-data analysis suites

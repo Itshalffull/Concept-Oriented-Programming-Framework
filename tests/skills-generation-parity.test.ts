@@ -22,8 +22,8 @@ import { parse as parseYaml } from 'yaml';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DEVTOOLS_MANIFEST = resolve(PROJECT_ROOT, 'examples/devtools/devtools.interface.yaml');
-const GENERATED_SKILLS_DIR = resolve(PROJECT_ROOT, 'generated/devtools/claude-skills');
-const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'generated/devtools/cli');
+const GENERATED_SKILLS_DIR = resolve(PROJECT_ROOT, '.claude/skills');
+const GENERATED_CLI_DIR = resolve(PROJECT_ROOT, 'cli/src');
 
 // ---- Types ----
 

@@ -299,6 +299,26 @@ handlerEntityCommand
   });
 
 handlerEntityCommand
+  .command('diff-from-spec')
+  .description('Compare the handler implementation against its concept spec to find drift missing actions , extra actions not in spec , variant mismatches , and storage collection discrepancies . Result as serialized JSON array of { kind , specValue , implValue } . kind is one of : missing_action , extra_action , missing_variant , extra_variant , storage_mismatch .')
+  .requiredOption('--concept <concept>', 'Concept')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerEntity', 'diffFromSpec', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+handlerEntityCommand
   .command('find-by-error')
   .description('Return handlers correlated with errors on the given entity symbol . Cross references ErrorCorrelation to find handlers whose action methods appear in error stack traces . Results as serialized JSON array .')
   .requiredOption('--error-symbol <errorSymbol>', 'Error Symbol')
@@ -343,5 +363,5 @@ handlerEntityCommand
 export const handlerEntityCommandTree = {
   group: 'handler-entity',
   description: 'Queryable representation of a concept handler implementation file the TypeScript ( or other language ) code that implements a concept s actions . Links handler source to its concept entity , action entities , parsed AST , dependencies , and runtime behavior . Enables queries like which handler implements User/create? , show me the handler source for this failing action , and what are the handler\'s dependencies? Bridges the gap between concept specs and their executable code , enabling stack trace correlation , error root cause analysis , and implementation coverage tracking',
-  commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'getByFile', command: 'get-by-file' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByLanguage', command: 'find-by-language' }, { action: 'getActionMethod', command: 'get-action-method' }, { action: 'implementationGaps', command: 'implementation-gaps' }, { action: 'getDependencies', command: 'get-dependencies' }, { action: 'getStorageUsage', command: 'get-storage-usage' }, { action: 'resolveStackFrame', command: 'resolve-stack-frame' }, { action: 'resolveToAstNode', command: 'resolve-to-ast-node' }, { action: 'resolveStackTrace', command: 'resolve-stack-trace' }, { action: 'traceToVariantReturn', command: 'trace-to-variant-return' }, { action: 'traceToStorageCalls', command: 'trace-to-storage-calls' }, { action: 'findByError', command: 'find-by-error' }, { action: 'sourceForAction', command: 'source-for-action' }],
+  commands: [{ action: 'register', command: 'register' }, { action: 'get', command: 'get' }, { action: 'getByFile', command: 'get-by-file' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByLanguage', command: 'find-by-language' }, { action: 'getActionMethod', command: 'get-action-method' }, { action: 'implementationGaps', command: 'implementation-gaps' }, { action: 'getDependencies', command: 'get-dependencies' }, { action: 'getStorageUsage', command: 'get-storage-usage' }, { action: 'resolveStackFrame', command: 'resolve-stack-frame' }, { action: 'resolveToAstNode', command: 'resolve-to-ast-node' }, { action: 'resolveStackTrace', command: 'resolve-stack-trace' }, { action: 'traceToVariantReturn', command: 'trace-to-variant-return' }, { action: 'traceToStorageCalls', command: 'trace-to-storage-calls' }, { action: 'diffFromSpec', command: 'diff-from-spec' }, { action: 'findByError', command: 'find-by-error' }, { action: 'sourceForAction', command: 'source-for-action' }],
 };

@@ -12,6 +12,7 @@ handlerScaffoldGenCommand
   .description('Scaffold a .handler.ts handler with register(), typed actions, and a conformance test.')
   .requiredOption('--concept-name <conceptName>', 'Concept Name')
   .option('-a, --actions <actions>', 'Comma-separated action signatures (name:param1:Type1,name:param2:Type2)')
+  .requiredOption('--style <style>', 'Style')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String  # Scaffold a handler')
