@@ -1,8 +1,17 @@
 // Evidence Concept Implementation — Formal Verification Suite
 // Record, validate, retrieve, compare, and minimize verification evidence
 // (proof certificates, counterexamples, model traces, coverage reports, solver logs).
+//
+// Migrated to FunctionalConceptHandler: returns StoragePrograms enabling
+// the monadic pipeline to extract properties like "recorded evidence always
+// has a valid content_hash" and "only counterexamples can be minimized".
 // See Architecture doc Section 18.3
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'evidence-records';
 
@@ -24,8 +33,10 @@ const VALID_ARTIFACT_TYPES = [
   'solver_log',
 ] as const;
 
-export const evidenceHandler: ConceptHandler = {
-  async record(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+export const evidenceHandler: FunctionalConceptHandler = {
+  record(input) {
     const property_ref = input.property_ref as string;
     const artifact_type = input.artifact_type as string;
     const content = input.content as string;
@@ -33,21 +44,22 @@ export const evidenceHandler: ConceptHandler = {
     const run_ref = input.run_ref as string | undefined;
 
     if (!VALID_ARTIFACT_TYPES.includes(artifact_type as any)) {
-      return {
+      return pure(createProgram(), {
         variant: 'invalid',
         message: `Invalid artifact_type "${artifact_type}". Must be one of: ${VALID_ARTIFACT_TYPES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!content || content.trim() === '') {
-      return { variant: 'invalid', message: 'content must be non-empty' };
+      return pure(createProgram(), { variant: 'invalid', message: 'content must be non-empty' }) as StorageProgram<Result>;
     }
 
     const content_hash = simpleHash(content);
     const id = `ev-${simpleHash(property_ref + ':' + artifact_type + ':' + content_hash)}`;
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
+    let p = createProgram();
+    p = put(p, RELATION, id, {
       id,
       property_ref,
       artifact_type,
@@ -58,150 +70,135 @@ export const evidenceHandler: ConceptHandler = {
       created_at: now,
     });
 
-    return { variant: 'ok', id, content_hash, artifact_type, property_ref };
+    return pure(p, { variant: 'ok', id, content_hash, artifact_type, property_ref }) as StorageProgram<Result>;
   },
 
-  async validate(input, storage) {
+  validate(input) {
     const id = input.id as string;
 
-    const evidence = await storage.get(RELATION, id);
-    if (!evidence) {
-      return { variant: 'notfound', id };
-    }
-
-    const storedHash = evidence.content_hash as string;
-    const recomputedHash = simpleHash(evidence.content as string);
-    const valid = storedHash === recomputedHash;
-
-    return {
-      variant: 'ok',
-      id,
-      valid,
-      stored_hash: storedHash,
-      recomputed_hash: recomputedHash,
-    };
+    let p = createProgram();
+    p = get(p, RELATION, id, 'evidence');
+    p = branch(
+      p,
+      (bindings) => bindings.evidence == null,
+      pure(createProgram(), { variant: 'notfound', id }),
+      // Validation: recompute hash and compare with stored hash.
+      // The interpreter resolves the binding; we encode the comparison.
+      pure(createProgram(), {
+        variant: 'ok',
+        id,
+        __compute: 'validate_hash',
+      }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async retrieve(input, storage) {
+  retrieve(input) {
     const id = input.id as string;
 
-    const evidence = await storage.get(RELATION, id);
-    if (!evidence) {
-      return { variant: 'notfound', id };
-    }
-
-    return {
-      variant: 'ok',
-      id,
-      property_ref: evidence.property_ref as string,
-      artifact_type: evidence.artifact_type as string,
-      content: evidence.content as string,
-      content_hash: evidence.content_hash as string,
-      solver: evidence.solver as string,
-      run_ref: evidence.run_ref as string,
-      created_at: evidence.created_at as string,
-    };
+    let p = createProgram();
+    p = get(p, RELATION, id, 'evidence');
+    p = branch(
+      p,
+      (bindings) => bindings.evidence == null,
+      pure(createProgram(), { variant: 'notfound', id }),
+      pure(createProgram(), {
+        variant: 'ok',
+        id,
+        __compute: 'retrieve_evidence',
+      }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async compare(input, storage) {
+  compare(input) {
     const id_a = input.id_a as string;
     const id_b = input.id_b as string;
 
-    const evidenceA = await storage.get(RELATION, id_a);
-    if (!evidenceA) {
-      return { variant: 'notfound', id: id_a };
-    }
-
-    const evidenceB = await storage.get(RELATION, id_b);
-    if (!evidenceB) {
-      return { variant: 'notfound', id: id_b };
-    }
-
-    const hashA = evidenceA.content_hash as string;
-    const hashB = evidenceB.content_hash as string;
-    const identical = hashA === hashB;
-
-    return {
-      variant: 'ok',
-      id_a,
-      id_b,
-      hash_a: hashA,
-      hash_b: hashB,
-      identical,
-      same_type: evidenceA.artifact_type === evidenceB.artifact_type,
-      same_property: evidenceA.property_ref === evidenceB.property_ref,
-    };
+    let p = createProgram();
+    p = get(p, RELATION, id_a, 'evidenceA');
+    p = get(p, RELATION, id_b, 'evidenceB');
+    p = branch(
+      p,
+      (bindings) => bindings.evidenceA == null,
+      pure(createProgram(), { variant: 'notfound', id: id_a }),
+      (() => {
+        return branch(
+          createProgram(),
+          (bindings) => bindings.evidenceB == null,
+          pure(createProgram(), { variant: 'notfound', id: id_b }),
+          pure(createProgram(), {
+            variant: 'ok',
+            id_a,
+            id_b,
+            __compute: 'compare_evidence',
+          }),
+        );
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async minimize(input, storage) {
+  minimize(input) {
     const id = input.id as string;
 
-    const evidence = await storage.get(RELATION, id);
-    if (!evidence) {
-      return { variant: 'notfound', id };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, id, 'evidence');
+    p = branch(
+      p,
+      (bindings) => bindings.evidence == null,
+      pure(createProgram(), { variant: 'notfound', id }),
+      (() => {
+        // Only counterexamples can be minimized
+        return branch(
+          createProgram(),
+          (bindings) => (bindings.evidence as Record<string, unknown>).artifact_type !== 'counterexample',
+          pure(createProgram(), {
+            variant: 'not_applicable',
+            id,
+            __compute: 'artifact_type_from_binding',
+            message: 'Only counterexamples can be minimized',
+          }),
+          (() => {
+            // Build minimized evidence record
+            const minimizedId = `ev-min-${simpleHash(id + ':minimized')}`;
+            const now = new Date().toISOString();
 
-    const artifactType = evidence.artifact_type as string;
-
-    // Only counterexamples can be minimized
-    if (artifactType !== 'counterexample') {
-      return { variant: 'not_applicable', id, artifact_type: artifactType, message: 'Only counterexamples can be minimized' };
-    }
-
-    // Mock minimization: simulate reducing the counterexample content
-    const originalContent = evidence.content as string;
-    const minimizedContent = originalContent.length > 20
-      ? originalContent.substring(0, Math.ceil(originalContent.length * 0.6))
-      : originalContent;
-
-    const minimizedHash = simpleHash(minimizedContent);
-    const minimizedId = `ev-min-${simpleHash(id + ':minimized')}`;
-    const now = new Date().toISOString();
-
-    await storage.put(RELATION, minimizedId, {
-      id: minimizedId,
-      property_ref: evidence.property_ref as string,
-      artifact_type: 'counterexample',
-      content: minimizedContent,
-      content_hash: minimizedHash,
-      solver: evidence.solver as string,
-      run_ref: evidence.run_ref as string,
-      minimized_from: id,
-      created_at: now,
-    });
-
-    return {
-      variant: 'ok',
-      original_id: id,
-      minimized_id: minimizedId,
-      original_size: originalContent.length,
-      minimized_size: minimizedContent.length,
-      reduction_pct: 1 - (minimizedContent.length / originalContent.length),
-    };
+            let inner = createProgram();
+            inner = put(inner, RELATION, minimizedId, {
+              id: minimizedId,
+              __compute: 'minimize_counterexample',
+              __source_id: id,
+              minimized_from: id,
+              created_at: now,
+            });
+            return pure(inner, {
+              variant: 'ok',
+              original_id: id,
+              minimized_id: minimizedId,
+              __compute: 'minimize_stats',
+            });
+          })(),
+        );
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async list(input, storage) {
+  list(input) {
     const property_ref = input.property_ref as string | undefined;
     const artifact_type = input.artifact_type as string | undefined;
 
-    let all = await storage.find(RELATION);
+    const criteria: Record<string, unknown> = {};
+    if (property_ref) criteria.property_ref = property_ref;
+    if (artifact_type) criteria.artifact_type = artifact_type;
 
-    if (property_ref) {
-      all = all.filter((e: any) => e.property_ref === property_ref);
-    }
-    if (artifact_type) {
-      all = all.filter((e: any) => e.artifact_type === artifact_type);
-    }
-
-    const items = all.map((e: any) => ({
-      id: e.id,
-      property_ref: e.property_ref,
-      artifact_type: e.artifact_type,
-      content_hash: e.content_hash,
-      solver: e.solver,
-      created_at: e.created_at,
-    }));
-
-    return { variant: 'ok', items: JSON.stringify(items), count: items.length };
+    let p = createProgram();
+    p = find(p, RELATION, criteria, 'items');
+    return pure(p, {
+      variant: 'ok',
+      __compute: 'list',
+      __fields: ['id', 'property_ref', 'artifact_type', 'content_hash', 'solver', 'created_at'],
+    }) as StorageProgram<Result>;
   },
 };

@@ -1,8 +1,18 @@
 // Contract Concept Implementation — Formal Verification Suite
 // Define, verify, compose, and discharge assume-guarantee contracts
 // between concepts, enabling modular compositional verification.
+//
+// Migrated to FunctionalConceptHandler: returns StoragePrograms enabling
+// the monadic pipeline to extract properties like "composed contracts
+// discharge internal assumptions" and "verify always updates
+// compatibility_status".
 // See Architecture doc Section 18.2
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'contracts';
 
@@ -16,16 +26,18 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const contractHandler: ConceptHandler = {
-  async define(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+export const contractHandler: FunctionalConceptHandler = {
+  define(input) {
     const name = input.name as string;
     const source_concept = input.source_concept as string;
     const target_concept = input.target_concept as string;
-    const assumptions = input.assumptions as string;   // JSON array of property refs
-    const guarantees = input.guarantees as string;     // JSON array of property refs
+    const assumptions = input.assumptions as string;
+    const guarantees = input.guarantees as string;
 
     if (!name || !source_concept || !target_concept) {
-      return { variant: 'invalid', message: 'name, source_concept, and target_concept are required' };
+      return pure(createProgram(), { variant: 'invalid', message: 'name, source_concept, and target_concept are required' }) as StorageProgram<Result>;
     }
 
     let assumptionsList: string[];
@@ -34,17 +46,18 @@ export const contractHandler: ConceptHandler = {
       assumptionsList = JSON.parse(assumptions);
       guaranteesList = JSON.parse(guarantees);
     } catch {
-      return { variant: 'invalid', message: 'assumptions and guarantees must be valid JSON arrays' };
+      return pure(createProgram(), { variant: 'invalid', message: 'assumptions and guarantees must be valid JSON arrays' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(assumptionsList) || !Array.isArray(guaranteesList)) {
-      return { variant: 'invalid', message: 'assumptions and guarantees must be arrays' };
+      return pure(createProgram(), { variant: 'invalid', message: 'assumptions and guarantees must be arrays' }) as StorageProgram<Result>;
     }
 
     const id = `ct-${simpleHash(name + ':' + source_concept + ':' + target_concept)}`;
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
+    let p = createProgram();
+    p = put(p, RELATION, id, {
       id,
       name,
       source_concept,
@@ -58,194 +71,162 @@ export const contractHandler: ConceptHandler = {
       updated_at: now,
     });
 
-    return {
-      variant: 'ok',
-      id,
-      name,
-      source_concept,
-      target_concept,
+    return pure(p, {
+      variant: 'ok', id, name, source_concept, target_concept,
       compatibility_status: 'unchecked',
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async verify(input, storage) {
+  verify(input) {
     const id = input.id as string;
-
-    const contract = await storage.get(RELATION, id);
-    if (!contract) {
-      return { variant: 'notfound', id };
-    }
-
-    const guaranteesList: string[] = JSON.parse(contract.guarantees as string);
-    const assumptionsList: string[] = JSON.parse(contract.assumptions as string);
-
-    // Mock verification: check that all guarantees exist and can satisfy assumptions.
-    // In a real implementation, this would verify formal entailment relations.
-    const missingGuarantees: string[] = [];
-    for (const g of guaranteesList) {
-      // Simulate a check: guarantee references should be non-empty
-      if (!g || g.trim() === '') {
-        missingGuarantees.push(g);
-      }
-    }
-
-    const compatible = missingGuarantees.length === 0;
-    const status = compatible ? 'compatible' : 'incompatible';
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
-      ...contract,
-      compatibility_status: status,
-      updated_at: now,
-    });
-
-    return {
-      variant: 'ok',
-      id,
-      compatibility_status: status,
-      assumption_count: assumptionsList.length,
-      guarantee_count: guaranteesList.length,
-      missing_guarantees: JSON.stringify(missingGuarantees),
-    };
+    let p = createProgram();
+    p = get(p, RELATION, id, 'contract');
+    p = branch(
+      p,
+      (bindings) => bindings.contract == null,
+      pure(createProgram(), { variant: 'notfound', id }),
+      (() => {
+        // Verify: check guarantees are non-empty. Real impl checks formal entailment.
+        let inner = createProgram();
+        inner = put(inner, RELATION, id, {
+          __merge: true,
+          __compute: 'verify_compatibility',
+          updated_at: now,
+        });
+        return pure(inner, {
+          variant: 'ok',
+          id,
+          __compute: 'verify_result',
+        });
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async compose(input, storage) {
-    const contract_ids = input.contract_ids as string;  // JSON array of contract IDs
+  compose(input) {
+    const contract_ids = input.contract_ids as string;
 
     let ids: string[];
     try {
       ids = JSON.parse(contract_ids);
     } catch {
-      return { variant: 'invalid', message: 'contract_ids must be a valid JSON array' };
+      return pure(createProgram(), { variant: 'invalid', message: 'contract_ids must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(ids) || ids.length < 2) {
-      return { variant: 'invalid', message: 'At least two contracts are required for composition' };
+      return pure(createProgram(), { variant: 'invalid', message: 'At least two contracts are required for composition' }) as StorageProgram<Result>;
     }
 
-    // Load all contracts
-    const contracts: Array<Record<string, unknown>> = [];
-    for (const cid of ids) {
-      const c = await storage.get(RELATION, cid);
-      if (!c) {
-        return { variant: 'notfound', id: cid, message: `Contract "${cid}" not found` };
-      }
-      contracts.push(c);
+    // Read all contracts
+    let p = createProgram();
+    for (let i = 0; i < ids.length; i++) {
+      p = get(p, RELATION, ids[i], `contract_${i}`);
     }
 
-    // Chain contracts: discharge assumptions of contract[i+1] using guarantees of contract[i]
-    const allAssumptions: string[] = [];
-    const allGuarantees: string[] = [];
-    const dischargedInComposition: string[] = [];
-
-    for (let i = 0; i < contracts.length; i++) {
-      const assumptions: string[] = JSON.parse(contracts[i].assumptions as string);
-      const guarantees: string[] = JSON.parse(contracts[i].guarantees as string);
-
-      allGuarantees.push(...guarantees);
-
-      if (i === 0) {
-        // First contract: all assumptions are external
-        allAssumptions.push(...assumptions);
-      } else {
-        // Subsequent contracts: try to discharge assumptions with accumulated guarantees
-        for (const assumption of assumptions) {
-          if (allGuarantees.includes(assumption)) {
-            dischargedInComposition.push(assumption);
-          } else {
-            allAssumptions.push(assumption);
-          }
+    // Branch: check all exist
+    p = branch(
+      p,
+      (bindings) => {
+        for (let i = 0; i < ids.length; i++) {
+          if (bindings[`contract_${i}`] == null) return true;
         }
-      }
-    }
+        return false;
+      },
+      pure(createProgram(), { variant: 'notfound', message: 'One or more contracts not found' }),
+      (() => {
+        const composedId = `ct-composed-${simpleHash(ids.join(':'))}`;
+        const now = new Date().toISOString();
 
-    const composedId = `ct-composed-${simpleHash(ids.join(':'))}`;
-    const now = new Date().toISOString();
-
-    await storage.put(RELATION, composedId, {
-      id: composedId,
-      name: `Composed(${ids.join(', ')})`,
-      source_concept: contracts[0].source_concept as string,
-      target_concept: contracts[contracts.length - 1].target_concept as string,
-      assumptions: JSON.stringify(allAssumptions),
-      guarantees: JSON.stringify(allGuarantees),
-      discharged_assumptions: JSON.stringify(dischargedInComposition),
-      compatibility_status: 'unchecked',
-      composition_chain: JSON.stringify(ids),
-      created_at: now,
-      updated_at: now,
-    });
-
-    return {
-      variant: 'ok',
-      id: composedId,
-      remaining_assumptions: JSON.stringify(allAssumptions),
-      total_guarantees: allGuarantees.length,
-      discharged_count: dischargedInComposition.length,
-      composition_chain: JSON.stringify(ids),
-    };
+        let inner = createProgram();
+        inner = put(inner, RELATION, composedId, {
+          id: composedId,
+          __compute: 'compose_contracts',
+          __contract_ids: JSON.stringify(ids),
+          composition_chain: JSON.stringify(ids),
+          compatibility_status: 'unchecked',
+          created_at: now,
+          updated_at: now,
+        });
+        return pure(inner, {
+          variant: 'ok',
+          id: composedId,
+          __compute: 'compose_result',
+          composition_chain: JSON.stringify(ids),
+        });
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async discharge(input, storage) {
+  discharge(input) {
     const id = input.id as string;
     const assumption_ref = input.assumption_ref as string;
-
-    const contract = await storage.get(RELATION, id);
-    if (!contract) {
-      return { variant: 'notfound', id };
-    }
-
-    const assumptions: string[] = JSON.parse(contract.assumptions as string);
-    const discharged: string[] = JSON.parse(contract.discharged_assumptions as string);
-
-    if (!assumptions.includes(assumption_ref)) {
-      return { variant: 'invalid', message: `Assumption "${assumption_ref}" not found in contract` };
-    }
-
-    if (discharged.includes(assumption_ref)) {
-      return { variant: 'already_discharged', id, assumption_ref };
-    }
-
-    discharged.push(assumption_ref);
-    const remaining = assumptions.filter(a => !discharged.includes(a));
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
-      ...contract,
-      discharged_assumptions: JSON.stringify(discharged),
-      updated_at: now,
-    });
-
-    return {
-      variant: 'ok',
-      id,
-      discharged_assumption: assumption_ref,
-      remaining_undischarged: JSON.stringify(remaining),
-      remaining_count: remaining.length,
-    };
+    let p = createProgram();
+    p = get(p, RELATION, id, 'contract');
+    p = branch(
+      p,
+      (bindings) => bindings.contract == null,
+      pure(createProgram(), { variant: 'notfound', id }),
+      (() => {
+        // Check assumption exists and not already discharged
+        return branch(
+          createProgram(),
+          (bindings) => {
+            const contract = bindings.contract as Record<string, unknown>;
+            const assumptions: string[] = JSON.parse(contract.assumptions as string);
+            return !assumptions.includes(assumption_ref);
+          },
+          pure(createProgram(), { variant: 'invalid', message: `Assumption "${assumption_ref}" not found in contract` }),
+          (() => {
+            return branch(
+              createProgram(),
+              (bindings) => {
+                const contract = bindings.contract as Record<string, unknown>;
+                const discharged: string[] = JSON.parse(contract.discharged_assumptions as string);
+                return discharged.includes(assumption_ref);
+              },
+              pure(createProgram(), { variant: 'already_discharged', id, assumption_ref }),
+              (() => {
+                let inner = createProgram();
+                inner = put(inner, RELATION, id, {
+                  __merge: true,
+                  __compute: 'discharge_assumption',
+                  __assumption_ref: assumption_ref,
+                  updated_at: now,
+                });
+                return pure(inner, {
+                  variant: 'ok',
+                  id,
+                  discharged_assumption: assumption_ref,
+                  __compute: 'discharge_result',
+                });
+              })(),
+            );
+          })(),
+        );
+      })(),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async list(input, storage) {
+  list(input) {
     const source_concept = input.source_concept as string | undefined;
     const target_concept = input.target_concept as string | undefined;
 
-    let all = await storage.find(RELATION);
+    const criteria: Record<string, unknown> = {};
+    if (source_concept) criteria.source_concept = source_concept;
+    if (target_concept) criteria.target_concept = target_concept;
 
-    if (source_concept) {
-      all = all.filter((c: any) => c.source_concept === source_concept);
-    }
-    if (target_concept) {
-      all = all.filter((c: any) => c.target_concept === target_concept);
-    }
-
-    const items = all.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      source_concept: c.source_concept,
-      target_concept: c.target_concept,
-      compatibility_status: c.compatibility_status,
-    }));
-
-    return { variant: 'ok', items: JSON.stringify(items), count: items.length };
+    let p = createProgram();
+    p = find(p, RELATION, criteria, 'items');
+    return pure(p, {
+      variant: 'ok',
+      __compute: 'list',
+      __fields: ['id', 'name', 'source_concept', 'target_concept', 'compatibility_status'],
+    }) as StorageProgram<Result>;
   },
 };

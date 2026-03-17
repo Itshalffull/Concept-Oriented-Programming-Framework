@@ -2,8 +2,17 @@
 // Define, instantiate, validate, search, and manage reusable specification
 // templates (Dwyer patterns, smart contract patterns, distributed system
 // invariants, etc.) for generating formal properties from parameterized schemas.
+//
+// Migrated to FunctionalConceptHandler: returns StoragePrograms enabling
+// the monadic pipeline to extract properties like "instantiate always
+// substitutes all template parameters" and "define validates category".
 // See Architecture doc Section 18.6
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, pure,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'spec-schemas';
 
@@ -41,42 +50,45 @@ function extractParamNames(template: string): string[] {
   return [...new Set(matches.map(m => m.slice(2, -1)))];
 }
 
-export const specificationSchemaHandler: ConceptHandler = {
-  async define(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+export const specificationSchemaHandler: FunctionalConceptHandler = {
+  define(input) {
     const name = input.name as string;
     const category = input.category as string;
     const pattern_type = input.pattern_type as string;
     const template_text = input.template_text as string;
-    const parameters = input.parameters as string;   // JSON array of { name, type, description }
+    const parameters = input.parameters as string;
     const formal_language = input.formal_language as string | undefined;
     const description = input.description as string | undefined;
 
     if (!VALID_CATEGORIES.includes(category as any)) {
-      return {
+      return pure(createProgram(), {
         variant: 'invalid',
         message: `Invalid category "${category}". Must be one of: ${VALID_CATEGORIES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!name || !pattern_type || !template_text) {
-      return { variant: 'invalid', message: 'name, pattern_type, and template_text are required' };
+      return pure(createProgram(), { variant: 'invalid', message: 'name, pattern_type, and template_text are required' }) as StorageProgram<Result>;
     }
 
     let paramList: Array<{ name: string; type: string; description?: string }>;
     try {
       paramList = JSON.parse(parameters);
     } catch {
-      return { variant: 'invalid', message: 'parameters must be a valid JSON array' };
+      return pure(createProgram(), { variant: 'invalid', message: 'parameters must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(paramList)) {
-      return { variant: 'invalid', message: 'parameters must be an array' };
+      return pure(createProgram(), { variant: 'invalid', message: 'parameters must be an array' }) as StorageProgram<Result>;
     }
 
     const id = `ss-${simpleHash(name + ':' + category + ':' + pattern_type)}`;
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, id, {
+    let p = createProgram();
+    p = put(p, RELATION, id, {
       id,
       name,
       category,
@@ -89,156 +101,95 @@ export const specificationSchemaHandler: ConceptHandler = {
       updated_at: now,
     });
 
-    return { variant: 'ok', id, name, category, pattern_type };
+    return pure(p, { variant: 'ok', id, name, category, pattern_type }) as StorageProgram<Result>;
   },
 
-  async instantiate(input, storage) {
+  instantiate(input) {
     const schema_id = input.schema_id as string;
-    const param_values = input.param_values as string;  // JSON map: param_name -> value
-
-    const schema = await storage.get(RELATION, schema_id);
-    if (!schema) {
-      return { variant: 'notfound', schema_id };
-    }
+    const param_values = input.param_values as string;
 
     let values: Record<string, string>;
     try {
       values = JSON.parse(param_values);
     } catch {
-      return { variant: 'invalid', message: 'param_values must be a valid JSON object' };
+      return pure(createProgram(), { variant: 'invalid', message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
     }
 
-    const templateText = schema.template_text as string;
-    const requiredParams = extractParamNames(templateText);
+    let p = createProgram();
+    p = get(p, RELATION, schema_id, 'schema');
+    p = branch(
+      p,
+      (bindings) => bindings.schema == null,
+      pure(createProgram(), { variant: 'notfound', schema_id }),
+      (() => {
+        // Substitution and param checking happen in interpreter via __compute.
+        // We encode the values for the interpreter to resolve against the binding.
+        return pure(createProgram(), {
+          variant: 'ok',
+          schema_id,
+          __compute: 'instantiate_schema',
+          __param_values: JSON.stringify(values),
+        });
+      })(),
+    );
+    return p as StorageProgram<Result>;
+  },
 
-    // Verify all required parameters are provided
-    const missingParams = requiredParams.filter(p => !(p in values));
-    if (missingParams.length > 0) {
-      return {
-        variant: 'missing_params',
+  validate(input) {
+    const schema_id = input.schema_id as string;
+    const param_values = input.param_values as string;
+
+    let values: Record<string, string>;
+    try {
+      values = JSON.parse(param_values);
+    } catch {
+      return pure(createProgram(), { variant: 'invalid', message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, RELATION, schema_id, 'schema');
+    p = branch(
+      p,
+      (bindings) => bindings.schema == null,
+      pure(createProgram(), { variant: 'notfound', schema_id }),
+      pure(createProgram(), {
+        variant: 'ok',
         schema_id,
-        missing: JSON.stringify(missingParams),
-        message: `Missing required parameters: ${missingParams.join(', ')}`,
-      };
-    }
-
-    const instantiatedText = substituteParams(templateText, values);
-    const property_ref = `fp-inst-${simpleHash(schema_id + ':' + JSON.stringify(values))}`;
-
-    return {
-      variant: 'ok',
-      schema_id,
-      property_ref,
-      instantiated_text: instantiatedText,
-      category: schema.category as string,
-      pattern_type: schema.pattern_type as string,
-      formal_language: schema.formal_language as string,
-    };
+        __compute: 'validate_params',
+        __param_values: JSON.stringify(values),
+      }),
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async validate(input, storage) {
-    const schema_id = input.schema_id as string;
-    const param_values = input.param_values as string;  // JSON map: param_name -> value
-
-    const schema = await storage.get(RELATION, schema_id);
-    if (!schema) {
-      return { variant: 'notfound', schema_id };
-    }
-
-    let values: Record<string, string>;
-    try {
-      values = JSON.parse(param_values);
-    } catch {
-      return { variant: 'invalid', message: 'param_values must be a valid JSON object' };
-    }
-
-    const templateText = schema.template_text as string;
-    const paramDefs: Array<{ name: string; type: string; description?: string }> =
-      JSON.parse(schema.parameters as string);
-    const requiredParams = extractParamNames(templateText);
-
-    // Check all parameters are present and types match
-    const errors: string[] = [];
-    for (const paramName of requiredParams) {
-      if (!(paramName in values)) {
-        errors.push(`Missing parameter: ${paramName}`);
-        continue;
-      }
-      // Check type if defined
-      const paramDef = paramDefs.find(p => p.name === paramName);
-      if (paramDef) {
-        const value = values[paramName];
-        if (paramDef.type === 'number' && isNaN(Number(value))) {
-          errors.push(`Parameter "${paramName}" must be a number, got "${value}"`);
-        }
-        if (paramDef.type === 'boolean' && value !== 'true' && value !== 'false') {
-          errors.push(`Parameter "${paramName}" must be a boolean, got "${value}"`);
-        }
-      }
-    }
-
-    // Check for extra parameters not in template
-    const extraParams = Object.keys(values).filter(k => !requiredParams.includes(k));
-    if (extraParams.length > 0) {
-      errors.push(`Unexpected parameters: ${extraParams.join(', ')}`);
-    }
-
-    const valid = errors.length === 0;
-    const preview = valid ? substituteParams(templateText, values) : '';
-
-    return {
-      variant: 'ok',
-      schema_id,
-      valid,
-      errors: JSON.stringify(errors),
-      preview,
-    };
-  },
-
-  async list_by_category(input, storage) {
+  list_by_category(input) {
     const category = input.category as string;
 
-    const all = await storage.find(RELATION);
-    const matching = all.filter((s: any) => s.category === category);
-
-    const items = matching.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      category: s.category,
-      pattern_type: s.pattern_type,
-      formal_language: s.formal_language,
-      description: s.description,
-    }));
-
-    return { variant: 'ok', items: JSON.stringify(items), count: items.length, category };
+    let p = createProgram();
+    p = find(p, RELATION, { category }, 'items');
+    return pure(p, {
+      variant: 'ok',
+      __compute: 'list',
+      __fields: ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'],
+      category,
+    }) as StorageProgram<Result>;
   },
 
-  async search(input, storage) {
+  search(input) {
     const query = input.query as string;
 
     if (!query || query.trim() === '') {
-      return { variant: 'invalid', message: 'query must be non-empty' };
+      return pure(createProgram(), { variant: 'invalid', message: 'query must be non-empty' }) as StorageProgram<Result>;
     }
 
-    const lowerQuery = query.toLowerCase();
-    const all = await storage.find(RELATION);
-
-    const matching = all.filter((s: any) => {
-      const name = (s.name as string || '').toLowerCase();
-      const templateText = (s.template_text as string || '').toLowerCase();
-      const description = (s.description as string || '').toLowerCase();
-      return name.includes(lowerQuery) || templateText.includes(lowerQuery) || description.includes(lowerQuery);
-    });
-
-    const items = matching.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      category: s.category,
-      pattern_type: s.pattern_type,
-      formal_language: s.formal_language,
-      description: s.description,
-    }));
-
-    return { variant: 'ok', items: JSON.stringify(items), count: items.length, query };
+    let p = createProgram();
+    p = find(p, RELATION, {}, 'all_schemas');
+    return pure(p, {
+      variant: 'ok',
+      __compute: 'search',
+      __query: query,
+      __search_fields: ['name', 'template_text', 'description'],
+      __result_fields: ['id', 'name', 'category', 'pattern_type', 'formal_language', 'description'],
+    }) as StorageProgram<Result>;
   },
 };
