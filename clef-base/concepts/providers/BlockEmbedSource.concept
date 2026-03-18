@@ -50,9 +50,26 @@ concept BlockEmbedSource [BE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "block_embed")
-    then  resolve(block_id: "blk-1", canvas_id: "canvas-main",
-                  render_depth: 1, context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "block_embed")
+      then  resolve(block_id: "blk-1", canvas_id: "canvas-main",
+                    render_depth: 1, context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall be in registrations:
+        be.block_id != none
+    }
+
+    never {
+      exists be in registrations:
+        be.canvas_id = ""
+    }
+
+    action resolve {
+      requires: block_id != ""
+      ensures ok: data != none
+    }
   }
 }

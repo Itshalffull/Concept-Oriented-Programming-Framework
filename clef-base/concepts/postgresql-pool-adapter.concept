@@ -117,11 +117,28 @@ concept PostgresqlPoolAdapter [C] {
   }
 
   invariant {
-    after connect(url: "postgresql://localhost/test", pool_size: 5,
-                  ssl: false, schema_prefix: "clef_")
-         -> ok(connection: c)
-    then put(connection: c, table: "entities", key: "e1",
-             value: "{\"name\":\"test\"}")
-         -> ok(key: "e1")
+    example "connect then put succeeds" {
+      after connect(url: "postgresql://localhost/test", pool_size: 5,
+                    ssl: false, schema_prefix: "clef_")
+           -> ok(connection: c)
+      then put(connection: c, table: "entities", key: "e1",
+               value: "{\"name\":\"test\"}")
+           -> ok(key: "e1")
+    }
+
+    always {
+      forall c in connections:
+        c.connection_url != none
+    }
+
+    never {
+      exists c in connections:
+        c.pool_size = 0
+    }
+
+    action connect {
+      requires: url != ""
+      ensures ok: connection_url != none
+    }
   }
 }

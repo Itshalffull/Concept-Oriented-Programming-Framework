@@ -50,9 +50,26 @@ concept EntityFieldSource [EF] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "entity_field")
-    then  resolve(entity_type: "Task", field_path: "title",
-                  entity_id: "task-1", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "entity_field")
+      then  resolve(entity_type: "Task", field_path: "title",
+                    entity_id: "task-1", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall ef in registrations:
+        ef.entity_type != none
+    }
+
+    never {
+      exists ef in registrations:
+        ef.field_path = ""
+    }
+
+    action resolve {
+      requires: entity_type != ""
+      ensures ok: data != none
+    }
   }
 }

@@ -130,8 +130,25 @@ concept ConceptBrowser [P] {
   }
 
   invariant {
-    after install(package_name: "taxonomy-extra", version: "1.0.0")
-         -> ok(installed: p)
-    then remove(package_name: "taxonomy-extra") -> ok()
+    example "install then remove succeeds" {
+      after install(package_name: "taxonomy-extra", version: "1.0.0")
+           -> ok(installed: p)
+      then remove(package_name: "taxonomy-extra") -> ok()
+    }
+
+    always {
+      forall p in packages:
+        p.package_name != none
+    }
+
+    never {
+      exists p in packages:
+        p.package_version = ""
+    }
+
+    action install {
+      requires: package_name != ""
+      ensures ok: package_status != none
+    }
   }
 }

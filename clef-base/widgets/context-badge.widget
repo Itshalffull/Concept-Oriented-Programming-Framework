@@ -126,10 +126,50 @@ widget context-badge {
   }
 
   invariant {
-    "Badge always shows the deepest (most specific) space name";
-    "Color tint reflects the space status: active (accent), proposed (amber), archived (gray)";
-    "Tapping the badge opens the full stack as a bottom sheet on mobile";
-    "Dismissing a space from the sheet collapses back to badge view";
+    example "tap badge expands to sheet": {
+      after transition(from: "badge", event: "TAP") -> ok
+      then state = "expanded"
+    }
+
+    example "close sheet returns to badge": {
+      after transition(from: "expanded", event: "CLOSE") -> ok
+      then state = "badge"
+    }
+
+    example "dismiss space returns to badge": {
+      after transition(from: "expanded", event: "DISMISS_SPACE") -> ok
+      then state = "badge"
+    }
+
+    example "enter key expands badge": {
+      after transition(from: "badge", event: "keydown.Enter") -> ok
+      then state = "expanded"
+    }
+
+    example "escape key closes sheet": {
+      after transition(from: "expanded", event: "keydown.Escape") -> ok
+      then state = "badge"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"expandTrigger", "sheetClose", "stackItemAction"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Badge always shows the deepest (most specific) space name"
+    "Color tint reflects the space status: active (accent), proposed (amber), archived (gray)"
+    "Tapping the badge opens the full stack as a bottom sheet on mobile"
+    "Dismissing a space from the sheet collapses back to badge view"
   }
 
 }

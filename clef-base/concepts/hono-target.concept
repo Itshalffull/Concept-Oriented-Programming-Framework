@@ -61,16 +61,33 @@ concept HonoTarget [H] {
   }
 
   invariant {
-    after register(concept: "User", action: "create", method: "POST",
-                   path: "/api/users", middleware: []) -> ok(route: r)
-    then  listRoutes(group: none) -> ok(routes: rs)
-    and   r in rs
-  }
+    example "registered route appears in listRoutes" {
+      after register(concept: "User", action: "create", method: "POST",
+                     path: "/api/users", middleware: []) -> ok(route: r)
+      then  listRoutes(group: none) -> ok(routes: rs)
+      and   r in rs
+    }
 
-  invariant {
-    after register(concept: "User", action: "create", method: "POST",
-                   path: "/api/users", middleware: []) -> ok(route: r)
-    and   register(concept: "User", action: "get", method: "POST",
-                   path: "/api/users", middleware: []) -> duplicate(path: "/api/users", method: "POST")
+    example "duplicate method and path rejected" {
+      after register(concept: "User", action: "create", method: "POST",
+                     path: "/api/users", middleware: []) -> ok(route: r)
+      and   register(concept: "User", action: "get", method: "POST",
+                     path: "/api/users", middleware: []) -> duplicate(path: "/api/users", method: "POST")
+    }
+
+    always {
+      forall h in routes:
+        h.route_path != none
+    }
+
+    never {
+      exists h in routes:
+        h.route_concept = ""
+    }
+
+    action register {
+      requires: concept != ""
+      ensures ok: route_path != none
+    }
   }
 }

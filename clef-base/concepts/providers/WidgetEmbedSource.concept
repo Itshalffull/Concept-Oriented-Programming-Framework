@@ -50,9 +50,26 @@ concept WidgetEmbedSource [WE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "widget_embed")
-    then  resolve(widget_id: "avatar-badge", widget_props: "{\"userId\":\"u1\"}",
-                  render_mode: "inline", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "widget_embed")
+      then  resolve(widget_id: "avatar-badge", widget_props: "{\"userId\":\"u1\"}",
+                    render_mode: "inline", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall we in registrations:
+        we.widget_id != none
+    }
+
+    never {
+      exists we in registrations:
+        we.widget_id = ""
+    }
+
+    action resolve {
+      requires: widget_id != ""
+      ensures ok: data != none
+    }
   }
 }

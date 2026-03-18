@@ -131,10 +131,60 @@ widget override-dot {
   }
 
   invariant {
-    "Dot color must encode semantic: blue (modified), green (created), red (deleted), amber (conflict)";
-    "Tooltip must appear on hover and disappear on pointer leave";
-    "Clicking the dot must trigger the diff-view interactor for the entity";
-    "Dot must be positioned at the top-right corner of the decorated content by default";
+    example "hover shows tooltip": {
+      after transition(from: "idle", event: "POINTER_ENTER") -> ok
+      then state = "hovering"
+    }
+
+    example "pointer leave hides tooltip": {
+      after transition(from: "hovering", event: "POINTER_LEAVE") -> ok
+      then state = "idle"
+    }
+
+    example "click from hovering returns to idle": {
+      after transition(from: "hovering", event: "CLICK") -> ok
+      then state = "idle"
+    }
+
+    example "semantic transition to created": {
+      after transition(from: "modified", event: "SET_CREATED") -> ok
+      then state = "created"
+    }
+
+    example "semantic transition to conflict": {
+      after transition(from: "modified", event: "SET_CONFLICT") -> ok
+      then state = "conflict"
+    }
+
+    example "enter key triggers click": {
+      after transition(from: "hovering", event: "keydown.Enter") -> ok
+      then state = "idle"
+    }
+
+    example "space key triggers click": {
+      after transition(from: "hovering", event: "keydown.Space") -> ok
+      then state = "idle"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"dot"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Dot color must encode semantic: blue (modified), green (created), red (deleted), amber (conflict)"
+    "Tooltip must appear on hover and disappear on pointer leave"
+    "Clicking the dot must trigger the diff-view interactor for the entity"
+    "Dot must be positioned at the top-right corner of the decorated content by default"
   }
 
 }

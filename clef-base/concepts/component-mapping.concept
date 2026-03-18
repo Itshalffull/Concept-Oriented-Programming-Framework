@@ -123,15 +123,37 @@ concept ComponentMapping [M] {
   }
 
   invariant {
-    after create(name: "Article Card", widget_id: "card",
-                 schema: "Article", display_mode: "teaser") -> ok(mapping: m)
-    then lookup(schema: "Article", display_mode: "teaser") -> ok(mapping: m)
-  }
+    example "create then lookup returns same mapping" {
+      after create(name: "Article Card", widget_id: "card",
+                   schema: "Article", display_mode: "teaser") -> ok(mapping: m)
+      then lookup(schema: "Article", display_mode: "teaser") -> ok(mapping: m)
+    }
 
-  invariant {
-    after create(name: "Test Mapping", widget_id: "card",
-                 schema: "Test", display_mode: "full") -> ok(mapping: m)
-    and   delete(mapping: m) -> ok()
-    then  lookup(schema: "Test", display_mode: "full") -> notfound()
+    example "create then delete then lookup returns notfound" {
+      after create(name: "Test Mapping", widget_id: "card",
+                   schema: "Test", display_mode: "full") -> ok(mapping: m)
+      and   delete(mapping: m) -> ok()
+      then  lookup(schema: "Test", display_mode: "full") -> notfound()
+    }
+
+    always {
+      forall m in mappings:
+        m.mapping_name != none
+    }
+
+    never {
+      exists m in mappings:
+        m.widget_id = ""
+    }
+
+    action create {
+      requires: name != ""
+      ensures ok: mapping_name != none
+    }
+
+    action delete {
+      requires: mapping != none
+      ensures ok: mapping_name != none
+    }
   }
 }

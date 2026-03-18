@@ -164,11 +164,61 @@ widget diff-inline {
   }
 
   invariant {
-    "Insertions must be highlighted in green; deletions in red with strikethrough";
-    "Three-way diffs must show conflict markers for ancestor content changed by both sides";
-    "Interactive mode must show accept/reject buttons per hunk";
-    "Non-interactive mode must hide all hunk action buttons";
-    "Line numbers must be continuous across hunks";
+    example "enable interactive mode": {
+      after transition(from: "viewing", event: "ENABLE_INTERACTIVE") -> ok
+      then state = "interactive"
+    }
+
+    example "disable interactive mode": {
+      after transition(from: "interactive", event: "DISABLE_INTERACTIVE") -> ok
+      then state = "viewing"
+    }
+
+    example "accept hunk from pending": {
+      after transition(from: "pending", event: "ACCEPT_HUNK") -> ok
+      then state = "accepted"
+    }
+
+    example "reject hunk from pending": {
+      after transition(from: "pending", event: "REJECT_HUNK") -> ok
+      then state = "rejected"
+    }
+
+    example "reset accepted hunk": {
+      after transition(from: "accepted", event: "RESET_HUNK") -> ok
+      then state = "pending"
+    }
+
+    example "A key accepts hunk": {
+      after transition(from: "pending", event: "keydown.A") -> ok
+      then state = "accepted"
+    }
+
+    example "R key rejects hunk": {
+      after transition(from: "pending", event: "keydown.R") -> ok
+      then state = "rejected"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"acceptButton", "rejectButton"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Insertions must be highlighted in green; deletions in red with strikethrough"
+    "Three-way diffs must show conflict markers for ancestor content changed by both sides"
+    "Interactive mode must show accept/reject buttons per hunk"
+    "Non-interactive mode must hide all hunk action buttons"
+    "Line numbers must be continuous across hunks"
   }
 
 }

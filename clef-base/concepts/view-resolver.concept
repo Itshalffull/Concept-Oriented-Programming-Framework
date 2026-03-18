@@ -50,7 +50,24 @@ concept ViewResolver [V] {
   }
 
   invariant {
-    after register(resolver_type: "kernel", provider: "KernelViewResolver") -> ok(resolver_type: "kernel")
-    then resolve(view: "test-view", data_source: "{\"concept\":\"ContentNode\",\"action\":\"list\"}", filters: "[]", context: "{\"resolver_type\":\"kernel\"}") -> ok(data: d, count: c, view: "test-view")
+    example "register kernel then resolve succeeds" {
+      after register(resolver_type: "kernel", provider: "KernelViewResolver") -> ok(resolver_type: "kernel")
+      then resolve(view: "test-view", data_source: "{\"concept\":\"ContentNode\",\"action\":\"list\"}", filters: "[]", context: "{\"resolver_type\":\"kernel\"}") -> ok(data: d, count: c, view: "test-view")
+    }
+
+    always {
+      forall v in providers:
+        v.resolver_type != none
+    }
+
+    never {
+      exists v in providers:
+        v.provider_name = ""
+    }
+
+    action register {
+      requires: resolver_type != ""
+      ensures ok: resolver_type != none
+    }
   }
 }

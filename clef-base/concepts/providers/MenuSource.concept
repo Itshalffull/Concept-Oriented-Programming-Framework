@@ -47,9 +47,26 @@ concept MenuSource [MS] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "menu")
-    then  resolve(menu_id: "main-nav", max_depth: 3,
-                  active_path: "/home", context: "{}")
-          -> ok(data: d)
+    example "register then resolve menu succeeds" {
+      after register() -> ok(provider_name: "menu")
+      then  resolve(menu_id: "main-nav", max_depth: 3,
+                    active_path: "/home", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall ms in registrations:
+        ms.menu_id != none
+    }
+
+    never {
+      exists ms in registrations:
+        ms.menu_id = ""
+    }
+
+    action resolve {
+      requires: menu_id != ""
+      ensures ok: data != none
+    }
   }
 }

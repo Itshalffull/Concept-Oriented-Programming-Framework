@@ -131,10 +131,60 @@ widget triple-zone-layout {
   }
 
   invariant {
-    "Zone 1 must render all mapped fields from the entity's Schema";
-    "Zone 2 must render the entity's block content via canvas-embed";
-    "Zone 3 must show related entities from Backlink, Reference, and SemanticEmbedding queries";
-    "Collapsing a zone must preserve its content state";
+    example "collapse zone 1": {
+      after transition(from: "allVisible", event: "COLLAPSE_ZONE1") -> ok
+      then state = "zone1Hidden"
+    }
+
+    example "collapse zone 2": {
+      after transition(from: "allVisible", event: "COLLAPSE_ZONE2") -> ok
+      then state = "zone2Hidden"
+    }
+
+    example "collapse zone 3": {
+      after transition(from: "allVisible", event: "COLLAPSE_ZONE3") -> ok
+      then state = "zone3Hidden"
+    }
+
+    example "expand zone 1": {
+      after transition(from: "zone1Hidden", event: "EXPAND_ZONE1") -> ok
+      then state = "allVisible"
+    }
+
+    example "key 1 focuses zone 1": {
+      after transition(from: "allVisible", event: "keydown.1") -> ok
+      then state = "allVisible"
+    }
+
+    example "key 2 focuses zone 2": {
+      after transition(from: "allVisible", event: "keydown.2") -> ok
+      then state = "allVisible"
+    }
+
+    example "key 3 focuses zone 3": {
+      after transition(from: "allVisible", event: "keydown.3") -> ok
+      then state = "allVisible"
+    }
+
+    always "FSM deterministic": {
+      forall s in states:
+      s.transitions_count <= 1
+    }
+
+    always "interactive parts have ARIA": {
+      forall p in {"zone1", "zone2", "zone3", "relatedItem"}:
+      p.aria != none
+    }
+
+    never "unreachable state": {
+      exists s in states:
+      s.inbound_count = 0
+    }
+
+    "Zone 1 must render all mapped fields from the entity's Schema"
+    "Zone 2 must render the entity's block content via canvas-embed"
+    "Zone 3 must show related entities from Backlink, Reference, and SemanticEmbedding queries"
+    "Collapsing a zone must preserve its content state"
   }
 
 }

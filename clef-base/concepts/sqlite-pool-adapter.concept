@@ -115,11 +115,28 @@ concept SqlitePoolAdapter [C] {
   }
 
   invariant {
-    after connect(path: "/tmp/test.db", wal_mode: true,
-                  max_size_mb: none)
-         -> ok(connection: c)
-    then put(connection: c, table: "entities", key: "e1",
-             value: "{\"name\":\"test\"}")
-         -> ok(key: "e1")
+    example "connect then put succeeds" {
+      after connect(path: "/tmp/test.db", wal_mode: true,
+                    max_size_mb: none)
+           -> ok(connection: c)
+      then put(connection: c, table: "entities", key: "e1",
+               value: "{\"name\":\"test\"}")
+           -> ok(key: "e1")
+    }
+
+    always {
+      forall c in connections:
+        c.db_path != none
+    }
+
+    never {
+      exists c in connections:
+        c.db_path = ""
+    }
+
+    action connect {
+      requires: path != ""
+      ensures ok: db_path != none
+    }
   }
 }

@@ -42,7 +42,24 @@ concept ReactViewResolver [R] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "react")
-    then register() -> already_registered()
+    example "double register returns already_registered" {
+      after register() -> ok(provider_name: "react")
+      then register() -> already_registered()
+    }
+
+    always {
+      forall r in registrations:
+        r.registered != none
+    }
+
+    never {
+      exists r in registrations:
+        r.registered = false
+    }
+
+    action register {
+      requires: registered != none
+      ensures ok: provider_name != none
+    }
   }
 }

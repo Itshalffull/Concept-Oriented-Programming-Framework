@@ -50,9 +50,26 @@ concept ViewEmbedSource [VE] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "view_embed")
-    then  resolve(view_id: "recent-tasks", view_params: "{}",
-                  max_rows: 10, context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "view_embed")
+      then  resolve(view_id: "recent-tasks", view_params: "{}",
+                    max_rows: 10, context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall ve in registrations:
+        ve.view_id != none
+    }
+
+    never {
+      exists ve in registrations:
+        ve.view_id = ""
+    }
+
+    action resolve {
+      requires: view_id != ""
+      ensures ok: data != none
+    }
   }
 }

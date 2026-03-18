@@ -54,9 +54,26 @@ concept EntityReferenceDisplaySource [ERD] {
   }
 
   invariant {
-    after register() -> ok(provider_name: "entity_reference_display")
-    then  resolve(reference_field: "assignee", display_mode: "badge",
-                  entity_id: "task-1", context: "{}")
-          -> ok(data: d)
+    example "register then resolve succeeds" {
+      after register() -> ok(provider_name: "entity_reference_display")
+      then  resolve(reference_field: "assignee", display_mode: "badge",
+                    entity_id: "task-1", context: "{}")
+            -> ok(data: d)
+    }
+
+    always {
+      forall erd in registrations:
+        erd.reference_field != none
+    }
+
+    never {
+      exists erd in registrations:
+        erd.target_entity_type = ""
+    }
+
+    action resolve {
+      requires: reference_field != ""
+      ensures ok: data != none
+    }
   }
 }
