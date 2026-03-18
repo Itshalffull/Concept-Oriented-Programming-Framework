@@ -215,4 +215,11 @@ compose {
 
 invariant {
   always statusBadge.data-status in ["pending", "approved", "denied", "timed_out", "changes_requested"]
+
+  invariant {
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
+  }
+
 }

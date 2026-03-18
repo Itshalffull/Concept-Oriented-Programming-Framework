@@ -262,6 +262,10 @@ widget color-picker {
   }
 
   invariant {
+    example "open transitions from closed": { after transition(from: "closed", event: "OPEN") -> ok then state = "open" }
+    example "close transitions from open": { after transition(from: "open", event: "CLOSE") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "areaThumb must remain constrained within the area bounds";
     "Channel slider values must stay within their valid ranges";
     "Color format conversion must be lossless within display precision";

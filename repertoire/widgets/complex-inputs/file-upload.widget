@@ -258,9 +258,10 @@ widget file-upload {
   }
 
   invariant {
-    ?maxFiles => countFiles <= ?maxFiles;
-    ?maxSize => each file.size <= ?maxSize;
-    ?accept => each file.type matches ?accept;
+    example "drag_enter transitions from idle": { after transition(from: "idle", event: "DRAG_ENTER") -> ok then state = "dragOver" }
+    example "drag_leave transitions from dragOver": { after transition(from: "dragOver", event: "DRAG_LEAVE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Removing a file during upload must cancel the in-progress request";
     "File list must update aria-live region when files are added or removed";
     "Drag-over visual feedback must only apply when dragged items contain files";

@@ -120,10 +120,15 @@ widget popover {
   }
 
   invariant {
+    example "OPEN from closed": { after transition(from: "closed", event: "OPEN") -> ok then state = "open" }
+    example "CLOSE from open": { after transition(from: "open", event: "CLOSE") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Content must reposition on scroll and resize to stay anchored";
     "Focus must return to trigger when popover closes";
     "Popover must not block interaction with the rest of the page";
     "Arrow must rotate to match the computed placement direction";
+    "example \"OPEN from closed\": { after transition(from: \"closed\", event: \"OPEN\") -> ok then state = \"open\" } example \"CLOSE from open\": { after transition(from: \"open\", event: \"CLOSE\") -> ok then state = \"closed\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -198,12 +198,17 @@ widget condition-builder {
   }
 
   invariant {
+    example "CHANGE_FIELD from idle": { after transition(from: "idle", event: "CHANGE_FIELD") -> ok then state = "fieldChanged" }
+    example "OPERATOR_RESET from fieldChanged": { after transition(from: "fieldChanged", event: "OPERATOR_RESET") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Changing a field must reset the operator and value for that row";
     "Operator options must match the selected field type";
     "Value input type must match the operator (e.g., date picker for date fields)";
     "At least one condition row must always be present";
     "Row count must not exceed maxRows";
     "Logic toggle must apply uniformly to all row junctions when allowGroups is false";
+    "example \"CHANGE_FIELD from idle\": { after transition(from: \"idle\", event: \"CHANGE_FIELD\") -> ok then state = \"fieldChanged\" } example \"OPERATOR_RESET from fieldChanged\": { after transition(from: \"fieldChanged\", event: \"OPERATOR_RESET\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

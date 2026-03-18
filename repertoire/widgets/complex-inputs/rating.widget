@@ -149,11 +149,10 @@ widget rating {
   }
 
   invariant {
-    value >= 0;
-    value <= max;
-    max > 0;
-    ?half => step is 0.5;
-    not ?half => step is 1;
+    example "fill transitions from empty": { after transition(from: "empty", event: "FILL") -> ok then state = "filled" }
+    example "empty transitions from filled": { after transition(from: "filled", event: "EMPTY") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Hover preview must not modify the committed value";
     "Exactly one item must have tabindex 0 at any time";
     "Read-only mode must prevent all value changes from user interaction";

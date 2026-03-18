@@ -241,11 +241,16 @@ widget calendar-view {
   }
 
   invariant {
+    example "SWITCH_WEEK from monthView": { after transition(from: "monthView", event: "SWITCH_WEEK") -> ok then state = "weekView" }
+    example "NAVIGATE_PREV from monthView": { after transition(from: "monthView", event: "NAVIGATE_PREV") -> ok then state = "navigating" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one day cell must have tabindex 0 at all times (roving focus)";
     "Title must update via aria-live when navigating between periods";
     "Days outside minDate/maxDate must be aria-disabled";
     "Grid must always show complete weeks, padding with outside-month days";
     "Today cell must be visually distinct via data-today attribute";
+    "example \"SWITCH_WEEK from monthView\": { after transition(from: \"monthView\", event: \"SWITCH_WEEK\") -> ok then state = \"weekView\" } example \"NAVIGATE_PREV from monthView\": { after transition(from: \"monthView\", event: \"NAVIGATE_PREV\") -> ok then state = \"navigating\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

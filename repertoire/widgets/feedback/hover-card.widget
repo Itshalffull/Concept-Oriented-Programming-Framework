@@ -109,11 +109,16 @@ widget hover-card {
   }
 
   invariant {
+    example "POINTER_ENTER from hidden": { after transition(from: "hidden", event: "POINTER_ENTER") -> ok then state = "opening" }
+    example "DELAY_ELAPSED from opening": { after transition(from: "opening", event: "DELAY_ELAPSED") -> ok then state = "open" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Card must not appear until openDelay has fully elapsed";
     "Moving pointer from trigger into card content must keep card open";
     "Moving pointer from card content back to trigger must keep card open";
     "Card must reposition on scroll and viewport resize";
     "Escape must immediately close the card regardless of closeDelay";
+    "example \"POINTER_ENTER from hidden\": { after transition(from: \"hidden\", event: \"POINTER_ENTER\") -> ok then state = \"opening\" } example \"DELAY_ELAPSED from opening\": { after transition(from: \"opening\", event: \"DELAY_ELAPSED\") -> ok then state = \"open\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

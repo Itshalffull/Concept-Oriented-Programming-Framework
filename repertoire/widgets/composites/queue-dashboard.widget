@@ -271,6 +271,10 @@ widget queue-dashboard {
   }
 
   invariant {
+    example "load transitions from idle": { after transition(from: "idle", event: "LOAD") -> ok then state = "loading" }
+    example "load_complete transitions from loading": { after transition(from: "loading", event: "LOAD_COMPLETE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Stat cards must sum to the total job count when no tab filter is applied";
     "Tab filter must update the job table to show only matching status jobs";
     "Auto-refresh must poll at the configured interval when enabled";

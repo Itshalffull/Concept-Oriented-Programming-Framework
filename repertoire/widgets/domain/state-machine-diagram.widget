@@ -261,12 +261,17 @@ widget state-machine-diagram {
   }
 
   invariant {
+    example "ADD_STATE from viewing": { after transition(from: "viewing", event: "ADD_STATE") -> ok then state = "addingState" }
+    example "ADD_TRANSITION from viewing": { after transition(from: "viewing", event: "ADD_TRANSITION") -> ok then state = "addingTransition" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one state must have the 'initial' flag at all times";
     "Transitions must reference existing state names for both from and to";
     "Deleting a state must cascade-delete all transitions that reference it";
     "Duplicate transitions (same from, to, and label) must be prevented";
     "Read-only mode must hide add/edit/delete controls";
     "Confirmation dialog must appear before any destructive delete action";
+    "example \"ADD_STATE from viewing\": { after transition(from: \"viewing\", event: \"ADD_STATE\") -> ok then state = \"addingState\" } example \"ADD_TRANSITION from viewing\": { after transition(from: \"viewing\", event: \"ADD_TRANSITION\") -> ok then state = \"addingTransition\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

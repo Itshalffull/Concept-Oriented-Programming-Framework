@@ -307,6 +307,10 @@ widget graph-view {
   }
 
   invariant {
+    example "SWITCH_LOCAL from globalView": { after transition(from: "globalView", event: "SWITCH_LOCAL") -> ok then state = "localView" }
+    example "SELECT_NODE from globalView": { after transition(from: "globalView", event: "SELECT_NODE") -> ok then state = "nodeSelected" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Local view must display only the selected node and its direct neighbors";
     "Search highlighting must be additive with type filters";
     "Force simulation must reheat when nodes are added, removed, or dragged";
@@ -314,6 +318,7 @@ widget graph-view {
     "Node size and link thickness sliders must update the rendering in real time";
     "Detail panel must only be visible when a node is selected";
     "Keyboard navigation must cycle through nodes in a consistent order";
+    "example \"SWITCH_LOCAL from globalView\": { after transition(from: \"globalView\", event: \"SWITCH_LOCAL\") -> ok then state = \"localView\" } example \"SELECT_NODE from globalView\": { after transition(from: \"globalView\", event: \"SELECT_NODE\") -> ok then state = \"nodeSelected\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -220,6 +220,10 @@ widget rich-text-editor {
   }
 
   invariant {
+    example "input transitions from empty": { after transition(from: "empty", event: "INPUT") -> ok then state = "editing" }
+    example "clear transitions from editing": { after transition(from: "editing", event: "CLEAR") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Editor must maintain valid document structure at all times";
     "Slash menu must position relative to the text cursor, not the viewport";
     "Bubble menu must appear near the selection and dismiss on collapse";

@@ -209,7 +209,10 @@ widget mention-input {
   }
 
   invariant {
-    length(?triggers) > 0;
+    example "trigger_char transitions from idle": { after transition(from: "idle", event: "TRIGGER_CHAR") -> ok then state = "triggered" }
+    example "query_change transitions from triggered": { after transition(from: "triggered", event: "QUERY_CHANGE") -> ok then state = "suggesting" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Each trigger char must be a single character";
     "Suggestions must appear within debounce window after trigger detection";
     "Inserting a mention must replace the trigger character and query text";

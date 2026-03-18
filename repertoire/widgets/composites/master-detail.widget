@@ -275,6 +275,10 @@ widget master-detail {
   }
 
   invariant {
+    example "select transitions from noSelection": { after transition(from: "noSelection", event: "SELECT") -> ok then state = "hasSelection" }
+    example "deselect transitions from hasSelection": { after transition(from: "hasSelection", event: "DESELECT") -> ok then state = "noSelection" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Detail pane must show empty state when no item is selected";
     "Detail pane must show the selected item's content when an item is selected";
     "In stacked layout mode, only one pane (list or detail) must be visible at a time";

@@ -233,6 +233,10 @@ widget cron-editor {
   }
 
   invariant {
+    example "SWITCH_ADVANCED from simple": { after transition(from: "simple", event: "SWITCH_ADVANCED") -> ok then state = "advanced" }
+    example "SWITCH_SIMPLE from advanced": { after transition(from: "advanced", event: "SWITCH_SIMPLE") -> ok then state = "simple" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Switching between simple and advanced modes must synchronize the cron expression";
     "Invalid cron expressions must hide the preview and show an error message";
     "Simple editor must only show time input when frequency is not minutely";
@@ -240,6 +244,7 @@ widget cron-editor {
     "Next runs list must calculate timestamps based on the cron expression and timezone";
     "Read-only mode must disable all inputs and selectors";
     "Cron expression must validate against standard five-field format";
+    "example \"SWITCH_ADVANCED from simple\": { after transition(from: \"simple\", event: \"SWITCH_ADVANCED\") -> ok then state = \"advanced\" } example \"SWITCH_SIMPLE from advanced\": { after transition(from: \"advanced\", event: \"SWITCH_SIMPLE\") -> ok then state = \"simple\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

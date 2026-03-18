@@ -118,9 +118,11 @@ widget checkbox-group {
   }
 
   invariant {
-    length(?options) > 0;
-    ?min => size(?values) >= ?min;
-    ?max => size(?values) <= ?max;
-    forEach(?values, v -> exists(?options, o -> o.value == v));
+    example "CHECK from item": { after transition(from: "item", event: "CHECK") -> ok then state = "checked" }
+    example "UNCHECK from item": { after transition(from: "item", event: "UNCHECK") -> ok then state = "unchecked" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "length(?options) > 0; ?min => size(?values) >= ?min; ?max => size(?values) <= ?max; forEach(?values, v -> exists(?options, o -> o.value == v));";
+    "example \"CHECK from item\": { after transition(from: \"item\", event: \"CHECK\") -> ok then state = \"checked\" } example \"UNCHECK from item\": { after transition(from: \"item\", event: \"UNCHECK\") -> ok then state = \"unchecked\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

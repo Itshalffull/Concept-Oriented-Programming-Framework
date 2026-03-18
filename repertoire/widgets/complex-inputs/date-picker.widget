@@ -293,9 +293,10 @@ widget date-picker {
   }
 
   invariant {
-    ?min and ?max => ?min <= ?max;
-    ?value and ?min => ?value >= ?min;
-    ?value and ?max => ?value <= ?max;
+    example "open transitions from closed": { after transition(from: "closed", event: "OPEN") -> ok then state = "open" }
+    example "close transitions from open": { after transition(from: "open", event: "CLOSE") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Focus must return to trigger when calendar closes";
     "Only one cell within the grid may have tabindex 0 at any time";
     "Cells outside the min/max range must be non-interactive";

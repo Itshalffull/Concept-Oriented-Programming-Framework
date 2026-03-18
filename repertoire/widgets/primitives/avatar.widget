@@ -86,15 +86,12 @@ widget avatar {
   }
 
   invariant {
-    after send(LOAD_SUCCESS) -> state is loaded;
-    then image data-visible is "true";
-    and fallback data-visible is "false";
-  }
-
-  invariant {
-    after send(LOAD_ERROR) -> state is error;
-    then image data-visible is "false";
-    and fallback data-visible is "true";
+    example "LOAD_SUCCESS from loading": { after transition(from: "loading", event: "LOAD_SUCCESS") -> ok then state = "loaded" }
+    example "LOAD_ERROR from loading": { after transition(from: "loading", event: "LOAD_ERROR") -> ok then state = "error" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "after send(LOAD_SUCCESS) -> state is loaded; then image data-visible is \"true\"; and fallback data-visible is \"false\"; after send(LOAD_ERROR) -> state is error; then image data-visible is \"false\"; and fallback data-visible is \"true\";";
+    "example \"LOAD_SUCCESS from loading\": { after transition(from: \"loading\", event: \"LOAD_SUCCESS\") -> ok then state = \"loaded\" } example \"LOAD_ERROR from loading\": { after transition(from: \"loading\", event: \"LOAD_ERROR\") -> ok then state = \"error\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

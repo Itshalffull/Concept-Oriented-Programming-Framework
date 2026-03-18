@@ -146,6 +146,10 @@ widget spatial-canvas-viewport {
   }
 
   invariant {
+    example "PAN_START from idle": { after transition(from: "idle", event: "PAN_START") -> ok then state = "panning" }
+    example "MARQUEE_START from idle": { after transition(from: "idle", event: "MARQUEE_START") -> ok then state = "selecting" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Camera transforms must not cause items to become permanently unreachable";
     "Viewport culling must hide items outside visible rect for performance";
     "Zoom must apply at pointer position (zoom-at-point), not viewport center";
@@ -153,5 +157,6 @@ widget spatial-canvas-viewport {
     "Selection marquee must select all items whose bounds intersect the rect";
     "Items must render via WidgetResolver based on their Schema+DisplayMode";
     "Connector paths must update when connected items move";
+    "example \"PAN_START from idle\": { after transition(from: \"idle\", event: \"PAN_START\") -> ok then state = \"panning\" } example \"MARQUEE_START from idle\": { after transition(from: \"idle\", event: \"MARQUEE_START\") -> ok then state = \"selecting\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

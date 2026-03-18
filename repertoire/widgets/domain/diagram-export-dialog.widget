@@ -108,4 +108,13 @@ widget diagram-export-dialog {
       onClick: send(CANCEL);
     }
   }
+
+  invariant {
+    example "SELECT_FORMAT from open": { after transition(from: "open", event: "SELECT_FORMAT") -> ok then state = "configured" }
+    example "CANCEL from open": { after transition(from: "open", event: "CANCEL") -> ok then state = "closed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "example \"SELECT_FORMAT from open\": { after transition(from: \"open\", event: \"SELECT_FORMAT\") -> ok then state = \"configured\" } example \"CANCEL from open\": { after transition(from: \"open\", event: \"CANCEL\") -> ok then state = \"closed\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
+  }
+
 }

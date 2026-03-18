@@ -126,11 +126,16 @@ widget drag-handle {
   }
 
   invariant {
+    example "GRAB from idle": { after transition(from: "idle", event: "GRAB") -> ok then state = "grabbed" }
+    example "HOVER from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "aria-grabbed must be true only in grabbed and dragging states";
     "Disabled handles must not respond to pointer or keyboard interactions";
     "Arrow key movement direction must match orientation (up/down for vertical, left/right for horizontal)";
     "Escape during drag must cancel the reorder and restore original position";
     "Screen readers must announce grab and drop events via live region";
+    "example \"GRAB from idle\": { after transition(from: \"idle\", event: \"GRAB\") -> ok then state = \"grabbed\" } example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

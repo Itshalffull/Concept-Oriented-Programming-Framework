@@ -141,20 +141,12 @@ widget checkbox {
   }
 
   invariant {
-    after send(TOGGLE) from unchecked -> state is checked;
-    then aria-checked is "true";
-    and indicator data-visible is "true";
-  }
-
-  invariant {
-    after send(TOGGLE) from checked -> state is unchecked;
-    then aria-checked is "false";
-    and indicator data-visible is "false";
-  }
-
-  invariant {
-    after send(SET_INDETERMINATE) -> state is indeterminate;
-    then aria-checked is "mixed";
+    example "TOGGLE from unchecked": { after transition(from: "unchecked", event: "TOGGLE") -> ok then state = "checked" }
+    example "TOGGLE from checked": { after transition(from: "checked", event: "TOGGLE") -> ok then state = "unchecked" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "after send(TOGGLE) from unchecked -> state is checked; then aria-checked is \"true\"; and indicator data-visible is \"true\"; after send(TOGGLE) from checked -> state is unchecked; then aria-checked is \"false\"; and indicator data-visible is \"false\"; after send(SET_INDETERMINATE) -> state is indeterminate; then aria-checked is \"mixed\";";
+    "example \"TOGGLE from unchecked\": { after transition(from: \"unchecked\", event: \"TOGGLE\") -> ok then state = \"checked\" } example \"TOGGLE from checked\": { after transition(from: \"checked\", event: \"TOGGLE\") -> ok then state = \"unchecked\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

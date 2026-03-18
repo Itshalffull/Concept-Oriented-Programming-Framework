@@ -125,9 +125,11 @@ widget stepper {
   }
 
   invariant {
-    min <= max;
-    value >= min;
-    value <= max;
-    step > 0;
+    example "AT_MIN from boundary": { after transition(from: "boundary", event: "AT_MIN") -> ok then state = "atMin" }
+    example "AT_MAX from boundary": { after transition(from: "boundary", event: "AT_MAX") -> ok then state = "atMax" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "min <= max; value >= min; value <= max; step > 0;";
+    "example \"AT_MIN from boundary\": { after transition(from: \"boundary\", event: \"AT_MIN\") -> ok then state = \"atMin\" } example \"AT_MAX from boundary\": { after transition(from: \"boundary\", event: \"AT_MAX\") -> ok then state = \"atMax\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

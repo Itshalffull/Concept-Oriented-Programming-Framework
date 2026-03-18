@@ -251,6 +251,10 @@ widget permission-matrix {
   }
 
   invariant {
+    example "collapse transitions from expanded": { after transition(from: "expanded", event: "COLLAPSE") -> ok then state = "collapsed" }
+    example "expand transitions from collapsed": { after transition(from: "collapsed", event: "EXPAND") -> ok then state = "expanded" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Grid column count must equal roles.length + 1 (for the label column)";
     "Resource checkbox must show indeterminate when some but not all child actions are granted";
     "Toggling a resource checkbox must grant or revoke all child action permissions for that role";

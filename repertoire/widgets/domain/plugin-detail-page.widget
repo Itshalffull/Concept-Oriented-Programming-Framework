@@ -259,6 +259,10 @@ widget plugin-detail-page {
   }
 
   invariant {
+    example "INSTALL from idle": { after transition(from: "idle", event: "INSTALL") -> ok then state = "installing" }
+    example "UNINSTALL from idle": { after transition(from: "idle", event: "UNINSTALL") -> ok then state = "uninstalling" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Install button label must reflect the current installation state";
     "Only one tab panel may be visible at a time";
     "Install/uninstall/update actions must be disabled during async operations";
@@ -266,6 +270,7 @@ widget plugin-detail-page {
     "Rating must display as read-only in the hero stats";
     "Screenshot tab must only be shown when screenshots are available";
     "Review tab must display the average rating and total review count";
+    "example \"INSTALL from idle\": { after transition(from: \"idle\", event: \"INSTALL\") -> ok then state = \"installing\" } example \"UNINSTALL from idle\": { after transition(from: \"idle\", event: \"UNINSTALL\") -> ok then state = \"uninstalling\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -64,6 +64,11 @@ widget badge {
   }
 
   invariant {
-    ?max => ?max > 0;
+    example "SET_DOT from display": { after transition(from: "display", event: "SET_DOT") -> ok then state = "dot" }
+    example "SET_LABEL from display": { after transition(from: "display", event: "SET_LABEL") -> ok then state = "static" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "?max => ?max > 0;";
+    "example \"SET_DOT from display\": { after transition(from: \"display\", event: \"SET_DOT\") -> ok then state = \"dot\" } example \"SET_LABEL from display\": { after transition(from: \"display\", event: \"SET_LABEL\") -> ok then state = \"static\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

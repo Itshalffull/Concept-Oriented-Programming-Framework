@@ -95,11 +95,16 @@ widget skeleton {
   }
 
   invariant {
+    example "CONTENT_READY from loading": { after transition(from: "loading", event: "CONTENT_READY") -> ok then state = "hidden" }
+    example "CONTENT_LOADING from hidden": { after transition(from: "hidden", event: "CONTENT_LOADING") -> ok then state = "loading" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Skeleton must always be aria-hidden true";
     "Parent container must set aria-busy true while skeleton is displayed";
     "Only the shapes matching the current variant must be visible";
     "lines prop must only affect the text variant";
     "Animation must be disableable for users with prefers-reduced-motion";
+    "example \"CONTENT_READY from loading\": { after transition(from: \"loading\", event: \"CONTENT_READY\") -> ok then state = \"hidden\" } example \"CONTENT_LOADING from hidden\": { after transition(from: \"hidden\", event: \"CONTENT_LOADING\") -> ok then state = \"loading\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -99,6 +99,11 @@ widget toggle-switch {
   }
 
   invariant {
-    checked == (state.toggle == "on");
+    example "TOGGLE from toggle": { after transition(from: "toggle", event: "TOGGLE") -> ok then state = "on" }
+    example "TOGGLE from toggle": { after transition(from: "toggle", event: "TOGGLE") -> ok then state = "off" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "checked == (state.toggle == \"on\");";
+    "example \"TOGGLE from toggle\": { after transition(from: \"toggle\", event: \"TOGGLE\") -> ok then state = \"on\" } example \"TOGGLE from toggle\": { after transition(from: \"toggle\", event: \"TOGGLE\") -> ok then state = \"off\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

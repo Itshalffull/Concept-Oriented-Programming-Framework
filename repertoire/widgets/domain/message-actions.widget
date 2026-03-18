@@ -92,10 +92,15 @@ widget message-actions {
   }
 
   invariant {
+    example "SHOW from hidden": { after transition(from: "hidden", event: "SHOW") -> ok then state = "visible" }
+    example "HIDE from visible": { after transition(from: "visible", event: "HIDE") -> ok then state = "hidden" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Toolbar must appear on hover/focus and disappear on blur/leave";
     "Copy must show confirmation feedback for 2 seconds";
     "Regenerate must only appear for assistant messages";
     "Edit must only appear for user messages";
+    "example \"SHOW from hidden\": { after transition(from: \"hidden\", event: \"SHOW\") -> ok then state = \"visible\" } example \"HIDE from visible\": { after transition(from: \"visible\", event: \"HIDE\") -> ok then state = \"hidden\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

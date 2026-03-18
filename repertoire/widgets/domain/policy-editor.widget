@@ -245,6 +245,10 @@ widget policy-editor {
   }
 
   invariant {
+    example "SWITCH_JSON from visual": { after transition(from: "visual", event: "SWITCH_JSON") -> ok then state = "json" }
+    example "VALIDATE from visual": { after transition(from: "visual", event: "VALIDATE") -> ok then state = "validating" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Switching modes must synchronize the policy state between visual and JSON representations";
     "JSON validation errors must highlight the specific lines in the JSON editor";
     "Visual editor must only show actions relevant to the selected service";
@@ -252,6 +256,7 @@ widget policy-editor {
     "Read-only mode must disable all form controls and the JSON editor";
     "aria-busy must be true during validation and simulation operations";
     "Policy must validate against the schema before simulation can run";
+    "example \"SWITCH_JSON from visual\": { after transition(from: \"visual\", event: \"SWITCH_JSON\") -> ok then state = \"json\" } example \"VALIDATE from visual\": { after transition(from: \"visual\", event: \"VALIDATE\") -> ok then state = \"validating\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

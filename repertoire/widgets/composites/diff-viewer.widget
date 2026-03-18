@@ -330,6 +330,10 @@ widget diff-viewer {
   }
 
   invariant {
+    example "switch_to_unified transitions from sideBySide": { after transition(from: "sideBySide", event: "SWITCH_TO_UNIFIED") -> ok then state = "unified" }
+    example "switch_to_side_by_side transitions from unified": { after transition(from: "unified", event: "SWITCH_TO_SIDE_BY_SIDE") -> ok then state = "sideBySide" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one mode (sideBySide or unified) must be active at all times";
     "Side-by-side mode must show left and right panes; unified mode must show a single pane";
     "Line numbers in left and right panes must independently track original and modified versions";

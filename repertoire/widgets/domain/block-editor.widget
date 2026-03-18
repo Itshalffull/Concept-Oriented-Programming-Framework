@@ -231,6 +231,10 @@ widget block-editor {
   }
 
   invariant {
+    example "BLUR from editing": { after transition(from: "editing", event: "BLUR") -> ok then state = "idle" }
+    example "SLASH from editing": { after transition(from: "editing", event: "SLASH") -> ok then state = "slashMenuOpen" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Only one slash menu may be open at a time across the entire editor";
     "Block drag handle must be hidden in readOnly mode";
     "Focus must transfer to the new block after Enter creates one";
@@ -238,6 +242,7 @@ widget block-editor {
     "Selection toolbar must be positioned relative to the text selection bounding rect";
     "Block type conversion must preserve text content when possible";
     "aria-grabbed must be true on exactly one block during dragging state";
+    "example \"BLUR from editing\": { after transition(from: \"editing\", event: \"BLUR\") -> ok then state = \"idle\" } example \"SLASH from editing\": { after transition(from: \"editing\", event: \"SLASH\") -> ok then state = \"slashMenuOpen\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

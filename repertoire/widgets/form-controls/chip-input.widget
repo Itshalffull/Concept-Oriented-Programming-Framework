@@ -179,7 +179,11 @@ widget chip-input {
   }
 
   invariant {
-    ?maxItems => length(?values) <= ?maxItems;
-    noDuplicates(?values);
+    example "FOCUS from interaction": { after transition(from: "interaction", event: "FOCUS") -> ok then state = "typing" }
+    example "SUGGEST from interaction": { after transition(from: "interaction", event: "SUGGEST") -> ok then state = "suggesting" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "?maxItems => length(?values) <= ?maxItems; noDuplicates(?values);";
+    "example \"FOCUS from interaction\": { after transition(from: \"interaction\", event: \"FOCUS\") -> ok then state = \"typing\" } example \"SUGGEST from interaction\": { after transition(from: \"interaction\", event: \"SUGGEST\") -> ok then state = \"suggesting\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

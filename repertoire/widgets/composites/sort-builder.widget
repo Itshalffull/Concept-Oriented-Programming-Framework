@@ -171,6 +171,10 @@ widget sort-builder {
   }
 
   invariant {
+    example "add_sort transitions from empty": { after transition(from: "empty", event: "ADD_SORT") -> ok then state = "hasSorts" }
+    example "remove_last transitions from hasSorts": { after transition(from: "hasSorts", event: "REMOVE_LAST") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Each field may appear in at most one sort criterion";
     "Total sort criteria must not exceed maxSorts";
     "Removing the last sort criterion must transition to empty state";

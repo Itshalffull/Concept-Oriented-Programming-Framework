@@ -111,8 +111,12 @@ widget disclosure {
   }
 
   invariant {
-    trigger aria-expanded matches content visibility;
-    when ?disabled == true then TOGGLE events are ignored;
+    example "TOGGLE from disclosure": { after transition(from: "disclosure", event: "TOGGLE") -> ok then state = "expanded" }
+    example "TOGGLE from disclosure": { after transition(from: "disclosure", event: "TOGGLE") -> ok then state = "collapsed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    "trigger aria-expanded matches content visibility; when ?disabled == true then TOGGLE events are ignored;";
+    "example \"TOGGLE from disclosure\": { after transition(from: \"disclosure\", event: \"TOGGLE\") -> ok then state = \"expanded\" } example \"TOGGLE from disclosure\": { after transition(from: \"disclosure\", event: \"TOGGLE\") -> ok then state = \"collapsed\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

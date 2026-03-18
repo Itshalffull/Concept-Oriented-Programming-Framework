@@ -301,6 +301,10 @@ widget faceted-search {
   }
 
   invariant {
+    example "search transitions from idle": { after transition(from: "idle", event: "SEARCH") -> ok then state = "searching" }
+    example "search_complete transitions from searching": { after transition(from: "searching", event: "SEARCH_COMPLETE") -> ok then state = "hasResults" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Search results must update when query or facet filters change";
     "Active filter chips must mirror the set of applied facet selections";
     "Removing a chip must deactivate the corresponding facet item";

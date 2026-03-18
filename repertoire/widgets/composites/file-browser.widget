@@ -380,6 +380,10 @@ widget file-browser {
   }
 
   invariant {
+    example "switch_to_list transitions from grid": { after transition(from: "grid", event: "SWITCH_TO_LIST") -> ok then state = "list" }
+    example "switch_to_grid transitions from list": { after transition(from: "list", event: "SWITCH_TO_GRID") -> ok then state = "grid" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Exactly one view mode (grid or list) must be visible at all times";
     "Multi-select bar must only appear when two or more items are selected";
     "Detail sidebar must close when selection is cleared";

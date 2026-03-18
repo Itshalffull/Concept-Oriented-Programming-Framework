@@ -85,9 +85,12 @@ widget empty-state {
   }
 
   invariant {
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "title must always be present and non-empty";
     "icon must be aria-hidden since it is decorative";
     "action button must be focusable when present";
+    "always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }
