@@ -1,0 +1,12 @@
+# Interpreter bridge — resolve perform instructions to effect handlers.
+# See Architecture doc Sections on StorageProgram and EffectHandler.
+
+sync ResolvePerformEffect [eager]
+  purpose: "Bridge perform instructions to EffectHandler resolution during program interpretation. When the interpreter encounters a perform instruction, this sync resolves the protocol:operation pair to a registered handler."
+when {
+  ProgramInterpreter/execute: [ program: ?program ]
+    => [ performNeeded: ?protocol; operation: ?operation; payload: ?payload ]
+}
+then {
+  EffectHandler/resolve: [ protocol: ?protocol; operation: ?operation ]
+}

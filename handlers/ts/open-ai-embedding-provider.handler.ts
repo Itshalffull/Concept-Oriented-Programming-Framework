@@ -1,36 +1,66 @@
 // ============================================================
-// OpenAIEmbeddingProvider Handler
+// OpenAIEmbeddingProvider Handler — Functional Style
 //
 // Embedding model provider using OpenAI's text-embedding-3-large
-// API. Requires network access and API key.
+// API. Uses perform("http", "POST", ...) to declare transport
+// effects — actual HTTP calls are resolved by the execution layer
+// (ExternalCall → HttpProvider → OpenAiEndpoint).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, find, pure, perform,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+
+const MODEL_NAME = 'openai-code';
+const PROVIDER_REF = 'embedding:openai-code';
 
 let idCounter = 0;
 function nextId(): string {
   return `open-ai-embedding-provider-${++idCounter}`;
 }
 
-const MODEL_NAME = 'openai-code';
-const PROVIDER_REF = 'embedding:openai-code';
-
-export const openAIEmbeddingProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    // Check if already initialised
-    const existing = await storage.find('open-ai-embedding-provider', { providerRef: PROVIDER_REF });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
-
+export const openAIEmbeddingProviderHandler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('open-ai-embedding-provider', id, {
+
+    let p = createProgram();
+    p = put(p, 'open-ai-embedding-provider', id, {
       id,
       providerRef: PROVIDER_REF,
       modelName: MODEL_NAME,
     });
+    p = pure(p, { variant: 'ok', instance: id });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    return { variant: 'ok', instance: id };
+  embed(input: Record<string, unknown>) {
+    const text = input.text as string;
+    const model = (input.model as string) || 'text-embedding-3-small';
+    const dimensions = (input.dimensions as number) || 1536;
+
+    let p = createProgram();
+
+    // Declare the HTTP transport effect — resolved by the execution layer:
+    // perform → EffectHandler → ExternalCall → HttpProvider → OpenAiEndpoint
+    p = perform(p, 'http', 'POST', {
+      endpoint: 'openai-embeddings',
+      path: '/embeddings',
+      body: JSON.stringify({
+        model,
+        input: text,
+        dimensions,
+      }),
+    }, 'apiResponse');
+
+    p = pure(p, {
+      variant: 'ok',
+      vector: '',
+      dimensions,
+      model: MODEL_NAME,
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

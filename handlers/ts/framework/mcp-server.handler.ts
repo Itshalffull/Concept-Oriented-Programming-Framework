@@ -287,17 +287,14 @@ function inferAction(toolName: string): string {
 }
 
 // ─── Lazy Loading Configuration ──────────────────────────
-// Tools marked as always-loaded get full schemas in the upfront
-// tool list. All other tools are deferred — only name + brief
-// description are sent. The LLM discovers deferred tools via
-// search_tools and loads full schemas via describe_tools.
+// Which tools are always-loaded (full schemas upfront) vs deferred
+// (discoverable via search_tools) is declared in the interface
+// manifest per-action (mcp.alwaysLoaded: true) and emitted into
+// catalog.json by the MCP Bind target. The discovery meta-tools
+// are always loaded by default.
 
 const ALWAYS_LOADED_TOOLS = new Set([
-  // Score core tools — always available
-  'score_query', 'score_show', 'score_list', 'score_back', 'score_traverse',
-  'score_api_status', 'score_api_explain', 'score_api_reindex',
-  'score_api_search', 'score_api_list_concepts', 'score_api_list_syncs',
-  // Discovery meta-tools — always available
+  // Discovery meta-tools — always available (not concept-generated)
   'search_tools', 'describe_tools', 'list_tool_categories', 'get_tool_category',
 ]);
 
@@ -426,13 +423,56 @@ export async function bootMcpServer(manifestPath: string) {
     toolRegistry.set(tool.name, tool);
   }
 
-  // Start Score seeding in the background so initialize can complete quickly.
+  // Boot the Score kernel — registers all Score layer concepts and wires syncs.
   const sharedStorage = createInMemoryStorage();
   const conceptsNeedingScoreSeed = new Set(['ScoreApi', 'ScoreIndex', 'ScoreNavigator', 'ScoreQuery', 'ToolDiscovery']);
-  const scoreSeedPromise = seedScoreIndex(sharedStorage).catch((err) => {
-    console.error('Failed to seed Score index for MCP server:', err);
-    throw err;
-  });
+
+  let scoreKernelRef: Awaited<ReturnType<typeof import('../score/score-kernel.handler.js')['getScoreKernel']>> = null;
+  const scoreSeedPromise = (async () => {
+    try {
+      const { scoreKernelHandler, getScoreKernel } = await import('../score/score-kernel.handler.js');
+      const bootResult = await scoreKernelHandler.boot({ projectRoot: process.cwd() }, sharedStorage);
+      if (bootResult.variant === 'ok' || bootResult.variant === 'alreadyBooted') {
+        scoreKernelRef = getScoreKernel();
+
+        // Warm embedding cache from disk before discovery so cached
+        // vectors are available and skip redundant API calls.
+        const { embeddingCacheHandler } = await import('../embedding-cache.handler.js');
+        const embeddingCacheStorage = createInMemoryStorage();
+        const cachePath = path.resolve(process.cwd(), '.clef/embedding-cache.json');
+        const warmResult = await embeddingCacheHandler.warm({ path: cachePath }, embeddingCacheStorage);
+        if (warmResult.variant === 'ok') {
+          console.error(`[clef-mcp] Embedding cache warmed: ${warmResult.loaded} entries loaded, ${warmResult.skipped} skipped`);
+        } else if (warmResult.variant === 'fileNotFound') {
+          console.error('[clef-mcp] Embedding cache: no manifest yet (first boot)');
+        } else {
+          console.error(`[clef-mcp] Embedding cache warning: ${warmResult.variant} — ${warmResult.reason || warmResult.path || ''}`);
+        }
+
+        // Discover project files — triggers parse/symbol/entity pipeline via syncs
+        if (bootResult.variant === 'ok') {
+          const kernelId = bootResult.kernel || bootResult.kernel;
+          await scoreKernelHandler.discover({
+            kernel: kernelId,
+            basePaths: 'specs,syncs,surface,handlers,repertoire,score,bind',
+          }, sharedStorage);
+        }
+
+        // Flush embedding cache to disk after discovery so new
+        // embeddings persist across MCP server restarts.
+        const flushResult = await embeddingCacheHandler.flush({ path: cachePath }, embeddingCacheStorage);
+        if (flushResult.variant === 'ok') {
+          console.error(`[clef-mcp] Embedding cache flushed: ${flushResult.count} entries`);
+        } else {
+          console.error(`[clef-mcp] Embedding cache flush failed: ${flushResult.reason || ''}`);
+        }
+
+        console.error(`[clef-mcp] Score kernel booted: ${bootResult.conceptCount || 0} concepts`);
+      }
+    } catch (kernelErr) {
+      console.error('[clef-mcp] Score kernel boot failed:', kernelErr instanceof Error ? kernelErr.message : String(kernelErr));
+    }
+  })();
 
   // ─── Populate ToolDiscovery catalog ────────────────────
   // Register all tools in the discovery catalog for lazy loading.
@@ -613,16 +653,25 @@ export async function bootMcpServer(manifestPath: string) {
         await scoreSeedPromise;
       }
 
-      const handler = await resolveHandler(tool.concept);
-      if (!handler) {
-        return {
-          content: [{ type: 'text' as const, text: `No handler for concept: ${tool.concept}` }],
-          isError: true,
-        };
+      // Try kernel dispatch first (if ScoreKernel booted successfully),
+      // fall back to direct handler resolution for non-kernel concepts
+      let result: Record<string, unknown>;
+      if (scoreKernelRef && conceptsNeedingScoreSeed.has(tool.concept)) {
+        // Route through the booted Score kernel
+        result = await scoreKernelRef.invokeConcept(
+          `urn:clef/${tool.concept}`, tool.action, args,
+        ) as Record<string, unknown>;
+      } else {
+        const handler = await resolveHandler(tool.concept);
+        if (!handler) {
+          return {
+            content: [{ type: 'text' as const, text: `No handler for concept: ${tool.concept}` }],
+            isError: true,
+          };
+        }
+        // Use shared storage so ScoreNavigator cursor persists across calls
+        result = await handler[tool.action](args, sharedStorage);
       }
-
-      // Use shared storage so ScoreNavigator cursor persists across calls
-      const result = await handler[tool.action](args, sharedStorage);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };
@@ -637,331 +686,6 @@ export async function bootMcpServer(manifestPath: string) {
   // Connect via stdio
   const transport = new StdioServerTransport();
   await server.connect(transport);
-}
-
-/** Seed the shared storage with Score index data from the project */
-export async function seedScoreIndex(storage: ConceptStorage) {
-  const fs = await import('fs');
-  const path = await import('path');
-  const { scoreIndexHandler } = await import('../score/score-index.handler.js');
-  const cwd = process.cwd();
-  const sourceDirs = ['bind', 'cli', 'examples', 'handlers', 'repertoire', 'runtime', 'score', 'specs', 'surface', 'syncs', 'tests'];
-  const excludedDirs = new Set(['.git', 'node_modules', 'dist', 'coverage', '.claude', '.codex', 'generated']);
-
-  async function indexFile(absPath: string) {
-    const relPath = path.relative(cwd, absPath).replace(/\\/g, '/');
-    const content = fs.readFileSync(absPath, 'utf-8');
-    const definitions = extractDefinitions(relPath, content);
-    await scoreIndexHandler.upsertFile({
-      path: relPath,
-      language: inferLanguageFromPath(relPath),
-      role: inferRoleFromPath(relPath),
-      definitions,
-    }, storage);
-
-    for (const symbol of extractSymbols(relPath, content)) {
-      await scoreIndexHandler.upsertSymbol(symbol, storage);
-    }
-
-    if (relPath.endsWith('.concept')) {
-      const name = extractConceptName(content) || path.basename(relPath, '.concept');
-      await scoreIndexHandler.upsertConcept({
-        name,
-        purpose: extractPurpose(content),
-        actions: extractActions(content),
-        stateFields: extractStateFields(content),
-        file: relPath,
-      }, storage);
-      return;
-    }
-
-    if (relPath.endsWith('.sync')) {
-      for (const s of extractSyncs(content)) {
-        await scoreIndexHandler.upsertSync({
-          name: s.name,
-          annotation: s.annotation,
-          triggers: s.triggers,
-          effects: s.effects,
-          file: relPath,
-        }, storage);
-      }
-      return;
-    }
-
-    if (relPath.endsWith('.handler.ts')) {
-      const concept = path.basename(relPath, '.handler.ts')
-        .replace(/(^|-)(\w)/g, (_: string, __: string, c: string) => c.toUpperCase());
-      const actions = extractHandlerActions(content);
-      const lines = content.split('\n').length;
-      await storage.put('handlers', `handler:${concept}:typescript`, {
-        handlerConcept: concept,
-        handlerLanguage: 'typescript',
-        handlerFile: relPath,
-        handlerActions: actions,
-        handlerLineCount: lines,
-      });
-    }
-  }
-
-  async function walkDir(dir: string): Promise<void> {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isSymbolicLink()) continue;
-      if (entry.isDirectory()) {
-        if (excludedDirs.has(entry.name)) continue;
-        await walkDir(path.join(dir, entry.name));
-        continue;
-      }
-      await indexFile(path.join(dir, entry.name));
-    }
-  }
-
-  for (const dir of sourceDirs) {
-    const fullDir = path.join(cwd, dir);
-    if (!fs.existsSync(fullDir)) continue;
-    await walkDir(fullDir);
-  }
-
-  const suiteDirs = ['suites', 'repertoire/concepts', 'bind/interface', 'score/semantic', 'score/analysis', 'score/parse', 'score/discovery', 'score/auto'];
-  for (const dir of suiteDirs) {
-    const fullDir = path.join(cwd, dir);
-    if (!fs.existsSync(fullDir)) continue;
-    for (const yamlPath of findFilesNamed(fullDir, 'suite.yaml', fs, path)) {
-      try {
-        const yaml = await import('yaml');
-        const suiteContent = yaml.parse(fs.readFileSync(yamlPath, 'utf-8'));
-        const relPath = path.relative(cwd, yamlPath).replace(/\\/g, '/');
-        const fallbackName = path.basename(path.dirname(yamlPath));
-        const conceptMap = suiteContent?.concepts || {};
-        const syncSection = suiteContent?.syncs || {};
-        const conceptNames = Array.isArray(conceptMap)
-          ? conceptMap
-          : Object.keys(conceptMap);
-        const suiteSyncs = Array.isArray(syncSection)
-          ? syncSection
-          : [
-            ...(syncSection.required || []),
-            ...(syncSection.recommended || []),
-          ];
-
-        await storage.put('suiteManifests', `suite:${suiteContent?.suite?.name || fallbackName}`, {
-          suiteName: suiteContent?.suite?.name || fallbackName,
-          suiteVersion: suiteContent?.suite?.version || '0.0.0',
-          suiteConcepts: conceptNames,
-          suiteSyncs,
-          suiteFile: relPath,
-        });
-      } catch {
-        // skip malformed suite files
-      }
-    }
-  }
-}
-
-// ─── Lightweight spec extractors (no full parser dependency) ─
-
-function extractConceptName(content: string): string | null {
-  const match = content.match(/concept\s+(\w+)/);
-  return match ? match[1] : null;
-}
-
-function extractPurpose(content: string): string {
-  const match = content.match(/purpose\s*\{([^}]*)\}/s);
-  return match ? match[1].trim().replace(/\s+/g, ' ') : '';
-}
-
-function extractActions(content: string): string[] {
-  const actions: string[] = [];
-  const re = /action\s+(\w+)\s*\(/g;
-  let m;
-  while ((m = re.exec(content)) !== null) {
-    actions.push(m[1]);
-  }
-  return actions;
-}
-
-function extractStateFields(content: string): string[] {
-  const stateMatch = content.match(/state\s*\{([\s\S]*?)\n\s*\}/);
-  if (!stateMatch) return [];
-  const fields: string[] = [];
-  const re = /(\w+)\s*:/g;
-  let m;
-  while ((m = re.exec(stateMatch[1])) !== null) {
-    fields.push(m[1]);
-  }
-  return fields;
-}
-
-function extractSyncs(content: string): Array<{ name: string; annotation: string; triggers: string[]; effects: string[] }> {
-  const syncs: Array<{ name: string; annotation: string; triggers: string[]; effects: string[] }> = [];
-  const syncBlocks = content.split(/(?=^sync\s)/m);
-  for (const block of syncBlocks) {
-    const nameMatch = block.match(/^sync\s+(\w+)\s*(?:\[(\w+)\])?/);
-    if (!nameMatch) continue;
-    const triggers: string[] = [];
-    const effects: string[] = [];
-    // Extract when patterns: Concept/action
-    const whenMatch = block.match(/when\s*\{([\s\S]*?)\}/);
-    if (whenMatch) {
-      const re = /(\w+)\/(\w+)/g;
-      let m;
-      while ((m = re.exec(whenMatch[1])) !== null) {
-        triggers.push(`${m[1]}/${m[2]}`);
-      }
-    }
-    // Extract then actions: Concept/action
-    const thenMatch = block.match(/then\s*\{([\s\S]*?)\}/);
-    if (thenMatch) {
-      const re = /(\w+)\/(\w+)/g;
-      let m;
-      while ((m = re.exec(thenMatch[1])) !== null) {
-        effects.push(`${m[1]}/${m[2]}`);
-      }
-    }
-    syncs.push({ name: nameMatch[1], annotation: nameMatch[2] || 'eager', triggers, effects });
-  }
-  return syncs;
-}
-
-function extractHandlerActions(content: string): string[] {
-  const actions: string[] = [];
-  const re = /async\s+(\w+)\s*\(\s*input/g;
-  let m;
-  while ((m = re.exec(content)) !== null) {
-    actions.push(m[1]);
-  }
-  return actions;
-}
-
-function inferLanguageFromPath(filePath: string): string {
-  const ext = filePath.split('.').pop()?.toLowerCase() || '';
-  const langMap: Record<string, string> = {
-    ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
-    concept: 'concept-spec', sync: 'sync-spec', yaml: 'yaml', yml: 'yaml',
-    json: 'json', md: 'markdown', widget: 'widget-spec', theme: 'theme-spec', derived: 'derived-spec',
-  };
-  return langMap[ext] || ext || 'unknown';
-}
-
-function inferRoleFromPath(filePath: string): string {
-  const normalized = filePath.replace(/\\/g, '/');
-  if (normalized.includes('/generated/') || normalized.startsWith('generated/')) return 'generated';
-  if (normalized.includes('/tests/') || normalized.endsWith('.test.ts')) return 'test';
-  if (/\.(concept|sync|widget|theme|derived)$/.test(normalized)) return 'spec';
-  if (/\.(yaml|yml|json)$/.test(normalized)) return 'config';
-  if (normalized.endsWith('.md')) return 'doc';
-  return 'source';
-}
-
-function lineNumberAt(content: string, offset: number): number {
-  return content.slice(0, offset).split('\n').length;
-}
-
-function extractDefinitions(filePath: string, content: string): string[] {
-  if (filePath.endsWith('.concept')) {
-    return [extractConceptName(content), ...extractActions(content)].filter((value): value is string => Boolean(value));
-  }
-  if (filePath.endsWith('.sync')) {
-    return extractSyncs(content).map(sync => sync.name);
-  }
-  const definitions: string[] = [];
-  const regexes = [
-    /export\s+(?:async\s+)?function\s+(\w+)/g,
-    /export\s+const\s+(\w+)/g,
-    /export\s+class\s+(\w+)/g,
-    /export\s+interface\s+(\w+)/g,
-    /export\s+type\s+(\w+)/g,
-  ];
-  for (const regex of regexes) {
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      definitions.push(match[1]);
-    }
-  }
-  return Array.from(new Set(definitions));
-}
-
-function extractSymbols(filePath: string, content: string): Array<{ name: string; kind: string; file: string; line: number; scope: string }> {
-  const symbols: Array<{ name: string; kind: string; file: string; line: number; scope: string }> = [];
-
-  if (filePath.endsWith('.concept')) {
-    const conceptName = extractConceptName(content);
-    if (conceptName) {
-      const conceptMatch = content.match(/concept\s+(\w+)/);
-      symbols.push({
-        name: conceptName,
-        kind: 'concept',
-        file: filePath,
-        line: conceptMatch ? lineNumberAt(content, conceptMatch.index || 0) : 1,
-        scope: 'module',
-      });
-    }
-    const actionRegex = /action\s+(\w+)\s*\(/g;
-    let match;
-    while ((match = actionRegex.exec(content)) !== null) {
-      symbols.push({
-        name: match[1],
-        kind: 'action',
-        file: filePath,
-        line: lineNumberAt(content, match.index),
-        scope: conceptName || 'module',
-      });
-    }
-    return symbols;
-  }
-
-  if (filePath.endsWith('.sync')) {
-    for (const sync of extractSyncs(content)) {
-      const match = content.match(new RegExp(`^sync\\s+${sync.name}\\b`, 'm'));
-      symbols.push({
-        name: sync.name,
-        kind: 'sync',
-        file: filePath,
-        line: match ? lineNumberAt(content, match.index || 0) : 1,
-        scope: 'module',
-      });
-    }
-    return symbols;
-  }
-
-  const patterns: Array<{ regex: RegExp; kind: string }> = [
-    { regex: /export\s+(?:async\s+)?function\s+(\w+)/g, kind: 'function' },
-    { regex: /export\s+const\s+(\w+)/g, kind: 'variable' },
-    { regex: /export\s+class\s+(\w+)/g, kind: 'class' },
-    { regex: /export\s+interface\s+(\w+)/g, kind: 'type' },
-    { regex: /export\s+type\s+(\w+)/g, kind: 'type' },
-  ];
-
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.regex.exec(content)) !== null) {
-      symbols.push({
-        name: match[1],
-        kind: pattern.kind,
-        file: filePath,
-        line: lineNumberAt(content, match.index),
-        scope: 'module',
-      });
-    }
-  }
-
-  return symbols;
-}
-
-function findFilesNamed(rootDir: string, fileName: string, fs: typeof import('fs'), path: typeof import('path')): string[] {
-  const matches: string[] = [];
-  function walk(dir: string) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isSymbolicLink()) continue;
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.name === fileName) {
-        matches.push(fullPath);
-      }
-    }
-  }
-  walk(rootDir);
-  return matches;
 }
 
 /** Resolve a concept name to its handler module */

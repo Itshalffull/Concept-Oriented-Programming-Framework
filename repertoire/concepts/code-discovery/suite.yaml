@@ -12,6 +12,11 @@ concepts:
     params:
       B: { as: embedding-id, description: "Embedding identifier" }
 
+  EmbeddingCache:
+    spec: ./embedding-cache.concept
+    params:
+      E: { as: cache-entry-digest, description: "Content digest used as cache key" }
+
   # Embedding model providers
   CodeBERTEmbeddingProvider:
     spec: ./providers/embedding/codebert.concept
@@ -43,6 +48,13 @@ syncs:
       description: >
         Compute embeddings for extracted definition units
         when content digests change.
+
+    - path: ./syncs/embedding-cache.sync
+      name: EmbeddingCacheSyncs
+      description: >
+        File-backed embedding cache wiring: warm on Score boot,
+        lookup before embed, cache new embeddings, flush after
+        discovery. Enables embedding persistence across MCP restarts.
 
   integration: []
 

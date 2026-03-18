@@ -1,0 +1,73 @@
+# Register execution layer concepts as effect handlers.
+# ExternalCall handles network protocols; LocalProcess handles in-process runtimes.
+# See Architecture doc Sections on EffectHandler and the execution layer.
+
+sync RegisterExternalCallHttpEffect [eager]
+  purpose: "Register ExternalCall as the effect handler for HTTP protocol operations."
+when {
+  ExternalCall/initialize: []
+    => ok(protocols: ?protocols)
+}
+then {
+  EffectHandler/register: [ protocol: "http"; operation: "*" ]
+}
+
+sync RegisterExternalCallGrpcEffect [eager]
+  purpose: "Register ExternalCall as the effect handler for gRPC protocol operations."
+when {
+  ExternalCall/initialize: []
+    => ok(protocols: ?protocols)
+}
+then {
+  EffectHandler/register: [ protocol: "grpc"; operation: "*" ]
+}
+
+sync RegisterExternalCallGraphqlEffect [eager]
+  purpose: "Register ExternalCall as the effect handler for GraphQL protocol operations."
+when {
+  ExternalCall/initialize: []
+    => ok(protocols: ?protocols)
+}
+then {
+  EffectHandler/register: [ protocol: "graphql"; operation: "*" ]
+}
+
+sync RegisterExternalCallWsEffect [eager]
+  purpose: "Register ExternalCall as the effect handler for WebSocket protocol operations."
+when {
+  ExternalCall/initialize: []
+    => ok(protocols: ?protocols)
+}
+then {
+  EffectHandler/register: [ protocol: "ws"; operation: "*" ]
+}
+
+sync RegisterLocalProcessWasmEffect [eager]
+  purpose: "Register LocalProcess as the effect handler for WASM runtime operations."
+when {
+  LocalProcess/initialize: []
+    => ok(runtimes: ?runtimes)
+}
+then {
+  EffectHandler/register: [ protocol: "wasm"; operation: "*" ]
+}
+
+sync RegisterLocalProcessOnnxEffect [eager]
+  purpose: "Register LocalProcess as the effect handler for ONNX runtime operations."
+when {
+  LocalProcess/initialize: []
+    => ok(runtimes: ?runtimes)
+}
+then {
+  EffectHandler/register: [ protocol: "onnx"; operation: "*" ]
+}
+
+sync RegisterLocalProcessShellEffect [eager]
+  purpose: "Register LocalProcess as the effect handler for shell runtime operations."
+when {
+  LocalProcess/initialize: []
+    => ok(runtimes: ?runtimes)
+}
+then {
+  EffectHandler/register: [ protocol: "shell"; operation: "*" ]
+}

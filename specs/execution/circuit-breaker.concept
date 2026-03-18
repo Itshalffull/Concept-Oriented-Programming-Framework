@@ -1,0 +1,122 @@
+@version(1)
+concept CircuitBreaker [B] {
+
+  purpose {
+    Prevent cascading failures by tracking error rates per endpoint
+    and temporarily halting requests to failing endpoints. Transitions
+    through closed (healthy), open (tripped), and half-open (probing)
+    states based on configurable failure thresholds and recovery timers.
+  }
+
+  state {
+    breakers: set B
+    endpoint: B -> String
+    status: B -> String
+    failureCount: B -> Int
+    successCount: B -> Int
+    failureThreshold: B -> Int
+    successThreshold: B -> Int
+    resetTimeoutMs: B -> Int
+    lastFailureAt: B -> option String
+    openedAt: B -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(endpoint: String, failureThreshold: Int, successThreshold: Int, resetTimeoutMs: Int) {
+      -> ok(breaker: B) {
+        Create a circuit breaker for the named endpoint in closed
+        (healthy) state. failureThreshold consecutive failures trip
+        the breaker open. After resetTimeoutMs, it transitions to
+        half-open. successThreshold consecutive successes in half-open
+        close it again.
+      }
+      -> exists(endpoint: String) {
+        A circuit breaker is already configured for this endpoint.
+      }
+    }
+
+    action check(endpoint: String) {
+      -> closed(breaker: B) {
+        The circuit is closed — requests should proceed normally.
+      }
+      -> open(breaker: B, retryAfterMs: Int) {
+        The circuit is open — requests should be rejected immediately
+        without reaching the endpoint. retryAfterMs indicates when
+        the circuit will transition to half-open for probing.
+      }
+      -> halfOpen(breaker: B) {
+        The circuit is half-open — a single probe request should be
+        allowed through. If it succeeds, the circuit closes. If it
+        fails, the circuit reopens.
+      }
+      -> notFound(endpoint: String) {
+        No circuit breaker is configured for this endpoint.
+      }
+    }
+
+    action recordSuccess(endpoint: String) {
+      -> ok(breaker: B, status: String) {
+        Record a successful call. In half-open state, increments
+        the success counter — if it reaches successThreshold, the
+        circuit closes. In closed state, resets the failure counter.
+        Returns the new circuit status.
+      }
+      -> notFound(endpoint: String) {
+        No circuit breaker is configured for this endpoint.
+      }
+    }
+
+    action recordFailure(endpoint: String) {
+      -> ok(breaker: B, status: String) {
+        Record a failed call. Increments the failure counter — if
+        it reaches failureThreshold, the circuit opens. In half-open
+        state, a single failure immediately reopens the circuit.
+        Returns the new circuit status.
+      }
+      -> tripped(breaker: B, failureCount: Int) {
+        The failure threshold was reached and the circuit has tripped
+        open. No further requests will reach the endpoint until
+        resetTimeoutMs elapses.
+      }
+      -> notFound(endpoint: String) {
+        No circuit breaker is configured for this endpoint.
+      }
+    }
+
+    action reset(endpoint: String) {
+      -> ok(breaker: B) {
+        Force-reset the circuit breaker to closed state, clearing
+        all counters. Use for manual recovery or testing.
+      }
+      -> notFound(endpoint: String) {
+        No circuit breaker is configured for this endpoint.
+      }
+    }
+
+    action get(endpoint: String) {
+      -> ok(breaker: B, status: String, failureCount: Int, successCount: Int) {
+        Return the current state of the circuit breaker for
+        diagnostics.
+      }
+      -> notFound(endpoint: String) {
+        No circuit breaker is configured for this endpoint.
+      }
+    }
+  }
+
+  invariant {
+    after configure(endpoint: "openai-api", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000) -> ok(breaker: b)
+    then check(endpoint: "openai-api") -> closed(breaker: b)
+  }
+
+  invariant {
+    after configure(endpoint: "test-api", failureThreshold: 2, successThreshold: 1, resetTimeoutMs: 1000) -> ok(breaker: b)
+    and  recordFailure(endpoint: "test-api") -> ok(breaker: b, status: _)
+    and  recordFailure(endpoint: "test-api") -> tripped(breaker: b, failureCount: 2)
+    then get(endpoint: "test-api") -> ok(breaker: b, status: "open", failureCount: 2, successCount: 0)
+  }
+}

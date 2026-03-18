@@ -1,0 +1,91 @@
+@version(1)
+concept WebSocketProvider [W] {
+
+  purpose {
+    Manage WebSocket connections with send/receive lifecycle,
+    reconnection, and message framing. Serves as the protocol
+    provider for persistent bidirectional communication channels.
+  }
+
+  state {
+    connections: set W
+    name: W -> String
+    url: W -> String
+    status: W -> String
+    protocols: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "websocket-provider", kind is "protocol".
+      }
+    }
+
+    action configure(name: String, url: String, protocols: String) {
+      -> ok(connection: W) {
+        Create a named WebSocket connection configuration with
+        URL and sub-protocol list. Does not open the connection
+        until a send or receive is attempted.
+      }
+      -> exists(name: String) {
+        A connection with this name is already configured.
+      }
+    }
+
+    action send(connection: String, message: String) {
+      -> ok() {
+        Send a message over the named WebSocket connection,
+        opening it first if not already connected.
+      }
+      -> notConnected(connection: String) {
+        The connection could not be established or was closed
+        and reconnection failed.
+      }
+      -> error(message: String) {
+        The message could not be sent due to a framing or
+        serialization error.
+      }
+    }
+
+    action receive(connection: String) {
+      -> ok(message: String) {
+        Return the next message from the named WebSocket
+        connection's receive buffer.
+      }
+      -> notConnected(connection: String) {
+        The connection is not open and could not be established.
+      }
+      -> closed() {
+        The remote end closed the connection gracefully.
+      }
+    }
+
+    action close(connection: String) {
+      -> ok() {
+        Close the named WebSocket connection gracefully.
+      }
+      -> notFound(connection: String) {
+        No connection is configured with this name.
+      }
+    }
+
+    action list() {
+      -> ok(connections: String) {
+        Return all configured connections as a serialized JSON
+        array with name, url, and status.
+      }
+    }
+  }
+
+  invariant {
+    after configure(name: "events", url: "wss://events.example.com", protocols: "[]") -> ok(connection: w)
+    then close(connection: "unknown") -> notFound(connection: "unknown")
+  }
+}

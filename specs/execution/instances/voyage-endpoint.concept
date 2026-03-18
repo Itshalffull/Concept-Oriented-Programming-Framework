@@ -1,0 +1,58 @@
+@version(1)
+concept VoyageEndpoint [V] {
+
+  purpose {
+    Configure and authenticate a Voyage AI API endpoint for code
+    embedding calls. Stores API key, model selection, and input
+    type so that embedding concepts reference endpoints by name.
+  }
+
+  state {
+    endpoints: set V
+    name: V -> String
+    apiKey: V -> String
+    model: V -> String
+    baseUrl: V -> String
+    inputType: V -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, apiKey: String, model: String, inputType: String) {
+      -> ok(endpoint: V) {
+        Create a named Voyage endpoint configuration with API key,
+        model name (e.g. "voyage-code-3"), and input type
+        ("query" or "document"). Base URL defaults to the Voyage
+        API. The endpoint becomes addressable by name.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: V, baseUrl: String, model: String, headers: String) {
+        Look up the named endpoint and return its base URL, model,
+        and pre-built authorization headers ready for HTTP calls.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name, model, and inputType (API keys omitted).
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "code-search", apiKey: "vk-test", model: "voyage-code-3", inputType: "document") -> ok(endpoint: v)
+    then resolve(name: "code-search") -> ok(endpoint: v, baseUrl: _, model: "voyage-code-3", headers: _)
+  }
+}

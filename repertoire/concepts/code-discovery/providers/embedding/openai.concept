@@ -1,15 +1,19 @@
-@version(1)
+@version(2)
 concept OpenAIEmbeddingProvider [I] {
 
   purpose {
-    Embedding model provider using OpenAI's text-embedding-3-large
-    API. Requires network access and API key.
+    Compute code embeddings via OpenAI's text-embedding API.
+    Self-registers with PluginRegistry on initialization so
+    SemanticEmbedding can discover and route to this provider.
   }
 
   state {
     instances: set I
     providerRef: I -> String
     modelName: I -> String
+    apiModel: I -> String
+    dimensions: I -> Int
+    ready: I -> Bool
   }
 
   capabilities {
@@ -18,14 +22,35 @@ concept OpenAIEmbeddingProvider [I] {
   }
 
   actions {
-    action initialize() {
+    action initialize(apiKey: String, apiModel: String, dimensions: Int) {
       -> ok(instance: I) {
-        Register this embedding provider with PluginRegistry
-        for OpenAI embedding model.
+        Store provider config and mark ready. The API key is
+        validated on first embed call, not during initialization.
+        Default apiModel is text-embedding-3-small, default
+        dimensions is 1536.
       }
       -> loadError(message: String) {
-        Failed to initialize the OpenAI embedding provider.
+        Missing or empty API key.
       }
     }
+
+    action embed(text: String) {
+      -> ok(vector: String, dimensions: Int) {
+        Call the OpenAI embeddings endpoint and return the
+        resulting float vector as a JSON array string.
+      }
+      -> error(message: String) {
+        The API call failed due to network error, invalid key,
+        rate limiting, or the model returned an unexpected response.
+      }
+      -> notReady(message: String) {
+        Provider has not been initialized yet.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(apiKey: "sk-test", apiModel: "text-embedding-3-small", dimensions: 1536) -> ok(instance: i)
+    then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1536)
   }
 }

@@ -1,0 +1,62 @@
+# RateLimiter wiring — acquire tokens before dispatch, release on completion.
+# Prevents exceeding API quotas by throttling request rates per endpoint.
+
+sync AcquireTokenBeforeExternalCall [eager]
+  purpose: "Acquire a rate limit token before dispatching an external call. If no tokens available, the call is delayed or rejected."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep; payload: ?payload ]
+    => []
+}
+then {
+  RateLimiter/acquire: [ endpoint: ?ep; tokens: 1 ]
+}
+
+sync AcquireTokenBeforeLocalProcess [eager]
+  purpose: "Acquire a rate limit token before dispatching a local process."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod; input: ?input ]
+    => []
+}
+then {
+  RateLimiter/acquire: [ endpoint: ?mod; tokens: 1 ]
+}
+
+sync ReleaseTokenOnExternalCallSuccess [eager]
+  purpose: "Release a rate limit token when an external call completes, freeing capacity for the next request."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => ok(call: ?call; result: ?result)
+}
+then {
+  RateLimiter/release: [ endpoint: ?ep; tokens: 1 ]
+}
+
+sync ReleaseTokenOnExternalCallFailure [eager]
+  purpose: "Release a rate limit token when an external call fails, freeing capacity."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => error(call: ?call; message: ?msg)
+}
+then {
+  RateLimiter/release: [ endpoint: ?ep; tokens: 1 ]
+}
+
+sync ReleaseTokenOnLocalProcessSuccess [eager]
+  purpose: "Release a rate limit token when a local process completes."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => ok(process: ?proc; result: ?result)
+}
+then {
+  RateLimiter/release: [ endpoint: ?mod; tokens: 1 ]
+}
+
+sync ReleaseTokenOnLocalProcessFailure [eager]
+  purpose: "Release a rate limit token when a local process fails."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => error(process: ?proc; message: ?msg)
+}
+then {
+  RateLimiter/release: [ endpoint: ?mod; tokens: 1 ]
+}

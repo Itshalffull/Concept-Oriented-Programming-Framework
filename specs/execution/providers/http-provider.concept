@@ -1,0 +1,74 @@
+@version(1)
+concept HttpProvider [H] {
+
+  purpose {
+    Execute HTTP requests with connection pooling, header management,
+    and response parsing. Serves as the protocol provider for all
+    HTTP-based external calls, routing to configured endpoint instances.
+  }
+
+  state {
+    instances: set H
+    name: H -> String
+    baseUrl: H -> String
+    headers: H -> String
+    timeout: H -> Int
+    status: H -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "http-provider", kind is "protocol", capabilities
+        lists supported HTTP methods.
+      }
+    }
+
+    action configure(name: String, baseUrl: String, headers: String, timeout: Int) {
+      -> ok(instance: H) {
+        Create a named HTTP endpoint instance with base URL, default
+        headers, and timeout. The instance is addressable by name in
+        subsequent execute calls.
+      }
+      -> exists(name: String) {
+        An instance with this name is already configured.
+      }
+    }
+
+    action execute(instance: String, method: String, path: String, body: String, headers: String) {
+      -> ok(status: Int, body: String, headers: String) {
+        Send the HTTP request to the named instance's base URL plus
+        path, merging instance default headers with call-specific
+        headers. Returns status code, response body, and response headers.
+      }
+      -> notFound(instance: String) {
+        No instance is configured with this name.
+      }
+      -> networkError(message: String) {
+        The request failed due to a network-level error such as
+        DNS resolution failure, connection refused, or TLS error.
+      }
+      -> timeout(instance: String, timeoutMs: Int) {
+        The request exceeded the configured timeout duration.
+      }
+    }
+
+    action list() {
+      -> ok(instances: String) {
+        Return all configured instances as a serialized JSON array
+        of name, baseUrl, and status objects.
+      }
+    }
+  }
+
+  invariant {
+    after configure(name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000) -> ok(instance: h)
+    then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> notFound(instance: "unknown-api")
+  }
+}

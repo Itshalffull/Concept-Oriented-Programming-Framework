@@ -1,0 +1,73 @@
+# Instance provider registration — Tier 3 instances register with Tier 2 protocol providers.
+# Each instance's register() action triggers HttpProvider/configure or OnnxProvider/load
+# plus PluginRegistry registration for discovery.
+
+sync RegisterOpenAiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for an OpenAI endpoint when it registers."
+when {
+  OpenAiEndpoint/register: [ name: ?name; apiKey: ?key; model: ?model; baseUrl: ?url; dimensions: ?dims ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: ?url;
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { model: ?model; kind: "embedding"; dimensions: ?dims; provider: "openai" }
+  ]
+}
+
+sync RegisterVoyageEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for a Voyage AI endpoint when it registers."
+when {
+  VoyageEndpoint/register: [ name: ?name; apiKey: ?key; model: ?model; inputType: ?inputType ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: "https://api.voyageai.com/v1";
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { model: ?model; kind: "embedding"; inputType: ?inputType; provider: "voyage" }
+  ]
+}
+
+sync RegisterLocalModelOnnxInstance [eager]
+  purpose: "Load an ONNX model when a local model instance using the ONNX runtime registers."
+when {
+  LocalModelInstance/register: [ name: ?name; runtime: "onnx"; modelPath: ?path; device: ?device; dimensions: ?dims ]
+    => ok(instance: ?inst)
+}
+then {
+  OnnxProvider/load: [ name: ?name; modelPath: ?path; device: ?device; options: "{}" ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { runtime: "onnx"; kind: "embedding"; dimensions: ?dims; provider: "local" }
+  ]
+}
+
+sync RegisterLocalModelWasmInstance [eager]
+  purpose: "Load a WASM module when a local model instance using the WASM runtime registers."
+when {
+  LocalModelInstance/register: [ name: ?name; runtime: "wasm"; modelPath: ?path; device: ?device; dimensions: ?dims ]
+    => ok(instance: ?inst)
+}
+then {
+  WasmProvider/load: [ name: ?name; wasmPath: ?path; memoryLimit: 65536 ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { runtime: "wasm"; kind: "embedding"; dimensions: ?dims; provider: "local" }
+  ]
+}

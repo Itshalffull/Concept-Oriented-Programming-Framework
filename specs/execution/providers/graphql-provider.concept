@@ -1,0 +1,70 @@
+@version(1)
+concept GraphqlProvider [Q] {
+
+  purpose {
+    Execute GraphQL operations with query, mutation, and subscription
+    support, variable binding, and schema-aware error handling. Serves
+    as the protocol provider for all GraphQL-based external calls.
+  }
+
+  state {
+    endpoints: set Q
+    name: Q -> String
+    url: Q -> String
+    headers: Q -> String
+    schemaRef: Q -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "graphql-provider", kind is "protocol".
+      }
+    }
+
+    action configure(name: String, url: String, headers: String, schemaRef: String) {
+      -> ok(endpoint: Q) {
+        Create a named GraphQL endpoint with URL, auth headers,
+        and optional schema reference for validation.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already configured.
+      }
+    }
+
+    action execute(endpoint: String, query: String, variables: String, operationType: String) {
+      -> ok(data: String) {
+        Execute the GraphQL operation against the named endpoint,
+        passing variables. Returns the data field from the response.
+      }
+      -> notFound(endpoint: String) {
+        No endpoint is configured with this name.
+      }
+      -> graphqlErrors(errors: String) {
+        The GraphQL server returned errors in the response. Errors
+        are serialized as a JSON array of error objects.
+      }
+      -> networkError(message: String) {
+        The request failed at the network level before reaching
+        the GraphQL server.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all configured endpoints as a serialized JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after configure(name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "") -> ok(endpoint: q)
+    then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> notFound(endpoint: "unknown-api")
+  }
+}

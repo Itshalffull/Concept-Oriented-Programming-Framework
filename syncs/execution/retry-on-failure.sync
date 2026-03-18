@@ -1,0 +1,21 @@
+# Observability — Retry policy evaluation on execution failures.
+
+sync RetryExternalCallOnFailure [eager]
+  purpose: "Evaluate retry policy when an external call fails."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => error(call: ?call; message: ?msg)
+}
+then {
+  RetryPolicy/should_retry: [ policy: ?call; error: ?msg ]
+}
+
+sync RetryLocalProcessOnFailure [eager]
+  purpose: "Evaluate retry policy when a local process fails."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => error(process: ?proc; message: ?msg)
+}
+then {
+  RetryPolicy/should_retry: [ policy: ?proc; error: ?msg ]
+}

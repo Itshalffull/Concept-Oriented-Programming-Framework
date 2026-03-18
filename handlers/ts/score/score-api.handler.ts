@@ -10,6 +10,27 @@
 // (dependence graph traversal, data flow analysis, embeddings).
 
 import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import { getScoreKernel } from './score-kernel.handler.js';
+
+// ─── Kernel Dispatch ────────────────────────────────────
+
+/**
+ * Dispatch an action to a sibling concept via the booted ScoreKernel.
+ * Returns null if the kernel isn't available (graceful degradation).
+ */
+async function dispatch(
+  uri: string,
+  action: string,
+  input: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const kernel = getScoreKernel();
+  if (!kernel) return null;
+  try {
+    return await kernel.invokeConcept(uri, action, input) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
 
 // ─── Helpers ─────────────────────────────────────────────
 
@@ -176,7 +197,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', definitions };
   },
 
-  async matchPattern(input, _storage) {
+  async matchPattern(input, storage) {
     const pattern = input.pattern as string;
     const language = input.language as string;
 
@@ -184,13 +205,29 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'invalidPattern', pattern: '', error: 'Pattern is required' };
     }
 
-    // Pattern matching delegates to the SyntaxTree concept via
-    // StructuralPattern. This stub returns the interface contract;
-    // the actual tree-sitter query execution happens in the parse suite.
-    return {
-      variant: 'ok',
-      matches: [],
-    };
+    // Dispatch to SyntaxTree/query for each parsed tree matching the language.
+    // Trees are indexed in ScoreApi's files collection; tree IDs come from
+    // the parse layer. We iterate known files and query their trees.
+    const allFiles = await storage.find('files');
+    const matches: Array<Record<string, unknown>> = [];
+
+    for (const f of allFiles) {
+      const filePath = f.filePath as string;
+      if (language && !filePath.endsWith(`.${language}`) && inferLanguage(filePath) !== language) {
+        continue;
+      }
+      const treeId = f.treeId as string;
+      if (!treeId) continue;
+
+      const result = await dispatch('urn:clef/SyntaxTree', 'query', { tree: treeId, pattern });
+      if (result?.variant === 'ok' && Array.isArray(result.matches)) {
+        for (const m of result.matches as Array<Record<string, unknown>>) {
+          matches.push({ ...m, file: filePath });
+        }
+      }
+    }
+
+    return { variant: 'ok', matches };
   },
 
   // ─── Symbol Queries (Symbol Layer) ────────────────────
@@ -296,12 +333,26 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', symbol };
     }
 
-    // Relationships come from the SymbolRelationship concept.
-    // This stub returns the interface contract.
-    return {
-      variant: 'ok',
-      relationships: [],
-    };
+    // Dispatch to SymbolRelationship concept for both directions
+    const relationships: Array<Record<string, unknown>> = [];
+
+    const outgoing = await dispatch('urn:clef/SymbolRelationship', 'findFrom', { source: symbol, kind: '' });
+    if (outgoing?.variant === 'ok') {
+      const rels: unknown[] = (() => {
+        try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
+      })();
+      relationships.push(...(rels as Array<Record<string, unknown>>));
+    }
+
+    const incoming = await dispatch('urn:clef/SymbolRelationship', 'findTo', { target: symbol, kind: '' });
+    if (incoming?.variant === 'ok') {
+      const rels: unknown[] = (() => {
+        try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
+      })();
+      relationships.push(...(rels as Array<Record<string, unknown>>));
+    }
+
+    return { variant: 'ok', relationships };
   },
 
   // ─── Semantic Queries (Semantic Layer) ────────────────
@@ -360,6 +411,16 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', concept: conceptName || '', action: actionName || '' };
     }
 
+    // Try ActionEntity via kernel dispatch for full semantic detail
+    const result = await dispatch('urn:clef/ActionEntity', 'get', {
+      name: actionName,
+      concept: conceptName,
+    });
+    if (result?.variant === 'ok') {
+      return { variant: 'ok', action: result.action || result };
+    }
+
+    // Fallback: read from ScoreApi's own indexed data
     const entry = await storage.get('concepts', `concept:${conceptName}`);
     if (!entry) {
       return { variant: 'notFound', concept: conceptName, action: actionName };
@@ -370,8 +431,6 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', concept: conceptName, action: actionName };
     }
 
-    // Detailed action info comes from the semantic layer.
-    // Return the indexed summary.
     const action = {
       name: actionName,
       params: [],
@@ -478,13 +537,23 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', symbol: '' };
     }
 
-    // Delegates to the DependenceGraph concept.
-    // Stub returns the interface contract.
-    return {
-      variant: 'ok',
-      directDeps: [],
-      transitiveDeps: [],
-    };
+    // Dispatch to DependenceGraph concept via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependencies', {
+      source: symbol,
+      edgeKinds: '',
+    });
+    if (result?.variant === 'ok') {
+      const deps: unknown[] = (() => {
+        try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
+      })();
+      return {
+        variant: 'ok',
+        directDeps: deps,
+        transitiveDeps: [],
+      };
+    }
+
+    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
   },
 
   async getDependents(input, _storage) {
@@ -493,11 +562,23 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', symbol: '' };
     }
 
-    return {
-      variant: 'ok',
-      directDeps: [],
-      transitiveDeps: [],
-    };
+    // Dispatch to DependenceGraph concept via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependents', {
+      target: symbol,
+      edgeKinds: '',
+    });
+    if (result?.variant === 'ok') {
+      const deps: unknown[] = (() => {
+        try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
+      })();
+      return {
+        variant: 'ok',
+        directDeps: deps,
+        transitiveDeps: [],
+      };
+    }
+
+    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
   },
 
   async getImpact(input, _storage) {
@@ -506,11 +587,22 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'notFound', file: '' };
     }
 
-    return {
-      variant: 'ok',
-      directImpact: [],
-      transitiveImpact: [],
-    };
+    // Dispatch to DependenceGraph/impactAnalysis via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'impactAnalysis', {
+      changed: JSON.stringify([file]),
+    });
+    if (result?.variant === 'ok') {
+      const affected: unknown[] = (() => {
+        try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
+      })();
+      return {
+        variant: 'ok',
+        directImpact: affected,
+        transitiveImpact: [],
+      };
+    }
+
+    return { variant: 'ok', directImpact: [], transitiveImpact: [] };
   },
 
   async getDataFlow(input, _storage) {
@@ -521,10 +613,19 @@ export const scoreApiHandler: ConceptHandler = {
       return { variant: 'noPath', from: from || '', to: to || '' };
     }
 
-    return {
-      variant: 'ok',
-      paths: [],
-    };
+    // Dispatch to DataFlowPath/trace via kernel
+    const result = await dispatch('urn:clef/DataFlowPath', 'trace', {
+      source: from,
+      sink: to,
+    });
+    if (result?.variant === 'ok') {
+      const paths: unknown[] = (() => {
+        try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
+      })();
+      return { variant: 'ok', paths };
+    }
+
+    return { variant: 'ok', paths: [] };
   },
 
   // ─── Discovery Queries (Discovery Layer) ──────────────
@@ -752,12 +853,21 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', frames };
   },
 
-  async traceEndpoint(input, storage) {
+  async traceEndpoint(input, _storage) {
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
 
-    // Stub — delegates to InterfaceEntity in production
+    // Dispatch to InterfaceEntity via kernel
+    const result = await dispatch('urn:clef/InterfaceEntity', 'traceEndpointToAction', {
+      target,
+      path,
+      method,
+    });
+    if (result?.variant === 'ok') {
+      return result;
+    }
+
     return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
   },
 

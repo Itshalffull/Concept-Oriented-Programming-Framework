@@ -1,0 +1,31 @@
+# Observability — Error correlation for execution layer failures.
+
+sync CorrelateExternalCallError [eager]
+  purpose: "Link external call failures to static context for root cause analysis."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => error(call: ?call; message: ?msg)
+}
+then {
+  ErrorCorrelation/record: [
+    flowId: ?call;
+    errorKind: "transport-error";
+    message: ?msg;
+    rawEvent: ?protocol
+  ]
+}
+
+sync CorrelateLocalProcessError [eager]
+  purpose: "Link local process failures to static context for root cause analysis."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => error(process: ?proc; message: ?msg)
+}
+then {
+  ErrorCorrelation/record: [
+    flowId: ?proc;
+    errorKind: "transport-error";
+    message: ?msg;
+    rawEvent: ?runtime
+  ]
+}

@@ -1,16 +1,20 @@
-@version(1)
+@version(2)
 concept VoyageCodeEmbeddingProvider [I] {
 
   purpose {
-    Embedding model provider using Voyage AI's voyage-code-3
-    model. Code-optimized embeddings with superior performance
-    on code search tasks. Requires network access and API key.
+    Compute code embeddings via Voyage AI's voyage-code API.
+    Code-optimized embeddings with superior performance on code
+    search tasks. Self-registers with PluginRegistry so
+    SemanticEmbedding can discover and route to this provider.
   }
 
   state {
     instances: set I
     providerRef: I -> String
     modelName: I -> String
+    apiModel: I -> String
+    dimensions: I -> Int
+    ready: I -> Bool
   }
 
   capabilities {
@@ -19,14 +23,35 @@ concept VoyageCodeEmbeddingProvider [I] {
   }
 
   actions {
-    action initialize() {
+    action initialize(apiKey: String, apiModel: String, dimensions: Int) {
       -> ok(instance: I) {
-        Register this embedding provider with PluginRegistry
-        for Voyage Code model.
+        Store provider config and mark ready. The API key is
+        validated on first embed call, not during initialization.
+        Default apiModel is voyage-code-3, default dimensions
+        is 1024.
       }
       -> loadError(message: String) {
-        Failed to initialize the Voyage Code embedding provider.
+        Missing or empty API key.
       }
     }
+
+    action embed(text: String) {
+      -> ok(vector: String, dimensions: Int) {
+        Call the Voyage AI embeddings endpoint and return the
+        resulting float vector as a JSON array string.
+      }
+      -> error(message: String) {
+        The API call failed due to network error, invalid key,
+        rate limiting, or the model returned an unexpected response.
+      }
+      -> notReady(message: String) {
+        Provider has not been initialized yet.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(apiKey: "pa-test", apiModel: "voyage-code-3", dimensions: 1024) -> ok(instance: i)
+    then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 1024)
   }
 }

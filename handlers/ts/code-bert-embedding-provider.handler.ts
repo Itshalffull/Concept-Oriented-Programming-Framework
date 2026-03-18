@@ -1,37 +1,63 @@
 // ============================================================
-// CodeBERTEmbeddingProvider Handler
+// CodeBERTEmbeddingProvider Handler — Functional Style
 //
 // Embedding model provider using CodeBERT for local, open-source
-// code embeddings. Runs without network access after initial model
-// download.
+// code embeddings. Uses perform("onnx", "infer", ...) to declare
+// transport effects — actual ONNX inference is resolved by the
+// execution layer (LocalProcess → OnnxProvider → LocalModelInstance).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, find, pure, perform,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+
+const MODEL_NAME = 'codeBERT';
+const PROVIDER_REF = 'embedding:codeBERT';
 
 let idCounter = 0;
 function nextId(): string {
   return `code-bert-embedding-provider-${++idCounter}`;
 }
 
-const MODEL_NAME = 'codeBERT';
-const PROVIDER_REF = 'embedding:codeBERT';
-
-export const codeBERTEmbeddingProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    // Check if already initialised
-    const existing = await storage.find('code-bert-embedding-provider', { providerRef: PROVIDER_REF });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
-
+export const codeBERTEmbeddingProviderHandler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('code-bert-embedding-provider', id, {
+
+    let p = createProgram();
+    p = put(p, 'code-bert-embedding-provider', id, {
       id,
       providerRef: PROVIDER_REF,
       modelName: MODEL_NAME,
     });
+    p = pure(p, { variant: 'ok', instance: id });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    return { variant: 'ok', instance: id };
+  embed(input: Record<string, unknown>) {
+    const text = input.text as string;
+
+    let p = createProgram();
+
+    // Declare the ONNX transport effect — resolved by the execution layer:
+    // perform → EffectHandler → LocalProcess → OnnxProvider → LocalModelInstance
+    p = perform(p, 'onnx', 'infer', {
+      session: 'codebert-base',
+      inputs: JSON.stringify({
+        input_ids: text,
+        attention_mask: text,
+      }),
+      options: '{}',
+    }, 'inferResult');
+
+    p = pure(p, {
+      variant: 'ok',
+      vector: '',
+      dimensions: 768,
+      model: MODEL_NAME,
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

@@ -1,0 +1,29 @@
+# Observability — Runtime coverage tracking for execution layer.
+
+sync CoverExternalCall [eager]
+  purpose: "Track that an external call protocol+endpoint was exercised at runtime."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => ok(call: ?call; result: ?result)
+}
+then {
+  RuntimeCoverage/record: [
+    symbol: ?ep;
+    kind: "transport-effect";
+    flowId: ?call
+  ]
+}
+
+sync CoverLocalProcess [eager]
+  purpose: "Track that a local process runtime+module was exercised at runtime."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => ok(process: ?proc; result: ?result)
+}
+then {
+  RuntimeCoverage/record: [
+    symbol: ?mod;
+    kind: "transport-effect";
+    flowId: ?proc
+  ]
+}

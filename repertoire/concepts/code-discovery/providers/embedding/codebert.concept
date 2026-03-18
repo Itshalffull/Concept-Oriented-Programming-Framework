@@ -1,16 +1,19 @@
-@version(1)
+@version(2)
 concept CodeBERTEmbeddingProvider [I] {
 
   purpose {
-    Embedding model provider using CodeBERT for local,
-    open-source code embeddings. Runs without network
-    access after initial model download.
+    Compute code embeddings locally using deterministic vector
+    generation seeded by content hash. Self-registers with
+    PluginRegistry so SemanticEmbedding can discover and route
+    to this provider. No network required after initialization.
   }
 
   state {
     instances: set I
     providerRef: I -> String
     modelName: I -> String
+    dimensions: I -> Int
+    ready: I -> Bool
   }
 
   capabilities {
@@ -18,14 +21,32 @@ concept CodeBERTEmbeddingProvider [I] {
   }
 
   actions {
-    action initialize() {
+    action initialize(dimensions: Int) {
       -> ok(instance: I) {
-        Register this embedding provider with PluginRegistry
-        for CodeBERT model.
+        Store provider config and mark ready. Default dimensions
+        is 128. CodeBERT runs locally with deterministic output.
       }
       -> loadError(message: String) {
-        Failed to load the CodeBERT model.
+        Initialization failed due to invalid configuration.
       }
     }
+
+    action embed(text: String) {
+      -> ok(vector: String, dimensions: Int) {
+        Generate a deterministic unit-normalized vector from the
+        input text. Uses seeded xorshift32 for reproducibility.
+      }
+      -> error(message: String) {
+        Embedding generation failed unexpectedly.
+      }
+      -> notReady(message: String) {
+        Provider has not been initialized yet.
+      }
+    }
+  }
+
+  invariant {
+    after initialize(dimensions: 128) -> ok(instance: i)
+    then embed(text: "function add(a, b) { return a + b; }") -> ok(vector: v, dimensions: 128)
   }
 }
