@@ -1,47 +1,92 @@
+// @migrated dsl-constructs 2026-03-18
 // Conviction Concept Handler
-// Continuous staking with exponential charge — @gate concept.
-import type { ConceptHandler } from '@clef/runtime';
+// Continuous staking with exponential charge.
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const convictionHandler: ConceptHandler = {
-  async registerProposal(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _convictionHandler: FunctionalConceptHandler = {
+  registerProposal(input: Record<string, unknown>) {
     const id = `conviction-${Date.now()}`;
-    await storage.put('conviction', id, {
+    let p = createProgram();
+    p = put(p, 'conviction', id, {
       id, proposalRef: input.proposalRef, threshold: input.threshold,
       halfLifeDays: input.halfLifeDays, totalStaked: 0, stakes: [], status: 'Active',
     });
-    return { variant: 'registered', proposal: id };
+    return complete(p, 'registered', { proposal: id }) as StorageProgram<Result>;
   },
 
-  async stake(input, storage) {
+  stake(input: Record<string, unknown>) {
     const { proposal, staker, amount } = input;
-    const record = await storage.get('conviction', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    const stakes = record.stakes as Array<{ staker: unknown; amount: unknown; stakedAt: string }>;
-    stakes.push({ staker, amount, stakedAt: new Date().toISOString() });
-    const totalStaked = (record.totalStaked as number) + (amount as number);
-    await storage.put('conviction', proposal as string, { ...record, stakes, totalStaked });
-    return { variant: 'staked', proposal, newTotal: totalStaked };
+    let p = createProgram();
+    p = get(p, 'conviction', proposal as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'conviction', proposal as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const stakes = record.stakes as Array<{ staker: unknown; amount: unknown; stakedAt: string }>;
+          stakes.push({ staker, amount, stakedAt: new Date().toISOString() });
+          const totalStaked = (record.totalStaked as number) + (amount as number);
+          return { ...record, stakes, totalStaked };
+        });
+        return completeFrom(thenP, 'staked', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const newTotal = (record.totalStaked as number) + (amount as number);
+          return { variant: 'staked', proposal, newTotal };
+        });
+      },
+      (elseP) => complete(elseP, 'not_found', { proposal }),
+    ) as StorageProgram<Result>;
   },
 
-  async unstake(input, storage) {
+  unstake(input: Record<string, unknown>) {
     const { proposal, staker, amount } = input;
-    const record = await storage.get('conviction', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    const totalStaked = Math.max(0, (record.totalStaked as number) - (amount as number));
-    await storage.put('conviction', proposal as string, { ...record, totalStaked });
-    return { variant: 'unstaked', proposal, newTotal: totalStaked };
+    let p = createProgram();
+    p = get(p, 'conviction', proposal as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'conviction', proposal as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const totalStaked = Math.max(0, (record.totalStaked as number) - (amount as number));
+          return { ...record, totalStaked };
+        });
+        return completeFrom(thenP, 'unstaked', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const newTotal = Math.max(0, (record.totalStaked as number) - (amount as number));
+          return { variant: 'unstaked', proposal, newTotal };
+        });
+      },
+      (elseP) => complete(elseP, 'not_found', { proposal }),
+    ) as StorageProgram<Result>;
   },
 
-  async updateConviction(input, storage) {
+  updateConviction(input: Record<string, unknown>) {
     const { proposal } = input;
-    const record = await storage.get('conviction', proposal as string);
-    if (!record) return { variant: 'not_found', proposal };
-    const conviction = record.totalStaked as number;
-    const threshold = record.threshold as number;
-    if (conviction >= threshold) {
-      await storage.put('conviction', proposal as string, { ...record, status: 'Triggered' });
-      return { variant: 'triggered', proposal, conviction };
-    }
-    return { variant: 'updated', proposal, conviction };
+    let p = createProgram();
+    p = get(p, 'conviction', proposal as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'conviction_update', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const conviction = record.totalStaked as number;
+          const threshold = record.threshold as number;
+          if (conviction >= threshold) {
+            return { variant: 'triggered', proposal, conviction };
+          }
+          return { variant: 'updated', proposal, conviction };
+        });
+      },
+      (elseP) => complete(elseP, 'not_found', { proposal }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const convictionHandler = autoInterpret(_convictionHandler);

@@ -3,7 +3,7 @@
 // Governance transparency and disclosure timing rules.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -52,7 +52,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Suspended', suspendReason: reason };
         }, 'updated');
-        b2 = put(b2, 'disclosure', policy as string, {});
+        b2 = putFrom(b2, 'disclosure', policy as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'suspended', { policy });
       },
       (b) => complete(b, 'not_found', { policy }),

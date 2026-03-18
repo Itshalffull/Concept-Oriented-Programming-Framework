@@ -3,7 +3,7 @@
 // Async threaded discussion with signals and summaries.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -39,14 +39,8 @@ const _deliberationHandler: FunctionalConceptHandler = {
               entries.push({ entryId, author, content, parentEntry: parentEntry ?? null, postedAt: new Date().toISOString() });
               return { ...rec, entries };
             }, 'updated');
-            b3 = branch(b3, () => true,
-              (b4) => {
-                let b5 = put(b4, 'thread', thread as string, {});
-                return complete(b5, 'added', { entry: entryId });
-              },
-              (b4) => complete(b4, 'added', { entry: entryId }),
-            );
-            return b3;
+            b3 = putFrom(b3, 'thread', thread as string, (bindings) => bindings.updated as Record<string, unknown>);
+            return complete(b3, 'added', { entry: entryId });
           },
         );
       },
@@ -73,7 +67,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Closed', summary, closedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = put(b2, 'thread', thread as string, {});
+        b2 = putFrom(b2, 'thread', thread as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'closed', { thread });
       },
       (b) => complete(b, 'not_found', { thread }),

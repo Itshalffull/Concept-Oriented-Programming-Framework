@@ -3,7 +3,7 @@
 // Formal dispute resolution — @gate concept.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -35,7 +35,7 @@ const _disputeHandler: FunctionalConceptHandler = {
           evidenceList.push({ party, evidence, submittedAt: new Date().toISOString() });
           return { ...rec, evidence: evidenceList, status: 'EvidencePhase' };
         }, 'updated');
-        b2 = put(b2, 'dispute', dispute as string, {});
+        b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'evidence_added', { dispute });
       },
       (b) => complete(b, 'not_found', { dispute }),
@@ -58,7 +58,7 @@ const _disputeHandler: FunctionalConceptHandler = {
             resolvedAt: new Date().toISOString(),
           };
         }, 'updated');
-        b2 = put(b2, 'dispute', dispute as string, {});
+        b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'resolved', { dispute, decision });
       },
       (b) => complete(b, 'not_found', { dispute }),
@@ -82,7 +82,7 @@ const _disputeHandler: FunctionalConceptHandler = {
               const rec = bindings.record as Record<string, unknown>;
               return { ...rec, status: 'Appealed', appellant, appealGrounds: grounds };
             }, 'updated');
-            b3 = put(b3, 'dispute', dispute as string, {});
+            b3 = putFrom(b3, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
             return complete(b3, 'appealed', { dispute });
           },
         );
