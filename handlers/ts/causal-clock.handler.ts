@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CausalClock Handler
 //
@@ -7,185 +8,179 @@
 // provenance chains, and temporal queries.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `causal-clock-${++idCounter}`;
 }
 
-export const causalClockHandler: ConceptHandler = {
-  async tick(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  tick(input: Record<string, unknown>) {
     const replicaId = input.replicaId as string;
 
-    // Retrieve current clock for this replica, or initialize
-    const existing = await storage.get('causal-clock', replicaId);
-    let clock: number[];
+    let p = createProgram();
+    p = get(p, 'causal-clock', replicaId, 'existing');
+    p = find(p, 'causal-clock-replica', {}, 'allReplicas');
 
-    if (existing && Array.isArray(existing.clock)) {
-      clock = (existing.clock as number[]).slice();
-    } else {
-      // Initialize clock based on known replicas
-      const allReplicas = await storage.find('causal-clock-replica', {});
-      const replicaEntry = allReplicas.find(r => r.replicaId === replicaId);
-      let index: number;
-      if (replicaEntry) {
-        index = replicaEntry.index as number;
-        clock = new Array(allReplicas.length).fill(0);
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const allReplicas = bindings.allReplicas as Record<string, unknown>[];
+
+      let clock: number[];
+      let replicaIndex: number;
+      let needsRegistration = false;
+
+      if (existing && Array.isArray(existing.clock)) {
+        clock = (existing.clock as number[]).slice();
       } else {
-        index = allReplicas.length;
-        await storage.put('causal-clock-replica', replicaId, {
-          replicaId,
-          index,
-        });
-        clock = new Array(index + 1).fill(0);
+        const replicaEntry = allReplicas.find(r => r.replicaId === replicaId);
+        if (replicaEntry) {
+          replicaIndex = replicaEntry.index as number;
+          clock = new Array(allReplicas.length).fill(0);
+        } else {
+          replicaIndex = allReplicas.length;
+          clock = new Array(replicaIndex + 1).fill(0);
+          needsRegistration = true;
+        }
       }
-    }
 
-    // Find the replica's index
-    const allReplicas = await storage.find('causal-clock-replica', {});
-    let replicaIndex = allReplicas.findIndex(r => r.replicaId === replicaId);
-    if (replicaIndex === -1) {
-      replicaIndex = allReplicas.length;
-      await storage.put('causal-clock-replica', replicaId, {
-        replicaId,
-        index: replicaIndex,
-      });
-    }
+      replicaIndex = allReplicas.findIndex(r => r.replicaId === replicaId);
+      if (replicaIndex === -1) {
+        replicaIndex = allReplicas.length;
+        needsRegistration = true;
+      }
 
-    // Ensure clock is large enough
-    while (clock.length <= replicaIndex) {
-      clock.push(0);
-    }
+      while (clock!.length <= replicaIndex) {
+        clock!.push(0);
+      }
 
-    // Increment this replica's position
-    clock[replicaIndex]++;
+      clock![replicaIndex]++;
 
-    // Store updated clock
-    await storage.put('causal-clock', replicaId, {
-      replicaId,
-      clock,
-    });
+      return { clock: clock!, replicaIndex, needsRegistration };
+    }, 'computed');
 
-    // Create event record
+    // Store updated clock and event
     const eventId = nextId();
-    await storage.put('causal-clock-event', eventId, {
-      id: eventId,
-      replicaId,
-      clock: clock.slice(),
+    p = putFrom(p, 'causal-clock', replicaId, (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      return { replicaId, clock: computed.clock };
     });
 
-    return { variant: 'ok', timestamp: eventId, clock };
+    p = putFrom(p, 'causal-clock-event', eventId, (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      return { id: eventId, replicaId, clock: (computed.clock as number[]).slice() };
+    });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      return { timestamp: eventId, clock: computed.clock };
+    }) as StorageProgram<Result>;
   },
 
-  async merge(input: Record<string, unknown>, storage: ConceptStorage) {
+  merge(input: Record<string, unknown>) {
     const localClock = input.localClock as number[];
     const remoteClock = input.remoteClock as number[];
 
+    const p = createProgram();
+
     if (!Array.isArray(localClock) || !Array.isArray(remoteClock)) {
-      return { variant: 'incompatible', message: 'Clocks must be arrays of integers' };
+      return complete(p, 'incompatible', { message: 'Clocks must be arrays of integers' }) as StorageProgram<Result>;
     }
 
     if (localClock.length !== remoteClock.length) {
-      return { variant: 'incompatible', message: `Clock dimensions differ: local=${localClock.length}, remote=${remoteClock.length}` };
+      return complete(p, 'incompatible', { message: `Clock dimensions differ: local=${localClock.length}, remote=${remoteClock.length}` }) as StorageProgram<Result>;
     }
 
-    // Component-wise maximum
     const merged = localClock.map((val, i) => Math.max(val, remoteClock[i]));
-
-    return { variant: 'ok', merged };
+    return complete(p, 'ok', { merged }) as StorageProgram<Result>;
   },
 
-  async compare(input: Record<string, unknown>, storage: ConceptStorage) {
+  compare(input: Record<string, unknown>) {
     const a = input.a as string;
     const b = input.b as string;
 
-    const eventA = await storage.get('causal-clock-event', a);
-    if (!eventA) {
-      return { variant: 'concurrent' };
-    }
+    let p = createProgram();
+    p = get(p, 'causal-clock-event', a, 'eventA');
+    p = get(p, 'causal-clock-event', b, 'eventB');
 
-    const eventB = await storage.get('causal-clock-event', b);
-    if (!eventB) {
-      return { variant: 'concurrent' };
-    }
+    return branch(p,
+      (bindings) => !bindings.eventA || !bindings.eventB,
+      (thenP) => complete(thenP, 'concurrent', {}),
+      (elseP) => {
+        return completeFrom(elseP, 'dynamic', (bindings) => {
+          const eventA = bindings.eventA as Record<string, unknown>;
+          const eventB = bindings.eventB as Record<string, unknown>;
+          const clockA = eventA.clock as number[];
+          const clockB = eventB.clock as number[];
 
-    const clockA = eventA.clock as number[];
-    const clockB = eventB.clock as number[];
+          const maxLen = Math.max(clockA.length, clockB.length);
+          const normA = [...clockA, ...new Array(maxLen - clockA.length).fill(0)];
+          const normB = [...clockB, ...new Array(maxLen - clockB.length).fill(0)];
 
-    // Normalize lengths
-    const maxLen = Math.max(clockA.length, clockB.length);
-    const normA = [...clockA, ...new Array(maxLen - clockA.length).fill(0)];
-    const normB = [...clockB, ...new Array(maxLen - clockB.length).fill(0)];
+          let aLessOrEqual = true;
+          let bLessOrEqual = true;
+          let equal = true;
 
-    let aLessOrEqual = true;
-    let bLessOrEqual = true;
-    let equal = true;
+          for (let i = 0; i < maxLen; i++) {
+            if (normA[i] > normB[i]) { bLessOrEqual = false; equal = false; }
+            if (normB[i] > normA[i]) { aLessOrEqual = false; equal = false; }
+          }
 
-    for (let i = 0; i < maxLen; i++) {
-      if (normA[i] > normB[i]) {
-        bLessOrEqual = false;
-        equal = false;
-      }
-      if (normB[i] > normA[i]) {
-        aLessOrEqual = false;
-        equal = false;
-      }
-    }
-
-    if (equal) {
-      return { variant: 'concurrent' };
-    }
-
-    if (aLessOrEqual) {
-      return { variant: 'before' };
-    }
-
-    if (bLessOrEqual) {
-      return { variant: 'after' };
-    }
-
-    return { variant: 'concurrent' };
+          if (equal) return { variant: 'concurrent' };
+          if (aLessOrEqual) return { variant: 'before' };
+          if (bLessOrEqual) return { variant: 'after' };
+          return { variant: 'concurrent' };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async dominates(input: Record<string, unknown>, storage: ConceptStorage) {
+  dominates(input: Record<string, unknown>) {
     const a = input.a as string;
     const b = input.b as string;
 
-    const eventA = await storage.get('causal-clock-event', a);
-    if (!eventA) {
-      return { variant: 'ok', result: false };
-    }
+    let p = createProgram();
+    p = get(p, 'causal-clock-event', a, 'eventA');
+    p = get(p, 'causal-clock-event', b, 'eventB');
 
-    const eventB = await storage.get('causal-clock-event', b);
-    if (!eventB) {
-      return { variant: 'ok', result: false };
-    }
+    return branch(p,
+      (bindings) => !bindings.eventA || !bindings.eventB,
+      (thenP) => complete(thenP, 'ok', { result: false }),
+      (elseP) => {
+        return completeFrom(elseP, 'ok', (bindings) => {
+          const eventA = bindings.eventA as Record<string, unknown>;
+          const eventB = bindings.eventB as Record<string, unknown>;
+          const clockA = eventA.clock as number[];
+          const clockB = eventB.clock as number[];
 
-    const clockA = eventA.clock as number[];
-    const clockB = eventB.clock as number[];
+          const maxLen = Math.max(clockA.length, clockB.length);
+          const normA = [...clockA, ...new Array(maxLen - clockA.length).fill(0)];
+          const normB = [...clockB, ...new Array(maxLen - clockB.length).fill(0)];
 
-    const maxLen = Math.max(clockA.length, clockB.length);
-    const normA = [...clockA, ...new Array(maxLen - clockA.length).fill(0)];
-    const normB = [...clockB, ...new Array(maxLen - clockB.length).fill(0)];
+          let allGreaterOrEqual = true;
+          let strictlyGreater = false;
 
-    // a dominates b: a[i] >= b[i] for all i, and a != b
-    let allGreaterOrEqual = true;
-    let strictlyGreater = false;
+          for (let i = 0; i < maxLen; i++) {
+            if (normA[i] < normB[i]) { allGreaterOrEqual = false; break; }
+            if (normA[i] > normB[i]) { strictlyGreater = true; }
+          }
 
-    for (let i = 0; i < maxLen; i++) {
-      if (normA[i] < normB[i]) {
-        allGreaterOrEqual = false;
-        break;
-      }
-      if (normA[i] > normB[i]) {
-        strictlyGreater = true;
-      }
-    }
-
-    return { variant: 'ok', result: allGreaterOrEqual && strictlyGreater };
+          return { result: allGreaterOrEqual && strictlyGreater };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 };
+
+export const causalClockHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCausalClockCounter(): void {

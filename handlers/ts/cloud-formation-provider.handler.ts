@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CloudFormationProvider Handler
 //
@@ -6,7 +7,14 @@
 // rollback configurations, and stack event tracking.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -25,15 +33,13 @@ function generateChangeSetId(): string {
   return `changeset-${hex}`;
 }
 
-export const cloudFormationProviderHandler: ConceptHandler = {
-  async generate(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    // Derive stack name from plan identifier
     const stackName = `clef-${plan}`;
     const region = 'us-east-1';
 
-    // Generate a basic CloudFormation template
     const template = {
       AWSTemplateFormatVersion: '2010-09-09',
       Description: `CloudFormation stack generated from Clef deploy plan: ${plan}`,
@@ -55,7 +61,8 @@ export const cloudFormationProviderHandler: ConceptHandler = {
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('cloud-formation-provider', id, {
+    let p = createProgram();
+    p = put(p, 'cloud-formation-provider', id, {
       id,
       stackName,
       region,
@@ -70,103 +77,99 @@ export const cloudFormationProviderHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       stack: id,
       files: [templateFileName],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get('cloud-formation-provider', stack);
-    if (!record) {
-      return { variant: 'changeSetEmpty', stack };
-    }
+    let p = createProgram();
+    p = get(p, 'cloud-formation-provider', stack, 'record');
 
-    const changeSetId = generateChangeSetId();
-
-    await storage.put('cloud-formation-provider', stack, {
-      ...record,
-      changeSetId,
-      lastEventAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      stack,
-      changeSetId,
-      toCreate: 1,
-      toUpdate: 0,
-      toDelete: 0,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        const changeSetId = generateChangeSetId();
+        thenP = putFrom(thenP, 'cloud-formation-provider', stack, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, changeSetId, lastEventAt: new Date().toISOString() };
+        });
+        return complete(thenP, 'ok', {
+          stack,
+          changeSetId,
+          toCreate: 1,
+          toUpdate: 0,
+          toDelete: 0,
+        });
+      },
+      (elseP) => complete(elseP, 'changeSetEmpty', { stack }),
+    ) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get('cloud-formation-provider', stack);
-    if (!record) {
-      return { variant: 'rollbackComplete', stack, reason: `Stack '${stack}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'cloud-formation-provider', stack, 'record');
 
-    const capabilities = JSON.parse((record.capabilities as string) || '[]') as string[];
-    const requiredCapabilities = ['CAPABILITY_IAM'];
-    const missingCapabilities = requiredCapabilities.filter(c => !capabilities.includes(c));
-    if (missingCapabilities.length > 0) {
-      return {
-        variant: 'insufficientCapabilities',
-        stack,
-        required: missingCapabilities,
-      };
-    }
-
-    const stackId = generateStackId();
-    const now = new Date().toISOString();
-
-    await storage.put('cloud-formation-provider', stack, {
-      ...record,
-      stackId,
-      stackStatus: 'CREATE_COMPLETE',
-      lastEventAt: now,
-    });
-
-    return {
-      variant: 'ok',
-      stack,
-      stackId,
-      created: ['CopfResourceGroup'],
-      updated: [],
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        return branch(thenP,
+          (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            const capabilities = JSON.parse((record.capabilities as string) || '[]') as string[];
+            const requiredCapabilities = ['CAPABILITY_IAM'];
+            return requiredCapabilities.some(c => !capabilities.includes(c));
+          },
+          (insuffP) => complete(insuffP, 'insufficientCapabilities', {
+            stack,
+            required: ['CAPABILITY_IAM'],
+          }),
+          (okP) => {
+            const stackId = generateStackId();
+            const now = new Date().toISOString();
+            okP = putFrom(okP, 'cloud-formation-provider', stack, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, stackId, stackStatus: 'CREATE_COMPLETE', lastEventAt: now };
+            });
+            return complete(okP, 'ok', {
+              stack,
+              stackId,
+              created: ['CopfResourceGroup'],
+              updated: [],
+            });
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'rollbackComplete', { stack, reason: `Stack '${stack}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async teardown(input: Record<string, unknown>, storage: ConceptStorage) {
+  teardown(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get('cloud-formation-provider', stack);
-    if (!record) {
-      return { variant: 'deletionFailed', stack, resource: 'unknown', reason: `Stack '${stack}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'cloud-formation-provider', stack, 'record');
 
-    const destroyed = ['CopfResourceGroup'];
-    const now = new Date().toISOString();
-
-    await storage.put('cloud-formation-provider', stack, {
-      ...record,
-      stackStatus: 'DELETE_COMPLETE',
-      lastEventAt: now,
-    });
-
-    await storage.del('cloud-formation-provider', stack);
-
-    return {
-      variant: 'ok',
-      stack,
-      destroyed,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        const destroyed = ['CopfResourceGroup'];
+        const now = new Date().toISOString();
+        thenP = putFrom(thenP, 'cloud-formation-provider', stack, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, stackStatus: 'DELETE_COMPLETE', lastEventAt: now };
+        });
+        thenP = del(thenP, 'cloud-formation-provider', stack);
+        return complete(thenP, 'ok', { stack, destroyed });
+      },
+      (elseP) => complete(elseP, 'deletionFailed', { stack, resource: 'unknown', reason: `Stack '${stack}' not found` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const cloudFormationProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCloudFormationProviderCounter(): void {
