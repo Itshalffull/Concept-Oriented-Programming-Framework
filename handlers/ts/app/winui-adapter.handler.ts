@@ -1,158 +1,35 @@
-// ============================================================
-// WinUIAdapter Handler
-//
-// Transforms framework-neutral props into WinUI/XAML bindings:
-// event handlers, dependency properties, XAML attribute syntax.
-// ============================================================
+// @migrated dsl-constructs 2026-03-18
+// WinUIAdapter Handler — Transforms framework-neutral props into WinUI/XAML bindings.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 
-import type { ConceptHandler } from '@clef/runtime';
+const WINUI_EVENT_MAP: Record<string, string> = { onclick: 'Click', ondoubleclick: 'DoubleTapped', onchange: 'TextChanged', onfocus: 'GotFocus', onblur: 'LostFocus', onkeydown: 'KeyDown', onkeyup: 'KeyUp', onpointerenter: 'PointerEntered', onpointerleave: 'PointerExited', onpointerdown: 'PointerPressed', onpointerup: 'PointerReleased', onloaded: 'Loaded', onunloaded: 'Unloaded', onscroll: 'ViewChanged', ondrag: 'DragStarting', ondrop: 'Drop' };
 
-const WINUI_EVENT_MAP: Record<string, string> = {
-  onclick: 'Click',
-  ondoubleclick: 'DoubleTapped',
-  onchange: 'TextChanged',
-  onfocus: 'GotFocus',
-  onblur: 'LostFocus',
-  onkeydown: 'KeyDown',
-  onkeyup: 'KeyUp',
-  onpointerenter: 'PointerEntered',
-  onpointerleave: 'PointerExited',
-  onpointerdown: 'PointerPressed',
-  onpointerup: 'PointerReleased',
-  onloaded: 'Loaded',
-  onunloaded: 'Unloaded',
-  onscroll: 'ViewChanged',
-  ondrag: 'DragStarting',
-  ondrop: 'Drop',
-};
-
-export const winUIAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
-    const adapter = input.adapter as string;
-    const props = input.props as string;
-
-    if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
-    }
-
+export const winUIAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
+    const adapter = input.adapter as string; const props = input.props as string;
+    if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(props);
-    } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
-    }
-
+    try { parsed = JSON.parse(props); } catch { let p = createProgram(); return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     const normalized: Record<string, unknown> = {};
-
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* -> AutomationProperties
-      if (key.startsWith('aria-')) {
-        const automationProp = key.replace('aria-', 'AutomationProperties.');
-        normalized[automationProp] = value;
-        continue;
-      }
-
-      if (key.startsWith('data-')) {
-        normalized[key] = value;
-        continue;
-      }
-
-      // class -> XAML Style resource
-      if (key === 'class') {
-        normalized['Style'] = { __xamlStyle: true, value };
-        continue;
-      }
-
-      // Event handlers -> WinUI event names
-      if (key.startsWith('on')) {
-        const winuiEvent = WINUI_EVENT_MAP[key.toLowerCase()];
-        if (winuiEvent) {
-          normalized[winuiEvent] = value;
-        } else {
-          // PascalCase fallback for unknown events
-          const eventName = key.slice(2);
-          normalized[eventName.charAt(0).toUpperCase() + eventName.slice(1)] = value;
-        }
-        continue;
-      }
-
-      // style -> XAML dependency properties
-      if (key === 'style') {
-        normalized['__dependencyProperties'] = value;
-        continue;
-      }
-
-      // Layout -> WinUI/XAML panel containers
+      if (key.startsWith('aria-')) { normalized[key.replace('aria-', 'AutomationProperties.')] = value; continue; }
+      if (key.startsWith('data-')) { normalized[key] = value; continue; }
+      if (key === 'class') { normalized['Style'] = { __xamlStyle: true, value }; continue; }
+      if (key.startsWith('on')) { const we = WINUI_EVENT_MAP[key.toLowerCase()]; if (we) normalized[we] = value; else { const en = key.slice(2); normalized[en.charAt(0).toUpperCase() + en.slice(1)] = value; } continue; }
+      if (key === 'style') { normalized['__dependencyProperties'] = value; continue; }
       if (key === 'layout') {
-        let layoutConfig: Record<string, unknown>;
-        try {
-          layoutConfig = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
-        } catch {
-          layoutConfig = { kind: value };
-        }
-        const kind = (layoutConfig.kind as string) || 'stack';
-        const direction = (layoutConfig.direction as string) || 'column';
-        const gap = layoutConfig.gap as string | undefined;
-        const columns = layoutConfig.columns as string | undefined;
-        const rows = layoutConfig.rows as string | undefined;
+        let lc: Record<string, unknown>; try { lc = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>; } catch { lc = { kind: value }; }
+        const kind = (lc.kind as string) || 'stack'; const dir = (lc.direction as string) || 'column'; const gap = lc.gap as string | undefined; const cols = lc.columns as string | undefined; const rows = lc.rows as string | undefined;
         const layout: Record<string, unknown> = {};
-        switch (kind) {
-          case 'grid':
-            layout.container = 'Grid';
-            if (columns) layout.columnDefinitions = columns;
-            if (rows) layout.rowDefinitions = rows;
-            break;
-          case 'split':
-            layout.container = 'SplitView';
-            break;
-          case 'overlay':
-            layout.container = 'Canvas';
-            break;
-          case 'flow':
-            layout.container = 'ItemsWrapGrid';
-            break;
-          case 'sidebar':
-            layout.container = 'NavigationView';
-            break;
-          case 'center':
-            layout.container = 'Grid';
-            layout.horizontalAlignment = 'Center';
-            layout.verticalAlignment = 'Center';
-            break;
-          case 'stack':
-          default:
-            layout.container = 'StackPanel';
-            layout.orientation = direction === 'row' ? 'Horizontal' : 'Vertical';
-            break;
-        }
-        if (gap) layout.spacing = gap;
-        normalized['__layout'] = layout;
-        continue;
+        switch (kind) { case 'grid': layout.container = 'Grid'; if (cols) layout.columnDefinitions = cols; if (rows) layout.rowDefinitions = rows; break; case 'split': layout.container = 'SplitView'; break; case 'overlay': layout.container = 'Canvas'; break; case 'flow': layout.container = 'ItemsWrapGrid'; break; case 'sidebar': layout.container = 'NavigationView'; break; case 'center': layout.container = 'Grid'; layout.horizontalAlignment = 'Center'; layout.verticalAlignment = 'Center'; break; default: layout.container = 'StackPanel'; layout.orientation = dir === 'row' ? 'Horizontal' : 'Vertical'; break; }
+        if (gap) layout.spacing = gap; normalized['__layout'] = layout; continue;
       }
-
-      // Theme -> XAML ThemeResource keys
-      if (key === 'theme') {
-        let theme: Record<string, unknown>;
-        try {
-          theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>;
-        } catch { continue; }
-        const tokens = (theme.tokens || {}) as Record<string, string>;
-        const xamlTokens: Record<string, string> = {};
-        for (const [tokenName, tokenValue] of Object.entries(tokens)) {
-          // Convert token-name to PascalCase: color-primary -> ColorPrimary
-          const pascalKey = tokenName.replace(/(^|-)([a-z])/g, (_, _sep, c) => c.toUpperCase());
-          xamlTokens[`ThemeResource:${pascalKey}`] = tokenValue;
-        }
-        normalized['__themeTokens'] = xamlTokens;
-        continue;
-      }
-
-      // All other props -> XAML attributes / dependency properties
+      if (key === 'theme') { let theme: Record<string, unknown>; try { theme = typeof value === 'string' ? JSON.parse(value as string) : value as Record<string, unknown>; } catch { continue; } const tokens = (theme.tokens || {}) as Record<string, string>; const xamlTokens: Record<string, string> = {}; for (const [tn, tv] of Object.entries(tokens)) { const pk = tn.replace(/(^|-)([a-z])/g, (_, _sep, c) => c.toUpperCase()); xamlTokens[`ThemeResource:${pk}`] = tv; } normalized['__themeTokens'] = xamlTokens; continue; }
       normalized[key] = value;
     }
-
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

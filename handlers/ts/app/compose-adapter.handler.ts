@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ComposeAdapter Handler
 //
@@ -5,7 +6,11 @@
 // Modifier chains, onClick, Composable function parameters.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 const COMPOSE_MODIFIER_MAP: Record<string, string> = {
   onclick: 'Modifier.clickable',
@@ -16,63 +21,54 @@ const COMPOSE_MODIFIER_MAP: Record<string, string> = {
   onfocus: 'Modifier.onFocusChanged',
 };
 
-export const composeAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+export const composeAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* -> Compose semantics
       if (key.startsWith('aria-')) {
         const semanticProp = key.replace('aria-', 'semantics:');
         normalized[semanticProp] = value;
         continue;
       }
-
       if (key.startsWith('data-')) {
         normalized[key] = value;
         continue;
       }
-
-      // class -> Compose does not have CSS classes
       if (key === 'class') {
         normalized['__themeClass'] = value;
         continue;
       }
-
-      // Event handlers -> Modifier chain entries
       if (key.startsWith('on')) {
         const modifier = COMPOSE_MODIFIER_MAP[key.toLowerCase()];
         if (modifier) {
           normalized[modifier] = value;
         } else {
-          // Generic modifier fallback
           const eventName = key.slice(2);
           normalized[`Modifier.${eventName.charAt(0).toLowerCase()}${eventName.slice(1)}`] = value;
         }
         continue;
       }
-
-      // style -> Modifier chain for visual properties
       if (key === 'style') {
         normalized['__modifierChain'] = value;
         continue;
       }
-
-      // Layout -> Compose layout composables
       if (key === 'layout') {
         let layoutConfig: Record<string, unknown>;
         try {
@@ -117,8 +113,6 @@ export const composeAdapterHandler: ConceptHandler = {
         normalized['__layout'] = layout;
         continue;
       }
-
-      // Theme -> Material3 theme keys (colorScheme, typography)
       if (key === 'theme') {
         let theme: Record<string, unknown>;
         try {
@@ -130,8 +124,8 @@ export const composeAdapterHandler: ConceptHandler = {
           if (tokenName.startsWith('color-')) {
             m3Tokens[`colorScheme.${tokenName.replace('color-', '')}`] = tokenValue;
           } else if (tokenName.startsWith('font-') || tokenName.startsWith('typography-')) {
-            const key = tokenName.replace('font-', '').replace('typography-', '');
-            m3Tokens[`typography.${key}`] = tokenValue;
+            const tKey = tokenName.replace('font-', '').replace('typography-', '');
+            m3Tokens[`typography.${tKey}`] = tokenValue;
           } else {
             m3Tokens[tokenName] = tokenValue;
           }
@@ -139,13 +133,11 @@ export const composeAdapterHandler: ConceptHandler = {
         normalized['__themeTokens'] = m3Tokens;
         continue;
       }
-
-      // All other props -> Composable function parameters
       normalized[key] = value;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
