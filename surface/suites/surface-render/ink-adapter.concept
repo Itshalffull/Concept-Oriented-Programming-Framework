@@ -28,10 +28,26 @@ concept InkAdapter [A] {
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses Ink Box/Text component props" {
+      normalize -> ok implies layout maps to Ink flexbox and text maps to Ink color props
+    }
+
+    never "normalize produces browser DOM APIs" {
+      normalize -> ok where output contains addEventListener or classList
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains Ink-compatible bindings with ANSI terminal output
+    }
   }
 }

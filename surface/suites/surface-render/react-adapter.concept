@@ -28,10 +28,26 @@ concept ReactAdapter [A] {
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses React prop conventions" {
+      normalize -> ok implies class is mapped to className and events use camelCase
+    }
+
+    never "normalize produces output with 'class' attribute" {
+      normalize -> ok where output contains "class" instead of "className"
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains React-compatible bindings with SyntheticEvent handlers
+    }
   }
 }

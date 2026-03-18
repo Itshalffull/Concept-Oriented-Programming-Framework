@@ -39,9 +39,25 @@ concept TokenRemapProvider [V] {
   }
 
   invariant {
-    after apply(program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}")
-      -> ok(result: r, transformed: t, appliedTransforms: a)
-    then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}")
-      -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    example "apply remaps token paths and handles empty mappings": {
+      after apply(program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}")
+        -> ok(result: r, transformed: t, appliedTransforms: a)
+      then apply(program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}")
+        -> ok(result: r2, transformed: t2, appliedTransforms: a2)
+    }
+
+    always "successful apply produces a result in results set" {
+      apply -> ok implies result in results
+    }
+
+    never "non-token instructions are modified by remap" {
+      apply -> ok where instruction.tag != "token" and instruction is altered
+    }
+
+    action apply requires {
+      program and spec are valid JSON strings
+    } ensures {
+      result in results and outputProgram is set with remapped token paths
+    }
   }
 }

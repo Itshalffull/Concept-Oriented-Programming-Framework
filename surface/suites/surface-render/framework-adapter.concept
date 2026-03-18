@@ -57,10 +57,32 @@ concept FrameworkAdapter [R] {
   }
 
   invariant {
-    after register(renderer: r, framework: "react", version: "19",
-                   normalizer: "reactNormalizer", mountFn: "reactMount")
-      -> ok(renderer: r)
-    then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
-      -> ok(normalized: _)
+    example "registered adapter can normalize props": {
+      after register(renderer: r, framework: "react", version: "19",
+                     normalizer: "reactNormalizer", mountFn: "reactMount")
+        -> ok(renderer: r)
+      then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
+        -> ok(normalized: _)
+    }
+
+    always "registered adapters have active status" {
+      register -> ok implies status = "active"
+    }
+
+    never "normalize succeeds for unregistered adapter" {
+      normalize -> ok when renderer has not been registered
+    }
+
+    action register requires {
+      framework is a recognized adapter type and no duplicate registration exists
+    } ensures {
+      renderer is recorded with status "active" and normalizer, mountFn are set
+    }
+
+    action mount requires {
+      renderer has been registered via register -> ok
+    } ensures {
+      component is mounted at target via the registered mountFn
+    }
   }
 }

@@ -40,7 +40,29 @@ concept DeadPartProvider [D] {
   }
 
   invariant {
-    after analyze(analysis: d, program: "p1", parts: ["root", "unused"], instructions: ["element:root:container", "text:root:hello"]) -> ok(analysis: d, deadParts: dp, unreachableStates: us)
-    then getResults(analysis: d) -> ok(analysis: d, deadParts: dp2, unreachableStates: us2)
+    example "analyze stores retrievable dead part results": {
+      after analyze(analysis: d, program: "p1", parts: ["root", "unused"], instructions: ["element:root:container", "text:root:hello"]) -> ok(analysis: d, deadParts: dp, unreachableStates: us)
+      then getResults(analysis: d) -> ok(analysis: d, deadParts: dp2, unreachableStates: us2)
+    }
+
+    always "completed analyses are recorded" {
+      analyze -> ok implies analysis in analyses
+    }
+
+    never "referenced parts appear in deadParts" {
+      analyze -> ok where a part referenced by bind, text, or compose is in deadParts
+    }
+
+    action analyze requires {
+      program is a valid parseable render program and parts is non-empty
+    } ensures {
+      analysis in analyses and deadParts, unreachableStates are set
+    }
+
+    action getResults requires {
+      analysis in analyses
+    } ensures {
+      returned deadParts and unreachableStates match stored values
+    }
   }
 }

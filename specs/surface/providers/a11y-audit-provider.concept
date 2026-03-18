@@ -40,7 +40,29 @@ concept A11yAuditProvider [A] {
   }
 
   invariant {
-    after audit(audit: a, program: "p1", instructions: ["element:root:container", "aria:root:role:dialog", "keyboard:Escape:close", "focus:trap:root"], parts: ["root"]) -> ok(audit: a, findings: f1, passed: p1)
-    then getFindings(audit: a) -> ok(audit: a, findings: f2, passed: p2)
+    example "audit stores retrievable findings": {
+      after audit(audit: a, program: "p1", instructions: ["element:root:container", "aria:root:role:dialog", "keyboard:Escape:close", "focus:trap:root"], parts: ["root"]) -> ok(audit: a, findings: f1, passed: p1)
+      then getFindings(audit: a) -> ok(audit: a, findings: f2, passed: p2)
+    }
+
+    always "completed audits are recorded" {
+      audit -> ok implies audit in audits
+    }
+
+    never "audit passes with non-empty findings" {
+      audit -> ok(passed: true) when findings is non-empty
+    }
+
+    action audit requires {
+      program is a valid parseable render program
+    } ensures {
+      audit in audits and findings, passed are set
+    }
+
+    action getFindings requires {
+      audit in audits
+    } ensures {
+      returned findings and passed match stored audit results
+    }
   }
 }

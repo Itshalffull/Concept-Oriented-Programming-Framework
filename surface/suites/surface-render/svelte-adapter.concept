@@ -28,10 +28,26 @@ concept SvelteAdapter [A] {
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses Svelte event directives" {
+      normalize -> ok implies events are in on:event format
+    }
+
+    never "normalize produces output with raw DOM event names" {
+      normalize -> ok where output contains "onclick" instead of on:click directive
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains Svelte-compatible bindings with rune-based reactivity
+    }
   }
 }

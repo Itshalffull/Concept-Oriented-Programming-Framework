@@ -28,10 +28,26 @@ concept SolidAdapter [A] {
   }
 
   invariant {
-    after normalize(adapter: a,
-                    props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
-      -> ok(adapter: a, normalized: _)
-    then normalize(adapter: a, props: "")
-      -> error(message: _)
+    example "normalize succeeds with valid props and fails with empty": {
+      after normalize(adapter: a,
+                      props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
+        -> ok(adapter: a, normalized: _)
+      then normalize(adapter: a, props: "")
+        -> error(message: _)
+    }
+
+    always "normalized output uses Solid native event delegation" {
+      normalize -> ok implies events use on: prefix with native DOM events
+    }
+
+    never "normalize converts class to className" {
+      normalize -> ok where output contains "className" instead of "class"
+    }
+
+    action normalize requires {
+      props is a non-empty valid JSON string
+    } ensures {
+      normalized contains Solid-compatible bindings with createSignal integration
+    }
   }
 }

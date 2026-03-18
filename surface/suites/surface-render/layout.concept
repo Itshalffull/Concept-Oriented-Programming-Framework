@@ -60,11 +60,33 @@ concept Layout [Y] {
   }
 
   invariant {
-    after create(layout: y, name: "main", kind: "sidebar")
-      -> ok(layout: y)
-    then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
-      -> ok(layout: y)
-    and create(layout: y2, name: "bad", kind: "nonexistent")
-      -> invalid(message: _)
+    example "created layout can be configured and invalid kind is rejected": {
+      after create(layout: y, name: "main", kind: "sidebar")
+        -> ok(layout: y)
+      then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
+        -> ok(layout: y)
+      and create(layout: y2, name: "bad", kind: "nonexistent")
+        -> invalid(message: _)
+    }
+
+    always "layout kind is one of the recognized types" {
+      create -> ok implies kind in {"stack", "grid", "split", "overlay", "flow", "sidebar", "center"}
+    }
+
+    never "nest creates a circular reference" {
+      nest -> ok where child is an ancestor of parent in the layout tree
+    }
+
+    action create requires {
+      kind is a recognized layout type
+    } ensures {
+      layout is recorded with name and kind set
+    }
+
+    action nest requires {
+      parent and child both exist and nesting would not create a cycle
+    } ensures {
+      child is appended to parent's children list
+    }
   }
 }
