@@ -379,7 +379,7 @@ const _handler: FunctionalConceptHandler = {
    * flag customisation, and optionally manifestYaml for CLI-specific
    * config (command tree, examples, see-also, flag choices).
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     const projectionRaw = input.projection as string;

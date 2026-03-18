@@ -282,7 +282,7 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     // --- Parse projection ---

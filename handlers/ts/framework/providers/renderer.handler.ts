@@ -706,6 +706,7 @@ const _handler: FunctionalConceptHandler = {
     const format = input.format as string;
 
     if (!format) {
+      let p = createProgram();
       return complete(p, 'unknownFormat', { format: '' }) as StorageProgram<Result>;
     }
 
@@ -713,6 +714,7 @@ const _handler: FunctionalConceptHandler = {
     try {
       content = JSON.parse(contentStr || '{}');
     } catch {
+      let p = createProgram();
       return complete(p, 'invalidContent', { reason: 'Content is not valid JSON' }) as StorageProgram<Result>;
     }
 
@@ -722,10 +724,12 @@ const _handler: FunctionalConceptHandler = {
       // Check if this is because no handlers exist for the format at all
       const handlers = getHandlersForFormat(format);
       if (handlers.length === 0) {
+        let p = createProgram();
         return complete(p, 'unknownFormat', { format }) as StorageProgram<Result>;
       }
     }
 
+    let p = createProgram();
     return complete(p, 'ok', {
       output: result.output,
       sectionCount: result.sectionCount,
@@ -736,16 +740,17 @@ const _handler: FunctionalConceptHandler = {
   listHandlers(input: Record<string, unknown>) {
     const format = input.format as string;
     const handlers = getHandlersForFormat(format);
+    let p = createProgram();
     return complete(p, 'ok', {
       handlers: handlers.map(h => h.key),
       count: handlers.length,
     }) as StorageProgram<Result>;
   },
 
-  async listPatterns(
+  listPatterns(
     _input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
+    let p = createProgram();
     return complete(p, 'ok', {
       patterns: Object.keys(PATTERNS),
     }) as StorageProgram<Result>;

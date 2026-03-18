@@ -326,7 +326,7 @@ const _handler: FunctionalConceptHandler = {
     } catch {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const manifestRaw = projection.conceptManifest as string;
@@ -345,7 +345,7 @@ const _handler: FunctionalConceptHandler = {
     } catch {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
     }
 
     // Parse optional config and overrides

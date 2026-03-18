@@ -354,7 +354,7 @@ const _handler: FunctionalConceptHandler = {
    * with ID parameter), or resource-template (read-only list). Override
    * classification via the overrides input.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     const projectionRaw = input.projection as string;

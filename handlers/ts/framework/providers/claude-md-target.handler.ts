@@ -229,7 +229,7 @@ const _handler: FunctionalConceptHandler = {
    *   - config:          JSON string of claude-md target config
    *   - manifestYaml:    JSON string of the full parsed manifest YAML
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     // --- Parse current projection ---

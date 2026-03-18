@@ -351,7 +351,7 @@ const _handler: FunctionalConceptHandler = {
    *   variant 'ok' with files array and types summary, or
    *   variant 'error' with reason string.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     const projectionRaw = input.projection as string;

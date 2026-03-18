@@ -602,7 +602,7 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns files: SKILL.md + .commands.ts per concept in the group.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     // --- Parse config ---

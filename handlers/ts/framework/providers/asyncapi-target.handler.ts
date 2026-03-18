@@ -554,7 +554,7 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns variant 'ok' with a single asyncapi.yaml file and the document string.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     // --- Parse allProjections ---

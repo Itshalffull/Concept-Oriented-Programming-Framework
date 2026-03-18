@@ -157,7 +157,7 @@ const _handler: FunctionalConceptHandler = {
    * concept name, and target-specific config with an optional
    * `package` field.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
   ) {
     const projectionRaw = input.projection as string;

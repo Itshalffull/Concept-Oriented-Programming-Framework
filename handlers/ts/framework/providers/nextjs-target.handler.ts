@@ -348,14 +348,14 @@ const _handler: FunctionalConceptHandler = {
       content: generateServerActionsFile(manifest),
     });
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       routes: manifest.actions.map(a => {
         const r = inferHttpRoute(a.name, basePath);
         return `${r.method} ${r.path}`;
       }),
       files: files.map(f => ({ path: f.path, content: f.content })),
-    };
+    });
   },
 
   validate(input: Record<string, unknown>) {
