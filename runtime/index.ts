@@ -50,4 +50,4 @@ export { generateId, timestamp } from './types.js';
 // --- Functional handler support ---
 export { interpret } from './interpreter.js';
 export type { ExecutionResult } from './interpreter.js';
-export { wrapFunctional } from './functional-compat.js';
+export { wrapFunctional, autoInterpret } from './functional-compat.js';
