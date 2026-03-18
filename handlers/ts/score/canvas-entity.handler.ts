@@ -25,18 +25,19 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const canvasId = input.canvas_id as string;
     const name = input.name as string;
 
-    const existing = await storage.find('canvas-entity', { canvas_id: canvasId });
+    p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'existing');
     if (existing.length > 0) {
-      return { variant: 'alreadyRegistered', existing: existing[0].id as string };
+      return complete(p, 'alreadyRegistered', { existing: existing[0].id as string }) as StorageProgram<Result>;
     }
 
     const id = nextId();
     const symbol = `clef/canvas/${name}`;
 
-    await storage.put('canvas-entity', id, {
+    p = put(p, 'canvas-entity', id, {
       id,
       canvas_id: canvasId,
       name,
@@ -54,19 +55,20 @@ const _handler: FunctionalConceptHandler = {
       group_count: 0,
     });
 
-    return { variant: 'ok', id, symbol };
+    return complete(p, 'ok', { id, symbol }) as StorageProgram<Result>;
   },
 
   updateStats(input: Record<string, unknown>) {
+    let p = createProgram();
     const canvasId = input.canvas_id as string;
 
-    const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
+    p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'entities');
     if (entities.length === 0) {
-      return { variant: 'notfound', message: `Canvas entity for '${canvasId}' not found` };
+      return complete(p, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }) as StorageProgram<Result>;
     }
 
     const entity = entities[0];
-    await storage.put('canvas-entity', entity.id as string, {
+    p = put(p, 'canvas-entity', entity.id as string, {
       ...entity,
       item_count: (input.item_count as number) ?? entity.item_count,
       connector_count: (input.connector_count as number) ?? entity.connector_count,
@@ -81,22 +83,23 @@ const _handler: FunctionalConceptHandler = {
       group_count: (input.group_count as number) ?? entity.group_count,
     });
 
-    return { variant: 'ok', canvas_id: canvasId };
+    return complete(p, 'ok', { canvas_id: canvasId }) as StorageProgram<Result>;
   },
 
   getCanvas(input: Record<string, unknown>) {
+    let p = createProgram();
     const canvasId = input.canvas_id as string;
-    const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
+    p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'entities');
     if (entities.length === 0) {
-      return { variant: 'notfound', message: `Canvas entity for '${canvasId}' not found` };
+      return complete(p, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }) as StorageProgram<Result>;
     }
-    return { variant: 'ok', entity: entities[0] };
+    return complete(p, 'ok', { entity: entities[0] }) as StorageProgram<Result>;
   },
 
   listCanvases(_input: Record<string, unknown>) {
-    const all = await storage.list('canvas-entity');
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    p = find(p, 'canvas-entity', {}, 'all');
+    return complete(p, 'ok', {
       canvases: all.map((e: Record<string, unknown>) => ({
         id: e.id,
         canvas_id: e.canvas_id,
@@ -106,16 +109,15 @@ const _handler: FunctionalConceptHandler = {
         connector_count: e.connector_count,
         notation_name: e.notation_name,
       })),
-    };
+    }) as StorageProgram<Result>;
   },
 
   getConnectorGraph(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
 
     // Return connector relationship data for Score graph queries
-    const connectors = await storage.find('canvas-connector-entity', { canvas_id: canvasId });
-    return {
-      variant: 'ok',
+    p = find(p, 'canvas-connector-entity', { canvas_id: canvasId }, 'connectors');
+    return complete(p, 'ok', {
       canvas_id: canvasId,
       edges: connectors.map((c: Record<string, unknown>) => ({
         id: c.id,
@@ -125,7 +127,7 @@ const _handler: FunctionalConceptHandler = {
         label: c.label,
         type_key: c.type_key,
       })),
-    };
+    }) as StorageProgram<Result>;
   },
 };
 

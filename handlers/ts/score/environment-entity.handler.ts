@@ -18,6 +18,7 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const environment = input.environment as string;
     const kind = input.kind as string;
@@ -25,12 +26,12 @@ const _handler: FunctionalConceptHandler = {
     const source = input.source as string;
 
     const key = `env:${name}:${environment}`;
-    const existing = await storage.get('environment-entries', key);
+    p = get(p, 'environment-entries', key, 'existing');
 
     const id = existing ? (existing.id as string) : crypto.randomUUID();
     const now = new Date().toISOString();
 
-    await storage.put('environment-entries', key, {
+    p = put(p, 'environment-entries', key, {
       id,
       name,
       environment,
@@ -44,27 +45,29 @@ const _handler: FunctionalConceptHandler = {
     });
 
     if (existing) {
-      return { variant: 'updated', existing: id };
+      return complete(p, 'updated', { existing: id }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', entry: id };
+    return complete(p, 'ok', { entry: id }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const environment = input.environment as string;
 
-    const entry = await storage.get('environment-entries', `env:${name}:${environment}`);
+    p = get(p, 'environment-entries', `env:${name}:${environment}`, 'entry');
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', entry: entry.id };
+    return complete(p, 'ok', { entry: entry.id }) as StorageProgram<Result>;
   },
 
   findByEnvironment(input: Record<string, unknown>) {
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
+    p = find(p, 'environment-entries', { environment }, 'all');
 
     const entries = all.map(e => ({
       name: e.name,
@@ -75,29 +78,32 @@ const _handler: FunctionalConceptHandler = {
       sensitive: e.sensitive === 'true',
     }));
 
-    return { variant: 'ok', entries: JSON.stringify(entries) };
+    return complete(p, 'ok', { entries: JSON.stringify(entries) }) as StorageProgram<Result>;
   },
 
   findByConcept(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
-    const all = await storage.find('environment-entries', { boundConcept: concept });
+    p = find(p, 'environment-entries', { boundConcept: concept }, 'all');
 
-    return { variant: 'ok', entries: JSON.stringify(all) };
+    return complete(p, 'ok', { entries: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
   findByRuntime(input: Record<string, unknown>) {
+    let p = createProgram();
     const runtime = input.runtime as string;
-    const all = await storage.find('environment-entries', { boundRuntime: runtime });
+    p = find(p, 'environment-entries', { boundRuntime: runtime }, 'all');
 
-    return { variant: 'ok', entries: JSON.stringify(all) };
+    return complete(p, 'ok', { entries: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
   diffEnvironments(input: Record<string, unknown>) {
+    let p = createProgram();
     const envA = input.envA as string;
     const envB = input.envB as string;
 
-    const entriesA = await storage.find('environment-entries', { environment: envA });
-    const entriesB = await storage.find('environment-entries', { environment: envB });
+    p = find(p, 'environment-entries', { environment: envA }, 'entriesA');
+    p = find(p, 'environment-entries', { environment: envB }, 'entriesB');
 
     const mapA = new Map(entriesA.map(e => [e.name as string, e]));
     const mapB = new Map(entriesB.map(e => [e.name as string, e]));
@@ -147,15 +153,16 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (differences.length === 0) {
-      return { variant: 'same' };
+      return complete(p, 'same', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', differences: JSON.stringify(differences) };
+    return complete(p, 'ok', { differences: JSON.stringify(differences) }) as StorageProgram<Result>;
   },
 
   secretsAudit(input: Record<string, unknown>) {
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
+    p = find(p, 'environment-entries', { environment }, 'all');
     const secrets = all.filter(e => e.kind === 'secret');
 
     const result = secrets.map(s => ({
@@ -165,12 +172,13 @@ const _handler: FunctionalConceptHandler = {
       lastRotated: '',
     }));
 
-    return { variant: 'ok', secrets: JSON.stringify(result) };
+    return complete(p, 'ok', { secrets: JSON.stringify(result) }) as StorageProgram<Result>;
   },
 
   featureFlags(input: Record<string, unknown>) {
+    let p = createProgram();
     const environment = input.environment as string;
-    const all = await storage.find('environment-entries', { environment });
+    p = find(p, 'environment-entries', { environment }, 'all');
     const flags = all.filter(e => e.kind === 'feature-flag');
 
     const result = flags.map(f => ({
@@ -179,7 +187,7 @@ const _handler: FunctionalConceptHandler = {
       boundConcept: f.boundConcept || '',
     }));
 
-    return { variant: 'ok', flags: JSON.stringify(result) };
+    return complete(p, 'ok', { flags: JSON.stringify(result) }) as StorageProgram<Result>;
   },
 };
 

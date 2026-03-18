@@ -25,13 +25,14 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
+    let p = createProgram();
     const id = nextId();
-    await storage.put('symbol-index', id, {
+    p = put(p, 'symbol-index', id, {
       id,
       providerRef: id,
       indexType: 'symbol-aware',
     });
-    return { variant: 'ok', instance: id };
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 };
 

@@ -18,20 +18,21 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const sourceFile = input.sourceFile as string;
     const kind = input.kind as string;
     const targetEntity = input.targetEntity as string;
 
     const key = `test:${name}`;
-    const existing = await storage.get('tests', key);
+    p = get(p, 'tests', key, 'existing');
     if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
+      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
     }
 
     const id = crypto.randomUUID();
 
-    await storage.put('tests', key, {
+    p = put(p, 'tests', key, {
       id,
       name,
       sourceFile,
@@ -47,23 +48,25 @@ const _handler: FunctionalConceptHandler = {
       lastDuration: 0,
     });
 
-    return { variant: 'ok', test: id };
+    return complete(p, 'ok', { test: id }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
 
-    const entry = await storage.get('tests', `test:${name}`);
+    p = get(p, 'tests', `test:${name}`, 'entry');
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', test: entry.id };
+    return complete(p, 'ok', { test: entry.id }) as StorageProgram<Result>;
   },
 
   findByEntity(input: Record<string, unknown>) {
+    let p = createProgram();
     const entity = input.entity as string;
-    const all = await storage.find('tests', { targetEntity: entity });
+    p = find(p, 'tests', { targetEntity: entity }, 'all');
 
     const tests = all.map(t => ({
       name: t.name,
@@ -72,34 +75,37 @@ const _handler: FunctionalConceptHandler = {
       lastResult: t.lastResult || '',
     }));
 
-    return { variant: 'ok', tests: JSON.stringify(tests) };
+    return complete(p, 'ok', { tests: JSON.stringify(tests) }) as StorageProgram<Result>;
   },
 
   findByAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const action = input.action as string;
-    const all = await storage.find('tests', { targetEntity: concept });
+    p = find(p, 'tests', { targetEntity: concept }, 'all');
 
     const filtered = all.filter(t =>
       (t.targetAction as string) === action || (t.name as string).includes(action)
     );
 
-    return { variant: 'ok', tests: JSON.stringify(filtered) };
+    return complete(p, 'ok', { tests: JSON.stringify(filtered) }) as StorageProgram<Result>;
   },
 
   findByKind(input: Record<string, unknown>) {
+    let p = createProgram();
     const kind = input.kind as string;
-    const all = await storage.find('tests', { kind });
+    p = find(p, 'tests', { kind }, 'all');
 
-    return { variant: 'ok', tests: JSON.stringify(all) };
+    return complete(p, 'ok', { tests: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
   findFailing(_input: Record<string, unknown>) {
-    const all = await storage.find('tests');
+    let p = createProgram();
+    p = find(p, 'tests', 'all');
     const failing = all.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
 
     if (failing.length === 0) {
-      return { variant: 'allPassing' };
+      return complete(p, 'allPassing', {}) as StorageProgram<Result>;
     }
 
     const tests = failing.map(t => ({
@@ -110,12 +116,12 @@ const _handler: FunctionalConceptHandler = {
       errorMessage: '',
     }));
 
-    return { variant: 'ok', tests: JSON.stringify(tests) };
+    return complete(p, 'ok', { tests: JSON.stringify(tests) }) as StorageProgram<Result>;
   },
 
   coverageReport(input: Record<string, unknown>) {
     const entity = input.entity as string;
-    const tests = await storage.find('tests', { targetEntity: entity });
+    p = find(p, 'tests', { targetEntity: entity }, 'tests');
 
     // TODO: Cross-reference with ConceptEntity to get total actions/variants/invariants
     const testedActions = new Set(
@@ -132,18 +138,19 @@ const _handler: FunctionalConceptHandler = {
       coveragePct: 0,
     };
 
-    return { variant: 'ok', report: JSON.stringify(report) };
+    return complete(p, 'ok', { report: JSON.stringify(report) }) as StorageProgram<Result>;
   },
 
   untestedActions(_input: Record<string, unknown>) {
+    let p = createProgram();
     // TODO: Cross-reference all ConceptEntity actions with TestEntity coverage
     // For now, report full coverage as a stub
-    return { variant: 'fullCoverage' };
+    return complete(p, 'fullCoverage', {}) as StorageProgram<Result>;
   },
 
   untestedInvariants(_input: Record<string, unknown>) {
     // TODO: Cross-reference all concept invariants with TestEntity coverage
-    return { variant: 'fullCoverage' };
+    return complete(p, 'fullCoverage', {}) as StorageProgram<Result>;
   },
 
   recordResult(input: Record<string, unknown>) {
@@ -151,19 +158,19 @@ const _handler: FunctionalConceptHandler = {
     const result = input.result as string;
     const duration = input.duration as number;
 
-    const all = await storage.find('tests');
+    p = find(p, 'tests', 'all');
     const entry = all.find(t => t.id === testId);
 
     if (entry) {
       const key = `test:${entry.name}`;
-      await storage.put('tests', key, {
+      p = put(p, 'tests', key, {
         ...entry,
         lastResult: result,
         lastDuration: duration,
       });
     }
 
-    return { variant: 'ok', test: testId };
+    return complete(p, 'ok', { test: testId }) as StorageProgram<Result>;
   },
 };
 

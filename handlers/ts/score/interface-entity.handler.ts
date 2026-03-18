@@ -18,20 +18,21 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
 
     const key = `interface:${name}`;
-    const existing = await storage.get('interfaces', key);
+    p = get(p, 'interfaces', key, 'existing');
     if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
+      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
     }
 
     const id = crypto.randomUUID();
     const parsed = manifest ? JSON.parse(manifest) : {};
 
-    await storage.put('interfaces', key, {
+    p = put(p, 'interfaces', key, {
       id,
       name,
       sourceFile: source,
@@ -45,28 +46,30 @@ const _handler: FunctionalConceptHandler = {
       generatedSchemas: JSON.stringify(parsed.generatedSchemas || []),
     });
 
-    return { variant: 'ok', interface: id };
+    return complete(p, 'ok', { interface: id }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
 
-    const entry = await storage.get('interfaces', `interface:${name}`);
+    p = get(p, 'interfaces', `interface:${name}`, 'entry');
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', interface: entry.id };
+    return complete(p, 'ok', { interface: entry.id }) as StorageProgram<Result>;
   },
 
   listEndpoints(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
     const target = input.target as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', endpoints: '[]' };
+      return complete(p, 'ok', { endpoints: '[]' }) as StorageProgram<Result>;
     }
 
     const endpoints = JSON.parse(entry.generatedEndpoints as string || '[]');
@@ -74,52 +77,56 @@ const _handler: FunctionalConceptHandler = {
       ? endpoints.filter((e: { target: string }) => e.target === target)
       : endpoints;
 
-    return { variant: 'ok', endpoints: JSON.stringify(filtered) };
+    return complete(p, 'ok', { endpoints: JSON.stringify(filtered) }) as StorageProgram<Result>;
   },
 
   listCommands(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', commands: '[]' };
+      return complete(p, 'ok', { commands: '[]' }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', commands: entry.generatedCommands as string || '[]' };
+    return complete(p, 'ok', { commands: entry.generatedCommands as string || '[]' }) as StorageProgram<Result>;
   },
 
   listTools(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', tools: '[]' };
+      return complete(p, 'ok', { tools: '[]' }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', tools: entry.generatedTools as string || '[]' };
+    return complete(p, 'ok', { tools: entry.generatedTools as string || '[]' }) as StorageProgram<Result>;
   },
 
   listSkills(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', skills: '[]' };
+      return complete(p, 'ok', { skills: '[]' }) as StorageProgram<Result>;
     }
 
     // Skills are a subset of tools targeting AI coding assistants
     const tools = JSON.parse(entry.generatedTools as string || '[]');
     const skills = tools.filter((t: { kind?: string }) => t.kind === 'skill');
 
-    return { variant: 'ok', skills: JSON.stringify(skills) };
+    return complete(p, 'ok', { skills: JSON.stringify(skills) }) as StorageProgram<Result>;
   },
 
   findByConcept(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
 
     const exposures: Array<Record<string, string>> = [];
     for (const iface of all) {
@@ -162,13 +169,14 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', exposures: JSON.stringify(exposures) };
+    return complete(p, 'ok', { exposures: JSON.stringify(exposures) }) as StorageProgram<Result>;
   },
 
   findByAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const action = input.action as string;
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
 
     const exposures: Array<Record<string, string>> = [];
     for (const iface of all) {
@@ -211,15 +219,16 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', exposures: JSON.stringify(exposures) };
+    return complete(p, 'ok', { exposures: JSON.stringify(exposures) }) as StorageProgram<Result>;
   },
 
   traceEndpointToAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
 
     for (const iface of all) {
       const endpoints = JSON.parse(iface.generatedEndpoints as string || '[]');
@@ -228,64 +237,65 @@ const _handler: FunctionalConceptHandler = {
           (ep.target || 'rest') === target && ep.path === path && ep.method === method
       );
       if (match) {
-        return {
-          variant: 'ok',
+        return complete(p, 'ok', {
           concept: match.concept || '',
           action: match.action || '',
           handler: match.handler || '',
           sourceFile: match.sourceFile || '',
-        };
+        }) as StorageProgram<Result>;
       }
     }
 
-    return { variant: 'notfound' };
+    return complete(p, 'notfound', {}) as StorageProgram<Result>;
   },
 
   traceToolToAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const toolName = input.toolName as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
 
     for (const iface of all) {
       const tools = JSON.parse(iface.generatedTools as string || '[]');
       const match = tools.find((t: { name: string }) => t.name === toolName);
       if (match) {
-        return {
-          variant: 'ok',
+        return complete(p, 'ok', {
           concept: match.concept || '',
           action: match.action || '',
           handler: match.handler || '',
           sourceFile: match.sourceFile || '',
-        };
+        }) as StorageProgram<Result>;
       }
     }
 
-    return { variant: 'notfound' };
+    return complete(p, 'notfound', {}) as StorageProgram<Result>;
   },
 
   generatedSchemas(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', schemas: '[]' };
+      return complete(p, 'ok', { schemas: '[]' }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', schemas: entry.generatedSchemas as string || '[]' };
+    return complete(p, 'ok', { schemas: entry.generatedSchemas as string || '[]' }) as StorageProgram<Result>;
   },
 
   validateAgainstSpecs(input: Record<string, unknown>) {
+    let p = createProgram();
     const interfaceId = input.interface as string;
 
-    const all = await storage.find('interfaces');
+    p = find(p, 'interfaces', 'all');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
+      return complete(p, 'ok', { valid: JSON.stringify({ valid: true }) }) as StorageProgram<Result>;
     }
 
     // TODO: Cross-reference ConceptEntities to validate all referenced concepts exist
-    return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
+    return complete(p, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }) as StorageProgram<Result>;
   },
 };
 

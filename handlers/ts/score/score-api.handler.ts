@@ -125,13 +125,14 @@ const _handler: FunctionalConceptHandler = {
   // ─── Structural Queries (Parse Layer) ─────────────────
 
   listFiles(input: Record<string, unknown>) {
+    let p = createProgram();
     const pattern = (input.pattern as string) || '*';
-    const allFiles = await storage.find('files');
+    p = find(p, 'files', 'allFiles');
 
     const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
 
     if (matched.length === 0) {
-      return { variant: 'empty', pattern };
+      return complete(p, 'empty', { pattern }) as StorageProgram<Result>;
     }
 
     const files = matched.map(f => ({
@@ -141,34 +142,36 @@ const _handler: FunctionalConceptHandler = {
       size: 0,
     }));
 
-    return { variant: 'ok', files };
+    return complete(p, 'ok', { files }) as StorageProgram<Result>;
   },
 
   getFileTree(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = (input.path as string) || '.';
     const depth = (input.depth as number) || 0;
 
-    const allFiles = await storage.find('files');
+    p = find(p, 'files', 'allFiles');
     const paths = allFiles.map(f => f.filePath as string);
 
     if (paths.length === 0) {
-      return { variant: 'notFound', path };
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
     }
 
     const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
 
-    return { variant: 'ok', tree, fileCount, dirCount };
+    return complete(p, 'ok', { tree, fileCount, dirCount }) as StorageProgram<Result>;
   },
 
   getFileContent(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'notFound', path: '' };
+      return complete(p, 'notFound', { path: '' }) as StorageProgram<Result>;
     }
 
-    const fileEntry = await storage.get('files', `file:${path}`);
+    p = get(p, 'files', `file:${path}`, 'fileEntry');
     if (!fileEntry) {
-      return { variant: 'notFound', path };
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
     }
 
     // Content comes from the file system via the Score parse layer.
@@ -176,23 +179,23 @@ const _handler: FunctionalConceptHandler = {
     const language = (fileEntry.language as string) || inferLanguage(path);
     const definitions = (fileEntry.definitions as string[]) || [];
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       content: `[File: ${path}]`,
       language,
       definitions,
-    };
+    }) as StorageProgram<Result>;
   },
 
   getDefinitions(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'notFound', path: '' };
+      return complete(p, 'notFound', { path: '' }) as StorageProgram<Result>;
     }
 
-    const symbols = await storage.find('symbols', { file: path });
+    p = find(p, 'symbols', { file: path }, 'symbols');
     if (symbols.length === 0) {
-      return { variant: 'notFound', path };
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
     }
 
     const definitions = symbols.map(s => ({
@@ -202,21 +205,22 @@ const _handler: FunctionalConceptHandler = {
       span: `${path}:${s.line}`,
     }));
 
-    return { variant: 'ok', definitions };
+    return complete(p, 'ok', { definitions }) as StorageProgram<Result>;
   },
 
   matchPattern(input: Record<string, unknown>) {
+    let p = createProgram();
     const pattern = input.pattern as string;
     const language = input.language as string;
 
     if (!pattern) {
-      return { variant: 'invalidPattern', pattern: '', error: 'Pattern is required' };
+      return complete(p, 'invalidPattern', { pattern: '', error: 'Pattern is required' }) as StorageProgram<Result>;
     }
 
     // Dispatch to SyntaxTree/query for each parsed tree matching the language.
     // Trees are indexed in ScoreApi's files collection; tree IDs come from
     // the parse layer. We iterate known files and query their trees.
-    const allFiles = await storage.find('files');
+    p = find(p, 'files', 'allFiles');
     const matches: Array<Record<string, unknown>> = [];
 
     for (const f of allFiles) {
@@ -235,24 +239,25 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', matches };
+    return complete(p, 'ok', { matches }) as StorageProgram<Result>;
   },
 
   // ─── Symbol Queries (Symbol Layer) ────────────────────
 
   findSymbol(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const allSymbols = await storage.find('symbols');
+    p = find(p, 'symbols', 'allSymbols');
     const matched = allSymbols.filter(s =>
       (s.symbolName as string).toLowerCase().includes(name.toLowerCase())
     );
 
     if (matched.length === 0) {
-      return { variant: 'notFound', name };
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
     }
 
     const symbols = matched.map(s => ({
@@ -263,19 +268,20 @@ const _handler: FunctionalConceptHandler = {
       scope: s.scope as string,
     }));
 
-    return { variant: 'ok', symbols };
+    return complete(p, 'ok', { symbols }) as StorageProgram<Result>;
   },
 
   getReferences(input: Record<string, unknown>) {
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
     // Find the definition
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
     if (allSymbols.length === 0) {
-      return { variant: 'notFound', symbol };
+      return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
     }
 
     const def = allSymbols[0];
@@ -293,20 +299,21 @@ const _handler: FunctionalConceptHandler = {
       kind: 'reference',
     }));
 
-    return { variant: 'ok', definition, references };
+    return complete(p, 'ok', { definition, references }) as StorageProgram<Result>;
   },
 
   getScope(input: Record<string, unknown>) {
+    let p = createProgram();
     const file = input.file as string;
     const line = input.line as number;
 
     if (!file) {
-      return { variant: 'notFound', file: '' };
+      return complete(p, 'notFound', { file: '' }) as StorageProgram<Result>;
     }
 
-    const symbols = await storage.find('symbols', { file });
+    p = find(p, 'symbols', { file }, 'symbols');
     if (symbols.length === 0) {
-      return { variant: 'notFound', file };
+      return complete(p, 'notFound', { file }) as StorageProgram<Result>;
     }
 
     // Find the closest enclosing scope
@@ -322,23 +329,23 @@ const _handler: FunctionalConceptHandler = {
       kind: s.symbolKind as string,
     }));
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       scope: scopeName,
       symbols: visibleSymbols,
       parent: undefined,
-    };
+    }) as StorageProgram<Result>;
   },
 
   getRelationships(input: Record<string, unknown>) {
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
     if (allSymbols.length === 0) {
-      return { variant: 'notFound', symbol };
+      return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
     }
 
     // Dispatch to SymbolRelationship concept for both directions
@@ -360,13 +367,14 @@ const _handler: FunctionalConceptHandler = {
       relationships.push(...(rels as Array<Record<string, unknown>>));
     }
 
-    return { variant: 'ok', relationships };
+    return complete(p, 'ok', { relationships }) as StorageProgram<Result>;
   },
 
   // ─── Semantic Queries (Semantic Layer) ────────────────
 
   listConcepts(_input: Record<string, unknown>) {
-    const allConcepts = await storage.find('concepts');
+    let p = createProgram();
+    p = find(p, 'concepts', 'allConcepts');
 
     const concepts = allConcepts.map(c => ({
       name: c.conceptName as string,
@@ -376,18 +384,18 @@ const _handler: FunctionalConceptHandler = {
       file: c.file as string,
     }));
 
-    return { variant: 'ok', concepts };
+    return complete(p, 'ok', { concepts }) as StorageProgram<Result>;
   },
 
   getConcept(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const entry = await storage.get('concepts', `concept:${name}`);
+    p = get(p, 'concepts', `concept:${name}`, 'entry');
     if (!entry) {
-      return { variant: 'notFound', name };
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
     }
 
     const concept = {
@@ -408,15 +416,16 @@ const _handler: FunctionalConceptHandler = {
       file: entry.file as string,
     };
 
-    return { variant: 'ok', concept };
+    return complete(p, 'ok', { concept }) as StorageProgram<Result>;
   },
 
   getAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const conceptName = input.concept as string;
     const actionName = input.action as string;
 
     if (!conceptName || !actionName) {
-      return { variant: 'notFound', concept: conceptName || '', action: actionName || '' };
+      return complete(p, 'notFound', { concept: conceptName || '', action: actionName || '' }) as StorageProgram<Result>;
     }
 
     // Try ActionEntity via kernel dispatch for full semantic detail
@@ -425,18 +434,18 @@ const _handler: FunctionalConceptHandler = {
       concept: conceptName,
     });
     if (result?.variant === 'ok') {
-      return { variant: 'ok', action: result.action || result };
+      return complete(p, 'ok', { action: result.action || result }) as StorageProgram<Result>;
     }
 
     // Fallback: read from ScoreApi's own indexed data
-    const entry = await storage.get('concepts', `concept:${conceptName}`);
+    p = get(p, 'concepts', `concept:${conceptName}`, 'entry');
     if (!entry) {
-      return { variant: 'notFound', concept: conceptName, action: actionName };
+      return complete(p, 'notFound', { concept: conceptName, action: actionName }) as StorageProgram<Result>;
     }
 
     const actions = (entry.actions as string[]) || [];
     if (!actions.includes(actionName)) {
-      return { variant: 'notFound', concept: conceptName, action: actionName };
+      return complete(p, 'notFound', { concept: conceptName, action: actionName }) as StorageProgram<Result>;
     }
 
     const action = {
@@ -446,11 +455,12 @@ const _handler: FunctionalConceptHandler = {
       description: '',
     };
 
-    return { variant: 'ok', action };
+    return complete(p, 'ok', { action }) as StorageProgram<Result>;
   },
 
   listSyncs(_input: Record<string, unknown>) {
-    const allSyncs = await storage.find('syncs');
+    let p = createProgram();
+    p = find(p, 'syncs', 'allSyncs');
 
     const syncs = allSyncs.map(s => ({
       name: s.syncName as string,
@@ -460,18 +470,18 @@ const _handler: FunctionalConceptHandler = {
       file: s.file as string,
     }));
 
-    return { variant: 'ok', syncs };
+    return complete(p, 'ok', { syncs }) as StorageProgram<Result>;
   },
 
   getSync(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
-      return { variant: 'notFound', name: '' };
+      return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    const entry = await storage.get('syncs', `sync:${name}`);
+    p = get(p, 'syncs', `sync:${name}`, 'entry');
     if (!entry) {
-      return { variant: 'notFound', name };
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
     }
 
     const sync = {
@@ -483,20 +493,21 @@ const _handler: FunctionalConceptHandler = {
       file: entry.file as string,
     };
 
-    return { variant: 'ok', sync };
+    return complete(p, 'ok', { sync }) as StorageProgram<Result>;
   },
 
   getFlow(input: Record<string, unknown>) {
+    let p = createProgram();
     const startConcept = input.startConcept as string;
     const startAction = input.startAction as string;
 
     if (!startConcept || !startAction) {
-      return { variant: 'notFound', concept: startConcept || '', action: startAction || '' };
+      return complete(p, 'notFound', { concept: startConcept || '', action: startAction || '' }) as StorageProgram<Result>;
     }
 
     // Flow tracing uses the static flow graph from the analysis
     // layer. Walk syncs that trigger on the starting action.
-    const allSyncs = await storage.find('syncs');
+    p = find(p, 'syncs', 'allSyncs');
     const flow: Array<{ step: number; concept: string; action: string; sync: string; variant: string }> = [];
 
     let step = 0;
@@ -531,18 +542,19 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (flow.length === 0) {
-      return { variant: 'notFound', concept: startConcept, action: startAction };
+      return complete(p, 'notFound', { concept: startConcept, action: startAction }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', flow };
+    return complete(p, 'ok', { flow }) as StorageProgram<Result>;
   },
 
   // ─── Analysis Queries (Analysis Layer) ────────────────
 
   getDependencies(input: Record<string, unknown>) {
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
     // Dispatch to DependenceGraph concept via kernel
@@ -554,20 +566,19 @@ const _handler: FunctionalConceptHandler = {
       const deps: unknown[] = (() => {
         try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
       })();
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         directDeps: deps,
         transitiveDeps: [],
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    return complete(p, 'ok', { directDeps: [], transitiveDeps: [] }) as StorageProgram<Result>;
   },
 
   getDependents(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
     // Dispatch to DependenceGraph concept via kernel
@@ -579,20 +590,19 @@ const _handler: FunctionalConceptHandler = {
       const deps: unknown[] = (() => {
         try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
       })();
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         directDeps: deps,
         transitiveDeps: [],
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', directDeps: [], transitiveDeps: [] };
+    return complete(p, 'ok', { directDeps: [], transitiveDeps: [] }) as StorageProgram<Result>;
   },
 
   getImpact(input: Record<string, unknown>) {
     const file = input.file as string;
     if (!file) {
-      return { variant: 'notFound', file: '' };
+      return complete(p, 'notFound', { file: '' }) as StorageProgram<Result>;
     }
 
     // Dispatch to DependenceGraph/impactAnalysis via kernel
@@ -603,14 +613,13 @@ const _handler: FunctionalConceptHandler = {
       const affected: unknown[] = (() => {
         try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
       })();
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         directImpact: affected,
         transitiveImpact: [],
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', directImpact: [], transitiveImpact: [] };
+    return complete(p, 'ok', { directImpact: [], transitiveImpact: [] }) as StorageProgram<Result>;
   },
 
   getDataFlow(input: Record<string, unknown>) {
@@ -618,7 +627,7 @@ const _handler: FunctionalConceptHandler = {
     const to = input.to as string;
 
     if (!from || !to) {
-      return { variant: 'noPath', from: from || '', to: to || '' };
+      return complete(p, 'noPath', { from: from || '', to: to || '' }) as StorageProgram<Result>;
     }
 
     // Dispatch to DataFlowPath/trace via kernel
@@ -630,10 +639,10 @@ const _handler: FunctionalConceptHandler = {
       const paths: unknown[] = (() => {
         try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
       })();
-      return { variant: 'ok', paths };
+      return complete(p, 'ok', { paths }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', paths: [] };
+    return complete(p, 'ok', { paths: [] }) as StorageProgram<Result>;
   },
 
   // ─── Discovery Queries (Discovery Layer) ──────────────
@@ -643,14 +652,14 @@ const _handler: FunctionalConceptHandler = {
     const limit = (input.limit as number) || 20;
 
     if (!query) {
-      return { variant: 'empty', query: '' };
+      return complete(p, 'empty', { query: '' }) as StorageProgram<Result>;
     }
 
     const queryLower = query.toLowerCase();
     const results: Array<{ name: string; kind: string; file: string; line: number; score: number; snippet: string }> = [];
 
     // Search concepts
-    const concepts = await storage.find('concepts');
+    p = find(p, 'concepts', 'concepts');
     for (const c of concepts) {
       const name = c.conceptName as string;
       const purpose = c.purpose as string;
@@ -668,7 +677,7 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Search syncs
-    const syncs = await storage.find('syncs');
+    p = find(p, 'syncs', 'syncs');
     for (const s of syncs) {
       const name = s.syncName as string;
       if (name.toLowerCase().includes(queryLower)) {
@@ -684,7 +693,7 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Search symbols
-    const symbols = await storage.find('symbols');
+    p = find(p, 'symbols', 'symbols');
     for (const sym of symbols) {
       const name = sym.symbolName as string;
       if (name.toLowerCase().includes(queryLower)) {
@@ -704,38 +713,38 @@ const _handler: FunctionalConceptHandler = {
     const limited = results.slice(0, limit);
 
     if (limited.length === 0) {
-      return { variant: 'empty', query };
+      return complete(p, 'empty', { query }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', results: limited };
+    return complete(p, 'ok', { results: limited }) as StorageProgram<Result>;
   },
 
   explain(input: Record<string, unknown>) {
+    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
-      return { variant: 'notFound', symbol: '' };
+      return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
     // Check concepts first
-    const conceptEntry = await storage.get('concepts', `concept:${symbol}`);
+    p = get(p, 'concepts', `concept:${symbol}`, 'conceptEntry');
     if (conceptEntry) {
       const name = conceptEntry.conceptName as string;
       const purpose = conceptEntry.purpose as string;
       const actions = (conceptEntry.actions as string[]) || [];
       const file = conceptEntry.file as string;
 
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         summary: `${name} is a concept defined in ${file}. ${purpose} It has ${actions.length} actions: ${actions.join(', ')}.`,
         kind: 'concept',
         definedIn: file,
         usedBy: [],
         relationships: [],
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Check syncs
-    const syncEntry = await storage.get('syncs', `sync:${symbol}`);
+    p = get(p, 'syncs', `sync:${symbol}`, 'syncEntry');
     if (syncEntry) {
       const name = syncEntry.syncName as string;
       const annotation = syncEntry.annotation as string;
@@ -743,18 +752,17 @@ const _handler: FunctionalConceptHandler = {
       const effects = (syncEntry.effects as string[]) || [];
       const file = syncEntry.file as string;
 
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         summary: `${name} is an [${annotation}] sync rule defined in ${file}. It triggers on ${triggers.join(', ')} and invokes ${effects.join(', ')}.`,
         kind: 'sync',
         definedIn: file,
         usedBy: [],
         relationships: triggers.concat(effects),
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Check symbols
-    const allSymbols = await storage.find('symbols', { symbolName: symbol });
+    p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
     if (allSymbols.length > 0) {
       const first = allSymbols[0];
       const name = first.symbolName as string;
@@ -762,24 +770,24 @@ const _handler: FunctionalConceptHandler = {
       const file = first.file as string;
       const line = first.line as number;
 
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         summary: `${name} is a ${kind} defined at ${file}:${line}. It appears in ${allSymbols.length} location(s).`,
         kind,
         definedIn: `${file}:${line}`,
         usedBy: allSymbols.slice(1).map(s => `${s.file}:${s.line}`),
         relationships: [],
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'notFound', symbol };
+    return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
   },
 
   // ─── Implementation Queries ─────────────────────────────
 
   implementationGaps(_input: Record<string, unknown>) {
-    const allConcepts = await storage.find('concepts');
-    const allHandlers = await storage.find('handlers');
+    let p = createProgram();
+    p = find(p, 'concepts', 'allConcepts');
+    p = find(p, 'handlers', 'allHandlers');
 
     const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
 
@@ -822,22 +830,23 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (gaps.length === 0) {
-      return { variant: 'ok', gaps: [] };
+      return complete(p, 'ok', { gaps: [] }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', gaps };
+    return complete(p, 'ok', { gaps }) as StorageProgram<Result>;
   },
 
   resolveStackTrace(input: Record<string, unknown>) {
+    let p = createProgram();
     const stackTrace = input.stackTrace as string;
     if (!stackTrace) {
-      return { variant: 'ok', frames: [] };
+      return complete(p, 'ok', { frames: [] }) as StorageProgram<Result>;
     }
 
     const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
     const frames: Array<Record<string, unknown>> = [];
     let match: RegExpExecArray | null;
-    const allHandlers = await storage.find('handlers');
+    p = find(p, 'handlers', 'allHandlers');
 
     while ((match = frameRegex.exec(stackTrace)) !== null) {
       const file = match[1];
@@ -858,10 +867,11 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    return { variant: 'ok', frames };
+    return complete(p, 'ok', { frames }) as StorageProgram<Result>;
   },
 
   traceEndpoint(input: Record<string, unknown>) {
+    let p = createProgram();
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
@@ -876,42 +886,43 @@ const _handler: FunctionalConceptHandler = {
       return result;
     }
 
-    return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
+    return complete(p, 'notFound', { target: target || '', path: path || '', method: method || '' }) as StorageProgram<Result>;
   },
 
   // ─── Index Management ─────────────────────────────────
 
   status(_input: Record<string, unknown>) {
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
-    const meta = await storage.get('meta', 'concepts');
+    let p = createProgram();
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
+    p = get(p, 'meta', 'concepts', 'meta');
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       indexed: concepts.length > 0 || files.length > 0,
       conceptCount: concepts.length,
       symbolCount: symbols.length,
       fileCount: files.length,
       syncCount: syncs.length,
       lastIndexed: meta?.lastUpdated || new Date(0).toISOString(),
-    };
+    }) as StorageProgram<Result>;
   },
 
   reindex(_input: Record<string, unknown>) {
+    let p = createProgram();
     const start = Date.now();
 
     // Clear existing index
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
 
-    for (const c of concepts) await storage.del('concepts', `concept:${c.conceptName}`);
-    for (const s of syncs) await storage.del('syncs', `sync:${s.syncName}`);
-    for (const sym of symbols) await storage.del('symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
-    for (const f of files) await storage.del('files', `file:${f.filePath}`);
+    for (const c of concepts) p = del(p, 'concepts', `concept:${c.conceptName}`);
+    for (const s of syncs) p = del(p, 'syncs', `sync:${s.syncName}`);
+    for (const sym of symbols) p = del(p, 'symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
+    for (const f of files) p = del(p, 'files', `file:${f.filePath}`);
 
     // The actual reindex is triggered by syncs:
     // reindex → completion fires ScoreOnDeploySync and other
@@ -921,14 +932,13 @@ const _handler: FunctionalConceptHandler = {
 
     const duration = Date.now() - start;
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       conceptCount: 0,
       symbolCount: 0,
       fileCount: 0,
       syncCount: 0,
       duration,
-    };
+    }) as StorageProgram<Result>;
   },
 };
 

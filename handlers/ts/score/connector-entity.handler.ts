@@ -25,18 +25,19 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const connectorId = input.connector_id as string;
     const canvasId = input.canvas_id as string;
 
-    const existing = await storage.find('canvas-connector-entity', { connector_id: connectorId });
+    p = find(p, 'canvas-connector-entity', { connector_id: connectorId }, 'existing');
     if (existing.length > 0) {
-      return { variant: 'alreadyRegistered', existing: existing[0].id as string };
+      return complete(p, 'alreadyRegistered', { existing: existing[0].id as string }) as StorageProgram<Result>;
     }
 
     const id = nextId();
     const symbol = `clef/canvas/${canvasId}/connector/${connectorId}`;
 
-    await storage.put('canvas-connector-entity', id, {
+    p = put(p, 'canvas-connector-entity', id, {
       id,
       connector_id: connectorId,
       canvas_id: canvasId,
@@ -51,32 +52,33 @@ const _handler: FunctionalConceptHandler = {
       reference_id: (input.reference_id as string | undefined) ?? null,
     });
 
-    return { variant: 'ok', id, symbol };
+    return complete(p, 'ok', { id, symbol }) as StorageProgram<Result>;
   },
 
   updateKind(input: Record<string, unknown>) {
+    let p = createProgram();
     const connectorId = input.connector_id as string;
     const kind = input.kind as string;
 
-    const entities = await storage.find('canvas-connector-entity', { connector_id: connectorId });
+    p = find(p, 'canvas-connector-entity', { connector_id: connectorId }, 'entities');
     if (entities.length === 0) {
-      return { variant: 'notfound', message: `Connector entity for '${connectorId}' not found` };
+      return complete(p, 'notfound', { message: `Connector entity for '${connectorId}' not found` }) as StorageProgram<Result>;
     }
 
-    await storage.put('canvas-connector-entity', entities[0].id as string, {
+    p = put(p, 'canvas-connector-entity', entities[0].id as string, {
       ...entities[0],
       kind,
       reference_id: (input.reference_id as string | undefined) ?? entities[0].reference_id,
     });
 
-    return { variant: 'ok', connector_id: connectorId, kind };
+    return complete(p, 'ok', { connector_id: connectorId, kind }) as StorageProgram<Result>;
   },
 
   listByCanvas(input: Record<string, unknown>) {
+    let p = createProgram();
     const canvasId = input.canvas_id as string;
-    const connectors = await storage.find('canvas-connector-entity', { canvas_id: canvasId });
-    return {
-      variant: 'ok',
+    p = find(p, 'canvas-connector-entity', { canvas_id: canvasId }, 'connectors');
+    return complete(p, 'ok', {
       connectors: connectors.map((c: Record<string, unknown>) => ({
         id: c.id,
         connector_id: c.connector_id,
@@ -86,20 +88,20 @@ const _handler: FunctionalConceptHandler = {
         label: c.label,
         type_key: c.type_key,
       })),
-    };
+    }) as StorageProgram<Result>;
   },
 
   listByKind(input: Record<string, unknown>) {
+    let p = createProgram();
     const kind = input.kind as string;
     const canvasId = (input.canvas_id as string | undefined);
 
-    let connectors = await storage.find('canvas-connector-entity', { kind });
+    p = find(p, 'canvas-connector-entity', { kind }, 'connectors');
     if (canvasId) {
       connectors = connectors.filter((c: Record<string, unknown>) => c.canvas_id === canvasId);
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       connectors: connectors.map((c: Record<string, unknown>) => ({
         id: c.id,
         connector_id: c.connector_id,
@@ -109,21 +111,21 @@ const _handler: FunctionalConceptHandler = {
         kind: c.kind,
         label: c.label,
       })),
-    };
+    }) as StorageProgram<Result>;
   },
 
   getConnectionsBetween(input: Record<string, unknown>) {
+    let p = createProgram();
     const itemA = input.item_a as string;
     const itemB = input.item_b as string;
 
-    const all = await storage.list('canvas-connector-entity');
+    p = find(p, 'canvas-connector-entity', {}, 'all');
     const connections = all.filter((c: Record<string, unknown>) =>
       (c.source_item === itemA && c.target_item === itemB) ||
       (c.source_item === itemB && c.target_item === itemA)
     );
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       connections: connections.map((c: Record<string, unknown>) => ({
         id: c.id,
         connector_id: c.connector_id,
@@ -133,7 +135,7 @@ const _handler: FunctionalConceptHandler = {
         kind: c.kind,
         label: c.label,
       })),
-    };
+    }) as StorageProgram<Result>;
   },
 };
 
