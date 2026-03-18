@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ViewEmbedSource Handler
 //
@@ -6,7 +7,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,26 +23,29 @@ function nextId(): string {
 
 let registered = false;
 
-export const viewEmbedSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('view-embed-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'view-embed-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'view_embed' };
+    return complete(p, 'ok', { provider_name: 'view_embed' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const viewId = input.view_id as string;
     const viewParams = input.view_params as string;
     const maxRows = input.max_rows as number | undefined;
     const context = input.context as string;
 
     if (!viewId) {
-      return { variant: 'error', message: 'view_id is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'view_id is required' }) as StorageProgram<Result>;
     }
 
     // Parse view params
@@ -42,7 +53,8 @@ export const viewEmbedSourceHandler: ConceptHandler = {
     try {
       parsedParams = JSON.parse(viewParams || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid view_params JSON: ${viewParams}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid view_params JSON: ${viewParams}` }) as StorageProgram<Result>;
     }
 
     // Parse context
@@ -50,41 +62,39 @@ export const viewEmbedSourceHandler: ConceptHandler = {
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
     }
 
-    // Look up the view definition
-    const view = await storage.get('view', viewId);
-    if (!view) {
-      return { variant: 'view_not_found', view_id: viewId };
-    }
+    let p = createProgram();
+    p = get(p, 'view', viewId, 'view');
 
-    // Execute the view query — in production this delegates to the
-    // View query engine
-    const limit = maxRows ?? 50;
-    const results = await storage.find('view_result', { view_id: viewId });
-    const limitedResults = results.slice(0, limit);
+    return branch(p, 'view',
+      (thenP) => {
+        const limit = maxRows ?? 50;
+        thenP = find(thenP, 'view_result', { view_id: viewId }, 'results');
 
-    const data = JSON.stringify({
-      view_id: viewId,
-      params: parsedParams,
-      context: parsedContext,
-      row_count: limitedResults.length,
-      rows: limitedResults,
-    });
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const results = bindings.results as Record<string, unknown>[];
+          const limitedResults = results.slice(0, limit);
 
-    const id = nextId();
-    await storage.put('view-embed-source', id, {
-      id,
-      view_id: viewId,
-      view_params: viewParams,
-      max_rows: limit,
-      createdAt: new Date().toISOString(),
-    });
+          const data = JSON.stringify({
+            view_id: viewId,
+            params: parsedParams,
+            context: parsedContext,
+            row_count: limitedResults.length,
+            rows: limitedResults,
+          });
 
-    return { variant: 'ok', data };
+          return { data };
+        });
+      },
+      (elseP) => complete(elseP, 'view_not_found', { view_id: viewId }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const viewEmbedSourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetViewEmbedSource(): void {
