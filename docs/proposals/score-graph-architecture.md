@@ -6,7 +6,7 @@
 
 All five Score layers now have complete handler implementations registered
 through a shared `ScoreKernel` concept. The MCP server boots via
-`ScoreKernel/boot` (with fallback to `seedScoreIndex`). Key changes:
+`ScoreKernel/boot`. Key changes:
 
 ### What was implemented
 
@@ -22,9 +22,9 @@ through a shared `ScoreKernel` concept. The MCP server boots via
    - `connectRuntime(kernel, endpoint)` → future ChangeStream bridge
 
 3. **MCP server refactor** (`mcp-server.handler.ts`):
-   - Primary path: `ScoreKernel/boot` + kernel dispatch
-   - Fallback: legacy `seedScoreIndex` if kernel boot fails
+   - `ScoreKernel/boot` + kernel dispatch (legacy `seedScoreIndex` removed)
    - Tool calls route through kernel for Score concepts
+   - ScoreApi stub actions wired to real entity handlers via kernel dispatch
 
 4. **Interface manifest** (`score.interface.yaml`):
    - Added ScoreQuery, ScoreNavigator, ScoreKernel action mappings
