@@ -11,7 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, del, delFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -109,31 +109,32 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'ia-c', { plan, provider }, 'existing');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      const now = new Date().toISOString();
-
-      if (existing.length === 0) {
+    return branch(p,
+      (bindings) => (bindings.existing as Record<string, unknown>[]).length === 0,
+      (bp) => {
+        // First apply: create resources
         const id = nextId();
         const resourceId = `${provider}-${plan}-applied`;
-        return {
-          _puts: [{ relation: 'ia-c', key: id, value: {
-            id, resourceId, provider, resourceType: 'applied-resource',
-            concept: plan, createdAt: now, lastSyncedAt: now,
-            driftDetected: false, estimatedMonthlyCost: null, plan,
-          }}],
-          created: [resourceId],
-          updated: [],
-          deleted: [],
-        };
-      }
-
-      return {
-        created: [],
-        updated: existing.map(r => r.resourceId as string),
-        deleted: [],
-      };
-    }) as StorageProgram<Result>;
+        const now = new Date().toISOString();
+        const bp2 = put(bp, 'ia-c', id, {
+          id, resourceId, provider, resourceType: 'applied-resource',
+          concept: plan, createdAt: now, lastSyncedAt: now,
+          driftDetected: false, estimatedMonthlyCost: null, plan,
+        });
+        return complete(bp2, 'ok', { created: [resourceId], updated: [], deleted: [] });
+      },
+      (bp) => {
+        // Update existing resources — use mapBindings to compute, then completeFrom
+        return completeFrom(bp, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>[];
+          return {
+            created: [],
+            updated: existing.map(r => r.resourceId as string),
+            deleted: [],
+          };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
   detectDrift(input: Record<string, unknown>) {
@@ -174,12 +175,18 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'ia-c', { plan, provider }, 'resources');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    // Use mapBindings to compute destroyed list, then delete
+    p = mapBindings(p, (bindings) => {
       const resources = bindings.resources as Record<string, unknown>[];
-      if (resources.length === 0) {
-        return { destroyed: [] };
-      }
-      const destroyed = resources.map(r => r.resourceId as string);
+      return resources.map(r => ({
+        id: r.id as string,
+        resourceId: r.resourceId as string,
+      }));
+    }, 'toDestroy');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const toDestroy = bindings.toDestroy as Array<{ id: string; resourceId: string }>;
+      const destroyed = toDestroy.map(r => r.resourceId);
       return { destroyed };
     }) as StorageProgram<Result>;
   },

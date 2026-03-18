@@ -443,10 +443,7 @@ function determineRelativeKernelPath(outputPath: string): string {
 // --- ConceptHandler interface ---
 
 const _handler: FunctionalConceptHandler = {
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ) {
+  generate(input: Record<string, unknown>) {
     const specPath = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
 
