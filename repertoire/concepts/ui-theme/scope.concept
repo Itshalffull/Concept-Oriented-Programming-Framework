@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Scope [Q] {
 
   purpose {
@@ -34,5 +34,26 @@ concept Scope [Q] {
     action getDepth(scopeId: ScopeId) {
       -> ok(depth: Int) { Current nesting depth returned. }
     }
+  }
+
+
+  always "scopes have required fields": {
+    forall q in scopes:
+    q.scope_name != none
+  }
+
+  never "orphaned entry in scopes": {
+    exists q in scopes:
+    q.scope_name = none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolve {
+    requires: path != ""
+    ensures ok: path != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Host [W] {
 
   purpose {
@@ -72,9 +72,24 @@ concept Host [W] {
     }
   }
 
-  invariant {
+  example "mount then unmount": {
     after mount(host: w, concept: "urn:app/Article", view: "list",
       level: 0, zone: "primary") -> ok(host: w)
     then unmount(host: w) -> ok(host: w, machines: _, binding: _)
+  }
+
+
+  action mount {
+    requires: concept != ""
+    ensures ok: host != none
+  }
+
+  action ready {
+    ensures ok: host != none
+  }
+
+  action trackResource {
+    requires: kind != ""
+    ensures ok: host != none
   }
 }

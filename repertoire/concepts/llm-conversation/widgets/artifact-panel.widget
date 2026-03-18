@@ -155,6 +155,10 @@ widget artifact-panel {
   }
 
   invariant {
+    example "copy transitions from open": { after transition(from: "open", event: "COPY") -> ok then state = "copied" }
+    example "copy_timeout transitions from copied": { after transition(from: "copied", event: "COPY_TIMEOUT") -> ok then state = "open" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Content rendering must match the artifact type (code highlighting, markdown, preview)";
     "Copy must place raw content on clipboard with success feedback";
     "Panel must be resizable by dragging the edge";

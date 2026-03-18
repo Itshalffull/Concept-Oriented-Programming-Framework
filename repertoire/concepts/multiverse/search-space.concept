@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept SearchSpace [S] {
 
   purpose {
@@ -74,14 +74,14 @@ concept SearchSpace [S] {
     }
   }
 
-  invariant {
+  example "index then query": {
     after index(scope_id: "vs-1", provider: "text",
                 entity_id: "e1", data: "hello world") -> ok(entry: _)
     then  query(scope_id: "vs-1", provider: "text",
                 query_expr: "hello") -> ok(results: r)
   }
 
-  invariant {
+  example "index then query": {
     after index(scope_id: "vs-2", provider: "text",
                 entity_id: "e2", data: "test data") -> ok(entry: _)
     and   tombstone(scope_id: "vs-2", provider: "text",
@@ -90,11 +90,37 @@ concept SearchSpace [S] {
                 query_expr: "test") -> ok(results: r)
   }
 
-  invariant {
+  example "index then query": {
     after index(scope_id: "vs-3", provider: "text",
                 entity_id: "e3", data: "content") -> ok(entry: _)
     and   clear(scope_id: "vs-3") -> ok()
     then  query(scope_id: "vs-3", provider: "text",
                 query_expr: "content") -> no_scope(scope_id: "vs-3")
+  }
+
+
+  always "scopes have required fields": {
+    forall s in scopes:
+    s.scope_id != none
+  }
+
+  never "orphaned entry in scopes": {
+    exists s in scopes:
+    s.scope_id = none
+  }
+
+  action index {
+    requires: scope_id != ""
+    ensures ok: scope_id != none
+  }
+
+  action tombstone {
+    requires: scope_id != ""
+    ensures ok: scope_id != none
+  }
+
+  action query {
+    requires: scope_id != ""
+    ensures ok: scope_id != none
   }
 }

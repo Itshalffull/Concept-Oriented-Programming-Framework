@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Renderer [R] {
 
   purpose {
@@ -45,13 +45,39 @@ concept Renderer [R] {
     }
   }
 
-  invariant {
+  example "render then render": {
     after render(renderer: r, tree: "<page><header/><body/></page>") -> ok(output: _)
     then render(renderer: r, tree: "<page><header/><body/></page>") -> ok(output: _)
   }
 
-  invariant {
+  example "autoPlaceholder then render": {
     after autoPlaceholder(renderer: r, name: "sidebar") -> ok(placeholder: p)
     then render(renderer: r, tree: p) -> ok(output: _)
+  }
+
+
+  always "renderers have required fields": {
+    forall r in renderers:
+    r.renderTree != none
+  }
+
+  never "orphaned entry in renderers": {
+    exists r in renderers:
+    r.renderTree = none
+  }
+
+  action render {
+    requires: tree != ""
+    ensures ok: renderer != none
+  }
+
+  action autoPlaceholder {
+    requires: name != ""
+    ensures ok: renderer != none
+  }
+
+  action stream {
+    requires: tree != ""
+    ensures ok: renderer != none
   }
 }

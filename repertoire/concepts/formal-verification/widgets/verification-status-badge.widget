@@ -124,6 +124,10 @@ widget verification-status-badge {
   }
 
   invariant {
+    example "hover transitions from idle": { after transition(from: "idle", event: "HOVER") -> ok then state = "hovered" }
+    example "leave transitions from hovered": { after transition(from: "hovered", event: "LEAVE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Status icon must visually distinguish all five states with unique icons and colors";
     "Running status must display an animated spinner icon";
     "Tooltip must only appear on hover or focus and include solver and duration when available";

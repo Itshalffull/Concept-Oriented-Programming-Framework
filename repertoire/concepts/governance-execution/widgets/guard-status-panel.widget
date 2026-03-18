@@ -83,6 +83,10 @@ widget guard-status-panel {
   }
 
   invariant {
+    example "select_guard transitions from idle": { after transition(from: "idle", event: "SELECT_GUARD") -> ok then state = "guardSelected" }
+    example "deselect transitions from guardSelected": { after transition(from: "guardSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Tripped guards must show warning styling and blocking banner";
     "Bypassed guards must show distinct muted styling";
     "Guard list must update in real-time as conditions change";

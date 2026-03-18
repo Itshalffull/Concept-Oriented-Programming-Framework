@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ZkSyncProvider [P] {
 
   purpose {
@@ -85,15 +85,40 @@ concept ZkSyncProvider [P] {
     }
   }
 
-  invariant {
+  example "register then poll": {
     after register(rpc_url: "https://mainnet.era.zksync.io",
                    diamond_proxy: "0x5678") -> ok(provider: p)
     then  poll(provider: p) -> ok(block_number: b, committed_batch: c,
                                   proven_batch: pr, executed_batch: e)
   }
 
-  invariant {
+  example "poll then checkFinality": {
     after poll(provider: p) -> notfound(provider: p)
     then  checkFinality(provider: p, tx_hash: "0xdef") -> notfound(provider: p)
+  }
+
+
+  always "providers have required fields": {
+    forall p in providers:
+    p.rpc_url != none
+  }
+
+  never "orphaned entry in providers": {
+    exists p in providers:
+    p.rpc_url = none
+  }
+
+  action register {
+    requires: rpc_url != ""
+    ensures ok: rpc_url != none
+  }
+
+  action poll {
+    ensures ok: provider != none
+  }
+
+  action checkFinality {
+    requires: tx_hash != ""
+    ensures ok: provider != none
   }
 }

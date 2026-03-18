@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept SpringPhysics [J] {
 
   purpose {
@@ -33,5 +33,31 @@ concept SpringPhysics [J] {
       -> ok(result: String) { Spring request routed to the named provider. }
       -> notfound(message: String) { Provider unavailable for the preset. }
     }
+  }
+
+
+  always "presets have required fields": {
+    forall j in presets:
+    j.preset_name != none
+  }
+
+  never "orphaned entry in presets": {
+    exists j in presets:
+    j.preset_name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolve {
+    requires: target != ""
+    ensures ok: target != none
+  }
+
+  action routeToProvider {
+    requires: provider != ""
+    ensures ok: provider != none
   }
 }

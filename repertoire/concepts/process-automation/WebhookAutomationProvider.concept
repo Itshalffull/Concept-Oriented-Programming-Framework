@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept WebhookAutomationProvider [WA] {
 
   purpose {
@@ -44,9 +44,25 @@ concept WebhookAutomationProvider [WA] {
     }
   }
 
-  invariant {
+  example "register then execute": {
     after register() -> ok(provider_name: "webhook")
     then  execute(action_payload: "{\"event\":\"deploy\"}", webhook_url: "https://hooks.example.com/deploy", method: "POST")
           -> ok(response: r)
+  }
+
+
+  always "executions have required fields": {
+    forall wa in executions:
+    wa.action_payload != none
+  }
+
+  never "orphaned entry in executions": {
+    exists wa in executions:
+    wa.action_payload = none
+  }
+
+  action execute {
+    requires: action_payload != ""
+    ensures ok: action_payload != none
   }
 }

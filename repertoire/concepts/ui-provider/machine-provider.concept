@@ -71,10 +71,26 @@ concept MachineProvider [P] {
     }
   }
 
-  invariant {
+  example "initialize then spawn": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then spawn(provider: p, widget: "dialog", context: "{}")
       -> ok(provider: p, machine: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action spawn {
+    requires: widget != ""
+    ensures ok: provider != none
+  }
+
+  action send {
+    requires: machine != ""
+    ensures ok: provider != none
   }
 }

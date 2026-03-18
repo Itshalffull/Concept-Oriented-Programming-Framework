@@ -64,10 +64,24 @@ concept ViewportProvider [P] {
     }
   }
 
-  invariant {
+  example "initialize then observe": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then observe(provider: p, width: 1024, height: 768)
       -> ok(provider: p, breakpoint: "lg", orientation: "landscape")
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action observe {
+    ensures ok: provider != none
+  }
+
+  action getBreakpoint {
+    ensures ok: provider != none
   }
 }

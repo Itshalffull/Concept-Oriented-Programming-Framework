@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ProcessSpec [P] {
 
   purpose {
@@ -89,8 +89,32 @@ concept ProcessSpec [P] {
     }
   }
 
-  invariant {
+  example "create then get": {
     after create(name: "onboard", steps: s, edges: e) -> ok(spec: x)
     then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft", steps: s, edges: e)
+  }
+
+
+  always "specs have required fields": {
+    forall p in specs:
+    p.name != none
+  }
+
+  never "orphaned entry in specs": {
+    exists p in specs:
+    p.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action publish {
+    ensures ok: spec != none
+  }
+
+  action deprecate {
+    ensures ok: spec != none
   }
 }

@@ -71,10 +71,25 @@ concept BindingProvider [P, C] {
     }
   }
 
-  invariant {
+  example "initialize then bind": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then bind(provider: p, concept: c, mode: "static")
       -> ok(provider: p)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action bind {
+    requires: mode != ""
+    ensures ok: provider != none
+  }
+
+  action sync {
+    ensures ok: provider != none
   }
 }

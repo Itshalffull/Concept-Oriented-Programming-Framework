@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept LatticeMerge [C] {
 
   purpose {
@@ -31,7 +31,7 @@ concept LatticeMerge [C] {
     }
   }
 
-  invariant {
+  example "execute then execute": {
     after execute(base: b, ours: o, theirs: t) -> clean(result: r)
     then execute(base: b, ours: t, theirs: o) -> clean(result: r)
   }

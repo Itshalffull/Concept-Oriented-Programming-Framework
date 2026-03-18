@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ContractChecker [C] {
 
   purpose {
@@ -72,9 +72,35 @@ concept ContractChecker [C] {
     }
   }
 
-  invariant {
+  example "check lifecycle": {
     after check(checker: c, widget: "approval-detail",
       concept: "Approval", contractVersion: _)
       -> ok(checker: c, resolved: _, unresolved: _, mismatches: _)
+  }
+
+
+  always "results have required fields": {
+    forall c in results:
+    c.widget != none
+  }
+
+  never "orphaned entry in results": {
+    exists c in results:
+    c.widget = none
+  }
+
+  action check {
+    requires: widget != ""
+    ensures ok: checker != none
+  }
+
+  action checkAll {
+    requires: concept != ""
+    ensures ok: checker != none
+  }
+
+  action checkSuite {
+    requires: suite != ""
+    ensures ok: checker != none
   }
 }

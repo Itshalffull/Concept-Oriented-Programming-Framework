@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FileManagement [F] {
   purpose {
     Manage file lifecycle with reference counting and garbage collection
@@ -58,10 +58,36 @@ concept FileManagement [F] {
     }
   }
 
-  invariant {
+  example "upload then addUsage": {
     after upload(file: f, data: d, mimeType: m) -> ok(file: f)
     then addUsage(file: f, entity: e) -> ok()
     and removeUsage(file: f, entity: e) -> ok()
     and  garbageCollect() -> ok(removed: 1)
+  }
+
+
+  always "files have required fields": {
+    forall f in files:
+    f.streamWrappers != none
+  }
+
+  never "orphaned entry in files": {
+    exists f in files:
+    f.streamWrappers = none
+  }
+
+  action upload {
+    requires: data != ""
+    ensures ok: file != none
+  }
+
+  action addUsage {
+    requires: entity != ""
+    ensures ok: file != none
+  }
+
+  action removeUsage {
+    requires: entity != ""
+    ensures ok: file != none
   }
 }

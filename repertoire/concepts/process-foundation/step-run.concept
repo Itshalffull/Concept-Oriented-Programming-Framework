@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept StepRun [S] {
 
@@ -84,8 +84,33 @@ concept StepRun [S] {
     }
   }
 
-  invariant {
+  example "start then complete": {
     after start(run_ref: "r1", step_key: "kyc", step_type: "automation", input: d) -> ok(step: s, run_ref: "r1", step_key: "kyc", step_type: "automation")
     then complete(step: s, output: o) -> ok(step: s, run_ref: "r1", step_key: "kyc", output: o)
+  }
+
+
+  always "steps have required fields": {
+    forall s in steps:
+    s.run_ref != none
+  }
+
+  never "orphaned entry in steps": {
+    exists s in steps:
+    s.run_ref = none
+  }
+
+  action start {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action complete {
+    ensures ok: step != none
+  }
+
+  action fail {
+    requires: error != ""
+    ensures ok: step != none
   }
 }

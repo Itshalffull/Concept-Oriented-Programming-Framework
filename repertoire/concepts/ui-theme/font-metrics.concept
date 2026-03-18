@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FontMetrics [F] {
 
   purpose {
@@ -32,5 +32,31 @@ concept FontMetrics [F] {
     action resolveVariableAxes(profileId: FontProfileId, context: String) {
       -> ok(axes: String) { Variable font axes resolved. }
     }
+  }
+
+
+  always "profiles have required fields": {
+    forall f in profiles:
+    f.profile_name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists f in profiles:
+    f.profile_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolveFeatures {
+    requires: context != ""
+    ensures ok: context != none
+  }
+
+  action getBaselineOffset {
+    requires: size != ""
+    ensures ok: size != none
   }
 }

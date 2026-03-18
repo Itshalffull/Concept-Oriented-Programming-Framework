@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FrameworkAdapter [R] {
 
   purpose {
@@ -56,11 +56,27 @@ concept FrameworkAdapter [R] {
     }
   }
 
-  invariant {
+  example "register then normalize": {
     after register(renderer: r, framework: "react", version: "19",
                    normalizer: "reactNormalizer", mountFn: "reactMount")
       -> ok(renderer: r)
     then normalize(renderer: r, props: "{ \"onClick\": \"handler_1\" }")
       -> ok(normalized: _)
+  }
+
+
+  action register {
+    requires: framework != ""
+    ensures ok: renderer != none
+  }
+
+  action normalize {
+    requires: props != ""
+    ensures ok: renderer != none
+  }
+
+  action mount {
+    requires: machine != ""
+    ensures ok: renderer != none
   }
 }

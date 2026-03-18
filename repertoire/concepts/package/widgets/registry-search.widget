@@ -102,6 +102,10 @@ widget registry-search {
   }
 
   invariant {
+    example "input transitions from idle": { after transition(from: "idle", event: "INPUT") -> ok then state = "searching" }
+    example "results transitions from searching": { after transition(from: "searching", event: "RESULTS") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Type-ahead must show top 5 matching packages within 200ms";
     "Results must match the selected sort order";
     "Empty state must show a helpful message for zero-result queries";

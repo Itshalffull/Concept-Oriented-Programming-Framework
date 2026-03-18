@@ -68,9 +68,25 @@ concept DesignTokenProvider [P] {
     }
   }
 
-  invariant {
+  example "initialize then getTokens": {
     after initialize(provider: p, config: "{ \"theme\": \"light\" }")
       -> ok(provider: p, pluginRef: _)
     then getTokens(provider: p) -> ok(tokens: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action resolve {
+    requires: tokenName != ""
+    ensures ok: provider != none
+  }
+
+  action switchTheme {
+    requires: theme != ""
+    ensures ok: provider != none
   }
 }

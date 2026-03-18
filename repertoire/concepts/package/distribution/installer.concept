@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Installer [I] {
 
   purpose {
@@ -68,18 +68,42 @@ concept Installer [I] {
     }
   }
 
-  invariant {
+  example "stage lifecycle": {
     after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
     then i.active = false
     and i.generation > 0
   }
 
-  invariant {
+  example "stage then activate": {
     after stage(lockfile_entries: entries, project_root: root) -> ok(installation: i)
     then activate(installation: i) -> ok()
     and i.active = true
     then rollback(installation: i) -> ok(previous: prev)
     and prev.active = true
     and i.active = false
+  }
+
+
+  always "installations have required fields": {
+    forall i in installations:
+    i.lockfile_hash != none
+  }
+
+  never "orphaned entry in installations": {
+    exists i in installations:
+    i.lockfile_hash = none
+  }
+
+  action stage {
+    requires: version != ""
+    ensures ok: version != none
+  }
+
+  action activate {
+    ensures ok: installation != none
+  }
+
+  action rollback {
+    ensures ok: installation != none
   }
 }

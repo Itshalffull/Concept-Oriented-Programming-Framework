@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ExposedFilter [F] {
 
   purpose {
@@ -56,9 +56,34 @@ concept ExposedFilter [F] {
     }
   }
 
-  invariant {
+  example "expose then collectInput": {
     after expose(filter: f, fieldName: "status", operator: "eq", defaultValue: "active") -> ok(filter: f)
     then collectInput(filter: f, value: "archived") -> ok(filter: f)
     and applyToQuery(filter: f) -> ok(queryMod: m)
+  }
+
+
+  always "exposedFilters have required fields": {
+    forall f in exposedFilters:
+    f.userInputs != none
+  }
+
+  never "orphaned entry in exposedFilters": {
+    exists f in exposedFilters:
+    f.userInputs = none
+  }
+
+  action expose {
+    requires: fieldName != ""
+    ensures ok: filter != none
+  }
+
+  action collectInput {
+    requires: value != ""
+    ensures ok: filter != none
+  }
+
+  action applyToQuery {
+    ensures ok: filter != none
   }
 }

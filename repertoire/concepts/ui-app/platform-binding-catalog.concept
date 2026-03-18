@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept PlatformBindingCatalog [B] {
 
   purpose {
@@ -41,5 +41,26 @@ concept PlatformBindingCatalog [B] {
         Return all bindings, optionally filtered by platform.
       }
     }
+  }
+
+
+  always "bindings have required fields": {
+    forall b in bindings:
+    b.platform != none
+  }
+
+  never "orphaned entry in bindings": {
+    exists b in bindings:
+    b.platform = none
+  }
+
+  action register {
+    requires: platform != ""
+    ensures ok: binding != none
+  }
+
+  action resolve {
+    requires: platform != ""
+    ensures ok: platform != none
   }
 }

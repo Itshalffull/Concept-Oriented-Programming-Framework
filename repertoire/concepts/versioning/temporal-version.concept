@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept TemporalVersion [V] {
 
   purpose {
@@ -70,13 +70,39 @@ concept TemporalVersion [V] {
     }
   }
 
-  invariant {
+  example "record then asOf": {
     after record(contentHash: h, validFrom: vf, validTo: _, metadata: _) -> ok(versionId: v)
     then asOf(systemTime: _, validTime: vf) -> ok(versionId: v, contentHash: h)
   }
 
-  invariant {
+  example "record then current": {
     after record(contentHash: h, validFrom: _, validTo: _, metadata: _) -> ok(versionId: v)
     then current() -> ok(versionId: v, contentHash: h)
+  }
+
+
+  always "versions have required fields": {
+    forall v in versions:
+    v.contentHash != none
+  }
+
+  never "orphaned entry in versions": {
+    exists v in versions:
+    v.contentHash = none
+  }
+
+  action record {
+    requires: contentHash != ""
+    ensures ok: contentHash != none
+  }
+
+  action between {
+    requires: start != ""
+    ensures ok: start != none
+  }
+
+  action supersede {
+    requires: contentHash != ""
+    ensures ok: versionId != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Fetcher [D] {
 
   purpose {
@@ -59,7 +59,7 @@ concept Fetcher [D] {
     }
   }
 
-  invariant {
+  example "fetch lifecycle": {
     after fetch(module_id: "pkg-a", version: "1.0.0",
                 source_url: url, expected_hash: h)
       -> ok(download: d)
@@ -67,11 +67,36 @@ concept Fetcher [D] {
     and d.bytes_downloaded = d.bytes_total
   }
 
-  invariant {
+  example "fetch then fetch": {
     after fetch(module_id: "pkg-a", version: "1.0.0",
                 source_url: url, expected_hash: h)
       -> cached()
     then fetch(module_id: "pkg-a", version: "1.0.0",
                source_url: url, expected_hash: h) -> cached()
+  }
+
+
+  always "downloads have required fields": {
+    forall d in downloads:
+    d.module_id != none
+  }
+
+  never "orphaned entry in downloads": {
+    exists d in downloads:
+    d.module_id = none
+  }
+
+  action fetch {
+    requires: module_id != ""
+    ensures ok: module_id != none
+  }
+
+  action fetchBatch {
+    requires: version != ""
+    ensures ok: version != none
+  }
+
+  action cancel {
+    ensures ok: download != none
   }
 }

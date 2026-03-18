@@ -116,6 +116,10 @@ widget memory-inspector {
   }
 
   invariant {
+    example "switch_tab transitions from viewing": { after transition(from: "viewing", event: "SWITCH_TAB") -> ok then state = "viewing" }
+    example "clear transitions from searching": { after transition(from: "searching", event: "CLEAR") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Working memory view must show current key-value pairs with token counts";
     "Episodic view must display entries as a chronological timeline";
     "Context bar must visualize token allocation across memory types";

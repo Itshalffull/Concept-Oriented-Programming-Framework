@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ContentStore [B] {
 
   purpose {
@@ -62,14 +62,40 @@ concept ContentStore [B] {
     }
   }
 
-  invariant {
+  example "store then retrieve": {
     after store(data: d, media_type: "application/tar+gzip") -> ok(blob: b)
     then retrieve(hash: b.hash) -> ok(data: d)
     and verify(hash: b.hash) -> ok()
   }
 
-  invariant {
+  example "store then gc": {
     after store(data: d, media_type: "application/tar+gzip") -> ok(blob: b)
     then gc(lockfile_hashes: [b.hash]) -> ok(removed: 0)
+  }
+
+
+  always "blobs have required fields": {
+    forall b in blobs:
+    b.hash != none
+  }
+
+  never "orphaned entry in blobs": {
+    exists b in blobs:
+    b.hash = none
+  }
+
+  action store {
+    requires: media_type != ""
+    ensures ok: media_type != none
+  }
+
+  action retrieve {
+    requires: hash != ""
+    ensures ok: hash != none
+  }
+
+  action verify {
+    requires: hash != ""
+    ensures ok: hash != none
   }
 }

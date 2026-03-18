@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ContentEmbedding [E] {
 
   purpose {
@@ -65,8 +65,34 @@ concept ContentEmbedding [E] {
     }
   }
 
-  invariant {
+  example "index then get": {
     after index(entity_id: "node-1", source_type: "page", text: "hello world", model: "text-embedding-3-small") -> ok(embedding: e)
     then get(entity_id: "node-1") -> ok(embedding: e, entity_id: "node-1", source_type: "page", model: "text-embedding-3-small", updated_at: _, excerpt: _)
+  }
+
+
+  always "embeddings have required fields": {
+    forall e in embeddings:
+    e.entity_id != none
+  }
+
+  never "orphaned entry in embeddings": {
+    exists e in embeddings:
+    e.entity_id = none
+  }
+
+  action index {
+    requires: entity_id != ""
+    ensures ok: entity_id != none
+  }
+
+  action remove {
+    requires: entity_id != ""
+    ensures ok: entity_id != none
+  }
+
+  action get {
+    requires: entity_id != ""
+    ensures ok: entity_id != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Branch [B] {
 
   purpose {
@@ -98,13 +98,38 @@ concept Branch [B] {
     }
   }
 
-  invariant {
+  example "create then advance": {
     after create(name: n, fromNode: f) -> ok(branch: b)
     then advance(branch: b, newNode: n2) -> ok()
   }
 
-  invariant {
+  example "protect then advance": {
     after protect(branch: b) -> ok()
     then advance(branch: b, newNode: _) -> protected(message: _)
+  }
+
+
+  always "branches have required fields": {
+    forall b in branches:
+    b.name != none
+  }
+
+  never "orphaned entry in branches": {
+    exists b in branches:
+    b.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action advance {
+    requires: newNode != ""
+    ensures ok: branch != none
+  }
+
+  action delete {
+    ensures ok: branch != none
   }
 }

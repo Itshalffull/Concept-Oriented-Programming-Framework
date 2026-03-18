@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Theme [H] {
 
   purpose {
@@ -51,11 +51,26 @@ concept Theme [H] {
     }
   }
 
-  invariant {
+  example "create then activate": {
     after create(theme: h, name: "dark",
                  overrides: "{ \"color-bg\": \"#1a1a1a\" }")
       -> ok(theme: h)
     then activate(theme: h, priority: 1) -> ok(theme: h)
     and resolve(theme: h) -> ok(tokens: _)
+  }
+
+
+  action create {
+    requires: name != ""
+    ensures ok: theme != none
+  }
+
+  action extend {
+    requires: overrides != ""
+    ensures ok: theme != none
+  }
+
+  action activate {
+    ensures ok: theme != none
   }
 }

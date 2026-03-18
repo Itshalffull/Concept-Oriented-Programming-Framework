@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept ConnectorCall [C] {
 
@@ -62,5 +62,30 @@ concept ConnectorCall [C] {
         No call with this identifier exists.
       }
     }
+  }
+
+
+  always "calls have required fields": {
+    forall c in calls:
+    c.step_ref != none
+  }
+
+  never "orphaned entry in calls": {
+    exists c in calls:
+    c.step_ref = none
+  }
+
+  action invoke {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action mark_success {
+    ensures ok: call != none
+  }
+
+  action mark_failure {
+    requires: error != ""
+    ensures ok: call != none
   }
 }

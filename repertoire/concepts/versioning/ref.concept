@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Ref [R] {
 
   purpose {
@@ -72,13 +72,39 @@ concept Ref [R] {
     }
   }
 
-  invariant {
+  example "create then resolve": {
     after create(name: n, hash: h) -> ok(ref: r)
     then resolve(name: n) -> ok(hash: h)
   }
 
-  invariant {
+  example "update then resolve": {
     after update(name: n, newHash: h2, expectedOldHash: h1) -> ok()
     then resolve(name: n) -> ok(hash: h2)
+  }
+
+
+  always "refs have required fields": {
+    forall r in refs:
+    r.name != none
+  }
+
+  never "orphaned entry in refs": {
+    exists r in refs:
+    r.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action update {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action delete {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

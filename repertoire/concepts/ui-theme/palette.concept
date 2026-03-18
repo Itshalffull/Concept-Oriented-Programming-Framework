@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Palette [C] {
 
   purpose {
@@ -40,9 +40,24 @@ concept Palette [C] {
     }
   }
 
-  invariant {
+  example "generate then assignRole": {
     after generate(palette: c, name: "blue", seed: "#3b82f6")
       -> ok(palette: c, scale: _)
     then assignRole(palette: c, role: "primary") -> ok(palette: c)
+  }
+
+
+  action generate {
+    requires: name != ""
+    ensures ok: palette != none
+  }
+
+  action assignRole {
+    requires: role != ""
+    ensures ok: palette != none
+  }
+
+  action checkContrast {
+    ensures ok: foreground != none
   }
 }

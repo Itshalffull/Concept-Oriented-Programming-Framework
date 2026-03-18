@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept RuntimeProfile [R] {
 
   purpose {
@@ -51,5 +51,26 @@ concept RuntimeProfile [R] {
         Return all declared runtime profiles.
       }
     }
+  }
+
+
+  always "profiles have required fields": {
+    forall r in profiles:
+    r.name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists r in profiles:
+    r.name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: profile != none
+  }
+
+  action resolve {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

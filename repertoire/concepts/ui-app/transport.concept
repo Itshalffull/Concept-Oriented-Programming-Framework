@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Transport [P] {
 
   purpose {
@@ -70,11 +70,26 @@ concept Transport [P] {
     }
   }
 
-  invariant {
+  example "configure then fetch": {
     after configure(transport: p, kind: "rest",
       baseUrl: "https://api.example.com", auth: _, retryPolicy: _)
       -> ok(transport: p)
     then fetch(transport: p, query: "{ \"path\": \"/articles\" }")
       -> ok(transport: p, data: _)
+  }
+
+
+  action configure {
+    requires: kind != ""
+    ensures ok: transport != none
+  }
+
+  action setAuth {
+    requires: auth != ""
+    ensures ok: transport != none
+  }
+
+  action clearAuth {
+    ensures ok: transport != none
   }
 }

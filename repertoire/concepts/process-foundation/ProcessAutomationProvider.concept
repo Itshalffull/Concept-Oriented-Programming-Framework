@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ProcessAutomationProvider [PA] {
 
   purpose {
@@ -44,9 +44,25 @@ concept ProcessAutomationProvider [PA] {
     }
   }
 
-  invariant {
+  example "register then execute": {
     after register() -> ok(provider_name: "process")
     then  execute(action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001")
           -> ok(run_id: rid)
+  }
+
+
+  always "executions have required fields": {
+    forall pa in executions:
+    pa.action_payload != none
+  }
+
+  never "orphaned entry in executions": {
+    exists pa in executions:
+    pa.action_payload = none
+  }
+
+  action execute {
+    requires: action_payload != ""
+    ensures ok: action_payload != none
   }
 }

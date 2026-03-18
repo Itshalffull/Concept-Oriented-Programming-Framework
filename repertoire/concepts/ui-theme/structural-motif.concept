@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept StructuralMotif [N] {
 
   purpose {
@@ -43,5 +43,31 @@ concept StructuralMotif [N] {
       -> ok(result: String) { Motif request routed to a provider. }
       -> notfound(message: String) { No provider is available for the request. }
     }
+  }
+
+
+  always "motifs have required fields": {
+    forall n in motifs:
+    n.motif_scope != none
+  }
+
+  never "orphaned entry in motifs": {
+    exists n in motifs:
+    n.motif_scope = none
+  }
+
+  action registerProvider {
+    requires: provider != ""
+    ensures ok: provider != none
+  }
+
+  action configure {
+    requires: scope != ""
+    ensures ok: scope != none
+  }
+
+  action resolve {
+    requires: scope != ""
+    ensures ok: scope != none
   }
 }

@@ -152,6 +152,10 @@ widget display-as-picker {
   }
 
   invariant {
+    example "toggle transitions from default": { after transition(from: "default", event: "TOGGLE") -> ok then state = "open" }
+    example "toggle transitions from open": { after transition(from: "open", event: "TOGGLE") -> ok then state = "default" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Current mode must be visually distinguished from other options";
     "Modes must be grouped by Schema when multiple schemas are present";
     "Selecting a mode must trigger on_change callback with the new mode_id";

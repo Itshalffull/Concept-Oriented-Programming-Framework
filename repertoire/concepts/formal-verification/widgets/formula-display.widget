@@ -141,6 +141,10 @@ widget formula-display {
   }
 
   invariant {
+    example "copy transitions from idle": { after transition(from: "idle", event: "COPY") -> ok then state = "copied" }
+    example "timeout transitions from copied": { after transition(from: "copied", event: "TIMEOUT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Syntax highlighting must adapt to the specified formal language";
     "Copy button must show confirmation feedback for 2 seconds after copying";
     "LaTeX rendering must only activate when renderLatex prop is true";

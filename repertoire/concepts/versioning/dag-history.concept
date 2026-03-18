@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept DAGHistory [N] {
 
   purpose {
@@ -83,13 +83,37 @@ concept DAGHistory [N] {
     }
   }
 
-  invariant {
+  example "append then getNode": {
     after append(parents: "[]", contentRef: "abc123", metadata: "") -> ok(nodeId: n)
     then getNode(nodeId: n) -> ok(parents: "[]", contentRef: "abc123", metadata: "")
   }
 
-  invariant {
+  example "append then ancestors": {
     after append(parents: "[p1]", contentRef: "def456", metadata: "") -> ok(nodeId: n)
     then ancestors(nodeId: n) -> ok(nodes: path)
+  }
+
+
+  always "nodes have required fields": {
+    forall n in nodes:
+    n.contentRef != none
+  }
+
+  never "orphaned entry in nodes": {
+    exists n in nodes:
+    n.contentRef = none
+  }
+
+  action append {
+    requires: contentRef != ""
+    ensures ok: contentRef != none
+  }
+
+  action ancestors {
+    ensures ok: nodeId != none
+  }
+
+  action commonAncestor {
+    ensures ok: a != none
   }
 }

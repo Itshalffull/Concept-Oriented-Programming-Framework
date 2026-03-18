@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Conformance [C] {
 
   purpose {
@@ -99,11 +99,37 @@ concept Conformance [C] {
     }
   }
 
-  invariant {
+  example "generate then matrix": {
     after generate(concept: "password", specPath: "./specs/password.concept")
       -> ok(suite: c, testVectors: vs)
     and  verify(suite: c, language: "typescript", artifactLocation: ".clef-artifacts/ts/password")
       -> ok(passed: 12, total: 12, coveredRequirements: reqs)
     then matrix(concepts: ["password"]) -> ok(matrix: m)
+  }
+
+
+  always "suites have required fields": {
+    forall c in suites:
+    c.concept != none
+  }
+
+  never "orphaned entry in suites": {
+    exists c in suites:
+    c.concept = none
+  }
+
+  action generate {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
+
+  action verify {
+    requires: language != ""
+    ensures ok: suite != none
+  }
+
+  action registerDeviation {
+    requires: concept != ""
+    ensures ok: concept != none
   }
 }

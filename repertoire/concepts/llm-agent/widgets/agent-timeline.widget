@@ -160,6 +160,10 @@ widget agent-timeline {
   }
 
   invariant {
+    example "new_entry transitions from idle": { after transition(from: "idle", event: "NEW_ENTRY") -> ok then state = "idle" }
+    example "deselect transitions from entrySelected": { after transition(from: "entrySelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "New entries must append at the bottom with auto-scroll when enabled";
     "Delegation entries must be visually distinct from regular messages";
     "Interrupt must immediately halt and show the interrupt banner";

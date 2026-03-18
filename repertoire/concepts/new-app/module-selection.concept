@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ModuleSelection [S] {
 
   purpose {
@@ -147,9 +147,35 @@ concept ModuleSelection [S] {
     }
   }
 
-  invariant {
+  example "begin lifecycle": {
     after begin(template_name: "social", profile_name: none) -> ok(selection: s)
     and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> missing_concepts(missing: m)
     // Adding a derived concept that references a concept not in the selection always fails.
+  }
+
+
+  always "selections have required fields": {
+    forall s in selections:
+    s.template_name != none
+  }
+
+  never "orphaned entry in selections": {
+    exists s in selections:
+    s.template_name = none
+  }
+
+  action addConcept {
+    requires: module_id != ""
+    ensures ok: selection != none
+  }
+
+  action removeConcept {
+    requires: module_id != ""
+    ensures ok: selection != none
+  }
+
+  action chooseHandler {
+    requires: concept_module != ""
+    ensures ok: selection != none
   }
 }

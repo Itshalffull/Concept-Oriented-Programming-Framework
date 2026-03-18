@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Escalation [L] {
 
   purpose {
@@ -53,5 +53,31 @@ concept Escalation [L] {
         Raises the escalation to a higher level.
       }
     }
+  }
+
+
+  always "escalations have required fields": {
+    forall l in escalations:
+    l.run_ref != none
+  }
+
+  never "orphaned entry in escalations": {
+    exists l in escalations:
+    l.run_ref = none
+  }
+
+  action escalate {
+    requires: source_ref != ""
+    ensures ok: source_ref != none
+  }
+
+  action accept {
+    requires: acceptor != ""
+    ensures ok: escalation != none
+  }
+
+  action resolve {
+    requires: resolution != ""
+    ensures ok: escalation != none
   }
 }

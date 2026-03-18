@@ -68,11 +68,27 @@ concept SlotProvider [P] {
     }
   }
 
-  invariant {
+  example "initialize then define": {
     after initialize(provider: p, config: "{}")
       -> ok(provider: p, pluginRef: _)
     then define(provider: p, name: "header", host: "dialog",
                 position: "before-title", fallback: _)
       -> ok(provider: p, slot: _)
+  }
+
+
+  action initialize {
+    requires: config != ""
+    ensures ok: provider != none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: provider != none
+  }
+
+  action fill {
+    requires: slot != ""
+    ensures ok: provider != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Density [D] {
 
   purpose {
@@ -33,5 +33,21 @@ concept Density [D] {
     action listExemptions() {
       -> ok(interactors: list String) { Exempt interactor list returned. }
     }
+  }
+
+
+  action set {
+    requires: mode != ""
+    ensures ok: mode != none
+  }
+
+  action getMultiplier {
+    requires: mode != ""
+    ensures ok: mode != none
+  }
+
+  action isExempt {
+    requires: interactor != ""
+    ensures ok: interactor != none
   }
 }

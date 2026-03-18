@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept RecursiveMerge [C] {
 
   purpose {
@@ -33,7 +33,7 @@ concept RecursiveMerge [C] {
     }
   }
 
-  invariant {
+  example "execute then execute": {
     after execute(base: b, ours: b, theirs: t) -> clean(result: t)
     then execute(base: b, ours: o, theirs: b) -> clean(result: o)
   }

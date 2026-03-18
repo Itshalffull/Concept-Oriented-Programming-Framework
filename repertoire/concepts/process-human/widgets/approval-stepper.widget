@@ -179,6 +179,10 @@ widget approval-stepper {
   }
 
   invariant {
+    example "focus_step transitions from viewing": { after transition(from: "viewing", event: "FOCUS_STEP") -> ok then state = "stepFocused" }
+    example "blur transitions from stepFocused": { after transition(from: "stepFocused", event: "BLUR") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Current step must be visually distinguished from past and future steps";
     "Completed steps must show a checkmark icon and completion timestamp";
     "Parallel variant must display M-of-N quorum progress";

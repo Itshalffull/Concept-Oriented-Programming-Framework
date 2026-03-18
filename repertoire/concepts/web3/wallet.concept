@@ -1,3 +1,4 @@
+@version(2)
 concept Wallet [W] {
 
   purpose {
@@ -64,8 +65,34 @@ concept Wallet [W] {
     }
   }
 
-  invariant {
+  example "verify then verify": {
     after verify(address: addr, message: msg, signature: sig) -> ok(address: addr, recoveredAddress: addr)
     then verify(address: addr, message: msg, signature: sig) -> ok(address: addr, recoveredAddress: addr)
+  }
+
+
+  always "addresses have required fields": {
+    forall w in addresses:
+    w.labels != none
+  }
+
+  never "orphaned entry in addresses": {
+    exists w in addresses:
+    w.labels = none
+  }
+
+  action verify {
+    requires: address != ""
+    ensures ok: address != none
+  }
+
+  action verifyTypedData {
+    requires: address != ""
+    ensures ok: address != none
+  }
+
+  action getNonce {
+    requires: address != ""
+    ensures ok: address != none
   }
 }

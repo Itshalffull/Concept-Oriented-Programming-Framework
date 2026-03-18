@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ImageFilter [Z] {
 
   purpose {
@@ -29,5 +29,31 @@ concept ImageFilter [Z] {
       -> ok(result: String) { Image filter request routed to a provider. }
       -> notfound(message: String) { Provider unavailable for the preset. }
     }
+  }
+
+
+  always "presets have required fields": {
+    forall z in presets:
+    z.preset_name != none
+  }
+
+  never "orphaned entry in presets": {
+    exists z in presets:
+    z.preset_name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action apply {
+    requires: asset != ""
+    ensures ok: asset != none
+  }
+
+  action computeDuotone {
+    requires: asset != ""
+    ensures ok: asset != none
   }
 }

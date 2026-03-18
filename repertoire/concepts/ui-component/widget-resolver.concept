@@ -94,7 +94,7 @@ concept WidgetResolver [R] {
     }
   }
 
-  invariant {
+  example "resolve then explain": {
     after resolve(resolver: r,
       element: "{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }",
       context: "{ \"platform\": \"browser\", \"viewport\": \"desktop\" }")
@@ -105,11 +105,27 @@ concept WidgetResolver [R] {
       -> ok(resolver: r, explanation: _)
   }
 
-  invariant {
+  example "override then resolve": {
     after override(resolver: r, element: "{ \"kind\": \"selection-single\" }",
       widget: "custom-picker") -> ok(resolver: r)
     then resolve(resolver: r,
       element: "{ \"kind\": \"selection-single\" }", context: _)
       -> ok(resolver: r, widget: "custom-picker", score: _, reason: _, bindingMap: _)
+  }
+
+
+  action resolve {
+    requires: element != ""
+    ensures ok: resolver != none
+  }
+
+  action resolveAll {
+    requires: elements != ""
+    ensures ok: resolver != none
+  }
+
+  action override {
+    requires: element != ""
+    ensures ok: resolver != none
   }
 }

@@ -92,6 +92,10 @@ widget expression-toggle-input {
   }
 
   invariant {
+    example "toggle transitions from fixed": { after transition(from: "fixed", event: "TOGGLE") -> ok then state = "expression" }
+    example "toggle transitions from expression": { after transition(from: "expression", event: "TOGGLE") -> ok then state = "fixed" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Switching modes must preserve the current value when possible";
     "Expression autocomplete must suggest available upstream variables";
     "Live preview must update on every keystroke in expression mode";

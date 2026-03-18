@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept WebhookInbox [H] {
 
@@ -57,5 +57,30 @@ concept WebhookInbox [H] {
         Hook is not in received status.
       }
     }
+  }
+
+
+  always "hooks have required fields": {
+    forall h in hooks:
+    h.run_ref != none
+  }
+
+  never "orphaned entry in hooks": {
+    exists h in hooks:
+    h.run_ref = none
+  }
+
+  action register {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action receive {
+    requires: correlation_key != ""
+    ensures ok: correlation_key != none
+  }
+
+  action expire {
+    ensures ok: hook != none
   }
 }

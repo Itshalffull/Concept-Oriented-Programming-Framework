@@ -79,6 +79,10 @@ widget coverage-source-view {
   }
 
   invariant {
+    example "hover_line transitions from idle": { after transition(from: "idle", event: "HOVER_LINE") -> ok then state = "lineHovered" }
+    example "leave transitions from lineHovered": { after transition(from: "lineHovered", event: "LEAVE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Coverage gutter must color-code each line (green=covered, red=uncovered, yellow=partial)";
     "Hover must show which property or contract covers the hovered line";
     "Jump-to-uncovered must navigate to the next uncovered line";

@@ -118,6 +118,10 @@ widget stream-text {
   }
 
   invariant {
+    example "stream_start transitions from idle": { after transition(from: "idle", event: "STREAM_START") -> ok then state = "streaming" }
+    example "token transitions from streaming": { after transition(from: "streaming", event: "TOKEN") -> ok then state = "streaming" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Text must append without layout shift or content reflow";
     "Cursor must be visible only during active streaming";
     "Markdown must render progressively without breaking incomplete syntax";

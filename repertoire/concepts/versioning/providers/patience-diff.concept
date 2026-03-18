@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept PatienceDiff [C] {
 
   purpose {
@@ -30,7 +30,7 @@ concept PatienceDiff [C] {
     }
   }
 
-  invariant {
+  example "compute then compute": {
     after compute(contentA: a, contentB: a) -> ok(editScript: _, distance: 0)
     then compute(contentA: a, contentB: b) -> ok(editScript: es, distance: d)
   }

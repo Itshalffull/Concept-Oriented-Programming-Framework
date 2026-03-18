@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Machine [M] {
 
   purpose {
@@ -60,10 +60,25 @@ concept Machine [M] {
     }
   }
 
-  invariant {
+  example "spawn then send": {
     after spawn(machine: m, widget: "dialog", context: "{}")
       -> ok(machine: m)
     then send(machine: m, event: "{ \"type\": \"OPEN\" }")
       -> ok(machine: m, state: "open")
+  }
+
+
+  action spawn {
+    requires: widget != ""
+    ensures ok: machine != none
+  }
+
+  action send {
+    requires: event != ""
+    ensures ok: machine != none
+  }
+
+  action connect {
+    ensures ok: machine != none
   }
 }

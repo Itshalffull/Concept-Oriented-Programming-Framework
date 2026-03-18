@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept SelfUpdate [U] {
 
   purpose {
@@ -78,7 +78,7 @@ concept SelfUpdate [U] {
     }
   }
 
-  invariant {
+  example "check then apply": {
     after check(current_version: "1.0.0", platform: "darwin-arm64")
          -> available(update: u, latest_version: "1.1.0",
                       download_url: "https://dl.clef.dev/cli/1.1.0/darwin-arm64",
@@ -86,8 +86,33 @@ concept SelfUpdate [U] {
     then apply(update: u, binary_path: "/usr/local/bin/clef") -> ok(previous_path: p)
   }
 
-  invariant {
+  example "apply then rollback": {
     after apply(update: u, binary_path: b) -> ok(previous_path: p)
     then rollback(update: u) -> ok()
+  }
+
+
+  always "updates have required fields": {
+    forall u in updates:
+    u.current_version != none
+  }
+
+  never "orphaned entry in updates": {
+    exists u in updates:
+    u.current_version = none
+  }
+
+  action check {
+    requires: current_version != ""
+    ensures ok: current_version != none
+  }
+
+  action apply {
+    requires: binary_path != ""
+    ensures ok: update != none
+  }
+
+  action rollback {
+    ensures ok: update != none
   }
 }

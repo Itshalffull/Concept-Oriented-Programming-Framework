@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Slot [L] {
 
   purpose {
@@ -34,10 +34,25 @@ concept Slot [L] {
     }
   }
 
-  invariant {
+  example "define then fill": {
     after define(slot: l, name: "header", host: "dialog",
                  position: "before-title", fallback: _)
       -> ok(slot: l)
     then fill(slot: l, content: "Custom Header") -> ok(slot: l)
+  }
+
+
+  action define {
+    requires: name != ""
+    ensures ok: slot != none
+  }
+
+  action fill {
+    requires: content != ""
+    ensures ok: slot != none
+  }
+
+  action clear {
+    ensures ok: slot != none
   }
 }

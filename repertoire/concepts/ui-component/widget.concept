@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Widget [P] {
 
   purpose {
@@ -49,9 +49,23 @@ concept Widget [P] {
     }
   }
 
-  invariant {
+  example "register then get": {
     after register(widget: p, name: "dialog", ast: _,
                    category: "overlay") -> ok(widget: p)
     then get(widget: p) -> ok(widget: p, ast: _, name: "dialog")
+  }
+
+
+  action register {
+    requires: name != ""
+    ensures ok: widget != none
+  }
+
+  action get {
+    ensures ok: widget != none
+  }
+
+  action unregister {
+    ensures ok: widget != none
   }
 }

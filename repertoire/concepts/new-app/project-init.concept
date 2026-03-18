@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ProjectInit [J] {
 
   purpose {
@@ -117,11 +117,35 @@ concept ProjectInit [J] {
     }
   }
 
-  invariant {
+  example "create then writeManifest": {
     after create(project_name: "my-app", project_path: "/tmp/my-app",
                  module_list: mods, profile: prof,
                  derived_concepts: derived) -> ok(init: j)
     then writeManifest(init: j) -> ok
     // A freshly created init can always proceed to write its manifest.
+  }
+
+
+  always "inits have required fields": {
+    forall j in inits:
+    j.project_name != none
+  }
+
+  never "orphaned entry in inits": {
+    exists j in inits:
+    j.project_name = none
+  }
+
+  action create {
+    requires: project_name != ""
+    ensures ok: project_name != none
+  }
+
+  action writeManifest {
+    ensures ok: init != none
+  }
+
+  action writeInterfaceManifests {
+    ensures ok: init != none
   }
 }

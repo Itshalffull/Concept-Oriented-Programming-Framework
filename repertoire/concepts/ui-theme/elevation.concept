@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Elevation [W] {
 
   purpose {
@@ -37,7 +37,7 @@ concept Elevation [W] {
     }
   }
 
-  invariant {
+  example "define then get": {
     after define(elevation: w, level: 2,
                  shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]")
       -> ok(elevation: w)
@@ -46,5 +46,20 @@ concept Elevation [W] {
             shadow: "[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]")
     and define(elevation: w2, level: 7, shadow: "[]")
       -> invalid(message: _)
+  }
+
+
+  action define {
+    requires: shadow != ""
+    ensures ok: elevation != none
+  }
+
+  action get {
+    ensures ok: elevation != none
+  }
+
+  action generateScale {
+    requires: baseColor != ""
+    ensures ok: baseColor != none
   }
 }

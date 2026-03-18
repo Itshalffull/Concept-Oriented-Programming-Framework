@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Resolver [R] {
 
   purpose {
@@ -91,16 +91,42 @@ concept Resolver [R] {
     }
   }
 
-  invariant {
+  example "resolve then explain": {
     after resolve(constraints: cs, policy: p, locked_versions: none)
       -> ok(resolution: r)
     then explain(resolution: r, module_id: mid) -> ok(path: _)
   }
 
-  invariant {
+  example "resolve then update": {
     after resolve(constraints: cs, policy: p, locked_versions: none)
       -> ok(resolution: r)
     then update(resolution: r, targets: ts, policy: p2) -> ok(resolution: r2)
     and  explain(resolution: r2, module_id: mid) -> ok(path: _)
+  }
+
+
+  always "resolutions have required fields": {
+    forall r in resolutions:
+    r.input_constraints != none
+  }
+
+  never "orphaned entry in resolutions": {
+    exists r in resolutions:
+    r.input_constraints = none
+  }
+
+  action resolve {
+    requires: version_range != ""
+    ensures ok: version_range != none
+  }
+
+  action update {
+    requires: feature_unification != ""
+    ensures ok: resolution != none
+  }
+
+  action explain {
+    requires: module_id != ""
+    ensures ok: resolution != none
   }
 }

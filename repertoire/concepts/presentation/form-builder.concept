@@ -24,8 +24,24 @@ concept FormBuilder [F] {
     }
   }
 
-  invariant {
+  example "buildForm then buildForm": {
     after buildForm(form: f, schema: "user-profile") -> ok(definition: d)
     then buildForm(form: f, schema: "user-profile") -> ok(definition: d)
+  }
+
+
+  always "formDefinitions have required fields": {
+    forall f in formDefinitions:
+    f.schema != none
+  }
+
+  never "orphaned entry in formDefinitions": {
+    exists f in formDefinitions:
+    f.schema = none
+  }
+
+  action buildForm {
+    requires: schema != ""
+    ensures ok: form != none
   }
 }

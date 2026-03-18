@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept MobileAdapter [A] {
 
   purpose {
@@ -30,11 +30,17 @@ concept MobileAdapter [A] {
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

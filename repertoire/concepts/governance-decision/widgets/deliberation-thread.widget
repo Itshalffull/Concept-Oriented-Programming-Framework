@@ -114,6 +114,10 @@ widget deliberation-thread {
   }
 
   invariant {
+    example "reply_to transitions from viewing": { after transition(from: "viewing", event: "REPLY_TO") -> ok then state = "composing" }
+    example "send transitions from composing": { after transition(from: "composing", event: "SEND") -> ok then state = "viewing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Entries must appear in chronological order within each nesting level";
     "Reply threads must indent and cap at maxNesting depth";
     "Argument tags must be color-coded (green=for, red=against, blue=question, yellow=amendment)";

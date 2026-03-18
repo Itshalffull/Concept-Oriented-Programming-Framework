@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Notification [N] {
   purpose {
     Deliver user-facing alerts across multiple channels with subscription
@@ -81,7 +81,7 @@ concept Notification [N] {
     }
   }
 
-  invariant {
+  example "registerChannel then defineTemplate": {
     after registerChannel(name: c, config: cfg) -> ok()
     then defineTemplate(notification: n, template: t) -> ok()
     and subscribe(user: u, eventType: e, channel: c) -> ok()
@@ -89,10 +89,36 @@ concept Notification [N] {
     and  getUnread(user: u) -> ok(notifications: n)
   }
 
-  invariant {
+  example "notify then markRead": {
     after notify(notification: n, user: u, template: t, data: d) -> ok()
     then  markRead(notification: n) -> ok()
     and   getUnread(user: u) -> ok(notifications: _)
     // n is no longer present in the unread notifications
+  }
+
+
+  always "channels have required fields": {
+    forall n in channels:
+    n.templates != none
+  }
+
+  never "orphaned entry in channels": {
+    exists n in channels:
+    n.templates = none
+  }
+
+  action registerChannel {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action defineTemplate {
+    requires: template != ""
+    ensures ok: notification != none
+  }
+
+  action subscribe {
+    requires: user != ""
+    ensures ok: user != none
   }
 }

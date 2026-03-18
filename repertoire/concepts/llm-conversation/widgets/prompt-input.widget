@@ -158,6 +158,10 @@ widget prompt-input {
   }
 
   invariant {
+    example "input transitions from empty": { after transition(from: "empty", event: "INPUT") -> ok then state = "composing" }
+    example "clear transitions from composing": { after transition(from: "composing", event: "CLEAR") -> ok then state = "empty" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Textarea must auto-expand vertically up to a maximum height then scroll";
     "Enter without Shift must submit; Shift+Enter must insert a newline";
     "Submit button must be disabled when textarea is empty";

@@ -192,6 +192,10 @@ widget delegation-graph {
   }
 
   invariant {
+    example "search transitions from browsing": { after transition(from: "browsing", event: "SEARCH") -> ok then state = "searching" }
+    example "clear_search transitions from searching": { after transition(from: "searching", event: "CLEAR_SEARCH") -> ok then state = "browsing" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Voting power must reflect effective weight including transitive delegations";
     "Delegating must show a confirmation before committing";
     "Graph view must show power flow direction with edge thickness";

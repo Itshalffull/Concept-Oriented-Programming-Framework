@@ -165,6 +165,10 @@ widget timelock-countdown {
   }
 
   invariant {
+    example "tick transitions from running": { after transition(from: "running", event: "TICK") -> ok then state = "running" }
+    example "tick transitions from warning": { after transition(from: "warning", event: "TICK") -> ok then state = "warning" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Countdown must update every second during running, warning, and critical states";
     "Execute button must only be enabled after timelock expiration";
     "Visual urgency must escalate through running -> warning -> critical";

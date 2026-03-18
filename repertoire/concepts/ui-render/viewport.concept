@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Viewport [V] {
 
   purpose {
@@ -36,10 +36,24 @@ concept Viewport [V] {
     }
   }
 
-  invariant {
+  example "observe then getBreakpoint": {
     after observe(viewport: v, width: 1024, height: 768)
       -> ok(viewport: v, breakpoint: "lg", orientation: "landscape")
     then getBreakpoint(viewport: v)
       -> ok(viewport: v, breakpoint: "lg", width: 1024, height: 768)
+  }
+
+
+  action observe {
+    ensures ok: viewport != none
+  }
+
+  action setBreakpoints {
+    requires: breakpoints != ""
+    ensures ok: viewport != none
+  }
+
+  action getBreakpoint {
+    ensures ok: viewport != none
   }
 }

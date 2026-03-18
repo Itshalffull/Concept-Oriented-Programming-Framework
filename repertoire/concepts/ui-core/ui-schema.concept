@@ -91,21 +91,36 @@ concept UISchema [S, C] {
     }
   }
 
-  invariant {
+  example "inspect then getElements": {
     after inspect(schema: s, conceptSpec: "concept Test [T] { state { name: T -> String } }")
       -> ok(schema: s)
     then getElements(schema: s) -> ok(elements: _)
   }
 
-  invariant {
+  example "inspect then getEntityElement": {
     after inspect(schema: s, conceptSpec: "concept Approval [A] { state { status: A -> String } }")
       -> ok(schema: s)
     then getEntityElement(schema: s) -> ok(entityElement: _)
   }
 
-  invariant {
+  example "inspect then getElements": {
     after inspect(schema: s, conceptSpec: _) -> ok(schema: s)
     and markResolved(schema: s) -> ok(schema: s)
     then getElements(schema: s) -> resolved(message: _)
+  }
+
+
+  action inspect {
+    requires: conceptSpec != ""
+    ensures ok: schema != none
+  }
+
+  action override {
+    requires: overrides != ""
+    ensures ok: schema != none
+  }
+
+  action getSchema {
+    ensures ok: schema != none
   }
 }

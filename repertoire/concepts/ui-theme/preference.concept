@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Preference [P] {
 
   purpose {
@@ -30,5 +30,31 @@ concept Preference [P] {
     action getPriority(source: String) {
       -> ok(priority: Int) { Priority returned for the named source. }
     }
+  }
+
+
+  always "entries have required fields": {
+    forall p in entries:
+    p.entry_key != none
+  }
+
+  never "orphaned entry in entries": {
+    exists p in entries:
+    p.entry_key = none
+  }
+
+  action update {
+    requires: key != ""
+    ensures ok: key != none
+  }
+
+  action resolve {
+    requires: key != ""
+    ensures ok: key != none
+  }
+
+  action negotiate {
+    requires: snapshot != ""
+    ensures ok: snapshot != none
   }
 }

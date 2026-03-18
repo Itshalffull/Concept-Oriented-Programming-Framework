@@ -1,3 +1,4 @@
+@version(2)
 concept Content [C] {
 
   purpose {
@@ -64,8 +65,34 @@ concept Content [C] {
     }
   }
 
-  invariant {
+  example "store then resolve": {
     after store(data: d, name: "test.txt", contentType: "text/plain") -> ok(cid: c, size: s)
     then resolve(cid: c) -> ok(data: d, contentType: "text/plain", size: s)
+  }
+
+
+  always "items have required fields": {
+    forall c in items:
+    c.cid != none
+  }
+
+  never "orphaned entry in items": {
+    exists c in items:
+    c.cid = none
+  }
+
+  action store {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action pin {
+    requires: cid != ""
+    ensures ok: cid != none
+  }
+
+  action unpin {
+    requires: cid != ""
+    ensures ok: cid != none
   }
 }

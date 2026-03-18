@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept ProcessRun [R] {
 
@@ -99,10 +99,35 @@ concept ProcessRun [R] {
     }
   }
 
-  invariant {
+  example "start then get_status": {
     after start(spec_ref: "onboard", spec_version: 1, input: d) -> ok(run: r, spec_ref: "onboard")
     then get_status(run: r) -> ok(run: r, status: "running", spec_ref: "onboard")
     and  complete(run: r, output: o) -> ok(run: r)
     and  get_status(run: r) -> ok(run: r, status: "completed", spec_ref: "onboard")
+  }
+
+
+  always "runs have required fields": {
+    forall r in runs:
+    r.spec_ref != none
+  }
+
+  never "orphaned entry in runs": {
+    exists r in runs:
+    r.spec_ref = none
+  }
+
+  action start {
+    requires: spec_ref != ""
+    ensures ok: spec_ref != none
+  }
+
+  action start_child {
+    requires: spec_ref != ""
+    ensures ok: spec_ref != none
+  }
+
+  action complete {
+    ensures ok: run != none
   }
 }

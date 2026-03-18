@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept WorkItem [W] {
 
@@ -94,10 +94,35 @@ concept WorkItem [W] {
     }
   }
 
-  invariant {
+  example "create then claim": {
     after create(step_ref: "review", candidate_pool: p, form_schema: "ReviewForm", priority: 1) -> ok(item: w, step_ref: "review")
     then claim(item: w, assignee: "alice") -> ok(item: w, assignee: "alice")
     and  start(item: w) -> ok(item: w)
     and  complete(item: w, form_data: d) -> ok(item: w, step_ref: "review", form_data: d)
+  }
+
+
+  always "items have required fields": {
+    forall w in items:
+    w.step_ref != none
+  }
+
+  never "orphaned entry in items": {
+    exists w in items:
+    w.step_ref = none
+  }
+
+  action create {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action claim {
+    requires: assignee != ""
+    ensures ok: item != none
+  }
+
+  action start {
+    ensures ok: item != none
   }
 }

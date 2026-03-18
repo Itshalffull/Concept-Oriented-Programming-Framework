@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept LLMCall [M] {
 
@@ -81,9 +81,33 @@ concept LLMCall [M] {
     }
   }
 
-  invariant {
+  example "request then record_response": {
     after request(step_ref: "draft", model: "claude-sonnet-4-5-20250929", prompt: p, output_schema: "Email:v1", max_attempts: 3) -> ok(call: m, step_ref: "draft", model: "claude-sonnet-4-5-20250929")
     then record_response(call: m, raw_output: o, input_tokens: 100, output_tokens: 200) -> ok(call: m)
     and  validate(call: m) -> valid(call: m, step_ref: "draft", validated_output: o)
+  }
+
+
+  always "calls have required fields": {
+    forall m in calls:
+    m.step_ref != none
+  }
+
+  never "orphaned entry in calls": {
+    exists m in calls:
+    m.step_ref = none
+  }
+
+  action request {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action record_response {
+    ensures ok: call != none
+  }
+
+  action validate {
+    ensures ok: call != none
   }
 }

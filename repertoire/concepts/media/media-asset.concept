@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept MediaAsset [M] {
   purpose {
     Provide a source-abstracted asset facade wrapping heterogeneous file types
@@ -55,9 +55,33 @@ concept MediaAsset [M] {
     }
   }
 
-  invariant {
+  example "createMedia then extractMetadata": {
     after createMedia(asset: a, source: s, file: f) -> ok(asset: a)
     then extractMetadata(asset: a) -> ok(metadata: m)
     and getMedia(asset: a) -> ok(asset: a, metadata: m, thumbnail: _)
+  }
+
+
+  always "mediaEntities have required fields": {
+    forall m in mediaEntities:
+    m.sourcePlugin != none
+  }
+
+  never "orphaned entry in mediaEntities": {
+    exists m in mediaEntities:
+    m.sourcePlugin = none
+  }
+
+  action createMedia {
+    requires: source != ""
+    ensures ok: asset != none
+  }
+
+  action extractMetadata {
+    ensures ok: asset != none
+  }
+
+  action generateThumbnail {
+    ensures ok: asset != none
   }
 }

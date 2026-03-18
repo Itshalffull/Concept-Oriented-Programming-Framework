@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept SchemaEvolution [S] {
 
   purpose {
@@ -73,8 +73,34 @@ concept SchemaEvolution [S] {
     }
   }
 
-  invariant {
+  example "register then check": {
     after register(subject: s, schema: sc, compatibility: "full") -> ok(version: v, schemaId: sid)
     then check(oldSchema: prev, newSchema: sc, mode: "full") -> compatible()
+  }
+
+
+  always "schemas have required fields": {
+    forall s in schemas:
+    s.subject != none
+  }
+
+  never "orphaned entry in schemas": {
+    exists s in schemas:
+    s.subject = none
+  }
+
+  action register {
+    requires: subject != ""
+    ensures ok: subject != none
+  }
+
+  action check {
+    requires: mode != ""
+    ensures ok: mode != none
+  }
+
+  action upcast {
+    requires: subject != ""
+    ensures ok: subject != none
   }
 }

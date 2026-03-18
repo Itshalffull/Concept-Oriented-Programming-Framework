@@ -80,6 +80,10 @@ widget weight-breakdown {
   }
 
   invariant {
+    example "hover_segment transitions from idle": { after transition(from: "idle", event: "HOVER_SEGMENT") -> ok then state = "segmentHovered" }
+    example "leave transitions from segmentHovered": { after transition(from: "segmentHovered", event: "LEAVE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Segment sizes must be proportional to weight source values";
     "Legend must show all sources including zero-weight ones";
     "Hover tooltip must show exact value and percentage";

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept QualitySignal [Q] {
 
   purpose {
@@ -63,10 +63,36 @@ concept QualitySignal [Q] {
     }
   }
 
-  invariant {
+  example "record then latest": {
     after record(target_symbol: "clef/concept/Password", dimension: "formal", status: "pass", severity: "gate", summary: "Proved 3 properties", artifact_path: null, artifact_hash: null, run_ref: "run-1")
       -> ok(signal: q)
     then latest(target_symbol: "clef/concept/Password", dimension: "formal")
       -> ok(signal: q, status: "pass", severity: "gate", summary: "Proved 3 properties", observed_at: t)
+  }
+
+
+  always "signals have required fields": {
+    forall q in signals:
+    q.target_symbol != none
+  }
+
+  never "orphaned entry in signals": {
+    exists q in signals:
+    q.target_symbol = none
+  }
+
+  action record {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
+  }
+
+  action latest {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
+  }
+
+  action explain {
+    requires: target_symbol != ""
+    ensures ok: target_symbol != none
   }
 }

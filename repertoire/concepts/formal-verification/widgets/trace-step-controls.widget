@@ -168,6 +168,10 @@ widget trace-step-controls {
   }
 
   invariant {
+    example "play transitions from paused": { after transition(from: "paused", event: "PLAY") -> ok then state = "playing" }
+    example "pause transitions from playing": { after transition(from: "playing", event: "PAUSE") -> ok then state = "paused" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Forward/backward buttons must be disabled at trace boundaries";
     "Play must advance one step per interval based on speed setting";
     "Step counter must always reflect the current position accurately";

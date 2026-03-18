@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept Approval [A] {
 
@@ -92,8 +92,34 @@ concept Approval [A] {
     }
   }
 
-  invariant {
+  example "request then approve": {
     after request(step_ref: "mgr_approve", policy_kind: "one_of", required_count: 1, roles: r) -> ok(approval: a, step_ref: "mgr_approve")
     then approve(approval: a, actor: "boss", comment: "looks good") -> ok(approval: a, step_ref: "mgr_approve")
+  }
+
+
+  always "approvals have required fields": {
+    forall a in approvals:
+    a.step_ref != none
+  }
+
+  never "orphaned entry in approvals": {
+    exists a in approvals:
+    a.step_ref = none
+  }
+
+  action request {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action approve {
+    requires: actor != ""
+    ensures ok: approval != none
+  }
+
+  action deny {
+    requires: actor != ""
+    ensures ok: approval != none
   }
 }

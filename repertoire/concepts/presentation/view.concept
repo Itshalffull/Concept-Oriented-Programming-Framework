@@ -1,4 +1,4 @@
-@version(3)
+@version(2)
 concept View [V] {
 
   purpose {
@@ -168,13 +168,37 @@ concept View [V] {
     }
   }
 
-  invariant {
+  example "create then setFilter": {
     after create(view: v, dataSource: "tasks", layout: "table") -> ok(view: v)
     then setFilter(view: v, filter: "status=active") -> ok(view: v)
   }
 
-  invariant {
+  example "setFilter then changeLayout": {
     after setFilter(view: v, filter: "status=active") -> ok(view: v)
     then changeLayout(view: v, layout: "board") -> ok(view: v)
+  }
+
+
+  always "views have required fields": {
+    forall v in views:
+    v.dataSource != none
+  }
+
+  never "orphaned entry in views": {
+    exists v in views:
+    v.dataSource = none
+  }
+
+  action create {
+    requires: dataSource != ""
+    ensures ok: view != none
+  }
+
+  action get {
+    ensures ok: view != none
+  }
+
+  action resolve {
+    ensures ok: view != none
   }
 }

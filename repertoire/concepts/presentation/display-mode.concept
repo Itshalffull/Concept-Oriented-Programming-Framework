@@ -130,14 +130,14 @@ concept DisplayMode [D] {
     }
   }
 
-  invariant {
+  example "create then resolve": {
     after create(schema: "Article", mode_id: "full", name: "Full Page")
           -> ok(mode: m)
     then resolve(schema: "Article", mode_id: "full")
          -> ok(mode: m)
   }
 
-  invariant {
+  example "create then list_for_schema": {
     after create(schema: "Article", mode_id: "teaser", name: "Teaser Card")
           -> ok(mode: m)
     then list_for_schema(schema: "Article")
@@ -145,7 +145,7 @@ concept DisplayMode [D] {
     and  ms includes m
   }
 
-  invariant {
+  example "create then get": {
     after create(schema: "Article", mode_id: "full", name: "Full Page")
           -> ok(mode: m)
     and   set_layout(mode: m, layout: "triple-zone-default")
@@ -154,12 +154,38 @@ concept DisplayMode [D] {
                              component_mapping: null)
   }
 
-  invariant {
+  example "create then get": {
     after create(schema: "Article", mode_id: "full", name: "Full Page")
           -> ok(mode: m)
     and   set_component_mapping(mode: m, mapping: "article-hero-card")
           -> ok(mode: m)
     then  get(mode: m) -> ok(component_mapping: "article-hero-card",
                              layout: null)
+  }
+
+
+  always "modes have required fields": {
+    forall d in modes:
+    d.name != none
+  }
+
+  never "orphaned entry in modes": {
+    exists d in modes:
+    d.name = none
+  }
+
+  action create {
+    requires: schema != ""
+    ensures ok: schema != none
+  }
+
+  action resolve {
+    requires: schema != ""
+    ensures ok: schema != none
+  }
+
+  action set_layout {
+    requires: layout != ""
+    ensures ok: mode != none
   }
 }

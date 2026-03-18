@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Shell [S] {
 
   purpose {
@@ -64,10 +64,26 @@ concept Shell [S] {
     }
   }
 
-  invariant {
+  example "initialize then assignToZone": {
     after initialize(shell: s, zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }")
       -> ok(shell: s)
     then assignToZone(shell: s, zone: "primary", ref: "host-1")
       -> ok(shell: s)
+  }
+
+
+  action initialize {
+    requires: zones != ""
+    ensures ok: shell != none
+  }
+
+  action assignToZone {
+    requires: zone != ""
+    ensures ok: shell != none
+  }
+
+  action adapt {
+    requires: config != ""
+    ensures ok: shell != none
   }
 }

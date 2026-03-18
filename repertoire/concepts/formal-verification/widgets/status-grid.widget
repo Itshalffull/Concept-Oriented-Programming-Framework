@@ -146,6 +146,10 @@ widget status-grid {
   }
 
   invariant {
+    example "hover_cell transitions from idle": { after transition(from: "idle", event: "HOVER_CELL") -> ok then state = "cellHovered" }
+    example "leave_cell transitions from cellHovered": { after transition(from: "cellHovered", event: "LEAVE_CELL") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Cell colors must map to verification status (green=proved, red=refuted, etc.)";
     "Hovering a cell must highlight its entire row and column";
     "Aggregates must show pass/fail counts for each row and column";

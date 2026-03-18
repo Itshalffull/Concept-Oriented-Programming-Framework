@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Download [D] {
 
   purpose {
@@ -74,16 +74,41 @@ concept Download [D] {
     }
   }
 
-  invariant {
+  example "register then resolve": {
     after register(artifact_id: "cli", platform: "darwin-arm64", version: "1.0.0",
                    content_hash: "sha256:abc", artifact_url: "https://dl.clef.dev/cli/1.0.0/darwin-arm64",
                    size_bytes: 42000000) -> ok(download: d)
     then resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> ok(download: d)
   }
 
-  invariant {
+  example "register then yank": {
     after register(...) -> ok(download: d)
     then yank(download: d) -> ok()
     and  resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> yanked(download: d)
+  }
+
+
+  always "downloads have required fields": {
+    forall d in downloads:
+    d.artifact_id != none
+  }
+
+  never "orphaned entry in downloads": {
+    exists d in downloads:
+    d.artifact_id = none
+  }
+
+  action register {
+    requires: artifact_id != ""
+    ensures ok: artifact_id != none
+  }
+
+  action resolve {
+    requires: artifact_id != ""
+    ensures ok: artifact_id != none
+  }
+
+  action yank {
+    ensures ok: download != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept BrowserAdapter [A] {
 
   purpose {
@@ -29,11 +29,17 @@ concept BrowserAdapter [A] {
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"type\": \"navigation\", \"destination\": \"detail\", \"urlPattern\": \"/articles/:id\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

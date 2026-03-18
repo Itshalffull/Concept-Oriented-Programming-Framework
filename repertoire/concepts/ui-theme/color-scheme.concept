@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ColorScheme [S] {
 
   purpose {
@@ -35,5 +35,31 @@ concept ColorScheme [S] {
       -> ok(modes: list String) { Available modes returned for the scheme. }
       -> notfound(message: String) { Scheme was not found. }
     }
+  }
+
+
+  always "schemes have required fields": {
+    forall s in schemes:
+    s.scheme_name != none
+  }
+
+  never "orphaned entry in schemes": {
+    exists s in schemes:
+    s.scheme_name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action activate {
+    requires: themeId != ""
+    ensures ok: themeId != none
+  }
+
+  action resolve {
+    requires: role != ""
+    ensures ok: role != none
   }
 }

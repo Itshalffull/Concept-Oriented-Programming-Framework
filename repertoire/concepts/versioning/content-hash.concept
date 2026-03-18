@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ContentHash [C] {
 
   purpose {
@@ -65,18 +65,44 @@ concept ContentHash [C] {
     }
   }
 
-  invariant {
+  example "store then retrieve": {
     after store(content: c) -> ok(hash: h)
     then retrieve(hash: h) -> ok(content: c)
   }
 
-  invariant {
+  example "store then verify": {
     after store(content: c) -> ok(hash: h)
     then verify(hash: h, content: c) -> valid()
   }
 
-  invariant {
+  example "store then store": {
     after store(content: c) -> ok(hash: h)
     then store(content: c) -> alreadyExists(hash: h)
+  }
+
+
+  always "objects have required fields": {
+    forall c in objects:
+    c.digest != none
+  }
+
+  never "orphaned entry in objects": {
+    exists c in objects:
+    c.digest = none
+  }
+
+  action retrieve {
+    requires: hash != ""
+    ensures ok: hash != none
+  }
+
+  action verify {
+    requires: hash != ""
+    ensures ok: hash != none
+  }
+
+  action delete {
+    requires: hash != ""
+    ensures ok: hash != none
   }
 }

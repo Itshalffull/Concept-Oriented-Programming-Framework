@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept WatchKitAdapter [A] {
 
   purpose {
@@ -28,11 +28,17 @@ concept WatchKitAdapter [A] {
     }
   }
 
-  invariant {
+  example "normalize then normalize": {
     after normalize(adapter: a,
                     props: "{ \"onclick\": \"handler_1\", \"class\": \"btn\" }")
       -> ok(adapter: a, normalized: _)
     then normalize(adapter: a, props: "")
       -> error(message: _)
+  }
+
+
+  action normalize {
+    requires: props != ""
+    ensures ok: adapter != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Lockfile [L] {
 
   purpose {
@@ -96,16 +96,40 @@ concept Lockfile [L] {
     }
   }
 
-  invariant {
+  example "write then read": {
     after write(project_hash: "hash1", entries: es, metadata: m)
       -> ok(lockfile: lf)
     then read(lockfile: lf)
       -> ok(project_hash: "hash1", entries: es, metadata: m)
   }
 
-  invariant {
+  example "write then verify": {
     after write(project_hash: "hash1", entries: es, metadata: m)
       -> ok(lockfile: lf)
     then verify(lockfile: lf) -> ok()
+  }
+
+
+  always "lockfiles have required fields": {
+    forall l in lockfiles:
+    l.project_hash != none
+  }
+
+  never "orphaned entry in lockfiles": {
+    exists l in lockfiles:
+    l.project_hash = none
+  }
+
+  action write {
+    requires: project_hash != ""
+    ensures ok: project_hash != none
+  }
+
+  action read {
+    ensures ok: lockfile != none
+  }
+
+  action verify {
+    ensures ok: lockfile != none
   }
 }

@@ -81,6 +81,10 @@ widget execution-metrics-panel {
   }
 
   invariant {
+    example "update transitions from idle": { after transition(from: "idle", event: "UPDATE") -> ok then state = "updating" }
+    example "update_complete transitions from updating": { after transition(from: "updating", event: "UPDATE_COMPLETE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Counters must animate smoothly when values update";
     "Token gauge must show warning color when approaching limit";
     "Cost must format to 2 decimal places in USD";

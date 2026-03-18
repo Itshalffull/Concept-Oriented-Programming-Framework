@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept TestSelection [M] {
 
   purpose {
@@ -92,10 +92,31 @@ concept TestSelection [M] {
     }
   }
 
-  invariant {
+  example "record then analyze": {
     after record(testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true)
       -> ok(mapping: m)
     then analyze(changedSources: ["./specs/password.concept"])
       -> ok(affectedTests: ts)
+  }
+
+
+  always "mappings have required fields": {
+    forall m in mappings:
+    m.testId != none
+  }
+
+  never "orphaned entry in mappings": {
+    exists m in mappings:
+    m.testId = none
+  }
+
+  action select {
+    requires: language != ""
+    ensures ok: language != none
+  }
+
+  action record {
+    requires: testId != ""
+    ensures ok: testId != none
   }
 }

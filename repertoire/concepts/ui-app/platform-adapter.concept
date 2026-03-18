@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept PlatformAdapter [D] {
 
   purpose {
@@ -52,10 +52,26 @@ concept PlatformAdapter [D] {
     }
   }
 
-  invariant {
+  example "register then mapNavigation": {
     after register(adapter: d, platform: "browser", config: "{}")
       -> ok(adapter: d)
     then mapNavigation(adapter: d,
       transition: "{ \"type\": \"push\" }") -> ok(adapter: d, platformAction: _)
+  }
+
+
+  action register {
+    requires: platform != ""
+    ensures ok: adapter != none
+  }
+
+  action mapNavigation {
+    requires: transition != ""
+    ensures ok: adapter != none
+  }
+
+  action mapZone {
+    requires: role != ""
+    ensures ok: adapter != none
   }
 }

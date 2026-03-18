@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FlowToken [K] {
 
   purpose {
@@ -61,9 +61,33 @@ concept FlowToken [K] {
     }
   }
 
-  invariant {
+  example "emit then consume": {
     after emit(run_ref: "r1", position: "step_a", branch_id: "b1") -> ok(token: t1, run_ref: "r1", position: "step_a")
     then consume(token: t1) -> ok(token: t1, run_ref: "r1", position: "step_a")
     and  count_active(run_ref: "r1", position: "step_a") -> ok(count: 0)
+  }
+
+
+  always "tokens have required fields": {
+    forall k in tokens:
+    k.run_ref != none
+  }
+
+  never "orphaned entry in tokens": {
+    exists k in tokens:
+    k.run_ref = none
+  }
+
+  action emit {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action consume {
+    ensures ok: token != none
+  }
+
+  action kill {
+    ensures ok: token != none
   }
 }

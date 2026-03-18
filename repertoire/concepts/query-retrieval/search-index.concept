@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept SearchIndex [I] {
 
   purpose {
@@ -75,9 +75,35 @@ concept SearchIndex [I] {
     }
   }
 
-  invariant {
+  example "createIndex then indexItem": {
     after createIndex(index: i, config: "{}") -> ok(index: i)
     then indexItem(index: i, item: "doc-1", data: "hello world") -> ok(index: i)
     and search(index: i, query: "hello") -> ok(results: r)
+  }
+
+
+  always "indexes have required fields": {
+    forall i in indexes:
+    i.processors != none
+  }
+
+  never "orphaned entry in indexes": {
+    exists i in indexes:
+    i.processors = none
+  }
+
+  action createIndex {
+    requires: config != ""
+    ensures ok: index != none
+  }
+
+  action indexItem {
+    requires: item != ""
+    ensures ok: index != none
+  }
+
+  action removeItem {
+    requires: item != ""
+    ensures ok: index != none
   }
 }

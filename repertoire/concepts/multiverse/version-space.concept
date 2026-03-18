@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept VersionSpace [V] {
 
   purpose {
@@ -227,7 +227,7 @@ concept VersionSpace [V] {
     }
   }
 
-  invariant {
+  example "fork then resolve": {
     after fork(name: "redesign", parent: null, scope: null,
                visibility: "shared") -> ok(space: s)
     and   write(space: s, entity_id: "a1",
@@ -235,17 +235,43 @@ concept VersionSpace [V] {
     then  resolve(space: s, entity_id: "a1") -> ok(fields: f, source: _)
   }
 
-  invariant {
+  example "fork then resolve": {
     after fork(name: "experiment", parent: null, scope: null,
                visibility: "private") -> ok(space: s)
     and   create_in_space(space: s, fields: "{title: \"Space-Only\"}") -> ok(override: _, entity_id: e)
     then  resolve(space: s, entity_id: e) -> ok(fields: _, source: _)
   }
 
-  invariant {
+  example "fork then enter": {
     after fork(name: "to-archive", parent: null, scope: null,
                visibility: "private") -> ok(space: s)
     and   archive(space: s) -> ok()
     then  enter(space: s, user: "u1") -> archived(space: s)
+  }
+
+
+  always "spaces have required fields": {
+    forall v in spaces:
+    v.name != none
+  }
+
+  never "orphaned entry in spaces": {
+    exists v in spaces:
+    v.name = none
+  }
+
+  action fork {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action enter {
+    requires: user != ""
+    ensures ok: space != none
+  }
+
+  action leave {
+    requires: user != ""
+    ensures ok: space != none
   }
 }

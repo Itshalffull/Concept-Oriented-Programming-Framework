@@ -87,7 +87,7 @@ concept Affordance [F] {
     }
   }
 
-  invariant {
+  example "declare then match": {
     after declare(affordance: f1, widget: "radio-group",
       interactor: "single-choice", specificity: 10,
       conditions: "{ \"maxOptions\": 8 }",
@@ -101,7 +101,7 @@ concept Affordance [F] {
       context: "{ \"optionCount\": 4 }") -> ok(matches: _)
   }
 
-  invariant {
+  example "declare then match": {
     after declare(affordance: f1, widget: "approval-detail",
       interactor: "entity-detail", specificity: 20,
       conditions: "{ \"concept\": \"Approval\" }",
@@ -110,5 +110,30 @@ concept Affordance [F] {
       -> ok(affordance: f1)
     then match(affordance: _, interactor: "entity-detail",
       context: "{ \"concept\": \"Approval\" }") -> ok(matches: _)
+  }
+
+
+  always "affordances have required fields": {
+    forall f in affordances:
+    f.widget != none
+  }
+
+  never "orphaned entry in affordances": {
+    exists f in affordances:
+    f.widget = none
+  }
+
+  action declare {
+    requires: widget != ""
+    ensures ok: affordance != none
+  }
+
+  action match {
+    requires: interactor != ""
+    ensures ok: affordance != none
+  }
+
+  action explain {
+    ensures ok: affordance != none
   }
 }

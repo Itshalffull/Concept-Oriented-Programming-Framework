@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 @gate
 concept Timer [T] {
 
@@ -58,5 +58,29 @@ concept Timer [T] {
         Resets a fired or active timer with a new specification.
       }
     }
+  }
+
+
+  always "timers have required fields": {
+    forall t in timers:
+    t.run_ref != none
+  }
+
+  never "orphaned entry in timers": {
+    exists t in timers:
+    t.run_ref = none
+  }
+
+  action set_timer {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action fire {
+    ensures ok: timer != none
+  }
+
+  action cancel {
+    ensures ok: timer != none
   }
 }

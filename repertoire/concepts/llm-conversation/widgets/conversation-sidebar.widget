@@ -162,6 +162,10 @@ widget conversation-sidebar {
   }
 
   invariant {
+    example "search transitions from idle": { after transition(from: "idle", event: "SEARCH") -> ok then state = "searching" }
+    example "clear_search transitions from searching": { after transition(from: "searching", event: "CLEAR_SEARCH") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Selected conversation must be visually highlighted";
     "Search must filter by title and message content in real-time";
     "Context menu must support rename, delete, archive, and share";

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Merge [C] {
 
   purpose {
@@ -76,8 +76,28 @@ concept Merge [C] {
     }
   }
 
-  invariant {
+  example "merge then finalize": {
     after merge(base: b, ours: o, theirs: t, strategy: _) -> clean(result: r)
     then finalize(mergeId: _) -> ok(result: r)
+  }
+
+
+  always "strategies have required fields": {
+    forall c in strategies:
+    c.strategy_name != none
+  }
+
+  never "orphaned entry in strategies": {
+    exists c in strategies:
+    c.strategy_name = none
+  }
+
+  action registerStrategy {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action merge {
+    ensures ok: base != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Checkpoint [Z] {
 
   purpose {
@@ -51,5 +51,30 @@ concept Checkpoint [Z] {
         Removes old checkpoints, keeping only the most recent keep_count.
       }
     }
+  }
+
+
+  always "checkpoints have required fields": {
+    forall z in checkpoints:
+    z.run_ref != none
+  }
+
+  never "orphaned entry in checkpoints": {
+    exists z in checkpoints:
+    z.run_ref = none
+  }
+
+  action capture {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action restore {
+    ensures ok: checkpoint != none
+  }
+
+  action find_latest {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
   }
 }

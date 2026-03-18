@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Snapshot [S] {
 
   purpose {
@@ -106,11 +106,37 @@ concept Snapshot [S] {
     }
   }
 
-  invariant {
+  example "compare then compare": {
     after compare(outputPath: "generated/ts/password.ts", currentContent: "...")
       -> changed(snapshot: s, diff: "...", linesAdded: 5, linesRemoved: 3)
     and  approve(path: "generated/ts/password.ts") -> ok(snapshot: s2)
     then compare(outputPath: "generated/ts/password.ts", currentContent: "...")
       -> unchanged(snapshot: s2)
+  }
+
+
+  always "snapshots have required fields": {
+    forall s in snapshots:
+    s.path != none
+  }
+
+  never "orphaned entry in snapshots": {
+    exists s in snapshots:
+    s.path = none
+  }
+
+  action compare {
+    requires: outputPath != ""
+    ensures ok: outputPath != none
+  }
+
+  action approve {
+    requires: path != ""
+    ensures ok: path != none
+  }
+
+  action reject {
+    requires: path != ""
+    ensures ok: path != none
   }
 }

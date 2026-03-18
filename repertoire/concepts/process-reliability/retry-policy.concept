@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept RetryPolicy [Y] {
 
   purpose {
@@ -53,5 +53,31 @@ concept RetryPolicy [Y] {
         Step eventually succeeded. Transitions to succeeded.
       }
     }
+  }
+
+
+  always "policies have required fields": {
+    forall y in policies:
+    y.step_ref != none
+  }
+
+  never "orphaned entry in policies": {
+    exists y in policies:
+    y.step_ref = none
+  }
+
+  action create {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action should_retry {
+    requires: error != ""
+    ensures ok: policy != none
+  }
+
+  action record_attempt {
+    requires: error != ""
+    ensures ok: policy != none
   }
 }

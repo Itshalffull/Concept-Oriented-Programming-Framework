@@ -175,6 +175,10 @@ widget proof-session-tree {
   }
 
   invariant {
+    example "select transitions from idle": { after transition(from: "idle", event: "SELECT") -> ok then state = "selected" }
+    example "deselect transitions from selected": { after transition(from: "selected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Tree must support arbitrary nesting depth for proof obligation hierarchies";
     "Arrow key navigation must follow WAI-ARIA TreeView pattern";
     "Expanding a node with unloaded children must trigger a fetch";

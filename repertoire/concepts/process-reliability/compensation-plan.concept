@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept CompensationPlan [X] {
 
   purpose {
@@ -58,5 +58,30 @@ concept CompensationPlan [X] {
         Human intervention likely required.
       }
     }
+  }
+
+
+  always "plans have required fields": {
+    forall x in plans:
+    x.run_ref != none
+  }
+
+  never "orphaned entry in plans": {
+    exists x in plans:
+    x.run_ref = none
+  }
+
+  action register {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action trigger {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action execute_next {
+    ensures ok: plan != none
   }
 }

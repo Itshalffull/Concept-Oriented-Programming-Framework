@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept VersionContext [C] {
 
   purpose {
@@ -56,14 +56,40 @@ concept VersionContext [C] {
     }
   }
 
-  invariant {
+  example "push then get": {
     after push(user: "alice", space_id: "space-1") -> ok(context: c)
     then  get(user: "alice") -> ok(stack: s)
   }
 
-  invariant {
+  example "push then get": {
     after push(user: "bob", space_id: "space-1") -> ok(context: _)
     and   pop(user: "bob", space_id: "space-1") -> ok(context: _)
     then  get(user: "bob") -> no_context(user: "bob")
+  }
+
+
+  always "contexts have required fields": {
+    forall c in contexts:
+    c.context_user != none
+  }
+
+  never "orphaned entry in contexts": {
+    exists c in contexts:
+    c.context_user = none
+  }
+
+  action push {
+    requires: user != ""
+    ensures ok: user != none
+  }
+
+  action pop {
+    requires: user != ""
+    ensures ok: user != none
+  }
+
+  action get {
+    requires: user != ""
+    ensures ok: user != none
   }
 }

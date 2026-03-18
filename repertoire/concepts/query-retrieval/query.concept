@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Query [Q] {
 
   purpose {
@@ -75,8 +75,32 @@ concept Query [Q] {
     }
   }
 
-  invariant {
+  example "parse then execute": {
     after parse(query: q, expression: "status = 'active'") -> ok(query: q)
     then execute(query: q) -> ok(results: r)
+  }
+
+
+  always "queries have required fields": {
+    forall q in queries:
+    q.expression != none
+  }
+
+  never "orphaned entry in queries": {
+    exists q in queries:
+    q.expression = none
+  }
+
+  action parse {
+    requires: expression != ""
+    ensures ok: query != none
+  }
+
+  action execute {
+    ensures ok: query != none
+  }
+
+  action subscribe {
+    ensures ok: query != none
   }
 }

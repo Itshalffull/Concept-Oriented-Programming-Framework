@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Element [E] {
 
   purpose {
@@ -76,10 +76,25 @@ concept Element [E] {
     }
   }
 
-  invariant {
+  example "create then enrich": {
     after create(element: e, kind: "input-text", label: "Title",
                  dataType: "String") -> ok(element: e)
     then enrich(element: e, interactorType: "text-short",
                 interactorProps: "{}") -> ok(element: e)
+  }
+
+
+  action create {
+    requires: kind != ""
+    ensures ok: element != none
+  }
+
+  action nest {
+    ensures ok: parent != none
+  }
+
+  action setConstraints {
+    requires: constraints != ""
+    ensures ok: element != none
   }
 }

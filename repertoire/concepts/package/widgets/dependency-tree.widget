@@ -118,6 +118,10 @@ widget dependency-tree {
   }
 
   invariant {
+    example "select transitions from idle": { after transition(from: "idle", event: "SELECT") -> ok then state = "nodeSelected" }
+    example "deselect transitions from nodeSelected": { after transition(from: "nodeSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Tree must reflect the actual resolved dependency graph";
     "Conflicting versions must show warning indicators on both nodes";
     "Vulnerability markers must link to the audit report";

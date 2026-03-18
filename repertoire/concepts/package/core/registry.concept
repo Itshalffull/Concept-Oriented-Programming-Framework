@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Registry [M] {
 
   purpose {
@@ -122,7 +122,7 @@ concept Registry [M] {
     }
   }
 
-  invariant {
+  example "publish then lookup": {
     after publish(name: "auth", namespace: "clef", version: "1.0.0",
                   kind: concept, artifact_hash: "sha256:abc",
                   dependencies: [], metadata: m)
@@ -131,7 +131,7 @@ concept Registry [M] {
       -> ok(modules: ms)
   }
 
-  invariant {
+  example "publish then yank": {
     after publish(name: "auth", namespace: "clef", version: "1.0.0",
                   kind: concept, artifact_hash: "sha256:abc",
                   dependencies: [], metadata: m)
@@ -139,5 +139,30 @@ concept Registry [M] {
     then yank(module: mod) -> ok()
     and  lookup(name: "auth", namespace: "clef", version_range: "^1.0.0")
       -> notfound()
+  }
+
+
+  always "modules have required fields": {
+    forall m in modules:
+    m.name != none
+  }
+
+  never "orphaned entry in modules": {
+    exists m in modules:
+    m.name = none
+  }
+
+  action publish {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action yank {
+    ensures ok: module != none
+  }
+
+  action lookup {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

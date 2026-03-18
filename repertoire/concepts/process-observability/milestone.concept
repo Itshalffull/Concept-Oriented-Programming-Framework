@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Milestone [I] {
 
   purpose {
@@ -44,5 +44,29 @@ concept Milestone [I] {
         can become untrue (e.g., inventory drops below threshold).
       }
     }
+  }
+
+
+  always "milestones have required fields": {
+    forall i in milestones:
+    i.run_ref != none
+  }
+
+  never "orphaned entry in milestones": {
+    exists i in milestones:
+    i.run_ref = none
+  }
+
+  action define {
+    requires: run_ref != ""
+    ensures ok: run_ref != none
+  }
+
+  action evaluate {
+    ensures ok: milestone != none
+  }
+
+  action revoke {
+    ensures ok: milestone != none
   }
 }

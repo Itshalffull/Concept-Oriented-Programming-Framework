@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ComponentManifest [C] {
 
   purpose {
@@ -79,7 +79,7 @@ concept ComponentManifest [C] {
     }
   }
 
-  invariant {
+  example "register then lookup": {
     after register(module_id: "auth-suite", version: "1.0.0",
                    concepts: [{ name: "Authentication", spec_path: "specs/auth.concept", type_params: ["U"] }],
                    syncs: [{ name: "auth-session", path: "syncs/auth-session.sync", annotation: "eager" }],
@@ -87,8 +87,34 @@ concept ComponentManifest [C] {
     then lookup(module_id: "auth-suite", version: "1.0.0") -> ok(component: c)
   }
 
-  invariant {
+  example "register then search": {
     after register(module_id: "auth-suite", version: "1.0.0", ...) -> ok(component: c)
     then search(capability: "Authentication") -> ok(results: rs)
+  }
+
+
+  always "components have required fields": {
+    forall c in components:
+    c.module_id != none
+  }
+
+  never "orphaned entry in components": {
+    exists c in components:
+    c.module_id = none
+  }
+
+  action register {
+    requires: module_id != ""
+    ensures ok: module_id != none
+  }
+
+  action lookup {
+    requires: module_id != ""
+    ensures ok: module_id != none
+  }
+
+  action search {
+    requires: capability != ""
+    ensures ok: capability != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept DestinationCatalog [D] {
 
   purpose {
@@ -54,12 +54,38 @@ concept DestinationCatalog [D] {
     }
   }
 
-  invariant {
+  example "register then resolveByName": {
     after register(destination: d, name: "dashboard", targetConcept: "AppShell",
                    targetView: "dashboard", href: "/admin", icon: "home", group: "Content")
       -> ok(destination: d)
     then resolveByName(name: "dashboard")
       -> ok(destination: d, targetConcept: "AppShell", targetView: "dashboard",
             href: "/admin", icon: "home", group: "Content")
+  }
+
+
+  always "destinations have required fields": {
+    forall d in destinations:
+    d.name != none
+  }
+
+  never "orphaned entry in destinations": {
+    exists d in destinations:
+    d.name = none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: destination != none
+  }
+
+  action resolveByName {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolveByHref {
+    requires: href != ""
+    ensures ok: href != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Motion [O] {
 
   purpose {
@@ -37,12 +37,28 @@ concept Motion [O] {
     }
   }
 
-  invariant {
+  example "defineDuration then defineTransition": {
     after defineDuration(motion: o, name: "normal", ms: 200) -> ok(motion: o)
     then defineTransition(motion: o2, name: "fade",
            config: "{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }")
       -> ok(motion: o2)
     and defineDuration(motion: o3, name: "bad", ms: -1)
       -> invalid(message: _)
+  }
+
+
+  action defineDuration {
+    requires: name != ""
+    ensures ok: motion != none
+  }
+
+  action defineEasing {
+    requires: name != ""
+    ensures ok: motion != none
+  }
+
+  action defineTransition {
+    requires: name != ""
+    ensures ok: motion != none
   }
 }

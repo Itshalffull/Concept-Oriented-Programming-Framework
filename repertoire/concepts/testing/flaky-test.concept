@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FlakyTest [F] {
 
   purpose {
@@ -115,10 +115,36 @@ concept FlakyTest [F] {
     }
   }
 
-  invariant {
+  example "record then isQuarantined": {
     after record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 50) -> ok(test: f)
     and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: false, duration: 5001) -> ok(test: f)
     and  record(testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 48) -> ok(test: f)
     then isQuarantined(testId: "test_timing") -> yes(test: f, reason: r, owner: o, quarantinedAt: t)
+  }
+
+
+  always "tests have required fields": {
+    forall f in tests:
+    f.testId != none
+  }
+
+  never "orphaned entry in tests": {
+    exists f in tests:
+    f.testId = none
+  }
+
+  action record {
+    requires: testId != ""
+    ensures ok: testId != none
+  }
+
+  action quarantine {
+    requires: testId != ""
+    ensures ok: testId != none
+  }
+
+  action release {
+    requires: testId != ""
+    ensures ok: testId != none
   }
 }

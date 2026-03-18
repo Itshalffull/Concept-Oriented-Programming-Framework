@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept TargetProfile [P] {
 
   purpose {
@@ -116,9 +116,33 @@ concept TargetProfile [P] {
     }
   }
 
-  invariant {
+  example "create then validate": {
     after create(name: "myProfile") -> ok(profile: p)
     then validate(profile: p) -> incomplete(missing: m)
     // A freshly created profile is always incomplete until dimensions are set.
+  }
+
+
+  always "profiles have required fields": {
+    forall p in profiles:
+    p.name != none
+  }
+
+  never "orphaned entry in profiles": {
+    exists p in profiles:
+    p.name = none
+  }
+
+  action create {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action setBackendLanguages {
+    ensures ok: profile != none
+  }
+
+  action setFrontendFrameworks {
+    ensures ok: profile != none
   }
 }

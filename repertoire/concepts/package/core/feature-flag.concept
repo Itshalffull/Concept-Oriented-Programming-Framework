@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FeatureFlag [F] {
 
   purpose {
@@ -63,15 +63,34 @@ concept FeatureFlag [F] {
     }
   }
 
-  invariant {
+  example "enable then disable": {
     after enable(flag: f) -> ok()
     then disable(flag: f) -> ok()
   }
 
-  invariant {
+  example "enable then enable": {
     after enable(flag: f1) -> ok()
     then enable(flag: f2) -> conflict(conflicting_flag: _)
     when f1.module_id = f2.module_id
     and  f1.name in f2.mutually_exclusive_with
+  }
+
+
+  always "flags have required fields": {
+    forall f in flags:
+    f.module_id != none
+  }
+
+  never "orphaned entry in flags": {
+    exists f in flags:
+    f.module_id = none
+  }
+
+  action enable {
+    ensures ok: flag != none
+  }
+
+  action disable {
+    ensures ok: flag != none
   }
 }

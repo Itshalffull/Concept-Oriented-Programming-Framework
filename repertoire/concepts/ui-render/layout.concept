@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Layout [Y] {
 
   purpose {
@@ -59,12 +59,27 @@ concept Layout [Y] {
     }
   }
 
-  invariant {
+  example "create then configure": {
     after create(layout: y, name: "main", kind: "sidebar")
       -> ok(layout: y)
     then configure(layout: y, config: "{ \"direction\": \"row\", \"gap\": \"space-4\" }")
       -> ok(layout: y)
     and create(layout: y2, name: "bad", kind: "nonexistent")
       -> invalid(message: _)
+  }
+
+
+  action create {
+    requires: name != ""
+    ensures ok: layout != none
+  }
+
+  action configure {
+    requires: config != ""
+    ensures ok: layout != none
+  }
+
+  action nest {
+    ensures ok: parent != none
   }
 }

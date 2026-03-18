@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Signal [G] {
 
   purpose {
@@ -58,9 +58,24 @@ concept Signal [G] {
     }
   }
 
-  invariant {
+  example "create then read": {
     after create(signal: g, kind: "state", initialValue: "hello")
       -> ok(signal: g)
     then read(signal: g) -> ok(signal: g, value: "hello", version: _)
+  }
+
+
+  action create {
+    requires: kind != ""
+    ensures ok: signal != none
+  }
+
+  action read {
+    ensures ok: signal != none
+  }
+
+  action write {
+    requires: value != ""
+    ensures ok: signal != none
   }
 }

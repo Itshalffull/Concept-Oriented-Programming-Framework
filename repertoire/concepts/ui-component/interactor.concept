@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Interactor [I] {
 
   purpose {
@@ -83,7 +83,7 @@ concept Interactor [I] {
     }
   }
 
-  invariant {
+  example "define then classify": {
     after define(interactor: i, name: "single-choice",
       category: "selection",
       properties: "{ \"cardinality\": \"one\", \"comparison\": true }")
@@ -94,7 +94,7 @@ concept Interactor [I] {
       -> ok(interactor: _, confidence: _)
   }
 
-  invariant {
+  example "define then classify": {
     after define(interactor: i, name: "entity-detail",
       category: "entity",
       properties: "{ \"dataType\": \"entity\" }")
@@ -103,5 +103,30 @@ concept Interactor [I] {
       constraints: "{ \"concept\": \"Approval\", \"view\": \"detail\" }",
       intent: _)
       -> ok(interactor: _, confidence: _)
+  }
+
+
+  always "types have required fields": {
+    forall i in types:
+    i.name != none
+  }
+
+  never "orphaned entry in types": {
+    exists i in types:
+    i.name = none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: interactor != none
+  }
+
+  action classify {
+    requires: fieldType != ""
+    ensures ok: interactor != none
+  }
+
+  action get {
+    ensures ok: interactor != none
   }
 }

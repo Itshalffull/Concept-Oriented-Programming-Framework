@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Auditor [A] {
 
   purpose {
@@ -65,18 +65,33 @@ concept Auditor [A] {
     }
   }
 
-  invariant {
+  example "audit then diff": {
     after audit(lockfile_entries: entries) -> ok(audit: a)
     then diff(old_audit: a, new_audit: a)
       -> ok(new_advisories: [], resolved_advisories: [])
   }
 
-  invariant {
+  example "checkPolicy lifecycle": {
     after checkPolicy(lockfile_entries: entries,
                       policy: {allowed_licenses: ["MIT", "Apache-2.0"],
                                denied_namespaces: [],
                                max_severity: "critical"})
       -> ok(audit: a)
     then a.policy_violations = []
+  }
+
+
+  always "audits have required fields": {
+    forall a in audits:
+    a.lockfile_hash != none
+  }
+
+  never "orphaned entry in audits": {
+    exists a in audits:
+    a.lockfile_hash = none
+  }
+
+  action diff {
+    ensures ok: old_audit != none
   }
 }

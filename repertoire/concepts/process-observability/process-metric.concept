@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept ProcessMetric [Q] {
 
   purpose {
@@ -41,5 +41,31 @@ concept ProcessMetric [Q] {
         Computes aggregate (avg, sum, min, max, p50, p95, p99) over time range.
       }
     }
+  }
+
+
+  always "metrics have required fields": {
+    forall q in metrics:
+    q.spec_ref != none
+  }
+
+  never "orphaned entry in metrics": {
+    exists q in metrics:
+    q.spec_ref = none
+  }
+
+  action record {
+    requires: metric_name != ""
+    ensures ok: metric_name != none
+  }
+
+  action query {
+    requires: metric_name != ""
+    ensures ok: metric_name != none
+  }
+
+  action aggregate {
+    requires: metric_name != ""
+    ensures ok: metric_name != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Binding [B, C] {
 
   purpose {
@@ -53,11 +53,26 @@ concept Binding [B, C] {
     }
   }
 
-  invariant {
+  example "bind then sync": {
     after bind(binding: b, concept: c, mode: "static")
       -> ok(binding: b)
     then sync(binding: b) -> ok(binding: b)
     and bind(binding: b2, concept: c2, mode: "invalid-mode")
       -> invalid(message: _)
+  }
+
+
+  action bind {
+    requires: mode != ""
+    ensures ok: binding != none
+  }
+
+  action sync {
+    ensures ok: binding != none
+  }
+
+  action invoke {
+    requires: action != ""
+    ensures ok: binding != none
   }
 }

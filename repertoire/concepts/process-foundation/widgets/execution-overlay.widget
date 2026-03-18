@@ -174,6 +174,10 @@ widget execution-overlay {
   }
 
   invariant {
+    example "start transitions from idle": { after transition(from: "idle", event: "START") -> ok then state = "live" }
+    example "step_advance transitions from live": { after transition(from: "live", event: "STEP_ADVANCE") -> ok then state = "live" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Node overlays must reflect the actual execution status of each process step";
     "Active marker must pulse on the currently executing step";
     "Flow animation must only run during live or replay states";

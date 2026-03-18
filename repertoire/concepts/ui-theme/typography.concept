@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Typography [X] {
 
   purpose {
@@ -37,11 +37,26 @@ concept Typography [X] {
     }
   }
 
-  invariant {
+  example "defineScale then defineStyle": {
     after defineScale(typography: x, baseSize: 16, ratio: 1.25, steps: 6)
       -> ok(typography: x, scale: _)
     then defineStyle(typography: x, name: "heading-1",
                      config: "{ \"scale\": \"3xl\", \"weight\": 700 }")
       -> ok(typography: x)
+  }
+
+
+  action defineScale {
+    ensures ok: typography != none
+  }
+
+  action defineFontStack {
+    requires: name != ""
+    ensures ok: typography != none
+  }
+
+  action defineStyle {
+    requires: name != ""
+    ensures ok: typography != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Surface [F] {
 
   purpose {
@@ -64,9 +64,24 @@ concept Surface [F] {
     }
   }
 
-  invariant {
+  example "create then destroy": {
     after create(surface: f, kind: "browser-dom", mountPoint: "#app")
       -> ok(surface: f)
     then destroy(surface: f) -> ok(surface: f)
+  }
+
+
+  action create {
+    requires: kind != ""
+    ensures ok: surface != none
+  }
+
+  action attach {
+    requires: renderer != ""
+    ensures ok: surface != none
+  }
+
+  action resize {
+    ensures ok: surface != none
   }
 }

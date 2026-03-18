@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Patch [P] {
 
   purpose {
@@ -80,14 +80,38 @@ concept Patch [P] {
     }
   }
 
-  invariant {
+  example "create then apply": {
     after create(base: b, target: t, effect: e) -> ok(patchId: p)
     then apply(patchId: p, content: b) -> ok(result: t)
   }
 
-  invariant {
+  example "invert then apply": {
     after invert(patchId: p) -> ok(inversePatchId: inv)
     then apply(patchId: p, content: b) -> ok(result: t)
     and  apply(patchId: inv, content: t) -> ok(result: b)
+  }
+
+
+  always "patches have required fields": {
+    forall p in patches:
+    p.base != none
+  }
+
+  never "orphaned entry in patches": {
+    exists p in patches:
+    p.base = none
+  }
+
+  action create {
+    requires: base != ""
+    ensures ok: base != none
+  }
+
+  action apply {
+    ensures ok: patchId != none
+  }
+
+  action invert {
+    ensures ok: patchId != none
   }
 }

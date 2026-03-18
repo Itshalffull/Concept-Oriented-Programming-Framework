@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Manifest [P] {
 
   purpose {
@@ -131,18 +131,44 @@ concept Manifest [P] {
     }
   }
 
-  invariant {
+  example "add then validate": {
     after add(project: p, module_id: "auth", version_range: "^1.0.0",
               edge_type: "normal", environment: "all",
               features: [], optional: false) -> ok()
     then validate(project: p) -> ok()
   }
 
-  invariant {
+  example "add then remove": {
     after add(project: p, module_id: "auth", version_range: "^1.0.0",
               edge_type: "normal", environment: "all",
               features: [], optional: false) -> ok()
     then remove(project: p, module_id: "auth") -> ok()
     and  validate(project: p) -> ok()
+  }
+
+
+  always "projects have required fields": {
+    forall p in projects:
+    p.name != none
+  }
+
+  never "orphaned entry in projects": {
+    exists p in projects:
+    p.name = none
+  }
+
+  action add {
+    requires: module_id != ""
+    ensures ok: project != none
+  }
+
+  action remove {
+    requires: module_id != ""
+    ensures ok: project != none
+  }
+
+  action override {
+    requires: module_id != ""
+    ensures ok: project != none
   }
 }

@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept AppTemplate [T] {
 
   purpose {
@@ -75,9 +75,34 @@ concept AppTemplate [T] {
     }
   }
 
-  invariant {
+  example "customize lifecycle": {
     after customize(template: t, add: [], remove: ["required-module"],
                     features: []) -> invalid(errors: e)
     // Removing a required module from a template always yields invalid.
+  }
+
+
+  always "templates have required fields": {
+    forall t in templates:
+    t.name != none
+  }
+
+  never "orphaned entry in templates": {
+    exists t in templates:
+    t.name = none
+  }
+
+  action detail {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action customize {
+    ensures ok: template != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
   }
 }

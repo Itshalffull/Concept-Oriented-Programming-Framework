@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Publisher [U] {
 
   purpose {
@@ -80,7 +80,7 @@ concept Publisher [U] {
     }
   }
 
-  invariant {
+  example "package then sign": {
     after package(source_path: src, kind: "library",
                   manifest: m) -> ok(publication: u)
     then sign(publication: u) -> ok()
@@ -88,11 +88,36 @@ concept Publisher [U] {
     and u.status = "published"
   }
 
-  invariant {
+  example "package then attest": {
     after package(source_path: src, kind: "library",
                   manifest: m) -> ok(publication: u)
     then attest(publication: u, builder: "ci",
                 source_repo: "repo", source_commit: "abc123") -> ok()
     and u.provenance != none
+  }
+
+
+  always "publications have required fields": {
+    forall u in publications:
+    u.module_id != none
+  }
+
+  never "orphaned entry in publications": {
+    exists u in publications:
+    u.module_id = none
+  }
+
+  action package {
+    requires: source_path != ""
+    ensures ok: source_path != none
+  }
+
+  action sign {
+    ensures ok: publication != none
+  }
+
+  action attest {
+    requires: builder != ""
+    ensures ok: publication != none
   }
 }

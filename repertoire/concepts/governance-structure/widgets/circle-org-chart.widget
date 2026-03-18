@@ -111,6 +111,10 @@ widget circle-org-chart {
   }
 
   invariant {
+    example "select_circle transitions from idle": { after transition(from: "idle", event: "SELECT_CIRCLE") -> ok then state = "circleSelected" }
+    example "deselect transitions from circleSelected": { after transition(from: "circleSelected", event: "DESELECT") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Nested circles must be visually contained within parent circles";
     "Member avatars must truncate with +N indicator beyond maxAvatars";
     "Selected circle must highlight its boundary and all ancestors";

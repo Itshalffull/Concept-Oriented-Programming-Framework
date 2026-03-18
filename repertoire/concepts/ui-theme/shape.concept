@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept Shape [H] {
 
   purpose {
@@ -28,5 +28,31 @@ concept Shape [H] {
     action computeClipPath(shapeId: ShapeProfileId, element: String) {
       -> ok(clipPath: String) { Clip path computed for the element. }
     }
+  }
+
+
+  always "shapes have required fields": {
+    forall h in shapes:
+    h.shape_name != none
+  }
+
+  never "orphaned entry in shapes": {
+    exists h in shapes:
+    h.shape_name = none
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: name != none
+  }
+
+  action resolve {
+    requires: element != ""
+    ensures ok: element != none
+  }
+
+  action computeRadius {
+    requires: element != ""
+    ensures ok: element != none
   }
 }

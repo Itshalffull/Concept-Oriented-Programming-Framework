@@ -1,4 +1,4 @@
-@version(1)
+@version(2)
 concept FieldPlacement [P] {
 
   purpose {
@@ -109,7 +109,7 @@ concept FieldPlacement [P] {
     }
   }
 
-  invariant {
+  example "create then get": {
     after create(source_field: "Article.title", formatter: "heading")
           -> ok(placement: p)
     and   configure(placement: p, formatter_options: "{\"level\": 1}")
@@ -119,11 +119,35 @@ concept FieldPlacement [P] {
                                   formatter_options: "{\"level\": 1}")
   }
 
-  invariant {
+  example "create then get": {
     after create(source_field: "Article.title", formatter: "heading")
           -> ok(placement: p)
     and   duplicate(placement: p) -> ok(new_placement: p2)
     then  get(placement: p2) -> ok(source_field: "Article.title",
                                    formatter: "heading")
+  }
+
+
+  always "placements have required fields": {
+    forall p in placements:
+    p.source_field != none
+  }
+
+  never "orphaned entry in placements": {
+    exists p in placements:
+    p.source_field = none
+  }
+
+  action create {
+    requires: source_field != ""
+    ensures ok: source_field != none
+  }
+
+  action configure {
+    ensures ok: placement != none
+  }
+
+  action set_visibility {
+    ensures ok: placement != none
   }
 }

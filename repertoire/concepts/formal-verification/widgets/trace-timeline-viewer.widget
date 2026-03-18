@@ -158,6 +158,10 @@ widget trace-timeline-viewer {
   }
 
   invariant {
+    example "play transitions from idle": { after transition(from: "idle", event: "PLAY") -> ok then state = "playing" }
+    example "pause transitions from playing": { after transition(from: "playing", event: "PAUSE") -> ok then state = "idle" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "Changed cells must be visually highlighted with a distinct color";
     "Step cursor must track the current step position precisely";
     "Playback must advance one step per interval based on playbackSpeed";

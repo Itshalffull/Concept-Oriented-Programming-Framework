@@ -1,3 +1,4 @@
+@version(2)
 @gate
 concept ChainMonitor [B] {
 
@@ -62,13 +63,39 @@ concept ChainMonitor [B] {
     }
   }
 
-  invariant {
+  example "awaitFinality then status": {
     after awaitFinality(txHash: tx, level: "confirmations") -> ok(chain: "ethereum", block: 100, confirmations: 12)
     then status(txHash: tx) -> ok(chain: "ethereum", block: 100, confirmations: 12)
   }
 
-  invariant {
+  example "awaitFinality then status": {
     after awaitFinality(txHash: tx, level: "confirmations") -> reorged(txHash: tx, depth: 3)
     then status(txHash: tx) -> ok(chain: "ethereum", block: 100, confirmations: 0)
+  }
+
+
+  always "subscriptions have required fields": {
+    forall b in subscriptions:
+    b.blockHeight != none
+  }
+
+  never "orphaned entry in subscriptions": {
+    exists b in subscriptions:
+    b.blockHeight = none
+  }
+
+  action awaitFinality {
+    requires: txHash != ""
+    ensures ok: txHash != none
+  }
+
+  action subscribe {
+    requires: rpcUrl != ""
+    ensures ok: rpcUrl != none
+  }
+
+  action onBlock {
+    requires: blockHash != ""
+    ensures ok: blockHash != none
   }
 }
