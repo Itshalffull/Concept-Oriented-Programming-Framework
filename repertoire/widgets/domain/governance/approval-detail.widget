@@ -214,11 +214,9 @@ compose {
 }
 
 invariant {
-  always statusBadge.data-status in ["pending", "approved", "denied", "timed_out", "changes_requested"]
-
-  invariant {
-    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
-    never "unreachable state": { exists s in states: s.inbound_count = 0 }
-  }
-
+  example "DATA_READY from loading": { after transition(from: "loading", event: "DATA_READY") -> ok then state = "idle" }
+  example "APPROVE_CLICK from idle": { after transition(from: "idle", event: "APPROVE_CLICK") -> ok then state = "confirming" }
+  always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+  never "unreachable state": { exists s in states: s.inbound_count = 0 }
+  "statusBadge.data-status must be one of: pending, approved, denied, timed_out, changes_requested";
 }

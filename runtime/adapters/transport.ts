@@ -12,6 +12,9 @@ import type {
   ConceptRegistry,
 } from '../types.js';
 import { timestamp } from '../types.js';
+import type { FunctionalConceptHandler } from '../functional-handler.js';
+import type { StorageProgram } from '../storage-program.js';
+import { interpret } from '../interpreter.js';
 
 /**
  * In-process transport adapter. Wraps a concept handler
@@ -40,7 +43,17 @@ export function createInProcessAdapter(
         };
       }
 
-      const result = await actionFn(invocation.input, storage);
+      const rawResult = await actionFn(invocation.input, storage);
+
+      // Auto-detect functional handlers: if result has instructions array,
+      // it's a StorageProgram that needs interpretation
+      let result: { variant: string; [key: string]: unknown };
+      if (rawResult && Array.isArray((rawResult as StorageProgram<unknown>).instructions)) {
+        const execResult = await interpret(rawResult as StorageProgram<unknown>, storage);
+        result = { variant: execResult.variant, ...execResult.output };
+      } else {
+        result = rawResult as { variant: string; [key: string]: unknown };
+      }
       const { variant, ...rest } = result;
 
       // Include variant in output so sync output patterns like
@@ -68,6 +81,45 @@ export function createInProcessAdapter(
       return { available: true, latency: 0 };
     },
   };
+}
+
+/**
+ * Wrap a FunctionalConceptHandler into a ConceptHandler by interpreting
+ * each action's returned StorageProgram against the provided storage.
+ * This allows functional handlers to be used anywhere a ConceptHandler
+ * is expected (kernel registration, transport adapters, tests, etc.).
+ */
+export function wrapFunctionalHandler(
+  handler: FunctionalConceptHandler,
+  storage: ConceptStorage,
+): ConceptHandler {
+  const wrapped: ConceptHandler = {};
+  // Dynamically wrap each action so that any action name works
+  return new Proxy(wrapped, {
+    get(_target, prop: string) {
+      if (typeof handler[prop] !== 'function') return undefined;
+      return async (input: Record<string, unknown>, _storage?: ConceptStorage) => {
+        const program = handler[prop](input) as StorageProgram<unknown>;
+        const result = await interpret(program, storage);
+        return { variant: result.variant, ...result.output };
+      };
+    },
+    has(_target, prop: string) {
+      return typeof handler[prop] === 'function';
+    },
+  });
+}
+
+/**
+ * In-process transport adapter for FunctionalConceptHandler.
+ * Builds a StorageProgram for each action and interprets it
+ * against the provided storage.
+ */
+export function createFunctionalInProcessAdapter(
+  handler: FunctionalConceptHandler,
+  storage: ConceptStorage,
+): ConceptTransport {
+  return createInProcessAdapter(wrapFunctionalHandler(handler, storage), storage);
 }
 
 /**

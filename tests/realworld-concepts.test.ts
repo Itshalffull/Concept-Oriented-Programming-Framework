@@ -4,12 +4,17 @@
 // Validates individual RealWorld/Conduit concept handlers via
 // direct invocation: Profile, Article, Comment, Tag, Favorite,
 // Follow.
+//
+// All handlers use functional (StorageProgram) style. The
+// interpret() function executes programs against storage.
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
 import {
   createInMemoryStorage,
 } from '../runtime/index.js';
+import { interpret } from '../runtime/interpreter.js';
+import type { StorageProgram } from '../runtime/storage-program.js';
 
 // App concept handlers
 import { profileHandler } from '../handlers/ts/app/profile.handler.js';
@@ -19,6 +24,18 @@ import { tagHandler } from '../handlers/ts/app/tag.handler.js';
 import { favoriteHandler } from '../handlers/ts/app/favorite.handler.js';
 import { followHandler } from '../handlers/ts/app/follow.handler.js';
 
+/** Helper: build a program and interpret it against storage, returning { variant, ...output }. */
+async function run(
+  handler: { [k: string]: (input: Record<string, unknown>, ...rest: unknown[]) => unknown },
+  action: string,
+  input: Record<string, unknown>,
+  storage: ReturnType<typeof createInMemoryStorage>,
+): Promise<Record<string, unknown>> {
+  const program = handler[action](input) as StorageProgram<unknown>;
+  const result = await interpret(program, storage);
+  return { variant: result.variant, ...result.output };
+}
+
 // ============================================================
 // 1. Profile Concept
 // ============================================================
@@ -27,7 +44,7 @@ describe('Profile Concept', () => {
   it('updates and retrieves a profile', async () => {
     const storage = createInMemoryStorage();
 
-    const updateResult = await profileHandler.update(
+    const updateResult = await run(profileHandler, 'update',
       { user: 'u1', bio: 'Hello world', image: 'http://img.png' },
       storage,
     );
@@ -35,7 +52,7 @@ describe('Profile Concept', () => {
     expect(updateResult.user).toBe('u1');
     expect(updateResult.bio).toBe('Hello world');
 
-    const getResult = await profileHandler.get({ user: 'u1' }, storage);
+    const getResult = await run(profileHandler, 'get', { user: 'u1' }, storage);
     expect(getResult.variant).toBe('ok');
     expect(getResult.bio).toBe('Hello world');
     expect(getResult.image).toBe('http://img.png');
@@ -43,7 +60,7 @@ describe('Profile Concept', () => {
 
   it('returns notfound for missing profile', async () => {
     const storage = createInMemoryStorage();
-    const result = await profileHandler.get({ user: 'nonexistent' }, storage);
+    const result = await run(profileHandler, 'get', { user: 'nonexistent' }, storage);
     expect(result.variant).toBe('notfound');
   });
 });
@@ -56,14 +73,14 @@ describe('Article Concept', () => {
   it('creates and retrieves an article', async () => {
     const storage = createInMemoryStorage();
 
-    const createResult = await articleHandler.create(
+    const createResult = await run(articleHandler, 'create',
       { article: 'a1', title: 'Test Article', description: 'A test', body: 'Body text', author: 'u1' },
       storage,
     );
     expect(createResult.variant).toBe('ok');
     expect(createResult.article).toBe('a1');
 
-    const getResult = await articleHandler.get({ article: 'a1' }, storage);
+    const getResult = await run(articleHandler, 'get', { article: 'a1' }, storage);
     expect(getResult.variant).toBe('ok');
     expect(getResult.title).toBe('Test Article');
     expect(getResult.slug).toBe('test-article');
@@ -73,18 +90,18 @@ describe('Article Concept', () => {
   it('updates an article', async () => {
     const storage = createInMemoryStorage();
 
-    await articleHandler.create(
+    await run(articleHandler, 'create',
       { article: 'a1', title: 'Old Title', description: 'Desc', body: 'Body', author: 'u1' },
       storage,
     );
 
-    const updateResult = await articleHandler.update(
+    const updateResult = await run(articleHandler, 'update',
       { article: 'a1', title: 'New Title', description: 'New Desc', body: 'New Body' },
       storage,
     );
     expect(updateResult.variant).toBe('ok');
 
-    const getResult = await articleHandler.get({ article: 'a1' }, storage);
+    const getResult = await run(articleHandler, 'get', { article: 'a1' }, storage);
     expect(getResult.variant).toBe('ok');
     expect(getResult.title).toBe('New Title');
     expect(getResult.slug).toBe('new-title');
@@ -93,21 +110,21 @@ describe('Article Concept', () => {
   it('deletes an article', async () => {
     const storage = createInMemoryStorage();
 
-    await articleHandler.create(
+    await run(articleHandler, 'create',
       { article: 'a1', title: 'To Delete', description: 'Desc', body: 'Body', author: 'u1' },
       storage,
     );
 
-    const deleteResult = await articleHandler.delete({ article: 'a1' }, storage);
+    const deleteResult = await run(articleHandler, 'delete', { article: 'a1' }, storage);
     expect(deleteResult.variant).toBe('ok');
 
-    const getResult = await articleHandler.get({ article: 'a1' }, storage);
+    const getResult = await run(articleHandler, 'get', { article: 'a1' }, storage);
     expect(getResult.variant).toBe('notfound');
   });
 
   it('returns notfound when deleting non-existent article', async () => {
     const storage = createInMemoryStorage();
-    const result = await articleHandler.delete({ article: 'nonexistent' }, storage);
+    const result = await run(articleHandler, 'delete', { article: 'nonexistent' }, storage);
     expect(result.variant).toBe('notfound');
   });
 });
@@ -120,34 +137,34 @@ describe('Comment Concept', () => {
   it('creates and deletes a comment', async () => {
     const storage = createInMemoryStorage();
 
-    const createResult = await commentHandler.create(
+    const createResult = await run(commentHandler, 'create',
       { comment: 'c1', body: 'Great post', target: 'a1', author: 'u1' },
       storage,
     );
     expect(createResult.variant).toBe('ok');
     expect(createResult.comment).toBe('c1');
 
-    const deleteResult = await commentHandler.delete({ comment: 'c1' }, storage);
+    const deleteResult = await run(commentHandler, 'delete', { comment: 'c1' }, storage);
     expect(deleteResult.variant).toBe('ok');
   });
 
   it('lists comments by target article', async () => {
     const storage = createInMemoryStorage();
 
-    await commentHandler.create(
+    await run(commentHandler, 'create',
       { comment: 'c1', body: 'First', target: 'a1', author: 'u1' },
       storage,
     );
-    await commentHandler.create(
+    await run(commentHandler, 'create',
       { comment: 'c2', body: 'Second', target: 'a1', author: 'u2' },
       storage,
     );
-    await commentHandler.create(
+    await run(commentHandler, 'create',
       { comment: 'c3', body: 'Other', target: 'a2', author: 'u1' },
       storage,
     );
 
-    const listResult = await commentHandler.list({ target: 'a1' }, storage);
+    const listResult = await run(commentHandler, 'list', { target: 'a1' }, storage);
     expect(listResult.variant).toBe('ok');
     const comments = JSON.parse(listResult.comments as string);
     expect(comments).toHaveLength(2);
@@ -162,11 +179,11 @@ describe('Tag Concept', () => {
   it('adds tags to articles', async () => {
     const storage = createInMemoryStorage();
 
-    await tagHandler.add({ tag: 'javascript', article: 'a1' }, storage);
-    await tagHandler.add({ tag: 'javascript', article: 'a2' }, storage);
-    await tagHandler.add({ tag: 'rust', article: 'a1' }, storage);
+    await run(tagHandler, 'add', { tag: 'javascript', article: 'a1' }, storage);
+    await run(tagHandler, 'add', { tag: 'javascript', article: 'a2' }, storage);
+    await run(tagHandler, 'add', { tag: 'rust', article: 'a1' }, storage);
 
-    const listResult = await tagHandler.list({}, storage);
+    const listResult = await run(tagHandler, 'list', {}, storage);
     expect(listResult.variant).toBe('ok');
     const tags = JSON.parse(listResult.tags as string);
     expect(tags).toHaveLength(2);
@@ -177,9 +194,9 @@ describe('Tag Concept', () => {
   it('removes a tag from an article', async () => {
     const storage = createInMemoryStorage();
 
-    await tagHandler.add({ tag: 'javascript', article: 'a1' }, storage);
-    await tagHandler.add({ tag: 'javascript', article: 'a2' }, storage);
-    await tagHandler.remove({ tag: 'javascript', article: 'a1' }, storage);
+    await run(tagHandler, 'add', { tag: 'javascript', article: 'a1' }, storage);
+    await run(tagHandler, 'add', { tag: 'javascript', article: 'a2' }, storage);
+    await run(tagHandler, 'remove', { tag: 'javascript', article: 'a1' }, storage);
 
     const record = await storage.get('tag', 'javascript');
     expect(record).not.toBeNull();
@@ -195,16 +212,16 @@ describe('Favorite Concept', () => {
   it('favorites and unfavorites articles', async () => {
     const storage = createInMemoryStorage();
 
-    await favoriteHandler.favorite({ user: 'u1', article: 'a1' }, storage);
-    await favoriteHandler.favorite({ user: 'u1', article: 'a2' }, storage);
+    await run(favoriteHandler, 'favorite', { user: 'u1', article: 'a1' }, storage);
+    await run(favoriteHandler, 'favorite', { user: 'u1', article: 'a2' }, storage);
 
-    const check1 = await favoriteHandler.isFavorited({ user: 'u1', article: 'a1' }, storage);
+    const check1 = await run(favoriteHandler, 'isFavorited', { user: 'u1', article: 'a1' }, storage);
     expect(check1.variant).toBe('ok');
     expect(check1.favorited).toBe(true);
 
-    await favoriteHandler.unfavorite({ user: 'u1', article: 'a1' }, storage);
+    await run(favoriteHandler, 'unfavorite', { user: 'u1', article: 'a1' }, storage);
 
-    const check2 = await favoriteHandler.isFavorited({ user: 'u1', article: 'a1' }, storage);
+    const check2 = await run(favoriteHandler, 'isFavorited', { user: 'u1', article: 'a1' }, storage);
     expect(check2.variant).toBe('ok');
     expect(check2.favorited).toBe(false);
   });
@@ -212,11 +229,11 @@ describe('Favorite Concept', () => {
   it('counts favorites for an article', async () => {
     const storage = createInMemoryStorage();
 
-    await favoriteHandler.favorite({ user: 'u1', article: 'a1' }, storage);
-    await favoriteHandler.favorite({ user: 'u2', article: 'a1' }, storage);
-    await favoriteHandler.favorite({ user: 'u3', article: 'a2' }, storage);
+    await run(favoriteHandler, 'favorite', { user: 'u1', article: 'a1' }, storage);
+    await run(favoriteHandler, 'favorite', { user: 'u2', article: 'a1' }, storage);
+    await run(favoriteHandler, 'favorite', { user: 'u3', article: 'a2' }, storage);
 
-    const count = await favoriteHandler.count({ article: 'a1' }, storage);
+    const count = await run(favoriteHandler, 'count', { article: 'a1' }, storage);
     expect(count.variant).toBe('ok');
     expect(count.count).toBe(2);
   });
@@ -230,15 +247,15 @@ describe('Follow Concept', () => {
   it('follows and unfollows users', async () => {
     const storage = createInMemoryStorage();
 
-    await followHandler.follow({ user: 'u1', target: 'u2' }, storage);
+    await run(followHandler, 'follow', { user: 'u1', target: 'u2' }, storage);
 
-    const check1 = await followHandler.isFollowing({ user: 'u1', target: 'u2' }, storage);
+    const check1 = await run(followHandler, 'isFollowing', { user: 'u1', target: 'u2' }, storage);
     expect(check1.variant).toBe('ok');
     expect(check1.following).toBe(true);
 
-    await followHandler.unfollow({ user: 'u1', target: 'u2' }, storage);
+    await run(followHandler, 'unfollow', { user: 'u1', target: 'u2' }, storage);
 
-    const check2 = await followHandler.isFollowing({ user: 'u1', target: 'u2' }, storage);
+    const check2 = await run(followHandler, 'isFollowing', { user: 'u1', target: 'u2' }, storage);
     expect(check2.variant).toBe('ok');
     expect(check2.following).toBe(false);
   });
@@ -246,8 +263,8 @@ describe('Follow Concept', () => {
   it('does not duplicate follows', async () => {
     const storage = createInMemoryStorage();
 
-    await followHandler.follow({ user: 'u1', target: 'u2' }, storage);
-    await followHandler.follow({ user: 'u1', target: 'u2' }, storage);
+    await run(followHandler, 'follow', { user: 'u1', target: 'u2' }, storage);
+    await run(followHandler, 'follow', { user: 'u1', target: 'u2' }, storage);
 
     const record = await storage.get('follow', 'u1');
     expect(record).not.toBeNull();

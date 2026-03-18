@@ -393,15 +393,29 @@ export function performFrom(
 /** Append a conditional branch. Merges effects from both branches (conservative). */
 export function branch<A>(
   program: StorageProgram<unknown>,
-  condition: (bindings: Bindings) => boolean,
-  thenBranch: StorageProgram<A>,
-  elseBranch: StorageProgram<A>,
+  condition: string | ((bindings: Bindings) => boolean),
+  thenBranch: StorageProgram<A> | ((p: StorageProgram<unknown>) => StorageProgram<A>),
+  elseBranch: StorageProgram<A> | ((p: StorageProgram<unknown>) => StorageProgram<A>),
 ): StorageProgram<A> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+
+  // Support string binding name as shorthand for (bindings) => !!bindings[name]
+  const conditionFn: (bindings: Bindings) => boolean =
+    typeof condition === 'string'
+      ? (bindings: Bindings) => !!bindings[condition]
+      : condition;
+
+  // Support builder callbacks: (emptyProgram) => StorageProgram
+  const base = createProgram();
+  const thenProg: StorageProgram<A> =
+    typeof thenBranch === 'function' ? thenBranch(base) : thenBranch;
+  const elseProg: StorageProgram<A> =
+    typeof elseBranch === 'function' ? elseBranch(base) : elseBranch;
+
   return {
-    instructions: [...program.instructions, { tag: 'branch', condition, thenBranch, elseBranch }],
+    instructions: [...program.instructions, { tag: 'branch', condition: conditionFn, thenBranch: thenProg, elseBranch: elseProg }],
     terminated: false,
-    effects: mergeEffects(program.effects, mergeEffects(thenBranch.effects, elseBranch.effects)),
+    effects: mergeEffects(program.effects, mergeEffects(thenProg.effects, elseProg.effects)),
   };
 }
 

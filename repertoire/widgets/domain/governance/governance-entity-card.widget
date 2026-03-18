@@ -96,11 +96,9 @@ affordance {
 }
 
 invariant {
-  always root has aria-label
-
-  invariant {
-    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
-    never "unreachable state": { exists s in states: s.inbound_count = 0 }
-  }
-
+  example "CLICK from idle": { after transition(from: "idle", event: "CLICK") -> ok then state = "navigating" }
+  example "HOVER_IN from idle": { after transition(from: "idle", event: "HOVER_IN") -> ok then state = "hovered" }
+  always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+  never "unreachable state": { exists s in states: s.inbound_count = 0 }
+  "root must always have aria-label";
 }
