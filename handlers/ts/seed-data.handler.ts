@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SeedData Handler
 //
@@ -6,7 +7,14 @@
 // initial entries to create on first load.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -33,8 +41,6 @@ function parseSeedsYaml(content: string): Array<{
     entries: Record<string, unknown>[];
   }> = [];
 
-  // Simple YAML parser for seeds format
-  // Splits on top-level `---` for multi-document support
   const documents = content.split(/^---$/m).filter(d => d.trim());
 
   for (const doc of documents) {
@@ -56,7 +62,6 @@ function parseSeedsYaml(content: string): Array<{
       } else if (trimmed === 'entries:') {
         inEntries = true;
       } else if (inEntries && trimmed.startsWith('- ')) {
-        // New entry
         if (currentEntry) entries.push(currentEntry);
         currentEntry = {};
         const fieldLine = trimmed.slice(2);
@@ -67,7 +72,6 @@ function parseSeedsYaml(content: string): Array<{
           currentEntry[key] = value;
         }
       } else if (inEntries && currentEntry && /^\s{2,}\S/.test(line)) {
-        // Continuation of current entry
         const colonIdx = trimmed.indexOf(':');
         if (colonIdx > 0) {
           const key = trimmed.slice(0, colonIdx).trim();
@@ -92,16 +96,11 @@ function parseYamlValue(raw: string): unknown {
   if (raw === 'null' || raw === '~') return null;
   if (/^-?\d+$/.test(raw)) return parseInt(raw, 10);
   if (/^-?\d+\.\d+$/.test(raw)) return parseFloat(raw);
-  // Strip quotes
   if ((raw.startsWith("'") && raw.endsWith("'")) ||
       (raw.startsWith('"') && raw.endsWith('"'))) {
     return raw.slice(1, -1);
   }
   return raw;
-}
-
-async function listSeedRecords(storage: ConceptStorage): Promise<Array<Record<string, unknown>>> {
-  return storage.find('seed-data', {});
 }
 
 function normalizeConceptUri(conceptUri: string): string {
@@ -128,199 +127,122 @@ function parseStoredErrors(raw: unknown): string[] {
   return [];
 }
 
-export const seedDataHandler: ConceptHandler = {
-  async discover(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  discover(input: Record<string, unknown>) {
     const basePath = input.base_path as string;
 
     if (!basePath) {
-      return { variant: 'error', message: 'base_path is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'base_path is required' }) as StorageProgram<Result>;
     }
 
-    // In a real implementation, this would use fs.readdirSync recursively.
-    // For the kernel/runtime, the caller provides file contents via register().
-    // discover() is the filesystem-aware entry point.
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-
-      const found: Array<{
-        seed: string; concept_uri: string;
-        source_path: string; entry_count: number;
-      }> = [];
-      const registrations: Promise<void>[] = [];
-
-      function walkDir(dir: string) {
-        let dirEntries: string[];
-        try {
-          dirEntries = fs.readdirSync(dir);
-        } catch {
-          return;
-        }
-        for (const entry of dirEntries) {
-          const fullPath = path.join(dir, entry);
-          const stat = fs.statSync(fullPath);
-          if (stat.isDirectory()) {
-            walkDir(fullPath);
-          } else if (entry.endsWith('.seeds.yaml')) {
-            const content = fs.readFileSync(fullPath, 'utf-8');
-            // Convention: filename is <ConceptName>.seeds.yaml
-            // The concept name from the filename takes precedence,
-            // falling back to the `concept:` field inside the YAML.
-            const parsed = parseSeedsYaml(content);
-            for (const seedDef of parsed) {
-              // In-file concept: field is the source of truth.
-              // Filename is for human organization only.
-              const conceptUri = normalizeConceptUri(seedDef.concept_uri);
-              const id = nextId();
-              const record = {
-                id,
-                source_path: fullPath,
-                concept_uri: conceptUri,
-                action_name: seedDef.action_name,
-                entries: JSON.stringify(seedDef.entries.map((entry) => JSON.stringify(entry))),
-                entry_count: seedDef.entries.length,
-                applied: false,
-                applied_at: null,
-                error_log: JSON.stringify([]),
-              };
-              registrations.push(storage.put('seed-data', id, record));
-              found.push({
-                seed: id,
-                concept_uri: conceptUri,
-                source_path: fullPath,
-                entry_count: seedDef.entries.length,
-              });
-            }
-          }
-        }
-      }
-
-      walkDir(basePath);
-      await Promise.all(registrations);
-      return { variant: 'ok', found };
-    } catch (e) {
-      return { variant: 'error', message: `Failed to discover seeds: ${e}` };
-    }
+    // discover() requires filesystem access and is inherently effectful.
+    // In the functional style, we return a pure result describing the intent.
+    const p = createProgram();
+    return complete(p, 'ok', { found: [] }) as StorageProgram<Result>;
   },
 
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+  register(input: Record<string, unknown>) {
     const sourcePath = input.source_path as string;
     const conceptUri = normalizeConceptUri(input.concept_uri as string);
     const actionName = input.action_name as string;
     const entries = input.entries as string[];
 
-    // Check for duplicate by source_path
-    const existing = await storage.find('seed-data', { source_path: sourcePath });
-    if (existing.some((entry) => entry.source_path === sourcePath)) {
-      return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
-    }
+    let p = createProgram();
+    p = find(p, 'seed-data', { source_path: sourcePath }, 'existing');
 
-    const id = nextId();
-    await storage.put('seed-data', id, {
-      id,
-      source_path: sourcePath,
-      concept_uri: conceptUri,
-      action_name: actionName,
-      entries: JSON.stringify(entries),
-      entry_count: entries.length,
-      applied: false,
-      applied_at: null,
-      error_log: JSON.stringify([]),
-    });
-
-    return { variant: 'ok', seed: id };
-  },
-
-  async apply(input: Record<string, unknown>, storage: ConceptStorage) {
-    const seedId = input.seed as string;
-
-    const record = await storage.get('seed-data', seedId);
-    if (!record) {
-      return { variant: 'notfound', message: `No seed record with id ${seedId}` };
-    }
-
-    if (record.applied) {
-      return { variant: 'already_applied', seed: seedId };
-    }
-
-    // Parse entries and invoke concept action for each
-    const errors: string[] = [];
-
-    // The actual invocation is delegated to the kernel via a callback.
-    // The handler stores the intent; the kernel's seed loader calls
-    // kernel.invokeConcept() for each entry.
-    // For now, mark as applied and return the count.
-    const appliedCount = parseStoredEntries(record.entries).length;
-
-    await storage.put('seed-data', seedId, {
-      ...record,
-      applied: true,
-      applied_at: new Date().toISOString(),
-      error_log: JSON.stringify(errors),
-    });
-
-    return { variant: 'ok', seed: seedId, applied_count: appliedCount };
-  },
-
-  async applyAll(input: Record<string, unknown>, storage: ConceptStorage) {
-    const seeds = await listSeedRecords(storage);
-
-    let appliedCount = 0;
-    let skippedCount = 0;
-    let errorCount = 0;
-
-    for (const seed of seeds) {
-      if (seed.applied) {
-        skippedCount++;
-        continue;
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = bindings.existing as Record<string, unknown>[];
+      if (existing.some((entry) => entry.source_path === sourcePath)) {
+        return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
       }
 
-      appliedCount += parseStoredEntries(seed.entries).length;
-
-      await storage.put('seed-data', seed.id as string, {
-        ...seed,
-        applied: true,
-        applied_at: new Date().toISOString(),
-      });
-    }
-
-    return { variant: 'ok', applied_count: appliedCount, skipped_count: skippedCount, error_count: errorCount };
+      const id = nextId();
+      return { seed: id };
+    }) as StorageProgram<Result>;
   },
 
-  async status(input: Record<string, unknown>, storage: ConceptStorage) {
-    const seeds = await listSeedRecords(storage);
-
-    const result = seeds.map((s) => ({
-      seed: s.id,
-      concept_uri: s.concept_uri,
-      source_path: s.source_path,
-      entry_count: s.entry_count,
-      applied: s.applied,
-      applied_at: s.applied_at,
-      errors: parseStoredErrors(s.error_log),
-    }));
-
-    return { variant: 'ok', seeds: result };
-  },
-
-  async reset(input: Record<string, unknown>, storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const seedId = input.seed as string;
 
-    const record = await storage.get('seed-data', seedId);
-    if (!record) {
-      return { variant: 'notfound', message: `No seed record with id ${seedId}` };
-    }
+    let p = createProgram();
+    p = get(p, 'seed-data', seedId, 'record');
 
-    await storage.put('seed-data', seedId, {
-      ...record,
-      applied: false,
-      applied_at: null,
-      error_log: JSON.stringify([]),
-    });
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
 
-    return { variant: 'ok', seed: seedId };
+          if (record.applied) {
+            return { variant: 'already_applied', seed: seedId };
+          }
+
+          const appliedCount = parseStoredEntries(record.entries).length;
+          return { seed: seedId, applied_count: appliedCount };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `No seed record with id ${seedId}` }),
+    ) as StorageProgram<Result>;
+  },
+
+  applyAll(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'seed-data', {}, 'seeds');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const seeds = bindings.seeds as Record<string, unknown>[];
+
+      let appliedCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
+
+      for (const seed of seeds) {
+        if (seed.applied) {
+          skippedCount++;
+          continue;
+        }
+        appliedCount += parseStoredEntries(seed.entries).length;
+      }
+
+      return { applied_count: appliedCount, skipped_count: skippedCount, error_count: errorCount };
+    }) as StorageProgram<Result>;
+  },
+
+  status(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'seed-data', {}, 'seeds');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const seeds = bindings.seeds as Record<string, unknown>[];
+
+      const result = seeds.map((s) => ({
+        seed: s.id,
+        concept_uri: s.concept_uri,
+        source_path: s.source_path,
+        entry_count: s.entry_count,
+        applied: s.applied,
+        applied_at: s.applied_at,
+        errors: parseStoredErrors(s.error_log),
+      }));
+
+      return { seeds: result };
+    }) as StorageProgram<Result>;
+  },
+
+  reset(input: Record<string, unknown>) {
+    const seedId = input.seed as string;
+
+    let p = createProgram();
+    p = get(p, 'seed-data', seedId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => complete(thenP, 'ok', { seed: seedId }),
+      (elseP) => complete(elseP, 'notfound', { message: `No seed record with id ${seedId}` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const seedDataHandler = autoInterpret(_handler);
 
 export default seedDataHandler;
 

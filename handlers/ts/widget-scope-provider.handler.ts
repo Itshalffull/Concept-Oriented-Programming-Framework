@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // WidgetScopeProvider Handler
 //
@@ -6,7 +7,14 @@
 // transitions, props, slots, and composed widget references.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -41,9 +49,6 @@ interface Declaration {
 /**
  * Build scope graph from widget spec source text.
  * Scope hierarchy: file (global) -> widget -> section (anatomy/states/props/etc.)
- * Each widget is a self-contained scope. Sections within the widget
- * create child scopes for organization, but all declarations are
- * visible from the widget scope level.
  */
 function buildWidgetScopes(source: string, file: string): {
   scopes: ScopeNode[];
@@ -72,7 +77,6 @@ function buildWidgetScopes(source: string, file: string): {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Match widget declaration: widget WidgetName { or name: WidgetName
     const widgetMatch = line.match(/^\s*(?:widget\s+(\w[\w-]*)|name\s*:\s*['"]?([\w-]+)['"]?)\s*/);
     if (widgetMatch) {
       widgetName = widgetMatch[1] || widgetMatch[2];
@@ -97,7 +101,6 @@ function buildWidgetScopes(source: string, file: string): {
 
     if (!widgetScope) continue;
 
-    // Track sections
     const sectionMatch = line.match(/^\s*(anatomy|states?|transitions?|props?|slots?|compose|affordances?|interactors?)\s*[:{]/);
     if (sectionMatch) {
       currentSection = sectionMatch[1];
@@ -111,7 +114,6 @@ function buildWidgetScopes(source: string, file: string): {
       continue;
     }
 
-    // Match declarations within sections
     const declMatch = line.match(/^\s+([\w-]+)\s*[:({]/);
     if (declMatch && widgetName && currentSection) {
       const itemName = declMatch[1];
@@ -122,81 +124,32 @@ function buildWidgetScopes(source: string, file: string): {
       const prefix = `surface/widget/${widgetName}`;
 
       if (currentSection === 'anatomy') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/part/${itemName}`,
-          scopeId,
-          kind: 'state-field',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/part/${itemName}`, scopeId, kind: 'state-field' });
       } else if (currentSection === 'states' || currentSection === 'state') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/state/${itemName}`,
-          scopeId,
-          kind: 'state-field',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/state/${itemName}`, scopeId, kind: 'state-field' });
       } else if (currentSection === 'transitions' || currentSection === 'transition') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/transition/${itemName}`,
-          scopeId,
-          kind: 'action',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/transition/${itemName}`, scopeId, kind: 'action' });
       } else if (currentSection === 'props' || currentSection === 'prop') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/prop/${itemName}`,
-          scopeId,
-          kind: 'state-field',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/prop/${itemName}`, scopeId, kind: 'state-field' });
       } else if (currentSection === 'slots' || currentSection === 'slot') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/slot/${itemName}`,
-          scopeId,
-          kind: 'state-field',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/slot/${itemName}`, scopeId, kind: 'state-field' });
       } else if (currentSection === 'compose') {
-        // Composed widget references are external references, not declarations
-        references.push({
-          name: itemName,
-          scopeId,
-          resolved: null,
-        });
+        references.push({ name: itemName, scopeId, resolved: null });
       } else if (currentSection === 'affordances' || currentSection === 'affordance' ||
                  currentSection === 'interactors' || currentSection === 'interactor') {
-        declarations.push({
-          name: itemName,
-          symbolString: `${prefix}/affordance/${itemName}`,
-          scopeId,
-          kind: 'action',
-        });
+        declarations.push({ name: itemName, symbolString: `${prefix}/affordance/${itemName}`, scopeId, kind: 'action' });
       }
     }
 
-    // Match extends references
     const extendsMatch = line.match(/extends\s+([\w-]+)/);
     if (extendsMatch) {
-      references.push({
-        name: extendsMatch[1],
-        scopeId: widgetScope.id,
-        resolved: null,
-      });
+      references.push({ name: extendsMatch[1], scopeId: widgetScope.id, resolved: null });
     }
 
-    // Match transition event references: on eventName -> stateName
     const eventMatch = line.match(/on\s+([\w-]+)\s*->\s*([\w-]+)/);
     if (eventMatch && widgetScope) {
-      references.push({
-        name: eventMatch[1],
-        scopeId: sectionScope?.id || widgetScope.id,
-        resolved: null,
-      });
-      references.push({
-        name: eventMatch[2],
-        scopeId: sectionScope?.id || widgetScope.id,
-        resolved: null,
-      });
+      references.push({ name: eventMatch[1], scopeId: sectionScope?.id || widgetScope.id, resolved: null });
+      references.push({ name: eventMatch[2], scopeId: sectionScope?.id || widgetScope.id, resolved: null });
     }
   }
 
@@ -228,58 +181,58 @@ function resolveInChain(
   return null;
 }
 
-export const widgetScopeProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('widget-scope-provider', id, {
-        id,
-        providerRef: 'widget-scope-provider',
-        handledLanguages: 'widget-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'widget-scope-provider', id, {
+      id,
+      providerRef: 'widget-scope-provider',
+      handledLanguages: 'widget-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async buildScopes(input: Record<string, unknown>, storage: ConceptStorage) {
+  buildScopes(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const result = buildWidgetScopes(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       scopes: JSON.stringify(result.scopes),
       declarations: JSON.stringify(result.declarations),
       references: JSON.stringify(result.references),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const scopeId = input.scopeId as string;
     const scopes = JSON.parse(input.scopes as string) as ScopeNode[];
     const declarations = JSON.parse(input.declarations as string) as Declaration[];
 
     const resolved = resolveInChain(name, scopeId, scopes, declarations);
+    const p = createProgram();
     if (resolved) {
-      return { variant: 'ok', symbolString: resolved };
+      return complete(p, 'ok', { symbolString: resolved }) as StorageProgram<Result>;
     }
 
-    return { variant: 'unresolved', name };
+    return complete(p, 'unresolved', { name }) as StorageProgram<Result>;
   },
 
-  async getSupportedLanguages(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedLanguages(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       languages: JSON.stringify(['widget-spec']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const widgetScopeProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetScopeProviderCounter(): void {

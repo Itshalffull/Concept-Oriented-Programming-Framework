@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EthereumL2Connector Handler
 //
@@ -7,134 +8,160 @@
 // See Architecture doc Sections 16.11, 16.12.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, putFrom, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `eth-l2-${++idCounter}`;
 }
 
-export const ethereumL2ConnectorHandler: ConceptHandler = {
-  async read(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  read(input: Record<string, unknown>) {
     const connector = input.connector as string;
     const query = input.query as string;
 
     if (!connector) {
-      return { variant: 'error', message: 'connector is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'connector is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('ethereum_l2_connector', connector);
-    if (!existing) {
-      return { variant: 'notfound', connector };
-    }
+    let p = createProgram();
+    p = get(p, 'ethereum_l2_connector', connector, 'existing');
 
-    if (!query) {
-      return { variant: 'error', message: 'query is required' };
-    }
+    return branch(p, 'existing',
+      (thenP) => {
+        if (!query) {
+          return complete(thenP, 'error', { message: 'query is required' });
+        }
 
-    // Simulate an L2 contract read call
-    let parsedQuery: Record<string, unknown>;
-    try {
-      parsedQuery = JSON.parse(query);
-    } catch {
-      return { variant: 'error', message: 'Invalid query JSON' };
-    }
+        let parsedQuery: Record<string, unknown>;
+        try {
+          parsedQuery = JSON.parse(query);
+        } catch {
+          return complete(thenP, 'error', { message: 'Invalid query JSON' });
+        }
 
-    const data = JSON.stringify({
-      result: `read_result_for_${parsedQuery.method || 'call'}`,
-      contract: existing['contract_address'],
-      chain_id: existing['chain_id'],
-    });
-
-    return { variant: 'ok', data };
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const data = JSON.stringify({
+            result: `read_result_for_${parsedQuery.method || 'call'}`,
+            contract: existing['contract_address'],
+            chain_id: existing['chain_id'],
+          });
+          return { data };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { connector }),
+    ) as StorageProgram<Result>;
   },
 
-  async write(input: Record<string, unknown>, storage: ConceptStorage) {
+  write(input: Record<string, unknown>) {
     const connector = input.connector as string;
     const data = input.data as string;
 
     if (!connector) {
-      return { variant: 'error', message: 'connector is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'connector is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('ethereum_l2_connector', connector);
-    if (!existing) {
-      return { variant: 'notfound', connector };
-    }
+    let p = createProgram();
+    p = get(p, 'ethereum_l2_connector', connector, 'existing');
 
-    if (!data) {
-      return { variant: 'error', message: 'data is required' };
-    }
+    return branch(p, 'existing',
+      (thenP) => {
+        if (!data) {
+          return complete(thenP, 'error', { message: 'data is required' });
+        }
 
-    // Validate data is valid JSON
-    try {
-      JSON.parse(data);
-    } catch {
-      return { variant: 'error', message: 'Invalid data JSON' };
-    }
+        try {
+          JSON.parse(data);
+        } catch {
+          return complete(thenP, 'error', { message: 'Invalid data JSON' });
+        }
 
-    // Simulate submitting a transaction
-    const tx_hash = `0x${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
-
-    return { variant: 'ok', tx_hash };
+        const tx_hash = `0x${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
+        return complete(thenP, 'ok', { tx_hash });
+      },
+      (elseP) => complete(elseP, 'notfound', { connector }),
+    ) as StorageProgram<Result>;
   },
 
-  async test(input: Record<string, unknown>, storage: ConceptStorage) {
+  test(input: Record<string, unknown>) {
     const connector = input.connector as string;
 
     if (!connector) {
-      return { variant: 'unreachable', message: 'connector is required' };
+      const p = createProgram();
+      return complete(p, 'unreachable', { message: 'connector is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('ethereum_l2_connector', connector);
-    if (!existing) {
-      return { variant: 'unreachable', message: `Connector '${connector}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'ethereum_l2_connector', connector, 'existing');
 
-    // Simulate connectivity test
-    const startTime = Date.now();
-    const block_number = 1000000 + Math.floor(Math.random() * 100000);
-    const latency_ms = Date.now() - startTime + Math.floor(Math.random() * 50);
+    return branch(p, 'existing',
+      (thenP) => {
+        const startTime = Date.now();
+        const block_number = 1000000 + Math.floor(Math.random() * 100000);
+        const latency_ms = Date.now() - startTime + Math.floor(Math.random() * 50);
 
-    await storage.put('ethereum_l2_connector', connector, {
-      ...existing,
-      status: 'connected',
-      updatedAt: new Date().toISOString(),
-    });
+        thenP = putFrom(thenP, 'ethereum_l2_connector', connector, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return {
+            ...existing,
+            status: 'connected',
+            updatedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', block_number, latency_ms };
+        return complete(thenP, 'ok', { block_number, latency_ms });
+      },
+      (elseP) => complete(elseP, 'unreachable', { message: `Connector '${connector}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async discover(input: Record<string, unknown>, storage: ConceptStorage) {
+  discover(input: Record<string, unknown>) {
     const connector = input.connector as string;
 
     if (!connector) {
-      return { variant: 'notfound', connector: '' };
+      const p = createProgram();
+      return complete(p, 'notfound', { connector: '' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('ethereum_l2_connector', connector);
-    if (!existing) {
-      return { variant: 'notfound', connector };
-    }
+    let p = createProgram();
+    p = get(p, 'ethereum_l2_connector', connector, 'existing');
 
-    // Parse ABI to extract function and event names
-    let abi: readonly Record<string, unknown>[];
-    try {
-      abi = JSON.parse(String(existing['abi'] || '[]'));
-    } catch {
-      abi = [];
-    }
+    return branch(p, 'existing',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
 
-    const functions = (abi as Record<string, unknown>[])
-      .filter((item) => item.type === 'function')
-      .map((item) => String(item.name));
-    const events = (abi as Record<string, unknown>[])
-      .filter((item) => item.type === 'event')
-      .map((item) => String(item.name));
+        let abi: readonly Record<string, unknown>[];
+        try {
+          abi = JSON.parse(String(existing['abi'] || '[]'));
+        } catch {
+          abi = [];
+        }
 
-    return { variant: 'ok', functions, events };
+        const functions = (abi as Record<string, unknown>[])
+          .filter((item) => item.type === 'function')
+          .map((item) => String(item.name));
+        const events = (abi as Record<string, unknown>[])
+          .filter((item) => item.type === 'event')
+          .map((item) => String(item.name));
+
+        return { functions, events };
+      }),
+      (elseP) => complete(elseP, 'notfound', { connector }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const ethereumL2ConnectorHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetEthereumL2Connector(): void {
