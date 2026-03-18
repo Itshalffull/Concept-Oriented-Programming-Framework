@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // LanguageGrammar Handler
 //
@@ -8,7 +9,12 @@
 // See design doc Section 4.1 (LanguageGrammar).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let grammarCounter = 0;
 
@@ -16,8 +22,10 @@ function nextGrammarId(): string {
   return `grammar-${++grammarCounter}`;
 }
 
-export const languageGrammarHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const extensions = input.extensions as string;
     const parserWasmPath = input.parserWasmPath as string;
@@ -55,7 +63,7 @@ export const languageGrammarHandler: ConceptHandler = {
     return { variant: 'ok', grammar: id };
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const fileExtension = input.fileExtension as string;
     const mapping = await storage.get('ext_map', fileExtension);
     if (!mapping) {
@@ -64,7 +72,7 @@ export const languageGrammarHandler: ConceptHandler = {
     return { variant: 'ok', grammar: mapping.grammarId as string };
   },
 
-  async resolveByMime(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolveByMime(input: Record<string, unknown>) {
     const mimeType = input.mimeType as string;
     const mapping = await storage.get('mime_map', mimeType);
     if (!mapping) {
@@ -73,7 +81,7 @@ export const languageGrammarHandler: ConceptHandler = {
     return { variant: 'ok', grammar: mapping.grammarId as string };
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const grammarId = input.grammar as string;
     const data = await storage.get('grammar', grammarId);
     if (!data) {
@@ -88,7 +96,7 @@ export const languageGrammarHandler: ConceptHandler = {
     };
   },
 
-  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
+  list(_input: Record<string, unknown>) {
     const all = await storage.find('grammar');
     const grammars = all.map((g) => ({
       id: g.id,
@@ -99,3 +107,5 @@ export const languageGrammarHandler: ConceptHandler = {
     return { variant: 'ok', grammars: JSON.stringify(grammars) };
   },
 };
+
+export const languageGrammarHandler = autoInterpret(_handler);

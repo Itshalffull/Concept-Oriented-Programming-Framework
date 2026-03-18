@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FileArtifact Handler
 //
@@ -7,7 +8,12 @@
 // See design doc Section 4.1 (FileArtifact).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { inferLanguage, inferRole } from './file-role-inference.js';
 
 let artifactCounter = 0;
@@ -15,8 +21,10 @@ function nextArtifactId(): string {
   return `artifact-${++artifactCounter}`;
 }
 
-export const fileArtifactHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const node = input.node as string;
     const role = (input.role as string) || inferRole(node);
     const language = (input.language as string) || inferLanguage(node) || '';
@@ -45,7 +53,7 @@ export const fileArtifactHandler: ConceptHandler = {
     return { variant: 'ok', artifact: id };
   },
 
-  async setProvenance(input: Record<string, unknown>, storage: ConceptStorage) {
+  setProvenance(input: Record<string, unknown>) {
     const artifactId = input.artifact as string;
     const spec = input.spec as string;
     const generator = input.generator as string;
@@ -63,7 +71,7 @@ export const fileArtifactHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 
-  async findByRole(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByRole(input: Record<string, unknown>) {
     const role = input.role as string;
     const matches = await storage.find('artifact', { role });
     return {
@@ -72,7 +80,7 @@ export const fileArtifactHandler: ConceptHandler = {
     };
   },
 
-  async findGeneratedFrom(input: Record<string, unknown>, storage: ConceptStorage) {
+  findGeneratedFrom(input: Record<string, unknown>) {
     const spec = input.spec as string;
     const all = await storage.find('artifact');
     const matches = all.filter((a) => {
@@ -95,7 +103,7 @@ export const fileArtifactHandler: ConceptHandler = {
     };
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const artifactId = input.artifact as string;
     const data = await storage.get('artifact', artifactId);
     if (!data) {
@@ -111,6 +119,8 @@ export const fileArtifactHandler: ConceptHandler = {
     };
   },
 };
+
+export const fileArtifactHandler = autoInterpret(_handler);
 
 /** Reset the artifact counter. Useful for testing. */
 export function resetArtifactCounter(): void {

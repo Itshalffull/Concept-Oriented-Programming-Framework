@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // StructuralPattern Handler — Stub
 //
@@ -6,16 +7,24 @@
 // returns unsupported for all actions.
 // ============================================================
 
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const structuralPatternHandler: ConceptHandler = {
-  async create() {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  create(_input: Record<string, unknown>) {
     return { variant: 'invalidSyntax', message: 'stub — not yet implemented', position: 0 };
   },
-  async match() {
+  match(_input: Record<string, unknown>) {
     return { variant: 'noMatches' };
   },
-  async matchProject() {
+  matchProject(_input: Record<string, unknown>) {
     return { variant: 'noMatches' };
   },
 };
+
+export const structuralPatternHandler = autoInterpret(_handler);
