@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GridLayout Handler
 //
@@ -6,19 +7,27 @@
 // spacing. Best for collections and galleries.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const gridLayoutHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'grid', category: 'layout' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _functionalHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'grid', category: 'layout' }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, _storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const items = (input.items as string[]) ?? [];
 
     if (!canvas) {
-      return { variant: 'error', message: 'Canvas identifier is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Canvas identifier is required' }) as StorageProgram<Result>;
     }
 
     // Compute grid positions: arrange in rows with uniform cell sizing
@@ -33,8 +42,10 @@ export const gridLayoutHandler: ConceptHandler = {
       return JSON.stringify({ item, x, y });
     });
 
-    return { variant: 'ok', positions };
+    const p = createProgram();
+    return complete(p, 'ok', { positions }) as StorageProgram<Result>;
   },
 };
 
+export const gridLayoutHandler = autoInterpret(_functionalHandler);
 export default gridLayoutHandler;
