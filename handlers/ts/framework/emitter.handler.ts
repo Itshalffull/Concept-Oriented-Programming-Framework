@@ -15,6 +15,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.js';
 import { createHash, randomUUID } from 'crypto';
 
 // Storage relation names

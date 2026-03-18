@@ -556,7 +556,6 @@ const _handler: FunctionalConceptHandler = {
    */
   async generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
   ) {
     // --- Parse allProjections ---
 

@@ -604,7 +604,6 @@ const _handler: FunctionalConceptHandler = {
    */
   async generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
   ) {
     // --- Parse config ---
     let config: Record<string, unknown> = {};

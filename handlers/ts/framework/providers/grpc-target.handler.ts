@@ -159,7 +159,6 @@ const _handler: FunctionalConceptHandler = {
    */
   async generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
   ) {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;

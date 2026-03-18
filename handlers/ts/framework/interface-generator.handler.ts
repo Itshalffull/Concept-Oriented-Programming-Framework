@@ -493,7 +493,7 @@ function stubProvider(meta: Record<string, unknown>): ConceptHandler {
   };
 }
 
-export const interfaceGeneratorHandler: ConceptHandler = createInterfaceGeneratorHandler({
+const _handler = createInterfaceGeneratorHandler({
   RestTarget: stubProvider({ name: 'RestTarget', inputKind: 'InterfaceProjection', outputKind: 'RestRoutes', capabilities: '[]', targetKey: 'rest', providerType: 'target' }),
   GraphqlTarget: stubProvider({ name: 'GraphqlTarget', inputKind: 'InterfaceProjection', outputKind: 'GraphQLSchema', capabilities: '[]', targetKey: 'graphql', providerType: 'target' }),
   GrpcTarget: stubProvider({ name: 'GrpcTarget', inputKind: 'InterfaceProjection', outputKind: 'GrpcProto', capabilities: '[]', targetKey: 'grpc', providerType: 'target' }),
@@ -508,7 +508,9 @@ export const interfaceGeneratorHandler: ConceptHandler = createInterfaceGenerato
   SwiftSdkTarget: stubProvider({ name: 'SwiftSdkTarget', inputKind: 'InterfaceProjection', outputKind: 'SwiftSdk', capabilities: '[]', targetKey: 'swift', providerType: 'sdk' }),
   OpenapiTarget: stubProvider({ name: 'OpenapiTarget', inputKind: 'InterfaceProjection', outputKind: 'OpenApiSpec', capabilities: '[]', targetKey: 'openapi', providerType: 'spec' }),
   AsyncapiTarget: stubProvider({ name: 'AsyncapiTarget', inputKind: 'InterfaceProjection', outputKind: 'AsyncApiSpec', capabilities: '[]', targetKey: 'asyncapi', providerType: 'spec' }),
-});
+}) as unknown as FunctionalConceptHandler;
+
+export const interfaceGeneratorHandler = autoInterpret(_handler);
 
 // --- Manifest Helpers ---
 
