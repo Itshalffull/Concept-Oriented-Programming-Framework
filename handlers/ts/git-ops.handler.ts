@@ -1,33 +1,36 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GitOps Handler
 //
-// Coordinate manifest generation for GitOps controllers. Owns
-// the manifest registry tracking what has been pushed to the
-// deploy repo, reconciliation status tracking, and drift
-// detection from the controller perspective.
+// Coordinate manifest generation for GitOps controllers.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
-function nextId(): string {
-  return `git-ops-${++idCounter}`;
-}
+function nextId(): string { return `git-ops-${++idCounter}`; }
 
 const SUPPORTED_CONTROLLERS = ['argocd', 'flux', 'custom'];
 
-export const gitOpsHandler: ConceptHandler = {
-  async emit(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const controller = input.controller as string;
     const repo = input.repo as string;
     const path = input.path as string;
 
     if (!SUPPORTED_CONTROLLERS.includes(controller)) {
-      return { variant: 'controllerUnsupported', controller };
+      const p = createProgram();
+      return complete(p, 'controllerUnsupported', { controller }) as StorageProgram<Result>;
     }
 
-    // Generate manifest file names based on plan and controller
     const manifestFile = `${path}/${plan}-manifest.yaml`;
     const kustomizationFile = `${path}/kustomization.yaml`;
     const files = [manifestFile, kustomizationFile];
@@ -35,60 +38,41 @@ export const gitOpsHandler: ConceptHandler = {
     const id = nextId();
     const now = new Date().toISOString();
 
-    await storage.put('git-ops', id, {
-      id,
-      plan,
-      controller,
+    let p = createProgram();
+    p = put(p, 'git-ops', id, {
+      id, plan, controller,
       repoPath: `${repo}:${path}`,
-      committedAt: now,
-      reconciledAt: null,
-      status: 'committed',
+      committedAt: now, reconciledAt: null, status: 'committed',
     });
 
-    return {
-      variant: 'ok',
-      manifest: id,
-      files,
-    };
+    return complete(p, 'ok', { manifest: id, files }) as StorageProgram<Result>;
   },
 
-  async reconciliationStatus(input: Record<string, unknown>, storage: ConceptStorage) {
+  reconciliationStatus(input: Record<string, unknown>) {
     const manifest = input.manifest as string;
 
-    const record = await storage.get('git-ops', manifest);
-    if (!record) {
-      return { variant: 'failed', manifest, reason: `Manifest '${manifest}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'git-ops', manifest, 'record');
 
-    const status = record.status as string;
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, '', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const status = record.status as string;
 
-    if (status === 'synced' || status === 'reconciled') {
-      return {
-        variant: 'ok',
-        manifest,
-        status: 'synced',
-        reconciledAt: record.reconciledAt || new Date().toISOString(),
-      };
-    }
-
-    if (status === 'failed') {
-      return {
-        variant: 'failed',
-        manifest,
-        reason: (record.failReason as string) || 'Reconciliation failed',
-      };
-    }
-
-    // Default: still pending
-    return {
-      variant: 'pending',
-      manifest,
-      waitingOn: ['controller-sync'],
-    };
+        if (status === 'synced' || status === 'reconciled') {
+          return { variant: 'ok', manifest, status: 'synced', reconciledAt: record.reconciledAt || new Date().toISOString() };
+        }
+        if (status === 'failed') {
+          return { variant: 'failed', manifest, reason: (record.failReason as string) || 'Reconciliation failed' };
+        }
+        return { variant: 'pending', manifest, waitingOn: ['controller-sync'] };
+      }),
+      (elseP) => complete(elseP, 'failed', { manifest, reason: `Manifest '${manifest}' not found` }),
+    ) as StorageProgram<Result>;
   },
 };
 
+export const gitOpsHandler = autoInterpret(_handler);
+
 /** Reset the ID counter. Useful for testing. */
-export function resetGitOpsCounter(): void {
-  idCounter = 0;
-}
+export function resetGitOpsCounter(): void { idCounter = 0; }
