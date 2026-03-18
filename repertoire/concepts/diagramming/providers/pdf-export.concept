@@ -26,4 +26,9 @@ concept PdfExportProvider [C] {
       -> error(message: String) { Export failed. }
     }
   }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
+  }
 }

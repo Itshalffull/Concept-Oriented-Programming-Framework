@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NextjsAdapter Handler
 //
@@ -6,7 +7,11 @@
 // components with 'use client' directive.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 /**
  * Convert a lowercase DOM event name to React camelCase convention.
@@ -17,45 +22,43 @@ function toReactEventName(key: string): string {
   return 'on' + eventPart.charAt(0).toUpperCase() + eventPart.slice(1);
 }
 
-export const nextjsAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+export const nextjsAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
+    let p = createProgram();
+
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
     let hasInteractivity = false;
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through unchanged
       if (key.startsWith('aria-') || key.startsWith('data-')) {
         normalized[key] = value;
         continue;
       }
 
-      // class -> className
       if (key === 'class') {
         normalized['className'] = value;
         continue;
       }
 
-      // for -> htmlFor
       if (key === 'for') {
         normalized['htmlFor'] = value;
         continue;
       }
 
-      // Event handlers: onclick -> onClick, mark as interactive
       if (key.startsWith('on')) {
         hasInteractivity = true;
         const reactName = toReactEventName(key);
@@ -63,13 +66,11 @@ export const nextjsAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // style as object pass-through
       if (key === 'style' && typeof value === 'string') {
         normalized['style'] = { __cssText: value };
         continue;
       }
 
-      // Layout -> CSS flexbox/grid container
       if (key === 'layout') {
         let layoutConfig: Record<string, unknown>;
         try {
@@ -120,7 +121,6 @@ export const nextjsAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // Theme -> CSS custom properties
       if (key === 'theme') {
         let theme: Record<string, unknown>;
         try {
@@ -135,17 +135,15 @@ export const nextjsAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // All other props pass through
       normalized[key] = value;
     }
 
-    // Mark interactive components with 'use client' directive
     if (hasInteractivity) {
       normalized['__useClient'] = true;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
 
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

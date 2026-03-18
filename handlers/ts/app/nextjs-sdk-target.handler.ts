@@ -1,16 +1,23 @@
+// @migrated dsl-constructs 2026-03-18
 // NextjsSdkTarget Concept Implementation
 // Interface target concept for generating Next.js SDK client code from projections.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const nextjsSdkTargetHandler: ConceptHandler = {
-  async initialize(input, storage) {
+export const nextjsSdkTargetHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const config = input.config as string;
+
+    let p = createProgram();
 
     let parsedConfig: Record<string, unknown>;
     try {
       parsedConfig = JSON.parse(config || '{}');
     } catch {
-      return { variant: 'loadError', message: 'Configuration must be valid JSON' };
+      return complete(p, 'loadError', { message: 'Configuration must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const appDir = (parsedConfig.appDir as string) || 'app';
@@ -20,31 +27,25 @@ export const nextjsSdkTargetHandler: ConceptHandler = {
 
     const instanceId = `nextjs-sdk-${Date.now()}`;
 
-    try {
-      await storage.put('nextjs-sdk-target', instanceId, {
+    p = put(p, 'nextjs-sdk-target', instanceId, {
+      instanceId,
+      appDir,
+      srcDir,
+      typescript,
+      appRouter,
+      status: 'initialized',
+      createdAt: new Date().toISOString(),
+    });
+
+    return complete(p, 'ok', {
+      instance: JSON.stringify({
         instanceId,
         appDir,
         srcDir,
         typescript,
         appRouter,
         status: 'initialized',
-        createdAt: new Date().toISOString(),
-      });
-
-      return {
-        variant: 'ok',
-        instance: JSON.stringify({
-          instanceId,
-          appDir,
-          srcDir,
-          typescript,
-          appRouter,
-          status: 'initialized',
-        }),
-      };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown initialization error';
-      return { variant: 'loadError', message };
-    }
+      }),
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

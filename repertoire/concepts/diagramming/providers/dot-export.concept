@@ -34,4 +34,9 @@ concept DotExportProvider [C] {
       -> error(message: String) { Parse failed. }
     }
   }
+
+  example "register-then-export": {
+    after register() -> ok(name: n, category: c)
+    then export(canvas_id: "c1", options: none) -> ok(data: d)
+  }
 }

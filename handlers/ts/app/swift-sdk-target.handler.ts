@@ -1,8 +1,10 @@
+// @migrated dsl-constructs 2026-03-18
 // SwiftSdkTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 
-export const swiftSdkTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+export const swiftSdkTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
 
@@ -142,8 +144,8 @@ export const swiftSdkTargetHandler: ConceptHandler = {
       `}`,
     ].join('\n');
 
-    const platformsFormatted = platforms.map(p => {
-      switch (p.toLowerCase()) {
+    const platformsFormatted = platforms.map(pl => {
+      switch (pl.toLowerCase()) {
         case 'ios': return `.iOS(.v16)`;
         case 'macos': return `.macOS(.v13)`;
         case 'tvos': return `.tvOS(.v16)`;
@@ -186,7 +188,8 @@ export const swiftSdkTargetHandler: ConceptHandler = {
 
     const packageId = `swift-sdk-${conceptName}-${Date.now()}`;
 
-    await storage.put('package', packageId, {
+    let p = createProgram();
+    p = put(p, 'package', packageId, {
       packageId,
       packageName,
       platforms: JSON.stringify(platforms),
@@ -198,11 +201,6 @@ export const swiftSdkTargetHandler: ConceptHandler = {
       packageSwiftFile,
       generatedAt: new Date().toISOString(),
     });
-
-    return {
-      variant: 'ok',
-      package: packageId,
-      files,
-    };
+    return complete(p, 'ok', { package: packageId, files }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

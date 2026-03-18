@@ -1,16 +1,21 @@
+// @migrated dsl-constructs 2026-03-18
 // Capture Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const captureHandler: ConceptHandler = {
-  async clip(input, storage) {
+export const captureHandler: FunctionalConceptHandler = {
+  clip(input: Record<string, unknown>) {
     const url = input.url as string;
     const mode = input.mode as string;
     const metadata = input.metadata as string || '{}';
 
     const itemId = `cap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    // Plugin-dispatched to capture_mode provider
-    await storage.put('captureItem', itemId, {
+    let p = createProgram();
+    p = put(p, 'captureItem', itemId, {
       itemId,
       url,
       mode,
@@ -23,18 +28,17 @@ export const captureHandler: ConceptHandler = {
       },
       status: 'new',
     });
-
-    return { variant: 'ok', itemId, content: '' };
+    return complete(p, 'ok', { itemId, content: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async import(input, storage) {
+  import(input: Record<string, unknown>) {
     const file = input.file as string;
     const options = input.options as string || '{}';
 
     const itemId = `cap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    // Plugin-dispatched to capture_mode provider
-    await storage.put('captureItem', itemId, {
+    let p = createProgram();
+    p = put(p, 'captureItem', itemId, {
       itemId,
       file,
       content: '',
@@ -46,17 +50,18 @@ export const captureHandler: ConceptHandler = {
       },
       status: 'new',
     });
-
-    return { variant: 'ok', itemId, content: '' };
+    return complete(p, 'ok', { itemId, content: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async subscribe(input, storage) {
+  subscribe(input: Record<string, unknown>) {
     const sourceId = input.sourceId as string;
     const schedule = input.schedule as string;
     const mode = input.mode as string;
 
     const subscriptionId = `sub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await storage.put('captureSubscription', subscriptionId, {
+
+    let p = createProgram();
+    p = put(p, 'captureSubscription', subscriptionId, {
       subscriptionId,
       sourceId,
       schedule,
@@ -64,40 +69,38 @@ export const captureHandler: ConceptHandler = {
       lastRun: null,
       watermark: null,
     });
-
-    return { variant: 'ok', subscriptionId };
+    return complete(p, 'ok', { subscriptionId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async detectChanges(input, storage) {
+  detectChanges(input: Record<string, unknown>) {
     const subscriptionId = input.subscriptionId as string;
-    const sub = await storage.get('captureSubscription', subscriptionId);
-    if (!sub) {
-      return { variant: 'notfound', message: `Subscription "${subscriptionId}" not found` };
-    }
 
-    // Uses watermark/hash comparison to find new/changed items
-    // Emits itemCaptured for each detected change
-    const now = new Date().toISOString();
-    await storage.put('captureSubscription', subscriptionId, {
-      ...sub,
-      lastRun: now,
-    });
-
-    return { variant: 'ok', changeset: '[]' };
+    let p = createProgram();
+    p = spGet(p, 'captureSubscription', subscriptionId, 'sub');
+    p = branch(p, 'sub',
+      (b) => {
+        let b2 = put(b, 'captureSubscription', subscriptionId, {
+          lastRun: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { changeset: '[]' });
+      },
+      (b) => complete(b, 'notfound', { message: `Subscription "${subscriptionId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async markReady(input, storage) {
+  markReady(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
-    const item = await storage.get('captureItem', itemId);
-    if (!item) {
-      return { variant: 'notfound', message: `Item "${itemId}" not found` };
-    }
 
-    await storage.put('captureItem', itemId, {
-      ...item,
-      status: 'processing',
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'captureItem', itemId, 'item');
+    p = branch(p, 'item',
+      (b) => {
+        let b2 = put(b, 'captureItem', itemId, { status: 'processing' });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Item "${itemId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

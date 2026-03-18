@@ -33,4 +33,9 @@ concept StatechartNotationProvider [C] {
       }
     }
   }
+
+  example "register-then-getDefinition": {
+    after register() -> ok(name: n, category: c)
+    then getDefinition() -> ok(notation: d)
+  }
 }
