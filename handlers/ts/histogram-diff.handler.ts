@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HistogramDiff Handler
 //
@@ -6,7 +7,14 @@
 // for source code with common boilerplate lines.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -151,22 +159,23 @@ function histogramDiff(linesA: string[], linesB: string[]): EditOp[] {
   return ops;
 }
 
-export const histogramDiffHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'histogram',
       category: 'diff',
       contentTypes: ['text/plain', 'text/*'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+  compute(input: Record<string, unknown>) {
     const contentA = input.contentA as string;
     const contentB = input.contentB as string;
 
     if (typeof contentA !== 'string' || typeof contentB !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be text strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
     }
 
     const linesA = contentA.split('\n');
@@ -177,15 +186,18 @@ export const histogramDiffHandler: ConceptHandler = {
     const editScript = JSON.stringify(editOps);
 
     const id = nextId();
-    await storage.put('histogram-diff', id, {
+    let p = createProgram();
+    p = put(p, 'histogram-diff', id, {
       id,
       editScript,
       distance,
     });
 
-    return { variant: 'ok', editScript, distance };
+    return complete(p, 'ok', { editScript, distance }) as StorageProgram<Result>;
   },
 };
+
+export const histogramDiffHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetHistogramDiffCounter(): void {
