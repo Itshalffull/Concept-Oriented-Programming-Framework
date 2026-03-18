@@ -179,12 +179,9 @@ interface ToolCatalogEntry {
   alwaysLoaded: boolean;
 }
 
-/** Well-known tools that should always be loaded with full schemas */
-const ALWAYS_LOADED_TOOLS = new Set([
-  'score_query', 'score_show', 'score_list', 'score_back', 'score_traverse',
-  'score_api_status', 'score_api_explain', 'score_api_reindex',
-  'score_api_search', 'score_api_list_concepts', 'score_api_list_syncs',
-]);
+// alwaysLoaded is now declared per-action in the interface manifest
+// (mcp.alwaysLoaded: true) and read from overrides at generation time.
+// No hardcoded tool names — the manifest is the single source of truth.
 
 /**
  * Generate a brief one-line description for tool catalog.
@@ -213,8 +210,9 @@ function generateToolCatalog(
     const overrideType = actionOverride.type as string | undefined;
     const mcpType = overrideType || inferMcpType(action.name);
 
-    // Only tools are relevant for lazy loading (resources/templates are read-only)
-    if (mcpType !== 'tool') continue;
+    // Resources/templates skip the catalog unless explicitly marked alwaysLoaded
+    const isAlwaysLoaded = (actionOverride.alwaysLoaded as boolean) === true;
+    if (mcpType !== 'tool' && !isAlwaysLoaded) continue;
 
     const toolName = `${snake}_${toSnakeCase(action.name)}`;
     const desc = (actionOverride.description as string)
@@ -227,7 +225,7 @@ function generateToolCatalog(
       category: conceptName,
       concept: conceptName,
       action: action.name,
-      alwaysLoaded: ALWAYS_LOADED_TOOLS.has(toolName),
+      alwaysLoaded: (actionOverride.alwaysLoaded as boolean) === true,
     });
   }
 

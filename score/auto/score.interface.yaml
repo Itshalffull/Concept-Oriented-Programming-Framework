@@ -339,6 +339,7 @@ concepts:
         # Concept/Sync operations → resources
         listConcepts:
           type: resource-template
+          alwaysLoaded: true
           uriTemplate: "score://concepts"
           description: >
             List all concepts in the project with purpose, actions,
@@ -359,6 +360,7 @@ concepts:
             types, all variants with fields and prose, and description.
         listSyncs:
           type: resource-template
+          alwaysLoaded: true
           uriTemplate: "score://syncs"
           description: >
             List all sync rules with annotation (eager/eventual/local),
@@ -407,12 +409,14 @@ concepts:
         # Discovery operations
         search:
           type: tool
+          alwaysLoaded: true
           description: >
             Search the project using natural language. Combines
             semantic embeddings, trigram text search, and symbol
             indexing. Returns ranked results with relevance scores.
         explain:
           type: resource
+          alwaysLoaded: true
           uriTemplate: "score://explain/{symbol}"
           description: >
             Generate a natural language explanation of a symbol —
@@ -422,12 +426,14 @@ concepts:
         # Index management
         status:
           type: resource
+          alwaysLoaded: true
           uriTemplate: "score://status"
           description: >
             Get the current Score index status — counts of indexed
             entities and last indexing time.
         reindex:
           type: tool
+          alwaysLoaded: true
           description: >
             Force a full reindex of the project. Parses all files,
             extracts symbols, builds semantic graph, and computes
@@ -877,6 +883,7 @@ annotations:
       query:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_query
           description: >
             Run a GraphQL query against the Score index.
@@ -894,6 +901,7 @@ annotations:
       show:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_show
           description: >
             Show a Score entity by kind and name with all related items.
@@ -902,6 +910,7 @@ annotations:
       traverse:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_traverse
           description: >
             Traverse a relationship from the current Score item to a
@@ -909,12 +918,14 @@ annotations:
       back:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_back
           description: >
             Go back to the previous Score item in the traversal history.
       list:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_list
           description: >
             List all Score entities of a given kind.
@@ -959,6 +970,7 @@ annotations:
       scan:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: runtime_discovery_scan
           description: >
             Scan a project directory for deploy manifests (*.deploy.yaml),
@@ -966,6 +978,7 @@ annotations:
       listProjects:
         mcp:
           type: resource-template
+          alwaysLoaded: true
           name: runtime_discovery_list_projects
           description: >
             List all previously scanned projects with directories and
@@ -973,6 +986,7 @@ annotations:
       listRuntimes:
         mcp:
           type: resource-template
+          alwaysLoaded: true
           name: runtime_discovery_list_runtimes
           description: >
             List runtimes declared in a project's deploy manifests with
@@ -980,6 +994,7 @@ annotations:
       resolveEndpoint:
         mcp:
           type: resource
+          alwaysLoaded: true
           name: runtime_discovery_resolve_endpoint
           description: >
             Extract the transport endpoint URL for a runtime, resolving
@@ -987,6 +1002,7 @@ annotations:
       resolveCredentials:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: runtime_discovery_resolve_credentials
           description: >
             Resolve credential references (API tokens, secrets) from a
@@ -994,6 +1010,7 @@ annotations:
       selectRuntime:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: runtime_discovery_select_runtime
           description: >
             Select a runtime for Score connection. Triggers
@@ -1010,6 +1027,7 @@ annotations:
       connect:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_connect
           description: >
             Connect to a remote Score endpoint by performing a health
@@ -1017,12 +1035,14 @@ annotations:
       query:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_query
           description: >
             Execute a GraphQL query against the remote Score index.
       show:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_show
           description: >
             Look up a Score entity by kind and name on the remote index.
@@ -1031,6 +1051,7 @@ annotations:
       traverse:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_traverse
           description: >
             Traverse a relationship from the current entity to a related
@@ -1038,12 +1059,14 @@ annotations:
       disconnect:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_disconnect
           description: >
             Close a connection to a remote Score endpoint.
       status:
         mcp:
           type: tool
+          alwaysLoaded: true
           name: score_bridge_status
           description: >
             Check connection health — endpoint, status, error count,

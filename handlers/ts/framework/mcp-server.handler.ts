@@ -287,17 +287,14 @@ function inferAction(toolName: string): string {
 }
 
 // ─── Lazy Loading Configuration ──────────────────────────
-// Tools marked as always-loaded get full schemas in the upfront
-// tool list. All other tools are deferred — only name + brief
-// description are sent. The LLM discovers deferred tools via
-// search_tools and loads full schemas via describe_tools.
+// Which tools are always-loaded (full schemas upfront) vs deferred
+// (discoverable via search_tools) is declared in the interface
+// manifest per-action (mcp.alwaysLoaded: true) and emitted into
+// catalog.json by the MCP Bind target. The discovery meta-tools
+// are always loaded by default.
 
 const ALWAYS_LOADED_TOOLS = new Set([
-  // Score core tools — always available
-  'score_query', 'score_show', 'score_list', 'score_back', 'score_traverse',
-  'score_api_status', 'score_api_explain', 'score_api_reindex',
-  'score_api_search', 'score_api_list_concepts', 'score_api_list_syncs',
-  // Discovery meta-tools — always available
+  // Discovery meta-tools — always available (not concept-generated)
   'search_tools', 'describe_tools', 'list_tool_categories', 'get_tool_category',
 ]);
 
