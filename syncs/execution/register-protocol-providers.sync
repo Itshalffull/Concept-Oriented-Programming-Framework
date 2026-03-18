@@ -79,3 +79,14 @@ then {
   LocalProcess/registerRuntime: [ runtime: "shell"; providerName: ?name ]
   PluginRegistry/register: [ type: "runtime-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
 }
+
+sync RegisterFsProvider [eager]
+  purpose: "Register FsProvider as a runtime provider for LocalProcess and PluginRegistry."
+when {
+  FsProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  LocalProcess/registerRuntime: [ runtime: "fs"; providerName: ?name ]
+  PluginRegistry/register: [ type: "runtime-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}

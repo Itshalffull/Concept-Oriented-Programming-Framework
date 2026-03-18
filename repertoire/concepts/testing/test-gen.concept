@@ -1,12 +1,14 @@
-@version(1)
+@version(2)
 concept TestGen [T] {
 
   purpose {
-    Coordinate automated test generation from concept invariants.
-    Routes to language-specific providers (TypeScript/fast-check,
-    Rust/proptest, Swift/SwiftCheck, Solidity/Foundry) via
-    PluginRegistry dispatch. Generates PBT properties, stateful
-    sequence tests, and fuzz harnesses from invariant constructs.
+    Coordinate automated test generation from all six invariant
+    construct types. Maps each construct to a generation strategy:
+    example → conformance vectors, forall → PBT properties,
+    always → stateful sequence tests, never → violation-attempt
+    tests, eventually → bounded liveness tests, requires/ensures
+    → contract-constrained PBT. Routes to language-specific
+    providers via PluginRegistry dispatch.
   }
 
   state {
@@ -18,6 +20,7 @@ concept TestGen [T] {
     generated_files: T -> String
     invariant_version: T -> String
     generated_at: T -> DateTime
+    strategies: T -> String
 
     config {
       num_runs: T -> Int
@@ -30,11 +33,14 @@ concept TestGen [T] {
   actions {
 
     action generate(concept_ref: String, language: String, invariant_version: String) {
-      -> ok(generation: T, generated_files: String, provider_used: String) {
-        Compile concept invariants into PBT properties, boundary
-        vectors, and fuzz harnesses for the target language. Uses
-        InvariantCompiler for mechanical translation, then dispatches
-        to the language-specific provider via PluginRegistry.
+      -> ok(generation: T, generated_files: String, provider_used: String, strategies: String) {
+        Parse concept invariants across all six construct types and
+        compile each to the appropriate test strategy. Generates
+        conformance tests from example blocks, PBT properties from
+        forall blocks, stateful tests from always/never blocks,
+        liveness tests from eventually blocks, and contract tests
+        from requires/ensures blocks. Routes to language-specific
+        provider via PluginRegistry.
       }
       -> invalid(message: String) {
         Concept has no parseable invariants, or no provider is
@@ -69,19 +75,31 @@ concept TestGen [T] {
     }
 
     action coverage(concept_ref: String) {
-      -> ok(total_invariants: Int, covered: Int, uncovered: Int, coverage_pct: Float, languages: list String) {
+      -> ok(total_invariants: Int, covered: Int, uncovered: Int, coverage_pct: Float, languages: list String, construct_coverage: String) {
         Report how many invariant clauses have generated tests
-        across all languages for the given concept.
+        across all languages and all construct types for the
+        given concept. construct_coverage breaks down coverage
+        per invariant kind (example, forall, always, never,
+        eventually, requires_ensures).
       }
     }
   }
 
-  invariant {
+  example "generate produces strategies for all constructs": {
     after generate(concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1")
-      -> ok(generation: g, generated_files: files, provider_used: "TestGenTypeScript")
+      -> ok(generation: g, generated_files: files, provider_used: "TestGenTypeScript", strategies: strats)
     then list(concept_ref: "clef/concept/Password", language: "typescript")
       -> ok(generations: gs)
-    and  coverage(concept_ref: "clef/concept/Password")
-      -> ok(total_invariants: 3, covered: 3, uncovered: 0, coverage_pct: 100.0, languages: ["typescript"])
+  }
+
+  forall "valid languages accepted": {
+    given lang in {"typescript", "rust", "swift", "solidity"}
+    after generate(concept_ref: "clef/concept/Test", language: lang, invariant_version: "v1")
+      -> ok(generation: _, generated_files: _, provider_used: _, strategies: _)
+  }
+
+  never "invalid language accepted": {
+    exists g in generations:
+      g.language = "python"
   }
 }

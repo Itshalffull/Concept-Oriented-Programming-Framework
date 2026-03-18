@@ -151,3 +151,31 @@ then {
     metadata: { kind: "webhook"; provider: "webhook"; url: ?url }
   ]
 }
+
+sync RegisterZ3SolverEndpoint [eager]
+  purpose: "Register a Z3 solver endpoint with PluginRegistry for SolverProvider dispatch."
+when {
+  Z3SolverEndpoint/register: [ name: ?name; binaryPath: ?path; timeout: ?timeout; options: ?opts ]
+    => ok(endpoint: ?ep)
+}
+then {
+  PluginRegistry/register: [
+    type: "solver-endpoint";
+    name: ?name;
+    metadata: { solver: "z3"; binaryPath: ?path; timeout: ?timeout; kind: "smt" }
+  ]
+}
+
+sync RegisterAlloySolverEndpoint [eager]
+  purpose: "Register an Alloy solver endpoint with PluginRegistry for SolverProvider dispatch."
+when {
+  AlloySolverEndpoint/register: [ name: ?name; jarPath: ?path; scope: ?scope; timeout: ?timeout ]
+    => ok(endpoint: ?ep)
+}
+then {
+  PluginRegistry/register: [
+    type: "solver-endpoint";
+    name: ?name;
+    metadata: { solver: "alloy"; jarPath: ?path; scope: ?scope; kind: "model-checker" }
+  ]
+}

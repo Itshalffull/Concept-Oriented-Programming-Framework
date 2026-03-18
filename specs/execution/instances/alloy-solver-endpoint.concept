@@ -1,0 +1,66 @@
+@version(1)
+concept AlloySolverEndpoint [A] {
+
+  purpose {
+    Configure an Alloy bounded model checker instance for formal
+    verification. Stores the JAR path, scope bounds, and solver
+    options. Executes via perform("shell",...) through the execution layer.
+  }
+
+  state {
+    endpoints: set A
+    name: A -> String
+    jarPath: A -> String
+    scope: A -> Int
+    timeout: A -> Int
+    options: A -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, jarPath: String, scope: Int, timeout: Int, options: String) {
+      -> ok(endpoint: A) {
+        Create a named Alloy solver endpoint with JAR path,
+        default scope bound, timeout, and solver options.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action check(name: String, model: String, predicate: String) {
+      -> ok(result: String, counterexample: String, timingMs: Int) {
+        Run an Alloy model check with the given predicate.
+        Returns the result (satisfiable/unsatisfiable) and
+        any counterexample found.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+      -> timeout(name: String, timingMs: Int) {
+        The model checker exceeded the configured timeout.
+      }
+      -> error(message: String) {
+        The Alloy JAR could not be executed or returned
+        an unexpected error.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: A, jarPath: String, scope: Int, timeout: Int) {
+        Look up the named endpoint for diagnostics.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+  }
+
+  example "check after register": {
+    after register(name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000, options: "") -> ok(endpoint: a)
+    then resolve(name: "alloy-local") -> ok(endpoint: a, jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000)
+  }
+}
