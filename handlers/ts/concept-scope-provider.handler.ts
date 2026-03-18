@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConceptScopeProvider Handler
 //
@@ -7,7 +8,13 @@
 // scoped to the concept.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -19,9 +26,6 @@ function nextScopeId(): string {
   return `csp-scope-${++scopeCounter}`;
 }
 
-/**
- * Scope node for concept files.
- */
 interface ScopeNode {
   id: string;
   kind: string;
@@ -29,9 +33,6 @@ interface ScopeNode {
   parentId: string | null;
 }
 
-/**
- * Declaration within a concept scope.
- */
 interface Declaration {
   name: string;
   symbolString: string;
@@ -39,13 +40,6 @@ interface Declaration {
   kind: string;
 }
 
-/**
- * Build scope graph nodes from concept spec source text.
- * Scope hierarchy: file (global) -> concept -> action -> variant
- * Type parameters are declared in the concept scope.
- * State fields, actions are declared in the concept scope.
- * Variants and their params are declared in the action scope.
- */
 function buildConceptScopes(source: string, file: string): {
   scopes: ScopeNode[];
   declarations: Declaration[];
@@ -55,7 +49,6 @@ function buildConceptScopes(source: string, file: string): {
   const declarations: Declaration[] = [];
   const references: Array<{ name: string; scopeId: string; resolved: string | null }> = [];
 
-  // Global file scope
   const globalScope: ScopeNode = {
     id: nextScopeId(),
     kind: 'global',
@@ -72,7 +65,6 @@ function buildConceptScopes(source: string, file: string): {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Match concept declaration: concept ConceptName [T] {
     const conceptMatch = line.match(/^\s*concept\s+(\w+)\s*(?:\[(\w+)\])?\s*\{/);
     if (conceptMatch) {
       conceptName = conceptMatch[1];
@@ -86,7 +78,6 @@ function buildConceptScopes(source: string, file: string): {
       };
       scopes.push(conceptScope);
 
-      // Declare the concept itself in the global scope
       declarations.push({
         name: conceptName,
         symbolString: `clef/concept/${conceptName}`,
@@ -94,7 +85,6 @@ function buildConceptScopes(source: string, file: string): {
         kind: 'concept',
       });
 
-      // Declare the type parameter in the concept scope
       if (typeParam) {
         declarations.push({
           name: typeParam,
@@ -106,7 +96,6 @@ function buildConceptScopes(source: string, file: string): {
       continue;
     }
 
-    // Match state field declarations
     if (conceptScope) {
       const stateMatch = line.match(/^\s+(\w+)\s*:\s*(?:set\s+)?(\w+)(?:\s*->\s*(\w+))?\s*$/);
       if (stateMatch) {
@@ -119,26 +108,16 @@ function buildConceptScopes(source: string, file: string): {
             kind: 'state-field',
           });
 
-          // Type references in state fields
           const typeRef = stateMatch[2];
           if (typeRef && typeRef !== 'set') {
-            references.push({
-              name: typeRef,
-              scopeId: conceptScope.id,
-              resolved: null,
-            });
+            references.push({ name: typeRef, scopeId: conceptScope.id, resolved: null });
           }
           if (stateMatch[3]) {
-            references.push({
-              name: stateMatch[3],
-              scopeId: conceptScope.id,
-              resolved: null,
-            });
+            references.push({ name: stateMatch[3], scopeId: conceptScope.id, resolved: null });
           }
         }
       }
 
-      // Match action declarations
       const actionMatch = line.match(/^\s+action\s+(\w+)\s*\(/);
       if (actionMatch) {
         const actionName = actionMatch[1];
@@ -157,7 +136,6 @@ function buildConceptScopes(source: string, file: string): {
           kind: 'action',
         });
 
-        // Extract action parameters as declarations in the action scope
         const paramSection = line.match(/\(([^)]*)\)/);
         if (paramSection) {
           const params = paramSection[1].split(',').map((p) => p.trim()).filter(Boolean);
@@ -175,7 +153,6 @@ function buildConceptScopes(source: string, file: string): {
         }
       }
 
-      // Match variant declarations within an action
       const variantMatch = line.match(/^\s+->\s+(\w+)\s*\(/);
       if (variantMatch && actionScope) {
         const variantName = variantMatch[1];
@@ -192,9 +169,6 @@ function buildConceptScopes(source: string, file: string): {
   return { scopes, declarations, references };
 }
 
-/**
- * Resolve a name within the concept scope chain.
- */
 function resolveInChain(
   name: string,
   scopeId: string,
@@ -217,58 +191,59 @@ function resolveInChain(
   return null;
 }
 
-export const conceptScopeProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('concept-scope-provider', id, {
-        id,
-        providerRef: 'concept-scope-provider',
-        handledLanguages: 'concept-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'concept-scope-provider', id, {
+      id,
+      providerRef: 'concept-scope-provider',
+      handledLanguages: 'concept-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async buildScopes(input: Record<string, unknown>, storage: ConceptStorage) {
+  buildScopes(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const result = buildConceptScopes(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       scopes: JSON.stringify(result.scopes),
       declarations: JSON.stringify(result.declarations),
       references: JSON.stringify(result.references),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const scopeId = input.scopeId as string;
     const scopes = JSON.parse(input.scopes as string) as ScopeNode[];
     const declarations = JSON.parse(input.declarations as string) as Declaration[];
 
     const resolved = resolveInChain(name, scopeId, scopes, declarations);
+    const p = createProgram();
+
     if (resolved) {
-      return { variant: 'ok', symbolString: resolved };
+      return complete(p, 'ok', { symbolString: resolved }) as StorageProgram<Result>;
     }
 
-    return { variant: 'unresolved', name };
+    return complete(p, 'unresolved', { name }) as StorageProgram<Result>;
   },
 
-  async getSupportedLanguages(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedLanguages(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       languages: JSON.stringify(['concept-spec']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const conceptScopeProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetConceptScopeProviderCounter(): void {

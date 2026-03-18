@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConnectorPort Handler
 //
@@ -5,7 +6,14 @@
 // how connectors attach, with direction and data-type validation.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,8 +23,8 @@ function nextId(): string {
 const VALID_SIDES = ['top', 'right', 'bottom', 'left', 'center'];
 const VALID_DIRECTIONS = ['in', 'out', 'bidirectional'];
 
-export const connectorPortHandler: ConceptHandler = {
-  async addPort(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  addPort(input: Record<string, unknown>) {
     const owner = input.owner as string;
     const side = input.side as string;
     const offset = (input.offset as number) ?? 0.5;
@@ -26,17 +34,21 @@ export const connectorPortHandler: ConceptHandler = {
     const max_connections = (input.max_connections as number | undefined) ?? null;
 
     if (!VALID_SIDES.includes(side)) {
-      return { variant: 'error', message: `Invalid side '${side}'. Must be one of: ${VALID_SIDES.join(', ')}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid side '${side}'. Must be one of: ${VALID_SIDES.join(', ')}` }) as StorageProgram<Result>;
     }
     if (!VALID_DIRECTIONS.includes(direction)) {
-      return { variant: 'error', message: `Invalid direction '${direction}'. Must be one of: ${VALID_DIRECTIONS.join(', ')}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid direction '${direction}'. Must be one of: ${VALID_DIRECTIONS.join(', ')}` }) as StorageProgram<Result>;
     }
     if (offset < 0 || offset > 1) {
-      return { variant: 'error', message: 'Offset must be between 0.0 and 1.0' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Offset must be between 0.0 and 1.0' }) as StorageProgram<Result>;
     }
 
     const id = nextId();
-    await storage.put('connector-port', id, {
+    let p = createProgram();
+    p = put(p, 'connector-port', id, {
       id,
       port: id,
       owner,
@@ -48,107 +60,153 @@ export const connectorPortHandler: ConceptHandler = {
       connection_count: 0,
     });
 
-    return { variant: 'ok', port: id };
+    return complete(p, 'ok', { port: id }) as StorageProgram<Result>;
   },
 
-  async removePort(input: Record<string, unknown>, storage: ConceptStorage) {
+  removePort(input: Record<string, unknown>) {
     const port = input.port as string;
-    const record = await storage.get('connector-port', port);
-    if (!record) {
-      return { variant: 'notfound', message: `Port '${port}' not found` };
-    }
-    await storage.del('connector-port', port);
-    return { variant: 'ok', port };
+
+    let p = createProgram();
+    p = get(p, 'connector-port', port, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, 'connector-port', port);
+        return complete(thenP, 'ok', { port });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Port '${port}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async movePort(input: Record<string, unknown>, storage: ConceptStorage) {
+  movePort(input: Record<string, unknown>) {
     const port = input.port as string;
     const side = input.side as string;
     const offset = (input.offset as number) ?? 0.5;
 
-    const record = await storage.get('connector-port', port);
-    if (!record) {
-      return { variant: 'notfound', message: `Port '${port}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'connector-port', port, 'record');
 
-    await storage.put('connector-port', port, {
-      ...record,
-      position: { side, offset },
-    });
-
-    return { variant: 'ok', port, side, offset };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'connector-port', port, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, position: { side, offset } };
+        });
+        return complete(thenP, 'ok', { port, side, offset });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Port '${port}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async validateConnection(input: Record<string, unknown>, storage: ConceptStorage) {
+  validateConnection(input: Record<string, unknown>) {
     const sourcePortId = input.source_port as string;
     const targetPortId = input.target_port as string;
 
-    const sourcePort = await storage.get('connector-port', sourcePortId);
-    const targetPort = await storage.get('connector-port', targetPortId);
+    let p = createProgram();
+    p = get(p, 'connector-port', sourcePortId, 'sourcePort');
+    p = get(p, 'connector-port', targetPortId, 'targetPort');
 
-    if (!sourcePort || !targetPort) {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Port not found' };
-    }
+    return branch(p,
+      (bindings) => !bindings.sourcePort || !bindings.targetPort,
+      (thenP) => complete(thenP, 'incompatible', { source_port: sourcePortId, target_port: targetPortId, reason: 'Port not found' }),
+      (elseP) => {
+        return completeFrom(elseP, 'dynamic', (bindings) => {
+          const sourcePort = bindings.sourcePort as Record<string, unknown>;
+          const targetPort = bindings.targetPort as Record<string, unknown>;
 
-    // Direction validation
-    if (sourcePort.direction === 'in') {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Source port only accepts incoming connections' };
-    }
-    if (targetPort.direction === 'out') {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Target port only allows outgoing connections' };
-    }
+          if (sourcePort.direction === 'in') {
+            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Source port only accepts incoming connections' };
+          }
+          if (targetPort.direction === 'out') {
+            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Target port only allows outgoing connections' };
+          }
+          if (sourcePort.port_type && targetPort.port_type && sourcePort.port_type !== targetPort.port_type) {
+            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Type mismatch: '${sourcePort.port_type}' vs '${targetPort.port_type}'` };
+          }
+          if (sourcePort.max_connections !== null && sourcePort.connection_count >= sourcePort.max_connections) {
+            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Source port at max capacity (${sourcePort.max_connections})` };
+          }
+          if (targetPort.max_connections !== null && targetPort.connection_count >= targetPort.max_connections) {
+            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Target port at max capacity (${targetPort.max_connections})` };
+          }
 
-    // Type compatibility
-    if (sourcePort.port_type && targetPort.port_type && sourcePort.port_type !== targetPort.port_type) {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Type mismatch: '${sourcePort.port_type}' vs '${targetPort.port_type}'` };
-    }
-
-    // Capacity check
-    if (sourcePort.max_connections !== null && sourcePort.connection_count >= sourcePort.max_connections) {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Source port at max capacity (${sourcePort.max_connections})` };
-    }
-    if (targetPort.max_connections !== null && targetPort.connection_count >= targetPort.max_connections) {
-      return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Target port at max capacity (${targetPort.max_connections})` };
-    }
-
-    return { variant: 'ok', source_port: sourcePortId, target_port: targetPortId };
+          return { variant: 'ok', source_port: sourcePortId, target_port: targetPortId };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async incrementConnection(input: Record<string, unknown>, storage: ConceptStorage) {
+  incrementConnection(input: Record<string, unknown>) {
     const port = input.port as string;
-    const record = await storage.get('connector-port', port);
-    if (!record) {
-      return { variant: 'notfound', message: `Port '${port}' not found` };
-    }
 
-    const count = (record.connection_count as number) + 1;
-    if (record.max_connections !== null && count > (record.max_connections as number)) {
-      return { variant: 'exceeded', port, max: record.max_connections as number };
-    }
+    let p = createProgram();
+    p = get(p, 'connector-port', port, 'record');
 
-    await storage.put('connector-port', port, { ...record, connection_count: count });
-    return { variant: 'ok', port, count };
+    return branch(p, 'record',
+      (thenP) => {
+        return branch(thenP,
+          (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            const count = (record.connection_count as number) + 1;
+            return record.max_connections !== null && count > (record.max_connections as number);
+          },
+          (exceededP) => completeFrom(exceededP, 'exceeded', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { port, max: record.max_connections as number };
+          }),
+          (okP) => {
+            okP = putFrom(okP, 'connector-port', port, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, connection_count: (record.connection_count as number) + 1 };
+            });
+            return completeFrom(okP, 'ok', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { port, count: (record.connection_count as number) + 1 };
+            });
+          },
+        );
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Port '${port}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async decrementConnection(input: Record<string, unknown>, storage: ConceptStorage) {
+  decrementConnection(input: Record<string, unknown>) {
     const port = input.port as string;
-    const record = await storage.get('connector-port', port);
-    if (!record) {
-      return { variant: 'notfound', message: `Port '${port}' not found` };
-    }
 
-    const count = Math.max(0, (record.connection_count as number) - 1);
-    await storage.put('connector-port', port, { ...record, connection_count: count });
-    return { variant: 'ok', port, count };
+    let p = createProgram();
+    p = get(p, 'connector-port', port, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'connector-port', port, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const count = Math.max(0, (record.connection_count as number) - 1);
+          return { ...record, connection_count: count };
+        });
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { port, count: Math.max(0, (record.connection_count as number) - 1) };
+        });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Port '${port}' not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async getPortsForOwner(input: Record<string, unknown>, storage: ConceptStorage) {
+  getPortsForOwner(input: Record<string, unknown>) {
     const owner = input.owner as string;
-    const all = await storage.list('connector-port');
-    const ports = all.filter((p: Record<string, unknown>) => p.owner === owner);
-    return { variant: 'ok', ports: ports.map((p: Record<string, unknown>) => p.id) };
+
+    let p = createProgram();
+    p = find(p, 'connector-port', {}, 'all');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      const ports = all.filter(p => p.owner === owner);
+      return { ports: ports.map(p => p.id) };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const connectorPortHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetConnectorPortCounter(): void {
