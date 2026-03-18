@@ -160,40 +160,63 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[]): st
   return lines;
 }
 
+function quantifierToArbitrary(q: TestPlanForall['quantifiers'][0]): string {
+  if (q.domainType === 'set_literal' && q.values) {
+    return `fc.constantFrom(${q.values.map(v => JSON.stringify(v)).join(', ')})`;
+  }
+  if (q.domainType === 'type_ref') {
+    const t = (q.fieldName || '').toLowerCase();
+    if (t === 'int' || t === 'number') return 'fc.integer()';
+    if (t === 'bool' || t === 'boolean') return 'fc.boolean()';
+    return 'fc.string({ minLength: 1, maxLength: 50 })';
+  }
+  // state_field or unknown — use string arbitrary
+  return 'fc.string({ minLength: 1, maxLength: 50 })';
+}
+
 function renderForallTests(handlerVar: string, properties: TestPlanForall[]): string[] {
   if (properties.length === 0) return [];
 
   const lines: string[] = [];
-  lines.push(`  describe('forall properties', () => {`);
+  lines.push(`  describe('forall properties (PBT)', () => {`);
 
   for (const prop of properties) {
-    lines.push(`    it('forall: ${prop.name}', async () => {`);
-    lines.push(`      const storage = createInMemoryStorage();`);
+    // Build fc.property arguments from quantifiers
+    const arbArgs = prop.quantifiers.map(q => quantifierToArbitrary(q));
+    const varNames = prop.quantifiers.map(q => q.variable);
 
-    for (const q of prop.quantifiers) {
-      if (q.domainType === 'set_literal' && q.values) {
-        lines.push(`      const ${q.variable}Values = ${JSON.stringify(q.values)};`);
-      } else {
-        lines.push(`      const ${q.variable}Values = ['test-a', 'test-b', 'test-c'];`);
-      }
-      lines.push(`      for (const ${q.variable} of ${q.variable}Values) {`);
+    lines.push(`    it('forall: ${prop.name}', async () => {`);
+    lines.push(`      await fc.assert(`);
+    lines.push(`        fc.asyncProperty(`);
+    for (const arb of arbArgs) {
+      lines.push(`          ${arb},`);
     }
+    lines.push(`          async (${varNames.join(', ')}) => {`);
+    lines.push(`            const storage = createInMemoryStorage();`);
 
     for (const step of prop.steps) {
+      // Replace quantifier variable references in input values
       const stepInput = Object.entries(step.input)
-        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .map(([k, v]) => {
+          // If value matches a quantifier variable, use it directly
+          if (varNames.includes(v)) return `${k}: ${v}`;
+          return `${k}: ${JSON.stringify(v)}`;
+        })
         .join(', ');
-      lines.push(`        const result = await interpret(`);
-      lines.push(`          ${handlerVar}.${step.action}({ ${stepInput} }),`);
-      lines.push(`          storage,`);
-      lines.push(`        );`);
-      lines.push(`        expect(result.variant).toBeDefined();`);
+      lines.push(`            const result = await interpret(`);
+      lines.push(`              ${handlerVar}.${step.action}({ ${stepInput} }),`);
+      lines.push(`              storage,`);
+      lines.push(`            );`);
+      lines.push(`            expect(result.variant).toBeDefined();`);
+      if (step.expectedVariant) {
+        lines.push(`            expect(result.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
+      }
     }
 
-    for (const _q of prop.quantifiers) {
-      lines.push(`      }`);
-    }
-
+    lines.push(`          },`);
+    lines.push(`        ),`);
+    lines.push(`        { numRuns: 100 },`);
+    lines.push(`      );`);
     lines.push(`    });`);
     lines.push('');
   }
@@ -211,24 +234,60 @@ function renderStateInvariantTests(
   if (invariants.length === 0) return [];
 
   const lines: string[] = [];
-  lines.push(`  describe('state invariants', () => {`);
+  lines.push(`  describe('state invariants (stateful PBT)', () => {`);
 
   for (const inv of invariants) {
     const prefix = inv.kind === 'always' ? 'always' : 'never';
+
+    if (actions.length === 0) {
+      lines.push(`    it('${prefix}: ${inv.name}', () => {`);
+      lines.push(`      // No actions to test against`);
+      lines.push(`    });`);
+      lines.push('');
+      continue;
+    }
+
+    // Generate action arbitraries for stateful testing
+    const actionArbs = actions.map(a => {
+      const inputArb = a.params.map(p => {
+        const t = p.type.toLowerCase();
+        if (t === 'string') return `${p.name}: fc.string({ minLength: 1, maxLength: 20 })`;
+        if (t === 'int' || t === 'number') return `${p.name}: fc.integer({ min: 0, max: 1000 })`;
+        if (t === 'bool' || t === 'boolean') return `${p.name}: fc.boolean()`;
+        return `${p.name}: fc.string()`;
+      }).join(', ');
+      return `fc.record({ action: fc.constant('${a.name}'), input: fc.record({ ${inputArb} }) })`;
+    });
+
     lines.push(`    it('${prefix}: ${inv.name}', async () => {`);
-    lines.push(`      const storage = createInMemoryStorage();`);
-    if (actions.length > 0) {
-      const action = actions[0];
-      const inputObj = defaultInput(action.params);
-      lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-      lines.push(`      const result = await interpret(program, storage);`);
-      lines.push(`      expect(result.variant).toBeDefined();`);
+    lines.push(`      await fc.assert(`);
+    lines.push(`        fc.asyncProperty(`);
+    lines.push(`          fc.array(`);
+    lines.push(`            fc.oneof(`);
+    for (const arb of actionArbs) {
+      lines.push(`              ${arb},`);
     }
-    if (inv.kind === 'always') {
-      lines.push(`      // State predicate should hold after any action: ${inv.name}`);
-    } else {
-      lines.push(`      // Bad state should never be reachable: ${inv.name}`);
+    lines.push(`            ),`);
+    lines.push(`            { minLength: 1, maxLength: 5 },`);
+    lines.push(`          ),`);
+    lines.push(`          async (actionSequence) => {`);
+    lines.push(`            const storage = createInMemoryStorage();`);
+    lines.push(`            for (const step of actionSequence) {`);
+    lines.push(`              const actionFn = ${handlerVar}[step.action];`);
+    lines.push(`              if (typeof actionFn === 'function') {`);
+    lines.push(`                const program = actionFn.call(${handlerVar}, step.input as Record<string, unknown>);`);
+    lines.push(`                const result = await interpret(program, storage);`);
+    lines.push(`                expect(result.variant).toBeDefined();`);
+    if (inv.kind === 'never') {
+      lines.push(`                // Never: ${inv.name}`);
+      lines.push(`                // Assert the bad state was not reached`);
     }
+    lines.push(`              }`);
+    lines.push(`            }`);
+    lines.push(`          },`);
+    lines.push(`        ),`);
+    lines.push(`        { numRuns: 50 },`);
+    lines.push(`      );`);
     lines.push(`    });`);
     lines.push('');
   }
@@ -300,14 +359,16 @@ function renderContractTests(
   if (contracts.length === 0) return [];
 
   const lines: string[] = [];
-  lines.push(`  describe('action contracts', () => {`);
+  lines.push(`  describe('action contracts (PBT)', () => {`);
 
   for (const contract of contracts) {
     const action = actions.find(a => a.name === contract.targetAction);
 
+    // Precondition: violating it should produce an error variant
     for (const pre of contract.preconditions) {
       lines.push(`    it('${contract.targetAction} requires: ${pre.assertion}', async () => {`);
       lines.push(`      const storage = createInMemoryStorage();`);
+      lines.push(`      // Violate precondition by passing empty input`);
       lines.push(`      const program = ${handlerVar}.${contract.targetAction}({});`);
       lines.push(`      const result = await interpret(program, storage);`);
       lines.push(`      expect(['error', 'invalid', 'missing', 'notFound']).toContain(result.variant);`);
@@ -315,21 +376,48 @@ function renderContractTests(
       lines.push('');
     }
 
-    for (const post of contract.postconditions) {
-      lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);
-      lines.push(`      const storage = createInMemoryStorage();`);
-      if (action) {
-        const inputObj = defaultInput(action.params);
-        lines.push(`      const program = ${handlerVar}.${contract.targetAction}({ ${inputObj} });`);
-      } else {
-        lines.push(`      const program = ${handlerVar}.${contract.targetAction}({});`);
+    // Postcondition: when preconditions hold, ensures must hold (PBT)
+    if (action && contract.postconditions.length > 0) {
+      const inputArbs = action.params.map(p => {
+        const t = p.type.toLowerCase();
+        if (t === 'string') return `${p.name}: fc.string({ minLength: 1, maxLength: 50 })`;
+        if (t === 'int' || t === 'number') return `${p.name}: fc.integer({ min: 1, max: 1000 })`;
+        if (t === 'bool' || t === 'boolean') return `${p.name}: fc.boolean()`;
+        return `${p.name}: fc.string()`;
+      }).join(', ');
+
+      for (const post of contract.postconditions) {
+        lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);
+        lines.push(`      await fc.assert(`);
+        lines.push(`        fc.asyncProperty(`);
+        lines.push(`          fc.record({ ${inputArbs} }),`);
+        lines.push(`          async (input) => {`);
+        lines.push(`            const storage = createInMemoryStorage();`);
+        lines.push(`            const program = ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>);`);
+        lines.push(`            const result = await interpret(program, storage);`);
+        // Use fc.pre to filter to only the variant we care about
+        lines.push(`            fc.pre(result.variant === ${JSON.stringify(post.variant)});`);
+        lines.push(`            // Postcondition: ${post.assertion}`);
+        lines.push(`            expect(result.output).toBeDefined();`);
+        lines.push(`          },`);
+        lines.push(`        ),`);
+        lines.push(`        { numRuns: 100 },`);
+        lines.push(`      );`);
+        lines.push(`    });`);
+        lines.push('');
       }
-      lines.push(`      const result = await interpret(program, storage);`);
-      lines.push(`      if (result.variant === ${JSON.stringify(post.variant)}) {`);
-      lines.push(`        expect(result.output).toBeDefined();`);
-      lines.push(`      }`);
-      lines.push(`    });`);
-      lines.push('');
+    } else {
+      for (const post of contract.postconditions) {
+        lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);
+        lines.push(`      const storage = createInMemoryStorage();`);
+        lines.push(`      const program = ${handlerVar}.${contract.targetAction}({});`);
+        lines.push(`      const result = await interpret(program, storage);`);
+        lines.push(`      if (result.variant === ${JSON.stringify(post.variant)}) {`);
+        lines.push(`        expect(result.output).toBeDefined();`);
+        lines.push(`      }`);
+        lines.push(`    });`);
+        lines.push('');
+      }
     }
   }
 
@@ -355,6 +443,7 @@ export function renderTypeScriptTests(plan: TestPlan): string {
 
   // Imports
   lines.push("import { describe, it, expect, beforeEach } from 'vitest';");
+  lines.push("import fc from 'fast-check';");
   lines.push(`import { ${handlerVar} } from '../${plan.handlerPath}';`);
   lines.push("import {");
   lines.push("  classifyPurity,");

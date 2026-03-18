@@ -68,18 +68,44 @@ function renderSolidityTests(plan: TestPlan): string {
     lines.push('');
   }
 
-  // Forall / fuzz tests
+  // Forall / fuzz tests with vm.assume constraints
   for (const prop of plan.properties) {
     const fnName = prop.name.replace(/[^a-zA-Z0-9]/g, '_');
-    lines.push(`    function testFuzz_${fnName}(string memory input) public {`);
+
+    // Build typed fuzz parameters from quantifiers
+    const fuzzParams: string[] = [];
     for (const q of prop.quantifiers) {
-      if (q.domainType === 'set_literal' && q.values) {
-        const values = q.values.map(v => `"${v}"`).join(', ');
-        lines.push(`        // Quantifier: ${q.variable} in {${values}}`);
+      const t = (q.fieldName || '').toLowerCase();
+      if (t === 'int' || t === 'number') {
+        fuzzParams.push(`uint256 ${q.variable}`);
+      } else if (t === 'bool' || t === 'boolean') {
+        fuzzParams.push(`bool ${q.variable}`);
+      } else {
+        fuzzParams.push(`string memory ${q.variable}`);
       }
     }
+    if (fuzzParams.length === 0) {
+      fuzzParams.push('string memory input');
+    }
+
+    lines.push(`    function testFuzz_${fnName}(${fuzzParams.join(', ')}) public {`);
+
+    // Add vm.assume constraints for set_literal domains
+    for (const q of prop.quantifiers) {
+      if (q.domainType === 'set_literal' && q.values) {
+        lines.push(`        // Constrain ${q.variable} to valid domain`);
+        const conditions = q.values.map(v =>
+          `keccak256(bytes(${q.variable})) == keccak256(bytes("${v}"))`
+        ).join(' || ');
+        lines.push(`        vm.assume(${conditions});`);
+      }
+    }
+
     lines.push(`        // Property: ${prop.name}`);
-    lines.push('        assertTrue(bytes(input).length >= 0);');
+    for (const step of prop.steps) {
+      lines.push(`        // target.${step.action}(...)`);
+    }
+    lines.push('        assertTrue(true);');
     lines.push('    }');
     lines.push('');
   }

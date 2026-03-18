@@ -78,19 +78,84 @@ function renderRustTests(plan: TestPlan): string {
     lines.push('');
   }
 
-  // Forall properties via proptest
+  // Forall properties via proptest with typed strategies
   for (const prop of plan.properties) {
     const fnName = toSnake(prop.name).replace(/[^a-z0-9_]/g, '_');
     lines.push('proptest! {');
-    lines.push(`    #[test]`);
-    lines.push(`    fn prop_${fnName}(input in any::<String>()) {`);
+    lines.push('    #[test]');
+
+    // Build typed strategy from quantifiers
+    const stratParts: string[] = [];
+    const varParts: string[] = [];
+    for (const q of prop.quantifiers) {
+      if (q.domainType === 'set_literal' && q.values) {
+        const vals = q.values.map(v => `Just("${v}".to_string())`).join(', ');
+        stratParts.push(`${q.variable} in prop_oneof![${vals}]`);
+      } else {
+        stratParts.push(`${q.variable} in "[a-z]{1,20}"`);
+      }
+      varParts.push(q.variable);
+    }
+    if (stratParts.length === 0) {
+      stratParts.push('input in "[a-z]{1,20}"');
+      varParts.push('input');
+    }
+    lines.push(`    fn prop_${fnName}(${stratParts.join(', ')}) {`);
     lines.push(`        // Property: ${prop.name}`);
     for (const step of prop.steps) {
-      lines.push(`        let result = ${toSnake(step.action)}(input.clone());`);
+      const args = varParts.map(v => `${v}.clone()`).join(', ');
+      lines.push(`        let result = ${toSnake(step.action)}(${args});`);
       lines.push('        prop_assert!(result.variant.len() > 0);');
+      if (step.expectedVariant) {
+        lines.push(`        prop_assert_eq!(result.variant, "${step.expectedVariant}");`);
+      }
     }
     lines.push('    }');
     lines.push('}');
+    lines.push('');
+  }
+
+  // Fuzz harness via cargo-fuzz / libfuzzer
+  if (plan.actions.length > 0) {
+    lines.push('// ── cargo-fuzz harness ──────────────────────────────────');
+    lines.push('// Place in fuzz/fuzz_targets/ and run with: cargo fuzz run');
+    lines.push('');
+    lines.push('#[cfg(fuzzing)]');
+    lines.push('use libfuzzer_sys::fuzz_target;');
+    lines.push('');
+    lines.push('#[cfg(fuzzing)]');
+    lines.push(`use arbitrary::Arbitrary;`);
+    lines.push('');
+    lines.push('#[cfg(fuzzing)]');
+    lines.push('#[derive(Arbitrary, Debug)]');
+    lines.push(`enum ${plan.conceptName}Action {`);
+    for (const action of plan.actions) {
+      const fields = action.params.map(p => {
+        const t = p.type.toLowerCase();
+        if (t === 'int' || t === 'number') return `${toSnake(p.name)}: i64`;
+        if (t === 'bool' || t === 'boolean') return `${toSnake(p.name)}: bool`;
+        return `${toSnake(p.name)}: String`;
+      }).join(', ');
+      const pascalName = action.name.charAt(0).toUpperCase() + action.name.slice(1);
+      lines.push(`    ${pascalName} { ${fields} },`);
+    }
+    lines.push('}');
+    lines.push('');
+    lines.push('#[cfg(fuzzing)]');
+    lines.push('fuzz_target!(|actions: Vec<' + plan.conceptName + 'Action>| {');
+    lines.push('    let mut state = State::new();');
+    lines.push('    for action in actions {');
+    lines.push('        match action {');
+    for (const action of plan.actions) {
+      const pascalName = action.name.charAt(0).toUpperCase() + action.name.slice(1);
+      const paramNames = action.params.map(p => toSnake(p.name)).join(', ');
+      lines.push(`            ${plan.conceptName}Action::${pascalName} { ${paramNames} } => {`);
+      lines.push(`                let _ = ${toSnake(action.name)}(${paramNames});`);
+      lines.push('            }');
+    }
+    lines.push('        }');
+    lines.push('    }');
+    lines.push('});');
     lines.push('');
   }
 

@@ -80,14 +80,41 @@ function renderSwiftTests(plan: TestPlan): string {
     lines.push('');
   }
 
-  // Forall properties via SwiftCheck
+  // Forall properties via SwiftCheck with typed generators
   for (const prop of plan.properties) {
     const fnName = toCamel(prop.name.replace(/[^a-zA-Z0-9]/g, '_'));
     lines.push(`    func testForall_${fnName}() {`);
-    lines.push(`        property("${prop.name}") <- forAll { (input: String) in`);
+
+    // Build generator from quantifiers
+    const gens: string[] = [];
+    const vars: string[] = [];
+    for (const q of prop.quantifiers) {
+      if (q.domainType === 'set_literal' && q.values) {
+        const vals = q.values.map((v: string) => `"${v}"`).join(', ');
+        gens.push(`Gen.fromElements(of: [${vals}])`);
+      } else {
+        gens.push('String.arbitrary');
+      }
+      vars.push(q.variable);
+    }
+    if (gens.length === 0) {
+      gens.push('String.arbitrary');
+      vars.push('input');
+    }
+
+    if (gens.length === 1) {
+      lines.push(`        property("${prop.name}") <- forAll(${gens[0]}) { (${vars[0]}: String) in`);
+    } else {
+      lines.push(`        property("${prop.name}") <- forAll(${gens.join(', ')}) { (${vars.map((v: string) => `${v}: String`).join(', ')}) in`);
+    }
     for (const step of prop.steps) {
-      lines.push(`            let result = ${toCamel(plan.conceptName)}.${toCamel(step.action)}(input)`);
-      lines.push('            return !result.variant.isEmpty');
+      const args = vars.join(', ');
+      lines.push(`            let result = ${toCamel(plan.conceptName)}.${toCamel(step.action)}(${args})`);
+      if (step.expectedVariant) {
+        lines.push(`            return result.variant == "${step.expectedVariant}"`);
+      } else {
+        lines.push('            return !result.variant.isEmpty');
+      }
     }
     lines.push('        }');
     lines.push('    }');
