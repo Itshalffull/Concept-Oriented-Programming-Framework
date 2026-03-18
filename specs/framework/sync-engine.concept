@@ -98,7 +98,7 @@ concept SyncEngine [F] {
 
   never "pending queue entry without a flow": {
     forall entry in pendingQueue:
-    entry.flow == ""
+    entry.flow = ""
   }
 
   action registerSync {
