@@ -1,46 +1,100 @@
+// @migrated dsl-constructs 2026-03-18
 // Guard Concept Handler
 // Pre/post execution safety checks (Zodiac Guard pattern).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const guardHandler: ConceptHandler = {
-  async register(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _guardHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const id = `guard-${Date.now()}`;
-    await storage.put('guard', id, {
+    let p = createProgram();
+    p = put(p, 'guard', id, {
       id, name: input.name, targetAction: input.targetAction,
       checkType: input.checkType, condition: input.condition,
       enabled: true, registeredAt: new Date().toISOString(),
     });
-    return { variant: 'registered', guard: id };
+    return complete(p, 'registered', { guard: id }) as StorageProgram<Result>;
   },
 
-  async checkPre(input, storage) {
-    const { guard, context } = input;
-    const record = await storage.get('guard', guard as string);
-    if (!record || !record.enabled) return { variant: 'guard_disabled', guard };
-    // Stub: real impl evaluates condition against context
-    return { variant: 'allowed', guard };
-  },
-
-  async checkPost(input, storage) {
-    const { guard, context, result } = input;
-    const record = await storage.get('guard', guard as string);
-    if (!record || !record.enabled) return { variant: 'guard_disabled', guard };
-    return { variant: 'passed', guard };
-  },
-
-  async enable(input, storage) {
+  checkPre(input: Record<string, unknown>) {
     const { guard } = input;
-    const record = await storage.get('guard', guard as string);
-    if (!record) return { variant: 'not_found', guard };
-    await storage.put('guard', guard as string, { ...record, enabled: true });
-    return { variant: 'enabled', guard };
+    let p = createProgram();
+    p = get(p, 'guard', guard as string, 'record');
+
+    p = branch(p,
+      (bindings) => {
+        const rec = bindings.record as Record<string, unknown> | null;
+        return !!rec && !!rec.enabled;
+      },
+      (b) => complete(b, 'allowed', { guard }),
+      (b) => complete(b, 'guard_disabled', { guard }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async disable(input, storage) {
+  checkPost(input: Record<string, unknown>) {
     const { guard } = input;
-    const record = await storage.get('guard', guard as string);
-    if (!record) return { variant: 'not_found', guard };
-    await storage.put('guard', guard as string, { ...record, enabled: false });
-    return { variant: 'disabled', guard };
+    let p = createProgram();
+    p = get(p, 'guard', guard as string, 'record');
+
+    p = branch(p,
+      (bindings) => {
+        const rec = bindings.record as Record<string, unknown> | null;
+        return !!rec && !!rec.enabled;
+      },
+      (b) => complete(b, 'passed', { guard }),
+      (b) => complete(b, 'guard_disabled', { guard }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  enable(input: Record<string, unknown>) {
+    const { guard } = input;
+    let p = createProgram();
+    p = get(p, 'guard', guard as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, enabled: true };
+        }, 'updated');
+        b2 = put(b2, 'guard', guard as string, {});
+        return complete(b2, 'enabled', { guard });
+      },
+      (b) => complete(b, 'not_found', { guard }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  disable(input: Record<string, unknown>) {
+    const { guard } = input;
+    let p = createProgram();
+    p = get(p, 'guard', guard as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, enabled: false };
+        }, 'updated');
+        b2 = put(b2, 'guard', guard as string, {});
+        return complete(b2, 'disabled', { guard });
+      },
+      (b) => complete(b, 'not_found', { guard }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const guardHandler = autoInterpret(_guardHandler);
