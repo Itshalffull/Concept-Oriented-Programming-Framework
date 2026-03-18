@@ -1,70 +1,109 @@
+// @migrated dsl-constructs 2026-03-18
 // SimpleAccumulator Reputation Provider
 // Add/subtract reputation with optional per-period decay and configurable cap.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const simpleAccumulatorHandler: ConceptHandler = {
-  async configure(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _simpleAccumulatorHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
     const id = `acc-${Date.now()}`;
-    await storage.put('accumulator', id, {
+    let p = createProgram();
+    p = put(p, 'accumulator', id, {
       id,
       decayRate: input.decayRate ?? null,
       cap: input.cap ?? null,
     });
-
-    await storage.put('plugin-registry', `reputation-algorithm:${id}`, {
+    p = put(p, 'plugin-registry', `reputation-algorithm:${id}`, {
       id: `reputation-algorithm:${id}`,
       pluginKind: 'reputation-algorithm',
       provider: 'SimpleAccumulator',
       instanceId: id,
     });
-
-    return { variant: 'configured', config: id };
+    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
   },
 
-  async add(input, storage) {
+  add(input: Record<string, unknown>) {
     const { config, participant, amount } = input;
-    const cfg = await storage.get('accumulator', config as string);
-    const cap = cfg ? (cfg.cap as number | null) : null;
-
     const key = `${config}:${participant}`;
-    const existing = await storage.get('acc_score', key);
-    const currentScore = existing ? (existing.score as number) : 0;
-    let newScore = currentScore + (amount as number);
+    let p = createProgram();
+    p = get(p, 'accumulator', config as string, 'cfg');
+    p = get(p, 'acc_score', key, 'existing');
 
-    if (cap !== null) newScore = Math.min(newScore, cap);
+    p = mapBindings(p, (bindings) => {
+      const cfg = bindings.cfg as Record<string, unknown> | null;
+      const cap = cfg ? (cfg.cap as number | null) : null;
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const currentScore = existing ? (existing.score as number) : 0;
+      let newScore = currentScore + (amount as number);
+      if (cap !== null) newScore = Math.min(newScore, cap);
+      return newScore;
+    }, 'newScore');
 
-    await storage.put('acc_score', key, {
-      config, participant, score: newScore,
+    p = put(p, 'acc_score', key, {
+      config, participant, score: 0,
       updatedAt: new Date().toISOString(),
     });
 
-    return { variant: 'added', participant, newScore };
+    return completeFrom(p, 'added', (bindings) => {
+      return { participant, newScore: bindings.newScore };
+    }) as StorageProgram<Result>;
   },
 
-  async applyDecay(input, storage) {
+  applyDecay(input: Record<string, unknown>) {
     const { config, participant } = input;
-    const cfg = await storage.get('accumulator', config as string);
-    const decayRate = cfg ? (cfg.decayRate as number | null) : null;
-    if (decayRate === null) return { variant: 'no_decay', participant };
-
     const key = `${config}:${participant}`;
-    const existing = await storage.get('acc_score', key);
-    const currentScore = existing ? (existing.score as number) : 0;
-    const newScore = currentScore * (1 - decayRate);
+    let p = createProgram();
+    p = get(p, 'accumulator', config as string, 'cfg');
 
-    await storage.put('acc_score', key, {
-      config, participant, score: newScore,
-      updatedAt: new Date().toISOString(),
-    });
+    p = branch(p,
+      (bindings) => {
+        const cfg = bindings.cfg as Record<string, unknown> | null;
+        return cfg ? (cfg.decayRate as number | null) === null : true;
+      },
+      (b) => complete(b, 'no_decay', { participant }),
+      (b) => {
+        b = get(b, 'acc_score', key, 'existing');
+        b = mapBindings(b, (bindings) => {
+          const cfg = bindings.cfg as Record<string, unknown>;
+          const decayRate = cfg.decayRate as number;
+          const existing = bindings.existing as Record<string, unknown> | null;
+          const currentScore = existing ? (existing.score as number) : 0;
+          return { newScore: currentScore * (1 - decayRate), previousScore: currentScore };
+        }, 'decayResult');
 
-    return { variant: 'decayed', participant, newScore, previousScore: currentScore };
+        let b2 = put(b, 'acc_score', key, {
+          config, participant, score: 0,
+          updatedAt: new Date().toISOString(),
+        });
+
+        return completeFrom(b2, 'decayed', (bindings) => {
+          const result = bindings.decayResult as Record<string, unknown>;
+          return { participant, newScore: result.newScore, previousScore: result.previousScore };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async getScore(input, storage) {
+  getScore(input: Record<string, unknown>) {
     const { config, participant } = input;
     const key = `${config}:${participant}`;
-    const existing = await storage.get('acc_score', key);
-    const score = existing ? (existing.score as number) : 0;
-    return { variant: 'score', participant, score };
+    let p = createProgram();
+    p = get(p, 'acc_score', key, 'existing');
+
+    return completeFrom(p, 'score', (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const score = existing ? (existing.score as number) : 0;
+      return { participant, score };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const simpleAccumulatorHandler = autoInterpret(_simpleAccumulatorHandler);

@@ -1,71 +1,113 @@
+// @migrated dsl-constructs 2026-03-18
 // StakeThreshold Sybil Resistance Provider
 // Requires participants to stake a minimum amount; supports balance tracking and slashing.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const stakeThresholdHandler: ConceptHandler = {
-  async configure(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _stakeThresholdHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
     const id = `stake-cfg-${Date.now()}`;
-    await storage.put('stake_cfg', id, {
+    let p = createProgram();
+    p = put(p, 'stake_cfg', id, {
       id,
       minimumStake: input.minimumStake as number,
       token: input.token,
       lockPeriodDays: input.lockPeriodDays ?? 0,
     });
-
-    await storage.put('plugin-registry', `sybil-method:${id}`, {
+    p = put(p, 'plugin-registry', `sybil-method:${id}`, {
       id: `sybil-method:${id}`,
       pluginKind: 'sybil-method',
       provider: 'StakeThreshold',
       instanceId: id,
     });
-
-    return { variant: 'configured', config: id };
+    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
   },
 
-  async deposit(input, storage) {
+  deposit(input: Record<string, unknown>) {
     const { config, candidate, amount } = input;
     const key = `${config}:${candidate}`;
-    const existing = await storage.get('stake_balance', key);
-    const currentBalance = existing ? (existing.balance as number) : 0;
-    const newBalance = currentBalance + (amount as number);
+    let p = createProgram();
+    p = get(p, 'stake_balance', key, 'existing');
 
-    await storage.put('stake_balance', key, {
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const currentBalance = existing ? (existing.balance as number) : 0;
+      return currentBalance + (amount as number);
+    }, 'newBalance');
+
+    p = put(p, 'stake_balance', key, {
       config,
       candidate,
-      balance: newBalance,
+      balance: 0,
       lastDepositAt: new Date().toISOString(),
     });
 
-    return { variant: 'deposited', candidate, balance: newBalance };
+    return completeFrom(p, 'deposited', (bindings) => {
+      return { candidate, balance: bindings.newBalance };
+    }) as StorageProgram<Result>;
   },
 
-  async check(input, storage) {
+  check(input: Record<string, unknown>) {
     const { config, candidate } = input;
-    const cfg = await storage.get('stake_cfg', config as string);
-    if (!cfg) return { variant: 'not_found', config };
+    let p = createProgram();
+    p = get(p, 'stake_cfg', config as string, 'cfg');
 
-    const minimumStake = cfg.minimumStake as number;
-    const key = `${config}:${candidate}`;
-    const balanceRecord = await storage.get('stake_balance', key);
-    const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+    p = branch(p, 'cfg',
+      (b) => {
+        const key = `${config}:${candidate}`;
+        b = get(b, 'stake_balance', key, 'balanceRecord');
 
-    if (balance >= minimumStake) {
-      return { variant: 'qualified', candidate, balance, minimumStake };
-    }
-    return { variant: 'insufficient', candidate, balance, minimumStake, shortfall: minimumStake - balance };
+        return completeFrom(b, 'qualified', (bindings) => {
+          const cfg = bindings.cfg as Record<string, unknown>;
+          const minimumStake = cfg.minimumStake as number;
+          const balanceRecord = bindings.balanceRecord as Record<string, unknown> | null;
+          const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+
+          if (balance >= minimumStake) {
+            return { variant: 'qualified', candidate, balance, minimumStake };
+          }
+          return { variant: 'insufficient', candidate, balance, minimumStake, shortfall: minimumStake - balance };
+        });
+      },
+      (b) => complete(b, 'not_found', { config }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async slash(input, storage) {
+  slash(input: Record<string, unknown>) {
     const { config, candidate, amount } = input;
     const key = `${config}:${candidate}`;
-    const existing = await storage.get('stake_balance', key);
-    if (!existing) return { variant: 'no_balance', candidate };
+    let p = createProgram();
+    p = get(p, 'stake_balance', key, 'existing');
 
-    const currentBalance = existing.balance as number;
-    const slashAmount = Math.min(amount as number, currentBalance);
-    const newBalance = currentBalance - slashAmount;
+    p = branch(p, 'existing',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const currentBalance = existing.balance as number;
+          const slashAmount = Math.min(amount as number, currentBalance);
+          const newBalance = currentBalance - slashAmount;
+          return { slashedAmount: slashAmount, remainingBalance: newBalance };
+        }, 'slashResult');
 
-    await storage.put('stake_balance', key, { ...existing, balance: newBalance });
-    return { variant: 'slashed', candidate, slashedAmount: slashAmount, remainingBalance: newBalance };
+        let b2 = put(b, 'stake_balance', key, { balance: 0 });
+        return completeFrom(b2, 'slashed', (bindings) => {
+          const result = bindings.slashResult as Record<string, unknown>;
+          return { candidate, slashedAmount: result.slashedAmount, remainingBalance: result.remainingBalance };
+        });
+      },
+      (b) => complete(b, 'no_balance', { candidate }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const stakeThresholdHandler = autoInterpret(_stakeThresholdHandler);

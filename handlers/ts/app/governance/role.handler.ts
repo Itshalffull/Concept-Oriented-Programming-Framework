@@ -1,39 +1,66 @@
+// @migrated dsl-constructs 2026-03-18
 // Role Concept Handler
 // Named capacities with permissions, assignment, and revocation.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const roleHandler: ConceptHandler = {
-  async create(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _roleHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const id = `role-${Date.now()}`;
-    await storage.put('role', id, { id, name: input.name, permissions: input.permissions, polity: input.polity });
-    return { variant: 'created', role: id };
+    let p = createProgram();
+    p = put(p, 'role', id, { id, name: input.name, permissions: input.permissions, polity: input.polity });
+    return complete(p, 'created', { role: id }) as StorageProgram<Result>;
   },
 
-  async assign(input, storage) {
+  assign(input: Record<string, unknown>) {
     const { role, member, assignedBy } = input;
-    await storage.put('assignment', `${role}:${member}`, { role, member, assignedBy, assignedAt: new Date().toISOString() });
-    return { variant: 'assigned', assignment: `${role}:${member}` };
+    let p = createProgram();
+    p = put(p, 'assignment', `${role}:${member}`, { role, member, assignedBy, assignedAt: new Date().toISOString() });
+    return complete(p, 'assigned', { assignment: `${role}:${member}` }) as StorageProgram<Result>;
   },
 
-  async revoke(input, storage) {
+  revoke(input: Record<string, unknown>) {
     const { role, member } = input;
     const key = `${role}:${member}`;
-    const record = await storage.get('assignment', key);
-    if (!record) return { variant: 'not_assigned', role, member };
-    await storage.del('assignment', key);
-    return { variant: 'revoked', role, member };
+    let p = createProgram();
+    p = get(p, 'assignment', key, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'assignment', key);
+        return complete(b2, 'revoked', { role, member });
+      },
+      (b) => complete(b, 'not_assigned', { role, member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async check(input, storage) {
+  check(input: Record<string, unknown>) {
     const { role, member } = input;
-    const record = await storage.get('assignment', `${role}:${member}`);
-    if (record) return { variant: 'has_role', role, member };
-    return { variant: 'no_role', role, member };
+    let p = createProgram();
+    p = get(p, 'assignment', `${role}:${member}`, 'record');
+
+    p = branch(p, 'record',
+      (b) => complete(b, 'has_role', { role, member }),
+      (b) => complete(b, 'no_role', { role, member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async dissolve(input, storage) {
+  dissolve(input: Record<string, unknown>) {
     const { role } = input;
-    await storage.del('role', role as string);
-    return { variant: 'dissolved', role };
+    let p = createProgram();
+    p = del(p, 'role', role as string);
+    return complete(p, 'dissolved', { role }) as StorageProgram<Result>;
   },
 };
+
+export const roleHandler = autoInterpret(_roleHandler);

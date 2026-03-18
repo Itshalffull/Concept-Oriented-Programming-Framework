@@ -1,50 +1,85 @@
+// @migrated dsl-constructs 2026-03-18
 // Sanction Concept Handler
 // Graduated consequences and rewards (Ostrom DP5).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const sanctionHandler: ConceptHandler = {
-  async impose(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _sanctionHandler: FunctionalConceptHandler = {
+  impose(input: Record<string, unknown>) {
     const id = `sanction-${Date.now()}`;
-    await storage.put('sanction', id, {
+    let p = createProgram();
+    p = put(p, 'sanction', id, {
       id, subject: input.subject, severity: input.severity,
       consequence: input.consequence, reason: input.reason,
       status: 'Active', imposedAt: new Date().toISOString(),
     });
-    return { variant: 'imposed', sanction: id };
+    return complete(p, 'imposed', { sanction: id }) as StorageProgram<Result>;
   },
 
-  async escalate(input, storage) {
+  escalate(input: Record<string, unknown>) {
     const { sanction } = input;
-    const record = await storage.get('sanction', sanction as string);
-    if (!record) return { variant: 'not_found', sanction };
-    const levels = ['Warning', 'Minor', 'Major', 'Critical', 'Expulsion'];
-    const idx = levels.indexOf(record.severity as string);
-    const newSeverity = levels[Math.min(idx + 1, levels.length - 1)];
-    await storage.put('sanction', sanction as string, { ...record, severity: newSeverity });
-    return { variant: 'escalated', sanction, newSeverity };
+    let p = createProgram();
+    p = get(p, 'sanction', sanction as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const levels = ['Warning', 'Minor', 'Major', 'Critical', 'Expulsion'];
+          const idx = levels.indexOf(record.severity as string);
+          return levels[Math.min(idx + 1, levels.length - 1)];
+        }, 'newSeverity');
+
+        let b2 = put(b, 'sanction', sanction as string, { severity: '' });
+        return completeFrom(b2, 'escalated', (bindings) => {
+          return { sanction, newSeverity: bindings.newSeverity };
+        });
+      },
+      (b) => complete(b, 'not_found', { sanction }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async appeal(input, storage) {
+  appeal(input: Record<string, unknown>) {
     const { sanction, appellant, grounds } = input;
-    await storage.put('appeal', `appeal-${sanction}`, { sanction, appellant, grounds, status: 'Pending', appealedAt: new Date().toISOString() });
-    return { variant: 'appealed', sanction };
+    let p = createProgram();
+    p = put(p, 'appeal', `appeal-${sanction}`, { sanction, appellant, grounds, status: 'Pending', appealedAt: new Date().toISOString() });
+    return complete(p, 'appealed', { sanction }) as StorageProgram<Result>;
   },
 
-  async pardon(input, storage) {
+  pardon(input: Record<string, unknown>) {
     const { sanction, reason } = input;
-    const record = await storage.get('sanction', sanction as string);
-    if (!record) return { variant: 'not_found', sanction };
-    await storage.put('sanction', sanction as string, { ...record, status: 'Pardoned', pardonReason: reason });
-    return { variant: 'pardoned', sanction };
+    let p = createProgram();
+    p = get(p, 'sanction', sanction as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'sanction', sanction as string, { status: 'Pardoned', pardonReason: reason });
+        return complete(b2, 'pardoned', { sanction });
+      },
+      (b) => complete(b, 'not_found', { sanction }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async reward(input, storage) {
+  reward(input: Record<string, unknown>) {
     const id = `reward-${Date.now()}`;
-    await storage.put('sanction', id, {
+    let p = createProgram();
+    p = put(p, 'sanction', id, {
       id, subject: input.subject, type: input.type,
       amount: input.amount, reason: input.reason,
       status: 'Active', isReward: true, awardedAt: new Date().toISOString(),
     });
-    return { variant: 'rewarded', sanction: id };
+    return complete(p, 'rewarded', { sanction: id }) as StorageProgram<Result>;
   },
 };
+
+export const sanctionHandler = autoInterpret(_sanctionHandler);
