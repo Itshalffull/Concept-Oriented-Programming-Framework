@@ -2,7 +2,7 @@
 // Tag Concept Implementation (Classification Kit)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -43,11 +43,11 @@ export const tagHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'tag', {}, 'allTags');
-    p = mapBindings(p, (bindings) => {
+    p = completeFrom(p, 'ok', (bindings) => {
       const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
-      return JSON.stringify(allTags.map(record => record.tag as string));
-    }, 'tagsJson');
-    return complete(p, 'ok', { tags: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { tags: JSON.stringify(allTags.map(record => record.tag as string)) };
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   addTag(input: Record<string, unknown>) {

@@ -2,7 +2,7 @@
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -27,7 +27,13 @@ export const commentHandler: FunctionalConceptHandler = {
     } else {
       p = find(p, 'comment', {}, 'allComments');
     }
-    return complete(p, 'ok', { comments: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = completeFrom(p, 'ok', (bindings) => {
+      const allComments = (bindings.allComments as Array<Record<string, unknown>>) || [];
+      return { comments: JSON.stringify(allComments.map(r => ({
+        comment: r.comment, body: r.body, target: r.target, author: r.author,
+      }))) };
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   addComment(input: Record<string, unknown>) {
