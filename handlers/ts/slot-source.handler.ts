@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SlotSource Handler
 //
@@ -6,7 +7,14 @@
 // a different data retrieval strategy.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -17,145 +25,141 @@ export function resetSlotSourceCounter(): void {
   idCounter = 0;
 }
 
-export const slotSourceHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const sourceType = input.source_type as string;
     const provider = input.provider as string;
 
-    // Check if already registered
-    const existing = await storage.find('provider', {});
-    const alreadyRegistered = existing.find(
-      (p: Record<string, unknown>) => p.source_type === sourceType,
-    );
+    let p = createProgram();
+    p = find(p, 'provider', {}, 'existing');
 
-    if (alreadyRegistered) {
-      return { variant: 'already_registered', source_type: sourceType };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = bindings.existing as Record<string, unknown>[];
+      const alreadyRegistered = existing.find(
+        (pr: Record<string, unknown>) => pr.source_type === sourceType,
+      );
 
-    const id = nextId();
-    await storage.put('provider', id, {
-      id,
-      source_type: sourceType,
-      provider,
-    });
+      if (alreadyRegistered) {
+        return { variant: 'already_registered', source_type: sourceType };
+      }
 
-    return { variant: 'ok' };
+      return {};
+    }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const sourceType = input.source_type as string;
     const config = input.config as string;
     const context = input.context as string;
 
-    // Find the provider for this source type
-    const providers = await storage.find('provider', {});
-    const provider = providers.find(
-      (p: Record<string, unknown>) => p.source_type === sourceType,
-    );
+    let p = createProgram();
+    p = find(p, 'provider', {}, 'providers');
 
-    if (!provider) {
-      return {
-        variant: 'error',
-        message: `No provider registered for source type '${sourceType}'.`,
-      };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const providers = bindings.providers as Record<string, unknown>[];
+      const provider = providers.find(
+        (pr: Record<string, unknown>) => pr.source_type === sourceType,
+      );
 
-    // Parse config and context
-    let parsedConfig: Record<string, unknown>;
-    let parsedContext: Record<string, unknown>;
-
-    try {
-      parsedConfig = JSON.parse(config);
-    } catch {
-      return { variant: 'error', message: `Invalid config JSON: ${config}` };
-    }
-
-    try {
-      parsedContext = JSON.parse(context);
-    } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
-    }
-
-    // Resolve based on source type
-    let data: string;
-
-    switch (sourceType) {
-      case 'static_value':
-        data = String(parsedConfig.value ?? '');
-        break;
-
-      case 'entity_field': {
-        const field = String(parsedConfig.field ?? '');
-        // Resolve from entity in context if available
-        const entity = parsedContext.entity as Record<string, unknown> | undefined;
-        if (entity && field && field in entity) {
-          const val = entity[field];
-          // Return the actual value as a string
-          data = val === null || val === undefined
-            ? ''
-            : typeof val === 'object'
-              ? JSON.stringify(val)
-              : String(val);
-        } else if (parsedContext.entity_id) {
-          // Fallback: return field reference for client-side resolution
-          data = JSON.stringify({ field, entity_id: parsedContext.entity_id });
-        } else {
-          data = '';
-        }
-        break;
+      if (!provider) {
+        return {
+          variant: 'error',
+          message: `No provider registered for source type '${sourceType}'.`,
+        };
       }
 
-      case 'widget_embed':
-        data = JSON.stringify({
-          widget_id: parsedConfig.widget_id,
-          context: parsedContext,
-        });
-        break;
+      let parsedConfig: Record<string, unknown>;
+      let parsedContext: Record<string, unknown>;
 
-      case 'view_embed':
-        data = JSON.stringify({
-          view_id: parsedConfig.view_id,
-          context: parsedContext,
-        });
-        break;
+      try {
+        parsedConfig = JSON.parse(config);
+      } catch {
+        return { variant: 'error', message: `Invalid config JSON: ${config}` };
+      }
 
-      case 'block_embed':
-        data = JSON.stringify({
-          block_id: parsedConfig.block_id,
-          context: parsedContext,
-        });
-        break;
+      try {
+        parsedContext = JSON.parse(context);
+      } catch {
+        return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      }
 
-      case 'menu':
-        data = JSON.stringify({
-          menu_id: parsedConfig.menu_id,
-        });
-        break;
+      let data: string;
 
-      case 'formula':
-        data = JSON.stringify({
-          expression: parsedConfig.expression,
-          context: parsedContext,
-        });
-        break;
+      switch (sourceType) {
+        case 'static_value':
+          data = String(parsedConfig.value ?? '');
+          break;
 
-      case 'entity_reference_display':
-        data = JSON.stringify({
-          reference_field: parsedConfig.reference_field,
-          display_mode: parsedConfig.display_mode,
-          entity_id: parsedContext.entity_id,
-        });
-        break;
+        case 'entity_field': {
+          const field = String(parsedConfig.field ?? '');
+          const entity = parsedContext.entity as Record<string, unknown> | undefined;
+          if (entity && field && field in entity) {
+            const val = entity[field];
+            data = val === null || val === undefined
+              ? ''
+              : typeof val === 'object'
+                ? JSON.stringify(val)
+                : String(val);
+          } else if (parsedContext.entity_id) {
+            data = JSON.stringify({ field, entity_id: parsedContext.entity_id });
+          } else {
+            data = '';
+          }
+          break;
+        }
 
-      default:
-        data = JSON.stringify({ config: parsedConfig, context: parsedContext });
-        break;
-    }
+        case 'widget_embed':
+          data = JSON.stringify({
+            widget_id: parsedConfig.widget_id,
+            context: parsedContext,
+          });
+          break;
 
-    return { variant: 'ok', data };
+        case 'view_embed':
+          data = JSON.stringify({
+            view_id: parsedConfig.view_id,
+            context: parsedContext,
+          });
+          break;
+
+        case 'block_embed':
+          data = JSON.stringify({
+            block_id: parsedConfig.block_id,
+            context: parsedContext,
+          });
+          break;
+
+        case 'menu':
+          data = JSON.stringify({
+            menu_id: parsedConfig.menu_id,
+          });
+          break;
+
+        case 'formula':
+          data = JSON.stringify({
+            expression: parsedConfig.expression,
+            context: parsedContext,
+          });
+          break;
+
+        case 'entity_reference_display':
+          data = JSON.stringify({
+            reference_field: parsedConfig.reference_field,
+            display_mode: parsedConfig.display_mode,
+            entity_id: parsedContext.entity_id,
+          });
+          break;
+
+        default:
+          data = JSON.stringify({ config: parsedConfig, context: parsedContext });
+          break;
+      }
+
+      return { data };
+    }) as StorageProgram<Result>;
   },
 
-  async process(input: Record<string, unknown>, storage: ConceptStorage) {
+  process(input: Record<string, unknown>) {
     const data = input.data as string;
     const processors = input.processors as string[];
 
@@ -164,7 +168,6 @@ export const slotSourceHandler: ConceptHandler = {
     for (const processor of processors) {
       switch (processor) {
         case 'truncate':
-          // Truncate to 100 chars by default
           if (result.length > 100) {
             result = result.slice(0, 100) + '...';
           }
@@ -175,11 +178,9 @@ export const slotSourceHandler: ConceptHandler = {
           break;
 
         case 'date_format':
-          // Pass through — in a real implementation would format dates
           break;
 
         case 'image_style':
-          // Pass through — in a real implementation would apply image styles
           break;
 
         case 'fallback':
@@ -189,11 +190,13 @@ export const slotSourceHandler: ConceptHandler = {
           break;
 
         default:
-          // Unknown processor — skip
           break;
       }
     }
 
-    return { variant: 'ok', result };
+    const p = createProgram();
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
+
+export const slotSourceHandler = autoInterpret(_handler);

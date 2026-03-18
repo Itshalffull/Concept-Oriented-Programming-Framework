@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // PerformanceProfile Handler
 //
@@ -9,7 +10,14 @@
 // mount/unmount timing).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -25,12 +33,11 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)];
 }
 
-export const performanceProfileHandler: ConceptHandler = {
-  async aggregate(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  aggregate(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const window = input.window as string;
 
-    // Parse window to get time range
     let start = '';
     let end = '';
     try {
@@ -41,227 +48,225 @@ export const performanceProfileHandler: ConceptHandler = {
       // empty window means all time
     }
 
-    // Find runtime coverage entries for this symbol
-    const entries = await storage.find('runtime-coverage', { symbol });
-    const filtered = entries.filter((e) => {
-      if (!start && !end) return true;
-      const ts = e.timestamp as string || e.lastExercised as string || '';
-      if (start && ts < start) return false;
-      if (end && ts > end) return false;
-      return true;
-    });
+    let p = createProgram();
+    p = find(p, 'runtime-coverage', { symbol }, 'entries');
 
-    if (filtered.length < 2) {
-      return { variant: 'insufficientData', count: filtered.length };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const entries = bindings.entries as Record<string, unknown>[];
+      const filtered = entries.filter((e) => {
+        if (!start && !end) return true;
+        const ts = e.timestamp as string || e.lastExercised as string || '';
+        if (start && ts < start) return false;
+        if (end && ts > end) return false;
+        return true;
+      });
 
-    const id = nextId();
+      if (filtered.length < 2) {
+        return { variant: 'insufficientData', count: filtered.length };
+      }
 
-    // Determine entity kind from symbol path
-    let entityKind = 'unknown';
-    if (symbol.includes('/action/')) entityKind = 'action';
-    else if (symbol.includes('/sync/')) entityKind = 'sync';
-    else if (symbol.includes('/widget/')) entityKind = 'widget';
-    else if (symbol.includes('/variant/')) entityKind = 'variant';
+      const id = nextId();
 
-    // Collect timing data from performance entries
-    const timings: number[] = [];
-    let errorCount = 0;
-    for (const e of filtered) {
-      const duration = (e.durationMs as number) || 0;
-      timings.push(duration);
-      if (e.status === 'error' || e.status === 'failed') errorCount++;
-    }
+      let entityKind = 'unknown';
+      if (symbol.includes('/action/')) entityKind = 'action';
+      else if (symbol.includes('/sync/')) entityKind = 'sync';
+      else if (symbol.includes('/widget/')) entityKind = 'widget';
+      else if (symbol.includes('/variant/')) entityKind = 'variant';
 
-    timings.sort((a, b) => a - b);
-    const timing = JSON.stringify({
-      p50: percentile(timings, 50),
-      p90: percentile(timings, 90),
-      p99: percentile(timings, 99),
-      min: timings[0] || 0,
-      max: timings[timings.length - 1] || 0,
-    });
+      const timings: number[] = [];
+      let errorCount = 0;
+      for (const e of filtered) {
+        const duration = (e.durationMs as number) || 0;
+        timings.push(duration);
+        if (e.status === 'error' || e.status === 'failed') errorCount++;
+      }
 
-    const errorRate = filtered.length > 0
-      ? (errorCount / filtered.length).toFixed(4)
-      : '0';
+      timings.sort((a, b) => a - b);
+      const timing = JSON.stringify({
+        p50: percentile(timings, 50),
+        p90: percentile(timings, 90),
+        p99: percentile(timings, 99),
+        min: timings[0] || 0,
+        max: timings[timings.length - 1] || 0,
+      });
 
-    await storage.put('performance-profile', id, {
-      id,
-      entitySymbol: symbol,
-      entityKind,
-      sampleWindow: window,
-      invocationCount: filtered.length,
-      timing,
-      errorRate,
-      syncBreakdown: '{}',
-      selectionBreakdown: '{}',
-      renderBreakdown: '{}',
-    });
+      const errorRate = filtered.length > 0
+        ? (errorCount / filtered.length).toFixed(4)
+        : '0';
 
-    return { variant: 'ok', profile: id };
+      return { profile: id };
+    }) as StorageProgram<Result>;
   },
 
-  async hotspots(input: Record<string, unknown>, storage: ConceptStorage) {
+  hotspots(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const metric = input.metric as string;
     const topN = input.topN as number;
 
-    const allProfiles = await storage.find('performance-profile');
-    const filtered = kind
-      ? allProfiles.filter((p) => p.entityKind === kind)
-      : allProfiles;
+    let p = createProgram();
+    p = find(p, 'performance-profile', {}, 'allProfiles');
 
-    // Extract the requested metric from each profile
-    const scored = filtered.map((p) => {
-      let value = 0;
-      if (metric === 'errorRate') {
-        value = parseFloat(p.errorRate as string || '0');
-      } else {
-        try {
-          const timing = JSON.parse(p.timing as string || '{}');
-          value = timing[metric] || 0;
-        } catch {
-          value = 0;
-        }
-      }
-      return { symbol: p.entitySymbol as string, value };
-    });
+    return completeFrom(p, 'ok', (bindings) => {
+      const allProfiles = bindings.allProfiles as Record<string, unknown>[];
+      const filtered = kind
+        ? allProfiles.filter((pr) => pr.entityKind === kind)
+        : allProfiles;
 
-    scored.sort((a, b) => b.value - a.value);
-    const hotspots = scored.slice(0, topN || 10);
-
-    return { variant: 'ok', hotspots: JSON.stringify(hotspots) };
-  },
-
-  async slowChains(input: Record<string, unknown>, storage: ConceptStorage) {
-    const thresholdMs = input.thresholdMs as number;
-
-    // Find all sync entities and their associated profiles
-    const allSyncs = await storage.find('sync-entity');
-    const allProfiles = await storage.find('performance-profile');
-
-    // Build a map of symbol -> p90 timing
-    const profileMap = new Map<string, number>();
-    for (const p of allProfiles) {
-      try {
-        const timing = JSON.parse(p.timing as string || '{}');
-        profileMap.set(p.entitySymbol as string, timing.p90 || 0);
-      } catch {
-        // skip
-      }
-    }
-
-    // For each sync, trace its chain and sum p90 timings
-    const chains: Array<Record<string, unknown>> = [];
-    for (const sync of allSyncs) {
-      const syncSymbol = sync.symbol as string;
-      const p90 = profileMap.get(syncSymbol) || 0;
-
-      // Sum timings along the then-action chain
-      let totalP90 = p90;
-      let bottleneck = syncSymbol;
-      let maxP90 = p90;
-
-      try {
-        const thenActions = JSON.parse(sync.thenActions as string || '[]');
-        for (const action of thenActions) {
-          const actionSymbol = `clef/action/${(action as Record<string, unknown>).concept}/${(action as Record<string, unknown>).action}`;
-          const actionP90 = profileMap.get(actionSymbol) || 0;
-          totalP90 += actionP90;
-          if (actionP90 > maxP90) {
-            maxP90 = actionP90;
-            bottleneck = actionSymbol;
+      const scored = filtered.map((pr) => {
+        let value = 0;
+        if (metric === 'errorRate') {
+          value = parseFloat(pr.errorRate as string || '0');
+        } else {
+          try {
+            const timing = JSON.parse(pr.timing as string || '{}');
+            value = timing[metric] || 0;
+          } catch {
+            value = 0;
           }
         }
-      } catch {
-        // skip
-      }
+        return { symbol: pr.entitySymbol as string, value };
+      });
 
-      if (totalP90 > thresholdMs) {
-        chains.push({
-          flowGraphPath: syncSymbol,
-          p90TotalMs: totalP90,
-          bottleneck,
-        });
-      }
-    }
+      scored.sort((a, b) => b.value - a.value);
+      const hotspots = scored.slice(0, topN || 10);
 
-    chains.sort((a, b) => (b.p90TotalMs as number) - (a.p90TotalMs as number));
-
-    return { variant: 'ok', chains: JSON.stringify(chains) };
+      return { hotspots: JSON.stringify(hotspots) };
+    }) as StorageProgram<Result>;
   },
 
-  async compareWindows(input: Record<string, unknown>, storage: ConceptStorage) {
+  slowChains(input: Record<string, unknown>) {
+    const thresholdMs = input.thresholdMs as number;
+
+    let p = createProgram();
+    p = find(p, 'sync-entity', {}, 'allSyncs');
+    p = find(p, 'performance-profile', {}, 'allProfiles');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+      const allProfiles = bindings.allProfiles as Record<string, unknown>[];
+
+      const profileMap = new Map<string, number>();
+      for (const pr of allProfiles) {
+        try {
+          const timing = JSON.parse(pr.timing as string || '{}');
+          profileMap.set(pr.entitySymbol as string, timing.p90 || 0);
+        } catch {
+          // skip
+        }
+      }
+
+      const chains: Array<Record<string, unknown>> = [];
+      for (const sync of allSyncs) {
+        const syncSymbol = sync.symbol as string;
+        const p90 = profileMap.get(syncSymbol) || 0;
+
+        let totalP90 = p90;
+        let bottleneck = syncSymbol;
+        let maxP90 = p90;
+
+        try {
+          const thenActions = JSON.parse(sync.thenActions as string || '[]');
+          for (const action of thenActions) {
+            const actionSymbol = `clef/action/${(action as Record<string, unknown>).concept}/${(action as Record<string, unknown>).action}`;
+            const actionP90 = profileMap.get(actionSymbol) || 0;
+            totalP90 += actionP90;
+            if (actionP90 > maxP90) {
+              maxP90 = actionP90;
+              bottleneck = actionSymbol;
+            }
+          }
+        } catch {
+          // skip
+        }
+
+        if (totalP90 > thresholdMs) {
+          chains.push({
+            flowGraphPath: syncSymbol,
+            p90TotalMs: totalP90,
+            bottleneck,
+          });
+        }
+      }
+
+      chains.sort((a, b) => (b.p90TotalMs as number) - (a.p90TotalMs as number));
+
+      return { chains: JSON.stringify(chains) };
+    }) as StorageProgram<Result>;
+  },
+
+  compareWindows(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const windowA = input.windowA as string;
     const windowB = input.windowB as string;
 
-    // Find performance data for each window
-    const profilesA = await storage.find('performance-profile', { entitySymbol: symbol });
-    const profilesB = await storage.find('performance-profile', { entitySymbol: symbol });
+    let p = createProgram();
+    p = find(p, 'performance-profile', { entitySymbol: symbol }, 'profiles');
 
-    // Filter by window
-    let dataA: Record<string, unknown> | null = null;
-    let dataB: Record<string, unknown> | null = null;
+    return completeFrom(p, 'ok', (bindings) => {
+      const profiles = bindings.profiles as Record<string, unknown>[];
 
-    for (const p of profilesA) {
-      if (p.sampleWindow === windowA) { dataA = p; break; }
-    }
-    for (const p of profilesB) {
-      if (p.sampleWindow === windowB) { dataB = p; break; }
-    }
+      let dataA: Record<string, unknown> | null = null;
+      let dataB: Record<string, unknown> | null = null;
 
-    if (!dataA) {
-      return { variant: 'insufficientData', window: windowA, count: 0 };
-    }
-    if (!dataB) {
-      return { variant: 'insufficientData', window: windowB, count: 0 };
-    }
+      for (const pr of profiles) {
+        if (pr.sampleWindow === windowA && !dataA) { dataA = pr; }
+        if (pr.sampleWindow === windowB && !dataB) { dataB = pr; }
+      }
 
-    let aP50 = 0, aP99 = 0, bP50 = 0, bP99 = 0;
-    try {
-      const timingA = JSON.parse(dataA.timing as string || '{}');
-      const timingB = JSON.parse(dataB.timing as string || '{}');
-      aP50 = timingA.p50 || 0;
-      aP99 = timingA.p99 || 0;
-      bP50 = timingB.p50 || 0;
-      bP99 = timingB.p99 || 0;
-    } catch {
-      // defaults
-    }
+      if (!dataA) {
+        return { variant: 'insufficientData', window: windowA, count: 0 };
+      }
+      if (!dataB) {
+        return { variant: 'insufficientData', window: windowB, count: 0 };
+      }
 
-    const pctChange = aP50 > 0 ? ((bP50 - aP50) / aP50 * 100).toFixed(2) : '0';
-    const regression = bP50 > aP50 * 1.1; // 10% threshold
+      let aP50 = 0, aP99 = 0, bP50 = 0, bP99 = 0;
+      try {
+        const timingA = JSON.parse(dataA.timing as string || '{}');
+        const timingB = JSON.parse(dataB.timing as string || '{}');
+        aP50 = timingA.p50 || 0;
+        aP99 = timingA.p99 || 0;
+        bP50 = timingB.p50 || 0;
+        bP99 = timingB.p99 || 0;
+      } catch {
+        // defaults
+      }
 
-    return {
-      variant: 'ok',
-      comparison: JSON.stringify({
-        aP50, bP50, aP99, bP99,
-        regression,
-        pctChange,
-      }),
-    };
+      const pctChange = aP50 > 0 ? ((bP50 - aP50) / aP50 * 100).toFixed(2) : '0';
+      const regression = bP50 > aP50 * 1.1;
+
+      return {
+        comparison: JSON.stringify({
+          aP50, bP50, aP99, bP99, regression, pctChange,
+        }),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const profile = input.profile as string;
 
-    const record = await storage.get('performance-profile', profile);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'performance-profile', profile, 'record');
 
-    return {
-      variant: 'ok',
-      profile: record.id as string,
-      entitySymbol: record.entitySymbol as string,
-      entityKind: record.entityKind as string,
-      invocationCount: (record.invocationCount as number) || 0,
-      errorRate: record.errorRate as string,
-    };
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'notfound', {}),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          profile: record.id as string,
+          entitySymbol: record.entitySymbol as string,
+          entityKind: record.entityKind as string,
+          invocationCount: (record.invocationCount as number) || 0,
+          errorRate: record.errorRate as string,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const performanceProfileHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetPerformanceProfileCounter(): void {

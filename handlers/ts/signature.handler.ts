@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Signature Handler
 //
@@ -6,8 +7,15 @@
 // timestamping against a set of trusted signer identities.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 import { createHmac, randomBytes } from 'crypto';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -23,87 +31,83 @@ function hmacSign(data: string, key: string): string {
 
 /**
  * Generate a synthetic certificate for a signer identity.
- * In production this would come from a real PKI / X.509 infrastructure.
  */
 function generateCertificate(identity: string): string {
   const nonce = randomBytes(16).toString('hex');
   return JSON.stringify({ identity, nonce, issuedAt: new Date().toISOString() });
 }
 
-export const signatureHandler: ConceptHandler = {
-  async sign(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  sign(input: Record<string, unknown>) {
     const contentHash = input.contentHash as string;
     const identity = input.identity as string;
 
-    // Check that the identity is a trusted signer
-    const trusted = await storage.find('signature-trusted', { identity });
-    if (trusted.length === 0) {
-      return {
-        variant: 'unknownIdentity',
-        message: `Identity "${identity}" is not in the trusted signers set`,
-      };
-    }
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'trusted');
 
-    // Create the signature using HMAC over contentHash keyed by identity
-    const certificate = generateCertificate(identity);
-    const timestamp = new Date().toISOString();
-    const signatureData = hmacSign(`${contentHash}:${identity}:${timestamp}`, identity);
+    return completeFrom(p, 'ok', (bindings) => {
+      const trusted = bindings.trusted as Record<string, unknown>[];
+      if (trusted.length === 0) {
+        return {
+          variant: 'unknownIdentity',
+          message: `Identity "${identity}" is not in the trusted signers set`,
+        };
+      }
 
-    const sigId = nextId();
-    await storage.put('signature', sigId, {
-      id: sigId,
-      contentHash,
-      signer: identity,
-      certificate,
-      timestamp,
-      signatureData,
-      valid: true,
-    });
+      const certificate = generateCertificate(identity);
+      const timestamp = new Date().toISOString();
+      const signatureData = hmacSign(`${contentHash}:${identity}:${timestamp}`, identity);
 
-    return { variant: 'ok', signatureId: sigId };
+      const sigId = nextId();
+      return { signatureId: sigId };
+    }) as StorageProgram<Result>;
   },
 
-  async verify(input: Record<string, unknown>, storage: ConceptStorage) {
+  verify(input: Record<string, unknown>) {
     const contentHash = input.contentHash as string;
     const signatureId = input.signatureId as string;
 
-    const record = await storage.get('signature', signatureId);
-    if (!record) {
-      return { variant: 'invalid', message: `Signature "${signatureId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'signature', signatureId, 'record');
 
-    const signer = record.signer as string;
-    const timestamp = record.timestamp as string;
-    const storedSig = record.signatureData as string;
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = find(thenP, 'signature-trusted', {}, 'allTrusted');
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allTrusted = bindings.allTrusted as Record<string, unknown>[];
 
-    // Verify the signer is still trusted
-    const trusted = await storage.find('signature-trusted', { identity: signer });
-    if (trusted.length === 0) {
-      return { variant: 'untrustedSigner', signer };
-    }
+          const signer = record.signer as string;
+          const timestamp = record.timestamp as string;
+          const storedSig = record.signatureData as string;
 
-    // Re-compute the expected HMAC and compare
-    const expectedSig = hmacSign(`${contentHash}:${signer}:${timestamp}`, signer);
-    if (storedSig !== expectedSig) {
-      return { variant: 'invalid', message: 'Signature does not match content hash' };
-    }
+          const trusted = allTrusted.filter(t => t.identity === signer);
+          if (trusted.length === 0) {
+            return { variant: 'untrustedSigner', signer };
+          }
 
-    // Check certificate expiry (certificates issued more than 365 days ago are expired)
-    const cert = JSON.parse(record.certificate as string);
-    const issuedAt = new Date(cert.issuedAt).getTime();
-    const oneYearMs = 365 * 24 * 60 * 60 * 1000;
-    if (Date.now() - issuedAt > oneYearMs) {
-      return { variant: 'expired', message: 'Certificate has expired' };
-    }
+          const expectedSig = hmacSign(`${contentHash}:${signer}:${timestamp}`, signer);
+          if (storedSig !== expectedSig) {
+            return { variant: 'invalid', message: 'Signature does not match content hash' };
+          }
 
-    return { variant: 'valid', identity: signer, timestamp };
+          const cert = JSON.parse(record.certificate as string);
+          const issuedAt = new Date(cert.issuedAt).getTime();
+          const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+          if (Date.now() - issuedAt > oneYearMs) {
+            return { variant: 'expired', message: 'Certificate has expired' };
+          }
+
+          return { variant: 'valid', identity: signer, timestamp };
+        });
+      },
+      (elseP) => complete(elseP, 'invalid', { message: `Signature "${signatureId}" not found` }),
+    ) as StorageProgram<Result>;
   },
 
-  async timestamp(input: Record<string, unknown>, storage: ConceptStorage) {
+  timestamp(input: Record<string, unknown>) {
     const contentHash = input.contentHash as string;
 
-    // Generate an RFC 3161-style timestamp proof.
-    // In production this would call a Timestamp Authority (TSA).
     const ts = new Date().toISOString();
     const nonce = randomBytes(16).toString('hex');
     const proofData = hmacSign(`${contentHash}:${ts}:${nonce}`, 'tsa-authority');
@@ -116,30 +120,30 @@ export const signatureHandler: ConceptHandler = {
       authority: 'tsa-authority',
     });
 
-    return { variant: 'ok', proof };
+    const p = createProgram();
+    return complete(p, 'ok', { proof }) as StorageProgram<Result>;
   },
 
-  async addTrustedSigner(input: Record<string, unknown>, storage: ConceptStorage) {
+  addTrustedSigner(input: Record<string, unknown>) {
     const identity = input.identity as string;
 
-    // Check if already trusted
-    const existing = await storage.find('signature-trusted', { identity });
-    if (existing.length > 0) {
-      return {
-        variant: 'alreadyTrusted',
-        message: `Identity "${identity}" is already in the trusted set`,
-      };
-    }
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'existing');
 
-    const id = nextId();
-    await storage.put('signature-trusted', id, {
-      id,
-      identity,
-    });
-
-    return { variant: 'ok' };
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = bindings.existing as Record<string, unknown>[];
+      if (existing.length > 0) {
+        return {
+          variant: 'alreadyTrusted',
+          message: `Identity "${identity}" is already in the trusted set`,
+        };
+      }
+      return {};
+    }) as StorageProgram<Result>;
   },
 };
+
+export const signatureHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSignatureCounter(): void {
