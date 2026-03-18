@@ -291,15 +291,17 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
+    const p = createProgram();
+
+    return complete(p, 'ok', {
       name: 'RustSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'RustSdk',
       capabilities: JSON.stringify(['client', 'types', 'cargo']),
       targetKey: 'rust',
       providerType: 'sdk',
-    };
+
+    }) as StorageProgram<Result>;
   },
 
   /**
@@ -316,26 +318,34 @@ const _handler: FunctionalConceptHandler = {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
+      const p = createProgram();
+
+      return complete(p, 'error', {, reason: 'projection is required and must be a JSON string' }) as StorageProgram<Result>;
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
+      const p = createProgram();
+
+      return complete(p, 'error', {, reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
+      const p = createProgram();
+
+      return complete(p, 'error', {, reason: 'projection.conceptManifest is required and must be a JSON string' }) as StorageProgram<Result>;
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
+      const p = createProgram();
+
+      return complete(p, 'error', {, reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -354,7 +364,9 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      return { variant: 'ok', files: [], package: packageName };
+      const p = createProgram();
+
+      return complete(p, 'ok', {, files: [], package: packageName }) as StorageProgram<Result>;
     }
 
     // --- Generate concept client file ---
