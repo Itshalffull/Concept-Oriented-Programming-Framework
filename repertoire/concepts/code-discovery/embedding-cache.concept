@@ -90,6 +90,31 @@ concept EmbeddingCache [E] {
         are JSON arrays of distinct values present in the cache.
       }
     }
+
+    action lookupWithConfig(digest: String, model: String, dimensions: Int) {
+      -> hit(vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
+        An entry with this content digest, model, and dimensions
+        combination exists in the cache. The composite key ensures
+        that the same content embedded with different models or
+        dimensions produces separate cache entries.
+      }
+      -> miss() {
+        No entry exists for this digest+model+dimensions combination.
+        The caller should compute a fresh embedding and store it
+        via putWithConfig.
+      }
+    }
+
+    action putWithConfig(digest: String, model: String, dimensions: Int, vector: String, sourceKind: String, sourceKey: String) {
+      -> stored(entry: E) {
+        A new cache entry was created for this digest+model+dimensions
+        combination.
+      }
+      -> alreadyExists(entry: E) {
+        An entry with this digest+model+dimensions combination already
+        exists. The existing entry is returned unchanged.
+      }
+    }
   }
 
   invariant {
@@ -106,5 +131,15 @@ concept EmbeddingCache [E] {
     after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> stored(entry: e)
     and  evict(digest: "def456") -> ok()
     then lookup(digest: "def456") -> miss()
+  }
+
+  invariant {
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
+    then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
+  }
+
+  invariant {
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e1)
+    then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
   }
 }

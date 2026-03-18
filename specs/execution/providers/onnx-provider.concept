@@ -1,0 +1,79 @@
+@version(1)
+concept OnnxProvider [N] {
+
+  purpose {
+    Load and run ONNX inference sessions with tensor I/O, device
+    selection, and batch support. Serves as the runtime provider
+    for all ONNX-based local ML inference.
+  }
+
+  state {
+    sessions: set N
+    name: N -> String
+    modelPath: N -> String
+    device: N -> String
+    status: N -> String
+    inputSchema: N -> String
+    outputSchema: N -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "onnx-provider", kind is "runtime", capabilities
+        lists supported devices (cpu, cuda, tensorrt).
+      }
+    }
+
+    action load(name: String, modelPath: String, device: String, options: String) {
+      -> ok(session: N) {
+        Load an ONNX model from the given path, create an inference
+        session on the specified device, and make it available
+        under the given name.
+      }
+      -> loadError(message: String) {
+        The ONNX model could not be loaded due to an invalid model
+        file, unsupported operators, or device unavailability.
+      }
+      -> exists(name: String) {
+        A session with this name is already loaded.
+      }
+    }
+
+    action infer(session: String, inputs: String, options: String) {
+      -> ok(outputs: String, timingMs: Int) {
+        Run inference on the named session with the given input
+        tensors (JSON-serialized). Returns output tensors and
+        inference timing in milliseconds.
+      }
+      -> notFound(session: String) {
+        No session is loaded with this name.
+      }
+      -> inferenceError(message: String) {
+        Inference failed due to a runtime error in the ONNX
+        execution provider.
+      }
+      -> shapeMismatch(expected: String, got: String) {
+        The input tensor shapes do not match the model's expected
+        input schema.
+      }
+    }
+
+    action list() {
+      -> ok(sessions: String) {
+        Return all loaded sessions as a serialized JSON array
+        with name, modelPath, device, and status.
+      }
+    }
+  }
+
+  invariant {
+    after load(name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}") -> ok(session: n)
+    then infer(session: "unknown", inputs: "[]", options: "{}") -> notFound(session: "unknown")
+  }
+}

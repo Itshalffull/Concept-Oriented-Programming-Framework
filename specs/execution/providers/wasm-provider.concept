@@ -1,0 +1,74 @@
+@version(1)
+concept WasmProvider [M] {
+
+  purpose {
+    Load and execute WebAssembly modules with sandboxed memory,
+    typed imports/exports, and instance pooling. Serves as the
+    runtime provider for all WASM-based local computation.
+  }
+
+  state {
+    modules: set M
+    name: M -> String
+    wasmPath: M -> String
+    status: M -> String
+    memoryLimit: M -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "wasm-provider", kind is "runtime".
+      }
+    }
+
+    action load(name: String, wasmPath: String, memoryLimit: Int) {
+      -> ok(module: M) {
+        Load a WASM module from the given path, compile it, and
+        make it available for execution under the given name.
+      }
+      -> loadError(message: String) {
+        The WASM module could not be loaded or compiled due to
+        an invalid binary, missing imports, or memory constraints.
+      }
+      -> exists(name: String) {
+        A module with this name is already loaded.
+      }
+    }
+
+    action execute(module: String, function: String, args: String) {
+      -> ok(result: String) {
+        Call the named exported function on the loaded WASM module,
+        passing args as a JSON-serialized array. Returns the
+        function's return value as a JSON string.
+      }
+      -> notFound(module: String) {
+        No module is loaded with this name.
+      }
+      -> trap(message: String) {
+        The WASM execution trapped due to an out-of-bounds access,
+        integer overflow, unreachable instruction, or stack overflow.
+      }
+      -> timeout(module: String) {
+        The WASM execution exceeded the configured time limit.
+      }
+    }
+
+    action list() {
+      -> ok(modules: String) {
+        Return all loaded modules as a serialized JSON array
+        with name, wasmPath, and status.
+      }
+    }
+  }
+
+  invariant {
+    after load(name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536) -> ok(module: m)
+    then execute(module: "unknown", function: "tokenize", args: "[]") -> notFound(module: "unknown")
+  }
+}

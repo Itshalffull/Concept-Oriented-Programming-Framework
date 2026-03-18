@@ -250,4 +250,64 @@ export const embeddingCacheHandler: ConceptHandler = {
       sourceKinds: JSON.stringify([...sourceKinds].sort()),
     };
   },
+
+  // -----------------------------------------------------------------------
+  // Configuration-aware cache actions
+  // -----------------------------------------------------------------------
+  // These use a composite key of digest+model+dimensions so that the same
+  // content embedded with different models or dimensions produces separate
+  // cache entries. This prevents stale vector reuse when switching models.
+
+  async lookupWithConfig(input: Record<string, unknown>, storage: ConceptStorage) {
+    const digest = input.digest as string;
+    const model = input.model as string;
+    const dimensions = input.dimensions as number;
+
+    // Composite cache key: digest + model + dimensions
+    const configKey = `${digest}:${model}:${dimensions}`;
+    const record = await storage.get(ENTRIES_RELATION, configKey);
+    if (!record) {
+      return { variant: 'miss' };
+    }
+
+    return {
+      variant: 'hit',
+      vector: record.vector as string,
+      model: record.model as string,
+      dimensions: record.dimensions as number,
+      sourceKind: record.sourceKind as string,
+      sourceKey: record.sourceKey as string,
+    };
+  },
+
+  async putWithConfig(input: Record<string, unknown>, storage: ConceptStorage) {
+    const digest = input.digest as string;
+    const model = input.model as string;
+    const dimensions = input.dimensions as number;
+    const vector = input.vector as string;
+    const sourceKind = input.sourceKind as string;
+    const sourceKey = input.sourceKey as string;
+
+    // Composite cache key: digest + model + dimensions
+    const configKey = `${digest}:${model}:${dimensions}`;
+
+    const existing = await storage.get(ENTRIES_RELATION, configKey);
+    if (existing) {
+      return { variant: 'alreadyExists', entry: configKey };
+    }
+
+    const now = new Date().toISOString();
+    await storage.put(ENTRIES_RELATION, configKey, {
+      id: configKey,
+      digest,
+      vector,
+      model,
+      dimensions,
+      sourceKind,
+      sourceKey,
+      cachedAt: now,
+    });
+
+    return { variant: 'stored', entry: configKey };
+  },
 };

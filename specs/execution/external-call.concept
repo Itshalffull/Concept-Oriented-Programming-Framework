@@ -1,0 +1,80 @@
+@version(1)
+concept ExternalCall [X] {
+
+  purpose {
+    Dispatch outbound network requests to registered protocol providers,
+    providing a uniform interface for all network I/O regardless of
+    protocol. Handlers declare transport effects via perform(); this
+    concept resolves those effects to concrete protocol implementations.
+  }
+
+  state {
+    calls: set X
+    protocol: X -> String
+    endpoint: X -> String
+    payload: X -> String
+    status: X -> String
+    result: X -> option String
+    error: X -> option String
+    protocolProviders: set String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action initialize() {
+      -> ok(protocols: String) {
+        Register with PluginRegistry and return the list of
+        currently supported protocol names as a JSON array.
+      }
+    }
+
+    action registerProtocol(protocol: String, providerName: String) {
+      -> ok() {
+        Register a protocol provider mapping so that dispatch calls
+        for this protocol route to the named provider concept.
+      }
+      -> duplicate(protocol: String) {
+        A provider is already registered for this protocol.
+        Returns the protocol name for diagnostics.
+      }
+    }
+
+    action dispatch(protocol: String, operation: String, endpoint: String, payload: String, config: String) {
+      -> ok(call: X, result: String) {
+        Route the request to the registered protocol provider,
+        which executes the call and returns the response. Creates
+        a call record with status "completed".
+      }
+      -> protocolNotFound(protocol: String) {
+        No provider is registered for this protocol. The caller
+        should register a protocol provider before dispatching.
+      }
+      -> error(call: X, message: String) {
+        The protocol provider accepted the call but execution
+        failed. Creates a call record with status "failed" and
+        the error message from the provider.
+      }
+    }
+
+    action listProtocols() {
+      -> ok(protocols: String) {
+        Return all registered protocol names as a serialized
+        JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> protocolNotFound(protocol: "http")
+    then registerProtocol(protocol: "http", providerName: "HttpProvider") -> ok()
+  }
+
+  invariant {
+    after registerProtocol(protocol: "grpc", providerName: "GrpcProvider") -> ok()
+    then registerProtocol(protocol: "grpc", providerName: "AnotherProvider") -> duplicate(protocol: "grpc")
+  }
+}

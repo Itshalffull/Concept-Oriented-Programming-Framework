@@ -1,0 +1,27 @@
+# Observability — Performance profiling for execution layer.
+
+sync ProfileExternalCall [eager]
+  purpose: "Record performance data for external call completions."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => ok(call: ?call; result: ?result)
+}
+then {
+  PerformanceProfile/aggregate: [
+    symbol: ?ep;
+    window: "{}"
+  ]
+}
+
+sync ProfileLocalProcess [eager]
+  purpose: "Record performance data for local process completions."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => ok(process: ?proc; result: ?result)
+}
+then {
+  PerformanceProfile/aggregate: [
+    symbol: ?mod;
+    window: "{}"
+  ]
+}

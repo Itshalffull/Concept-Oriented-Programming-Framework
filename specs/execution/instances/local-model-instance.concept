@@ -1,0 +1,63 @@
+@version(1)
+concept LocalModelInstance [I] {
+
+  purpose {
+    Configure a specific local ML model (CodeBERT, UniXcoder, etc.)
+    loaded via ONNX or WASM runtime. Stores model path, tokenizer
+    path, device, and dimension metadata so that embedding concepts
+    reference models by name rather than embedding file paths.
+  }
+
+  state {
+    instances: set I
+    name: I -> String
+    runtime: I -> String
+    modelPath: I -> String
+    tokenizerPath: I -> option String
+    device: I -> String
+    maxSequenceLength: I -> Int
+    dimensions: I -> Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, runtime: String, modelPath: String, tokenizerPath: String, device: String, maxSequenceLength: Int, dimensions: Int) {
+      -> ok(instance: I) {
+        Create a named local model configuration with runtime
+        (onnx or wasm), model file path, optional tokenizer path,
+        device target, max sequence length, and output dimensions.
+        The instance becomes addressable by name for runtime
+        provider loading via sync wiring.
+      }
+      -> exists(name: String) {
+        An instance with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(instance: I, runtime: String, modelPath: String, config: String) {
+        Look up the named instance and return its runtime, model
+        path, and full configuration as a JSON string including
+        tokenizer path, device, and dimension metadata.
+      }
+      -> notFound(name: String) {
+        No instance is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(instances: String) {
+        Return all registered instances as a serialized JSON array
+        with name, runtime, device, and dimensions.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: 512, dimensions: 768) -> ok(instance: i)
+    then resolve(name: "codebert-base") -> ok(instance: i, runtime: "onnx", modelPath: "/models/codebert.onnx", config: _)
+  }
+}

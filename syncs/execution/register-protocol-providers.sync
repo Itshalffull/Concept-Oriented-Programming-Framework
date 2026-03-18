@@ -1,0 +1,81 @@
+# Protocol provider registration — Tier 2 providers register with Tier 1 registries.
+# Each protocol provider's register() action triggers dual registration:
+# 1. With the appropriate Tier 1 registry (ExternalCall or LocalProcess)
+# 2. With PluginRegistry for universal discovery
+
+sync RegisterHttpProvider [eager]
+  purpose: "Register HttpProvider as a protocol provider for ExternalCall and PluginRegistry."
+when {
+  HttpProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  ExternalCall/registerProtocol: [ protocol: "http"; providerName: ?name ]
+  PluginRegistry/register: [ type: "protocol-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterGrpcProvider [eager]
+  purpose: "Register GrpcProvider as a protocol provider for ExternalCall and PluginRegistry."
+when {
+  GrpcProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  ExternalCall/registerProtocol: [ protocol: "grpc"; providerName: ?name ]
+  PluginRegistry/register: [ type: "protocol-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterGraphqlProvider [eager]
+  purpose: "Register GraphqlProvider as a protocol provider for ExternalCall and PluginRegistry."
+when {
+  GraphqlProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  ExternalCall/registerProtocol: [ protocol: "graphql"; providerName: ?name ]
+  PluginRegistry/register: [ type: "protocol-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterWebSocketProvider [eager]
+  purpose: "Register WebSocketProvider as a protocol provider for ExternalCall and PluginRegistry."
+when {
+  WebSocketProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  ExternalCall/registerProtocol: [ protocol: "ws"; providerName: ?name ]
+  PluginRegistry/register: [ type: "protocol-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterWasmProvider [eager]
+  purpose: "Register WasmProvider as a runtime provider for LocalProcess and PluginRegistry."
+when {
+  WasmProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  LocalProcess/registerRuntime: [ runtime: "wasm"; providerName: ?name ]
+  PluginRegistry/register: [ type: "runtime-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterOnnxProvider [eager]
+  purpose: "Register OnnxProvider as a runtime provider for LocalProcess and PluginRegistry."
+when {
+  OnnxProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  LocalProcess/registerRuntime: [ runtime: "onnx"; providerName: ?name ]
+  PluginRegistry/register: [ type: "runtime-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}
+
+sync RegisterShellProvider [eager]
+  purpose: "Register ShellProvider as a runtime provider for LocalProcess and PluginRegistry."
+when {
+  ShellProvider/register: []
+    => ok(name: ?name; kind: ?kind; capabilities: ?caps)
+}
+then {
+  LocalProcess/registerRuntime: [ runtime: "shell"; providerName: ?name ]
+  PluginRegistry/register: [ type: "runtime-provider"; name: ?name; metadata: { kind: ?kind; capabilities: ?caps } ]
+}

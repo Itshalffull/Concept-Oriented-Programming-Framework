@@ -1,0 +1,79 @@
+@version(1)
+concept LocalProcess [L] {
+
+  purpose {
+    Dispatch in-process computation to registered runtime providers,
+    providing a uniform interface for local execution regardless of
+    runtime. Covers WASM modules, ONNX inference, shell commands,
+    and FFI calls through a single dispatch surface.
+  }
+
+  state {
+    processes: set L
+    runtime: L -> String
+    moduleRef: L -> String
+    input: L -> String
+    status: L -> String
+    result: L -> option String
+    error: L -> option String
+    runtimeProviders: set String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action initialize() {
+      -> ok(runtimes: String) {
+        Register with PluginRegistry and return the list of
+        currently supported runtime names as a JSON array.
+      }
+    }
+
+    action registerRuntime(runtime: String, providerName: String) {
+      -> ok() {
+        Register a runtime provider mapping so that dispatch calls
+        for this runtime route to the named provider concept.
+      }
+      -> duplicate(runtime: String) {
+        A provider is already registered for this runtime.
+        Returns the runtime name for diagnostics.
+      }
+    }
+
+    action dispatch(runtime: String, operation: String, moduleRef: String, input: String, config: String) {
+      -> ok(process: L, result: String) {
+        Route the computation to the registered runtime provider,
+        which executes the operation and returns the output. Creates
+        a process record with status "completed".
+      }
+      -> runtimeNotFound(runtime: String) {
+        No provider is registered for this runtime. The caller
+        should register a runtime provider before dispatching.
+      }
+      -> error(process: L, message: String) {
+        The runtime provider accepted the computation but execution
+        failed. Creates a process record with status "failed" and
+        the error message from the provider.
+      }
+    }
+
+    action listRuntimes() {
+      -> ok(runtimes: String) {
+        Return all registered runtime names as a serialized
+        JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> runtimeNotFound(runtime: "onnx")
+    then registerRuntime(runtime: "onnx", providerName: "OnnxProvider") -> ok()
+  }
+
+  invariant {
+    after registerRuntime(runtime: "wasm", providerName: "WasmProvider") -> ok()
+    then registerRuntime(runtime: "wasm", providerName: "AnotherProvider") -> duplicate(runtime: "wasm")
+  }
+}

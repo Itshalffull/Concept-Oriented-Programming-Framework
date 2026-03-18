@@ -1,0 +1,67 @@
+@version(1)
+concept GrpcProvider [G] {
+
+  purpose {
+    Execute gRPC calls with channel management, proto-based
+    serialization, and streaming support. Serves as the protocol
+    provider for all gRPC-based external calls.
+  }
+
+  state {
+    channels: set G
+    name: G -> String
+    target: G -> String
+    protoRef: G -> String
+    status: G -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+    requires network
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "grpc-provider", kind is "protocol", capabilities
+        lists supported call types (unary, server-stream, client-stream, bidi).
+      }
+    }
+
+    action configure(name: String, target: String, protoRef: String, options: String) {
+      -> ok(channel: G) {
+        Create a named gRPC channel to the target host:port with
+        the given proto definition reference and channel options.
+      }
+      -> exists(name: String) {
+        A channel with this name is already configured.
+      }
+    }
+
+    action execute(channel: String, service: String, method: String, payload: String) {
+      -> ok(response: String) {
+        Invoke the gRPC method on the named channel's service,
+        serializing the payload per the proto definition. Returns
+        the deserialized response as JSON.
+      }
+      -> notFound(channel: String) {
+        No channel is configured with this name.
+      }
+      -> rpcError(code: Int, message: String) {
+        The gRPC call returned a non-OK status code.
+      }
+    }
+
+    action list() {
+      -> ok(channels: String) {
+        Return all configured channels as a serialized JSON array.
+      }
+    }
+  }
+
+  invariant {
+    after configure(name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}") -> ok(channel: g)
+    then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> notFound(channel: "unknown-service")
+  }
+}

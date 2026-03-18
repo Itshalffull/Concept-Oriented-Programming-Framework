@@ -1,0 +1,65 @@
+@version(1)
+concept OpenAiEndpoint [O] {
+
+  purpose {
+    Configure and authenticate a specific OpenAI API endpoint for
+    embedding or completion calls. Stores API key, model selection,
+    and dimension configuration so that higher-level concepts
+    reference endpoints by name rather than embedding credentials.
+  }
+
+  state {
+    endpoints: set O
+    name: O -> String
+    apiKey: O -> String
+    model: O -> String
+    baseUrl: O -> String
+    maxTokens: O -> Int
+    dimensions: O -> option Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, apiKey: String, model: String, baseUrl: String, dimensions: Int) {
+      -> ok(endpoint: O) {
+        Create a named OpenAI endpoint configuration with API key,
+        model name, base URL, and output dimensions. The endpoint
+        becomes addressable by name for HttpProvider instance
+        configuration via sync wiring.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: O, baseUrl: String, model: String, headers: String) {
+        Look up the named endpoint and return its base URL, model,
+        and pre-built authorization headers ready for HTTP calls.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name, model, and baseUrl (API keys omitted).
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "embeddings", apiKey: "sk-test", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: 1536) -> ok(endpoint: o)
+    then resolve(name: "embeddings") -> ok(endpoint: o, baseUrl: "https://api.openai.com/v1", model: "text-embedding-3-small", headers: _)
+  }
+
+  invariant {
+    after resolve(name: "nonexistent") -> notFound(name: "nonexistent")
+    then register(name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0) -> ok(endpoint: _)
+  }
+}

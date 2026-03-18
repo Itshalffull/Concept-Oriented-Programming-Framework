@@ -1,0 +1,74 @@
+# Observability — ConnectorCall tracking for ExternalCall and LocalProcess.
+# Every dispatch creates a ConnectorCall record for lifecycle tracking.
+
+sync TrackExternalCall [eager]
+  purpose: "Create a ConnectorCall record for every ExternalCall dispatch."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; operation: ?op; endpoint: ?ep; payload: ?payload; config: ?cfg ]
+    => []
+}
+then {
+  ConnectorCall/invoke: [
+    step_ref: "external-call";
+    connector_type: ?protocol;
+    operation: ?op;
+    input: ?payload;
+    idempotency_key: ?ep
+  ]
+}
+
+sync TrackExternalCallSuccess [eager]
+  purpose: "Mark ConnectorCall succeeded when ExternalCall completes successfully."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => ok(call: ?call; result: ?result)
+}
+then {
+  ConnectorCall/mark_success: [ call: ?call; output: ?result ]
+}
+
+sync TrackExternalCallFailure [eager]
+  purpose: "Mark ConnectorCall failed when ExternalCall errors."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => error(call: ?call; message: ?msg)
+}
+then {
+  ConnectorCall/mark_failure: [ call: ?call; error: ?msg ]
+}
+
+sync TrackLocalProcess [eager]
+  purpose: "Create a ConnectorCall record for every LocalProcess dispatch."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; operation: ?op; moduleRef: ?mod; input: ?input; config: ?cfg ]
+    => []
+}
+then {
+  ConnectorCall/invoke: [
+    step_ref: "local-process";
+    connector_type: ?runtime;
+    operation: ?op;
+    input: ?input;
+    idempotency_key: ?mod
+  ]
+}
+
+sync TrackLocalProcessSuccess [eager]
+  purpose: "Mark ConnectorCall succeeded when LocalProcess completes successfully."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => ok(process: ?proc; result: ?result)
+}
+then {
+  ConnectorCall/mark_success: [ call: ?proc; output: ?result ]
+}
+
+sync TrackLocalProcessFailure [eager]
+  purpose: "Mark ConnectorCall failed when LocalProcess errors."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => error(process: ?proc; message: ?msg)
+}
+then {
+  ConnectorCall/mark_failure: [ call: ?proc; error: ?msg ]
+}

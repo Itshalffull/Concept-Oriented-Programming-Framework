@@ -1,0 +1,72 @@
+# Protocol dispatch — Tier 1 registries route to Tier 2 providers.
+# ExternalCall dispatches by protocol name; LocalProcess dispatches by runtime name.
+
+sync DispatchHttp [eager]
+  purpose: "Route HTTP protocol calls from ExternalCall to HttpProvider."
+when {
+  ExternalCall/dispatch: [ protocol: "http"; operation: ?op; endpoint: ?ep; payload: ?payload; config: ?cfg ]
+    => []
+}
+then {
+  HttpProvider/execute: [ instance: ?ep; method: ?op; path: ""; body: ?payload; headers: ?cfg ]
+}
+
+sync DispatchGrpc [eager]
+  purpose: "Route gRPC protocol calls from ExternalCall to GrpcProvider."
+when {
+  ExternalCall/dispatch: [ protocol: "grpc"; operation: ?op; endpoint: ?ep; payload: ?payload; config: ?cfg ]
+    => []
+}
+then {
+  GrpcProvider/execute: [ channel: ?ep; service: ""; method: ?op; payload: ?payload ]
+}
+
+sync DispatchGraphql [eager]
+  purpose: "Route GraphQL protocol calls from ExternalCall to GraphqlProvider."
+when {
+  ExternalCall/dispatch: [ protocol: "graphql"; operation: ?op; endpoint: ?ep; payload: ?payload; config: ?cfg ]
+    => []
+}
+then {
+  GraphqlProvider/execute: [ endpoint: ?ep; query: ?payload; variables: ?cfg; operationType: ?op ]
+}
+
+sync DispatchWebSocket [eager]
+  purpose: "Route WebSocket protocol calls from ExternalCall to WebSocketProvider."
+when {
+  ExternalCall/dispatch: [ protocol: "ws"; operation: "send"; endpoint: ?ep; payload: ?payload; config: ?cfg ]
+    => []
+}
+then {
+  WebSocketProvider/send: [ connection: ?ep; message: ?payload ]
+}
+
+sync DispatchWasm [eager]
+  purpose: "Route WASM runtime calls from LocalProcess to WasmProvider."
+when {
+  LocalProcess/dispatch: [ runtime: "wasm"; operation: ?op; moduleRef: ?mod; input: ?input; config: ?cfg ]
+    => []
+}
+then {
+  WasmProvider/execute: [ module: ?mod; function: ?op; args: ?input ]
+}
+
+sync DispatchOnnx [eager]
+  purpose: "Route ONNX runtime calls from LocalProcess to OnnxProvider."
+when {
+  LocalProcess/dispatch: [ runtime: "onnx"; operation: ?op; moduleRef: ?mod; input: ?input; config: ?cfg ]
+    => []
+}
+then {
+  OnnxProvider/infer: [ session: ?mod; inputs: ?input; options: ?cfg ]
+}
+
+sync DispatchShell [eager]
+  purpose: "Route shell runtime calls from LocalProcess to ShellProvider."
+when {
+  LocalProcess/dispatch: [ runtime: "shell"; operation: ?op; moduleRef: ?mod; input: ?input; config: ?cfg ]
+    => []
+}
+then {
+  ShellProvider/execute: [ command: ?mod; args: ?input; env: ?cfg; cwd: ""; timeout: 30000 ]
+}
