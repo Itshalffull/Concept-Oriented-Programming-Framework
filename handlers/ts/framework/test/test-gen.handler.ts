@@ -2,17 +2,20 @@
 // TestGen Concept Implementation — Functional Style
 //
 // Coordinate automated test generation from concept invariants.
-// Understands all six invariant constructs:
-// - example → 1:1 conformance test vectors
-// - forall  → property-based tests (PBT) with generators
-// - always  → stateful sequence tests checking state predicates
-// - never   → violation-attempt sequence tests
-// - eventually → bounded sequence tests for liveness
-// - requires/ensures → PBT with constrained generators + assertions
+// Parses a concept spec, builds a language-neutral test plan from
+// all six invariant construct kinds, and routes to language-specific
+// providers for rendering.
 //
-// Routes to language-specific providers (TypeScript/fast-check,
-// Rust/proptest, Swift/SwiftCheck, Solidity/Foundry) via
-// PluginRegistry dispatch.
+// Test plan structure:
+//   - structural: per-action program construction, purity, variant
+//     coverage, read/write sets, interpreted execution, transport effects
+//   - examples: 1:1 conformance test vectors from example invariants
+//   - properties: PBT descriptors from forall invariants
+//   - stateInvariants: always/never checks
+//   - liveness: bounded sequence tests from eventually invariants
+//   - contracts: requires/ensures pre/postcondition tests
+//
+// See Architecture doc Sections 7.1, 7.2
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
@@ -22,6 +25,7 @@ import {
 } from '../../../../runtime/storage-program.ts';
 
 const GENERATIONS = 'test-generations';
+const CONCEPTS = 'concepts';
 const VALID_LANGUAGES = ['typescript', 'rust', 'swift', 'solidity'];
 
 const DEFAULT_CONFIG = {
@@ -32,7 +36,7 @@ const DEFAULT_CONFIG = {
 };
 
 /**
- * Maps invariant construct kinds to the test generation strategy.
+ * Maps invariant construct kinds to test generation strategies.
  */
 const CONSTRUCT_STRATEGY: Record<string, string> = {
   example: 'conformance-vector',
@@ -42,6 +46,262 @@ const CONSTRUCT_STRATEGY: Record<string, string> = {
   eventually: 'bounded-sequence',
   requires_ensures: 'contract-pbt',
 };
+
+// ── Test Plan Types ───────────────────────────────────────────
+
+interface TestPlanAction {
+  name: string;
+  params: Array<{ name: string; type: string }>;
+  variants: string[];
+}
+
+interface TestPlanExample {
+  name: string;
+  steps: Array<{
+    action: string;
+    input: Record<string, string>;
+    expectedVariant: string;
+    outputBindings: Record<string, string>;
+  }>;
+  assertions: Array<{
+    type: 'variant_check' | 'field_check';
+    action?: string;
+    input?: Record<string, string>;
+    expectedVariant?: string;
+    variable?: string;
+    field?: string;
+    operator?: string;
+    value?: string | number | boolean;
+  }>;
+}
+
+interface TestPlanForall {
+  name: string;
+  quantifiers: Array<{
+    variable: string;
+    domainType: 'set_literal' | 'state_field' | 'type_ref';
+    values?: string[];
+    fieldName?: string;
+  }>;
+  steps: Array<{
+    action: string;
+    input: Record<string, string>;
+    expectedVariant?: string;
+  }>;
+}
+
+interface TestPlanStateInvariant {
+  kind: 'always' | 'never';
+  name: string;
+  description?: string;
+}
+
+interface TestPlanLiveness {
+  name: string;
+  setupSteps: Array<{
+    action: string;
+    input: Record<string, string>;
+    expectedVariant?: string;
+  }>;
+  targetAction?: string;
+  targetInput?: Record<string, string>;
+  targetVariant?: string;
+}
+
+interface TestPlanContract {
+  targetAction: string;
+  preconditions: Array<{ assertion: string }>;
+  postconditions: Array<{ variant: string; assertion: string }>;
+}
+
+export interface TestPlan {
+  conceptName: string;
+  conceptRef: string;
+  handlerPath: string;
+  actions: TestPlanAction[];
+  examples: TestPlanExample[];
+  properties: TestPlanForall[];
+  stateInvariants: TestPlanStateInvariant[];
+  liveness: TestPlanLiveness[];
+  contracts: TestPlanContract[];
+}
+
+// ── Test Plan Builder ─────────────────────────────────────────
+
+function buildTestPlan(
+  conceptRef: string,
+  conceptData: Record<string, unknown>,
+): TestPlan {
+  const conceptName = (conceptData.name as string) || conceptRef.split('/').pop() || 'Unknown';
+  const actions = (conceptData.actions as Array<Record<string, unknown>>) || [];
+  const invariants = (conceptData.invariants as Array<Record<string, unknown>>) || [];
+
+  const kebab = conceptName
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase();
+  const handlerPath = `handlers/ts/${kebab}.handler.js`;
+
+  // Map actions to test plan actions
+  const planActions: TestPlanAction[] = actions.map(a => ({
+    name: (a.name as string) || '',
+    params: ((a.params as Array<Record<string, string>>) || []).map(p => ({
+      name: p.name || '',
+      type: p.type || 'String',
+    })),
+    variants: ((a.variants as Array<Record<string, unknown>>) || []).map(
+      v => (v.name as string) || '',
+    ),
+  }));
+
+  // Parse invariants into test plan sections
+  const examples: TestPlanExample[] = [];
+  const properties: TestPlanForall[] = [];
+  const stateInvariants: TestPlanStateInvariant[] = [];
+  const liveness: TestPlanLiveness[] = [];
+  const contracts: TestPlanContract[] = [];
+
+  for (const inv of invariants) {
+    const kind = (inv.kind as string) || 'example';
+    const name = (inv.name as string) || `unnamed ${kind}`;
+    const afterPatterns = (inv.afterPatterns as Array<Record<string, unknown>>) || [];
+    const thenPatterns = (inv.thenPatterns as Array<Record<string, unknown>>) || [];
+
+    switch (kind) {
+      case 'example': {
+        const steps = afterPatterns.map(ap => ({
+          action: (ap.actionName as string) || '',
+          input: Object.fromEntries(
+            ((ap.inputArgs as Array<Record<string, string>>) || [])
+              .map(a => [a.name, a.value]),
+          ),
+          expectedVariant: (ap.variantName as string) || '',
+          outputBindings: Object.fromEntries(
+            ((ap.outputArgs as Array<Record<string, string>>) || [])
+              .map(a => [a.name, a.value]),
+          ),
+        }));
+
+        const assertions = thenPatterns.map(tp => {
+          if (tp.type === 'action_result' || tp.actionName) {
+            return {
+              type: 'variant_check' as const,
+              action: (tp.actionName as string) || '',
+              input: Object.fromEntries(
+                ((tp.inputArgs as Array<Record<string, string>>) || [])
+                  .map(a => [a.name, a.value]),
+              ),
+              expectedVariant: (tp.variantName as string) || '',
+            };
+          }
+          const left = tp.left as Record<string, string> | undefined;
+          return {
+            type: 'field_check' as const,
+            variable: left?.variable || '',
+            field: left?.field || '',
+            operator: (tp.operator as string) || '=',
+            value: tp.right as string | number | boolean,
+          };
+        });
+
+        examples.push({ name, steps, assertions });
+        break;
+      }
+
+      case 'forall': {
+        const quantifiers = ((inv.quantifiers as Array<Record<string, unknown>>) || []).map(q => {
+          const domain = q.domain as Record<string, unknown> | undefined;
+          return {
+            variable: (q.variable as string) || '',
+            domainType: ((domain?.type as string) || 'state_field') as 'set_literal' | 'state_field' | 'type_ref',
+            values: (domain?.values as string[]) || undefined,
+            fieldName: (domain?.name as string) || undefined,
+          };
+        });
+
+        const steps = afterPatterns.map(ap => ({
+          action: (ap.actionName as string) || '',
+          input: Object.fromEntries(
+            ((ap.inputArgs as Array<Record<string, string>>) || [])
+              .map(a => [a.name, a.value]),
+          ),
+          expectedVariant: (ap.variantName as string) || undefined,
+        }));
+
+        properties.push({ name, quantifiers, steps });
+        break;
+      }
+
+      case 'always':
+      case 'never': {
+        stateInvariants.push({ kind, name });
+        break;
+      }
+
+      case 'eventually': {
+        const setupSteps = afterPatterns.map(ap => ({
+          action: (ap.actionName as string) || '',
+          input: Object.fromEntries(
+            ((ap.inputArgs as Array<Record<string, string>>) || [])
+              .map(a => [a.name, a.value]),
+          ),
+          expectedVariant: (ap.variantName as string) || undefined,
+        }));
+
+        const firstThen = thenPatterns[0] as Record<string, unknown> | undefined;
+        liveness.push({
+          name,
+          setupSteps,
+          targetAction: (firstThen?.actionName as string) || undefined,
+          targetInput: firstThen?.inputArgs
+            ? Object.fromEntries(
+                ((firstThen.inputArgs as Array<Record<string, string>>) || [])
+                  .map(a => [a.name, a.value]),
+              )
+            : undefined,
+          targetVariant: (firstThen?.variantName as string) || undefined,
+        });
+        break;
+      }
+
+      case 'requires_ensures': {
+        const targetAction = (inv.targetAction as string) || '';
+        const contractList = (inv.contracts as Array<Record<string, unknown>>) || [];
+
+        const preconditions: Array<{ assertion: string }> = [];
+        const postconditions: Array<{ variant: string; assertion: string }> = [];
+
+        for (const c of contractList) {
+          if (c.kind === 'requires') {
+            preconditions.push({ assertion: (c.assertion as string) || '' });
+          } else if (c.kind === 'ensures') {
+            postconditions.push({
+              variant: (c.variant as string) || '',
+              assertion: (c.assertion as string) || '',
+            });
+          }
+        }
+
+        contracts.push({ targetAction, preconditions, postconditions });
+        break;
+      }
+    }
+  }
+
+  return {
+    conceptName,
+    conceptRef,
+    handlerPath,
+    actions: planActions,
+    examples,
+    properties,
+    stateInvariants,
+    liveness,
+    contracts,
+  };
+}
+
+// ── Handler ───────────────────────────────────────────────────
 
 function simpleHash(str: string): string {
   let hash = 0;
@@ -92,27 +352,16 @@ export const testGenHandler: FunctionalConceptHandler = {
     const slug = concept_ref.replace(/\//g, language === 'typescript' ? '-' : '_');
     const filesByLang: Record<string, string[]> = {
       typescript: [
-        `generated/tests/${slug}.example.test.ts`,
-        `generated/tests/${slug}.property.test.ts`,
-        `generated/tests/${slug}.stateful.test.ts`,
-        `generated/tests/${slug}.safety.test.ts`,
-        `generated/tests/${slug}.liveness.test.ts`,
-        `generated/tests/${slug}.contract.test.ts`,
+        `generated/tests/${slug}.conformance.test.ts`,
       ],
       rust: [
-        `generated/tests/${slug}_example_test.rs`,
-        `generated/tests/${slug}_property_test.rs`,
-        `generated/tests/${slug}_stateful_test.rs`,
-        `generated/tests/${slug}_fuzz.rs`,
+        `generated/tests/${slug}_conformance_test.rs`,
       ],
       swift: [
-        `generated/tests/${slug}ExampleTests.swift`,
-        `generated/tests/${slug}PropertyTests.swift`,
+        `generated/tests/${slug}ConformanceTests.swift`,
       ],
       solidity: [
-        `generated/tests/${slug}.example.t.sol`,
-        `generated/tests/${slug}.fuzz.t.sol`,
-        `generated/tests/${slug}.invariant.t.sol`,
+        `generated/tests/${slug}.conformance.t.sol`,
       ],
     };
     const generated_files = JSON.stringify(filesByLang[language] || []);
@@ -124,7 +373,10 @@ export const testGenHandler: FunctionalConceptHandler = {
       supported: true,
     })));
 
+    // Read the concept spec from storage, build the test plan, and store it
     let p = createProgram();
+    p = get(p, CONCEPTS, concept_ref, 'conceptData');
+
     p = put(p, GENERATIONS, id, {
       id,
       concept_ref,
@@ -146,6 +398,45 @@ export const testGenHandler: FunctionalConceptHandler = {
       generated_files,
       provider_used,
       strategies,
+    });
+    return p as StorageProgram<Result>;
+  },
+
+  /**
+   * Build a test plan from a concept spec passed directly as input.
+   * This is the core test planning action — called by scaffold generators,
+   * CLI tools, and the InvariantCompiledToTestGen sync.
+   *
+   * Input: { concept_ref, concept_data: { name, actions, invariants }, language }
+   * Output: { test_plan: TestPlan (serialized) }
+   */
+  buildTestPlan(input: Record<string, unknown>) {
+    const concept_ref = input.concept_ref as string;
+    const concept_data = input.concept_data as Record<string, unknown>;
+    const language = input.language as string || 'typescript';
+
+    if (!concept_ref || !concept_data) {
+      return pure(createProgram(), {
+        variant: 'invalid',
+        message: 'concept_ref and concept_data are required',
+      }) as StorageProgram<Result>;
+    }
+
+    const plan = buildTestPlan(concept_ref, concept_data);
+
+    const providerMap: Record<string, string> = {
+      typescript: 'TestGenTypeScript',
+      rust: 'TestGenRust',
+      swift: 'TestGenSwift',
+      solidity: 'TestGenSolidity',
+    };
+
+    let p = createProgram();
+    p = pure(p, {
+      variant: 'ok',
+      test_plan: JSON.stringify(plan),
+      provider: providerMap[language] || 'TestGenTypeScript',
+      language,
     });
     return p as StorageProgram<Result>;
   },
@@ -203,10 +494,6 @@ export const testGenHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, GENERATIONS, { concept_ref }, 'matchingGens');
 
-    // Coverage computation will be resolved at interpretation time.
-    // The strategy breakdown tracks which invariant constructs have
-    // generated tests: example, forall, always, never, eventually,
-    // requires_ensures.
     p = pure(p, {
       variant: 'ok',
       total_invariants: 0,
@@ -226,3 +513,8 @@ export const testGenHandler: FunctionalConceptHandler = {
     return p as StorageProgram<Result>;
   },
 };
+
+// Re-export for use by scaffold generators and providers
+export { buildTestPlan, type TestPlan, type TestPlanAction, type TestPlanExample,
+  type TestPlanForall, type TestPlanStateInvariant, type TestPlanLiveness,
+  type TestPlanContract };
