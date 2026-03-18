@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // DeployPlan Concept Implementation
 // Compute, validate, and execute deployment plans. Constructs a dependency
 // graph (DAG) from concept specs and syncs, then tracks execution as the
@@ -8,7 +9,14 @@
 //   DeployPlan/plan → (sync: ValidateBeforeExecute) → DeployPlan/validate
 //   DeployPlan/validate → (sync: ExecuteAfterValidation) → Artifact/build
 //   Runtime/provision [runtimeType: "vercel"] → (sync: RouteToVercel) → VercelRuntime/provision
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'deployplan';
 
@@ -158,41 +166,46 @@ function buildDeployGraph(manifest: ParsedManifest): {
   return { nodes, edges };
 }
 
-export const deployPlanHandler: ConceptHandler = {
+const _deployPlanHandler: FunctionalConceptHandler = {
   /**
    * Parse the deploy manifest, resolve environment, construct the deploy DAG.
    * The completion from this action triggers ValidateBeforeExecute sync.
    */
-  async plan(input, storage) {
+  plan(input: Record<string, unknown>) {
     const manifestRaw = input.manifest as string;
     const environment = input.environment as string;
 
     if (!manifestRaw || manifestRaw.trim() === '') {
-      return { variant: 'invalidManifest', errors: ['Manifest cannot be empty'] };
+      const p = createProgram();
+      return complete(p, 'invalidManifest', { errors: ['Manifest cannot be empty'] }) as StorageProgram<Result>;
     }
 
     if (!environment || environment.trim() === '') {
-      return { variant: 'invalidManifest', errors: ['Environment is required'] };
+      const p = createProgram();
+      return complete(p, 'invalidManifest', { errors: ['Environment is required'] }) as StorageProgram<Result>;
     }
 
     // Parse the manifest
     const manifest = parseManifest(manifestRaw);
     if (!manifest) {
-      return {
-        variant: 'invalidManifest',
+      const p = createProgram();
+      return complete(p, 'invalidManifest', {
         errors: ['Failed to parse manifest. Provide JSON-serialized deploy manifest.'],
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate basic structure
     if (!manifest.app?.name) {
-      return { variant: 'invalidManifest', errors: ['Missing app.name in manifest'] };
+      const p = createProgram();
+      return complete(p, 'invalidManifest', { errors: ['Missing app.name in manifest'] }) as StorageProgram<Result>;
     }
     if (!manifest.runtimes || Object.keys(manifest.runtimes).length === 0) {
-      return { variant: 'invalidManifest', errors: ['No runtimes defined in manifest'] };
+      const p = createProgram();
+      return complete(p, 'invalidManifest', { errors: ['No runtimes defined in manifest'] }) as StorageProgram<Result>;
     }
     if (!manifest.concepts || Object.keys(manifest.concepts).length === 0) {
-      return { variant: 'invalidManifest', errors: ['No concepts defined in manifest'] };
+      const p = createProgram();
+      return complete(p, 'invalidManifest', { errors: ['No concepts defined in manifest'] }) as StorageProgram<Result>;
     }
 
     // Build the dependency graph
@@ -209,14 +222,15 @@ export const deployPlanHandler: ConceptHandler = {
       }
     }
     if (missingRuntimes.length > 0) {
-      return { variant: 'incompleteGraph', missing: missingRuntimes };
+      const p = createProgram();
+      return complete(p, 'incompleteGraph', { missing: missingRuntimes }) as StorageProgram<Result>;
     }
 
     const planId = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
 
-    // Store the plan with the full parsed manifest for later execution
-    await storage.put(RELATION, planId, {
+    let p = createProgram();
+    p = put(p, RELATION, planId, {
       plan: planId,
       manifest: manifestRaw,
       parsedManifest: JSON.stringify(manifest),
@@ -236,18 +250,13 @@ export const deployPlanHandler: ConceptHandler = {
       estimatedDuration: graph.nodes.length * 30,
     });
 
-    // The completion output includes runtimeType for each runtime,
-    // which syncs use to route to the correct provider.
-    // The ValidateBeforeExecute sync triggers DeployPlan/validate.
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       plan: planId,
       graph: JSON.stringify(graph),
       estimatedDuration: graph.nodes.length * 30,
-      // Expose runtime info for sync routing
       appName: manifest.app.name,
       runtimes: JSON.stringify(manifest.runtimes),
-    };
+    }) as StorageProgram<Result>;
   },
 
   /**
@@ -255,184 +264,212 @@ export const deployPlanHandler: ConceptHandler = {
    * compatibility, storage migration safety, dependency ordering.
    * The completion triggers ExecuteAfterValidation sync.
    */
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const record = await storage.get(RELATION, plan);
-    if (!record) {
-      return { variant: 'schemaIncompatible', details: [`Plan "${plan}" not found`] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, plan, 'record');
 
-    const manifest: ParsedManifest = JSON.parse(record.parsedManifest as string);
-    const warnings: string[] = [];
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const manifest: ParsedManifest = JSON.parse(record.parsedManifest as string);
+          const warnings: string[] = [];
 
-    // Validate each runtime has at least one concept assigned
-    const runtimeNames = new Set(Object.keys(manifest.runtimes));
-    const usedRuntimes = new Set<string>();
-    for (const conceptDef of Object.values(manifest.concepts)) {
-      for (const impl of conceptDef.implementations) {
-        usedRuntimes.add(impl.runtime);
-      }
-    }
-    for (const rt of runtimeNames) {
-      if (!usedRuntimes.has(rt)) {
-        warnings.push(`Runtime "${rt}" has no concepts assigned`);
-      }
-    }
+          // Validate each runtime has at least one concept assigned
+          const rtNames = new Set(Object.keys(manifest.runtimes));
+          const usedRuntimes = new Set<string>();
+          for (const conceptDef of Object.values(manifest.concepts)) {
+            for (const impl of conceptDef.implementations) {
+              usedRuntimes.add(impl.runtime);
+            }
+          }
+          for (const rt of rtNames) {
+            if (!usedRuntimes.has(rt)) {
+              warnings.push(`Runtime "${rt}" has no concepts assigned`);
+            }
+          }
 
-    // Validate sync engine assignments
-    if (manifest.syncs) {
-      for (const sync of manifest.syncs) {
-        const engineRuntime = manifest.runtimes[sync.engine];
-        if (!engineRuntime) {
-          warnings.push(`Sync "${sync.path}" references unknown engine runtime "${sync.engine}"`);
-        } else if (!engineRuntime.engine) {
-          warnings.push(`Sync "${sync.path}" engine "${sync.engine}" does not have engine: true`);
-        }
-      }
-    }
+          // Validate sync engine assignments
+          if (manifest.syncs) {
+            for (const sync of manifest.syncs) {
+              const engineRuntime = manifest.runtimes[sync.engine];
+              if (!engineRuntime) {
+                warnings.push(`Sync "${sync.path}" references unknown engine runtime "${sync.engine}"`);
+              } else if (!engineRuntime.engine) {
+                warnings.push(`Sync "${sync.path}" engine "${sync.engine}" does not have engine: true`);
+              }
+            }
+          }
 
-    await storage.put(RELATION, plan, {
-      ...record,
-      currentPhase: 'validated',
-      validatedAt: new Date().toISOString(),
-    });
+          return { warnings, manifest };
+        }, 'validation');
 
-    // The completion includes the manifest data needed by downstream syncs
-    // to invoke Runtime/provision, Builder/build, etc.
-    return {
-      variant: 'ok',
-      plan,
-      warnings,
-      // Pass through for sync routing
-      appName: manifest.app.name,
-      runtimes: JSON.stringify(manifest.runtimes),
-      concepts: JSON.stringify(manifest.concepts),
-    };
+        thenP = putFrom(thenP, RELATION, plan, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentPhase: 'validated',
+            validatedAt: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const validation = bindings.validation as { warnings: string[]; manifest: ParsedManifest };
+          return {
+            plan,
+            warnings: validation.warnings,
+            appName: validation.manifest.app.name,
+            runtimes: JSON.stringify(validation.manifest.runtimes),
+            concepts: JSON.stringify(validation.manifest.concepts),
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'schemaIncompatible', { details: [`Plan "${plan}" not found`] }),
+    ) as StorageProgram<Result>;
   },
 
   /**
    * Execute the deployment plan. This action is typically triggered by the
    * ExecuteAfterValidation sync chain. It updates tracking state as the
    * sync engine drives provisioning and deployment through runtime providers.
-   *
-   * The actual provisioning happens via:
-   *   execute completion → sync → Runtime/provision → sync → VercelRuntime/provision
-   *   VercelRuntime/provision completion → sync → VercelRuntime/deploy
    */
-  async execute(input, storage) {
+  execute(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const record = await storage.get(RELATION, plan);
-    if (!record) {
-      return { variant: 'rollbackFailed', plan, reason: 'Plan not found', stuck: [] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, plan, 'record');
 
-    const manifest: ParsedManifest = JSON.parse(record.parsedManifest as string);
-    const nodes: Array<{ id: string; kind: string; target: string; status: string }> =
-      JSON.parse(record.graphNodes as string || '[]');
-    const now = new Date().toISOString();
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const manifest: ParsedManifest = JSON.parse(record.parsedManifest as string);
+          const nodes: Array<{ id: string; kind: string; target: string; status: string }> =
+            JSON.parse(record.graphNodes as string || '[]');
 
-    // Mark execution started
-    await storage.put(RELATION, plan, {
-      ...record,
-      currentPhase: 'executing',
-      executionStartedAt: now,
-    });
+          const runtimeEntries = Object.entries(manifest.runtimes).map(([name, config]) => ({
+            name,
+            runtimeType: config.type.toLowerCase().replace('runtime', ''),
+            concept: manifest.app.name,
+            framework: (config.config as Record<string, unknown>)?.framework || 'nextjs',
+            sourceDirectory: `./${manifest.app.name}`,
+            config: JSON.stringify(config),
+          }));
 
-    // The completion output contains the runtime configurations.
-    // The sync engine picks these up to invoke Runtime/provision
-    // for each runtime, with the runtimeType field that routes
-    // to the correct provider (e.g., route-to-vercel.sync matches
-    // runtimeType: "vercel" → VercelRuntime/provision).
-    const runtimeEntries = Object.entries(manifest.runtimes).map(([name, config]) => ({
-      name,
-      runtimeType: config.type.toLowerCase().replace('runtime', ''),
-      concept: manifest.app.name,
-      framework: (config.config as Record<string, unknown>)?.framework || 'nextjs',
-      sourceDirectory: `./${manifest.app.name}`,
-      config: JSON.stringify(config),
-    }));
+          const conceptNodes = nodes.filter(n => n.kind === 'concept');
+          const duration = conceptNodes.length * 24;
 
-    // Update tracking to mark as executed
-    await storage.put(RELATION, plan, {
-      ...record,
-      currentPhase: 'executed',
-      completedNodes: JSON.stringify(nodes.map(n => n.id)),
-      failedNodes: JSON.stringify([]),
-      executedAt: now,
-    });
+          return { manifest, nodes, runtimeEntries, conceptNodes, duration };
+        }, 'execData');
 
-    // nodesDeployed counts only concept nodes (not infrastructure nodes)
-    const conceptNodes = nodes.filter(n => n.kind === 'concept');
-    // duration is estimated per concept node (24s per concept for rolling deploy)
-    const duration = conceptNodes.length * 24;
+        const now = new Date().toISOString();
 
-    return {
-      variant: 'ok',
-      plan,
-      duration,
-      nodesDeployed: conceptNodes.length,
-      // Runtime entries for sync-driven provisioning
-      runtimes: JSON.stringify(runtimeEntries),
-      appName: manifest.app.name,
-      appUri: manifest.app.uri,
-    };
+        thenP = putFrom(thenP, RELATION, plan, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const execData = bindings.execData as { nodes: Array<{ id: string }> };
+          return {
+            ...record,
+            currentPhase: 'executed',
+            completedNodes: JSON.stringify(execData.nodes.map(n => n.id)),
+            failedNodes: JSON.stringify([]),
+            executionStartedAt: now,
+            executedAt: now,
+          };
+        });
+
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const execData = bindings.execData as {
+            manifest: ParsedManifest;
+            runtimeEntries: unknown[];
+            conceptNodes: unknown[];
+            duration: number;
+          };
+          return {
+            plan,
+            duration: execData.duration,
+            nodesDeployed: execData.conceptNodes.length,
+            runtimes: JSON.stringify(execData.runtimeEntries),
+            appName: execData.manifest.app.name,
+            appUri: execData.manifest.app.uri,
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'rollbackFailed', { plan, reason: 'Plan not found', stuck: [] }),
+    ) as StorageProgram<Result>;
   },
 
   /**
    * Rollback a deployment by reversing completed nodes.
    * Fires Runtime/rollback via syncs for each provisioned runtime.
    */
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const record = await storage.get(RELATION, plan);
-    if (!record) {
-      return { variant: 'partial', plan, rolledBack: [], stuck: [plan] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, plan, 'record');
 
-    const completed: string[] = JSON.parse(record.completedNodes as string || '[]');
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return JSON.parse(record.completedNodes as string || '[]');
+        }, 'completed');
 
-    await storage.put(RELATION, plan, {
-      ...record,
-      currentPhase: 'rolledback',
-      completedNodes: JSON.stringify([]),
-      rollbackStack: JSON.stringify([]),
-      rolledBackAt: new Date().toISOString(),
-    });
+        thenP = putFrom(thenP, RELATION, plan, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentPhase: 'rolledback',
+            completedNodes: JSON.stringify([]),
+            rollbackStack: JSON.stringify([]),
+            rolledBackAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', plan, rolledBack: completed };
+        return completeFrom(thenP, 'ok', (bindings) => ({
+          plan,
+          rolledBack: bindings.completed as string[],
+        }));
+      },
+      (elseP) => complete(elseP, 'partial', { plan, rolledBack: [], stuck: [plan] }),
+    ) as StorageProgram<Result>;
   },
 
   /**
    * Query current execution status of a deployment plan.
    */
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const record = await storage.get(RELATION, plan);
-    if (!record) {
-      return { variant: 'notfound', plan };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, plan, 'record');
 
-    const completedNodes: string[] = JSON.parse(record.completedNodes as string || '[]');
-    const failedNodes: string[] = JSON.parse(record.failedNodes as string || '[]');
-    const nodes: Array<{ id: string }> = JSON.parse(record.graphNodes as string || '[]');
-    const total = nodes.length || 1;
-    const progress = completedNodes.length / total;
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const completedNodes: string[] = JSON.parse(record.completedNodes as string || '[]');
+        const failedNodes: string[] = JSON.parse(record.failedNodes as string || '[]');
+        const nodes: Array<{ id: string }> = JSON.parse(record.graphNodes as string || '[]');
+        const total = nodes.length || 1;
+        const progress = completedNodes.length / total;
 
-    return {
-      variant: 'ok',
-      plan,
-      phase: record.currentPhase as string,
-      progress,
-      activeNodes: nodes
-        .map(n => n.id)
-        .filter(id => !completedNodes.includes(id) && !failedNodes.includes(id)),
-      completedNodes,
-      failedNodes,
-      appName: record.appName as string,
-    };
+        return {
+          plan,
+          phase: record.currentPhase as string,
+          progress,
+          activeNodes: nodes
+            .map(n => n.id)
+            .filter(id => !completedNodes.includes(id) && !failedNodes.includes(id)),
+          completedNodes,
+          failedNodes,
+          appName: record.appName as string,
+        };
+      }),
+      (elseP) => complete(elseP, 'notfound', { plan }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const deployPlanHandler = autoInterpret(_deployPlanHandler);
