@@ -25,8 +25,27 @@ concept JWT [U] {
     }
   }
 
-  invariant {
+  example "generate then verify round-trip": {
     after generate(user: x) -> ok(token: t)
     then verify(token: t) -> ok(user: x)
+  }
+
+  example "invalid token rejected": {
+    after verify(token: "invalid.token.here") -> error(message: "invalid token")
+  }
+
+  always "tokens map to users": {
+    forall u in tokens:
+    u.tokens != none
+  }
+
+  action generate {
+    ensures ok: token != ""
+  }
+
+  action verify {
+    requires: token != ""
+    ensures ok: user != none
+    ensures error: message != ""
   }
 }

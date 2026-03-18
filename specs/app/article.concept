@@ -58,13 +58,47 @@ concept Article [A] {
     }
   }
 
-  invariant {
+  example "create then get returns stored fields": {
     after create(article: a, title: "Test Article", description: "A test", body: "Body text", author: "u1") -> ok(article: a)
     then get(article: a) -> ok(article: a, slug: "test-article", title: "Test Article", description: "A test", body: "Body text", author: "u1")
   }
 
-  invariant {
+  example "create then delete succeeds": {
     after create(article: a, title: "To Delete", description: "Desc", body: "Body", author: "u1") -> ok(article: a)
     then delete(article: a) -> ok(article: a)
+  }
+
+  example "get nonexistent returns notfound": {
+    after get(article: z) -> notfound(message: "article not found")
+  }
+
+  example "delete nonexistent returns notfound": {
+    after delete(article: z) -> notfound(message: "article not found")
+  }
+
+  always "articles have required fields": {
+    forall a in articles:
+    a.title != none
+  }
+
+  never "deleted article in set": {
+    exists a in articles:
+    a.slug = none
+  }
+
+  action create {
+    requires: title != ""
+    requires: body != ""
+    ensures ok: article in articles
+  }
+
+  action update {
+    ensures ok: article in articles
+    ensures notfound: article != none
+  }
+
+  action delete {
+    ensures ok: article != none
+    ensures notfound: article != none
   }
 }

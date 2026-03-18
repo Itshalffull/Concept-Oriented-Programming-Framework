@@ -17,8 +17,22 @@ concept Echo [M] {
     }
   }
 
-  invariant {
+  example "idempotent echo": {
     after send(id: m, text: "hello") -> ok(id: m, echo: "hello")
     then send(id: m, text: "hello") -> ok(id: m, echo: "hello")
+  }
+
+  example "echo returns exact text": {
+    after send(id: m, text: "world") -> ok(id: m, echo: "world")
+  }
+
+  always "stored messages have text": {
+    forall m in messages:
+    m.text != none
+  }
+
+  action send {
+    requires: text != ""
+    ensures ok: echo = text
   }
 }

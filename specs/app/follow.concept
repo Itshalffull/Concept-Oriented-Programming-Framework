@@ -31,9 +31,20 @@ concept Follow [U] {
     }
   }
 
-  invariant {
+  example "follow then check then unfollow": {
     after follow(user: u, target: "u2") -> ok(user: u, target: "u2")
     then isFollowing(user: u, target: "u2") -> ok(following: true)
     and  unfollow(user: u, target: "u2") -> ok(user: u, target: "u2")
+  }
+
+  example "unfollowed user not in following": {
+    after follow(user: u, target: "u3") -> ok(user: u, target: "u3")
+    then unfollow(user: u, target: "u3") -> ok(user: u, target: "u3")
+    and  isFollowing(user: u, target: "u3") -> ok(following: false)
+  }
+
+  action follow {
+    requires: target != ""
+    ensures ok: target != ""
   }
 }

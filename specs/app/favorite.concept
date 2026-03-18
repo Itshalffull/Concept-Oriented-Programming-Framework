@@ -37,9 +37,24 @@ concept Favorite [U] {
     }
   }
 
-  invariant {
+  example "favorite then check then unfavorite": {
     after favorite(user: u, article: "a1") -> ok(user: u, article: "a1")
     then isFavorited(user: u, article: "a1") -> ok(favorited: true)
     and  unfavorite(user: u, article: "a1") -> ok(user: u, article: "a1")
+  }
+
+  example "unfavorited article not in set": {
+    after favorite(user: u, article: "a2") -> ok(user: u, article: "a2")
+    then unfavorite(user: u, article: "a2") -> ok(user: u, article: "a2")
+    and  isFavorited(user: u, article: "a2") -> ok(favorited: false)
+  }
+
+  example "count reflects favorites": {
+    after favorite(user: u, article: "a3") -> ok(user: u, article: "a3")
+    then count(article: "a3") -> ok(count: 1)
+  }
+
+  action favorite {
+    ensures ok: article != ""
   }
 }
