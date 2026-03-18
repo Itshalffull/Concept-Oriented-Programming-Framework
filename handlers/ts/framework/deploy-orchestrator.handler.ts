@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // DeployOrchestrator Concept Handler
 // End-to-end deployment orchestrator that reads deploy manifests,
 // creates deployment plans, validates, provisions runtimes, and deploys
@@ -6,7 +7,9 @@
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { resolve, basename } from 'path';
 import YAML from 'yaml';
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { Kernel } from '../../../runtime/self-hosted.js';
 
 const RELATION = 'deploy-orchestrator';
@@ -50,7 +53,7 @@ async function deploySingleApp(
   kernel: Kernel,
   app: { name: string; dir: string; manifest: string },
   environment: string,
-): Promise<{ variant: string; url?: string; errors?: string[] }> {
+) {
   // Step 1: Read manifest
   const manifestJson = readManifest(app.manifest);
 
@@ -199,8 +202,8 @@ const runs = new Map<string, {
   completedAt?: string;
 }>();
 
-export const deployOrchestratorHandler: ConceptHandler = {
-  async deploy(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  deploy(input: Record<string, unknown>) {
     const manifestPath = resolve(input.manifestPath as string);
     const environment = (input.environment as string) || 'production';
 
@@ -262,7 +265,7 @@ export const deployOrchestratorHandler: ConceptHandler = {
     return { variant: result.variant, appName, errors: result.errors || [] };
   },
 
-  async deployAll(input, storage) {
+  deployAll(input: Record<string, unknown>) {
     const projectRoot = resolve(input.projectRoot as string || '.');
     const environment = (input.environment as string) || 'production';
 
@@ -383,7 +386,7 @@ export const deployOrchestratorHandler: ConceptHandler = {
     return { variant: 'ok', deployed, urls, failed, configuredApps };
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const runId = input.run as string;
     const run = runs.get(runId);
 
@@ -400,3 +403,5 @@ export const deployOrchestratorHandler: ConceptHandler = {
     };
   },
 };
+
+export const deployOrchestratorHandler = autoInterpret(_handler);

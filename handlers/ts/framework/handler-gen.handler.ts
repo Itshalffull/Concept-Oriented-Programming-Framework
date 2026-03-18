@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HandlerGen — Generate storage-backed .handler.ts handlers
 //
@@ -9,13 +10,12 @@
 // Output: single <concept>.handler.ts file per concept.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
-  VariantSchema,
-} from '../../../runtime/types.js';
+  VariantSchema } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -442,7 +442,7 @@ function determineRelativeKernelPath(outputPath: string): string {
 
 // --- ConceptHandler interface ---
 
-export const handlerGenHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
@@ -465,3 +465,5 @@ export const handlerGenHandler: ConceptHandler = {
     };
   },
 };
+
+export const handlerGenHandler = autoInterpret(_handler);

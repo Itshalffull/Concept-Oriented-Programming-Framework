@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NextjsTarget Provider — Clef Bind
 //
@@ -7,12 +8,11 @@
 // for mutations. All generated code is purely functional.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
-  ActionSchema,
-} from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
+  ActionSchema } from '../../../../runtime/types.js';
 
 import {
   inferHttpRoute,
@@ -292,8 +292,8 @@ function generateServerActionsFile(manifest: ConceptManifest): string {
 
 // --- Handler Export ---
 
-export const nextjsTargetHandler: ConceptHandler = {
-  async register(_input, _storage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'NextjsTarget',
@@ -305,7 +305,7 @@ export const nextjsTargetHandler: ConceptHandler = {
     };
   },
 
-  async generate(input, storage) {
+  generate(input: Record<string, unknown>) {
     const projection = typeof input.projection === 'string'
       ? JSON.parse(input.projection)
       : input.projection;
@@ -361,11 +361,13 @@ export const nextjsTargetHandler: ConceptHandler = {
     };
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     return { variant: 'ok', route: input.route };
   },
 
-  async listRoutes(input, storage) {
+  listRoutes(input: Record<string, unknown>) {
     return { variant: 'ok', routes: [], methods: [] };
   },
 };
+
+export const nextjsTargetHandler = autoInterpret(_handler);

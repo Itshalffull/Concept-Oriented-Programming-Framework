@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // gRPC Target Provider Handler
 //
@@ -7,7 +8,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toPascalCase, typeToProtobuf, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 
@@ -136,8 +140,8 @@ function generateProtoFile(
 
 // --- Concept Handler ---
 
-export const grpcTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'GrpcTarget',
@@ -159,7 +163,7 @@ export const grpcTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;
 
@@ -222,3 +226,5 @@ export const grpcTargetHandler: ConceptHandler = {
     return { variant: 'ok', files };
   },
 };
+
+export const grpcTargetHandler = autoInterpret(_handler);

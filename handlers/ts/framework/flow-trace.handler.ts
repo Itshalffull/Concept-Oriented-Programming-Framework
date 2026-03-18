@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FlowTrace Concept Implementation
 //
@@ -9,7 +10,10 @@
 // See Architecture doc Section 16.1 / 17.1.
 // ============================================================
 
-import type { ActionRecord, CompiledSync, ConceptAST, ConceptHandler, WhenPattern } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ActionRecord, CompiledSync, ConceptAST, WhenPattern } from '../../../runtime/types.js';
 import type { SyncIndex } from './engine.js';
 import { ActionLog, indexKey } from './engine.js';
 
@@ -689,8 +693,8 @@ function hasFailedDescendant(node: TraceNode): boolean {
 
 // --- Concept Handler ---
 
-export const flowTraceHandler: ConceptHandler = {
-  async build(input, _storage) {
+const _handler: FunctionalConceptHandler = {
+  build(input: Record<string, unknown>) {
     const flowId = input.flowId as string;
     if (!flowId) {
       return { variant: 'error', message: 'flowId is required' };
@@ -702,7 +706,7 @@ export const flowTraceHandler: ConceptHandler = {
     return { variant: 'error', message: 'No action log available for flow: ' + flowId };
   },
 
-  async render(input, _storage) {
+  render(input: Record<string, unknown>) {
     const trace = input.trace as FlowTrace | undefined;
     const options = input.options as { failed?: boolean; json?: boolean } | undefined;
 
@@ -714,3 +718,5 @@ export const flowTraceHandler: ConceptHandler = {
     return { variant: 'ok', output };
   },
 };
+
+export const flowTraceHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Claude Skills Target Provider Handler
 //
@@ -15,7 +16,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toCamelCase,
@@ -580,8 +584,8 @@ function generateCommandRunner(
 
 // --- Concept Handler ---
 
-export const claudeSkillsTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'ClaudeSkillsTarget',
@@ -604,7 +608,7 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse config ---
     let config: Record<string, unknown> = {};
     if (input.config && typeof input.config === 'string') {
@@ -766,3 +770,5 @@ export const claudeSkillsTargetHandler: ConceptHandler = {
     return { variant: 'ok', files };
   },
 };
+
+export const claudeSkillsTargetHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Generator Concept Implementation
 //
@@ -7,7 +8,9 @@
 // Architecture doc: Clef Bind, Section 1.2
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId, timestamp } from '../../../runtime/types.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 
@@ -153,7 +156,7 @@ export function createInterfaceGeneratorHandler(
     async plan(
       input: Record<string, unknown>,
       storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const suite = input.suite as string;
       const interfaceManifestRaw = input.interfaceManifest as string;
 
@@ -223,7 +226,7 @@ export function createInterfaceGeneratorHandler(
     async generate(
       input: Record<string, unknown>,
       storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       const projections = (input.projections as Array<{
         conceptName: string;
@@ -439,7 +442,7 @@ export function createInterfaceGeneratorHandler(
     async status(
       input: Record<string, unknown>,
       storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       if (!planId) {
         return { variant: 'ok', plan: '', phase: 'unknown', progress: 0, activeTargets: [] };
@@ -461,7 +464,7 @@ export function createInterfaceGeneratorHandler(
     async regenerate(
       input: Record<string, unknown>,
       storage: ConceptStorage,
-    ): Promise<{ variant: string; [key: string]: unknown }> {
+    ) {
       const planId = input.plan as string;
       const targets = input.targets as string[];
       if (!planId) {
@@ -484,7 +487,7 @@ export function createInterfaceGeneratorHandler(
 
 function stubProvider(meta: Record<string, unknown>): ConceptHandler {
   return {
-    async register() { return { variant: 'ok', ...meta }; },
+    register(input: Record<string, unknown>) { return { variant: 'ok', ...meta }; },
     async generate() { return { variant: 'ok', files: [], filesGenerated: 0 }; },
   };
 }
@@ -540,5 +543,5 @@ function getSdkConfig(
 ): Record<string, unknown> {
   const sdk = manifestYaml?.sdk as Record<string, Record<string, unknown>> | undefined;
   if (!sdk?.[lang]) return {};
-  return sdk[lang];
-}
+
+export const interfaceGeneratorHandler = autoInterpret(_handler);

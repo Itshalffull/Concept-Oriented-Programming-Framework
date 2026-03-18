@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DeploymentValidator Concept Implementation
 //
@@ -18,7 +19,9 @@
 // See Architecture doc Section 17.2.
 // ============================================================
 
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId } from '../../../runtime/types.js';
 
 // --- Deployment Manifest Types ---
@@ -456,8 +459,8 @@ export function validateDeploymentManifest(
 
 // --- Concept Handler ---
 
-export const deploymentValidatorHandler: ConceptHandler = {
-  async parse(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  parse(input: Record<string, unknown>) {
     const raw = input.raw as string;
     if (!raw || typeof raw !== 'string') {
       return { variant: 'error', message: 'raw is required and must be a string' };
@@ -479,7 +482,7 @@ export const deploymentValidatorHandler: ConceptHandler = {
     }
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const manifestRef = input.manifest as string;
     if (!manifestRef) {
       return { variant: 'error', issues: ['manifest reference is required'] };
@@ -493,3 +496,5 @@ export const deploymentValidatorHandler: ConceptHandler = {
     return { variant: 'error', issues: ['full validation requires concept and sync registrations'] };
   },
 };
+
+export const deploymentValidatorHandler = autoInterpret(_handler);

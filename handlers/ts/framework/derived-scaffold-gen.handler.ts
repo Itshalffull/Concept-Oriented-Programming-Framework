@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DerivedScaffoldGen — Derived concept (.derived) scaffold generator
 //
@@ -8,7 +9,9 @@
 // See derived-concepts-proposal-v3.md for the full specification.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function toKebab(name: string): string {
   return name
@@ -179,8 +182,8 @@ function buildDerivedSpec(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const derivedScaffoldGenHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'DerivedScaffoldGen',
@@ -194,7 +197,7 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
     };
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
     const name = (input.name as string) || 'MyDerived';
 
     if (!name || typeof name !== 'string') {
@@ -217,7 +220,7 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
     const result = await derivedScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
@@ -229,3 +232,5 @@ export const derivedScaffoldGenHandler: ConceptHandler = {
     };
   },
 };
+
+export const derivedScaffoldGenHandler = autoInterpret(_handler);

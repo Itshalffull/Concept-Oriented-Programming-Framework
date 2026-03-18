@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HookSyncGenerator — Generates sync files from schema.yaml
 // hook declarations at install time.
@@ -9,7 +10,9 @@
 // See Architecture doc Section 2.1.3
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { SchemaDef, SchemaHooks } from './schema-yaml-parser.handler.js';
 
 export interface GeneratedHookSync {
@@ -173,12 +176,12 @@ export function generateAllHookSyncs(schemas: SchemaDef[]): {
 let counter = 0;
 export function resetHookSyncGeneratorCounter(): void { counter = 0; }
 
-export const hookSyncGeneratorHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   /**
    * Generate hook syncs from parsed schema definitions.
    * Input: { schemas: SchemaDef[] }
    */
-  async generate(input: Record<string, unknown>, storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
     const schemas = input.schemas as SchemaDef[] | undefined;
     if (!schemas || !Array.isArray(schemas)) {
       return { variant: 'error', message: 'schemas must be an array of SchemaDef objects' };
@@ -213,7 +216,7 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
    * Convenience action that parses then generates.
    * Input: { source: Record<string, unknown> }
    */
-  async generateFromYaml(input: Record<string, unknown>, storage: ConceptStorage) {
+  generateFromYaml(input: Record<string, unknown>) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
       return { variant: 'error', message: 'source must be a parsed YAML object' };
@@ -239,7 +242,7 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
    * Preview what hook syncs would be generated for a schema,
    * without storing anything.
    */
-  async preview(input: Record<string, unknown>, _storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
     const schemaName = input.schema_name as string | undefined;
     const hooks = input.hooks as Record<string, string> | undefined;
     const concept = input.concept as string | undefined;
@@ -274,3 +277,5 @@ export const hookSyncGeneratorHandler: ConceptHandler = {
     return { variant: 'ok', previews };
   },
 };
+
+export const hookSyncGeneratorHandler = autoInterpret(_handler);

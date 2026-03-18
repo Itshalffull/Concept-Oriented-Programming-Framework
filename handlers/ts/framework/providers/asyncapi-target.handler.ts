@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AsyncAPI Target Provider — Clef Bind
 //
@@ -9,13 +10,12 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
-  VariantSchema,
-} from '../../../../runtime/types.js';
+  VariantSchema } from '../../../../runtime/types.js';
 
 import {
   typeToJsonSchema,
@@ -533,8 +533,8 @@ function assembleAsyncApiDocument(
 
 // --- Concept Handler ---
 
-export const asyncapiTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'AsyncapiTarget',
@@ -560,7 +560,7 @@ export const asyncapiTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse allProjections ---
 
     const projectionsRaw = input.allProjections as string;
@@ -645,3 +645,5 @@ export const asyncapiTargetHandler: ConceptHandler = {
     };
   },
 };
+
+export const asyncapiTargetHandler = autoInterpret(_handler);

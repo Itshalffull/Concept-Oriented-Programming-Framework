@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConceptScaffoldGen — Concept spec (.concept) scaffold generator
 //
@@ -10,7 +11,9 @@
 //   - Section 2.2: Action signatures and variants
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function toKebab(name: string): string {
   return name
@@ -177,8 +180,8 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-export const conceptScaffoldGenHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'ConceptScaffoldGen',
@@ -192,7 +195,7 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
     };
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
     const name = (input.name as string) || 'MyConcept';
 
     if (!name || typeof name !== 'string') {
@@ -215,7 +218,7 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
     const result = await conceptScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
@@ -227,3 +230,5 @@ export const conceptScaffoldGenHandler: ConceptHandler = {
     };
   },
 };
+
+export const conceptScaffoldGenHandler = autoInterpret(_handler);

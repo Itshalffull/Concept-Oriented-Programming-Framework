@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Go SDK Target Provider — Clef Bind
 //
@@ -8,14 +9,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
-  VariantSchema,
-} from '../../../../runtime/types.js';
+  VariantSchema } from '../../../../runtime/types.js';
 
 import {
   typeToGo,
@@ -262,8 +262,8 @@ function generateGoMainClient(projections: ProjectionEntry[], goPackage: string)
 
 // --- Concept Handler ---
 
-export const goSdkTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'GoSdkTarget',
@@ -288,7 +288,7 @@ export const goSdkTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
@@ -375,3 +375,5 @@ export const goSdkTargetHandler: ConceptHandler = {
     return { variant: 'ok', files, package: packageName };
   },
 };
+
+export const goSdkTargetHandler = autoInterpret(_handler);

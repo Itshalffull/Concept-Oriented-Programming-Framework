@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // McpServer Concept Implementation
 //
 // Serves the MCP protocol over stdio, auto-discovering tools
@@ -8,7 +9,9 @@
 // Routes tool calls to the corresponding concept handlers via
 // the handler registry.
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // ─── Tool registry (in-memory, populated on start) ───────
 
@@ -62,9 +65,9 @@ export function inferActionFromToolName(toolName: string, conceptName: string): 
 
 // ─── McpServer Handler ──────────────────────────────────
 
-export const mcpServerHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
 
-  async start(input, storage) {
+  start(input: Record<string, unknown>) {
     const manifestPath = input.manifestPath as string;
     const transport = input.transport as string;
 
@@ -157,7 +160,7 @@ export const mcpServerHandler: ConceptHandler = {
     }
   },
 
-  async registerTool(input, storage) {
+  registerTool(input: Record<string, unknown>) {
     const name = input.name as string;
     const concept = input.concept as string;
     const action = input.action as string;
@@ -197,7 +200,7 @@ export const mcpServerHandler: ConceptHandler = {
     return { variant: 'ok', tool: name };
   },
 
-  async handleCall(input, _storage) {
+  handleCall(input: Record<string, unknown>) {
     const toolName = input.toolName as string;
     const argsStr = input.arguments as string;
 
@@ -236,13 +239,13 @@ export const mcpServerHandler: ConceptHandler = {
     }
   },
 
-  async stop(_input, storage) {
+  stop(input: Record<string, unknown>) {
     toolRegistry.clear();
     await storage.put('status', 'server', { status: 'stopped' });
     return { variant: 'ok', status: 'stopped' };
   },
 
-  async listTools(_input, _storage) {
+  listTools(input: Record<string, unknown>) {
     const tools = Array.from(toolRegistry.values()).map(t => ({
       name: t.name,
       type: t.type,
@@ -680,40 +683,5 @@ export async function bootMcpServer(manifestPath: string) {
         content: [{ type: 'text' as const, text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
         isError: true,
       };
-    }
-  });
 
-  // Connect via stdio
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-}
-
-/** Resolve a concept name to its handler module */
-async function resolveHandler(conceptName: string): Promise<ConceptHandler | null> {
-  // Map concept names to handler file paths
-  const kebab = conceptName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-  // Try multiple locations
-  const candidates = [
-    `../../../handlers/ts/framework/${kebab}.handler.js`,
-    `../../../handlers/ts/score/${kebab}.handler.js`,
-    `../../../handlers/ts/app/${kebab}.handler.js`,
-    `../../../handlers/ts/framework/providers/${kebab}.handler.js`,
-  ];
-
-  for (const candidate of candidates) {
-    try {
-      const mod = await import(candidate);
-      // Find the handler export (e.g., scoreApiHandler, scoreQueryHandler)
-      for (const key of Object.keys(mod)) {
-        if (key.endsWith('Handler') && typeof mod[key] === 'object') {
-          return mod[key] as ConceptHandler;
-        }
-      }
-    } catch {
-      // try next candidate
-    }
-  }
-
-  return null;
-}
+export const mcpServerHandler = autoInterpret(_handler);

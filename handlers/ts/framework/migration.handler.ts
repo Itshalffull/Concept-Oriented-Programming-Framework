@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Migration Concept Implementation
 //
@@ -7,14 +8,13 @@
 // See Architecture doc Section 17.3.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptTransport,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptTransport,
   ConceptQuery,
-  ConceptStorage,
   ActionInvocation,
-  ActionCompletion,
-} from '../../../runtime/types.js';
+  ActionCompletion } from '../../../runtime/types.js';
 import { timestamp } from '../../../runtime/types.js';
 
 /**
@@ -149,8 +149,8 @@ export function createMigrationGatedTransport(
 
 // --- Concept Handler ---
 
-export const migrationHandler: ConceptHandler = {
-  async check(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  check(input: Record<string, unknown>) {
     const specVersion = input.specVersion as number;
 
     if (specVersion === undefined || specVersion === null) {
@@ -166,7 +166,7 @@ export const migrationHandler: ConceptHandler = {
     return { variant: 'needsMigration', from: result.currentVersion, to: result.requiredVersion };
   },
 
-  async complete(input, storage) {
+  complete(input: Record<string, unknown>) {
     const version = input.version as number;
 
     if (version === undefined || version === null) {
@@ -177,3 +177,5 @@ export const migrationHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 };
+
+export const migrationHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SharedContentNodePoolProvider — Storage backend for Clef Base
 //
@@ -9,7 +10,9 @@
 // See Architecture doc Sections 3.1.1, 13.1
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { SchemaDef, SchemaFieldDef } from './schema-yaml-parser.handler.js';
 
 export interface FieldMapping {
@@ -173,12 +176,12 @@ export function resolveSetQuery(
 let counter = 0;
 export function resetContentNodePoolProviderCounter(): void { counter = 0; }
 
-export const contentNodePoolProviderHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   /**
    * Configure the pool provider for a concept by loading its schema.yaml mappings.
    * Input: { schemas: SchemaDef[], concept_state_fields?: string[] }
    */
-  async configure(input: Record<string, unknown>, storage: ConceptStorage) {
+  configure(input: Record<string, unknown>) {
     const schemas = input.schemas as SchemaDef[] | undefined;
     if (!schemas || !Array.isArray(schemas)) {
       return { variant: 'error', message: 'schemas must be an array of SchemaDef objects' };
@@ -210,7 +213,7 @@ export const contentNodePoolProviderHandler: ConceptHandler = {
    * and concept-local storage.
    * Input: { entity_id: string, data: Record<string, unknown>, schema_name: string, config: PoolProviderConfig }
    */
-  async routeSave(input: Record<string, unknown>, _storage: ConceptStorage) {
+  routeSave(input: Record<string, unknown>) {
     const entityId = input.entity_id as string | undefined;
     const data = input.data as Record<string, unknown> | undefined;
     const schemaName = input.schema_name as string | undefined;
@@ -241,7 +244,7 @@ export const contentNodePoolProviderHandler: ConceptHandler = {
    * Route a load operation: merge ContentNode Properties with concept-local data.
    * Input: { content_node_properties: Record, concept_local_data: Record, schema_name: string, config: PoolProviderConfig }
    */
-  async routeLoad(input: Record<string, unknown>, _storage: ConceptStorage) {
+  routeLoad(input: Record<string, unknown>) {
     const contentNodeProps = input.content_node_properties as Record<string, unknown> | undefined;
     const conceptLocalData = input.concept_local_data as Record<string, unknown> | undefined;
     const schemaName = input.schema_name as string | undefined;
@@ -267,7 +270,7 @@ export const contentNodePoolProviderHandler: ConceptHandler = {
    * Resolve a concept set query to a Schema membership query.
    * Input: { set_name: string, config: PoolProviderConfig }
    */
-  async resolveSet(input: Record<string, unknown>, _storage: ConceptStorage) {
+  resolveSet(input: Record<string, unknown>) {
     const setName = input.set_name as string | undefined;
     const config = input.config as PoolProviderConfig | undefined;
 
@@ -286,7 +289,7 @@ export const contentNodePoolProviderHandler: ConceptHandler = {
    * Get the field routing summary for a configured concept.
    * Input: { config: PoolProviderConfig }
    */
-  async describe(input: Record<string, unknown>, _storage: ConceptStorage) {
+  describe(input: Record<string, unknown>) {
     const config = input.config as PoolProviderConfig | undefined;
     if (!config) return { variant: 'error', message: 'config is required' };
 
@@ -308,3 +311,5 @@ export const contentNodePoolProviderHandler: ConceptHandler = {
     return { variant: 'ok', concept: config.conceptName, schemas: summary };
   },
 };
+
+export const contentNodePoolProviderHandler = autoInterpret(_handler);

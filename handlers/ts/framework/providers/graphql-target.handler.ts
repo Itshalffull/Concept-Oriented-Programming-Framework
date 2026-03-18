@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GraphQL Target Provider Implementation
 //
@@ -8,15 +9,14 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
   RelationSchema,
-  FieldSchema,
-} from '../../../../runtime/types.js';
+  FieldSchema } from '../../../../runtime/types.js';
 
 import {
   typeToGraphQL,
@@ -327,8 +327,8 @@ function generateSchemaFile(
 
 // --- Concept Handler ---
 
-export const graphqlTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'GraphqlTarget',
@@ -357,7 +357,7 @@ export const graphqlTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;
     const overridesRaw = input.overrides as string | undefined;
@@ -442,3 +442,5 @@ export const graphqlTargetHandler: ConceptHandler = {
     };
   },
 };
+
+export const graphqlTargetHandler = autoInterpret(_handler);

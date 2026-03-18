@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Claude MD Target Provider Handler
 //
@@ -13,7 +14,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toPascalCase,
@@ -202,8 +206,8 @@ function assembleClaudeMd(
 
 // --- Concept Handler ---
 
-export const claudeMdTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'ClaudeMdTarget',
@@ -231,7 +235,7 @@ export const claudeMdTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse current projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
@@ -324,3 +328,5 @@ export const claudeMdTargetHandler: ConceptHandler = {
     };
   },
 };
+
+export const claudeMdTargetHandler = autoInterpret(_handler);

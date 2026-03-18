@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NextjsGen Concept Implementation
 //
@@ -21,17 +22,16 @@
 //   - conformance.test.ts  (vitest tests from invariants)
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ResolvedType,
   ActionSchema,
   VariantSchema,
   InvariantSchema,
   InvariantStep,
-  InvariantValue,
-} from '../../../runtime/types.js';
+  InvariantValue } from '../../../runtime/types.js';
 
 // --- Naming helpers ---
 
@@ -946,8 +946,8 @@ function generateStepCode(
 
 // --- Handler Export ---
 
-export const nextjsGenHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
 
@@ -977,3 +977,5 @@ export const nextjsGenHandler: ConceptHandler = {
     }
   },
 };
+
+export const nextjsGenHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MCP Target Provider Handler
 //
@@ -8,7 +9,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -333,8 +337,8 @@ function generateMcpHelpMd(
 
 // --- Concept Handler ---
 
-export const mcpTargetHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'McpTarget',
@@ -356,7 +360,7 @@ export const mcpTargetHandler: ConceptHandler = {
   async generate(
     input: Record<string, unknown>,
     _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const overridesRaw = input.overrides as string | undefined;
 
@@ -434,3 +438,5 @@ export const mcpTargetHandler: ConceptHandler = {
     return { variant: 'ok', files };
   },
 };
+
+export const mcpTargetHandler = autoInterpret(_handler);

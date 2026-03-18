@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Middleware Concept Implementation
 //
@@ -8,7 +9,9 @@
 // Architecture doc: Clef Bind, Section 1.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
 /**
@@ -30,7 +33,7 @@ function isValidPosition(position: string): boolean {
   return position in POSITION_ORDER;
 }
 
-export const middlewareHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   /**
    * Register a trait-to-target middleware mapping.
    *
@@ -41,7 +44,7 @@ export const middlewareHandler: ConceptHandler = {
   async register(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const trait = input.trait as string;
     const target = input.target as string;
     const implementation = input.implementation as string;
@@ -85,7 +88,7 @@ export const middlewareHandler: ConceptHandler = {
   async resolve(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const traits = input.traits as string[];
     const target = input.target as string;
 
@@ -149,7 +152,7 @@ export const middlewareHandler: ConceptHandler = {
   async inject(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const output = input.output as string;
     const middlewares = input.middlewares as string[];
     const target = input.target as string;
@@ -166,3 +169,5 @@ export const middlewareHandler: ConceptHandler = {
     return { variant: 'ok', output: result, injectedCount };
   },
 };
+
+export const middlewareHandler = autoInterpret(_handler);

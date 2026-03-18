@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Emitter Concept Implementation
 //
@@ -11,7 +12,9 @@
 // See clef-generation-suite.md Part 1.5
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { createHash, randomUUID } from 'crypto';
 
 // Storage relation names
@@ -109,7 +112,7 @@ async function writeFileInternal(
   sources?: SourceEntry[],
   target?: string,
   concept?: string,
-): Promise<{ written: boolean; path: string; contentHash: string; fileId: string; sizeBytes: number; isNew: boolean }> {
+) {
   const hash = sha256(content);
   const key = fileKey(path);
 
@@ -160,7 +163,7 @@ async function writeFileInternal(
   };
 }
 
-export const emitterHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
   /**
    * Content-addressed file writing.
    *
@@ -176,7 +179,7 @@ export const emitterHandler: ConceptHandler = {
   async write(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const path = input.path as string;
     const content = input.content as string;
     const target = input.target as string | undefined;
@@ -221,7 +224,7 @@ export const emitterHandler: ConceptHandler = {
   async writeBatch(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const files = input.files as Array<{
       path: string;
       content: string;
@@ -280,7 +283,7 @@ export const emitterHandler: ConceptHandler = {
   async format(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // Support both path-based (generation suite) and file-ID-based (legacy) signatures
     const pathInput = input.path as string | undefined;
     const fileId = input.file as string | undefined;
@@ -350,7 +353,7 @@ export const emitterHandler: ConceptHandler = {
   async clean(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const outputDir = input.outputDir as string;
     // Support both new (currentManifest) and legacy (currentFiles) parameter names
     const currentList = (input.currentManifest || input.currentFiles) as string[];
@@ -386,7 +389,7 @@ export const emitterHandler: ConceptHandler = {
   async manifest(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
@@ -417,7 +420,7 @@ export const emitterHandler: ConceptHandler = {
   async trace(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const outputPath = input.outputPath as string;
     const key = fileKey(outputPath);
 
@@ -441,7 +444,7 @@ export const emitterHandler: ConceptHandler = {
   async affected(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const sourcePath = input.sourcePath as string;
 
     const allSourceMaps = await storage.find(SOURCE_MAP_RELATION);
@@ -468,7 +471,7 @@ export const emitterHandler: ConceptHandler = {
   async audit(
     input: Record<string, unknown>,
     storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
@@ -523,39 +526,4 @@ export const emitterHandler: ConceptHandler = {
   },
 };
 
-// ---- Internal helpers ----
-
-/**
- * Update the aggregated manifest record for the output directory
- * that a file belongs to. Adjusts file count and byte totals.
- */
-async function updateManifestOnWrite(
-  storage: ConceptStorage,
-  filePath: string,
-  newSize: number,
-  existing: Record<string, unknown> | null,
-): Promise<void> {
-  const outputDir = deriveOutputDir(filePath);
-  const manifestRecord = await storage.get(MANIFEST_RELATION, outputDir);
-
-  let totalFiles = 1;
-  let totalBytes = newSize;
-
-  if (manifestRecord) {
-    totalFiles = (manifestRecord.totalFiles as number) || 0;
-    totalBytes = (manifestRecord.totalBytes as number) || 0;
-
-    if (existing) {
-      totalBytes = totalBytes - ((existing.sizeBytes as number) || 0) + newSize;
-    } else {
-      totalFiles += 1;
-      totalBytes += newSize;
-    }
-  }
-
-  await storage.put(MANIFEST_RELATION, outputDir, {
-    outputDir,
-    totalFiles,
-    totalBytes,
-  });
-}
+export const emitterHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Projection Concept Implementation
 //
@@ -7,12 +8,11 @@
 // ============================================================
 
 import { createHash, randomUUID } from 'crypto';
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
-  ActionSchema,
-} from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
+  ActionSchema } from '../../../runtime/types.js';
 
 // --- Internal Types ---
 
@@ -296,13 +296,13 @@ const HISTORY_RELATION = 'projection_history';
 
 // --- Concept Handler ---
 
-export const projectionHandler: ConceptHandler = {
+const _handler: FunctionalConceptHandler = {
 
   /**
    * Parse manifest and annotations. Merge into a projection.
    * Compute resource mappings, count shapes/actions/traits, and persist.
    */
-  async project(input: Record<string, unknown>, storage: ConceptStorage) {
+  project(input: Record<string, unknown>) {
     const manifestJson = input.manifest as string;
     const annotationsJson = input.annotations as string;
 
@@ -413,7 +413,7 @@ export const projectionHandler: ConceptHandler = {
    * Load projection from storage, check for breaking changes against
    * previous versions, and verify annotation completeness.
    */
-  async validate(input: Record<string, unknown>, storage: ConceptStorage) {
+  validate(input: Record<string, unknown>) {
     const projectionId = input.projection as string;
 
     // Load the projection
@@ -517,7 +517,7 @@ export const projectionHandler: ConceptHandler = {
   /**
    * Compare two projections and return added/removed/changed fields.
    */
-  async diff(input: Record<string, unknown>, storage: ConceptStorage) {
+  diff(input: Record<string, unknown>) {
     const projectionId = input.projection as string;
     const previousId = input.previous as string;
 
@@ -632,7 +632,7 @@ export const projectionHandler: ConceptHandler = {
    * Auto-derive REST resource mappings from action names using
    * convention-based HTTP method and path inference.
    */
-  async inferResources(input: Record<string, unknown>, storage: ConceptStorage) {
+  inferResources(input: Record<string, unknown>) {
     const projectionId = input.projection as string;
 
     // Load the projection
@@ -698,56 +698,4 @@ export const projectionHandler: ConceptHandler = {
   },
 };
 
-// --- Breaking Change Detection ---
-
-/**
- * Detect breaking changes between a current and previous projection.
- *
- * Breaking changes include:
- * - Removed shapes (types that consumers depend on)
- * - Changed shape kinds (e.g. primitive -> list)
- * - Removed resource mapping paths
- * - Changed ID field names
- */
-function detectBreakingChanges(
-  current: ProjectionRecord,
-  previous: ProjectionRecord,
-): string[] {
-  const changes: string[] = [];
-
-  // Check for removed shapes
-  const currentShapeNames = new Set(current.shapes.map(s => s.name));
-  for (const prevShape of previous.shapes) {
-    if (!currentShapeNames.has(prevShape.name)) {
-      changes.push(`Removed shape: ${prevShape.name}`);
-    }
-  }
-
-  // Check for changed shape kinds
-  for (const currentShape of current.shapes) {
-    const prevShape = previous.shapes.find(s => s.name === currentShape.name);
-    if (prevShape && prevShape.kind !== currentShape.kind) {
-      changes.push(
-        `Shape "${currentShape.name}" kind changed from "${prevShape.kind}" to "${currentShape.kind}"`,
-      );
-    }
-  }
-
-  // Check resource mapping changes
-  if (previous.resourceMapping && current.resourceMapping) {
-    if (previous.resourceMapping.path !== current.resourceMapping.path) {
-      changes.push(
-        `Resource path changed from "${previous.resourceMapping.path}" to "${current.resourceMapping.path}"`,
-      );
-    }
-    if (previous.resourceMapping.idField !== current.resourceMapping.idField) {
-      changes.push(
-        `Resource ID field changed from "${previous.resourceMapping.idField}" to "${current.resourceMapping.idField}"`,
-      );
-    }
-  } else if (previous.resourceMapping && !current.resourceMapping) {
-    changes.push('Resource mapping removed');
-  }
-
-  return changes;
-}
+export const projectionHandler = autoInterpret(_handler);

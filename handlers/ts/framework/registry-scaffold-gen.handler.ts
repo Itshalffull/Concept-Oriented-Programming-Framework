@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RegistryScaffoldGen — Kernel registry boot code generator
 //
@@ -10,7 +11,9 @@
 
 import { readFileSync } from 'fs';
 import { resolve, dirname, relative, posix } from 'path';
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -261,8 +264,8 @@ function unquote(s: string): string {
 
 // --- Handler ----------------------------------------------------------------
 
-export const registryScaffoldGenHandler: ConceptHandler = {
-  async register() {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'RegistryScaffoldGen',
@@ -272,7 +275,7 @@ export const registryScaffoldGenHandler: ConceptHandler = {
     };
   },
 
-  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
+  generate(input: Record<string, unknown>) {
     const deployManifestPath = input.deployManifest as string;
     const outputPath = (input.outputPath as string) || 'generated/kernel-registry.ts';
     const language = (input.language as string) || 'typescript';
@@ -304,7 +307,7 @@ export const registryScaffoldGenHandler: ConceptHandler = {
     }
   },
 
-  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+  preview(input: Record<string, unknown>) {
     const result = await registryScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = typeof result.files === 'string' ? JSON.parse(result.files) : result.files;
@@ -316,3 +319,5 @@ export const registryScaffoldGenHandler: ConceptHandler = {
     };
   },
 };
+
+export const registryScaffoldGenHandler = autoInterpret(_handler);
