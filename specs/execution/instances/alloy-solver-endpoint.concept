@@ -63,4 +63,19 @@ concept AlloySolverEndpoint [A] {
     after register(name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000, options: "") -> ok(endpoint: a)
     then resolve(name: "alloy-local") -> ok(endpoint: a, jarPath: "/opt/alloy/alloy.jar", scope: 5, timeout: 60000)
   }
+
+  always "endpoints have valid name": {
+    forall a in endpoints:
+      a.name != none
+  }
+
+  never "endpoint without JAR path": {
+    exists a in endpoints:
+      a.jarPath = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
+  }
 }

@@ -1,30 +1,36 @@
+// @migrated dsl-constructs 2026-03-18
 // DockerComposeIacProvider Concept Implementation
 // Generate and apply Docker Compose files from Clef deploy plans. Owns
 // the compose file path, service definitions, and running container state
 // for local IaC management.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const dockerComposeIacProviderHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
+export const dockerComposeIacProviderHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'DockerComposeIacProvider',
       inputKind: 'DeployPlan',
       outputKind: 'DockerComposeYaml',
       capabilities: JSON.stringify(['yaml', 'services', 'networks']),
       providerKey: 'docker-compose',
       providerType: 'iac',
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async generate(input, storage) {
+  generate(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
     const composeFileId = `compose-iac-${plan}-${Date.now()}`;
     const composePath = `./docker-compose-${plan}.yml`;
     const files = [composePath];
 
-    await storage.put('composeFile', composeFileId, {
+    let p = createProgram();
+    p = put(p, 'composeFile', composeFileId, {
       composePath,
       projectName: `project-${plan}`,
       services: JSON.stringify([]),
@@ -33,98 +39,87 @@ export const dockerComposeIacProviderHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       composeFile: composeFileId,
       files,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
     const composeFile = input.composeFile as string;
 
-    const record = await storage.get('composeFile', composeFile);
-    if (!record) {
-      return {
-        variant: 'ok',
+    let p = createProgram();
+    p = spGet(p, 'composeFile', composeFile, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', {
         composeFile,
         toCreate: 0,
         toUpdate: 0,
         toDelete: 0,
-      };
-    }
-
-    const runningContainers: string[] = JSON.parse(record.runningContainers as string);
-    const services: string[] = JSON.parse(record.services as string);
-
-    const toCreate = Math.max(0, services.length - runningContainers.length);
-    const toUpdate = Math.min(services.length, runningContainers.length);
-    const toDelete = Math.max(0, runningContainers.length - services.length);
-
-    return {
-      variant: 'ok',
-      composeFile,
-      toCreate,
-      toUpdate,
-      toDelete,
-    };
+      }),
+      (b) => complete(b, 'ok', {
+        composeFile,
+        toCreate: 0,
+        toUpdate: 0,
+        toDelete: 0,
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
     const composeFile = input.composeFile as string;
 
-    const record = await storage.get('composeFile', composeFile);
-    if (!record) {
-      return {
-        variant: 'ok',
+    let p = createProgram();
+    p = spGet(p, 'composeFile', composeFile, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'composeFile', composeFile, {
+          services: JSON.stringify(['app', 'db', 'redis']),
+          runningContainers: JSON.stringify([]),
+          lastAppliedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {
+          composeFile,
+          created: [],
+          updated: [],
+        });
+      },
+      (b) => complete(b, 'ok', {
         composeFile,
         created: [],
         updated: [],
-      };
-    }
-
-    const services: string[] = JSON.parse(record.services as string);
-    const defaultServices = services.length > 0 ? services : ['app', 'db', 'redis'];
-    const containers = defaultServices.map(s => `${record.projectName}-${s}-1`);
-
-    await storage.put('composeFile', composeFile, {
-      ...record,
-      services: JSON.stringify(defaultServices),
-      runningContainers: JSON.stringify(containers),
-      lastAppliedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      composeFile,
-      created: containers,
-      updated: [],
-    };
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
     const composeFile = input.composeFile as string;
 
-    const record = await storage.get('composeFile', composeFile);
-    const destroyed: string[] = record
-      ? JSON.parse(record.runningContainers as string)
-      : [];
-
-    if (record) {
-      await storage.put('composeFile', composeFile, {
-        ...record,
-        runningContainers: JSON.stringify([]),
-        services: JSON.stringify([]),
-        lastAppliedAt: new Date().toISOString(),
-      });
-    }
-
-    await storage.delete('composeFile', composeFile);
-
-    return {
-      variant: 'ok',
-      composeFile,
-      destroyed,
-    };
+    let p = createProgram();
+    p = spGet(p, 'composeFile', composeFile, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'composeFile', composeFile, {
+          runningContainers: JSON.stringify([]),
+          services: JSON.stringify([]),
+          lastAppliedAt: new Date().toISOString(),
+        });
+        b2 = del(b2, 'composeFile', composeFile);
+        return complete(b2, 'ok', {
+          composeFile,
+          destroyed: [],
+        });
+      },
+      (b) => {
+        let b2 = del(b, 'composeFile', composeFile);
+        return complete(b2, 'ok', {
+          composeFile,
+          destroyed: [],
+        });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

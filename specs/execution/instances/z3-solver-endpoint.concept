@@ -62,8 +62,18 @@ concept Z3SolverEndpoint [Z] {
     then resolve(name: "z3-local") -> ok(endpoint: z, binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2")
   }
 
+  always "endpoints have valid name": {
+    forall z in endpoints:
+      z.name != none
+  }
+
   never "unregistered solve": {
     exists z in endpoints:
       z.name = "nonexistent"
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

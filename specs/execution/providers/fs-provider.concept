@@ -86,4 +86,19 @@ concept FsProvider [F] {
     after read(path: "/tmp/nonexistent-file") -> notFound(path: "/tmp/nonexistent-file")
     then exists(path: "/tmp/nonexistent-file") -> ok(exists: false)
   }
+
+  always "operations have valid path": {
+    forall f in operations:
+      f.path != none
+  }
+
+  never "operation without status": {
+    exists f in operations:
+      f.status = ""
+  }
+
+  action read {
+    requires: path != ""
+    ensures ok: content != none
+  }
 }

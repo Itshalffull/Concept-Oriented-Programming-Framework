@@ -84,8 +84,23 @@ concept WebSocketProvider [W] {
     }
   }
 
-  invariant {
+  example "close fails for unknown connection": {
     after configure(name: "events", url: "wss://events.example.com", protocols: "[]") -> ok(connection: w)
     then close(connection: "unknown") -> notFound(connection: "unknown")
+  }
+
+  always "connections have valid name": {
+    forall w in connections:
+      w.name != none
+  }
+
+  never "connection without URL": {
+    exists w in connections:
+      w.url = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: connection != none
   }
 }
