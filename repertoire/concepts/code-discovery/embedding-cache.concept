@@ -1,0 +1,110 @@
+@version(1)
+concept EmbeddingCache [E] {
+
+  purpose {
+    Persist embedding vectors across process restarts via a
+    content-addressed file-backed cache. On startup, warm from
+    a JSON manifest so previously computed embeddings survive
+    MCP server restarts without re-calling embedding APIs.
+    Uses content digests as cache keys so only changed entities
+    trigger recomputation.
+  }
+
+  state {
+    entries: set E
+    digest: E -> String
+    vector: E -> String
+    model: E -> String
+    dimensions: E -> Int
+    sourceKind: E -> String
+    sourceKey: E -> String
+    cachedAt: E -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action warm(path: String) {
+      -> ok(loaded: Int, skipped: Int) {
+        Read the cache manifest file and populate in-memory
+        entries. Loaded counts entries successfully restored,
+        skipped counts entries with corrupt or unparseable vectors.
+      }
+      -> fileNotFound(path: String) {
+        No cache manifest exists at the given path. Expected
+        on first boot before any embeddings have been computed.
+      }
+      -> corrupt(reason: String) {
+        The manifest file exists but is not valid JSON or has
+        a schema the cache cannot interpret.
+      }
+    }
+
+    action lookup(digest: String) {
+      -> hit(vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
+        An entry with this content digest exists in the cache.
+        Returns the stored vector and metadata without recomputation.
+      }
+      -> miss() {
+        No entry exists for this digest. The caller should
+        compute a fresh embedding and store it via put.
+      }
+    }
+
+    action put(digest: String, vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
+      -> stored(entry: E) {
+        A new cache entry was created for this digest.
+      }
+      -> alreadyExists(entry: E) {
+        An entry with this digest already exists. The existing
+        entry is returned unchanged.
+      }
+    }
+
+    action flush(path: String) {
+      -> ok(count: Int) {
+        All in-memory entries were serialized to the manifest
+        file at the given path. Count is the number of entries
+        written.
+      }
+      -> writeError(reason: String) {
+        The file could not be written, e.g. due to permission
+        or disk space issues.
+      }
+    }
+
+    action evict(digest: String) {
+      -> ok() {
+        The entry with this digest was removed from the cache.
+      }
+      -> notFound() {
+        No entry exists for this digest.
+      }
+    }
+
+    action stats() {
+      -> ok(totalEntries: Int, models: String, sourceKinds: String) {
+        Return aggregate cache statistics. Models and sourceKinds
+        are JSON arrays of distinct values present in the cache.
+      }
+    }
+  }
+
+  invariant {
+    after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
+    then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
+  }
+
+  invariant {
+    after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> stored(entry: e)
+    then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> alreadyExists(entry: e)
+  }
+
+  invariant {
+    after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> stored(entry: e)
+    and  evict(digest: "def456") -> ok()
+    then lookup(digest: "def456") -> miss()
+  }
+}

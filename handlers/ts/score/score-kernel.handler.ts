@@ -69,6 +69,7 @@ import { dataFlowPathHandler } from '../../data-flow-path.handler.js';
 
 // Discovery layer
 import { semanticEmbeddingHandler } from '../../semantic-embedding.handler.js';
+import { embeddingCacheHandler } from '../../embedding-cache.handler.js';
 
 // Score facade + index
 import { scoreApiHandler } from '../score-api.handler.js';
@@ -146,6 +147,7 @@ export const scoreKernelHandler: ConceptHandler = {
 
         // Discovery layer
         { uri: 'urn:clef/SemanticEmbedding', handler: semanticEmbeddingHandler },
+        { uri: 'urn:clef/EmbeddingCache', handler: embeddingCacheHandler },
       ],
     });
 

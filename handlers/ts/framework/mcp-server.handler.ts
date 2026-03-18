@@ -434,6 +434,21 @@ export async function bootMcpServer(manifestPath: string) {
       const bootResult = await scoreKernelHandler.boot({ projectRoot: process.cwd() }, sharedStorage);
       if (bootResult.variant === 'ok' || bootResult.variant === 'alreadyBooted') {
         scoreKernelRef = getScoreKernel();
+
+        // Warm embedding cache from disk before discovery so cached
+        // vectors are available and skip redundant API calls.
+        const { embeddingCacheHandler } = await import('../embedding-cache.handler.js');
+        const embeddingCacheStorage = createInMemoryStorage();
+        const cachePath = path.resolve(process.cwd(), '.clef/embedding-cache.json');
+        const warmResult = await embeddingCacheHandler.warm({ path: cachePath }, embeddingCacheStorage);
+        if (warmResult.variant === 'ok') {
+          console.error(`[clef-mcp] Embedding cache warmed: ${warmResult.loaded} entries loaded, ${warmResult.skipped} skipped`);
+        } else if (warmResult.variant === 'fileNotFound') {
+          console.error('[clef-mcp] Embedding cache: no manifest yet (first boot)');
+        } else {
+          console.error(`[clef-mcp] Embedding cache warning: ${warmResult.variant} — ${warmResult.reason || warmResult.path || ''}`);
+        }
+
         // Discover project files — triggers parse/symbol/entity pipeline via syncs
         if (bootResult.variant === 'ok') {
           const kernelId = bootResult.kernel || bootResult.kernel;
@@ -442,6 +457,16 @@ export async function bootMcpServer(manifestPath: string) {
             basePaths: 'specs,syncs,surface,handlers,repertoire,score,bind',
           }, sharedStorage);
         }
+
+        // Flush embedding cache to disk after discovery so new
+        // embeddings persist across MCP server restarts.
+        const flushResult = await embeddingCacheHandler.flush({ path: cachePath }, embeddingCacheStorage);
+        if (flushResult.variant === 'ok') {
+          console.error(`[clef-mcp] Embedding cache flushed: ${flushResult.count} entries`);
+        } else {
+          console.error(`[clef-mcp] Embedding cache flush failed: ${flushResult.reason || ''}`);
+        }
+
         console.error(`[clef-mcp] Score kernel booted: ${bootResult.conceptCount || 0} concepts`);
       }
     } catch (kernelErr) {

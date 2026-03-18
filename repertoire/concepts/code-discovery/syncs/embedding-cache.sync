@@ -1,0 +1,89 @@
+# EmbeddingCache wiring syncs — warm from file on boot, intercept
+# embedding computation with cache lookups, persist new embeddings,
+# and flush to disk after Score discovery completes.
+
+sync WarmEmbeddingCacheOnBoot [eager]
+  purpose: "Load previously computed embeddings from the cache manifest file when the Score kernel boots, so MCP server restarts skip redundant embedding API calls"
+when {
+  ScoreKernel/boot: [ projectRoot: ?root ]
+    => [ kernel: ?kernel ]
+}
+where {
+  bind(concat(?root, "/.clef/embedding-cache.json") as ?cachePath)
+}
+then {
+  EmbeddingCache/warm: [ path: ?cachePath ]
+}
+
+sync CacheLookupBeforeEmbed [eager]
+  purpose: "Check the embedding cache before computing a new embedding, using the content digest as the cache key to skip recomputation for unchanged entities"
+when {
+  ContentDigest/compute: [ unit: ?unit; algorithm: ?algo ]
+    => [ digest: ?digest ]
+}
+then {
+  EmbeddingCache/lookup: [ digest: ?digest ]
+}
+
+sync CacheHitSkipsCompute [eager]
+  purpose: "When the embedding cache contains a vector for this digest, restore it into SemanticEmbedding storage directly without calling the embedding API"
+when {
+  EmbeddingCache/lookup: [ digest: ?digest ]
+    => [ variant: "hit"; vector: ?vector; model: ?model; dimensions: ?dims;
+         sourceKind: ?kind; sourceKey: ?key ]
+}
+then {
+  SemanticEmbedding/compute: [ unit: ?key; model: ?model ]
+}
+
+sync CacheMissTriggersCompute [eager]
+  purpose: "When no cached embedding exists for a digest, fall through to the normal embedding computation pipeline"
+when {
+  DefinitionUnit/extract: [ tree: ?tree; startByte: ?start; endByte: ?end ]
+    => [ unit: ?unit ]
+  ContentDigest/compute: [ unit: ?unit; algorithm: ?algo ]
+    => [ digest: ?digest ]
+  EmbeddingCache/lookup: [ digest: ?digest ]
+    => [ variant: "miss" ]
+}
+where {
+  filter(NOT SemanticEmbedding: { ?existing digest: ?digest })
+}
+then {
+  SemanticEmbedding/compute: [ unit: ?unit; model: ?configuredModel ]
+}
+
+sync CacheNewEmbedding [eager]
+  purpose: "After a fresh embedding is computed, store it in the cache keyed by content digest so it persists across restarts"
+when {
+  SemanticEmbedding/compute: [ unit: ?unit; model: ?model ]
+    => [ embedding: ?embId ]
+  ContentDigest/compute: [ unit: ?unit; algorithm: ?algo ]
+    => [ digest: ?digest ]
+}
+where {
+  SemanticEmbedding: { ?embId dimensions: ?dims }
+  SemanticEmbedding: { ?embId vector: ?vector }
+}
+then {
+  EmbeddingCache/put: [
+    digest: ?digest;
+    vector: ?vector;
+    model: ?model;
+    dimensions: ?dims;
+    sourceKind: "definition-unit";
+    sourceKey: ?unit ]
+}
+
+sync FlushEmbeddingCacheAfterDiscover [eager]
+  purpose: "Write the embedding cache to disk after Score discovery completes, ensuring new embeddings survive the next MCP restart"
+when {
+  ScoreKernel/discover: [ kernel: ?kernel; basePaths: ?paths ]
+    => [ fileCount: ?count ]
+}
+where {
+  bind(concat(projectRoot(), "/.clef/embedding-cache.json") as ?cachePath)
+}
+then {
+  EmbeddingCache/flush: [ path: ?cachePath ]
+}
