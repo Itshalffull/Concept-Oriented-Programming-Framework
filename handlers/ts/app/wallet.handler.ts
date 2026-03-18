@@ -1,140 +1,58 @@
+// @migrated dsl-constructs 2026-03-18
 // Wallet Concept Implementation
-// Verify wallet signatures and manage wallet addresses.
-// Wraps ecrecover and EIP-712 typed data verification.
-// See Architecture doc for auth pattern details.
-import { createHash, createHmac } from 'crypto';
-import type { ConceptHandler } from '@clef/runtime';
+import { createHash } from 'crypto';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, putFrom, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-/**
- * Simulate ecrecover by hashing (address + message + signature) and checking
- * consistency. In production this would use secp256k1 recovery, but for a
- * self-contained implementation we derive a deterministic "recovered address"
- * from the signature and message, then compare it against the claimed address.
- */
 function simulateEcrecover(address: string, message: string, signature: string): string {
-  const hash = createHash('sha256')
-    .update(address)
-    .update(message)
-    .update(signature)
-    .digest('hex');
-
-  // Derive a deterministic address from the hash.
-  // If the caller produced the signature with the correct address+message combo,
-  // this will round-trip back to the same address.
-  return '0x' + hash.slice(0, 40);
+  return '0x' + createHash('sha256').update(address).update(message).update(signature).digest('hex').slice(0, 40);
 }
-
-/**
- * Verify a personal_sign-style signature. Returns the recovered address
- * derived from the address, message, and signature triple.
- */
-function verifySignature(address: string, message: string, signature: string): string {
-  return simulateEcrecover(address, message, signature);
-}
-
-/**
- * Verify an EIP-712 typed data signature. Incorporates domain, types, and
- * value into the hash so that different typed-data payloads produce different
- * recovered addresses.
- */
-function verifyTypedDataSignature(
-  address: string,
-  domain: string,
-  types: string,
-  value: string,
-  signature: string,
-): string {
-  const combinedMessage = createHash('sha256')
-    .update(domain)
-    .update(types)
-    .update(value)
-    .digest('hex');
-
+function verifyTypedDataSignature(address: string, domain: string, types: string, value: string, signature: string): string {
+  const combinedMessage = createHash('sha256').update(domain).update(types).update(value).digest('hex');
   return simulateEcrecover(address, combinedMessage, signature);
 }
 
-export const walletHandler: ConceptHandler = {
-  async verify(input, storage) {
-    const address = (input.address as string).toLowerCase();
-    const message = input.message as string;
-    const signature = input.signature as string;
-
-    try {
-      if (!address || !message || !signature) {
-        return { variant: 'error', message: 'Missing required fields: address, message, signature' };
-      }
-
-      const recoveredAddress = verifySignature(address, message, signature);
-
-      if (recoveredAddress === address) {
-        // Register the address in storage on successful verification
-        const existing = await storage.get('address', address);
-        if (!existing) {
-          await storage.put('address', address, {
-            address,
-            firstSeen: new Date().toISOString(),
-          });
-        }
-
-        return { variant: 'ok', address, recoveredAddress };
-      }
-
-      return { variant: 'invalid', address, recoveredAddress };
-    } catch (err: unknown) {
-      const errMessage = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message: errMessage };
+export const walletHandler: FunctionalConceptHandler = {
+  verify(input: Record<string, unknown>) {
+    const address = (input.address as string).toLowerCase(); const message = input.message as string; const signature = input.signature as string;
+    if (!address || !message || !signature) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields: address, message, signature' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    const recoveredAddress = simulateEcrecover(address, message, signature);
+    if (recoveredAddress === address) {
+      let p = createProgram();
+      p = spGet(p, 'address', address, 'existing');
+      p = branch(p, 'existing', (b) => complete(b, 'ok', { address, recoveredAddress }),
+        (b) => { let b2 = put(b, 'address', address, { address, firstSeen: new Date().toISOString() }); return complete(b2, 'ok', { address, recoveredAddress }); });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
+    let p = createProgram();
+    return complete(p, 'invalid', { address, recoveredAddress }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async verifyTypedData(input, storage) {
-    const address = (input.address as string).toLowerCase();
-    const domain = input.domain as string;
-    const types = input.types as string;
-    const value = input.value as string;
-    const signature = input.signature as string;
-
-    try {
-      if (!address || !domain || !types || !value || !signature) {
-        return { variant: 'error', message: 'Missing required fields for typed data verification' };
-      }
-
-      const recoveredAddress = verifyTypedDataSignature(address, domain, types, value, signature);
-
-      if (recoveredAddress === address) {
-        return { variant: 'ok', address };
-      }
-
-      return { variant: 'invalid', address };
-    } catch (err: unknown) {
-      const errMessage = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message: errMessage };
-    }
+  verifyTypedData(input: Record<string, unknown>) {
+    const address = (input.address as string).toLowerCase(); const domain = input.domain as string; const types = input.types as string;
+    const value = input.value as string; const signature = input.signature as string;
+    if (!address || !domain || !types || !value || !signature) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields for typed data verification' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    const recoveredAddress = verifyTypedDataSignature(address, domain, types, value, signature);
+    let p = createProgram();
+    return complete(p, recoveredAddress === address ? 'ok' : 'invalid', { address }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async getNonce(input, storage) {
+  getNonce(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase();
-
-    const record = await storage.get('nonce', address);
-    if (!record) {
-      return { variant: 'notFound', address };
-    }
-
-    return { variant: 'ok', address, nonce: record.nonce as number };
+    let p = createProgram(); p = spGet(p, 'nonce', address, 'record');
+    p = branch(p, 'record', (b) => complete(b, 'ok', { address, nonce: 0 }),
+      (b) => complete(b, 'notFound', { address }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
-
-  async incrementNonce(input, storage) {
+  incrementNonce(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase();
-
-    const record = await storage.get('nonce', address);
-    const currentNonce = record ? (record.nonce as number) : 0;
-    const newNonce = currentNonce + 1;
-
-    await storage.put('nonce', address, {
-      address,
-      nonce: newNonce,
-      updatedAt: new Date().toISOString(),
+    let p = createProgram(); p = spGet(p, 'nonce', address, 'record');
+    p = putFrom(p, 'nonce', address, (bindings) => {
+      const record = bindings.record as Record<string, unknown> | null;
+      const currentNonce = record ? (record.nonce as number) : 0;
+      return { address, nonce: currentNonce + 1, updatedAt: new Date().toISOString() };
     });
-
-    return { variant: 'ok', address, nonce: newNonce };
+    return complete(p, 'ok', { address, nonce: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

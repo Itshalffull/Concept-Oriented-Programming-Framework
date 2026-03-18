@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ConceptLibraryTarget Concept Implementation
 //
 // Generates docs/reference/concept-library.md with two views:
@@ -7,7 +8,11 @@
 // Scans the entire project root for .concept, .derived, .sync, and
 // suite.yaml files. Groups spec files by nearest suite.yaml ancestor.
 // Works with any project directory structure.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 import type {
   ConceptAST,
   CompiledSync,
@@ -348,8 +353,8 @@ function renderFeatureHierarchy(
 // Handler
 // ---------------------------------------------------------------------------
 
-export const conceptLibraryTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+export const conceptLibraryTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/concept-library.md';
     const projectRoot = (config.projectRoot as string) || process.cwd();
@@ -596,7 +601,8 @@ export const conceptLibraryTargetHandler: ConceptHandler = {
     const content = md.join('\n');
     const docId = `concept-library-${Date.now()}`;
 
-    await storage.put('document', docId, {
+    let p = createProgram();
+    p = put(p, 'document', docId, {
       docId,
       outputPath,
       groupCount: sortedGroups.length,
@@ -607,10 +613,9 @@ export const conceptLibraryTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       document: docId,
       files: [outputPath],
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
