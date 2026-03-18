@@ -1,12 +1,20 @@
+// @migrated dsl-constructs 2026-03-18
 // LocalRuntime Concept Implementation
 // Local process provider for the Runtime coordination concept. Manages
 // child process PIDs, port assignments, and restart policies.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'local';
 
-export const localRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const command = input.command as string;
     const port = input.port as number;
@@ -15,7 +23,8 @@ export const localRuntimeHandler: ConceptHandler = {
     const pid = Math.floor(Math.random() * 60000) + 1000;
     const endpoint = `http://localhost:${port}`;
 
-    await storage.put(RELATION, processId, {
+    let p = createProgram();
+    p = put(p, RELATION, processId, {
       process: processId,
       concept,
       command,
@@ -26,65 +35,87 @@ export const localRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', process: processId, pid, endpoint };
+    return complete(p, 'ok', { process: processId, pid, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
     const process = input.process as string;
     const command = input.command as string;
 
-    const record = await storage.get(RELATION, process);
-    if (!record) {
-      return { variant: 'ok', process, pid: 0 };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, process, 'record');
 
     const pid = Math.floor(Math.random() * 60000) + 1000;
 
-    await storage.put(RELATION, process, {
-      ...record,
-      command,
-      pid,
-      status: 'running',
-      deployedAt: new Date().toISOString(),
-    });
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, process, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            command,
+            pid,
+            status: 'running',
+            deployedAt: new Date().toISOString(),
+          };
+        });
+        return complete(b2, 'ok', { process, pid });
+      },
+      (b) => complete(b, 'ok', { process, pid: 0 }),
+    );
 
-    return { variant: 'ok', process, pid };
+    return p as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const process = input.process as string;
-
-    return { variant: 'ok', process };
+    let p = createProgram();
+    return complete(p, 'ok', { process }) as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const process = input.process as string;
     const previousCommand = input.previousCommand as string;
-
-    const record = await storage.get(RELATION, process);
     const pid = Math.floor(Math.random() * 60000) + 1000;
 
-    if (record) {
-      await storage.put(RELATION, process, {
-        ...record,
-        command: previousCommand,
-        pid,
-        status: 'running',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, process, 'record');
 
-    return { variant: 'ok', process, pid };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, process, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            command: previousCommand,
+            pid,
+            status: 'running',
+          };
+        });
+        return complete(b2, 'ok', { process, pid });
+      },
+      (b) => complete(b, 'ok', { process, pid }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const process = input.process as string;
 
-    const record = await storage.get(RELATION, process);
-    if (!record) {
-      return { variant: 'ok', process };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, process, 'record');
 
-    await storage.del(RELATION, process);
-    return { variant: 'ok', process };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = del(b, RELATION, process);
+        return complete(b2, 'ok', { process });
+      },
+      (b) => complete(b, 'ok', { process }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const localRuntimeHandler = autoInterpret(_handler);

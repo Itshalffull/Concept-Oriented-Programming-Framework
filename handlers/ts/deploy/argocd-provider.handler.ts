@@ -1,12 +1,20 @@
+// @migrated dsl-constructs 2026-03-18
 // ArgoCDProvider Concept Implementation
 // ArgoCD GitOps provider. Generates ArgoCD Application CRDs, manages
 // sync waves, and tracks reconciliation status.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'argocd';
 
-export const argoCDProviderHandler: ConceptHandler = {
-  async emit(input, storage) {
+const _argoCDProviderHandler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
@@ -14,8 +22,8 @@ export const argoCDProviderHandler: ConceptHandler = {
     const applicationId = `app-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['application.yaml'];
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, applicationId, {
+    let p = createProgram();
+    p = put(p, RELATION, applicationId, {
       application: applicationId,
       plan,
       repo,
@@ -26,47 +34,56 @@ export const argoCDProviderHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', application: applicationId, files };
+    return complete(p, 'ok', { application: applicationId, files }) as StorageProgram<Result>;
   },
 
-  async reconciliationStatus(input, storage) {
+  reconciliationStatus(input: Record<string, unknown>) {
     const application = input.application as string;
 
-    const record = await storage.get(RELATION, application);
-    if (!record) {
-      return { variant: 'failed', application, reason: 'Application not found' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, application, 'record');
 
-    const reconciledAt = new Date();
-
-    await storage.put(RELATION, application, {
-      ...record,
-      syncStatus: 'Synced',
-      healthStatus: 'Healthy',
-      reconciledAt: reconciledAt.toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      application,
-      syncStatus: 'Synced',
-      healthStatus: 'Healthy',
-      reconciledAt,
-    };
+    return branch(p, 'record',
+      (thenP) => {
+        const reconciledAt = new Date();
+        thenP = putFrom(thenP, RELATION, application, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            syncStatus: 'Synced',
+            healthStatus: 'Healthy',
+            reconciledAt: reconciledAt.toISOString(),
+          };
+        });
+        return complete(thenP, 'ok', {
+          application,
+          syncStatus: 'Synced',
+          healthStatus: 'Healthy',
+          reconciledAt,
+        });
+      },
+      (elseP) => complete(elseP, 'failed', { application, reason: 'Application not found' }),
+    ) as StorageProgram<Result>;
   },
 
-  async syncWave(input, storage) {
+  syncWave(input: Record<string, unknown>) {
     const application = input.application as string;
     const wave = input.wave as number;
 
-    const record = await storage.get(RELATION, application);
-    if (record) {
-      await storage.put(RELATION, application, {
-        ...record,
-        syncWave: wave,
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, application, 'record');
 
-    return { variant: 'ok', application };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, application, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, syncWave: wave };
+        });
+        return complete(thenP, 'ok', { application });
+      },
+      (elseP) => complete(elseP, 'ok', { application }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const argoCDProviderHandler = autoInterpret(_argoCDProviderHandler);

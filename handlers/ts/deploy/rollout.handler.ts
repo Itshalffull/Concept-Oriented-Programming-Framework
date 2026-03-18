@@ -1,28 +1,38 @@
+// @migrated dsl-constructs 2026-03-18
 // Rollout Concept Implementation
 // Progressive delivery orchestration. Manages canary, blue-green, and
 // linear rollout strategies with step-by-step traffic shifting.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'rollout';
 const VALID_STRATEGIES = ['canary', 'blue-green', 'linear', 'immediate'];
 
-export const rolloutHandler: ConceptHandler = {
-  async begin(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  begin(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const strategy = input.strategy as string;
     const steps = input.steps;
 
     if (!VALID_STRATEGIES.includes(strategy)) {
-      return { variant: 'invalidStrategy', message: `Invalid strategy "${strategy}". Valid: ${VALID_STRATEGIES.join(', ')}` };
+      let p = createProgram();
+      return complete(p, 'invalidStrategy', {
+        message: `Invalid strategy "${strategy}". Valid: ${VALID_STRATEGIES.join(', ')}`,
+      }) as StorageProgram<Result>;
     }
 
-    // Default canary weight steps
     const weightSteps = [10, 25, 50, 100];
-
     const rolloutId = `ro-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
 
-    await storage.put(RELATION, rolloutId, {
+    let p = createProgram();
+    p = put(p, RELATION, rolloutId, {
       rollout: rolloutId,
       plan,
       strategy,
@@ -36,109 +46,164 @@ export const rolloutHandler: ConceptHandler = {
       newVersion: '',
     });
 
-    return { variant: 'ok', rollout: rolloutId };
+    return complete(p, 'ok', { rollout: rolloutId }) as StorageProgram<Result>;
   },
 
-  async advance(input, storage) {
+  advance(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const record = await storage.get(RELATION, rollout);
-    if (!record) {
-      return { variant: 'paused', rollout, reason: 'Rollout not found' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, rollout, 'record');
 
-    if (record.status === 'paused') {
-      return { variant: 'paused', rollout, reason: 'Rollout is paused' };
-    }
+    p = branch(p,
+      (bindings) => !bindings.record,
+      (b) => complete(b, 'paused', { rollout, reason: 'Rollout not found' }),
+      (b) => {
+        return branch(b,
+          (bindings) => (bindings.record as Record<string, unknown>).status === 'paused',
+          (b2) => complete(b2, 'paused', { rollout, reason: 'Rollout is paused' }),
+          (b2) => {
+            let b3 = mapBindings(b2, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const weightSteps: number[] = JSON.parse(record.weightSteps as string || '[10,25,50,100]');
+              const currentStep = (record.currentStep as number) + 1;
+              const stepIndex = currentStep - 1;
+              return { weightSteps, currentStep, stepIndex };
+            }, 'stepInfo');
 
-    const weightSteps: number[] = JSON.parse(record.weightSteps as string || '[10,25,50,100]');
-    const currentStep = (record.currentStep as number) + 1;
-    const stepIndex = currentStep - 1;
+            return branch(b3,
+              (bindings) => {
+                const info = bindings.stepInfo as { stepIndex: number; weightSteps: number[] };
+                return info.stepIndex >= info.weightSteps.length;
+              },
+              (b4) => {
+                const b5 = putFrom(b4, RELATION, rollout, (bindings) => {
+                  const record = bindings.record as Record<string, unknown>;
+                  const info = bindings.stepInfo as { currentStep: number };
+                  return {
+                    ...record,
+                    currentStep: info.currentStep,
+                    currentWeight: 100,
+                    status: 'complete',
+                  };
+                });
+                return complete(b5, 'complete', { rollout });
+              },
+              (b4) => {
+                b4 = putFrom(b4, RELATION, rollout, (bindings) => {
+                  const record = bindings.record as Record<string, unknown>;
+                  const info = bindings.stepInfo as { currentStep: number; stepIndex: number; weightSteps: number[] };
+                  return {
+                    ...record,
+                    currentStep: info.currentStep,
+                    currentWeight: info.weightSteps[info.stepIndex],
+                  };
+                });
+                return completeFrom(b4, 'ok', (bindings) => {
+                  const info = bindings.stepInfo as { currentStep: number; stepIndex: number; weightSteps: number[] };
+                  return {
+                    rollout,
+                    newWeight: info.weightSteps[info.stepIndex],
+                    step: info.currentStep,
+                  };
+                });
+              },
+            );
+          },
+        );
+      },
+    );
 
-    if (stepIndex >= weightSteps.length) {
-      await storage.put(RELATION, rollout, {
-        ...record,
-        currentStep,
-        currentWeight: 100,
-        status: 'complete',
-      });
-      return { variant: 'complete', rollout };
-    }
-
-    const newWeight = weightSteps[stepIndex];
-
-    await storage.put(RELATION, rollout, {
-      ...record,
-      currentStep,
-      currentWeight: newWeight,
-    });
-
-    return { variant: 'ok', rollout, newWeight, step: currentStep };
+    return p as StorageProgram<Result>;
   },
 
-  async pause(input, storage) {
+  pause(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
     const reason = input.reason as string;
 
-    const record = await storage.get(RELATION, rollout);
-    if (record) {
-      await storage.put(RELATION, rollout, {
-        ...record,
-        status: 'paused',
-        pauseReason: reason,
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, rollout, 'record');
 
-    return { variant: 'ok', rollout };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, rollout, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, status: 'paused', pauseReason: reason };
+        });
+        return complete(b2, 'ok', { rollout });
+      },
+      (b) => complete(b, 'ok', { rollout }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async resume(input, storage) {
+  resume(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const record = await storage.get(RELATION, rollout);
-    if (record) {
-      await storage.put(RELATION, rollout, {
-        ...record,
-        status: 'active',
-        pauseReason: '',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, rollout, 'record');
 
-    const currentWeight = record ? (record.currentWeight as number) : 0;
-    return { variant: 'ok', rollout, currentWeight };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, rollout, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, status: 'active', pauseReason: '' };
+        });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { rollout, currentWeight: record.currentWeight as number };
+        });
+      },
+      (b) => complete(b, 'ok', { rollout, currentWeight: 0 }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async abort(input, storage) {
+  abort(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const record = await storage.get(RELATION, rollout);
-    if (!record) {
-      return { variant: 'ok', rollout };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, rollout, 'record');
 
-    if (record.status === 'complete') {
-      return { variant: 'alreadyComplete', rollout };
-    }
+    p = branch(p,
+      (bindings) => !bindings.record,
+      (b) => complete(b, 'ok', { rollout }),
+      (b) => {
+        return branch(b,
+          (bindings) => (bindings.record as Record<string, unknown>).status === 'complete',
+          (b2) => complete(b2, 'alreadyComplete', { rollout }),
+          (b2) => {
+            const b3 = putFrom(b2, RELATION, rollout, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, status: 'aborted', currentWeight: 0 };
+            });
+            return complete(b3, 'ok', { rollout });
+          },
+        );
+      },
+    );
 
-    await storage.put(RELATION, rollout, {
-      ...record,
-      status: 'aborted',
-      currentWeight: 0,
-    });
-
-    return { variant: 'ok', rollout };
+    return p as StorageProgram<Result>;
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const record = await storage.get(RELATION, rollout);
-    const step = record ? (record.currentStep as number) : 0;
-    const weight = record ? (record.currentWeight as number) : 0;
-    const status = record ? (record.status as string) : 'unknown';
-    const startedAt = record ? (record.startedAt as string) : new Date().toISOString();
-    const elapsed = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+    let p = createProgram();
+    p = get(p, RELATION, rollout, 'record');
 
-    return { variant: 'ok', rollout, step, weight, status, elapsed };
+    return completeFrom(p, 'ok', (bindings) => {
+      const record = bindings.record as Record<string, unknown> | null;
+      const step = record ? (record.currentStep as number) : 0;
+      const weight = record ? (record.currentWeight as number) : 0;
+      const status = record ? (record.status as string) : 'unknown';
+      const startedAt = record ? (record.startedAt as string) : new Date().toISOString();
+      const elapsed = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+      return { rollout, step, weight, status, elapsed };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const rolloutHandler = autoInterpret(_handler);

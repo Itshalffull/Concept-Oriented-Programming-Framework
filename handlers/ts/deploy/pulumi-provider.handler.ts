@@ -1,72 +1,96 @@
+// @migrated dsl-constructs 2026-03-18
 // PulumiProvider Concept Implementation
 // Pulumi IaC provider. Generates Pulumi programs from deploy plans,
 // previews changes, applies stacks, and tears down resources.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'pulumi';
 
-export const pulumiProviderHandler: ConceptHandler = {
-  async generate(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
     const stackId = `stack-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['index.ts', 'Pulumi.yaml', 'Pulumi.dev.yaml'];
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, stackId, {
+    let p = createProgram();
+    p = put(p, RELATION, stackId, {
       stack: stackId,
       plan,
       status: 'generated',
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', stack: stackId, files };
+    return complete(p, 'ok', { stack: stackId, files }) as StorageProgram<Result>;
   },
 
-  async preview(input, storage) {
+  preview(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get(RELATION, stack);
-    if (!record) {
-      return { variant: 'backendUnreachable', backend: 'local' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, stack, 'record');
 
-    return {
-      variant: 'ok',
-      stack,
-      toCreate: 0,
-      toUpdate: 0,
-      toDelete: 0,
-      estimatedCost: 0,
-    };
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', {
+        stack,
+        toCreate: 0,
+        toUpdate: 0,
+        toDelete: 0,
+        estimatedCost: 0,
+      }),
+      (b) => complete(b, 'backendUnreachable', { backend: 'local' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get(RELATION, stack);
-    if (!record) {
-      return { variant: 'pluginMissing', plugin: 'unknown', version: '0.0.0' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, stack, 'record');
 
-    await storage.put(RELATION, stack, {
-      ...record,
-      status: 'applied',
-      appliedAt: new Date().toISOString(),
-    });
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, RELATION, stack, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            status: 'applied',
+            appliedAt: new Date().toISOString(),
+          };
+        });
+        return complete(b2, 'ok', { stack, created: [], updated: [] });
+      },
+      (b) => complete(b, 'pluginMissing', { plugin: 'unknown', version: '0.0.0' }),
+    );
 
-    return { variant: 'ok', stack, created: [], updated: [] };
+    return p as StorageProgram<Result>;
   },
 
-  async teardown(input, storage) {
+  teardown(input: Record<string, unknown>) {
     const stack = input.stack as string;
 
-    const record = await storage.get(RELATION, stack);
-    if (!record) {
-      return { variant: 'ok', stack, destroyed: [] };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, stack, 'record');
 
-    await storage.del(RELATION, stack);
-    return { variant: 'ok', stack, destroyed: [stack] };
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = del(b, RELATION, stack);
+        return complete(b2, 'ok', { stack, destroyed: [stack] });
+      },
+      (b) => complete(b, 'ok', { stack, destroyed: [] }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const pulumiProviderHandler = autoInterpret(_handler);
