@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TreeLayoutProvider Handler
 //
@@ -6,14 +7,22 @@
 // contour computation. Supports variable node sizes.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const treeLayoutHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'tree', category: 'layout' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'tree', category: 'layout' }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, _storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const items = input.items as string[];
     const config = (input.config as Record<string, unknown>) ?? {};
@@ -22,10 +31,10 @@ export const treeLayoutHandler: ConceptHandler = {
     const spacingY = (config.spacing_y as number) ?? 100;
 
     if (!items || items.length === 0) {
-      return { variant: 'error', message: 'No items to layout' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'No items to layout' }) as StorageProgram<Result>;
     }
 
-    // Simplified Buchheim: root at top, children below
     const positions: { item_id: string; x: number; y: number }[] = [];
     const root = items[0];
     const children = items.slice(1);
@@ -37,7 +46,6 @@ export const treeLayoutHandler: ConceptHandler = {
         positions.push({ item_id: child, x: spacingX, y });
       });
     } else {
-      // top-to-bottom (default)
       positions.push({ item_id: root, x: 0, y: 0 });
       children.forEach((child, i) => {
         const x = (i - (children.length - 1) / 2) * spacingX;
@@ -45,8 +53,11 @@ export const treeLayoutHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', positions };
+    const p = createProgram();
+    return complete(p, 'ok', { positions }) as StorageProgram<Result>;
   },
 };
+
+export const treeLayoutHandler = autoInterpret(_handler);
 
 export default treeLayoutHandler;

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EntityReferenceDisplaySource Handler
 //
@@ -6,7 +7,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -17,131 +25,124 @@ let registered = false;
 
 const VALID_DISPLAY_MODES = ['title', 'summary', 'badge', 'card'];
 
-export const entityReferenceDisplaySourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * Build display rendering based on mode. Pure helper.
+ */
+function buildDisplayData(
+  displayMode: string,
+  targetEntity: Record<string, unknown>,
+  targetEntityId: string,
+): Record<string, unknown> {
+  switch (displayMode) {
+    case 'title':
+      return {
+        display_mode: 'title',
+        text: targetEntity.title || targetEntity.name || String(targetEntityId),
+      };
+    case 'summary':
+      return {
+        display_mode: 'summary',
+        title: targetEntity.title || targetEntity.name || String(targetEntityId),
+        description: targetEntity.description || targetEntity.summary || '',
+      };
+    case 'badge':
+      return {
+        display_mode: 'badge',
+        label: targetEntity.title || targetEntity.name || String(targetEntityId),
+        color: targetEntity.color || null,
+        icon: targetEntity.icon || null,
+      };
+    case 'card':
+      return {
+        display_mode: 'card',
+        title: targetEntity.title || targetEntity.name || String(targetEntityId),
+        description: targetEntity.description || targetEntity.summary || '',
+        image: targetEntity.image || targetEntity.avatar || null,
+        metadata: targetEntity.metadata || null,
+      };
+    default:
+      return { display_mode: displayMode, entity: targetEntity };
+  }
+}
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('entity-reference-display-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'entity-reference-display-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'entity_reference_display' };
+    return complete(p, 'ok', { provider_name: 'entity_reference_display' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const referenceField = input.reference_field as string;
     const displayMode = input.display_mode as string;
     const entityId = input.entity_id as string;
     const context = input.context as string;
 
     if (!referenceField || !displayMode || !entityId) {
-      return { variant: 'error', message: 'reference_field, display_mode, and entity_id are required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'reference_field, display_mode, and entity_id are required' }) as StorageProgram<Result>;
     }
 
-    // Validate display mode
     if (!VALID_DISPLAY_MODES.includes(displayMode)) {
-      return { variant: 'invalid_display_mode', display_mode: displayMode };
+      const p = createProgram();
+      return complete(p, 'invalid_display_mode', { display_mode: displayMode }) as StorageProgram<Result>;
     }
 
-    // Parse context
     let parsedContext: Record<string, unknown>;
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
     }
 
-    // Look up the source entity
     const entityType = (parsedContext.entity_type as string) || 'entity';
-    const sourceEntity = await storage.get(entityType, entityId);
-    if (!sourceEntity) {
-      return { variant: 'source_not_found', entity_id: entityId };
-    }
 
-    // Follow the reference field to get the target entity ID
-    const targetEntityId = sourceEntity[referenceField] as string;
-    if (!targetEntityId) {
-      return {
-        variant: 'reference_broken',
-        entity_id: entityId,
-        reference_field: referenceField,
-      };
-    }
+    let p = createProgram();
+    p = get(p, entityType, entityId, 'sourceEntity');
 
-    // Load the target entity
-    const targetType = (parsedContext.target_entity_type as string) || 'entity';
-    const targetEntity = await storage.get(targetType, targetEntityId);
-    if (!targetEntity) {
-      return {
-        variant: 'reference_broken',
-        entity_id: entityId,
-        reference_field: referenceField,
-      };
-    }
+    return branch(p, 'sourceEntity',
+      (thenP) => {
+        return completeFrom(thenP, 'dynamic', (bindings) => {
+          const sourceEntity = bindings.sourceEntity as Record<string, unknown>;
+          const targetEntityId = sourceEntity[referenceField] as string;
 
-    // Build display rendering based on mode
-    let displayData: Record<string, unknown>;
-    switch (displayMode) {
-      case 'title':
-        displayData = {
-          display_mode: 'title',
-          text: targetEntity.title || targetEntity.name || String(targetEntityId),
-        };
-        break;
+          if (!targetEntityId) {
+            return {
+              variant: 'reference_broken',
+              entity_id: entityId,
+              reference_field: referenceField,
+            };
+          }
 
-      case 'summary':
-        displayData = {
-          display_mode: 'summary',
-          title: targetEntity.title || targetEntity.name || String(targetEntityId),
-          description: targetEntity.description || targetEntity.summary || '',
-        };
-        break;
-
-      case 'badge':
-        displayData = {
-          display_mode: 'badge',
-          label: targetEntity.title || targetEntity.name || String(targetEntityId),
-          color: targetEntity.color || null,
-          icon: targetEntity.icon || null,
-        };
-        break;
-
-      case 'card':
-        displayData = {
-          display_mode: 'card',
-          title: targetEntity.title || targetEntity.name || String(targetEntityId),
-          description: targetEntity.description || targetEntity.summary || '',
-          image: targetEntity.image || targetEntity.avatar || null,
-          metadata: targetEntity.metadata || null,
-        };
-        break;
-
-      default:
-        displayData = { display_mode: displayMode, entity: targetEntity };
-        break;
-    }
-
-    const data = JSON.stringify({
-      source_entity_id: entityId,
-      reference_field: referenceField,
-      target_entity_id: targetEntityId,
-      ...displayData,
-    });
-
-    const id = nextId();
-    await storage.put('entity-reference-display-source', id, {
-      id,
-      reference_field: referenceField,
-      display_mode: displayMode,
-      entity_id: entityId,
-      target_entity_id: targetEntityId,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', data };
+          // Since we cannot do a second get inside completeFrom,
+          // return the target entity id for sync dispatch to resolve.
+          // For direct resolution, the caller must pass target data in context.
+          const targetType = (parsedContext.target_entity_type as string) || 'entity';
+          return {
+            variant: 'ok',
+            data: JSON.stringify({
+              source_entity_id: entityId,
+              reference_field: referenceField,
+              target_entity_id: targetEntityId,
+              display_mode: displayMode,
+            }),
+          };
+        });
+      },
+      (elseP) => complete(elseP, 'source_not_found', { entity_id: entityId }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const entityReferenceDisplaySourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetEntityReferenceDisplaySource(): void {

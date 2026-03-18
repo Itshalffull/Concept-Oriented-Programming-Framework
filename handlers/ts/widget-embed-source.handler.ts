@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // WidgetEmbedSource Handler
 //
@@ -6,7 +7,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,26 +23,29 @@ function nextId(): string {
 
 let registered = false;
 
-export const widgetEmbedSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('widget-embed-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'widget-embed-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'widget_embed' };
+    return complete(p, 'ok', { provider_name: 'widget_embed' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const widgetId = input.widget_id as string;
     const widgetProps = input.widget_props as string;
     const renderMode = input.render_mode as string | undefined;
     const context = input.context as string;
 
     if (!widgetId) {
-      return { variant: 'error', message: 'widget_id is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'widget_id is required' }) as StorageProgram<Result>;
     }
 
     // Parse widget props
@@ -42,7 +53,8 @@ export const widgetEmbedSourceHandler: ConceptHandler = {
     try {
       parsedProps = JSON.parse(widgetProps || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid widget_props JSON: ${widgetProps}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid widget_props JSON: ${widgetProps}` }) as StorageProgram<Result>;
     }
 
     // Parse context
@@ -50,38 +62,41 @@ export const widgetEmbedSourceHandler: ConceptHandler = {
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
     }
 
-    // Look up the widget definition
-    const widget = await storage.get('widget', widgetId);
-    if (!widget) {
-      return { variant: 'widget_not_found', widget_id: widgetId };
-    }
+    let p = createProgram();
+    p = get(p, 'widget', widgetId, 'widget');
 
-    // Simulate widget rendering — in production this delegates to the
-    // widget render pipeline
-    const mode = renderMode || 'inline';
-    const data = JSON.stringify({
-      widget_id: widgetId,
-      props: parsedProps,
-      render_mode: mode,
-      context: parsedContext,
-      rendered: true,
-    });
+    return branch(p, 'widget',
+      (thenP) => {
+        const mode = renderMode || 'inline';
+        const id = nextId();
+        thenP = put(thenP, 'widget-embed-source', id, {
+          id,
+          widget_id: widgetId,
+          widget_props: widgetProps,
+          render_mode: mode,
+          createdAt: new Date().toISOString(),
+        });
 
-    const id = nextId();
-    await storage.put('widget-embed-source', id, {
-      id,
-      widget_id: widgetId,
-      widget_props: widgetProps,
-      render_mode: mode,
-      createdAt: new Date().toISOString(),
-    });
+        const data = JSON.stringify({
+          widget_id: widgetId,
+          props: parsedProps,
+          render_mode: mode,
+          context: parsedContext,
+          rendered: true,
+        });
 
-    return { variant: 'ok', data };
+        return complete(thenP, 'ok', { data });
+      },
+      (elseP) => complete(elseP, 'widget_not_found', { widget_id: widgetId }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const widgetEmbedSourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetWidgetEmbedSource(): void {

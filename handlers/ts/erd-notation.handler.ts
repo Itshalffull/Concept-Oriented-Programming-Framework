@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ErdNotation Handler
 //
@@ -7,7 +8,14 @@
 // cardinality edges.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const NOTATION_NAME = 'erd';
 
@@ -82,29 +90,31 @@ const DEFINITION = {
   preferred_layout: 'force-directed',
 };
 
-export const erdNotationHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const existing = await storage.get('notation-provider', NOTATION_NAME);
-    if (existing) {
-      return { variant: 'ok', name: NOTATION_NAME, category: 'diagram_notation' };
-    }
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = get(p, 'notation-provider', NOTATION_NAME, 'existing');
 
-    await storage.put('notation-provider', NOTATION_NAME, {
-      id: NOTATION_NAME,
-      name: NOTATION_NAME,
-      category: 'diagram_notation',
-      definition: DEFINITION,
-    });
-
-    return { variant: 'ok', name: NOTATION_NAME, category: 'diagram_notation' };
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'ok', { name: NOTATION_NAME, category: 'diagram_notation' }),
+      (elseP) => {
+        elseP = put(elseP, 'notation-provider', NOTATION_NAME, {
+          id: NOTATION_NAME,
+          name: NOTATION_NAME,
+          category: 'diagram_notation',
+          definition: DEFINITION,
+        });
+        return complete(elseP, 'ok', { name: NOTATION_NAME, category: 'diagram_notation' });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async getDefinition(_input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
-      notation: DEFINITION,
-    };
+  getDefinition(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { notation: DEFINITION }) as StorageProgram<Result>;
   },
 };
+
+export const erdNotationHandler = autoInterpret(_handler);
 
 export default erdNotationHandler;

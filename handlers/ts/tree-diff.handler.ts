@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TreeDiff Handler
 //
@@ -6,7 +7,14 @@
 // structural relationships lost by line-oriented diffs.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -50,13 +58,11 @@ function jsonToTree(value: unknown, label: string = 'root'): TreeNode {
 
 /**
  * Compute structural diff between two JSON trees.
- * Produces a list of edit operations (insert, delete, update, equal).
  */
 function diffTrees(nodeA: TreeNode, nodeB: TreeNode, path: string = ''): TreeEditOp[] {
   const ops: TreeEditOp[] = [];
   const currentPath = path ? `${path}.${nodeA.label}` : nodeA.label;
 
-  // Compare values at leaf nodes
   if (nodeA.children.length === 0 && nodeB.children.length === 0) {
     if (nodeA.value === nodeB.value) {
       ops.push({ type: 'equal', path: currentPath });
@@ -66,23 +72,18 @@ function diffTrees(nodeA: TreeNode, nodeB: TreeNode, path: string = ''): TreeEdi
     return ops;
   }
 
-  // Compare children
   const childrenA = new Map(nodeA.children.map(c => [c.label, c]));
   const childrenB = new Map(nodeB.children.map(c => [c.label, c]));
 
-  // Process all children from A
   for (const [label, childA] of childrenA) {
     const childB = childrenB.get(label);
     if (childB) {
-      // Both have this child -- recurse
       ops.push(...diffTrees(childA, childB, currentPath));
     } else {
-      // Deleted in B
       ops.push({ type: 'delete', path: `${currentPath}.${label}`, oldValue: treeToValue(childA) });
     }
   }
 
-  // Process children only in B (inserts)
   for (const [label, childB] of childrenB) {
     if (!childrenA.has(label)) {
       ops.push({ type: 'insert', path: `${currentPath}.${label}`, newValue: treeToValue(childB) });
@@ -107,17 +108,17 @@ function treeToValue(node: TreeNode): unknown {
   return obj;
 }
 
-export const treeDiffHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'tree',
       category: 'diff',
       contentTypes: ['application/json', 'application/xml', 'text/xml'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+  compute(input: Record<string, unknown>) {
     const contentA = input.contentA as string;
     const contentB = input.contentB as string;
 
@@ -127,13 +128,15 @@ export const treeDiffHandler: ConceptHandler = {
     try {
       parsedA = JSON.parse(contentA);
     } catch {
-      return { variant: 'unsupportedContent', message: 'Content A is not a valid tree structure (failed JSON parse)' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content A is not a valid tree structure (failed JSON parse)' }) as StorageProgram<Result>;
     }
 
     try {
       parsedB = JSON.parse(contentB);
     } catch {
-      return { variant: 'unsupportedContent', message: 'Content B is not a valid tree structure (failed JSON parse)' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content B is not a valid tree structure (failed JSON parse)' }) as StorageProgram<Result>;
     }
 
     const treeA = jsonToTree(parsedA);
@@ -144,15 +147,18 @@ export const treeDiffHandler: ConceptHandler = {
     const editScript = JSON.stringify(editOps);
 
     const id = nextId();
-    await storage.put('tree-diff', id, {
+    let p = createProgram();
+    p = put(p, 'tree-diff', id, {
       id,
       editScript,
       distance,
     });
 
-    return { variant: 'ok', editScript, distance };
+    return complete(p, 'ok', { editScript, distance }) as StorageProgram<Result>;
   },
 };
+
+export const treeDiffHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTreeDiffCounter(): void {

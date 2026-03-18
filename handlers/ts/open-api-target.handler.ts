@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // OpenApiTarget Handler
 //
@@ -12,15 +13,21 @@
 // See Architecture doc Section 2.7.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `open-api-target-${++idCounter}`;
 }
 
-export const openApiTargetHandler: ConceptHandler = {
-  async generate(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const config = input.config as string;
 
@@ -35,18 +42,15 @@ export const openApiTargetHandler: ConceptHandler = {
     const version = (configData.version as string) || '1.0.0';
     const basePath = (configData.basePath as string) || '/api';
 
-    // Build paths and schemas from projections
     const paths: Record<string, unknown> = {};
     const schemas: Record<string, unknown> = {};
     let pathCount = 0;
     let schemaCount = 0;
 
     for (const projection of projections) {
-      // Derive resource name from projection identifier
       const resourceName = projection.replace(/[^a-zA-Z0-9-]/g, '-');
       const resourcePath = `${basePath}/${resourceName}`;
 
-      // Generate CRUD-style paths for each projection
       paths[resourcePath] = {
         get: {
           summary: `List ${resourceName} items`,
@@ -88,9 +92,8 @@ export const openApiTargetHandler: ConceptHandler = {
           },
         },
       };
-      pathCount += 2; // get + post
+      pathCount += 2;
 
-      // Instance path
       const instancePath = `${resourcePath}/{id}`;
       paths[instancePath] = {
         get: {
@@ -147,9 +150,8 @@ export const openApiTargetHandler: ConceptHandler = {
           },
         },
       };
-      pathCount += 3; // get + put + delete
+      pathCount += 3;
 
-      // Generate schemas
       schemas[resourceName] = {
         type: 'object',
         properties: {
@@ -168,24 +170,19 @@ export const openApiTargetHandler: ConceptHandler = {
       schemaCount++;
     }
 
-    // Build the OpenAPI document
     const openApiDoc: Record<string, unknown> = {
       openapi: '3.1.0',
-      info: {
-        title,
-        version,
-      },
+      info: { title, version },
       paths,
-      components: {
-        schemas,
-      },
+      components: { schemas },
     };
 
     const content = JSON.stringify(openApiDoc, null, 2);
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('open-api-target', id, {
+    let p = createProgram();
+    p = put(p, 'open-api-target', id, {
       id,
       version: '3.1.0',
       paths: pathCount,
@@ -194,9 +191,11 @@ export const openApiTargetHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return { variant: 'ok', spec: id, content };
+    return complete(p, 'ok', { spec: id, content }) as StorageProgram<Result>;
   },
 };
+
+export const openApiTargetHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetOpenApiTargetCounter(): void {
