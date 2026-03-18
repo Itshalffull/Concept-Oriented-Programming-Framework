@@ -84,21 +84,94 @@ concept RenderTransform [X] {
     }
   }
 
-  invariant {
+  example "register then get returns transform": {
     after register(name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}")
       -> ok(transform: t)
     then get(name: "dark-theme") -> ok(transform: t, kind: k, spec: s)
   }
 
-  invariant {
+  example "duplicate register returns existing transform": {
     after register(name: "dark-theme", kind: "token-remap", spec: "{}")
       -> ok(transform: t)
     then register(name: "dark-theme", kind: "token-remap", spec: "{}")
       -> duplicate(transform: t)
   }
 
-  invariant {
+  example "duplicate registerKind returns duplicate": {
     after registerKind(kind: "token-remap") -> ok(kind: k)
     then registerKind(kind: "token-remap") -> duplicate(kind: k)
+  }
+
+  example "apply with identity spec preserves program": {
+    after registerKind(kind: "token-remap") -> ok(kind: k)
+    then apply(program: "p1", kind: "token-remap", spec: "{}") -> ok(result: "p1", appliedTransforms: at)
+  }
+
+  example "compose two transforms succeeds": {
+    after register(name: "t1", kind: "token-remap", spec: "{}") -> ok(transform: t1)
+    and  register(name: "t2", kind: "a11y-adapt", spec: "{}") -> ok(transform: t2)
+    then compose(transforms: "[\"t1\",\"t2\"]") -> ok(composed: c, name: n)
+  }
+
+  example "list returns registered transforms": {
+    after register(name: "dark-theme", kind: "token-remap", spec: "{}") -> ok(transform: t)
+    then list() -> ok(transforms: ts)
+  }
+
+  example "get unknown transform returns notfound": {
+    get(name: "nonexistent") -> notfound(message: m)
+  }
+
+  always "registered transforms have kinds": {
+    forall x in transforms:
+    kind(x) != none
+  }
+
+  always "registered transforms have names": {
+    forall x in transforms:
+    name(x) != none
+  }
+
+  always "transform kinds are registered": {
+    forall x in transforms:
+    kind(x) in registeredKinds
+  }
+
+  action registerKind {
+    requires: kind != ""
+    ensures ok: kind in registeredKinds
+    ensures duplicate: registeredKinds' == registeredKinds
+  }
+
+  action register {
+    requires: name != ""
+    requires: kind != ""
+    ensures ok: transform in transforms
+    ensures ok: name(transform) == name
+    ensures ok: kind(transform) == kind
+    ensures duplicate: transforms' == transforms
+  }
+
+  action apply {
+    requires: program != ""
+    requires: kind != ""
+    ensures ok: result != none
+    ensures error: transforms' == transforms
+  }
+
+  action compose {
+    requires: transforms != ""
+    ensures ok: composed in transforms
+    ensures error: transforms' == transforms
+  }
+
+  action list {
+    ensures ok: true
+  }
+
+  action get {
+    requires: name != ""
+    ensures ok: transform in transforms
+    ensures notfound: transforms' == transforms
   }
 }

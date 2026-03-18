@@ -60,13 +60,61 @@ concept RenderInterpreter [I] {
     }
   }
 
-  invariant {
+  example "register then execute succeeds": {
     after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
     then execute(interpreter: i, program: "p1", snapshot: "current") -> ok(interpreter: i, output: o, trace: t)
   }
 
-  invariant {
+  example "duplicate register returns exists": {
     after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
     then register(interpreter: i, target: "svelte", template: "tmpl") -> exists()
+  }
+
+  example "dryRun after register succeeds": {
+    after register(interpreter: i, target: "svelte", template: "tmpl") -> ok(interpreter: i)
+    then dryRun(interpreter: i, program: "p1") -> ok(interpreter: i, preview: pr, trace: t)
+  }
+
+  example "listTargets includes registered target": {
+    after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
+    then listTargets() -> ok(targets: ts)
+  }
+
+  example "execute without register returns notfound": {
+    execute(interpreter: i, program: "p1", snapshot: "current") -> notfound()
+  }
+
+  always "registered interpreters have targets": {
+    forall i in interpreters:
+    target(i) != none
+  }
+
+  always "registered interpreters have templates": {
+    forall i in interpreters:
+    template(i) != none
+  }
+
+  action register {
+    requires: target != ""
+    requires: template != ""
+    ensures ok: interpreter in interpreters
+    ensures ok: target(interpreter) == target
+    ensures exists: interpreters' == interpreters
+  }
+
+  action execute {
+    requires: program != ""
+    ensures ok: trace != []
+    ensures notfound: interpreters' == interpreters
+  }
+
+  action dryRun {
+    requires: program != ""
+    ensures ok: interpreters' == interpreters
+    ensures notfound: interpreters' == interpreters
+  }
+
+  action listTargets {
+    ensures ok: true
   }
 }

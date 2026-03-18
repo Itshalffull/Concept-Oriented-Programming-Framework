@@ -200,14 +200,184 @@ concept RenderProgram [R] {
     }
   }
 
-  invariant {
+  example "create then add element succeeds": {
     after create(program: p) -> ok()
     then element(program: p, part: "root", role: "container") -> ok(program: p)
   }
 
-  invariant {
+  example "pure seals program against further instructions": {
     after create(program: p) -> ok()
     then pure(program: p, output: "done") -> ok(program: p)
     and  element(program: p, part: "x", role: "text") -> sealed()
+  }
+
+  example "text after create succeeds": {
+    after create(program: p) -> ok()
+    then text(program: p, part: "root", content: "hello") -> ok(program: p)
+  }
+
+  example "prop declaration after create succeeds": {
+    after create(program: p) -> ok()
+    then prop(program: p, name: "label", propType: "string", defaultValue: "Click") -> ok(program: p)
+  }
+
+  example "bind after create succeeds": {
+    after create(program: p) -> ok()
+    then bind(program: p, part: "root", attr: "data-value", expr: "props.value") -> ok(program: p)
+  }
+
+  example "stateDef after create succeeds": {
+    after create(program: p) -> ok()
+    then stateDef(program: p, name: "idle", initial: true) -> ok(program: p)
+  }
+
+  example "transition after create succeeds": {
+    after create(program: p) -> ok()
+    then transition(program: p, fromState: "idle", event: "click", toState: "active") -> ok(program: p)
+  }
+
+  example "aria after create succeeds": {
+    after create(program: p) -> ok()
+    then aria(program: p, part: "root", attr: "aria-label", value: "Main") -> ok(program: p)
+  }
+
+  example "keyboard after create succeeds": {
+    after create(program: p) -> ok()
+    then keyboard(program: p, key: "Enter", event: "activate") -> ok(program: p)
+  }
+
+  example "focus after create succeeds": {
+    after create(program: p) -> ok()
+    then focus(program: p, strategy: "trap", initialPart: "root") -> ok(program: p)
+  }
+
+  example "compose after create succeeds": {
+    after create(program: p) -> ok()
+    then compose(program: p, widget: "Badge", slot: "header") -> ok(program: p)
+  }
+
+  example "token after create succeeds": {
+    after create(program: p) -> ok()
+    then token(program: p, path: "palette.primary", fallback: "#000") -> ok(program: p)
+  }
+
+  example "duplicate create returns exists": {
+    after create(program: p) -> ok()
+    then create(program: p) -> exists()
+  }
+
+  always "terminated programs are sealed": {
+    forall p in programs:
+    terminated(p) == true implies
+    element(program: p, part: "any", role: "any") -> sealed()
+  }
+
+  always "programs track their parts": {
+    forall p in programs:
+    forall instr in instructions(p):
+    instr.type == "element" implies instr.part in parts(p)
+  }
+
+  action create {
+    requires: program not in programs
+    ensures ok: program in programs
+    ensures ok: terminated(program) == false
+    ensures exists: programs' == programs
+  }
+
+  action element {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: part in parts(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action text {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action prop {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: name in props(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action bind {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action stateDef {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action transition {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action aria {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action keyboard {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action focus {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action compose {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: instructions(program) != []
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action token {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: path in tokens(program)
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
+  }
+
+  action pure {
+    requires: program in programs
+    requires: terminated(program) == false
+    ensures ok: terminated(program) == true
+    ensures notfound: programs' == programs
+    ensures sealed: programs' == programs
   }
 }
