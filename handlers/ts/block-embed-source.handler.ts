@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // BlockEmbedSource Handler
 //
@@ -6,7 +7,14 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,72 +23,88 @@ function nextId(): string {
 
 let registered = false;
 
-export const blockEmbedSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('block-embed-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'block-embed-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'block_embed' };
+    return complete(p, 'ok', { provider_name: 'block_embed' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const blockId = input.block_id as string;
     const canvasId = input.canvas_id as string;
     const renderDepth = input.render_depth as number | undefined;
     const context = input.context as string;
 
     if (!blockId || !canvasId) {
-      return { variant: 'error', message: 'block_id and canvas_id are required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'block_id and canvas_id are required' }) as StorageProgram<Result>;
     }
 
-    // Parse context
     let parsedContext: Record<string, unknown>;
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      const p = createProgram();
+      return complete(p, 'error', { message: `Invalid context JSON: ${context}` }) as StorageProgram<Result>;
     }
 
-    // Look up the block in the canvas
-    const block = await storage.get('block', blockId);
-    if (!block) {
-      return { variant: 'block_not_found', block_id: blockId, canvas_id: canvasId };
-    }
+    let p = createProgram();
+    p = get(p, 'block', blockId, 'block');
 
-    // Verify block belongs to the specified canvas
-    if (block.canvas_id && String(block.canvas_id) !== canvasId) {
-      return { variant: 'block_not_found', block_id: blockId, canvas_id: canvasId };
-    }
+    return branch(p, 'block',
+      (thenP) => {
+        thenP = mapBindings(thenP, (bindings) => {
+          const block = bindings.block as Record<string, unknown>;
+          if (block.canvas_id && String(block.canvas_id) !== canvasId) {
+            return null; // block not in this canvas
+          }
+          return block;
+        }, 'validBlock');
 
-    // Render the block — in production this delegates to the Canvas
-    // block render pipeline with depth limiting
-    const depth = renderDepth ?? 1;
-    const data = JSON.stringify({
-      block_id: blockId,
-      canvas_id: canvasId,
-      render_depth: depth,
-      block_type: block.type || 'unknown',
-      content: block.content || null,
-      context: parsedContext,
-      rendered: true,
-    });
+        return branch(thenP, 'validBlock',
+          (validP) => {
+            const depth = renderDepth ?? 1;
+            const id = nextId();
 
-    const id = nextId();
-    await storage.put('block-embed-source', id, {
-      id,
-      block_id: blockId,
-      canvas_id: canvasId,
-      render_depth: depth,
-      createdAt: new Date().toISOString(),
-    });
+            validP = put(validP, 'block-embed-source', id, {
+              id,
+              block_id: blockId,
+              canvas_id: canvasId,
+              render_depth: depth,
+              createdAt: new Date().toISOString(),
+            });
 
-    return { variant: 'ok', data };
+            return completeFrom(validP, 'ok', (bindings) => {
+              const block = bindings.validBlock as Record<string, unknown>;
+              const data = JSON.stringify({
+                block_id: blockId,
+                canvas_id: canvasId,
+                render_depth: depth,
+                block_type: block.type || 'unknown',
+                content: block.content || null,
+                context: parsedContext,
+                rendered: true,
+              });
+              return { data };
+            });
+          },
+          (invalidP) => complete(invalidP, 'block_not_found', { block_id: blockId, canvas_id: canvasId }),
+        );
+      },
+      (elseP) => complete(elseP, 'block_not_found', { block_id: blockId, canvas_id: canvasId }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const blockEmbedSourceHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetBlockEmbedSource(): void {

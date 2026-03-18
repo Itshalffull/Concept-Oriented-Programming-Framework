@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // BezierRouteProvider Handler
 //
@@ -5,14 +6,21 @@
 // and obstacle margin avoidance. O(E * V) complexity.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const bezierRouteHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'bezier-route', category: 'routing' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'bezier-route', category: 'routing' }) as StorageProgram<Result>;
   },
 
-  async route(input: Record<string, unknown>, _storage: ConceptStorage) {
+  route(input: Record<string, unknown>) {
     const source = input.source as string;
     const target = input.target as string;
 
@@ -25,8 +33,11 @@ export const bezierRouteHandler: ConceptHandler = {
       { x: 200, y: 100 },   // target (P3)
     ];
 
-    return { variant: 'ok', path };
+    const p = createProgram();
+    return complete(p, 'ok', { path }) as StorageProgram<Result>;
   },
 };
+
+export const bezierRouteHandler = autoInterpret(_handler);
 
 export default bezierRouteHandler;
