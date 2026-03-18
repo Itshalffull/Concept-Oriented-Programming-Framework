@@ -3,7 +3,7 @@
 // Glicko-2: rating + deviation + volatility for more accurate skill estimation than Elo.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -109,9 +109,11 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
 
   recordOutcome(input: Record<string, unknown>) {
     const { config, participant, opponent, outcome } = input;
+    const pKey = `${config}:${participant}`;
+
     let p = createProgram();
     p = get(p, 'glicko_cfg', config as string, 'cfg');
-    p = get(p, 'glicko_rating', `${config}:${participant}`, 'pRec');
+    p = get(p, 'glicko_rating', pKey, 'pRec');
     p = get(p, 'glicko_rating', `${config}:${opponent}`, 'oRec');
 
     p = mapBindings(p, (bindings) => {
@@ -143,7 +145,7 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
       };
     }, 'calc');
 
-    p = put(p, 'glicko_rating', `${config}:${participant}`, {});
+    p = putFrom(p, 'glicko_rating', pKey, (bindings) => (bindings.calc as Record<string, unknown>).putData as Record<string, unknown>);
 
     return completeFrom(p, 'updated', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;
@@ -157,9 +159,11 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
 
   applyInactivityDecay(input: Record<string, unknown>) {
     const { config, participant, daysSinceActive } = input;
+    const key = `${config}:${participant}`;
+
     let p = createProgram();
     p = get(p, 'glicko_cfg', config as string, 'cfg');
-    p = get(p, 'glicko_rating', `${config}:${participant}`, 'rec');
+    p = get(p, 'glicko_rating', key, 'rec');
 
     p = branch(p, 'rec',
       (b) => {
@@ -179,14 +183,14 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
           }
 
           const newDeviation = Math.min(173.7178 * phiNew, initialDev);
-          return { ...rec, deviation: newDeviation };
-        }, 'updated');
+          return { updatedRec: { ...rec, deviation: newDeviation }, newDeviation };
+        }, 'calc');
 
-        b2 = put(b2, 'glicko_rating', `${config}:${participant}`, {});
+        b2 = putFrom(b2, 'glicko_rating', key, (bindings) => (bindings.calc as Record<string, unknown>).updatedRec as Record<string, unknown>);
 
         return completeFrom(b2, 'decayed', (bindings) => {
-          const updated = bindings.updated as Record<string, unknown>;
-          return { participant, newDeviation: updated.deviation };
+          const calc = bindings.calc as Record<string, unknown>;
+          return { participant, newDeviation: calc.newDeviation };
         });
       },
       (b) => complete(b, 'not_found', { participant }),

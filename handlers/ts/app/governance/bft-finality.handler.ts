@@ -71,14 +71,26 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
 
         return branch(thenP, 'record',
           (hasRecord) => {
-            return completeFrom(hasRecord, 'voted', (bindings) => {
+            // Check if validator is in committee
+            hasRecord = mapBindings(hasRecord, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               const validators = JSON.parse(record.validators as string) as string[];
-              if (!validators.includes(validator as string)) {
-                return { variant: 'not_a_validator', validator };
-              }
-              return { variant: 'voted', committee, roundNumber, validator };
-            });
+              return validators.includes(validator as string);
+            }, 'isValidator');
+
+            return branch(hasRecord, 'isValidator',
+              (validP) => {
+                // Write updated votes
+                validP = putFrom(validP, 'bft_round', roundKey, (bindings) => {
+                  const round = bindings.round as Record<string, unknown>;
+                  const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
+                  votes[validator as string] = approve as boolean;
+                  return { ...round, votes: JSON.stringify(votes) };
+                });
+                return complete(validP, 'voted', { committee, roundNumber, validator });
+              },
+              (invalidP) => complete(invalidP, 'not_a_validator', { validator }),
+            );
           },
           (noRecord) => complete(noRecord, 'not_found', { committee }),
         );
@@ -99,24 +111,47 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
 
         return branch(thenP, 'record',
           (hasRecord) => {
-            return completeFrom(hasRecord, 'consensus_check', (bindings) => {
+            // Compute consensus status
+            hasRecord = mapBindings(hasRecord, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               const round = bindings.round as Record<string, unknown>;
               const validatorCount = record.validatorCount as number;
               const required = Math.ceil(validatorCount * 2 / 3);
               const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
-
               const approvals = Object.values(votes).filter(v => v).length;
               const rejections = Object.values(votes).filter(v => !v).length;
 
-              if (approvals >= required) {
+              if (approvals >= required) return 'finalized';
+              if (rejections > validatorCount - required) return 'rejected';
+              return 'insufficient';
+            }, 'consensusStatus');
+
+            // Write status update for finalized/rejected
+            hasRecord = putFrom(hasRecord, 'bft_round', roundKey, (bindings) => {
+              const round = bindings.round as Record<string, unknown>;
+              const status = bindings.consensusStatus as string;
+              if (status === 'finalized' || status === 'rejected') {
+                return { ...round, status };
+              }
+              return round;
+            });
+
+            return completeFrom(hasRecord, 'consensus_result', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const round = bindings.round as Record<string, unknown>;
+              const status = bindings.consensusStatus as string;
+              const validatorCount = record.validatorCount as number;
+              const required = Math.ceil(validatorCount * 2 / 3);
+              const votes = JSON.parse(round.votes as string) as Record<string, boolean>;
+              const approvals = Object.values(votes).filter(v => v).length;
+              const rejections = Object.values(votes).filter(v => !v).length;
+
+              if (status === 'finalized') {
                 return { variant: 'finalized', committee, currentVotes: approvals, required };
               }
-
-              if (rejections > validatorCount - required) {
+              if (status === 'rejected') {
                 return { variant: 'rejected', committee, rejections, required };
               }
-
               return { variant: 'insufficient', committee, currentVotes: approvals, required };
             });
           },

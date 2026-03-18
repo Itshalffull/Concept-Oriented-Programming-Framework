@@ -3,7 +3,7 @@
 // Synchronous governance meetings following Roberts Rules of Order.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -32,7 +32,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'InSession', chair, startedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = put(b2, 'meeting', meeting as string, {});
+        b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'called_to_order', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
@@ -62,7 +62,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Seconded', seconder };
         }, 'updated');
-        b2 = put(b2, 'motion', motion as string, {});
+        b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'seconded', { motion });
       },
       (b) => complete(b, 'not_found', { motion }),
@@ -82,7 +82,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Voting' };
         }, 'updated');
-        b2 = put(b2, 'motion', motion as string, {});
+        b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'question_called', { motion });
       },
       (b) => complete(b, 'not_found', { motion }),
@@ -104,7 +104,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           minutes.push({ content, recordedBy, recordedAt: new Date().toISOString() });
           return { ...rec, minutes };
         }, 'updated');
-        b2 = put(b2, 'meeting', meeting as string, {});
+        b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'recorded', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
@@ -124,7 +124,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Adjourned', adjournedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = put(b2, 'meeting', meeting as string, {});
+        b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'adjourned', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),

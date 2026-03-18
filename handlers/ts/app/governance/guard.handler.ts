@@ -3,7 +3,7 @@
 // Pre/post execution safety checks (Zodiac Guard pattern).
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -67,7 +67,7 @@ const _guardHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, enabled: true };
         }, 'updated');
-        b2 = put(b2, 'guard', guard as string, {});
+        b2 = putFrom(b2, 'guard', guard as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'enabled', { guard });
       },
       (b) => complete(b, 'not_found', { guard }),
@@ -87,7 +87,7 @@ const _guardHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, enabled: false };
         }, 'updated');
-        b2 = put(b2, 'guard', guard as string, {});
+        b2 = putFrom(b2, 'guard', guard as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'disabled', { guard });
       },
       (b) => complete(b, 'not_found', { guard }),

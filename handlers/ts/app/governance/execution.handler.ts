@@ -3,7 +3,7 @@
 // Atomic action execution with rollback support.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -32,7 +32,7 @@ const _executionHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Completed', completedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = put(b2, 'execution', execution as string, {});
+        b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'completed', { execution, result: 'success' });
       },
       (b) => complete(b, 'not_found', { execution }),
@@ -52,7 +52,7 @@ const _executionHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Rolled_Back', rollbackReason: reason };
         }, 'updated');
-        b2 = put(b2, 'execution', execution as string, {});
+        b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'rolled_back', { execution });
       },
       (b) => complete(b, 'not_found', { execution }),

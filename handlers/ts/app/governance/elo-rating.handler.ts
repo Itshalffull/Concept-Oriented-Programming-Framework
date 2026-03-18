@@ -3,10 +3,34 @@
 // Standard Elo: E = 1/(1+10^((Rl-Rw)/400)), rating update with K-factor.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+
+/** Pure Elo calculation. */
+function computeElo(Rw: number, Rl: number, K: number) {
+  const Ew = 1 / (1 + Math.pow(10, (Rl - Rw) / 400));
+  const El = 1 / (1 + Math.pow(10, (Rw - Rl) / 400));
+  const winnerDelta = K * (1 - Ew);
+  const loserDelta = K * (0 - El);
+  return {
+    winnerNewRating: Rw + winnerDelta,
+    loserNewRating: Rl + loserDelta,
+    winnerDelta,
+    loserDelta,
+  };
+}
+
+/** Pure Elo draw calculation. */
+function computeEloDraw(Ra: number, Rb: number, K: number) {
+  const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
+  const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
+  return {
+    aNewRating: Ra + K * (0.5 - Ea),
+    bNewRating: Rb + K * (0.5 - Eb),
+  };
+}
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -31,10 +55,13 @@ const _eloRatingHandler: FunctionalConceptHandler = {
 
   recordOutcome(input: Record<string, unknown>) {
     const { config, winner, loser } = input;
+    const winnerKey = `${config}:${winner}`;
+    const loserKey = `${config}:${loser}`;
+
     let p = createProgram();
     p = get(p, 'elo_cfg', config as string, 'cfg');
-    p = get(p, 'elo_rating', `${config}:${winner}`, 'wRec');
-    p = get(p, 'elo_rating', `${config}:${loser}`, 'lRec');
+    p = get(p, 'elo_rating', winnerKey, 'wRec');
+    p = get(p, 'elo_rating', loserKey, 'lRec');
 
     p = mapBindings(p, (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
@@ -48,69 +75,19 @@ const _eloRatingHandler: FunctionalConceptHandler = {
       const wGames = wRec ? (wRec.gamesPlayed as number) : 0;
       const lGames = lRec ? (lRec.gamesPlayed as number) : 0;
 
-      const Ew = 1 / (1 + Math.pow(10, (Rl - Rw) / 400));
-      const El = 1 / (1 + Math.pow(10, (Rw - Rl) / 400));
-
-      const winnerDelta = K * (1 - Ew);
-      const loserDelta = K * (0 - El);
-      const winnerNewRating = Rw + winnerDelta;
-      const loserNewRating = Rl + loserDelta;
-
-      return { winnerNewRating, loserNewRating, winnerDelta, loserDelta, wGames, lGames };
-    }, 'calc');
-
-    p = branch(p, () => true,
-      (b) => {
-        return completeFrom(b, 'updated', (bindings) => {
-          const calc = bindings.calc as Record<string, unknown>;
-          return {
-            winnerNewRating: calc.winnerNewRating,
-            loserNewRating: calc.loserNewRating,
-            winnerDelta: calc.winnerDelta,
-            loserDelta: calc.loserDelta,
-          };
-        });
-      },
-      (b) => complete(b, 'updated', {}),
-    );
-
-    // Issue puts for updated ratings
-    let q = createProgram();
-    q = get(q, 'elo_cfg', config as string, 'cfg');
-    q = get(q, 'elo_rating', `${config}:${winner}`, 'wRec');
-    q = get(q, 'elo_rating', `${config}:${loser}`, 'lRec');
-
-    q = mapBindings(q, (bindings) => {
-      const cfg = bindings.cfg as Record<string, unknown> | null;
-      const wRec = bindings.wRec as Record<string, unknown> | null;
-      const lRec = bindings.lRec as Record<string, unknown> | null;
-      const K = cfg ? (cfg.kFactor as number) : 32;
-      const initial = cfg ? (cfg.initialRating as number) : 1500;
-
-      const Rw = wRec ? (wRec.rating as number) : initial;
-      const Rl = lRec ? (lRec.rating as number) : initial;
-      const wGames = wRec ? (wRec.gamesPlayed as number) : 0;
-      const lGames = lRec ? (lRec.gamesPlayed as number) : 0;
-
-      const Ew = 1 / (1 + Math.pow(10, (Rl - Rw) / 400));
-      const El = 1 / (1 + Math.pow(10, (Rw - Rl) / 400));
-
-      const winnerDelta = K * (1 - Ew);
-      const loserDelta = K * (0 - El);
-      const winnerNewRating = Rw + winnerDelta;
-      const loserNewRating = Rl + loserDelta;
+      const elo = computeElo(Rw, Rl, K);
 
       return {
-        winnerPut: { config, participant: winner, rating: winnerNewRating, gamesPlayed: wGames + 1 },
-        loserPut: { config, participant: loser, rating: loserNewRating, gamesPlayed: lGames + 1 },
-        winnerNewRating, loserNewRating, winnerDelta, loserDelta,
+        winnerPut: { config, participant: winner, rating: elo.winnerNewRating, gamesPlayed: wGames + 1 },
+        loserPut: { config, participant: loser, rating: elo.loserNewRating, gamesPlayed: lGames + 1 },
+        ...elo,
       };
     }, 'calc');
 
-    q = put(q, 'elo_rating', `${config}:${winner}`, {});
-    q = put(q, 'elo_rating', `${config}:${loser}`, {});
+    p = putFrom(p, 'elo_rating', winnerKey, (bindings) => (bindings.calc as Record<string, unknown>).winnerPut as Record<string, unknown>);
+    p = putFrom(p, 'elo_rating', loserKey, (bindings) => (bindings.calc as Record<string, unknown>).loserPut as Record<string, unknown>);
 
-    return completeFrom(q, 'updated', (bindings) => {
+    return completeFrom(p, 'updated', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;
       return {
         winnerNewRating: calc.winnerNewRating,
@@ -123,10 +100,13 @@ const _eloRatingHandler: FunctionalConceptHandler = {
 
   recordDraw(input: Record<string, unknown>) {
     const { config, participantA, participantB } = input;
+    const keyA = `${config}:${participantA}`;
+    const keyB = `${config}:${participantB}`;
+
     let p = createProgram();
     p = get(p, 'elo_cfg', config as string, 'cfg');
-    p = get(p, 'elo_rating', `${config}:${participantA}`, 'recA');
-    p = get(p, 'elo_rating', `${config}:${participantB}`, 'recB');
+    p = get(p, 'elo_rating', keyA, 'recA');
+    p = get(p, 'elo_rating', keyB, 'recB');
 
     p = mapBindings(p, (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
@@ -140,22 +120,18 @@ const _eloRatingHandler: FunctionalConceptHandler = {
       const gA = recA ? (recA.gamesPlayed as number) : 0;
       const gB = recB ? (recB.gamesPlayed as number) : 0;
 
-      const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
-      const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
-
-      const aNew = Ra + K * (0.5 - Ea);
-      const bNew = Rb + K * (0.5 - Eb);
+      const draw = computeEloDraw(Ra, Rb, K);
 
       return {
-        aPut: { config, participant: participantA, rating: aNew, gamesPlayed: gA + 1 },
-        bPut: { config, participant: participantB, rating: bNew, gamesPlayed: gB + 1 },
-        aNewRating: aNew,
-        bNewRating: bNew,
+        aPut: { config, participant: participantA, rating: draw.aNewRating, gamesPlayed: gA + 1 },
+        bPut: { config, participant: participantB, rating: draw.bNewRating, gamesPlayed: gB + 1 },
+        aNewRating: draw.aNewRating,
+        bNewRating: draw.bNewRating,
       };
     }, 'calc');
 
-    p = put(p, 'elo_rating', `${config}:${participantA}`, {});
-    p = put(p, 'elo_rating', `${config}:${participantB}`, {});
+    p = putFrom(p, 'elo_rating', keyA, (bindings) => (bindings.calc as Record<string, unknown>).aPut as Record<string, unknown>);
+    p = putFrom(p, 'elo_rating', keyB, (bindings) => (bindings.calc as Record<string, unknown>).bPut as Record<string, unknown>);
 
     return completeFrom(p, 'updated', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;

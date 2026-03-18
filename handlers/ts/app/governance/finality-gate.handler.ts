@@ -3,7 +3,7 @@
 // Coordination concept wrapping external finality signals — @gate concept.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, mapBindings,
+  createProgram, get, put, branch, complete, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -32,7 +32,7 @@ const _finalityGateHandler: FunctionalConceptHandler = {
           const rec = bindings.record as Record<string, unknown>;
           return { ...rec, status: 'Finalized', proof, confirmedAt: new Date().toISOString() };
         }, 'updated');
-        b2 = put(b2, 'finality', gate as string, {});
+        b2 = putFrom(b2, 'finality', gate as string, (bindings) => bindings.updated as Record<string, unknown>);
         return complete(b2, 'finalized', { gate });
       },
       (b) => complete(b, 'not_found', { gate }),

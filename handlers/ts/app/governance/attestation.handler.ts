@@ -29,11 +29,22 @@ const _attestationHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'revoked', (bindings) => {
+        // Check authorization via mapBindings, then branch on result
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.attester !== revoker) return { variant: 'unauthorized', revoker };
-          return { variant: 'revoked', attestation };
-        });
+          return record.attester === revoker;
+        }, 'authorized');
+
+        return branch(thenP, 'authorized',
+          (authP) => {
+            authP = putFrom(authP, 'attestation', attestation as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, revoked: true };
+            });
+            return complete(authP, 'revoked', { attestation });
+          },
+          (unauthP) => complete(unauthP, 'unauthorized', { revoker }),
+        );
       },
       (elseP) => complete(elseP, 'not_found', { attestation }),
     ) as StorageProgram<Result>;
