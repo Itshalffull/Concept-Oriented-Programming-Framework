@@ -2,7 +2,7 @@
 // Article Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -71,15 +71,15 @@ export const articleHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'article', {}, 'allArticles');
-    p = mapBindings(p, (bindings) => {
+    p = completeFrom(p, 'ok', (bindings) => {
       const allArticles = (bindings.allArticles as Array<Record<string, unknown>>) || [];
       const articles = allArticles.map(r => ({
         slug: r.slug, title: r.title, description: r.description,
         body: r.body, author: r.author, createdAt: r.createdAt,
       }));
-      return JSON.stringify(articles);
-    }, 'articlesList');
-    return complete(p, 'ok', { articles: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { articles: JSON.stringify(articles) };
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   get(input: Record<string, unknown>) {
@@ -88,7 +88,19 @@ export const articleHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'article', article, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', { article }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          article,
+          slug: record.slug,
+          title: record.title,
+          description: record.description,
+          body: record.body,
+          author: record.author,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+        };
+      }),
       (b) => complete(b, 'notfound', { message: 'Article not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
