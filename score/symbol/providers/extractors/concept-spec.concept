@@ -40,5 +40,9 @@ concept ConceptSpecSymbolExtractor [I] {
       i.extractorRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

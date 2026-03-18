@@ -40,5 +40,9 @@ concept TreeSitterSyncSpec [I] {
       i.grammarRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

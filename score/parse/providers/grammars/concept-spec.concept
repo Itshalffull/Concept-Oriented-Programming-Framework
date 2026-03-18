@@ -40,5 +40,9 @@ concept TreeSitterConceptSpec [I] {
       i.grammarRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

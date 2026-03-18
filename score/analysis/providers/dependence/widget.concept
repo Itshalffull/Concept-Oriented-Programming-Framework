@@ -40,5 +40,9 @@ concept WidgetDependenceProvider [I] {
       i.providerRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

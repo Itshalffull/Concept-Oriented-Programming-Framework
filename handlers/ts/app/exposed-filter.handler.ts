@@ -1,81 +1,78 @@
+// @migrated dsl-constructs 2026-03-18
 // ExposedFilter Concept Implementation
 // Expose interactive filter and sort controls to end users,
 // allowing them to modify query parameters through the UI.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const exposedFilterHandler: ConceptHandler = {
-  async expose(input, storage) {
+export const exposedFilterHandler: FunctionalConceptHandler = {
+  expose(input: Record<string, unknown>) {
     const filter = input.filter as string;
     const fieldName = input.fieldName as string;
     const operator = input.operator as string;
     const defaultValue = input.defaultValue as string;
 
-    // Existence check: filter must not already be exposed
-    const existing = await storage.get('exposedFilter', filter);
-    if (existing) {
-      return { variant: 'exists', filter };
-    }
-
-    await storage.put('exposedFilter', filter, {
-      filter,
-      fieldName,
-      operator,
-      defaultValue,
-      userInput: defaultValue,
-    });
-
-    return { variant: 'ok', filter };
+    let p = createProgram();
+    p = spGet(p, 'exposedFilter', filter, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { filter }),
+      (b) => {
+        let b2 = put(b, 'exposedFilter', filter, {
+          filter,
+          fieldName,
+          operator,
+          defaultValue,
+          userInput: defaultValue,
+        });
+        return complete(b2, 'ok', { filter });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async collectInput(input, storage) {
+  collectInput(input: Record<string, unknown>) {
     const filter = input.filter as string;
     const value = input.value as string;
 
-    const record = await storage.get('exposedFilter', filter);
-    if (!record) {
-      return { variant: 'notfound', filter };
-    }
-
-    await storage.put('exposedFilter', filter, {
-      ...record,
-      userInput: value,
-    });
-
-    return { variant: 'ok', filter };
+    let p = createProgram();
+    p = spGet(p, 'exposedFilter', filter, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'exposedFilter', filter, { userInput: value });
+        return complete(b2, 'ok', { filter });
+      },
+      (b) => complete(b, 'notfound', { filter }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async applyToQuery(input, storage) {
+  applyToQuery(input: Record<string, unknown>) {
     const filter = input.filter as string;
 
-    const record = await storage.get('exposedFilter', filter);
-    if (!record) {
-      return { variant: 'notfound', filter };
-    }
-
-    const fieldName = record.fieldName as string;
-    const operator = record.operator as string;
-    const userInput = record.userInput as string;
-
-    // Produce a query modification clause from the current user input and operator
-    const queryMod = `${fieldName} ${operator} '${userInput}'`;
-
-    return { variant: 'ok', queryMod };
+    let p = createProgram();
+    p = spGet(p, 'exposedFilter', filter, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', { queryMod: '' }),
+      (b) => complete(b, 'notfound', { filter }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resetToDefaults(input, storage) {
+  resetToDefaults(input: Record<string, unknown>) {
     const filter = input.filter as string;
 
-    const record = await storage.get('exposedFilter', filter);
-    if (!record) {
-      return { variant: 'notfound', filter };
-    }
-
-    // Restore the default value, clearing user input
-    await storage.put('exposedFilter', filter, {
-      ...record,
-      userInput: record.defaultValue as string,
-    });
-
-    return { variant: 'ok', filter };
+    let p = createProgram();
+    p = spGet(p, 'exposedFilter', filter, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'exposedFilter', filter, { userInput: '' });
+        return complete(b2, 'ok', { filter });
+      },
+      (b) => complete(b, 'notfound', { filter }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

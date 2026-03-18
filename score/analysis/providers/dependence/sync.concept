@@ -40,5 +40,9 @@ concept SyncDependenceProvider [I] {
       i.providerRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

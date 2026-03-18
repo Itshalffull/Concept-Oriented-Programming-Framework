@@ -40,5 +40,9 @@ concept WidgetScopeProvider [I] {
       i.providerRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

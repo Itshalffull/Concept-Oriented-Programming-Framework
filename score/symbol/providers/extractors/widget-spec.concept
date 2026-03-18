@@ -42,5 +42,9 @@ concept WidgetSpecSymbolExtractor [I] {
       i.extractorRef = ""
   }
 
+  action initialize {
+    ensures ok: instance != none
+  }
+
   }
 }

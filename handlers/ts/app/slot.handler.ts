@@ -2,7 +2,7 @@
 // Slot Concept Implementation
 // Named insertion points within host components for composable content projection.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get as spGet, put, branch, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get as spGet, put, putFrom, branch, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 
 let slotCounter = 0;
 
@@ -43,11 +43,10 @@ export const slotHandler: FunctionalConceptHandler = {
     p = spGet(p, 'slot', slot, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        const existing = (b as any).__bindings?.existing;
-        let b2 = put(b, 'slot', slot, {
-          ...existing,
+        let b2 = putFrom(b, 'slot', slot, (bindings) => ({
+          ...(bindings.existing as Record<string, unknown>),
           content,
-        });
+        }));
         return complete(b2, 'ok', {});
       },
       (b) => complete(b, 'notfound', { message: 'Slot not found' }),
@@ -62,11 +61,10 @@ export const slotHandler: FunctionalConceptHandler = {
     p = spGet(p, 'slot', slot, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        const existing = (b as any).__bindings?.existing;
-        let b2 = put(b, 'slot', slot, {
-          ...existing,
+        let b2 = putFrom(b, 'slot', slot, (bindings) => ({
+          ...(bindings.existing as Record<string, unknown>),
           content: '',
-        });
+        }));
         return complete(b2, 'ok', {});
       },
       (b) => complete(b, 'notfound', { message: 'Slot not found' }),
