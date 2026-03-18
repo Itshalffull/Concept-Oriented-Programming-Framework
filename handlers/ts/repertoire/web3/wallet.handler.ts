@@ -5,49 +5,39 @@
 // Verify wallet signatures and manage nonces for replay
 // protection. Wraps ecrecover for personal_sign and EIP-712
 // typed data verification.
+//
+// Note: Signature recovery (recoverAddress, recoverTypedDataSigner)
+// requires async dynamic imports. These are modeled as synchronous
+// stub fallbacks for the functional handler. In production, use
+// perform() transport effects once the interpreter supports them.
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
-  mapBindings, putFrom, type StorageProgram,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /**
- * Recover the signer address from a personal_sign signature.
- * Uses ethers.js verifyMessage if available, falls back to stub.
+ * Synchronous stub for address recovery.
+ * In environments without ethers, returns zero address.
+ * Production deployments should use a perform() transport effect.
  */
-async function recoverAddress(message: string, signature: string): Promise<string> {
-  try {
-    const { verifyMessage } = await import('ethers');
-    return verifyMessage(message, signature);
-  } catch {
-    // Stub for environments without ethers — always returns zero address
-    return '0x0000000000000000000000000000000000000000';
-  }
+function recoverAddressSync(_message: string, _signature: string): string {
+  return '0x0000000000000000000000000000000000000000';
 }
 
 /**
- * Recover the signer from an EIP-712 typed data signature.
+ * Synchronous stub for typed data signer recovery.
  */
-async function recoverTypedDataSigner(
-  domain: string,
-  types: string,
-  value: string,
-  signature: string,
-): Promise<string> {
-  try {
-    const { verifyTypedData } = await import('ethers');
-    return verifyTypedData(
-      JSON.parse(domain),
-      JSON.parse(types),
-      JSON.parse(value),
-      signature,
-    );
-  } catch {
-    return '0x0000000000000000000000000000000000000000';
-  }
+function recoverTypedDataSignerSync(
+  _domain: string,
+  _types: string,
+  _value: string,
+  _signature: string,
+): string {
+  return '0x0000000000000000000000000000000000000000';
 }
 
 type Result = { variant: string; [key: string]: unknown };
@@ -55,23 +45,30 @@ type Result = { variant: string; [key: string]: unknown };
 const _walletHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase();
+    const message = input.message as string;
+    const signature = input.signature as string;
 
-    // Note: ecrecover is inherently async (dynamic import). In production,
-    // use perform(p, 'crypto', 'ecrecover', ...) to delegate signature
-    // recovery to a transport effect handler. For this skeleton we build
-    // the storage program assuming the address check is pre-resolved.
+    const recoveredAddress = recoverAddressSync(message, signature).toLowerCase();
 
+    if (recoveredAddress !== address) {
+      return complete(createProgram(), 'invalid', {
+        address,
+        recoveredAddress,
+      }) as StorageProgram<Result>;
+    }
+
+    // Addresses match — ensure address is registered
     let p = createProgram();
     p = get(p, 'addresses', address, 'existing');
 
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { address, recoveredAddress: address }),
+      (b) => complete(b, 'ok', { address, recoveredAddress }),
       (b) => {
         let b2 = put(b, 'addresses', address, {
           address,
           firstSeen: new Date().toISOString(),
         });
-        return complete(b2, 'ok', { address, recoveredAddress: address });
+        return complete(b2, 'ok', { address, recoveredAddress });
       },
     );
 
@@ -80,11 +77,18 @@ const _walletHandler: FunctionalConceptHandler = {
 
   verifyTypedData(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase();
+    const domain = input.domain as string;
+    const types = input.types as string;
+    const value = input.value as string;
+    const signature = input.signature as string;
 
-    // Same note as verify() — typed data recovery is async and would
-    // be handled via a perform() transport effect in production.
-    let p = createProgram();
-    return complete(p, 'ok', { address }) as StorageProgram<Result>;
+    const recovered = recoverTypedDataSignerSync(domain, types, value, signature).toLowerCase();
+
+    if (recovered !== address) {
+      return complete(createProgram(), 'invalid', { address }) as StorageProgram<Result>;
+    }
+
+    return complete(createProgram(), 'ok', { address }) as StorageProgram<Result>;
   },
 
   getNonce(input: Record<string, unknown>) {
