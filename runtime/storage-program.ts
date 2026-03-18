@@ -483,6 +483,23 @@ export function complete<A extends Record<string, unknown>>(
   };
 }
 
+/**
+ * Terminate the program with a named variant completion derived from bindings.
+ * Like complete() but the output is computed at interpretation time from accumulated bindings.
+ */
+export function completeFrom(
+  program: StorageProgram<unknown>,
+  variant: string,
+  fn: (bindings: Bindings) => Record<string, unknown>,
+): StorageProgram<{ variant: string; [key: string]: unknown }> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'pureFrom', fn: (bindings: Bindings) => ({ variant, ...fn(bindings) }) }],
+    terminated: true,
+    effects: addCompletionVariant(program.effects, variant),
+  };
+}
+
 /** Monadic bind: run first, bind result to bindAs, then run second. Merges effects from both programs. */
 export function compose<A, B>(
   first: StorageProgram<A>,
