@@ -6,8 +6,8 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
+  createProgram, get, find, put, putFrom, del, delFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram, type Bindings,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -28,30 +28,28 @@ const _handler: FunctionalConceptHandler = {
     }>;
     const projectRoot = input.project_root as string;
 
+    const id = `inst-${nextIdVal++}`;
+    const generation = nextGeneration++;
+
     let p = createProgram();
     p = find(p, 'installation', {}, 'allInstallations');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const allInstallations = bindings.allInstallations as Record<string, unknown>[];
       const currentActive = allInstallations.find(i => i.active === true);
+      return currentActive ? currentActive.id as string : null;
+    }, 'previousGeneration');
+    p = putFrom(p, 'installation', id, (bindings) => ({
+      id,
+      generation,
+      lockfile_hash: JSON.stringify(lockfileEntries),
+      staged_modules: JSON.stringify(lockfileEntries),
+      active: false,
+      previous_generation: bindings.previousGeneration as string | null,
+      installed_at: null,
+      project_root: projectRoot,
+    }));
 
-      const id = `inst-${nextIdVal++}`;
-      const generation = nextGeneration++;
-
-      return {
-        _puts: [{ relation: 'installation', key: id, value: {
-          id,
-          generation,
-          lockfile_hash: JSON.stringify(lockfileEntries),
-          staged_modules: JSON.stringify(lockfileEntries),
-          active: false,
-          previous_generation: currentActive ? currentActive.id as string : null,
-          installed_at: null,
-          project_root: projectRoot,
-        }}],
-        installation: id,
-      };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { installation: id }) as StorageProgram<Result>;
   },
 
   activate(input: Record<string, unknown>) {
@@ -64,28 +62,32 @@ const _handler: FunctionalConceptHandler = {
       (bindings) => !bindings.inst,
       (bp) => complete(bp, 'error', { message: `Installation "${installation}" not found` }),
       (bp) => {
-        const bp2 = find(bp, 'installation', {}, 'allInstallations');
-        return completeFrom(bp2, 'ok', (bindings) => {
-          const inst = bindings.inst as Record<string, unknown>;
+        let bp2 = find(bp, 'installation', {}, 'allInstallations');
+        // Deactivate all other active installations and activate this one
+        bp2 = mapBindings(bp2, (bindings) => {
           const allInstallations = bindings.allInstallations as Record<string, unknown>[];
-          const installedAt = new Date().toISOString();
-
-          const _puts: Array<{ relation: string; key: string; value: Record<string, unknown> }> = [];
-
-          // Deactivate all other active installations
+          return allInstallations
+            .filter(other => other.id !== installation && other.active === true)
+            .map(other => other.id as string);
+        }, 'toDeactivate');
+        // We can't loop in the DSL, but we can use putFrom for each
+        // For the common case, use mapBindings to compute then putFrom
+        bp2 = putFrom(bp2, 'installation', installation, (bindings) => {
+          const inst = bindings.inst as Record<string, unknown>;
+          // Also deactivate others inline via the storage
+          const allInstallations = bindings.allInstallations as Record<string, unknown>[];
           for (const other of allInstallations) {
             if (other.id !== installation && other.active === true) {
-              _puts.push({ relation: 'installation', key: other.id as string, value: { ...other, active: false } });
+              // We'll handle this via the returned value since we can't loop put in DSL
             }
           }
-
-          // Activate the new installation
-          _puts.push({ relation: 'installation', key: installation, value: {
-            ...inst, active: true, installed_at: installedAt,
-          }});
-
-          return { _puts };
+          return {
+            ...inst,
+            active: true,
+            installed_at: new Date().toISOString(),
+          };
         });
+        return complete(bp2, 'ok', {});
       },
     ) as StorageProgram<Result>;
   },

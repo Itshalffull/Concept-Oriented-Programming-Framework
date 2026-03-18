@@ -412,7 +412,8 @@ const _handler: FunctionalConceptHandler = {
         // Load history records for breaking-change detection
         let p2 = find(pFound, HISTORY_RELATION, { conceptName: projectionId }, 'historyRecords');
 
-        return completeFrom(p2, '_deferred', (bindings) => {
+        // Compute validation result into a binding
+        p2 = mapBindings(p2, (bindings) => {
           const projectionData = bindings.projectionData as Record<string, unknown>;
           const projection = projectionData as unknown as ProjectionRecord;
           const historyRecords = (bindings.historyRecords || []) as Array<Record<string, unknown>>;
@@ -478,7 +479,37 @@ const _handler: FunctionalConceptHandler = {
           }
 
           return { variant: 'ok', projection: projectionId, warnings };
-        });
+        }, 'validationResult');
+
+        // On success, store in history for future breaking-change detection
+        return branch(p2,
+          (bindings) => {
+            const result = bindings.validationResult as Record<string, unknown>;
+            return result.variant === 'ok';
+          },
+          // Validation passed — persist to history then complete
+          (pOk) => {
+            let p3 = putFrom(pOk, HISTORY_RELATION, '', (bindings) => {
+              const projectionData = bindings.projectionData as Record<string, unknown>;
+              const projection = projectionData as unknown as ProjectionRecord;
+              return {
+                id: `${projection.conceptName}:${projection.id}`,
+                ...projectionData,
+              };
+            });
+            return completeFrom(p3, 'ok', (bindings) => {
+              const result = bindings.validationResult as Record<string, unknown>;
+              return { projection: projectionId, warnings: result.warnings };
+            });
+          },
+          // Validation failed — complete with the computed variant
+          (pFail) => {
+            return completeFrom(pFail, '_deferred', (bindings) => {
+              const result = bindings.validationResult as Record<string, unknown>;
+              return result as Record<string, unknown>;
+            });
+          },
+        );
       },
       // Projection not found
       (pMissing) => {
@@ -497,101 +528,105 @@ const _handler: FunctionalConceptHandler = {
     const previousId = input.previous as string;
 
     // Load both projections
-    const currentData = await storage.get(PROJECTION_RELATION, projectionId);
-    const previousData = await storage.get(PROJECTION_RELATION, previousId);
+    p = get(p, PROJECTION_RELATION, projectionId, 'currentData');
+    p = get(p, PROJECTION_RELATION, previousId, 'previousData');
 
-    if (!currentData || !previousData) {
-      p = complete(p, 'incompatible', { reason: 'One or both projections not found in storage' }); return p;
-    }
+    // Branch on whether both projections exist
+    return branch(p,
+      (bindings) => !!(bindings.currentData && bindings.previousData),
+      // Both found
+      (pFound) => {
+        return completeFrom(pFound, '_deferred', (bindings) => {
+          const current = bindings.currentData as unknown as ProjectionRecord;
+          const previous = bindings.previousData as unknown as ProjectionRecord;
 
-    const current = currentData as unknown as ProjectionRecord;
-    const previous = previousData as unknown as ProjectionRecord;
+          // Verify both projections are for the same concept
+          if (current.conceptName !== previous.conceptName) {
+            return { variant: 'incompatible', reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"` };
+          }
 
-    // Verify both projections are for the same concept
-    if (current.conceptName !== previous.conceptName) {
-      p = complete(p, 'incompatible', { reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"` }); return p;
-    }
+          // Compare shapes
+          const currentShapeNames = new Set(current.shapes.map(s => s.name));
+          const previousShapeNames = new Set(previous.shapes.map(s => s.name));
 
-    // Compare shapes
-    const currentShapeNames = new Set(current.shapes.map(s => s.name));
-    const previousShapeNames = new Set(previous.shapes.map(s => s.name));
+          const added: string[] = [];
+          const removed: string[] = [];
+          const changed: string[] = [];
 
-    const added: string[] = [];
-    const removed: string[] = [];
-    const changed: string[] = [];
+          for (const name of currentShapeNames) {
+            if (!previousShapeNames.has(name)) {
+              added.push(`shape: ${name}`);
+            }
+          }
 
-    // Added shapes
-    for (const name of currentShapeNames) {
-      if (!previousShapeNames.has(name)) {
-        added.push(`shape: ${name}`);
-      }
-    }
+          for (const name of previousShapeNames) {
+            if (!currentShapeNames.has(name)) {
+              removed.push(`shape: ${name}`);
+            }
+          }
 
-    // Removed shapes
-    for (const name of previousShapeNames) {
-      if (!currentShapeNames.has(name)) {
-        removed.push(`shape: ${name}`);
-      }
-    }
+          for (const currentShape of current.shapes) {
+            const previousShape = previous.shapes.find(s => s.name === currentShape.name);
+            if (previousShape && previousShape.resolved !== currentShape.resolved) {
+              changed.push(`shape: ${currentShape.name} (type changed)`);
+            }
+          }
 
-    // Changed shapes (same name, different resolved type)
-    for (const currentShape of current.shapes) {
-      const previousShape = previous.shapes.find(s => s.name === currentShape.name);
-      if (previousShape && previousShape.resolved !== currentShape.resolved) {
-        changed.push(`shape: ${currentShape.name} (type changed)`);
-      }
-    }
+          // Compare traits
+          const currentTraitNames = new Set(current.traits.map(t => `${t.name}:${t.scope}`));
+          const previousTraitNames = new Set(previous.traits.map(t => `${t.name}:${t.scope}`));
 
-    // Compare traits
-    const currentTraitNames = new Set(current.traits.map(t => `${t.name}:${t.scope}`));
-    const previousTraitNames = new Set(previous.traits.map(t => `${t.name}:${t.scope}`));
+          for (const key of currentTraitNames) {
+            if (!previousTraitNames.has(key)) {
+              added.push(`trait: ${key}`);
+            }
+          }
+          for (const key of previousTraitNames) {
+            if (!currentTraitNames.has(key)) {
+              removed.push(`trait: ${key}`);
+            }
+          }
 
-    for (const key of currentTraitNames) {
-      if (!previousTraitNames.has(key)) {
-        added.push(`trait: ${key}`);
-      }
-    }
-    for (const key of previousTraitNames) {
-      if (!currentTraitNames.has(key)) {
-        removed.push(`trait: ${key}`);
-      }
-    }
+          // Compare resource mapping
+          const currentRM = current.resourceMapping;
+          const previousRM = previous.resourceMapping;
 
-    // Compare resource mapping
-    const currentRM = current.resourceMapping;
-    const previousRM = previous.resourceMapping;
+          if (currentRM && !previousRM) {
+            added.push('resourceMapping');
+          } else if (!currentRM && previousRM) {
+            removed.push('resourceMapping');
+          } else if (currentRM && previousRM) {
+            if (currentRM.path !== previousRM.path) {
+              changed.push(`resourceMapping.path: "${previousRM.path}" -> "${currentRM.path}"`);
+            }
+            if (currentRM.idField !== previousRM.idField) {
+              changed.push(`resourceMapping.idField: "${previousRM.idField}" -> "${currentRM.idField}"`);
+            }
+          }
 
-    if (currentRM && !previousRM) {
-      added.push('resourceMapping');
-    } else if (!currentRM && previousRM) {
-      removed.push('resourceMapping');
-    } else if (currentRM && previousRM) {
-      if (currentRM.path !== previousRM.path) {
-        changed.push(`resourceMapping.path: "${previousRM.path}" -> "${currentRM.path}"`);
-      }
-      if (currentRM.idField !== previousRM.idField) {
-        changed.push(`resourceMapping.idField: "${previousRM.idField}" -> "${currentRM.idField}"`);
-      }
-    }
+          // Compare target overrides
+          const currentTargets = new Set(current.targetOverrides.map(o => o.target));
+          const previousTargets = new Set(previous.targetOverrides.map(o => o.target));
 
-    // Compare target overrides
-    const currentTargets = new Set(current.targetOverrides.map(o => o.target));
-    const previousTargets = new Set(previous.targetOverrides.map(o => o.target));
+          for (const target of currentTargets) {
+            if (!previousTargets.has(target)) {
+              added.push(`targetOverride: ${target}`);
+            }
+          }
+          for (const target of previousTargets) {
+            if (!currentTargets.has(target)) {
+              removed.push(`targetOverride: ${target}`);
+            }
+          }
 
-    for (const target of currentTargets) {
-      if (!previousTargets.has(target)) {
-        added.push(`targetOverride: ${target}`);
-      }
-    }
-    for (const target of previousTargets) {
-      if (!currentTargets.has(target)) {
-        removed.push(`targetOverride: ${target}`);
-      }
-    }
-
-    p = complete(p, 'ok', { added,
-      removed,
-      changed }); return p;
+          return { variant: 'ok', added, removed, changed };
+        });
+      },
+      // One or both not found
+      (pMissing) => {
+        return complete(pMissing, 'incompatible', { reason: 'One or both projections not found in storage' });
+      },
+    );
   },
 
   /**
@@ -603,56 +638,72 @@ const _handler: FunctionalConceptHandler = {
     const projectionId = input.projection as string;
 
     // Load the projection
-    const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
-    if (!projectionData) {
-      p = complete(p, 'ok', { projection: projectionId,
-        resources: [] }); return p;
-    }
+    p = get(p, PROJECTION_RELATION, projectionId, 'projectionData');
 
-    const projection = projectionData as unknown as ProjectionRecord;
+    return branch(p, 'projectionData',
+      // Projection found
+      (pFound) => {
+        // Compute the inferred resources and updated projection
+        let p2 = mapBindings(pFound, (bindings) => {
+          const projectionData = bindings.projectionData as Record<string, unknown>;
+          const projection = projectionData as unknown as ProjectionRecord;
 
-    // Parse the manifest to get action schemas
-    let manifest: ConceptManifest;
-    try {
-      manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
-    } catch {
-      p = complete(p, 'ok', { projection: projectionId,
-        resources: [] }); return p;
-    }
+          // Parse the manifest to get action schemas
+          let manifest: ConceptManifest;
+          try {
+            manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
+          } catch {
+            return { resources: [] as string[], updatedProjection: null };
+          }
 
-    // Derive the resource base path and ID field
-    const resourcePath = projection.resourceMapping?.path
-      || `/${manifest.name.toLowerCase()}s`;
-    const idField = projection.resourceMapping?.idField
-      || (manifest.typeParams[0]?.name.toLowerCase() || 'id');
+          // Derive the resource base path and ID field
+          const resourcePath = projection.resourceMapping?.path
+            || `/${manifest.name.toLowerCase()}s`;
+          const idField = projection.resourceMapping?.idField
+            || (manifest.typeParams[0]?.name.toLowerCase() || 'id');
 
-    // Infer routes from action names
-    const routes = inferResourceRoutes(manifest.actions, resourcePath, idField);
+          // Infer routes from action names
+          const routes = inferResourceRoutes(manifest.actions, resourcePath, idField);
 
-    // Format as human-readable resource descriptions
-    const resources: string[] = [];
-    for (const [actionName, route] of routes) {
-      resources.push(`${route.method} ${route.path} -> ${actionName}`);
-    }
+          // Format as human-readable resource descriptions
+          const resources: string[] = [];
+          for (const [actionName, route] of routes) {
+            resources.push(`${route.method} ${route.path} -> ${actionName}`);
+          }
 
-    // Update the projection with the inferred resource mapping
-    if (!projection.resourceMapping) {
-      projection.resourceMapping = {
-        path: resourcePath,
-        idField,
-        actions: manifest.actions.map(a => a.name),
-      };
-    }
+          // Update the projection with the inferred resource mapping
+          if (!projection.resourceMapping) {
+            projection.resourceMapping = {
+              path: resourcePath,
+              idField,
+              actions: manifest.actions.map(a => a.name),
+            };
+          }
 
-    // Persist updated projection
-    await storage.put(
-      PROJECTION_RELATION,
-      projectionId,
-      projection as unknown as Record<string, unknown>,
+          return { resources, updatedProjection: projection as unknown as Record<string, unknown> };
+        }, 'inferResult');
+
+        // Persist updated projection
+        p2 = putFrom(p2, PROJECTION_RELATION, projectionId, (bindings) => {
+          const inferResult = bindings.inferResult as Record<string, unknown>;
+          const updatedProjection = inferResult.updatedProjection as Record<string, unknown> | null;
+          if (updatedProjection) return updatedProjection;
+          // Fallback: return the original projection data unchanged
+          return bindings.projectionData as Record<string, unknown>;
+        });
+
+        return completeFrom(p2, 'ok', (bindings) => {
+          const inferResult = bindings.inferResult as Record<string, unknown>;
+          return { projection: projectionId,
+            resources: inferResult.resources };
+        });
+      },
+      // Projection not found
+      (pMissing) => {
+        return complete(pMissing, 'ok', { projection: projectionId,
+          resources: [] });
+      },
     );
-
-    p = complete(p, 'ok', { projection: projectionId,
-      resources }); return p;
   },
 };
 
