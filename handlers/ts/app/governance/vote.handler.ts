@@ -1,49 +1,94 @@
+// @migrated dsl-constructs 2026-03-18
 // Vote Concept Handler
 // Session-based voting with weighted ballot collection and tallying.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const voteHandler: ConceptHandler = {
-  async openSession(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _voteHandler: FunctionalConceptHandler = {
+  openSession(input: Record<string, unknown>) {
     const id = `session-${Date.now()}`;
-    await storage.put('session', id, {
+    let p = createProgram();
+    p = put(p, 'session', id, {
       id, proposalRef: input.proposalRef, deadline: input.deadline,
       snapshotRef: input.snapshotRef, status: 'Open', ballots: [], createdAt: new Date().toISOString(),
     });
-    return { variant: 'opened', session: id };
+    return complete(p, 'opened', { session: id }) as StorageProgram<Result>;
   },
 
-  async castVote(input, storage) {
+  castVote(input: Record<string, unknown>) {
     const { session, voter, choice, weight } = input;
-    const record = await storage.get('session', session as string);
-    if (!record) return { variant: 'session_not_found', session };
-    if (record.status !== 'Open') return { variant: 'closed', session };
-    const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
-    if (ballots.some(b => b.voter === voter)) return { variant: 'already_voted', voter };
-    ballots.push({ voter, choice, weight });
-    await storage.put('session', session as string, { ...record, ballots });
-    return { variant: 'cast', ballot: `${session}:${voter}` };
+    let p = createProgram();
+    p = get(p, 'session', session as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'cast', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (record.status !== 'Open') return { variant: 'closed', session };
+          const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
+          if (ballots.some(bl => bl.voter === voter)) return { variant: 'already_voted', voter };
+          return { variant: 'cast', ballot: `${session}:${voter}` };
+        });
+      },
+      (b) => complete(b, 'session_not_found', { session }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async close(input, storage) {
+  close(input: Record<string, unknown>) {
     const { session } = input;
-    const record = await storage.get('session', session as string);
-    if (!record) return { variant: 'not_found', session };
-    await storage.put('session', session as string, { ...record, status: 'Closed' });
-    return { variant: 'closed', session };
+    let p = createProgram();
+    p = get(p, 'session', session as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'session', session as string, { status: 'Closed' });
+        return complete(b2, 'closed', { session });
+      },
+      (b) => complete(b, 'not_found', { session }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async tally(input, storage) {
+  tally(input: Record<string, unknown>) {
     const { session } = input;
-    const record = await storage.get('session', session as string);
-    if (!record) return { variant: 'not_found', session };
-    const ballots = record.ballots as Array<{ choice: string; weight: number }>;
-    const totals: Record<string, number> = {};
-    for (const b of ballots) {
-      totals[b.choice] = (totals[b.choice] ?? 0) + (b.weight ?? 1);
-    }
-    const winner = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
-    const outcome = winner ? winner[0] : 'no_result';
-    await storage.put('session', session as string, { ...record, status: 'Tallied', outcome, totals });
-    return { variant: 'result', session, outcome, totals: JSON.stringify(totals) };
+    let p = createProgram();
+    p = get(p, 'session', session as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        b = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const ballots = record.ballots as Array<{ choice: string; weight: number }>;
+          const totals: Record<string, number> = {};
+          for (const bl of ballots) {
+            totals[bl.choice] = (totals[bl.choice] ?? 0) + (bl.weight ?? 1);
+          }
+          const winner = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
+          const outcome = winner ? winner[0] : 'no_result';
+          return { outcome, totals: JSON.stringify(totals) };
+        }, 'tallyResult');
+
+        let b2 = put(b, 'session', session as string, { status: 'Tallied' });
+
+        return completeFrom(b2, 'result', (bindings) => {
+          const result = bindings.tallyResult as Record<string, unknown>;
+          return { session, outcome: result.outcome, totals: result.totals };
+        });
+      },
+      (b) => complete(b, 'not_found', { session }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const voteHandler = autoInterpret(_voteHandler);

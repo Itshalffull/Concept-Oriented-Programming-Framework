@@ -1,34 +1,65 @@
+// @migrated dsl-constructs 2026-03-18
 // Timelock Concept Handler
 // Safety delay between governance decision and execution — @gate concept.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const timelockHandler: ConceptHandler = {
-  async schedule(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _timelockHandler: FunctionalConceptHandler = {
+  schedule(input: Record<string, unknown>) {
     const id = `timelock-${Date.now()}`;
     const eta = new Date(Date.now() + (input.delayHours as number) * 3600000).toISOString();
     const grace = new Date(Date.now() + ((input.delayHours as number) + (input.gracePeriodHours as number)) * 3600000).toISOString();
-    await storage.put('timelock', id, {
+    let p = createProgram();
+    p = put(p, 'timelock', id, {
       id, operationHash: input.operationHash, payload: input.payload,
       delayHours: input.delayHours, gracePeriodHours: input.gracePeriodHours,
       eta, graceEnd: grace, status: 'Queued', queuedAt: new Date().toISOString(),
     });
-    return { variant: 'queued', lock: id };
+    return complete(p, 'queued', { lock: id }) as StorageProgram<Result>;
   },
 
-  async execute(input, storage) {
+  execute(input: Record<string, unknown>) {
     const { lock } = input;
-    const record = await storage.get('timelock', lock as string);
-    if (!record) return { variant: 'not_found', lock };
-    if (new Date() < new Date(record.eta as string)) return { variant: 'not_ready', lock, eta: record.eta };
-    await storage.put('timelock', lock as string, { ...record, status: 'Executed', executedAt: new Date().toISOString() });
-    return { variant: 'executed', lock, payload: record.payload };
+    let p = createProgram();
+    p = get(p, 'timelock', lock as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'executed', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (new Date() < new Date(record.eta as string)) {
+            return { variant: 'not_ready', lock, eta: record.eta };
+          }
+          return { variant: 'executed', lock, payload: record.payload };
+        });
+      },
+      (b) => complete(b, 'not_found', { lock }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async cancel(input, storage) {
+  cancel(input: Record<string, unknown>) {
     const { lock, reason } = input;
-    const record = await storage.get('timelock', lock as string);
-    if (!record) return { variant: 'not_found', lock };
-    await storage.put('timelock', lock as string, { ...record, status: 'Cancelled', cancelReason: reason });
-    return { variant: 'cancelled', lock };
+    let p = createProgram();
+    p = get(p, 'timelock', lock as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'timelock', lock as string, { status: 'Cancelled', cancelReason: reason });
+        return complete(b2, 'cancelled', { lock });
+      },
+      (b) => complete(b, 'not_found', { lock }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const timelockHandler = autoInterpret(_timelockHandler);
