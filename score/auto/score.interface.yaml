@@ -947,3 +947,104 @@ annotations:
           name: score_api_status
           description: >
             Get the current status of the Score index.
+
+  RuntimeDiscovery:
+    concept:
+      auto-register: true
+      description: >
+        Discover Clef deployment manifests within a project directory,
+        extract runtimes, and resolve transport endpoints and credentials.
+        Enables LLMs to scan project topology and connect to remote runtimes.
+    actions:
+      scan:
+        mcp:
+          type: tool
+          name: runtime_discovery_scan
+          description: >
+            Scan a project directory for deploy manifests (*.deploy.yaml),
+            extract declared runtimes, and register the project topology.
+      listProjects:
+        mcp:
+          type: resource-template
+          name: runtime_discovery_list_projects
+          description: >
+            List all previously scanned projects with directories and
+            runtime counts.
+      listRuntimes:
+        mcp:
+          type: resource-template
+          name: runtime_discovery_list_runtimes
+          description: >
+            List runtimes declared in a project's deploy manifests with
+            name, type, transport, and storage backend.
+      resolveEndpoint:
+        mcp:
+          type: resource
+          name: runtime_discovery_resolve_endpoint
+          description: >
+            Extract the transport endpoint URL for a runtime, resolving
+            environment variable references.
+      resolveCredentials:
+        mcp:
+          type: tool
+          name: runtime_discovery_resolve_credentials
+          description: >
+            Resolve credential references (API tokens, secrets) from a
+            runtime's infrastructure.secrets section.
+      selectRuntime:
+        mcp:
+          type: tool
+          name: runtime_discovery_select_runtime
+          description: >
+            Select a runtime for Score connection. Triggers
+            ScoreBridgeOnRuntimeSelect sync to auto-connect.
+
+  ScoreBridge:
+    concept:
+      auto-register: true
+      description: >
+        Proxy Score queries to a remote Clef runtime over transport.
+        Connect, query, show, traverse, and disconnect from remote
+        Score endpoints.
+    actions:
+      connect:
+        mcp:
+          type: tool
+          name: score_bridge_connect
+          description: >
+            Connect to a remote Score endpoint by performing a health
+            check. Stores the connection for subsequent queries.
+      query:
+        mcp:
+          type: tool
+          name: score_bridge_query
+          description: >
+            Execute a GraphQL query against the remote Score index.
+      show:
+        mcp:
+          type: tool
+          name: score_bridge_show
+          description: >
+            Look up a Score entity by kind and name on the remote index.
+            Kinds: concept, sync, symbol, file, handler, widget, theme,
+            deployment, suite, interface.
+      traverse:
+        mcp:
+          type: tool
+          name: score_bridge_traverse
+          description: >
+            Traverse a relationship from the current entity to a related
+            item on the remote Score graph.
+      disconnect:
+        mcp:
+          type: tool
+          name: score_bridge_disconnect
+          description: >
+            Close a connection to a remote Score endpoint.
+      status:
+        mcp:
+          type: tool
+          name: score_bridge_status
+          description: >
+            Check connection health — endpoint, status, error count,
+            and last query timestamp.
