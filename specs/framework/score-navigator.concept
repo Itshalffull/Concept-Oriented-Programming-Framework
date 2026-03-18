@@ -75,7 +75,7 @@ concept ScoreNavigator [N] {
   }
 
   always "cursor tracks current position": {
-    cursor != none implies cursorKind != none
+    cursor != none and cursorKind != none
   }
 
   action show {

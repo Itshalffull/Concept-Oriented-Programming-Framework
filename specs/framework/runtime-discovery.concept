@@ -115,12 +115,12 @@ concept RuntimeDiscovery [D] {
 
   always "scanned projects have a directory": {
     forall d in projects:
-    directory(d) != ""
+    d.directory != ""
   }
 
   never "project scanned with empty directory": {
     forall d in projects:
-    directory(d) == ""
+    d.directory = ""
   }
 
   action scan {

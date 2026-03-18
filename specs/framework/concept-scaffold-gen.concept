@@ -78,7 +78,7 @@ concept ConceptScaffoldGen [C] {
 
   always "generated specs have names": {
     forall c in specs:
-    name(c) != ""
+    c.name != ""
   }
 
   action generate {

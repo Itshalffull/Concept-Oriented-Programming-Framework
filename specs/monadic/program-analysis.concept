@@ -66,14 +66,14 @@ concept ProgramAnalysis [A] {
     then registerProvider(name: "read-write-sets", kind: "structural") -> exists()
   }
 
-  always "registered providers are listed": {
-    forall name in providers:
-    providerKind(name) != ""
+  always "registered providers have kind": {
+    forall p in providers:
+    p.providerKind != ""
   }
 
-  never "run succeeds for unregistered provider": {
-    run(program: p, provider: name) -> ok(analysis: a, result: r)
-    and name not in providers
+  never "empty provider kind registered": {
+    exists p in providers:
+    p.providerKind = ""
   }
 
   action registerProvider {

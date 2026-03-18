@@ -31,7 +31,7 @@ concept SyncParser [Y] {
 
   always "parsed syncs have an AST": {
     forall y in syncs:
-    ast(y) != none
+    y.ast != none
   }
 
   action parse {

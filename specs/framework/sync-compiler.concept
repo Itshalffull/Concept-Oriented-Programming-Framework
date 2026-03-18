@@ -38,7 +38,7 @@ concept SyncCompiler [Y] {
 
   always "compiled syncs are stored": {
     forall y in compiled:
-    compiled(y) != none
+    y.compiled != none
   }
 
   action compile {

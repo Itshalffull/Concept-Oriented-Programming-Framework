@@ -92,7 +92,7 @@ concept SuiteManager [S] {
 
   always "suites have names and paths": {
     forall s in suites:
-    name(s) != "" and path(s) != ""
+    s.name != "" and s.path != ""
   }
 
   action init {

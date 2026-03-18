@@ -52,7 +52,7 @@ concept SchemaGen [S] {
 
   always "manifests are fully resolved": {
     forall s in manifests:
-    manifests(s) != none
+    s.manifests != none
   }
 
   action generate {

@@ -131,12 +131,12 @@ concept ScoreBridge [B] {
 
   always "connected bridges have endpoints": {
     forall b in connections:
-    status(b) == "connected" implies endpoint(b) != ""
+    b.status = "connected" and b.endpoint != ""
   }
 
   never "bridge with errors but no endpoint": {
     forall b in connections:
-    errorCount(b) > 0 and endpoint(b) == ""
+    b.errorCount > 0 and b.endpoint = ""
   }
 
   action connect {

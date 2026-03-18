@@ -52,7 +52,7 @@ concept DeploymentValidator [M] {
 
   always "parsed manifests have a plan or issues": {
     forall m in manifests:
-    plan(m) != none or issues(m) != none
+    m.plan != none
   }
 
   action parse {

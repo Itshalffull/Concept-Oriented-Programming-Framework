@@ -61,7 +61,7 @@ concept InterfaceScaffoldGen [I] {
 
   always "generated manifests have names": {
     forall i in manifests:
-    name(i) != ""
+    i.name != ""
   }
 
   action generate {

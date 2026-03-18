@@ -62,7 +62,7 @@ concept TransportAdapterScaffoldGen [T] {
 
   always "adapters have a protocol": {
     forall t in adapters:
-    protocol(t) != ""
+    t.protocol != ""
   }
 
   action generate {

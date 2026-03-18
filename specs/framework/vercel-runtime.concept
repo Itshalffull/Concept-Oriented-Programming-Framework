@@ -73,12 +73,12 @@ concept VercelRuntime [V] {
 
   always "provisioned projects have a project ID": {
     forall v in projects:
-    projectId(v) != ""
+    v.projectId != ""
   }
 
   never "project destroyed while traffic is weighted": {
     forall v in projects:
-    currentDeploymentId(v) != none and v is destroyed
+    v.currentDeploymentId != none and v.status = "destroyed"
   }
 
   action provision {

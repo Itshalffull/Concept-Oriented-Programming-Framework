@@ -60,7 +60,7 @@ concept SuiteScaffoldGen [S] {
 
   always "generated suites have names": {
     forall s in suites:
-    name(s) != ""
+    s.name != ""
   }
 
   action generate {

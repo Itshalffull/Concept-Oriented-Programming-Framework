@@ -33,7 +33,7 @@ concept ScoreQuery [Q] {
 
   always "stored queries have timestamps": {
     forall q in queries:
-    timestamp(q) != none
+    q.timestamp != none
   }
 
   action query {

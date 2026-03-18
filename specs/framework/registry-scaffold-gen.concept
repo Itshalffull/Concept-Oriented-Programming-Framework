@@ -60,7 +60,7 @@ concept RegistryScaffoldGen [R] {
 
   always "registries reference a deploy manifest": {
     forall r in registries:
-    deployManifest(r) != ""
+    r.deployManifest != ""
   }
 
   action generate {

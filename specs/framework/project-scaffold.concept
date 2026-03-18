@@ -36,12 +36,12 @@ concept ProjectScaffold [P] {
 
   always "projects have names and paths": {
     forall p in projects:
-    name(p) != "" and path(p) != ""
+    p.name != "" and p.path != ""
   }
 
   never "project without a name": {
     forall p in projects:
-    name(p) == ""
+    p.name = ""
   }
 
   action scaffold {

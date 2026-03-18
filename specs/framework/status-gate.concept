@@ -118,12 +118,12 @@ concept StatusGate [G] {
 
   always "gates have a target and context": {
     forall g in gates:
-    target(g) != "" and context(g) != ""
+    g.target != "" and g.context != ""
   }
 
   never "completed gate updated": {
     forall g in gates:
-    completed(g) == true and status(g) changes
+    g.completed = true and g.status != "pending"
   }
 
   action report {
@@ -132,7 +132,7 @@ concept StatusGate [G] {
   }
 
   action complete {
-    requires: gate in gates and completed(gate) == false
-    ensures ok: completed(gate) == true
+    requires: gate in gates and gate.completed = false
+    ensures ok: gate.completed = true
   }
 }

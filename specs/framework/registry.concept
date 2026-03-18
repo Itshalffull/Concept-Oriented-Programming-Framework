@@ -48,12 +48,12 @@ concept Registry [C] {
 
   always "registered concepts have URIs": {
     forall c in concepts:
-    uri(c) != ""
+    c.uri != ""
   }
 
   never "concept registered with empty URI": {
-    forall c in concepts:
-    uri(c) == ""
+    exists c in concepts:
+    c.uri = ""
   }
 
   action register {

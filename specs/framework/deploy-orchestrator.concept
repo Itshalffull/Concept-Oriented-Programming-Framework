@@ -76,12 +76,12 @@ concept DeployOrchestrator [D] {
 
   always "completed runs have a deployment URL": {
     forall d in runs:
-    status(d) == "deployed" implies deploymentUrl(d) != none
+    d.status = "deployed" and d.deploymentUrl != none
   }
 
   never "run completes without a start time": {
     forall d in runs:
-    completedAt(d) != none and startedAt(d) == none
+    d.completedAt != none and d.startedAt = none
   }
 
   action deploy {

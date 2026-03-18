@@ -70,7 +70,7 @@ concept HandlerScaffoldGen [H] {
 
   always "generated handlers have concept names": {
     forall h in handlers:
-    conceptName(h) != ""
+    h.conceptName != ""
   }
 
   action generate {

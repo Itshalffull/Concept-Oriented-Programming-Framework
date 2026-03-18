@@ -77,7 +77,7 @@ concept SurfaceThemeScaffoldGen [X] {
 
   always "themes have names": {
     forall x in themes:
-    name(x) != ""
+    x.name != ""
   }
 
   action generate {

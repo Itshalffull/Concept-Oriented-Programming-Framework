@@ -83,7 +83,7 @@ concept DerivedScaffoldGen [D] {
 
   always "generated derived specs have names": {
     forall d in specs:
-    name(d) != ""
+    d.name != ""
   }
 
   action generate {

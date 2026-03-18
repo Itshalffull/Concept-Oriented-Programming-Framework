@@ -110,12 +110,12 @@ concept ToolDiscovery [T] {
 
   always "registered tools have descriptions": {
     forall t in tools:
-    briefDescription(t) != "" and fullDescription(t) != ""
+    t.briefDescription != "" and t.fullDescription != ""
   }
 
   never "tool without a category": {
     forall t in tools:
-    category(t) == ""
+    t.category = ""
   }
 
   action register {

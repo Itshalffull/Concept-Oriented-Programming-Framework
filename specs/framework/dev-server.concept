@@ -72,12 +72,12 @@ concept DevServer [D] {
 
   always "running sessions have a port": {
     forall d in sessions:
-    status(d) == "running" implies port(d) > 0
+    d.status = "running" and d.port > 0
   }
 
   never "session running on port zero": {
     forall d in sessions:
-    status(d) == "running" and port(d) == 0
+    d.status = "running" and d.port = 0
   }
 
   action start {

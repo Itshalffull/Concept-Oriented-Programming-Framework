@@ -66,7 +66,7 @@ concept DeployScaffoldGen [D] {
 
   always "generated manifests have app names": {
     forall d in manifests:
-    appName(d) != ""
+    d.appName != ""
   }
 
   action generate {

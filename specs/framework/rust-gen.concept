@@ -49,7 +49,7 @@ concept RustGen [S] {
 
   always "generated output contains files": {
     forall s in outputs:
-    outputs(s) != []
+    s.outputs != []
   }
 
   action generate {

@@ -74,17 +74,17 @@ concept KernelBoot [K] {
 
   always "booted kernels have registered concepts": {
     forall k in instances:
-    status(k) == "running" implies registeredConcepts(k) != []
+    k.status = "running" and k.registeredConcepts != []
   }
 
   never "kernel running without boot time": {
     forall k in instances:
-    status(k) == "running" and bootedAt(k) == none
+    k.status = "running" and k.bootedAt = none
   }
 
   action boot {
     requires: projectRoot != ""
-    ensures ok: concepts != [] or syncs != []
+    ensures ok: concepts != []
   }
 
   action shutdown {

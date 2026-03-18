@@ -77,7 +77,7 @@ concept SurfaceComponentScaffoldGen [W] {
 
   always "components have names": {
     forall w in components:
-    name(w) != ""
+    w.name != ""
   }
 
   action generate {

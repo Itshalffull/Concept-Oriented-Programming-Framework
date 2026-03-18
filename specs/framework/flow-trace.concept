@@ -49,7 +49,7 @@ concept FlowTrace [F] {
 
   always "traces have a tree": {
     forall f in traces:
-    tree(f) != none
+    f.tree != none
   }
 
   action build {

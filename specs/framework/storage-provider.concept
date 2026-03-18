@@ -74,12 +74,12 @@ concept StorageProvider [S] {
 
   always "provisioned stores have credentials": {
     forall s in stores:
-    status(s) == "provisioned" implies credentials(s) != ""
+    s.status = "provisioned" and s.credentials != ""
   }
 
   never "store without a name": {
     forall s in stores:
-    storeName(s) == ""
+    s.storeName = ""
   }
 
   action provision {

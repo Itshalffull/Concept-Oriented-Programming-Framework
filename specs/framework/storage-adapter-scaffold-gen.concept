@@ -62,7 +62,7 @@ concept StorageAdapterScaffoldGen [A] {
 
   always "adapters have a backend": {
     forall a in adapters:
-    backend(a) != ""
+    a.backend != ""
   }
 
   action generate {

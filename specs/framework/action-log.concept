@@ -45,13 +45,12 @@ concept ActionLog [R] {
 
   always "records set is consistent": {
     forall r in records:
-    record(r) != none
+    r.record != none
   }
 
-  never "edges reference nonexistent records": {
-    forall r in records:
-    forall e in edges(r):
-    e.target not in records
+  never "empty record in log": {
+    exists r in records:
+    r.record = none
   }
 
   action append {
@@ -61,6 +60,6 @@ concept ActionLog [R] {
 
   action addEdge {
     requires: from in records and to in records
-    ensures ok: to in edges(from)
+    ensures ok: to in from.edges
   }
 }

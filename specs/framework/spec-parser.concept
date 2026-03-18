@@ -30,7 +30,7 @@ concept SpecParser [S] {
 
   always "parsed specs have an AST": {
     forall s in specs:
-    ast(s) != none
+    s.ast != none
   }
 
   action parse {

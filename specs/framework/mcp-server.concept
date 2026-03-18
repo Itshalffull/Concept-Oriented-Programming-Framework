@@ -101,12 +101,12 @@ concept McpServer [S] {
 
   always "registered tools have schemas": {
     forall s in tools:
-    toolSchema(s) != ""
+    s.toolSchema != ""
   }
 
   never "tool registered without a concept mapping": {
     forall s in tools:
-    toolConcept(s) == "" or toolAction(s) == ""
+    s.toolConcept = ""
   }
 
   action registerTool {

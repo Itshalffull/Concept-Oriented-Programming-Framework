@@ -119,12 +119,12 @@ concept DeployPlan [D] {
 
   always "plans have an environment": {
     forall d in plans:
-    environment(d) != ""
+    d.environment != ""
   }
 
   never "execute without prior validation": {
     forall d in plans:
-    currentPhase(d) == "executing" and currentPhase(d) was never "validated"
+    d.currentPhase = "executing" and d.currentPhase != "validated"
   }
 
   action plan {
