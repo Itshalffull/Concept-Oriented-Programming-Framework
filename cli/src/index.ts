@@ -8,12 +8,13 @@ import { handlerScaffoldGenHandler } from '../../handlers/ts/framework/handler-s
 import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../../handlers/ts/framework/sync-parser.handler.js';
 import { syncScaffoldGenHandler } from '../../handlers/ts/framework/sync-scaffold-gen.handler.js';
-import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
+import { createStorageFactory } from '../../runtime/adapters/storage-factory.js';
 import { verifyCommand } from './verify/verify.command.js';
 import type { ConceptAST } from '../../runtime/types.js';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
-const storage = createInMemoryStorage();
+const storageFactory = createStorageFactory({ projectRoot: ROOT });
+const storage = storageFactory('cli');
 
 type ScaffoldResult = Awaited<ReturnType<NonNullable<typeof conceptScaffoldGenHandler.generate>>>;
 
