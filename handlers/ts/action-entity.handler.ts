@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ActionEntity Handler
 //
@@ -7,156 +8,234 @@
 // this action?" and "where is this action implemented?"
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `action-entity-${++idCounter}`;
 }
 
-export const actionEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+/**
+ * Parse variant refs to get count. Pure helper.
+ */
+function countVariants(variantRefs: string): number {
+  try {
+    const parsed = JSON.parse(variantRefs);
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Filter syncs whose compiled whenPatterns reference a given concept+action. Pure helper.
+ */
+function filterSyncsByWhen(
+  allSyncs: Record<string, unknown>[],
+  concept: string,
+  actionName: string,
+): Record<string, unknown>[] {
+  return allSyncs.filter((s) => {
+    try {
+      const compiled = JSON.parse(s.compiled as string || '{}');
+      const whenPatterns = compiled.when || [];
+      return whenPatterns.some(
+        (w: Record<string, unknown>) =>
+          w.concept === concept && w.action === actionName,
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * Filter syncs whose compiled thenActions reference a given concept+action. Pure helper.
+ */
+function filterSyncsByThen(
+  allSyncs: Record<string, unknown>[],
+  concept: string,
+  actionName: string,
+): Record<string, unknown>[] {
+  return allSyncs.filter((s) => {
+    try {
+      const compiled = JSON.parse(s.compiled as string || '{}');
+      const thenActions = compiled.then || [];
+      return thenActions.some(
+        (t: Record<string, unknown>) =>
+          t.concept === concept && t.action === actionName,
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
+const _actionEntityHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const name = input.name as string;
     const params = input.params as string;
     const variantRefs = input.variantRefs as string;
 
-    // Check for duplicate by concept + name
-    const existing = await storage.find('action-entity', { concept, name });
-    if (existing.length > 0) {
-      return { variant: 'ok', action: existing[0].id as string };
-    }
+    let p = createProgram();
+    p = find(p, 'action-entity', { concept, name }, 'existing');
 
-    const id = nextId();
-    const symbol = `clef/action/${concept}/${name}`;
-    let variantCount = 0;
-    try {
-      const parsed = JSON.parse(variantRefs);
-      variantCount = Array.isArray(parsed) ? parsed.length : 0;
-    } catch {
-      variantCount = 0;
-    }
+    p = branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (b) => completeFrom(b, 'ok', (bindings) => ({
+        action: ((bindings.existing as Record<string, unknown>[])[0].id as string),
+      })) as StorageProgram<Result>,
+      (b) => {
+        const id = nextId();
+        const symbol = `clef/action/${concept}/${name}`;
+        const variantCount = countVariants(variantRefs);
 
-    await storage.put('action-entity', id, {
-      id,
-      concept,
-      name,
-      symbol,
-      params,
-      variantRefs,
-      variantCount,
-      implementationSymbols: '[]',
-    });
+        let b2 = put(b, 'action-entity', id, {
+          id,
+          concept,
+          name,
+          symbol,
+          params,
+          variantRefs,
+          variantCount,
+          implementationSymbols: '[]',
+        });
+        return complete(b2, 'ok', { action: id }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    return { variant: 'ok', action: id };
+    return p;
   },
 
-  async findByConcept(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
 
     const criteria: Record<string, unknown> = {};
     if (concept !== undefined && concept !== '') criteria.concept = concept;
-    const results = await storage.find('action-entity', Object.keys(criteria).length > 0 ? criteria : undefined);
 
-    return { variant: 'ok', actions: JSON.stringify(results) };
+    let p = createProgram();
+    p = find(p, 'action-entity', Object.keys(criteria).length > 0 ? criteria : {}, 'results');
+    return completeFrom(p, 'ok', (bindings) => ({
+      actions: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async triggeringSyncs(input: Record<string, unknown>, storage: ConceptStorage) {
+  triggeringSyncs(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    // Look up the action entity to get concept + name
-    const actionRecord = await storage.get('action-entity', action);
-    if (!actionRecord) {
-      return { variant: 'ok', syncs: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'action-entity', action, 'actionRecord');
 
-    // Search sync-entity for syncs whose compiled whenPatterns reference this action
-    const allSyncs = await storage.find('sync-entity');
-    const matching = allSyncs.filter((s) => {
-      try {
-        const compiled = JSON.parse(s.compiled as string || '{}');
-        const whenPatterns = compiled.when || [];
-        return whenPatterns.some(
-          (w: Record<string, unknown>) =>
-            w.concept === actionRecord.concept && w.action === actionRecord.name,
-        );
-      } catch {
-        return false;
-      }
-    });
+    p = branch(p, 'actionRecord',
+      (b) => {
+        let b2 = find(b, 'sync-entity', {}, 'allSyncs');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const actionRecord = bindings.actionRecord as Record<string, unknown>;
+          const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+          const matching = filterSyncsByWhen(allSyncs, actionRecord.concept as string, actionRecord.name as string);
+          return { syncs: JSON.stringify(matching) };
+        }) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'ok', { syncs: '[]' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
 
-    return { variant: 'ok', syncs: JSON.stringify(matching) };
+    return p;
   },
 
-  async invokingSyncs(input: Record<string, unknown>, storage: ConceptStorage) {
+  invokingSyncs(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    // Look up the action entity to get concept + name
-    const actionRecord = await storage.get('action-entity', action);
-    if (!actionRecord) {
-      return { variant: 'ok', syncs: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'action-entity', action, 'actionRecord');
 
-    // Search sync-entity for syncs whose compiled thenActions reference this action
-    const allSyncs = await storage.find('sync-entity');
-    const matching = allSyncs.filter((s) => {
-      try {
-        const compiled = JSON.parse(s.compiled as string || '{}');
-        const thenActions = compiled.then || [];
-        return thenActions.some(
-          (t: Record<string, unknown>) =>
-            t.concept === actionRecord.concept && t.action === actionRecord.name,
-        );
-      } catch {
-        return false;
-      }
-    });
+    p = branch(p, 'actionRecord',
+      (b) => {
+        let b2 = find(b, 'sync-entity', {}, 'allSyncs');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const actionRecord = bindings.actionRecord as Record<string, unknown>;
+          const allSyncs = bindings.allSyncs as Record<string, unknown>[];
+          const matching = filterSyncsByThen(allSyncs, actionRecord.concept as string, actionRecord.name as string);
+          return { syncs: JSON.stringify(matching) };
+        }) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'ok', { syncs: '[]' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
 
-    return { variant: 'ok', syncs: JSON.stringify(matching) };
+    return p;
   },
 
-  async implementations(input: Record<string, unknown>, storage: ConceptStorage) {
+  implementations(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    const record = await storage.get('action-entity', action);
-    if (!record) {
-      return { variant: 'ok', symbols: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'action-entity', action, 'record');
 
-    return { variant: 'ok', symbols: (record.implementationSymbols as string) || '[]' };
+    return completeFrom(p, 'ok', (bindings) => {
+      const record = bindings.record as Record<string, unknown> | null;
+      if (!record) return { symbols: '[]' };
+      return { symbols: (record.implementationSymbols as string) || '[]' };
+    }) as StorageProgram<Result>;
   },
 
-  async interfaceExposures(input: Record<string, unknown>, storage: ConceptStorage) {
+  interfaceExposures(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    const record = await storage.get('action-entity', action);
-    if (!record) {
-      return { variant: 'ok', exposures: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'action-entity', action, 'record');
 
-    // Look up any interface-exposure records referencing this action's symbol
-    const exposures = await storage.find('interface-exposure', { actionSymbol: record.symbol });
-    return { variant: 'ok', exposures: JSON.stringify(exposures) };
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.symbol as string;
+        }, 'actionSymbol');
+        b2 = find(b2, 'interface-exposure', {}, 'allExposures');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const actionSymbol = bindings.actionSymbol as string;
+          const allExposures = bindings.allExposures as Record<string, unknown>[];
+          const matching = allExposures.filter(e => e.actionSymbol === actionSymbol);
+          return { exposures: JSON.stringify(matching) };
+        }) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'ok', { exposures: '[]' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const action = input.action as string;
 
-    const record = await storage.get('action-entity', action);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'action-entity', action, 'record');
 
-    return {
-      variant: 'ok',
-      action: record.id as string,
-      concept: record.concept as string,
-      name: record.name as string,
-      params: record.params as string,
-      variantCount: (record.variantCount as number) || 0,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          action: record.id as string,
+          concept: record.concept as string,
+          name: record.name as string,
+          params: record.params as string,
+          variantCount: (record.variantCount as number) || 0,
+        };
+      }) as StorageProgram<Result>,
+      (b) => complete(b, 'notfound', {}) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 };
+
+export const actionEntityHandler = autoInterpret(_actionEntityHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetActionEntityCounter(): void {

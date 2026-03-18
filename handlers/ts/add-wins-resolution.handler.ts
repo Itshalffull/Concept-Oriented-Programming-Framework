@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AddWinsResolution Handler
 //
@@ -7,12 +8,19 @@
 // collection membership.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `add-wins-resolution-${++idCounter}`;
 }
+
+type Result = { variant: string; [key: string]: unknown };
 
 /**
  * Parse a JSON-encoded set (array). Returns null if parsing fails,
@@ -30,48 +38,44 @@ function parseSet(data: string): string[] | null {
   }
 }
 
-export const addWinsResolutionHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _addWinsResolutionHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     const id = nextId();
-    await storage.put('add-wins-resolution', id, {
+
+    let p = createProgram();
+    p = put(p, 'add-wins-resolution', id, {
       id,
       name: 'add-wins',
       category: 'conflict-resolution',
       priority: 20,
     });
 
-    return { variant: 'ok', name: 'add-wins', category: 'conflict-resolution', priority: 20 };
+    return complete(p, 'ok', { name: 'add-wins', category: 'conflict-resolution', priority: 20 }) as StorageProgram<Result>;
   },
 
-  async attemptResolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  attemptResolve(input: Record<string, unknown>) {
     const base = input.base as string | undefined;
     const v1 = input.v1 as string;
     const v2 = input.v2 as string;
-    const context = input.context as string;
 
     // Parse both versions as sets
     const set1 = parseSet(v1);
     const set2 = parseSet(v2);
 
     if (set1 === null || set2 === null) {
-      return { variant: 'cannotResolve', reason: 'Content is not a set-like structure' };
+      const p = createProgram();
+      return complete(p, 'cannotResolve', { reason: 'Content is not a set-like structure' }) as StorageProgram<Result>;
     }
 
-    // Parse the base set if provided
-    const baseSet = base ? parseSet(base) : [];
-
     // Add-wins semantics: compute the union of both versions.
-    // Items present in either version are kept (additions win over removals).
     const union = new Set<string>([...set1, ...set2]);
-
-    // If we have a base, items explicitly removed by both sides (not in either)
-    // stay removed. But if removed by one side and present in the other, the
-    // add wins — which the union already handles.
     const result = JSON.stringify(Array.from(union).sort());
 
     // Cache the resolution
     const cacheId = nextId();
-    await storage.put('add-wins-resolution', cacheId, {
+
+    let p = createProgram();
+    p = put(p, 'add-wins-resolution', cacheId, {
       id: cacheId,
       base: base ?? null,
       v1,
@@ -80,9 +84,11 @@ export const addWinsResolutionHandler: ConceptHandler = {
       resolvedAt: new Date().toISOString(),
     });
 
-    return { variant: 'resolved', result };
+    return complete(p, 'resolved', { result }) as StorageProgram<Result>;
   },
 };
+
+export const addWinsResolutionHandler = autoInterpret(_addWinsResolutionHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetAddWinsResolutionCounter(): void {

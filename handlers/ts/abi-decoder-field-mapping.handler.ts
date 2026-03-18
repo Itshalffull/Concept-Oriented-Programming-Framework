@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AbiDecoderFieldMapping Handler
 //
@@ -7,116 +8,167 @@
 // See Architecture doc Sections 16.11, 16.12.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `abi-map-${++idCounter}`;
 }
 
-export const abiDecoderFieldMappingHandler: ConceptHandler = {
-  async apply(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+/**
+ * Parse field rules JSON. Returns null if parsing fails.
+ */
+function tryParseFieldRules(raw: unknown): Record<string, unknown> | null {
+  try {
+    return JSON.parse(String(raw || '{}'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Try parsing a JSON string. Returns null on failure.
+ */
+function tryParseJson(data: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validate that a string is valid JSON.
+ */
+function isValidJson(data: string): boolean {
+  try {
+    JSON.parse(data);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const _abiDecoderFieldMappingHandler: FunctionalConceptHandler = {
+  apply(input: Record<string, unknown>) {
     const data = input.data as string;
     const mapper = input.mapper as string;
     const contract = input.contract as string;
 
     if (!mapper) {
-      return { variant: 'error', message: 'mapper is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'mapper is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('abi_decoder_field_mapping', mapper);
-    if (!existing) {
-      return { variant: 'notfound', mapper };
-    }
+    let p = createProgram();
+    p = get(p, 'abi_decoder_field_mapping', mapper, 'existing');
 
-    if (!data) {
-      return { variant: 'error', message: 'data is required' };
-    }
-    if (!contract) {
-      return { variant: 'error', message: 'contract is required' };
-    }
+    p = branch(p, 'existing',
+      (b) => {
+        // existing found — validate remaining inputs
+        if (!data) {
+          return complete(b, 'error', { message: 'data is required' }) as StorageProgram<Result>;
+        }
+        if (!contract) {
+          return complete(b, 'error', { message: 'contract is required' }) as StorageProgram<Result>;
+        }
 
-    // Simulate ABI decoding and field mapping
-    let fieldRules: Record<string, unknown>;
-    try {
-      fieldRules = JSON.parse(String(existing['field_rules'] || '{}'));
-    } catch {
-      return { variant: 'error', message: 'Invalid field_rules in mapping' };
-    }
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const fieldRules = tryParseFieldRules(existing['field_rules']);
+          if (fieldRules === null) {
+            return { variant: 'error', message: 'Invalid field_rules in mapping' };
+          }
+          const mapped = JSON.stringify({
+            source_contract: contract,
+            decoded_fields: fieldRules,
+            raw_data: data,
+          });
+          return { mapped };
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    const mapped = JSON.stringify({
-      source_contract: contract,
-      decoded_fields: fieldRules,
-      raw_data: data,
-    });
-
-    return { variant: 'ok', mapped };
+    return p;
   },
 
-  async reverse(input: Record<string, unknown>, storage: ConceptStorage) {
+  reverse(input: Record<string, unknown>) {
     const data = input.data as string;
     const mapper = input.mapper as string;
 
     if (!mapper) {
-      return { variant: 'error', message: 'mapper is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'mapper is required' }) as StorageProgram<Result>;
     }
 
-    const existing = await storage.get('abi_decoder_field_mapping', mapper);
-    if (!existing) {
-      return { variant: 'notfound', mapper };
-    }
+    let p = createProgram();
+    p = get(p, 'abi_decoder_field_mapping', mapper, 'existing');
 
-    if (!data) {
-      return { variant: 'error', message: 'data is required' };
-    }
+    p = branch(p, 'existing',
+      (b) => {
+        if (!data) {
+          return complete(b, 'error', { message: 'data is required' }) as StorageProgram<Result>;
+        }
 
-    // Validate entity data
-    let entityData: Record<string, unknown>;
-    try {
-      entityData = JSON.parse(data);
-    } catch {
-      return { variant: 'error', message: 'Invalid entity data JSON' };
-    }
+        const entityData = tryParseJson(data);
+        if (entityData === null) {
+          return complete(b, 'error', { message: 'Invalid entity data JSON' }) as StorageProgram<Result>;
+        }
 
-    // Simulate reverse encoding
-    const encoded = `0x${Buffer.from(JSON.stringify(entityData)).toString('hex')}`;
+        const encoded = `0x${Buffer.from(JSON.stringify(entityData)).toString('hex')}`;
+        return complete(b, 'ok', { encoded }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return complete(b, 'notfound', { mapper }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
 
-    return { variant: 'ok', encoded };
+    return p;
   },
 
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+  register(input: Record<string, unknown>) {
     const contract_abi = input.contract_abi as string;
     const entity_schema = input.entity_schema as string;
     const field_rules = input.field_rules as string;
 
     if (!contract_abi) {
-      return { variant: 'invalid', message: 'contract_abi is required' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'contract_abi is required' }) as StorageProgram<Result>;
     }
     if (!entity_schema) {
-      return { variant: 'invalid', message: 'entity_schema is required' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'entity_schema is required' }) as StorageProgram<Result>;
     }
     if (!field_rules) {
-      return { variant: 'invalid', message: 'field_rules is required' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'field_rules is required' }) as StorageProgram<Result>;
     }
 
-    // Validate ABI JSON
-    try {
-      JSON.parse(contract_abi);
-    } catch {
-      return { variant: 'invalid', message: 'contract_abi is not valid JSON' };
+    if (!isValidJson(contract_abi)) {
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'contract_abi is not valid JSON' }) as StorageProgram<Result>;
     }
 
-    // Validate field rules JSON
-    try {
-      JSON.parse(field_rules);
-    } catch {
-      return { variant: 'invalid', message: 'field_rules is not valid JSON' };
+    if (!isValidJson(field_rules)) {
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'field_rules is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const id = nextId();
     const now = new Date().toISOString();
 
-    await storage.put('abi_decoder_field_mapping', id, {
+    let p = createProgram();
+    p = put(p, 'abi_decoder_field_mapping', id, {
       id,
       contract_abi,
       entity_schema,
@@ -126,9 +178,11 @@ export const abiDecoderFieldMappingHandler: ConceptHandler = {
       updatedAt: now,
     });
 
-    return { variant: 'ok', mapper: id };
+    return complete(p, 'ok', { mapper: id }) as StorageProgram<Result>;
   },
 };
+
+export const abiDecoderFieldMappingHandler = autoInterpret(_abiDecoderFieldMappingHandler);
 
 /** Reset internal state. Useful for testing. */
 export function resetAbiDecoderFieldMapping(): void {

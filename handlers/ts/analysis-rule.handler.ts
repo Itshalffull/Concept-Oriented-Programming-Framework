@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AnalysisRule Handler
 //
@@ -7,12 +8,19 @@
 // (datalog, graph traversal, pattern match).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `analysis-rule-${++idCounter}`;
 }
+
+type Result = { variant: string; [key: string]: unknown };
 
 const VALID_ENGINES = ['datalog', 'graph-traversal', 'pattern-match'];
 const VALID_SEVERITIES = ['error', 'warning', 'info'];
@@ -40,7 +48,6 @@ function evaluateRuleSource(
       const factStr = JSON.stringify(fact);
       for (const pattern of patterns) {
         if (engine === 'pattern-match') {
-          // AST pattern matching: substring match against serialized fact
           if (factStr.includes(pattern.match)) {
             findings.push({
               message: pattern.message,
@@ -50,7 +57,6 @@ function evaluateRuleSource(
             });
           }
         } else if (engine === 'graph-traversal') {
-          // Graph reachability: treat match as a node kind to find
           if ((fact.kind as string) === pattern.match || factStr.includes(pattern.match)) {
             findings.push({
               message: pattern.message,
@@ -60,7 +66,6 @@ function evaluateRuleSource(
             });
           }
         } else if (engine === 'datalog') {
-          // Datalog fact-based: treat match as a relation/predicate name
           if ((fact.relation as string) === pattern.match || factStr.includes(pattern.match)) {
             findings.push({
               message: pattern.message,
@@ -79,8 +84,8 @@ function evaluateRuleSource(
   return findings;
 }
 
-export const analysisRuleHandler: ConceptHandler = {
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
+const _analysisRuleHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const name = input.name as string;
     const engine = input.engine as string;
     const source = input.source as string;
@@ -89,24 +94,26 @@ export const analysisRuleHandler: ConceptHandler = {
 
     // Validate engine
     if (!VALID_ENGINES.includes(engine)) {
-      return {
-        variant: 'invalidSyntax',
+      const p = createProgram();
+      return complete(p, 'invalidSyntax', {
         message: `Unknown engine "${engine}". Must be one of: ${VALID_ENGINES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate source syntax: for all engines, source must be valid JSON
     try {
       JSON.parse(source);
     } catch {
-      return {
-        variant: 'invalidSyntax',
+      const p = createProgram();
+      return complete(p, 'invalidSyntax', {
         message: `Rule source is not valid JSON for engine "${engine}"`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     const id = nextId();
-    await storage.put('analysis-rule', id, {
+
+    let p = createProgram();
+    p = put(p, 'analysis-rule', id, {
       id,
       name,
       engine,
@@ -115,78 +122,95 @@ export const analysisRuleHandler: ConceptHandler = {
       category,
     });
 
-    return { variant: 'ok', rule: id };
+    return complete(p, 'ok', { rule: id }) as StorageProgram<Result>;
   },
 
-  async evaluate(input: Record<string, unknown>, storage: ConceptStorage) {
+  evaluate(input: Record<string, unknown>) {
     const rule = input.rule as string;
 
-    const record = await storage.get('analysis-rule', rule);
-    if (!record) {
-      return { variant: 'evaluationError', message: `Rule "${rule}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'analysis-rule', rule, 'record');
 
-    const engine = record.engine as string;
-    const source = record.source as string;
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = find(b, 'analysis-fact', {}, 'facts');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const facts = bindings.facts as Record<string, unknown>[];
+          const findings = evaluateRuleSource(
+            record.engine as string,
+            record.source as string,
+            facts,
+          );
+          if (findings.length === 0) {
+            return { variant: 'noFindings' };
+          }
+          return { findings: JSON.stringify(findings) };
+        }) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'evaluationError', { message: `Rule "${rule}" not found` }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
 
-    // Retrieve program facts from storage (stored by analysis engine providers)
-    const facts = await storage.find('analysis-fact', {});
-
-    const findings = evaluateRuleSource(engine, source, facts);
-
-    if (findings.length === 0) {
-      return { variant: 'noFindings' };
-    }
-
-    return { variant: 'ok', findings: JSON.stringify(findings) };
+    return p;
   },
 
-  async evaluateAll(input: Record<string, unknown>, storage: ConceptStorage) {
+  evaluateAll(input: Record<string, unknown>) {
     const category = input.category as string;
 
-    // Retrieve all rules, optionally filtered by category
     const criteria: Record<string, unknown> = {};
     if (category !== undefined && category !== '') {
       criteria.category = category;
     }
-    const rules = await storage.find('analysis-rule', Object.keys(criteria).length > 0 ? criteria : undefined);
 
-    // Retrieve all program facts
-    const facts = await storage.find('analysis-fact', {});
+    let p = createProgram();
+    p = find(p, 'analysis-rule', Object.keys(criteria).length > 0 ? criteria : {}, 'rules');
+    p = find(p, 'analysis-fact', {}, 'facts');
 
-    const results: { rule: string; findingCount: number; findings: unknown[] }[] = [];
-    for (const rule of rules) {
-      const engine = rule.engine as string;
-      const source = rule.source as string;
-      const findings = evaluateRuleSource(engine, source, facts);
-      results.push({
-        rule: rule.id as string,
-        findingCount: findings.length,
-        findings,
-      });
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const rules = bindings.rules as Record<string, unknown>[];
+      const facts = bindings.facts as Record<string, unknown>[];
 
-    return { variant: 'ok', results: JSON.stringify(results) };
+      const results: { rule: string; findingCount: number; findings: unknown[] }[] = [];
+      for (const rule of rules) {
+        const engine = rule.engine as string;
+        const source = rule.source as string;
+        const findings = evaluateRuleSource(engine, source, facts);
+        results.push({
+          rule: rule.id as string,
+          findingCount: findings.length,
+          findings,
+        });
+      }
+
+      return { results: JSON.stringify(results) };
+    }) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const rule = input.rule as string;
 
-    const record = await storage.get('analysis-rule', rule);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'analysis-rule', rule, 'record');
 
-    return {
-      variant: 'ok',
-      rule: record.id as string,
-      name: record.name as string,
-      engine: record.engine as string,
-      severity: record.severity as string,
-      category: record.category as string,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          rule: record.id as string,
+          name: record.name as string,
+          engine: record.engine as string,
+          severity: record.severity as string,
+          category: record.category as string,
+        };
+      }) as StorageProgram<Result>,
+      (b) => complete(b, 'notfound', {}) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 };
+
+export const analysisRuleHandler = autoInterpret(_analysisRuleHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetAnalysisRuleCounter(): void {

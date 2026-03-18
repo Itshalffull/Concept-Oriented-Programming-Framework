@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ActionGuide Handler
 //
@@ -11,26 +12,112 @@
 // changes. See Architecture doc Section 1.8.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `action-guide-${++idCounter}`;
 }
 
+type Result = { variant: string; [key: string]: unknown };
+
 const SUPPORTED_FORMATS = ['skill-md', 'cli-help', 'rest-guide', 'generic'];
 
-export const actionGuideHandler: ConceptHandler = {
-  async define(input: Record<string, unknown>, storage: ConceptStorage) {
+/**
+ * Render an action guide to the specified format. Pure helper.
+ */
+function renderGuide(
+  concept: string,
+  steps: Array<{ action: string; title: string; prose: string; order: number }>,
+  contentData: Record<string, unknown>,
+  format: string,
+): string {
+  const sections: string[] = [];
+
+  // Render steps section
+  if (format === 'skill-md') {
+    sections.push(`# Action Guide: ${concept}`);
+    sections.push('');
+    sections.push('## Steps');
+    for (const step of steps) {
+      sections.push(`${step.order + 1}. **${step.title}** — \`${step.action}\``);
+      if (step.prose) {
+        sections.push(`   ${step.prose}`);
+      }
+    }
+  } else if (format === 'cli-help') {
+    sections.push(`Action Guide: ${concept}`);
+    sections.push('');
+    sections.push('Steps:');
+    for (const step of steps) {
+      sections.push(`  ${step.order + 1}. ${step.title} (${step.action})`);
+    }
+  } else if (format === 'rest-guide') {
+    sections.push(`# ${concept} REST Guide`);
+    sections.push('');
+    for (const step of steps) {
+      sections.push(`## ${step.order + 1}. ${step.title}`);
+      sections.push(`Endpoint action: \`${step.action}\``);
+    }
+  } else {
+    // generic
+    sections.push(`Action Guide: ${concept}`);
+    sections.push('');
+    for (const step of steps) {
+      sections.push(`Step ${step.order + 1}: ${step.title} [${step.action}]`);
+    }
+  }
+
+  // Render decoration content keys
+  for (const [key, value] of Object.entries(contentData)) {
+    sections.push('');
+    if (format === 'skill-md') {
+      sections.push(`## ${key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}`);
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (typeof item === 'object' && item !== null) {
+            const obj = item as Record<string, string>;
+            if (obj.title && obj.rule) {
+              sections.push(`- **${obj.title}**: ${obj.rule}`);
+            } else if (obj.title) {
+              sections.push(`- **${obj.title}**`);
+            } else {
+              sections.push(`- ${JSON.stringify(item)}`);
+            }
+          } else {
+            sections.push(`- ${item}`);
+          }
+        }
+      } else if (typeof value === 'string') {
+        sections.push(value);
+      } else {
+        sections.push(JSON.stringify(value, null, 2));
+      }
+    } else {
+      sections.push(`[${key}]`);
+      sections.push(typeof value === 'string' ? value : JSON.stringify(value));
+    }
+  }
+
+  return sections.join('\n');
+}
+
+const _actionGuideHandler: FunctionalConceptHandler = {
+  define(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const steps = input.steps as string[];
     const content = input.content as string;
 
     if (!Array.isArray(steps) || steps.length === 0) {
-      return { variant: 'emptySteps' };
+      const p = createProgram();
+      return complete(p, 'emptySteps', {}) as StorageProgram<Result>;
     }
 
-    // Parse steps into structured objects
     const parsedSteps = steps.map((action, index) => ({
       action,
       title: action,
@@ -40,7 +127,9 @@ export const actionGuideHandler: ConceptHandler = {
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('action-guide', id, {
+
+    let p = createProgram();
+    p = put(p, 'action-guide', id, {
       id,
       concept,
       steps: JSON.stringify(parsedSteps),
@@ -48,107 +137,53 @@ export const actionGuideHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return { variant: 'ok', workflow: id, stepCount: parsedSteps.length };
+    return complete(p, 'ok', { workflow: id, stepCount: parsedSteps.length }) as StorageProgram<Result>;
   },
 
-  async render(input: Record<string, unknown>, storage: ConceptStorage) {
+  render(input: Record<string, unknown>) {
     const workflow = input.workflow as string;
     const format = input.format as string;
 
     if (!SUPPORTED_FORMATS.includes(format)) {
-      return { variant: 'unknownFormat', format };
+      const p = createProgram();
+      return complete(p, 'unknownFormat', { format }) as StorageProgram<Result>;
     }
 
-    const record = await storage.get('action-guide', workflow);
-    if (!record) {
-      return { variant: 'unknownFormat', format: `Workflow '${workflow}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'action-guide', workflow, 'record');
 
-    const steps = JSON.parse(record.steps as string) as Array<{
-      action: string;
-      title: string;
-      prose: string;
-      order: number;
-    }>;
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const steps = JSON.parse(record.steps as string) as Array<{
+            action: string;
+            title: string;
+            prose: string;
+            order: number;
+          }>;
 
-    let contentData: Record<string, unknown> = {};
-    try {
-      contentData = JSON.parse(record.content as string);
-    } catch {
-      // Content may be empty or invalid -- proceed with empty decorations
-    }
-
-    const sections: string[] = [];
-
-    // Render steps section
-    if (format === 'skill-md') {
-      sections.push(`# Action Guide: ${record.concept}`);
-      sections.push('');
-      sections.push('## Steps');
-      for (const step of steps) {
-        sections.push(`${step.order + 1}. **${step.title}** — \`${step.action}\``);
-        if (step.prose) {
-          sections.push(`   ${step.prose}`);
-        }
-      }
-    } else if (format === 'cli-help') {
-      sections.push(`Action Guide: ${record.concept}`);
-      sections.push('');
-      sections.push('Steps:');
-      for (const step of steps) {
-        sections.push(`  ${step.order + 1}. ${step.title} (${step.action})`);
-      }
-    } else if (format === 'rest-guide') {
-      sections.push(`# ${record.concept} REST Guide`);
-      sections.push('');
-      for (const step of steps) {
-        sections.push(`## ${step.order + 1}. ${step.title}`);
-        sections.push(`Endpoint action: \`${step.action}\``);
-      }
-    } else {
-      // generic
-      sections.push(`Action Guide: ${record.concept}`);
-      sections.push('');
-      for (const step of steps) {
-        sections.push(`Step ${step.order + 1}: ${step.title} [${step.action}]`);
-      }
-    }
-
-    // Render decoration content keys
-    for (const [key, value] of Object.entries(contentData)) {
-      sections.push('');
-      if (format === 'skill-md') {
-        sections.push(`## ${key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}`);
-        if (Array.isArray(value)) {
-          for (const item of value) {
-            if (typeof item === 'object' && item !== null) {
-              const obj = item as Record<string, string>;
-              if (obj.title && obj.rule) {
-                sections.push(`- **${obj.title}**: ${obj.rule}`);
-              } else if (obj.title) {
-                sections.push(`- **${obj.title}**`);
-              } else {
-                sections.push(`- ${JSON.stringify(item)}`);
-              }
-            } else {
-              sections.push(`- ${item}`);
-            }
+          let contentData: Record<string, unknown> = {};
+          try {
+            contentData = JSON.parse(record.content as string);
+          } catch {
+            // Content may be empty or invalid -- proceed with empty decorations
           }
-        } else if (typeof value === 'string') {
-          sections.push(value);
-        } else {
-          sections.push(JSON.stringify(value, null, 2));
-        }
-      } else {
-        sections.push(`[${key}]`);
-        sections.push(typeof value === 'string' ? value : JSON.stringify(value));
-      }
-    }
 
-    const rendered = sections.join('\n');
-    return { variant: 'ok', content: rendered };
+          const rendered = renderGuide(record.concept as string, steps, contentData, format);
+          return { content: rendered };
+        }) as StorageProgram<Result>;
+      },
+      (b) => {
+        return complete(b, 'unknownFormat', { format: `Workflow '${workflow}' not found` }) as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
+
+    return p;
   },
 };
+
+export const actionGuideHandler = autoInterpret(_actionGuideHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetActionGuideCounter(): void {
