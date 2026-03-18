@@ -46,3 +46,8 @@ export type {
   LiteQueryProtocol, LiteFilter, ConceptStateSnapshot,
 } from './types.js';
 export { generateId, timestamp } from './types.js';
+
+// --- Functional handler support ---
+export { interpret } from './interpreter.js';
+export type { ExecutionResult } from './interpreter.js';
+export { wrapFunctional } from './functional-compat.js';

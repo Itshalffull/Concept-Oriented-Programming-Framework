@@ -207,6 +207,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `// generated: ${lowerName}.conformance.stub.test.ts`,
     `import { describe, it, expect } from "vitest";`,
     `import { createInMemoryStorage } from "@clef/runtime";`,
+    `import { interpret } from "../../../runtime/interpreter.ts";`,
     `import { ${handlerVar} } from "./${lowerName}.impl";`,
     '',
     `describe("${conceptName} conformance", () => {`,
@@ -286,33 +287,34 @@ function generateStepCode(
   // Build input object
   const inputFields = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
 
-  lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
+  lines.push(`    const ${varName}Program = ${handlerVar}.${step.action}(`);
   lines.push(`      { ${inputFields} },`);
-  lines.push(`      storage,`);
   lines.push(`    );`);
+  lines.push(`    const ${varName} = await interpret(${varName}Program, storage);`);
 
   // Assert variant
   lines.push(`    expect(${varName}.variant).toBe("${step.expectedVariant}");`);
 
   // Assert output fields (Section 7.4 Rule 4)
+  // ExecutionResult has { variant, output: Record<string, unknown>, trace }
   for (const out of step.expectedOutputs) {
     if (out.value.kind === 'literal') {
-      lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
+      lines.push(`    expect(${varName}.output.${out.name}).toBe(${JSON.stringify(out.value.value)});`);
     } else if (out.value.kind === 'variable') {
       if (out.value.name === '_') {
         // Wildcard — just assert the field exists
-        lines.push(`    expect((${varName} as any).${out.name}).toBeDefined();`);
+        lines.push(`    expect(${varName}.output.${out.name}).toBeDefined();`);
       } else if (boundVars && !boundVars.has(out.value.name)) {
         // Setup step with unbound variable — capture the output value
         boundVars.add(out.value.name);
-        lines.push(`    ${out.value.name} = (${varName} as any).${out.name};`);
+        lines.push(`    ${out.value.name} = ${varName}.output.${out.name} as string;`);
       } else {
         // Assertion step or already-bound variable — assert consistency
-        lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
+        lines.push(`    expect(${varName}.output.${out.name}).toBe(${out.value.name});`);
       }
     } else {
       // Record or list — use deep equality
-      lines.push(`    expect((${varName} as any).${out.name}).toEqual(${invariantValueToTS(out.value)});`);
+      lines.push(`    expect(${varName}.output.${out.name}).toEqual(${invariantValueToTS(out.value)});`);
     }
   }
 
