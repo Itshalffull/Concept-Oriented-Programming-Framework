@@ -1,202 +1,134 @@
+// @migrated dsl-constructs 2026-03-18
 // ToolDiscovery Concept Implementation
 //
 // Enables on-demand discovery of MCP tools so that only a small
-// set of always-loaded tools consumes context window tokens upfront,
-// while the full tool library remains searchable and describable
-// on demand. Reduces upfront token usage by 95%+ for large servers.
+// set of always-loaded tools consumes context window tokens upfront.
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 // ─── Search Scoring ──────────────────────────────────────
 
 function scoreMatch(query: string, name: string, description: string): number {
-  const q = query.toLowerCase();
-  const n = name.toLowerCase();
-  const d = description.toLowerCase();
-
-  // Exact name match
+  const q = query.toLowerCase(); const n = name.toLowerCase(); const d = description.toLowerCase();
   if (n === q) return 1.0;
-
-  // Name starts with query
   if (n.startsWith(q)) return 0.95;
-
-  // Name contains query as a whole word (snake_case aware)
   const nameParts = n.split('_');
   if (nameParts.some(p => p === q)) return 0.9;
-
-  // Name contains query substring
   if (n.includes(q)) return 0.8;
-
-  // Description word match — split query into words and check each
   const queryWords = q.split(/\s+/).filter(w => w.length > 1);
-  if (queryWords.length > 0) {
-    const matchCount = queryWords.filter(w => d.includes(w) || n.includes(w)).length;
-    const ratio = matchCount / queryWords.length;
-    if (ratio > 0) return 0.3 + (ratio * 0.4); // 0.3 to 0.7
-  }
-
+  if (queryWords.length > 0) { const matchCount = queryWords.filter(w => d.includes(w) || n.includes(w)).length; const ratio = matchCount / queryWords.length; if (ratio > 0) return 0.3 + (ratio * 0.4); }
   return 0;
 }
 
-// ─── ToolDiscovery Handler ───────────────────────────────
-
-export const toolDiscoveryHandler: ConceptHandler = {
-
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
-    const briefDescription = input.briefDescription as string;
-    const fullDescription = input.fullDescription as string;
-    const category = input.category as string;
-    const concept = input.concept as string;
-    const action = input.action as string;
-    const inputSchema = input.inputSchema as string;
-    const alwaysLoaded = input.alwaysLoaded as boolean;
-
     const key = `tool:${name}`;
-    const existing = await storage.get('tools', key);
-    if (existing) {
-      return { variant: 'duplicate', name };
-    }
 
-    await storage.put('tools', key, {
-      toolName: name,
-      briefDescription: briefDescription || '',
-      fullDescription: fullDescription || '',
-      category: category || 'uncategorized',
-      concept: concept || '',
-      action: action || '',
-      inputSchema: inputSchema || '{}',
-      alwaysLoaded: alwaysLoaded || false,
-    });
+    let p = createProgram();
+    p = get(p, 'tools', key, 'existing');
 
-    return { variant: 'ok', tool: name };
+    return branch(p, 'existing',
+      (thenP) => complete(thenP, 'duplicate', { name }),
+      (elseP) => {
+        let p2 = put(elseP, 'tools', key, {
+          toolName: name,
+          briefDescription: (input.briefDescription as string) || '',
+          fullDescription: (input.fullDescription as string) || '',
+          category: (input.category as string) || 'uncategorized',
+          concept: (input.concept as string) || '',
+          action: (input.action as string) || '',
+          inputSchema: (input.inputSchema as string) || '{}',
+          alwaysLoaded: (input.alwaysLoaded as boolean) || false,
+        });
+        return complete(p2, 'ok', { tool: name });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async searchTools(input, storage) {
+  searchTools(input: Record<string, unknown>) {
     const query = input.query as string;
     const limit = (input.limit as number) || 10;
 
-    if (!query) {
-      return { variant: 'empty', query: '' };
-    }
+    if (!query) { const p = createProgram(); return complete(p, 'empty', { query: '' }) as StorageProgram<Result>; }
 
-    const allTools = await storage.find('tools');
+    let p = createProgram();
+    p = find(p, 'tools', {}, 'allTools');
 
-    const scored = allTools
-      .map(t => ({
-        name: t.toolName as string,
-        description: t.briefDescription as string,
-        category: t.category as string,
-        score: scoreMatch(
-          query,
-          t.toolName as string,
-          `${t.briefDescription} ${t.fullDescription}`,
-        ),
-      }))
-      .filter(t => t.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return completeFrom(p, '', (bindings) => {
+      const allTools = bindings.allTools as Array<Record<string, unknown>>;
+      const scored = allTools
+        .map(t => ({ name: t.toolName as string, description: t.briefDescription as string, category: t.category as string, score: scoreMatch(query, t.toolName as string, `${t.briefDescription} ${t.fullDescription}`) }))
+        .filter(t => t.score > 0).sort((a, b) => b.score - a.score).slice(0, limit);
 
-    if (scored.length === 0) {
-      return { variant: 'empty', query };
-    }
-
-    return {
-      variant: 'ok',
-      tools: scored.map(({ name, description, category }) => ({
-        name, description, category,
-      })),
-    };
+      if (scored.length === 0) return { variant: 'empty', query };
+      return { variant: 'ok', tools: scored.map(({ name, description, category }) => ({ name, description, category })) };
+    }) as StorageProgram<Result>;
   },
 
-  async describeTools(input, storage) {
+  describeTools(input: Record<string, unknown>) {
     const toolNames = input.tools as string[];
-    if (!toolNames || !Array.isArray(toolNames)) {
-      return { variant: 'ok', tools: [] };
-    }
+    if (!toolNames || !Array.isArray(toolNames)) { const p = createProgram(); return complete(p, 'ok', { tools: [] }) as StorageProgram<Result>; }
 
-    const results: Array<{
-      name: string;
-      description: string;
-      inputSchema: string;
-      concept: string;
-      action: string;
-    }> = [];
+    // Fetch all tools and filter in pure computation
+    let p = createProgram();
+    p = find(p, 'tools', {}, 'allTools');
 
-    for (const name of toolNames) {
-      const entry = await storage.get('tools', `tool:${name}`);
-      if (entry) {
-        results.push({
-          name: entry.toolName as string,
-          description: entry.fullDescription as string,
-          inputSchema: entry.inputSchema as string,
-          concept: entry.concept as string,
-          action: entry.action as string,
-        });
-      }
-    }
-
-    return { variant: 'ok', tools: results };
+    return completeFrom(p, 'ok', (bindings) => {
+      const allTools = bindings.allTools as Array<Record<string, unknown>>;
+      const nameSet = new Set(toolNames.map(n => `tool:${n}`));
+      const results = allTools
+        .filter(t => nameSet.has(`tool:${t.toolName}`))
+        .map(t => ({ name: t.toolName as string, description: t.fullDescription as string, inputSchema: t.inputSchema as string, concept: t.concept as string, action: t.action as string }));
+      return { tools: results };
+    }) as StorageProgram<Result>;
   },
 
-  async listCategories(_input, storage) {
-    const allTools = await storage.find('tools');
+  listCategories(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tools', {}, 'allTools');
 
-    const categoryMap = new Map<string, number>();
-    for (const tool of allTools) {
-      const cat = tool.category as string || 'uncategorized';
-      categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
-    }
-
-    const categories = Array.from(categoryMap.entries())
-      .map(([name, toolCount]) => ({
-        name,
-        toolCount,
-        description: `${toolCount} tools in the ${name} category`,
-      }))
-      .sort((a, b) => b.toolCount - a.toolCount);
-
-    return { variant: 'ok', categories };
+    return completeFrom(p, 'ok', (bindings) => {
+      const allTools = bindings.allTools as Array<Record<string, unknown>>;
+      const categoryMap = new Map<string, number>();
+      for (const tool of allTools) { const cat = tool.category as string || 'uncategorized'; categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1); }
+      const categories = Array.from(categoryMap.entries()).map(([name, toolCount]) => ({ name, toolCount, description: `${toolCount} tools in the ${name} category` })).sort((a, b) => b.toolCount - a.toolCount);
+      return { categories };
+    }) as StorageProgram<Result>;
   },
 
-  async getCategory(input, storage) {
+  getCategory(input: Record<string, unknown>) {
     const category = input.category as string;
-    if (!category) {
-      return { variant: 'notfound', category: '' };
-    }
+    if (!category) { const p = createProgram(); return complete(p, 'notfound', { category: '' }) as StorageProgram<Result>; }
 
-    const allTools = await storage.find('tools');
-    const matched = allTools.filter(t => {
-      const cat = t.category as string || '';
-      return cat.toLowerCase() === category.toLowerCase();
-    });
+    let p = createProgram();
+    p = find(p, 'tools', {}, 'allTools');
 
-    if (matched.length === 0) {
-      return { variant: 'notfound', category };
-    }
-
-    return {
-      variant: 'ok',
-      tools: matched.map(t => ({
-        name: t.toolName as string,
-        description: t.briefDescription as string,
-      })),
-    };
+    return completeFrom(p, '', (bindings) => {
+      const allTools = bindings.allTools as Array<Record<string, unknown>>;
+      const matched = allTools.filter(t => ((t.category as string) || '').toLowerCase() === category.toLowerCase());
+      if (matched.length === 0) return { variant: 'notfound', category };
+      return { variant: 'ok', tools: matched.map(t => ({ name: t.toolName as string, description: t.briefDescription as string })) };
+    }) as StorageProgram<Result>;
   },
 
-  async getAlwaysLoaded(_input, storage) {
-    const allTools = await storage.find('tools');
-    const loaded = allTools.filter(t => t.alwaysLoaded === true);
+  getAlwaysLoaded(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'tools', {}, 'allTools');
 
-    return {
-      variant: 'ok',
-      tools: loaded.map(t => ({
-        name: t.toolName as string,
-        description: t.fullDescription as string,
-        inputSchema: t.inputSchema as string,
-        concept: t.concept as string,
-        action: t.action as string,
-      })),
-    };
+    return completeFrom(p, 'ok', (bindings) => {
+      const allTools = bindings.allTools as Array<Record<string, unknown>>;
+      const loaded = allTools.filter(t => t.alwaysLoaded === true);
+      return { tools: loaded.map(t => ({ name: t.toolName as string, description: t.fullDescription as string, inputSchema: t.inputSchema as string, concept: t.concept as string, action: t.action as string })) };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const toolDiscoveryHandler = autoInterpret(_handler);
