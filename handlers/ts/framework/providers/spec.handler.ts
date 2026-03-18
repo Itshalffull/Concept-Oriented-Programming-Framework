@@ -19,16 +19,17 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
+    let p = createProgram();
     const projections = input.projections as string;
     const format = input.format as string;
     const config = input.config as string;
 
     if (!format) {
-      return { variant: 'unsupportedFormat', format: '' };
+      return complete(p, 'unsupportedFormat', { format: '' }) as StorageProgram<Result>;
     }
 
     const docId = randomUUID();
-    await storage.put('documents', docId, {
+    p = put(p, 'documents', docId, {
       id: docId,
       projections: projections || '[]',
       format,
@@ -37,11 +38,11 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', document: docId, content: '' };
+    return complete(p, 'ok', { document: docId, content: '' }) as StorageProgram<Result>;
   },
 
   validate(input: Record<string, unknown>) {
-    return { variant: 'ok', document: input.document as string };
+    return complete(p, 'ok', { document: input.document as string }) as StorageProgram<Result>;
   },
 };
 

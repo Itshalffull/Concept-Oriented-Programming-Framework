@@ -26,6 +26,7 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const extensions = input.extensions as string;
     const parserWasmPath = input.parserWasmPath as string;
@@ -33,13 +34,13 @@ const _handler: FunctionalConceptHandler = {
     const mimeTypes = (input.mimeTypes as string) ?? '[]';
 
     // Check for duplicate name
-    const existing = await storage.find('grammar', { name });
+    p = find(p, 'grammar', { name }, 'existing');
     if (existing.length > 0) {
-      return { variant: 'alreadyRegistered', existing: existing[0].id };
+      return complete(p, 'alreadyRegistered', { existing: existing[0].id }) as StorageProgram<Result>;
     }
 
     const id = nextGrammarId();
-    await storage.put('grammar', id, {
+    p = put(p, 'grammar', id, {
       id,
       name,
       extensions,
@@ -51,60 +52,63 @@ const _handler: FunctionalConceptHandler = {
     // Register extension → grammar mappings for fast resolution
     const extList: string[] = JSON.parse(extensions);
     for (const ext of extList) {
-      await storage.put('ext_map', ext, { grammarId: id });
+      p = put(p, 'ext_map', ext, { grammarId: id });
     }
 
     // Register MIME type → grammar mappings
     const mimeList: string[] = JSON.parse(mimeTypes);
     for (const mime of mimeList) {
-      await storage.put('mime_map', mime, { grammarId: id });
+      p = put(p, 'mime_map', mime, { grammarId: id });
     }
 
-    return { variant: 'ok', grammar: id };
+    return complete(p, 'ok', { grammar: id }) as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
+    let p = createProgram();
     const fileExtension = input.fileExtension as string;
-    const mapping = await storage.get('ext_map', fileExtension);
+    p = get(p, 'ext_map', fileExtension, 'mapping');
     if (!mapping) {
-      return { variant: 'noGrammar', extension: fileExtension };
+      return complete(p, 'noGrammar', { extension: fileExtension }) as StorageProgram<Result>;
     }
-    return { variant: 'ok', grammar: mapping.grammarId as string };
+    return complete(p, 'ok', { grammar: mapping.grammarId as string }) as StorageProgram<Result>;
   },
 
   resolveByMime(input: Record<string, unknown>) {
+    let p = createProgram();
     const mimeType = input.mimeType as string;
-    const mapping = await storage.get('mime_map', mimeType);
+    p = get(p, 'mime_map', mimeType, 'mapping');
     if (!mapping) {
-      return { variant: 'noGrammar', mimeType };
+      return complete(p, 'noGrammar', { mimeType }) as StorageProgram<Result>;
     }
-    return { variant: 'ok', grammar: mapping.grammarId as string };
+    return complete(p, 'ok', { grammar: mapping.grammarId as string }) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
+    let p = createProgram();
     const grammarId = input.grammar as string;
-    const data = await storage.get('grammar', grammarId);
+    p = get(p, 'grammar', grammarId, 'data');
     if (!data) {
-      return { variant: 'notfound', message: `Grammar ${grammarId} not found` };
+      return complete(p, 'notfound', { message: `Grammar ${grammarId} not found` }) as StorageProgram<Result>;
     }
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       grammar: grammarId,
       name: data.name as string,
       extensions: data.extensions as string,
       parserWasmPath: data.parserWasmPath as string,
-    };
+    }) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
-    const all = await storage.find('grammar');
+    let p = createProgram();
+    p = find(p, 'grammar', 'all');
     const grammars = all.map((g) => ({
       id: g.id,
       name: g.name,
       extensions: g.extensions,
       parserWasmPath: g.parserWasmPath,
     }));
-    return { variant: 'ok', grammars: JSON.stringify(grammars) };
+    return complete(p, 'ok', { grammars: JSON.stringify(grammars) }) as StorageProgram<Result>;
   },
 };
 

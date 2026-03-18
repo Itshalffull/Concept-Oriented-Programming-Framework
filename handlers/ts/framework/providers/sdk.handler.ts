@@ -18,16 +18,17 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
+    let p = createProgram();
     const projection = input.projection as string;
     const language = input.language as string;
     const config = input.config as string;
 
     if (!projection || !language) {
-      return { variant: 'unsupportedLanguage', language: language ?? '' };
+      return complete(p, 'unsupportedLanguage', { language: language ?? '' }) as StorageProgram<Result>;
     }
 
     const packageId = randomUUID();
-    await storage.put('packages', packageId, {
+    p = put(p, 'packages', packageId, {
       id: packageId,
       projection,
       language,
@@ -37,15 +38,14 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', package: packageId, files: [] };
+    return complete(p, 'ok', { package: packageId, files: [] }) as StorageProgram<Result>;
   },
 
   publish(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       package: input.package as string,
       registry: (input.registry as string) || 'npm',
-    };
+    }) as StorageProgram<Result>;
   },
 };
 
