@@ -53,4 +53,20 @@ concept StorageAdapterScaffoldGen [A] {
       }
     }
   }
+
+  example "generate produces storage adapter files": {
+    after generate(name: "AppStorage", backend: "postgresql")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "adapters have a backend": {
+    forall a in adapters:
+    backend(a) != ""
+  }
+
+  action generate {
+    requires: name != "" and backend != ""
+    ensures ok: filesGenerated > 0
+  }
 }

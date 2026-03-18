@@ -80,8 +80,28 @@ concept SuiteManager [S] {
     }
   }
 
-  invariant {
+  example "init then validate succeeds": {
     after init(name: "my-suite") -> ok(suite: s, path: "./suites/my-suite/")
     then validate(path: "./suites/my-suite/") -> ok(suite: s2, concepts: 0, syncs: 0)
+  }
+
+  example "init duplicate fails": {
+    after init(name: "my-suite") -> ok(suite: s, path: "./suites/my-suite/")
+    then init(name: "my-suite") -> alreadyExists(name: "my-suite")
+  }
+
+  always "suites have names and paths": {
+    forall s in suites:
+    name(s) != "" and path(s) != ""
+  }
+
+  action init {
+    requires: name != ""
+    ensures ok: path != ""
+  }
+
+  action validate {
+    requires: path != ""
+    ensures ok: concepts >= 0 and syncs >= 0
   }
 }

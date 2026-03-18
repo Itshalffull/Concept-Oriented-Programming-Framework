@@ -95,24 +95,44 @@ concept StatusGate [G] {
     }
   }
 
-  invariant {
+  example "report then get_status shows current state": {
     after report(target: "abc123", context: "clef/verify", status: "passing", details: "3 proved", provider: "exit-code", url: "")
       -> ok(gate: g, target: "abc123", provider: "exit-code")
     then get_status(gate: g)
       -> ok(gate: g, target: "abc123", status: "passing", provider: "exit-code", details: "3 proved", completed: false)
   }
 
-  invariant {
+  example "report then complete accepts": {
     after report(target: "abc123", context: "clef/verify", status: "passing", details: "all green", provider: "exit-code", url: "")
       -> ok(gate: g, target: "abc123", provider: "exit-code")
     then complete(gate: g, final_status: "passing", details: "done")
       -> ok(gate: g, accepted: true)
   }
 
-  invariant {
+  example "update after complete is rejected": {
     after complete(gate: g, final_status: "passing", details: "done")
       -> ok(gate: g, accepted: true)
     then update(gate: g, status: "failing", details: "late failure")
       -> already_completed(gate: g)
+  }
+
+  always "gates have a target and context": {
+    forall g in gates:
+    target(g) != "" and context(g) != ""
+  }
+
+  never "completed gate updated": {
+    forall g in gates:
+    completed(g) == true and status(g) changes
+  }
+
+  action report {
+    requires: target != "" and context != ""
+    ensures ok: gate in gates
+  }
+
+  action complete {
+    requires: gate in gates and completed(gate) == false
+    ensures ok: completed(gate) == true
   }
 }

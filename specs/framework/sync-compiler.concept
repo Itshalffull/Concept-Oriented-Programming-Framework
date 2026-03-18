@@ -22,7 +22,7 @@ concept SyncCompiler [Y] {
     }
   }
 
-  invariant {
+  example "compile valid then compile empty then-clause fails": {
     after compile(sync: "s1", ast: {
       name: "TestSync", annotations: [],
       when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
@@ -34,5 +34,15 @@ concept SyncCompiler [Y] {
       when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }],
       where: [], then: []
     }) -> error(message: e)
+  }
+
+  always "compiled syncs are stored": {
+    forall y in compiled:
+    compiled(y) != none
+  }
+
+  action compile {
+    requires: ast.name != "" and ast.then != []
+    ensures ok: compiled != none
   }
 }

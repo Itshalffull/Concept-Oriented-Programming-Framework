@@ -108,24 +108,44 @@ concept ScoreBridge [B] {
     }
   }
 
-  invariant {
+  example "connect then status shows connected": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     then status(bridge: b)
       -> ok(bridge: b, endpoint: "https://app.example.com/score", status: "connected", errorCount: 0, lastQueryAt: lat)
   }
 
-  invariant {
+  example "connect then query succeeds": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     then query(bridge: b, graphql: "{ concepts { conceptName } }")
       -> ok(bridge: b, data: d)
   }
 
-  invariant {
+  example "connect then disconnect then status not found": {
     after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
       -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
     and  disconnect(bridge: b) -> ok(bridge: b)
     then status(bridge: b) -> notfound(bridge: b)
+  }
+
+  always "connected bridges have endpoints": {
+    forall b in connections:
+    status(b) == "connected" implies endpoint(b) != ""
+  }
+
+  never "bridge with errors but no endpoint": {
+    forall b in connections:
+    errorCount(b) > 0 and endpoint(b) == ""
+  }
+
+  action connect {
+    requires: endpoint != "" and protocol != ""
+    ensures ok: bridge in connections
+  }
+
+  action query {
+    requires: bridge in connections and graphql != ""
+    ensures ok: data != ""
   }
 }

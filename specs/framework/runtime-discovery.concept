@@ -97,19 +97,39 @@ concept RuntimeDiscovery [D] {
     }
   }
 
-  invariant {
+  example "scan then list runtimes": {
     after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
     then listRuntimes(project: p) -> ok(project: p, runtimes: rdata)
   }
 
-  invariant {
+  example "scan then resolve endpoint": {
     after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
     then resolveEndpoint(project: p, runtime: "vercel")
       -> ok(project: p, runtime: "vercel", endpoint: ep, protocol: proto)
   }
 
-  invariant {
+  example "scan nonexistent directory fails gracefully": {
     after scan(directory: "/nonexistent") -> io_error(directory: "/nonexistent", message: msg)
     then listProjects() -> ok(projects: ps)
+  }
+
+  always "scanned projects have a directory": {
+    forall d in projects:
+    directory(d) != ""
+  }
+
+  never "project scanned with empty directory": {
+    forall d in projects:
+    directory(d) == ""
+  }
+
+  action scan {
+    requires: directory != ""
+    ensures ok: manifests != []
+  }
+
+  action resolveEndpoint {
+    requires: project in projects
+    ensures ok: endpoint != "" and protocol != ""
   }
 }

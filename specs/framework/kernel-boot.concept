@@ -58,17 +58,37 @@ concept KernelBoot [K] {
     }
   }
 
-  invariant {
+  example "boot then status shows running": {
     after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
       -> ok(kernel: k, concepts: cs, syncs: ss)
     then status(kernel: k)
       -> ok(kernel: k, status: "running", concepts: cs, syncs: ss)
   }
 
-  invariant {
+  example "boot then shutdown then status not found": {
     after boot(projectRoot: "./", manifestPath: "examples/devtools/devtools.interface.yaml")
       -> ok(kernel: k, concepts: cs, syncs: ss)
     then shutdown(kernel: k) -> ok(kernel: k)
     and status(kernel: k) -> notfound(kernel: k)
+  }
+
+  always "booted kernels have registered concepts": {
+    forall k in instances:
+    status(k) == "running" implies registeredConcepts(k) != []
+  }
+
+  never "kernel running without boot time": {
+    forall k in instances:
+    status(k) == "running" and bootedAt(k) == none
+  }
+
+  action boot {
+    requires: projectRoot != ""
+    ensures ok: concepts != [] or syncs != []
+  }
+
+  action shutdown {
+    requires: kernel in instances
+    ensures ok: kernel not in instances
   }
 }

@@ -29,8 +29,23 @@ concept ProjectScaffold [P] {
     }
   }
 
-  invariant {
+  example "scaffold then duplicate fails": {
     after scaffold(name: "my-app") -> ok(project: p, path: "./my-app/")
     then scaffold(name: "my-app") -> alreadyExists(name: "my-app")
+  }
+
+  always "projects have names and paths": {
+    forall p in projects:
+    name(p) != "" and path(p) != ""
+  }
+
+  never "project without a name": {
+    forall p in projects:
+    name(p) == ""
+  }
+
+  action scaffold {
+    requires: name != ""
+    ensures ok: path != ""
   }
 }

@@ -56,4 +56,25 @@ concept HandlerScaffoldGen [H] {
       }
     }
   }
+
+  example "generate produces handler files": {
+    after generate(conceptName: "User", actions: [], style: "functional")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with empty concept name fails": {
+    after generate(conceptName: "", actions: [], style: "functional")
+      -> error(message: m)
+  }
+
+  always "generated handlers have concept names": {
+    forall h in handlers:
+    conceptName(h) != ""
+  }
+
+  action generate {
+    requires: conceptName != ""
+    ensures ok: filesGenerated > 0
+  }
 }

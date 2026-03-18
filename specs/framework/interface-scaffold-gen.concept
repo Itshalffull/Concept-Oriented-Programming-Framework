@@ -52,4 +52,20 @@ concept InterfaceScaffoldGen [I] {
       }
     }
   }
+
+  example "generate produces interface manifest": {
+    after generate(name: "my-api", targets: ["rest", "graphql"], sdks: ["typescript"])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated manifests have names": {
+    forall i in manifests:
+    name(i) != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
 }

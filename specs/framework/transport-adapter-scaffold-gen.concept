@@ -53,4 +53,20 @@ concept TransportAdapterScaffoldGen [T] {
       }
     }
   }
+
+  example "generate produces transport adapter files": {
+    after generate(name: "ApiTransport", protocol: "http")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "adapters have a protocol": {
+    forall t in adapters:
+    protocol(t) != ""
+  }
+
+  action generate {
+    requires: name != "" and protocol != ""
+    ensures ok: filesGenerated > 0
+  }
 }

@@ -32,8 +32,35 @@ concept ActionLog [R] {
     }
   }
 
-  invariant {
+  example "append then query returns the record": {
     after append(record: { flow: "f1", concept: "Echo", action: "send", type: "completion", variant: "ok" }) -> ok(id: r)
     then query(flow: "f1") -> ok(records: recs)
+  }
+
+  example "addEdge links two records": {
+    after append(record: { flow: "f1", concept: "A", action: "x", type: "completion", variant: "ok" }) -> ok(id: r1)
+    and append(record: { flow: "f1", concept: "B", action: "y", type: "completion", variant: "ok" }) -> ok(id: r2)
+    then addEdge(from: r1, to: r2, sync: "AtoB") -> ok()
+  }
+
+  always "records set is consistent": {
+    forall r in records:
+    record(r) != none
+  }
+
+  never "edges reference nonexistent records": {
+    forall r in records:
+    forall e in edges(r):
+    e.target not in records
+  }
+
+  action append {
+    requires: record != none
+    ensures ok: id in records
+  }
+
+  action addEdge {
+    requires: from in records and to in records
+    ensures ok: to in edges(from)
   }
 }

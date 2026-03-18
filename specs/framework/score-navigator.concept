@@ -59,14 +59,32 @@ concept ScoreNavigator [N] {
     }
   }
 
-  invariant {
+  example "show then back is empty": {
     after show(kind: "concept", name: "User") -> ok(item: i, related: r, cursor: c)
     then back() -> empty()
   }
 
-  invariant {
+  example "show then traverse then back returns to original": {
     after show(kind: "concept", name: "User") -> ok(item: i1, related: r1, cursor: c1)
     and  traverse(relation: "actions", target: "register") -> ok(item: i2, related: r2, cursor: c2)
     then back() -> ok(item: i3, related: r3, cursor: c3)
+  }
+
+  example "list entities by kind": {
+    after list(kind: "concept") -> ok(items: items)
+  }
+
+  always "cursor tracks current position": {
+    cursor != none implies cursorKind != none
+  }
+
+  action show {
+    requires: kind != "" and name != ""
+    ensures ok: cursor != none
+  }
+
+  action traverse {
+    requires: cursor != none
+    ensures ok: cursor != none
   }
 }

@@ -84,14 +84,38 @@ concept McpServer [S] {
     }
   }
 
-  invariant {
+  example "register tool then list includes it": {
     after registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}") -> ok(tool: t)
     then listTools() -> ok(tools: ts)
   }
 
-  invariant {
+  example "duplicate registration rejected": {
     after registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "Run a GraphQL query", schema: "{}") -> ok(tool: t)
     and  registerTool(name: "score_query", concept: "ScoreQuery", action: "query", description: "duplicate", schema: "{}") -> duplicate(name: n)
     then listTools() -> ok(tools: ts)
+  }
+
+  example "handle call for unregistered tool": {
+    after handleCall(toolName: "nonexistent", arguments: "{}") -> notfound(toolName: "nonexistent")
+  }
+
+  always "registered tools have schemas": {
+    forall s in tools:
+    toolSchema(s) != ""
+  }
+
+  never "tool registered without a concept mapping": {
+    forall s in tools:
+    toolConcept(s) == "" or toolAction(s) == ""
+  }
+
+  action registerTool {
+    requires: name != "" and concept != "" and action != ""
+    ensures ok: tool in tools
+  }
+
+  action start {
+    requires: manifestPath != ""
+    ensures ok: toolCount >= 0
   }
 }

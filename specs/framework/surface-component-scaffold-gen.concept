@@ -66,4 +66,22 @@ concept SurfaceComponentScaffoldGen [W] {
       }
     }
   }
+
+  example "generate produces widget scaffold": {
+    after generate(name: "Button", parts: ["root", "label"], states: ["idle", "pressed"],
+                   events: ["click"], role: "button", requires: none,
+                   affordance: none, props: [], compose: [])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "components have names": {
+    forall w in components:
+    name(w) != ""
+  }
+
+  action generate {
+    requires: name != "" and parts != []
+    ensures ok: filesGenerated > 0
+  }
 }

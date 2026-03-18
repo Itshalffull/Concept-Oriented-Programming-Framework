@@ -72,4 +72,22 @@ concept DerivedScaffoldGen [D] {
       }
     }
   }
+
+  example "generate produces derived spec": {
+    after generate(name: "TaskBoard", typeParam: "T", purpose: "Compose tasks",
+                   composes: [], syncs: [], surfaceActions: [],
+                   surfaceQueries: [], principle: [])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated derived specs have names": {
+    forall d in specs:
+    name(d) != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
 }

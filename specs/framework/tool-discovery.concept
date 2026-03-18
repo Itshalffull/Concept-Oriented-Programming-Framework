@@ -84,7 +84,7 @@ concept ToolDiscovery [T] {
     }
   }
 
-  invariant {
+  example "register then search finds tool": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
@@ -92,7 +92,7 @@ concept ToolDiscovery [T] {
     then searchTools(query: "query", limit: 5) -> ok(tools: results)
   }
 
-  invariant {
+  example "register then describe returns full schema": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
@@ -100,11 +100,31 @@ concept ToolDiscovery [T] {
     then describeTools(tools: ["score_query"]) -> ok(tools: details)
   }
 
-  invariant {
+  example "register always-loaded then getAlwaysLoaded includes it": {
     after register(name: "score_query", briefDescription: "Run GraphQL queries",
                    fullDescription: "Run a GraphQL query against the Score index",
                    category: "score", concept: "ScoreQuery", action: "query",
                    inputSchema: "{}", alwaysLoaded: true) -> ok(tool: t)
     then getAlwaysLoaded() -> ok(tools: loaded)
+  }
+
+  always "registered tools have descriptions": {
+    forall t in tools:
+    briefDescription(t) != "" and fullDescription(t) != ""
+  }
+
+  never "tool without a category": {
+    forall t in tools:
+    category(t) == ""
+  }
+
+  action register {
+    requires: name != "" and concept != "" and action != ""
+    ensures ok: tool in tools
+  }
+
+  action searchTools {
+    requires: query != ""
+    ensures ok: tools != none
   }
 }

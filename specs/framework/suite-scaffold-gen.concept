@@ -51,4 +51,20 @@ concept SuiteScaffoldGen [S] {
       }
     }
   }
+
+  example "generate produces suite scaffold": {
+    after generate(name: "my-suite", description: "A test suite", concepts: ["User", "Session"])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated suites have names": {
+    forall s in suites:
+    name(s) != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
 }

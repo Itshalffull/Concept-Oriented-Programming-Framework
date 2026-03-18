@@ -66,4 +66,22 @@ concept SurfaceThemeScaffoldGen [X] {
       }
     }
   }
+
+  example "generate produces theme scaffold": {
+    after generate(name: "my-theme", primaryColor: "220", fontFamily: "Inter",
+                   baseSize: 16, scale: 1.25, secondaryColor: "180",
+                   borderRadius: "md", mode: "light", extends: none)
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "themes have names": {
+    forall x in themes:
+    name(x) != ""
+  }
+
+  action generate {
+    requires: name != "" and primaryColor != ""
+    ensures ok: filesGenerated > 0
+  }
 }

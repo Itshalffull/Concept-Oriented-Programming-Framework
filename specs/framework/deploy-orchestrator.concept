@@ -63,9 +63,29 @@ concept DeployOrchestrator [D] {
     }
   }
 
-  invariant {
+  example "deploy then status shows deployed": {
     after deploy(manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production")
       -> ok(run: r, appName: "clef-web", deploymentUrl: url, duration: d)
     then status(run: r) -> ok(run: r, appName: "clef-web", status: "deployed", deploymentUrl: url)
+  }
+
+  example "deploy with missing manifest fails": {
+    after deploy(manifestPath: "/nonexistent/deploy.yaml", environment: "production")
+      -> manifestNotFound(path: "/nonexistent/deploy.yaml")
+  }
+
+  always "completed runs have a deployment URL": {
+    forall d in runs:
+    status(d) == "deployed" implies deploymentUrl(d) != none
+  }
+
+  never "run completes without a start time": {
+    forall d in runs:
+    completedAt(d) != none and startedAt(d) == none
+  }
+
+  action deploy {
+    requires: manifestPath != "" and environment != ""
+    ensures ok: appName != "" and deploymentUrl != ""
   }
 }

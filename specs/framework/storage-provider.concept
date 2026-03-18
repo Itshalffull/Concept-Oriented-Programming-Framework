@@ -61,14 +61,34 @@ concept StorageProvider [S] {
     }
   }
 
-  invariant {
+  example "provision then get credentials": {
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
     then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
   }
 
-  invariant {
+  example "provision then destroy then credentials not found": {
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
     then destroy(store: s1) -> ok(store: s1)
     and getCredentials(store: s1) -> notfound(store: s1)
+  }
+
+  always "provisioned stores have credentials": {
+    forall s in stores:
+    status(s) == "provisioned" implies credentials(s) != ""
+  }
+
+  never "store without a name": {
+    forall s in stores:
+    storeName(s) == ""
+  }
+
+  action provision {
+    requires: storeName != "" and storageType != ""
+    ensures ok: credentials != ""
+  }
+
+  action destroy {
+    requires: store in stores
+    ensures ok: store not in stores
   }
 }

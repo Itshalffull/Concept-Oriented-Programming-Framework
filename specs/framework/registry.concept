@@ -36,8 +36,28 @@ concept Registry [C] {
     }
   }
 
-  invariant {
+  example "register then heartbeat shows available": {
     after register(uri: "test://concept-a", transport: "in-process") -> ok(concept: c)
     then heartbeat(uri: "test://concept-a") -> ok(available: true)
+  }
+
+  example "register then deregister removes concept": {
+    after register(uri: "test://concept-b", transport: "in-process") -> ok(concept: c)
+    then deregister(uri: "test://concept-b") -> ok()
+  }
+
+  always "registered concepts have URIs": {
+    forall c in concepts:
+    uri(c) != ""
+  }
+
+  never "concept registered with empty URI": {
+    forall c in concepts:
+    uri(c) == ""
+  }
+
+  action register {
+    requires: uri != ""
+    ensures ok: concept in concepts
   }
 }

@@ -62,4 +62,27 @@ concept ConceptScaffoldGen [C] {
       }
     }
   }
+
+  example "generate produces concept spec files": {
+    after generate(name: "User", typeParam: "U", purpose: "Manage users",
+                   stateFields: [], actions: [], version: 1, gate: false,
+                   capabilities: []) -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with empty name fails": {
+    after generate(name: "", typeParam: "X", purpose: "Test",
+                   stateFields: [], actions: [], version: 1, gate: false,
+                   capabilities: []) -> error(message: m)
+  }
+
+  always "generated specs have names": {
+    forall c in specs:
+    name(c) != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
 }

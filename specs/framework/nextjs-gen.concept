@@ -30,4 +30,24 @@ concept NextjsGen [S] {
       }
     }
   }
+
+  example "generate produces Next.js files": {
+    after generate(spec: "s1", manifest: {
+      name: "User", uri: "urn:clef/User", typeParams: [], relations: [],
+      actions: [{ name: "create", params: [],
+        variants: [{ tag: "ok", fields: [], prose: "Created." }] }],
+      invariants: [], graphqlSchema: "",
+      jsonSchemas: { invocations: {}, completions: {} },
+      capabilities: [], purpose: "Manage users."
+    }) -> ok(files: f)
+  }
+
+  example "generate with unmappable types fails": {
+    after generate(spec: "s1", manifest: { name: "" }) -> error(message: m)
+  }
+
+  action generate {
+    requires: manifest.name != ""
+    ensures ok: files != []
+  }
 }

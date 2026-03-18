@@ -51,4 +51,20 @@ concept RegistryScaffoldGen [R] {
       }
     }
   }
+
+  example "generate produces registry boot code": {
+    after generate(deployManifest: "deploy.yaml", outputPath: "./generated/", language: "typescript")
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "registries reference a deploy manifest": {
+    forall r in registries:
+    deployManifest(r) != ""
+  }
+
+  action generate {
+    requires: deployManifest != "" and language != ""
+    ensures ok: filesGenerated > 0
+  }
 }

@@ -105,9 +105,35 @@ concept DeployPlan [D] {
     }
   }
 
-  invariant {
+  example "plan then validate then execute succeeds": {
     after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
     then validate(plan: p) -> ok(plan: p, warnings: w)
     and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+  }
+
+  example "rollback after failed execution": {
+    after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
+    and execute(plan: p) -> partial(plan: p, deployed: d, failed: f)
+    then rollback(plan: p) -> ok(plan: p, rolledBack: rb)
+  }
+
+  always "plans have an environment": {
+    forall d in plans:
+    environment(d) != ""
+  }
+
+  never "execute without prior validation": {
+    forall d in plans:
+    currentPhase(d) == "executing" and currentPhase(d) was never "validated"
+  }
+
+  action plan {
+    requires: manifest != "" and environment != ""
+    ensures ok: graph != ""
+  }
+
+  action execute {
+    requires: plan in plans
+    ensures ok: nodesDeployed > 0
   }
 }

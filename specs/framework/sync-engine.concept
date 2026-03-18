@@ -70,7 +70,7 @@ concept SyncEngine [F] {
     }
   }
 
-  invariant {
+  example "register sync then completion produces invocations": {
     after registerSync(sync: {
       name: "TestSync", annotations: ["eager"],
       when: [{ concept: "urn:clef/Test", action: "act", inputFields: [], outputFields: [] }],
@@ -82,5 +82,32 @@ concept SyncEngine [F] {
       input: {}, variant: "ok", output: {}, flow: "f1",
       timestamp: "2024-01-01T00:00:00Z"
     }) -> ok(invocations: inv)
+  }
+
+  example "queue eventual sync then drain on availability": {
+    after queueSync(sync: { name: "EventualSync", annotations: ["eventual"] },
+                    bindings: {}, flow: "f2") -> ok(pendingId: pid)
+    then onAvailabilityChange(conceptUri: "urn:clef/Other", available: true)
+      -> ok(drained: inv)
+  }
+
+  always "registered syncs are indexed": {
+    forall s in syncs:
+    s != none
+  }
+
+  never "pending queue entry without a flow": {
+    forall entry in pendingQueue:
+    entry.flow == ""
+  }
+
+  action registerSync {
+    requires: sync != none
+    ensures ok: sync in syncs
+  }
+
+  action onCompletion {
+    requires: completion != none
+    ensures ok: invocations != none
   }
 }

@@ -61,8 +61,33 @@ concept VercelRuntime [V] {
     }
   }
 
-  invariant {
+  example "provision then deploy": {
     after provision(concept: "User", teamId: "team-1", framework: "nextjs") -> ok(project: p, projectId: pid, endpoint: ep)
     then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+  }
+
+  example "deploy then rollback": {
+    after deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+    then rollback(project: p, targetDeploymentId: did) -> ok(project: p, restoredDeploymentId: rid)
+  }
+
+  always "provisioned projects have a project ID": {
+    forall v in projects:
+    projectId(v) != ""
+  }
+
+  never "project destroyed while traffic is weighted": {
+    forall v in projects:
+    currentDeploymentId(v) != none and v is destroyed
+  }
+
+  action provision {
+    requires: concept != "" and teamId != ""
+    ensures ok: projectId != "" and endpoint != ""
+  }
+
+  action deploy {
+    requires: project in projects
+    ensures ok: deploymentUrl != ""
   }
 }

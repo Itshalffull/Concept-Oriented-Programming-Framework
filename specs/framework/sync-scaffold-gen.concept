@@ -55,4 +55,22 @@ concept SyncScaffoldGen [S] {
       }
     }
   }
+
+  example "generate produces sync file": {
+    after generate(name: "OnUserCreate", trigger: { concept: "User", action: "create" },
+                   conditions: [], effects: [{ concept: "Notification", action: "send" }],
+                   thenBlocks: [])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  always "generated syncs have names": {
+    forall s in specs:
+    name(s) != ""
+  }
+
+  action generate {
+    requires: name != ""
+    ensures ok: filesGenerated > 0
+  }
 }

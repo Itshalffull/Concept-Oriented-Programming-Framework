@@ -39,7 +39,7 @@ concept SchemaGen [S] {
     }
   }
 
-  invariant {
+  example "generate valid AST then invalid fails": {
     after generate(spec: "s1", ast: {
       name: "Ping", typeParams: ["T"], purpose: "A test.",
       state: [], actions: [{
@@ -48,5 +48,15 @@ concept SchemaGen [S] {
       }], invariants: [], capabilities: []
     }) -> ok(manifest: m)
     then generate(spec: "s2", ast: { name: "" }) -> error(message: e)
+  }
+
+  always "manifests are fully resolved": {
+    forall s in manifests:
+    manifests(s) != none
+  }
+
+  action generate {
+    requires: ast.name != ""
+    ensures ok: manifest != none
   }
 }

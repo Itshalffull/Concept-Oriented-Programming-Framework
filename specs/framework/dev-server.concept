@@ -58,9 +58,30 @@ concept DevServer [D] {
     }
   }
 
-  invariant {
+  example "start then stop lifecycle": {
     after start(port: 3000, watchDirs: ["./specs", "./syncs"])
       -> ok(session: d, port: 3000, url: "http://localhost:3000")
     then stop(session: d) -> ok(session: d)
+  }
+
+  example "start then status shows running": {
+    after start(port: 3000, watchDirs: ["./specs", "./syncs"])
+      -> ok(session: d, port: 3000, url: "http://localhost:3000")
+    then status(session: d) -> running(port: 3000, uptime: u, lastRecompile: lr)
+  }
+
+  always "running sessions have a port": {
+    forall d in sessions:
+    status(d) == "running" implies port(d) > 0
+  }
+
+  never "session running on port zero": {
+    forall d in sessions:
+    status(d) == "running" and port(d) == 0
+  }
+
+  action start {
+    requires: port > 0
+    ensures ok: session in sessions
   }
 }

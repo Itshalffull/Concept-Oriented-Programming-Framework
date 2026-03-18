@@ -26,8 +26,18 @@ concept ScoreQuery [Q] {
     }
   }
 
-  invariant {
+  example "valid query then invalid query": {
     after query(graphql: "{ concepts { name } }") -> ok(id: q, data: d)
     then query(graphql: "invalid {{{}}}") -> error(message: m)
+  }
+
+  always "stored queries have timestamps": {
+    forall q in queries:
+    timestamp(q) != none
+  }
+
+  action query {
+    requires: graphql != ""
+    ensures ok: data != ""
   }
 }

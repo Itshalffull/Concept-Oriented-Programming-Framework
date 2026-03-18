@@ -34,11 +34,26 @@ concept FlowTrace [F] {
     }
   }
 
-  invariant {
+  example "render existing trace then build missing flow": {
     after render(trace: {
       flowId: "f1", status: "ok", durationMs: 100,
       root: { action: "Test/ping", variant: "ok", durationMs: 50, fields: {}, children: [] }
     }, options: {}) -> ok(output: o)
     then build(flowId: "f1") -> error(message: e)
+  }
+
+  example "build produces a flow tree": {
+    after build(flowId: "existing-flow") -> ok(trace: t, tree: tree)
+    then render(trace: t, options: {}) -> ok(output: o)
+  }
+
+  always "traces have a tree": {
+    forall f in traces:
+    tree(f) != none
+  }
+
+  action build {
+    requires: flowId != ""
+    ensures ok: tree != none
   }
 }

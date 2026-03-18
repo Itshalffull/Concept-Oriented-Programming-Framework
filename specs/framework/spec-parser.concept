@@ -23,8 +23,18 @@ concept SpecParser [S] {
     }
   }
 
-  invariant {
+  example "parse valid then parse empty fails": {
     after parse(source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }") -> ok(spec: s, ast: a)
     then parse(source: "") -> error(message: m, line: 0)
+  }
+
+  always "parsed specs have an AST": {
+    forall s in specs:
+    ast(s) != none
+  }
+
+  action parse {
+    requires: source != ""
+    ensures ok: ast != none
   }
 }
