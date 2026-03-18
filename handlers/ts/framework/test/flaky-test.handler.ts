@@ -31,7 +31,7 @@ async function getPolicy(storage: ConceptStorage): Promise<{
   autoQuarantine: boolean;
   retryCount: number;
 }> {
-  const stored = await storage.get(POLICY, 'current');
+  p = get(p, POLICY, 'current', 'stored');
   if (!stored) return { ...DEFAULT_POLICY };
   return {
     flipThreshold: (stored.flipThreshold as number) ?? DEFAULT_POLICY.flipThreshold,
@@ -58,6 +58,7 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.testId as string;
     const language = input.language as string;
     const builder = input.builder as string;
@@ -66,7 +67,7 @@ const _handler: FunctionalConceptHandler = {
     const duration = input.duration as number;
 
     const testKey = `${testId}:${language}:${testType}`;
-    const existing = await storage.get(TESTS, testKey);
+    p = get(p, TESTS, testKey, 'existing');
     const now = new Date().toISOString();
     const policy = await getPolicy(storage);
 
@@ -117,7 +118,7 @@ const _handler: FunctionalConceptHandler = {
 
     const testRef = existing ? (existing.id as string) : `flaky-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    await storage.put(TESTS, testKey, {
+    p = put(p, TESTS, testKey, {
       id: testRef,
       testId,
       language,
@@ -137,7 +138,7 @@ const _handler: FunctionalConceptHandler = {
     if (windowFlipCount >= policy.flipThreshold) {
       if (policy.autoQuarantine && !quarantined) {
         // Auto-quarantine
-        await storage.put(TESTS, testKey, {
+        p = put(p, TESTS, testKey, {
           id: testRef,
           testId,
           language,
@@ -154,37 +155,37 @@ const _handler: FunctionalConceptHandler = {
         });
       }
 
-      return {
-        variant: 'flakyDetected',
+      return complete(p, 'flakyDetected', {
         test: testRef,
         flipCount: windowFlipCount,
         recentResults: results.map(r => r.passed),
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', test: testRef };
+    return complete(p, 'ok', { test: testRef }) as StorageProgram<Result>;
   },
 
   quarantine(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.testId as string;
     const reasonText = input.reason as string;
     const owner = input.owner as string | undefined;
 
     // Find the test record across all languages
-    const allTests = await storage.find(TESTS, { testId });
+    p = find(p, TESTS, { testId }, 'allTests');
     if (allTests.length === 0) {
-      return { variant: 'notFound', testId };
+      return complete(p, 'notFound', { testId }) as StorageProgram<Result>;
     }
 
     const test = allTests[0];
     if (test.quarantined as boolean) {
-      return { variant: 'alreadyQuarantined', test: test.id as string };
+      return complete(p, 'alreadyQuarantined', { test: test.id as string }) as StorageProgram<Result>;
     }
 
     const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
     const now = new Date().toISOString();
 
-    await storage.put(TESTS, testKey, {
+    p = put(p, TESTS, testKey, {
       ...test,
       quarantined: true,
       quarantinedAt: now,
@@ -193,25 +194,26 @@ const _handler: FunctionalConceptHandler = {
       owner: owner || null,
     });
 
-    return { variant: 'ok', test: test.id as string };
+    return complete(p, 'ok', { test: test.id as string }) as StorageProgram<Result>;
   },
 
   release(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.testId as string;
 
-    const allTests = await storage.find(TESTS, { testId });
+    p = find(p, TESTS, { testId }, 'allTests');
     if (allTests.length === 0) {
-      return { variant: 'notQuarantined', test: testId };
+      return complete(p, 'notQuarantined', { test: testId }) as StorageProgram<Result>;
     }
 
     const test = allTests[0];
     if (!(test.quarantined as boolean)) {
-      return { variant: 'notQuarantined', test: test.id as string };
+      return complete(p, 'notQuarantined', { test: test.id as string }) as StorageProgram<Result>;
     }
 
     const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
 
-    await storage.put(TESTS, testKey, {
+    p = put(p, TESTS, testKey, {
       ...test,
       quarantined: false,
       quarantinedAt: null,
@@ -219,34 +221,35 @@ const _handler: FunctionalConceptHandler = {
       reason: null,
     });
 
-    return { variant: 'ok', test: test.id as string };
+    return complete(p, 'ok', { test: test.id as string }) as StorageProgram<Result>;
   },
 
   isQuarantined(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.testId as string;
 
-    const allTests = await storage.find(TESTS, { testId });
+    p = find(p, TESTS, { testId }, 'allTests');
     if (allTests.length === 0) {
-      return { variant: 'unknown', testId };
+      return complete(p, 'unknown', { testId }) as StorageProgram<Result>;
     }
 
     const test = allTests[0];
     if (test.quarantined as boolean) {
-      return {
-        variant: 'yes',
+      return complete(p, 'yes', {
         test: test.id as string,
         reason: test.reason as string,
         owner: test.owner as string | null,
         quarantinedAt: test.quarantinedAt as string,
-      };
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'no', test: test.id as string };
+    return complete(p, 'no', { test: test.id as string }) as StorageProgram<Result>;
   },
 
   report(input: Record<string, unknown>) {
+    let p = createProgram();
     const testTypeFilter = input.testType as string | undefined;
-    const allTests = await storage.find(TESTS);
+    p = find(p, TESTS, 'allTests');
     const policy = await getPolicy(storage);
 
     let totalTracked = 0;
@@ -299,8 +302,7 @@ const _handler: FunctionalConceptHandler = {
     // Sort topFlaky by flipCount descending
     topFlaky.sort((a, b) => b.flipCount - a.flipCount);
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       summary: {
         totalTracked,
         currentlyFlaky,
@@ -308,10 +310,11 @@ const _handler: FunctionalConceptHandler = {
         stabilized,
         topFlaky: topFlaky.slice(0, 10),
       },
-    };
+    }) as StorageProgram<Result>;
   },
 
   setPolicy(input: Record<string, unknown>) {
+    let p = createProgram();
     const existing = await getPolicy(storage);
 
     const newPolicy = {
@@ -321,9 +324,9 @@ const _handler: FunctionalConceptHandler = {
       retryCount: (input.retryCount as number) ?? existing.retryCount,
     };
 
-    await storage.put(POLICY, 'current', newPolicy);
+    p = put(p, POLICY, 'current', newPolicy);
 
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 };
 
