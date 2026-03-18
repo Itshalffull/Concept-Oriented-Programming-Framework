@@ -6,7 +6,11 @@
 // for the "react" target.  The RenderInterpreter dispatcher discovers
 // this provider at runtime without importing it.
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 import { interpretReact } from '../interpreter-targets/react.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
 
@@ -15,45 +19,28 @@ const PROVIDER_REF = 'render-interpreter-provider:react';
 let idCounter = 0;
 function nextId(): string { return `ri-react-${++idCounter}`; }
 
-export const renderInterpreterReactHandler: ConceptHandler = {
-  /**
-   * Self-register in plugin-registry so the RenderInterpreter
-   * dispatcher can discover this provider for target "react".
-   */
-  async initialize(_input: Record<string, unknown>, storage: ConceptStorage) {
-    // Idempotent — skip if already registered
-    const existing = await storage.find('plugin-registry', {
-      pluginKind: 'render-interpreter-provider',
-      target: 'react',
-    });
-    if (existing.length > 0) {
-      return { variant: 'ok', provider: PROVIDER_REF };
-    }
-
-    const id = nextId();
-
-    await storage.put('render-interpreter-react', id, {
-      id,
-      providerRef: PROVIDER_REF,
-      target: 'react',
-    });
-
-    await storage.put('plugin-registry', PROVIDER_REF, {
-      pluginKind: 'render-interpreter-provider',
-      target: 'react',
-      providerRef: PROVIDER_REF,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', provider: PROVIDER_REF };
+export const renderInterpreterReactHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react' }, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { provider: PROVIDER_REF }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'render-interpreter-react', id, {
+          id, providerRef: PROVIDER_REF, target: 'react',
+        });
+        b2 = put(b2, 'plugin-registry', PROVIDER_REF, {
+          pluginKind: 'render-interpreter-provider',
+          target: 'react', providerRef: PROVIDER_REF, instanceId: id,
+        });
+        return complete(b2, 'ok', { provider: PROVIDER_REF });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  /**
-   * Interpret a RenderProgram instruction sequence into a
-   * TypeScript/React functional component.
-   */
-  async interpret(input: Record<string, unknown>, storage: ConceptStorage) {
-    const executionId = input.executionId as string | undefined;
+  interpret(input: Record<string, unknown>) {
     const componentName = (input.componentName as string) || 'Widget';
     const dryRun = input.dryRun === true;
 
@@ -66,45 +53,30 @@ export const renderInterpreterReactHandler: ConceptHandler = {
             : JSON.parse(input.instructions as string)
         ) as RenderInstruction[];
       } else if (input.program) {
-        // Program may be a JSON-serialised instruction array
-        const raw = input.program as string;
-        instructions = JSON.parse(raw) as RenderInstruction[];
+        instructions = JSON.parse(input.program as string) as RenderInstruction[];
       } else {
-        return { variant: 'error', message: 'No instructions or program provided' };
+        let p = createProgram();
+        return complete(p, 'error', { message: 'No instructions or program provided' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     } catch {
-      return { variant: 'error', message: 'Failed to parse instructions' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Failed to parse instructions' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const { output, trace } = interpretReact(instructions, componentName);
 
-    if (dryRun) {
-      return {
-        variant: 'ok',
-        componentName,
-        output,
-        trace: JSON.stringify(trace),
-        dryRun: true,
-      };
+    let p = createProgram();
+    if (!dryRun) {
+      const executionId = input.executionId as string | undefined;
+      if (executionId) {
+        p = put(p, 'executions', executionId, {
+          target: 'react', componentName, output, trace, status: 'completed',
+        });
+      }
     }
-
-    // Persist execution result
-    if (executionId) {
-      await storage.put('executions', executionId, {
-        target: 'react',
-        componentName,
-        output,
-        trace,
-        status: 'completed',
-      });
-    }
-
-    return {
-      variant: 'ok',
-      componentName,
-      output,
-      trace: JSON.stringify(trace),
-    };
+    return complete(p, 'ok', {
+      componentName, output, trace: JSON.stringify(trace), ...(dryRun ? { dryRun: true } : {}),
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

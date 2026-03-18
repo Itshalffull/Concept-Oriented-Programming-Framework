@@ -1,6 +1,10 @@
 // RenderInterpreterSolid — self-registering provider for "solid" target
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
 import { interpretSolid } from '../interpreter-targets/solid.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
 
@@ -9,57 +13,64 @@ const PROVIDER_REF = 'render-interpreter-provider:solid';
 let idCounter = 0;
 function nextId(): string { return `ri-solid-${++idCounter}`; }
 
-export const renderInterpreterSolidHandler: ConceptHandler = {
-  async initialize(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const existing = await storage.find('plugin-registry', {
-      pluginKind: 'render-interpreter-provider',
-      target: 'solid',
-    });
-    if (existing.length > 0) return { variant: 'ok', provider: PROVIDER_REF };
-
-    const id = nextId();
-    await storage.put('render-interpreter-solid', id, { id, providerRef: PROVIDER_REF, target: 'solid' });
-    await storage.put('plugin-registry', PROVIDER_REF, {
-      pluginKind: 'render-interpreter-provider',
-      target: 'solid',
-      providerRef: PROVIDER_REF,
-      instanceId: id,
-    });
-
-    return { variant: 'ok', provider: PROVIDER_REF };
+export const renderInterpreterSolidHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'solid' }, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { provider: PROVIDER_REF }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'render-interpreter-solid', id, {
+          id, providerRef: PROVIDER_REF, target: 'solid',
+        });
+        b2 = put(b2, 'plugin-registry', PROVIDER_REF, {
+          pluginKind: 'render-interpreter-provider',
+          target: 'solid', providerRef: PROVIDER_REF, instanceId: id,
+        });
+        return complete(b2, 'ok', { provider: PROVIDER_REF });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async interpret(input: Record<string, unknown>, storage: ConceptStorage) {
-    const executionId = input.executionId as string | undefined;
+  interpret(input: Record<string, unknown>) {
     const componentName = (input.componentName as string) || 'Widget';
     const dryRun = input.dryRun === true;
 
     let instructions: RenderInstruction[];
     try {
       if (input.instructions) {
-        instructions = (Array.isArray(input.instructions) ? input.instructions : JSON.parse(input.instructions as string)) as RenderInstruction[];
+        instructions = (
+          Array.isArray(input.instructions)
+            ? input.instructions
+            : JSON.parse(input.instructions as string)
+        ) as RenderInstruction[];
       } else if (input.program) {
         instructions = JSON.parse(input.program as string) as RenderInstruction[];
       } else {
-        return { variant: 'error', message: 'No instructions or program provided' };
+        let p = createProgram();
+        return complete(p, 'error', { message: 'No instructions or program provided' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     } catch {
-      return { variant: 'error', message: 'Failed to parse instructions' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Failed to parse instructions' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const { output, trace } = interpretSolid(instructions, componentName);
 
-    if (dryRun) {
-      return { variant: 'ok', componentName, output, trace: JSON.stringify(trace), dryRun: true };
+    let p = createProgram();
+    if (!dryRun) {
+      const executionId = input.executionId as string | undefined;
+      if (executionId) {
+        p = put(p, 'executions', executionId, {
+          target: 'solid', componentName, output, trace, status: 'completed',
+        });
+      }
     }
-
-    if (executionId) {
-      await storage.put('executions', executionId, {
-        target: 'solid', componentName, output, trace, status: 'completed',
-      });
-    }
-
-    return { variant: 'ok', componentName, output, trace: JSON.stringify(trace) };
+    return complete(p, 'ok', {
+      componentName, output, trace: JSON.stringify(trace), ...(dryRun ? { dryRun: true } : {}),
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
