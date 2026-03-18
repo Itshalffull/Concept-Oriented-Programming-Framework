@@ -1,0 +1,18 @@
+# Remote Score connection: auto-connect on runtime selection.
+# When a user selects a runtime from a discovered project,
+# resolve its credentials and establish a ScoreBridge connection
+# to the runtime's Score endpoint.
+
+sync ScoreBridgeOnRuntimeSelect [eager]
+  purpose: "When a runtime is selected via RuntimeDiscovery, resolve credentials and connect ScoreBridge to the runtime's Score endpoint"
+when {
+  RuntimeDiscovery/selectRuntime: [ project: ?project; runtime: ?runtime ]
+    => [ ok: true; endpoint: ?endpoint; protocol: ?protocol ]
+}
+then {
+  ScoreBridge/connect: [
+    endpoint: ?endpoint;
+    protocol: ?protocol;
+    authToken: ""
+  ]
+}

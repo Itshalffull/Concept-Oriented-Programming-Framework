@@ -1,0 +1,131 @@
+@version(1)
+concept ScoreBridge [B] {
+
+  purpose {
+    Proxy Score queries to a remote Clef runtime over a transport
+    connection, enabling an LLM or local tool to query the semantic
+    index of a deployed application without local file access.
+  }
+
+  state {
+    connections: set B
+    endpoint: B -> String
+    protocol: B -> String
+    authToken: B -> option String
+    status: B -> String
+    lastQueryAt: B -> option DateTime
+    errorCount: B -> Int
+  }
+
+  actions {
+    action connect(endpoint: String, protocol: String, authToken: String) {
+      -> ok(bridge: B, endpoint: String, protocol: String) {
+        Establish a connection to the remote Score endpoint by
+        performing a health check over the specified protocol.
+        Stores the connection for subsequent queries.
+      }
+      -> unreachable(endpoint: String, message: String) {
+        The remote endpoint did not respond to the health check
+        or returned a non-success status.
+      }
+      -> auth_failed(endpoint: String, message: String) {
+        The endpoint responded but rejected the provided
+        authentication token.
+      }
+    }
+
+    action query(bridge: B, graphql: String) {
+      -> ok(bridge: B, data: String) {
+        Execute a GraphQL query against the remote Score index
+        and return the JSON response data.
+      }
+      -> notfound(bridge: B) {
+        No active connection exists with this identifier.
+      }
+      -> remote_error(bridge: B, message: String) {
+        The remote Score endpoint returned an error response.
+        The connection remains open for retry.
+      }
+      -> disconnected(bridge: B, message: String) {
+        The connection was lost during the query. The bridge
+        status is updated to reflect the disconnection.
+      }
+    }
+
+    action show(bridge: B, kind: String, name: String) {
+      -> ok(bridge: B, item: String, related: String) {
+        Look up a Score entity by kind and name on the remote
+        index, returning its full details and related items.
+      }
+      -> notfound(bridge: B) {
+        No active connection exists with this identifier.
+      }
+      -> entity_notfound(kind: String, name: String) {
+        The remote index has no entity of the given kind with
+        that name.
+      }
+      -> remote_error(bridge: B, message: String) {
+        The remote Score endpoint returned an error.
+      }
+    }
+
+    action traverse(bridge: B, relation: String, target: String) {
+      -> ok(bridge: B, item: String, related: String) {
+        Follow a relationship edge on the remote Score graph
+        from the last shown entity to the named target.
+      }
+      -> notfound(bridge: B) {
+        No active connection exists with this identifier.
+      }
+      -> edge_notfound(relation: String, target: String) {
+        No relationship of that type leads to the named target
+        from the current position in the remote graph.
+      }
+      -> remote_error(bridge: B, message: String) {
+        The remote Score endpoint returned an error.
+      }
+    }
+
+    action disconnect(bridge: B) {
+      -> ok(bridge: B) {
+        Close the connection to the remote Score endpoint and
+        remove it from the active connection set.
+      }
+      -> notfound(bridge: B) {
+        No active connection exists with this identifier.
+      }
+    }
+
+    action status(bridge: B) {
+      -> ok(bridge: B, endpoint: String, status: String, errorCount: Int, lastQueryAt: String) {
+        Return the current connection status including endpoint,
+        health state, accumulated error count, and timestamp of
+        the last successful query.
+      }
+      -> notfound(bridge: B) {
+        No active connection exists with this identifier.
+      }
+    }
+  }
+
+  invariant {
+    after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
+      -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
+    then status(bridge: b)
+      -> ok(bridge: b, endpoint: "https://app.example.com/score", status: "connected", errorCount: 0, lastQueryAt: lat)
+  }
+
+  invariant {
+    after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
+      -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
+    then query(bridge: b, graphql: "{ concepts { conceptName } }")
+      -> ok(bridge: b, data: d)
+  }
+
+  invariant {
+    after connect(endpoint: "https://app.example.com/score", protocol: "http", authToken: "tok_test")
+      -> ok(bridge: b, endpoint: "https://app.example.com/score", protocol: "http")
+    and  disconnect(bridge: b) -> ok(bridge: b)
+    then status(bridge: b) -> notfound(bridge: b)
+  }
+}

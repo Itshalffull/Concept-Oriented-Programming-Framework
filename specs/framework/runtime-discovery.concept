@@ -1,0 +1,115 @@
+@version(1)
+concept RuntimeDiscovery [D] {
+
+  purpose {
+    Discover Clef deployment manifests within a project directory,
+    extract the runtimes they declare, and resolve transport endpoints
+    and credential references for each runtime. Provider-agnostic:
+    works with any deploy manifest format (Vercel, K8s, Fly, local).
+  }
+
+  state {
+    projects: set D
+    directory: D -> String
+    manifests: D -> list String
+    runtimes: D -> list String
+    manifestContent: D -> String
+    selectedRuntime: D -> option String
+    scannedAt: D -> DateTime
+  }
+
+  actions {
+    action scan(directory: String) {
+      -> ok(project: D, manifests: list String, runtimes: list String) {
+        Walk the directory for deploy manifest files (*.deploy.yaml),
+        parse each to extract declared runtimes, and register the
+        project with its discovered topology.
+      }
+      -> empty(directory: String) {
+        No deploy manifests found in the given directory or its
+        standard deploy/ subdirectories.
+      }
+      -> io_error(directory: String, message: String) {
+        The directory does not exist or is not readable.
+      }
+    }
+
+    action listProjects() {
+      -> ok(projects: Bytes) {
+        Return all previously scanned projects as a JSON array
+        with their directories and runtime counts.
+      }
+    }
+
+    action listRuntimes(project: D) {
+      -> ok(project: D, runtimes: Bytes) {
+        Return the runtimes declared in the project's deploy
+        manifests as a JSON array with name, type, transport
+        protocol, and storage backend for each.
+      }
+      -> notfound(project: D) {
+        No scanned project exists with this identifier.
+      }
+    }
+
+    action resolveEndpoint(project: D, runtime: String) {
+      -> ok(project: D, runtime: String, endpoint: String, protocol: String) {
+        Extract the transport endpoint URL for a specific runtime
+        from the project's deploy manifests, resolving environment
+        variable references where possible.
+      }
+      -> notfound(project: D, runtime: String) {
+        The project or runtime does not exist in the scanned topology.
+      }
+      -> unresolvable(runtime: String, variable: String) {
+        The endpoint contains an environment variable reference
+        that cannot be resolved from the current environment.
+      }
+    }
+
+    action resolveCredentials(project: D, runtime: String) {
+      -> ok(project: D, runtime: String, credentials: Bytes) {
+        Extract and resolve credential references (API tokens,
+        secrets) for a runtime from the infrastructure.secrets
+        section of its deploy manifest. Returns resolved values
+        as a JSON object with key-value pairs.
+      }
+      -> notfound(project: D, runtime: String) {
+        The project or runtime does not exist in the scanned topology.
+      }
+      -> partial(runtime: String, resolved: Bytes, missing: list String) {
+        Some credential references could not be resolved. Returns
+        what was resolved and which variables remain missing.
+      }
+    }
+
+    action selectRuntime(project: D, runtime: String) {
+      -> ok(project: D, runtime: String, endpoint: String, protocol: String) {
+        Mark a runtime as selected for this project and return
+        its resolved endpoint and protocol, ready for connection.
+      }
+      -> notfound(project: D, runtime: String) {
+        The project or runtime does not exist.
+      }
+      -> unresolvable(runtime: String, variable: String) {
+        The runtime's endpoint cannot be resolved.
+      }
+    }
+  }
+
+  invariant {
+    after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
+    then listRuntimes(project: p) -> ok(project: p, runtimes: rdata)
+  }
+
+  invariant {
+    after scan(directory: "/app/clef-base") -> ok(project: p, manifests: m, runtimes: r)
+    then resolveEndpoint(project: p, runtime: "vercel")
+      -> ok(project: p, runtime: "vercel", endpoint: ep, protocol: proto)
+  }
+
+  invariant {
+    after scan(directory: "/nonexistent") -> io_error(directory: "/nonexistent", message: msg)
+    then listProjects() -> ok(projects: ps)
+  }
+}
