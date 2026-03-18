@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SyncSpecSymbolExtractor Handler
 //
@@ -5,7 +6,12 @@
 // concept references, and variable bindings as symbols.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -122,43 +128,44 @@ function extractFromSyncSpec(source: string, file: string): Array<{
   return symbols;
 }
 
-export const syncSpecSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _syncSpecSymbolExtractorHandler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('sync-spec-symbol-extractor', id, {
-        id,
-        extractorRef: 'sync-spec-symbol-extractor',
-        handledExtensions: '.sync',
-        language: 'sync-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'sync-spec-symbol-extractor', id, {
+      id,
+      extractorRef: 'sync-spec-symbol-extractor',
+      handledExtensions: '.sync',
+      language: 'sync-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromSyncSpec(source, file);
 
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(_input: Record<string, unknown>) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.sync']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const syncSpecSymbolExtractorHandler = autoInterpret(_syncSpecSymbolExtractorHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSyncSpecSymbolExtractorCounter(): void {

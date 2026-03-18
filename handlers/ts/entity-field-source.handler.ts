@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EntityFieldSource Handler
 //
@@ -6,7 +7,12 @@
 // See Architecture doc Section 16.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,26 +21,47 @@ function nextId(): string {
 
 let registered = false;
 
-export const entityFieldSourceHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+/**
+ * Traverse a dot-notation field path on an object.
+ * Returns undefined if any segment is missing.
+ */
+function traverseFieldPath(obj: unknown, fieldPath: string): unknown {
+  const pathParts = fieldPath.split('.');
+  let current: unknown = obj;
+  for (const part of pathParts) {
+    if (current == null || typeof current !== 'object') {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+const _entityFieldSourceHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      return complete(createProgram(), 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('entity-field-source', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'entity-field-source', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'entity_field' };
+    return complete(p, 'ok', { provider_name: 'entity_field' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const entityType = input.entity_type as string;
     const fieldPath = input.field_path as string;
     const entityId = input.entity_id as string;
     const context = input.context as string;
 
     if (!entityType || !fieldPath || !entityId) {
-      return { variant: 'error', message: 'entity_type, field_path, and entity_id are required' };
+      return complete(createProgram(), 'error', {
+        message: 'entity_type, field_path, and entity_id are required',
+      }) as StorageProgram<Result>;
     }
 
     // Parse context
@@ -42,44 +69,55 @@ export const entityFieldSourceHandler: ConceptHandler = {
     try {
       parsedContext = JSON.parse(context || '{}');
     } catch {
-      return { variant: 'error', message: `Invalid context JSON: ${context}` };
+      return complete(createProgram(), 'error', {
+        message: `Invalid context JSON: ${context}`,
+      }) as StorageProgram<Result>;
     }
 
-    // Look up the entity
-    const entity = await storage.get(entityType, entityId);
-    if (!entity) {
-      return { variant: 'not_found', entity_type: entityType, entity_id: entityId };
-    }
+    let p = createProgram();
+    p = get(p, entityType, entityId, 'entity');
 
-    // Traverse the field path (supports dot-notation)
-    const pathParts = fieldPath.split('.');
-    let current: unknown = entity;
-    for (const part of pathParts) {
-      if (current == null || typeof current !== 'object') {
-        return { variant: 'field_missing', entity_type: entityType, field_path: fieldPath };
-      }
-      current = (current as Record<string, unknown>)[part];
-    }
+    p = branch(p, 'entity',
+      (b) => {
+        // Entity found — traverse field path
+        let b2 = mapBindings(b, (bindings) => {
+          const entity = bindings.entity as Record<string, unknown>;
+          const value = traverseFieldPath(entity, fieldPath);
+          if (value === undefined) return undefined;
+          return typeof value === 'string' ? value : JSON.stringify(value);
+        }, 'resolvedData');
 
-    if (current === undefined) {
-      return { variant: 'field_missing', entity_type: entityType, field_path: fieldPath };
-    }
+        b2 = branch(b2, 'resolvedData',
+          (inner) => {
+            const id = nextId();
+            let inner2 = put(inner, 'entity-field-source', id, {
+              id,
+              entity_type: entityType,
+              field_path: fieldPath,
+              entity_id: entityId,
+              resolved_data: '', // placeholder — actual value set via completeFrom
+              context: parsedContext,
+              createdAt: new Date().toISOString(),
+            });
+            return completeFrom(inner2, 'ok', (bindings) => ({
+              data: bindings.resolvedData as string,
+            }));
+          },
+          (inner) => complete(inner, 'field_missing', {
+            entity_type: entityType,
+            field_path: fieldPath,
+          }),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'not_found', { entity_type: entityType, entity_id: entityId }),
+    );
 
-    const data = typeof current === 'string' ? current : JSON.stringify(current);
-    const id = nextId();
-    await storage.put('entity-field-source', id, {
-      id,
-      entity_type: entityType,
-      field_path: fieldPath,
-      entity_id: entityId,
-      resolved_data: data,
-      context: parsedContext,
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', data };
+    return p as StorageProgram<Result>;
   },
 };
+
+export const entityFieldSourceHandler = autoInterpret(_entityFieldSourceHandler);
 
 /** Reset internal state. Useful for testing. */
 export function resetEntityFieldSource(): void {

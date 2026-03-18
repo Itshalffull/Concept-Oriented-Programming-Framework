@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CssTokenSymbolExtractor Handler
 //
@@ -7,7 +8,12 @@
 // theme specs through CSS custom properties.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -123,43 +129,43 @@ function extractFromCss(source: string, file: string): Array<{
   return symbols;
 }
 
-export const cssTokenSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _cssTokenSymbolExtractorHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('css-token-symbol-extractor', id, {
-        id,
-        extractorRef: 'css-token-symbol-extractor',
-        handledExtensions: '.css',
-        language: 'css',
-      });
-
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    let p = createProgram();
+    p = put(p, 'css-token-symbol-extractor', id, {
+      id,
+      extractorRef: 'css-token-symbol-extractor',
+      handledExtensions: '.css',
+      language: 'css',
+    });
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromCss(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.css']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const cssTokenSymbolExtractorHandler = autoInterpret(_cssTokenSymbolExtractorHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCssTokenSymbolExtractorCounter(): void {
