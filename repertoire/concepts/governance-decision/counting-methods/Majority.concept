@@ -39,9 +39,38 @@ concept Majority [MJ] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> configured(config: mj)
-    then count(config: mj, ballots: _, weights: _) -> winner(choice: _, voteShare: _, totalWeight: _)
-    // When one of two choices has > 50% of weight
+
+        then count(config: mj, ballots: _, weights: _) -> winner(choice: _, voteShare: _, totalWeight: _)
+
+        // When one of two choices has > 50% of weight
+
+  }
+
+
+  always "valid-binaryOnly" {
+
+    forall mj in configurations:
+
+      mj.binaryOnly != none
+
+  }
+
+  never "orphaned-threshold" {
+
+    exists mj in configurations:
+
+      mj.threshold = none
+
+  }
+
+  action configure {
+
+    requires: threshold != ""
+
+    ensures configured: threshold != none
+
   }
 }

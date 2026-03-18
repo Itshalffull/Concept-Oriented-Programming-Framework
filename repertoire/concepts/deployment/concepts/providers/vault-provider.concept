@@ -58,8 +58,36 @@ concept VaultProvider [V] {
     }
   }
 
-  invariant {
+  example "fetch-then-renewLease": {
+
     after fetch(path: "secret/data/db-password") -> ok(value: v, leaseId: lid, leaseDuration: 3600)
-    then renewLease(leaseId: lid) -> ok(leaseId: lid, newDuration: 3600)
+
+        then renewLease(leaseId: lid) -> ok(leaseId: lid, newDuration: 3600)
+
+  }
+
+
+  always "valid-address" {
+
+    forall v in connections:
+
+      v.address != none
+
+  }
+
+  never "orphaned-authMethod" {
+
+    exists v in connections:
+
+      v.authMethod = none
+
+  }
+
+  action fetch {
+
+    requires: path != ""
+
+    ensures ok: path != none
+
   }
 }

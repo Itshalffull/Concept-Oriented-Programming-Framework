@@ -74,9 +74,38 @@ concept Connector [C] {
     }
   }
 
-  invariant {
+  example "configure-then-read": {
+
     after configure(sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}") -> ok(connectorId: "conn-1")
-    then test(connectorId: "conn-1") -> ok(message: "connected")
-    and  read(connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}") -> ok(data: "[{\"id\":1}]")
+
+        then test(connectorId: "conn-1") -> ok(message: "connected")
+
+        and  read(connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}") -> ok(data: "[{\"id\":1}]")
+
+  }
+
+
+  always "valid-sourceId" {
+
+    forall c in connectors:
+
+      c.sourceId != none
+
+  }
+
+  never "orphaned-protocolId" {
+
+    exists c in connectors:
+
+      c.protocolId = none
+
+  }
+
+  action configure {
+
+    requires: sourceId != ""
+
+    ensures ok: sourceId != none
+
   }
 }

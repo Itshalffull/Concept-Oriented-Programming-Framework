@@ -54,8 +54,28 @@ concept CedarEvaluator [CE] {
     }
   }
 
-  invariant {
+  example "loadPolicies-then-authorize": {
+
     after loadPolicies(policies: _, schema: _) -> loaded(store: ce)
-    then authorize(store: ce, principal: _, action: _, resource: _, context: _) -> allow(store: ce)
+
+        then authorize(store: ce, principal: _, action: _, resource: _, context: _) -> allow(store: ce)
+
+  }
+
+
+  always "valid-policyId" {
+
+    forall ce in policyStores:
+
+      ce.policyId != none
+
+  }
+
+  action loadPolicies {
+
+    requires: policies != ""
+
+    ensures loaded: policies != none
+
   }
 }

@@ -40,9 +40,38 @@ concept Supermajority [SM] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(threshold: 0.6667, roundingMode: "Ceil", abstentionsCount: false) -> configured(config: sm)
-    then count(config: sm, ballots: _, weights: _) -> winner(choice: _, voteShare: _, requiredShare: 0.6667)
-    // When one choice has >= 66.67% of cast votes
+
+        then count(config: sm, ballots: _, weights: _) -> winner(choice: _, voteShare: _, requiredShare: 0.6667)
+
+        // When one choice has >= 66.67% of cast votes
+
+  }
+
+
+  always "valid-threshold" {
+
+    forall sm in configurations:
+
+      sm.threshold != none
+
+  }
+
+  never "orphaned-threshold" {
+
+    exists sm in configurations:
+
+      sm.threshold = none
+
+  }
+
+  action configure {
+
+    requires: threshold != ""
+
+    ensures configured: threshold != none
+
   }
 }

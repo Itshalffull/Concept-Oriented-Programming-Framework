@@ -53,8 +53,36 @@ concept ProofOfPersonhood [PP] {
     }
   }
 
-  invariant {
+  example "verify-then-checkStatus": {
+
     after verify(participant: p, method: _, proofHash: _, verifier: _, expiryDays: _) -> verified(verification: _)
-    then checkStatus(participant: p) -> valid(expiresAt: _)
+
+        then checkStatus(participant: p) -> valid(expiresAt: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall pp in verifications:
+
+      pp.participant != none
+
+  }
+
+  never "orphaned-participant" {
+
+    exists pp in verifications:
+
+      pp.participant = none
+
+  }
+
+  action verify {
+
+    requires: participant != ""
+
+    ensures verified: participant != none
+
   }
 }

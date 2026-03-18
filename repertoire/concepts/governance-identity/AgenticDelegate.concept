@@ -78,9 +78,38 @@ concept AgenticDelegate [D] {
     }
   }
 
-  invariant {
+  example "register-then-proposeAction": {
+
     after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> registered(delegate: d)
-    then assumeRole(delegate: d, roleId: r) -> role_assumed(delegate: d, roleId: r)
-    and  proposeAction(delegate: d, action: a, justification: _) -> proposed(delegate: d, action: a)
+
+        then assumeRole(delegate: d, roleId: r) -> role_assumed(delegate: d, roleId: r)
+
+        and  proposeAction(delegate: d, action: a, justification: _) -> proposed(delegate: d, action: a)
+
+  }
+
+
+  always "valid-agentType" {
+
+    forall d in delegates:
+
+      d.agentType != none
+
+  }
+
+  never "orphaned-systemPrompt" {
+
+    exists d in delegates:
+
+      d.systemPrompt = none
+
+  }
+
+  action register {
+
+    requires: agentType != ""
+
+    ensures registered: agentType != none
+
   }
 }

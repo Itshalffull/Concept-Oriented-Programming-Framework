@@ -35,8 +35,36 @@ concept ApprovalCounting [AC] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(maxApprovals: _, winnerCount: 1) -> configured(config: ac)
-    then count(config: ac, approvalSets: _, weights: _) -> winners(rankedResults: _, topChoice: _, approvalCount: _)
+
+        then count(config: ac, approvalSets: _, weights: _) -> winners(rankedResults: _, topChoice: _, approvalCount: _)
+
+  }
+
+
+  always "valid-maxApprovals" {
+
+    forall ac in configurations:
+
+      ac.maxApprovals != none
+
+  }
+
+  never "orphaned-winnerCount" {
+
+    exists ac in configurations:
+
+      ac.winnerCount = none
+
+  }
+
+  action configure {
+
+    requires: maxApprovals != ""
+
+    ensures configured: maxApprovals != none
+
   }
 }

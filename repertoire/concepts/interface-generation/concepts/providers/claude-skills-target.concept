@@ -80,8 +80,36 @@ concept ClaudeSkillsTarget [K] {
     }
   }
 
-  invariant {
+  example "generate-then-listSkills": {
+
     after generate(projection: "spec-parser-projection", config: "{\"progressive\":true}") -> ok(skills: s, files: f)
-    then listSkills(suite: "test-suite") -> ok(skills: all, enriched: e, flat: fl)
+
+        then listSkills(suite: "test-suite") -> ok(skills: all, enriched: e, flat: fl)
+
+  }
+
+
+  always "valid-name" {
+
+    forall k in skills:
+
+      k.name != none
+
+  }
+
+  never "orphaned-progressive" {
+
+    exists k in skills:
+
+      k.progressive = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

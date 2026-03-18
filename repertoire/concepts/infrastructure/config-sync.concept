@@ -51,14 +51,46 @@ concept ConfigSync [C] {
     }
   }
 
-  invariant {
+  example "export-then-export": {
+
     after export(config: c) -> ok(data: d)
-    then import(config: c, data: d) -> ok()
-    and export(config: c) -> ok(data: d)
+
+        then import(config: c, data: d) -> ok()
+
+        and export(config: c) -> ok(data: d)
+
   }
 
-  invariant {
+  example "override-then-export": {
+
     after override(config: c, layer: "production", values: "debug=false") -> ok()
-    then export(config: c) -> ok(data: d)
+
+        then export(config: c) -> ok(data: d)
+
+  }
+
+
+  always "valid-syncDirectory" {
+
+    forall c in activeConfig:
+
+      c.syncDirectory != none
+
+  }
+
+  never "orphaned-overrideLayers" {
+
+    exists c in activeConfig:
+
+      c.overrideLayers = none
+
+  }
+
+  action export {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

@@ -87,12 +87,36 @@ concept SwiftBuilder [S] {
     }
   }
 
-  invariant {
+  example "build-then-test": {
+
     after build(source: "./generated/swift/password", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: { mode: "release" })
-      -> ok(build: s, artifactPath: ".clef-artifacts/swift/password", artifactHash: "sha256:abc")
-    then test(build: s, toolchainPath: "/usr/bin/swiftc",
-              invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift", env: null },
-              testType: "unit")
-      -> ok(passed: 12, failed: 0, skipped: 0, duration: 1500, testType: "unit")
+
+          -> ok(build: s, artifactPath: ".clef-artifacts/swift/password", artifactHash: "sha256:abc")
+
+        then test(build: s, toolchainPath: "/usr/bin/swiftc",
+
+                  invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift", env: null },
+
+                  testType: "unit")
+
+          -> ok(passed: 12, failed: 0, skipped: 0, duration: 1500, testType: "unit")
+
+  }
+
+
+  always "valid-packagePath" {
+
+    forall s in builds:
+
+      s.packagePath != none
+
+  }
+
+  never "orphaned-buildDir" {
+
+    exists s in builds:
+
+      s.buildDir = none
+
   }
 }

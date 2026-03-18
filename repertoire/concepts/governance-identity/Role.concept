@@ -72,9 +72,38 @@ concept Role [R] {
     }
   }
 
-  invariant {
+  example "create-then-check": {
+
     after create(role: r, name: _, purpose: _, permissions: _) -> created(role: r)
-    then assign(role: r, holder: h) -> assigned(role: r, holder: h)
-    and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+
+        then assign(role: r, holder: h) -> assigned(role: r, holder: h)
+
+        and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+
+  }
+
+
+  always "valid-name" {
+
+    forall r in roles:
+
+      r.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists r in roles:
+
+      r.purpose = none
+
+  }
+
+  action create {
+
+    requires: role != ""
+
+    ensures created: role != none
+
   }
 }

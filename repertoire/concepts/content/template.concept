@@ -51,8 +51,36 @@ concept Template [T] {
     }
   }
 
-  invariant {
+  example "define-then-instantiate": {
+
     after define(template: t, body: "Hello {{name}}", variables: "name") -> ok()
-    then instantiate(template: t, values: "name=World") -> ok(content: "Hello World")
+
+        then instantiate(template: t, values: "name=World") -> ok(content: "Hello World")
+
+  }
+
+
+  always "valid-variables" {
+
+    forall t in templates:
+
+      t.variables != none
+
+  }
+
+  never "orphaned-triggers" {
+
+    exists t in templates:
+
+      t.triggers = none
+
+  }
+
+  action define {
+
+    requires: template != ""
+
+    ensures ok: template != none
+
   }
 }

@@ -66,8 +66,36 @@ concept PulumiProvider [P] {
     }
   }
 
-  invariant {
+  example "generate-then-apply": {
+
     after generate(plan: "dp-001") -> ok(stack: p, files: f)
-    then apply(stack: p) -> ok(stack: p, created: c, updated: u)
+
+        then apply(stack: p) -> ok(stack: p, created: c, updated: u)
+
+  }
+
+
+  always "valid-backend" {
+
+    forall p in stacks:
+
+      p.backend != none
+
+  }
+
+  never "orphaned-stackName" {
+
+    exists p in stacks:
+
+      p.stackName = none
+
+  }
+
+  action generate {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

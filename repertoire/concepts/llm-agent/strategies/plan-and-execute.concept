@@ -60,4 +60,13 @@ concept PlanAndExecuteStrategy [S] {
       }
     }
   }
+
+  always "valid-result" {
+    forall s in sessions:
+      s.result != none
+  }
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
+  }
 }

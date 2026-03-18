@@ -39,10 +39,40 @@ concept DiagramExport [X] {
     }
   }
 
-  invariant {
+  example "export-then-importDiagram": {
+
     after export(canvas_id: c, format: "json", options: { embed_data: true })
-           -> ok(export: x, data: d, mime_type: _)
-    then  importDiagram(data: d, format: "json", target_canvas: _)
-           -> ok(canvas_id: _, items_created: _, connectors_created: _)
+
+               -> ok(export: x, data: d, mime_type: _)
+
+        then  importDiagram(data: d, format: "json", target_canvas: _)
+
+               -> ok(canvas_id: _, items_created: _, connectors_created: _)
+
+  }
+
+
+  always "valid-format" {
+
+    forall x in exports:
+
+      x.format != none
+
+  }
+
+  never "orphaned-canvas_id" {
+
+    exists x in exports:
+
+      x.canvas_id = none
+
+  }
+
+  action export {
+
+    requires: canvas_id != ""
+
+    ensures ok: canvas_id != none
+
   }
 }

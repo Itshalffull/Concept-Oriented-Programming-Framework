@@ -63,10 +63,40 @@ concept SocialGraphVerification [SG] {
     }
   }
 
-  invariant {
+  example "configure-then-analyze": {
+
     after configure(minVouches: 3, trustAnchors: _, clusterThreshold: _) -> configured(config: _)
-    then vouch(voucher: _, vouchee: p) -> vouched(vouch: _)
-    // After 3+ vouches from well-connected members:
-    and  analyze(participant: p) -> trusted(participant: p, connectivityScore: _, vouchCount: _)
+
+        then vouch(voucher: _, vouchee: p) -> vouched(vouch: _)
+
+        // After 3+ vouches from well-connected members:
+
+        and  analyze(participant: p) -> trusted(participant: p, connectivityScore: _, vouchCount: _)
+
+  }
+
+
+  always "valid-voucher" {
+
+    forall sg in vouches:
+
+      sg.voucher != none
+
+  }
+
+  never "orphaned-vouchee" {
+
+    exists sg in vouches:
+
+      sg.vouchee = none
+
+  }
+
+  action configure {
+
+    requires: minVouches != ""
+
+    ensures configured: minVouches != none
+
   }
 }

@@ -73,10 +73,40 @@ concept Proposal [P] {
     }
   }
 
-  invariant {
+  example "create-then-advance": {
+
     after create(proposer: _, title: _, description: _, actions: _) -> created(proposal: p)
-    then sponsor(proposal: p, sponsorId: _) -> sponsored(proposal: p)
-    and  activate(proposal: p) -> activated(proposal: p)
-    and  advance(proposal: p, newStatus: "Passed") -> advanced(proposal: p, status: "Passed")
+
+        then sponsor(proposal: p, sponsorId: _) -> sponsored(proposal: p)
+
+        and  activate(proposal: p) -> activated(proposal: p)
+
+        and  advance(proposal: p, newStatus: "Passed") -> advanced(proposal: p, status: "Passed")
+
+  }
+
+
+  always "valid-proposer" {
+
+    forall p in proposals:
+
+      p.proposer != none
+
+  }
+
+  never "orphaned-title" {
+
+    exists p in proposals:
+
+      p.title = none
+
+  }
+
+  action create {
+
+    requires: proposer != ""
+
+    ensures created: proposer != none
+
   }
 }

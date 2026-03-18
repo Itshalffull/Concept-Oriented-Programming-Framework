@@ -27,8 +27,36 @@ concept EnvProvider [E] {
     }
   }
 
-  invariant {
+  example "fetch-then-fetch": {
+
     after fetch(name: "DATABASE_URL") -> ok(value: v)
-    then fetch(name: "DATABASE_URL") -> ok(value: v)
+
+        then fetch(name: "DATABASE_URL") -> ok(value: v)
+
+  }
+
+
+  always "valid-name" {
+
+    forall e in variables:
+
+      e.name != none
+
+  }
+
+  never "orphaned-value" {
+
+    exists e in variables:
+
+      e.value = none
+
+  }
+
+  action fetch {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -46,9 +46,38 @@ concept ConstraintAnchor [A] {
     }
   }
 
-  invariant {
+  example "pin-then-getAnchorsForCanvas": {
+
     after pin(canvas_id: c, item_id: i, x: 100.0, y: 200.0) -> ok(anchor: a)
-    then  getAnchorsForCanvas(canvas_id: c) -> ok(anchors: as)
-    and   as includes a
+
+        then  getAnchorsForCanvas(canvas_id: c) -> ok(anchors: as)
+
+        and   as includes a
+
+  }
+
+
+  always "valid-anchor_type" {
+
+    forall a in anchors:
+
+      a.anchor_type != none
+
+  }
+
+  never "orphaned-canvas_id" {
+
+    exists a in anchors:
+
+      a.canvas_id = none
+
+  }
+
+  action pin {
+
+    requires: canvas_id != ""
+
+    ensures ok: canvas_id != none
+
   }
 }

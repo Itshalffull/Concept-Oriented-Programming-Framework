@@ -102,13 +102,46 @@ concept AgentTeam [M] {
     }
   }
 
-  invariant {
+  example "assemble-then-delegate": {
+
     after assemble(name: "research", members: [{agent_id: "a1",
-                   role_id: "researcher"}, {agent_id: "a2",
-                   role_id: "writer"}],
-                   topology: "pipeline", protocol: "round_robin")
-      -> ok(team: m)
-    then delegate(team: m, task: "Write a report on X")
-      -> ok(assignment: _)
+
+                       role_id: "researcher"}, {agent_id: "a2",
+
+                       role_id: "writer"}],
+
+                       topology: "pipeline", protocol: "round_robin")
+
+          -> ok(team: m)
+
+        then delegate(team: m, task: "Write a report on X")
+
+          -> ok(assignment: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall m in teams:
+
+      m.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists m in teams:
+
+      m.name = none
+
+  }
+
+  action addMember {
+
+    requires: team != ""
+
+    ensures ok: team != none
+
   }
 }

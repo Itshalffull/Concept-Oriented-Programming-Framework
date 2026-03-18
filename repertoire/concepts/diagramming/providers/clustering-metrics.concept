@@ -43,10 +43,15 @@ concept ClusteringMetricsProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "clustering-coefficient", config: {})
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "transitivity", config: {})
-      -> ok(payload: _)
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "transitivity", config: {})
+
+          -> ok(payload: _)
+
   }
 }

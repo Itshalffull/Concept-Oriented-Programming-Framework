@@ -74,8 +74,28 @@ concept Replica [R] {
     }
   }
 
-  invariant {
+  example "localUpdate-then-getState": {
+
     after localUpdate(op: o) -> ok(newState: n)
-    then getState() -> ok(state: s, clock: c)
+
+        then getState() -> ok(state: s, clock: c)
+
+  }
+
+
+  always "valid-replicaId" {
+
+    forall r in peers:
+
+      r.replicaId != none
+
+  }
+
+  action addPeer {
+
+    requires: peerId != ""
+
+    ensures ok: peerId != none
+
   }
 }

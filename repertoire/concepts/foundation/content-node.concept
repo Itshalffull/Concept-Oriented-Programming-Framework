@@ -78,13 +78,44 @@ concept ContentNode [N] {
     }
   }
 
-  invariant {
+  example "create-then-get": {
+
     after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
-    then get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
+
+        then get(node: x) -> ok(node: x, type: "page", content: "Hello", metadata: "")
+
   }
 
-  invariant {
+  example "create-then-create": {
+
     after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
-    then create(node: x, type: "page", content: "Again", createdBy: "user2") -> exists(message: "already exists")
+
+        then create(node: x, type: "page", content: "Again", createdBy: "user2") -> exists(message: "already exists")
+
+  }
+
+
+  always "valid-type" {
+
+    forall n in nodes:
+
+      n.type != none
+
+  }
+
+  never "orphaned-content" {
+
+    exists n in nodes:
+
+      n.content = none
+
+  }
+
+  action create {
+
+    requires: node != ""
+
+    ensures ok: node != none
+
   }
 }

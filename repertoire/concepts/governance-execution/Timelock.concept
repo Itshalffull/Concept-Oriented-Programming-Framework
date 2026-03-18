@@ -53,9 +53,38 @@ concept Timelock [TL] {
     }
   }
 
-  invariant {
+  example "schedule-then-execute": {
+
     after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> queued(lock: tl)
-    // After delay elapses:
-    then execute(lock: tl) -> executed(lock: tl, payload: _)
+
+        // After delay elapses:
+
+        then execute(lock: tl) -> executed(lock: tl, payload: _)
+
+  }
+
+
+  always "valid-operationHash" {
+
+    forall tl in locks:
+
+      tl.operationHash != none
+
+  }
+
+  never "orphaned-payload" {
+
+    exists tl in locks:
+
+      tl.payload = none
+
+  }
+
+  action schedule {
+
+    requires: operationHash != ""
+
+    ensures queued: operationHash != none
+
   }
 }

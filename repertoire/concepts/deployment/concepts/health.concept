@@ -74,8 +74,36 @@ concept Health [H] {
     }
   }
 
-  invariant {
+  example "checkConcept-then-checkSuite": {
+
     after checkConcept(concept: "User", runtime: "server") -> ok(check: h, latencyMs: 15)
-    then checkSuite(suite: "auth", environment: "staging") -> ok(check: h2, conceptResults: cr, syncResults: sr)
+
+        then checkSuite(suite: "auth", environment: "staging") -> ok(check: h2, conceptResults: cr, syncResults: sr)
+
+  }
+
+
+  always "valid-target" {
+
+    forall h in checks:
+
+      h.target != none
+
+  }
+
+  never "orphaned-kind" {
+
+    exists h in checks:
+
+      h.kind = none
+
+  }
+
+  action checkConcept {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

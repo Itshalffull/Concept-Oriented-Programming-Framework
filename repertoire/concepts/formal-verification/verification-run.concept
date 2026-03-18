@@ -81,10 +81,40 @@ concept VerificationRun [V] {
     }
   }
 
-  invariant {
+  example "start-then-complete": {
+
     after start(target_symbol: "clef/concept/Password", properties: ["p1", "p2"], solver: "z3", timeout_ms: 10000)
-      -> ok(run: r)
-    then complete(run: r, results: res, resource_usage: usage)
-      -> ok(run: r, proved: 2, refuted: 0, unknown: 0)
+
+          -> ok(run: r)
+
+        then complete(run: r, results: res, resource_usage: usage)
+
+          -> ok(run: r, proved: 2, refuted: 0, unknown: 0)
+
+  }
+
+
+  always "valid-target_symbol" {
+
+    forall v in runs:
+
+      v.target_symbol != none
+
+  }
+
+  never "orphaned-properties_checked" {
+
+    exists v in runs:
+
+      v.properties_checked = none
+
+  }
+
+  action start {
+
+    requires: target_symbol != ""
+
+    ensures ok: target_symbol != none
+
   }
 }

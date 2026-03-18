@@ -48,8 +48,36 @@ concept GcpSmProvider [G] {
     }
   }
 
-  invariant {
+  example "fetch-then-rotate": {
+
     after fetch(secretId: "db-password", version: "latest") -> ok(value: v, versionId: vid, projectId: pid)
-    then rotate(secretId: "db-password") -> ok(secretId: "db-password", newVersionId: nv)
+
+        then rotate(secretId: "db-password") -> ok(secretId: "db-password", newVersionId: nv)
+
+  }
+
+
+  always "valid-projectId" {
+
+    forall g in secrets:
+
+      g.projectId != none
+
+  }
+
+  never "orphaned-secretId" {
+
+    exists g in secrets:
+
+      g.secretId = none
+
+  }
+
+  action fetch {
+
+    requires: secretId != ""
+
+    ensures ok: secretId != none
+
   }
 }

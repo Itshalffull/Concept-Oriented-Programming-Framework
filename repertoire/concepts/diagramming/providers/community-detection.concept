@@ -48,10 +48,15 @@ concept CommunityDetectionProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "louvain", config: { resolution: "1.0" })
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "modularity", config: {})
-      -> ok(payload: _)
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "modularity", config: {})
+
+          -> ok(payload: _)
+
   }
 }

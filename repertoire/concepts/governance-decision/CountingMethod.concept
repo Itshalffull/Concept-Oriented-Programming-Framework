@@ -51,8 +51,36 @@ concept CountingMethod [C] {
     }
   }
 
-  invariant {
+  example "register-then-aggregate": {
+
     after register(name: _, provider: _, parameters: _) -> registered(method: m)
-    then aggregate(method: m, ballots: _, weights: _) -> winner(method: m, outcome: _, details: _)
+
+        then aggregate(method: m, ballots: _, weights: _) -> winner(method: m, outcome: _, details: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall c in methods:
+
+      c.name != none
+
+  }
+
+  never "orphaned-provider" {
+
+    exists c in methods:
+
+      c.provider = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures registered: name != none
+
   }
 }

@@ -37,8 +37,20 @@ concept ReputationWeight [RW] {
     }
   }
 
-  invariant {
+  example "configure-then-computeWeight": {
+
     after configure(scalingFunction: "Linear", cap: 100.0, floor: 1.0) -> configured(config: rw)
-    then computeWeight(config: rw, reputationScore: 50.0) -> weight(value: 50.0)
+
+        then computeWeight(config: rw, reputationScore: 50.0) -> weight(value: 50.0)
+
+  }
+
+
+  action configure {
+
+    requires: scalingFunction != ""
+
+    ensures configured: scalingFunction != none
+
   }
 }

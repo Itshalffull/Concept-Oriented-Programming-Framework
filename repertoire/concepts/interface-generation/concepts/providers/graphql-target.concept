@@ -76,8 +76,36 @@ concept GraphqlTarget [Q] {
     }
   }
 
-  invariant {
+  example "generate-then-listOperations": {
+
     after generate(projection: "order-projection", config: "{}") -> ok(types: t, files: f)
-    then listOperations(concept: "Order") -> ok(queries: q, mutations: m, subscriptions: s)
+
+        then listOperations(concept: "Order") -> ok(queries: q, mutations: m, subscriptions: s)
+
+  }
+
+
+  always "valid-relay" {
+
+    forall q in types:
+
+      q.relay != none
+
+  }
+
+  never "orphaned-federation" {
+
+    exists q in types:
+
+      q.federation = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

@@ -68,9 +68,38 @@ concept Sanction [SN] {
     }
   }
 
-  invariant {
+  example "impose-then-appeal": {
+
     after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> imposed(sanction: sn)
-    then escalate(sanction: sn) -> escalated(sanction: sn, newSeverity: "Minor")
-    and  appeal(sanction: sn) -> appeal_opened(sanction: sn)
+
+        then escalate(sanction: sn) -> escalated(sanction: sn, newSeverity: "Minor")
+
+        and  appeal(sanction: sn) -> appeal_opened(sanction: sn)
+
+  }
+
+
+  always "valid-subject" {
+
+    forall sn in records:
+
+      sn.subject != none
+
+  }
+
+  never "orphaned-subject" {
+
+    exists sn in records:
+
+      sn.subject = none
+
+  }
+
+  action impose {
+
+    requires: subject != ""
+
+    ensures imposed: subject != none
+
   }
 }

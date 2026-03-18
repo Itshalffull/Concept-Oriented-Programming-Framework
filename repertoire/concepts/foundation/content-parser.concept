@@ -78,9 +78,38 @@ concept ContentParser [C] {
     }
   }
 
-  invariant {
+  example "registerFormat-then-extractTags": {
+
     after registerFormat(name: "markdown", grammar: "{}") -> ok(name: "markdown")
-    and parse(content: c, text: "Hello #tag [[ref]]", format: "markdown") -> ok(ast: a)
-    then extractTags(content: c) -> ok(tags: t)
+
+        and parse(content: c, text: "Hello #tag [[ref]]", format: "markdown") -> ok(ast: a)
+
+        then extractTags(content: c) -> ok(tags: t)
+
+  }
+
+
+  always "valid-astCache" {
+
+    forall c in formats:
+
+      c.astCache != none
+
+  }
+
+  never "orphaned-extractors" {
+
+    exists c in formats:
+
+      c.extractors = none
+
+  }
+
+  action registerFormat {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

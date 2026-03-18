@@ -28,4 +28,13 @@ concept SymbolIndexProvider [I] {
       }
     }
   }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-providerRef" {
+    exists i in instances:
+      i.providerRef = none
+  }
 }

@@ -49,14 +49,46 @@ concept VercelKVProvider [K] {
     }
   }
 
-  invariant {
+  example "provision-then-getCredentials-2": {
+
     after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
-    then getCredentials(storeName: "test-kv") -> ok(storeName: "test-kv", credentials: creds)
+
+        then getCredentials(storeName: "test-kv") -> ok(storeName: "test-kv", credentials: creds)
+
   }
 
-  invariant {
+  example "provision-then-getCredentials": {
+
     after provision(storeName: "test-kv", config: "{}") -> ok(storeName: "test-kv", storeId: sid, credentials: creds)
-    then destroy(storeName: "test-kv") -> ok(storeName: "test-kv")
-    and getCredentials(storeName: "test-kv") -> notfound(storeName: "test-kv")
+
+        then destroy(storeName: "test-kv") -> ok(storeName: "test-kv")
+
+        and getCredentials(storeName: "test-kv") -> notfound(storeName: "test-kv")
+
+  }
+
+
+  always "valid-storeName" {
+
+    forall k in stores:
+
+      k.storeName != none
+
+  }
+
+  never "orphaned-storeId" {
+
+    exists k in stores:
+
+      k.storeId = none
+
+  }
+
+  action provision {
+
+    requires: storeName != ""
+
+    ensures ok: storeName != none
+
   }
 }

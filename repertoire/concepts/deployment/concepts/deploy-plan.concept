@@ -105,9 +105,22 @@ concept DeployPlan [D] {
     }
   }
 
-  invariant {
+  example "plan-then-execute": {
+
     after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
-    then validate(plan: p) -> ok(plan: p, warnings: w)
-    and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+
+        then validate(plan: p) -> ok(plan: p, warnings: w)
+
+        and execute(plan: p) -> ok(plan: p, duration: 120, nodesDeployed: 5)
+
+  }
+
+
+  action plan {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

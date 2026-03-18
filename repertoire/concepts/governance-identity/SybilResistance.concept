@@ -57,9 +57,38 @@ concept SybilResistance [S] {
     }
   }
 
-  invariant {
+  example "verify-then-resolveChallenge": {
+
     after verify(candidate: c, method: _, evidence: _) -> verified(id: s)
-    then challenge(targetId: s, challenger: _, evidence: _) -> challenge_opened(challengeId: ch)
-    and  resolveChallenge(challengeId: ch, outcome: "upheld") -> upheld(challengeId: ch, removedId: s)
+
+        then challenge(targetId: s, challenger: _, evidence: _) -> challenge_opened(challengeId: ch)
+
+        and  resolveChallenge(challengeId: ch, outcome: "upheld") -> upheld(challengeId: ch, removedId: s)
+
+  }
+
+
+  always "valid-method" {
+
+    forall s in verified:
+
+      s.method != none
+
+  }
+
+  never "orphaned-verifiedAt" {
+
+    exists s in verified:
+
+      s.verifiedAt = none
+
+  }
+
+  action verify {
+
+    requires: candidate != ""
+
+    ensures verified: candidate != none
+
   }
 }

@@ -54,9 +54,38 @@ concept Relation [R] {
     }
   }
 
-  invariant {
+  example "defineRelation-then-getRelated": {
+
     after defineRelation(relation: r, schema: "parent-child") -> ok(relation: r)
-    then link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
-    and getRelated(relation: r, entity: "alice") -> ok(related: "bob")
+
+        then link(relation: r, source: "alice", target: "bob") -> ok(relation: r, source: "alice", target: "bob")
+
+        and getRelated(relation: r, entity: "alice") -> ok(related: "bob")
+
+  }
+
+
+  always "valid-definition" {
+
+    forall r in relations:
+
+      r.definition != none
+
+  }
+
+  never "orphaned-links" {
+
+    exists r in relations:
+
+      r.links = none
+
+  }
+
+  action defineRelation {
+
+    requires: relation != ""
+
+    ensures ok: relation != none
+
   }
 }

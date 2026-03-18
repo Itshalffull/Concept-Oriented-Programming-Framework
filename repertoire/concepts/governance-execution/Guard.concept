@@ -56,8 +56,36 @@ concept Guard [GD] {
     }
   }
 
-  invariant {
+  example "register-then-checkPre": {
+
     after register(name: _, checkType: _, condition: _, targetAction: _) -> registered(guard: gd)
-    then checkPre(guard: gd, context: _) -> passed(guard: gd)
+
+        then checkPre(guard: gd, context: _) -> passed(guard: gd)
+
+  }
+
+
+  always "valid-name" {
+
+    forall gd in guards:
+
+      gd.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists gd in guards:
+
+      gd.name = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures registered: name != none
+
   }
 }

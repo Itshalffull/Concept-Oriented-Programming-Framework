@@ -125,11 +125,42 @@ concept Toolchain [T] {
     }
   }
 
-  invariant {
+  example "resolve-then-list": {
+
     after resolve(language: "swift", platform: "linux-arm64", versionConstraint: ">=5.10")
-      -> ok(tool: t, version: "5.10.1", path: "/usr/bin/swiftc", capabilities: ["cross-compile"],
-             invocation: { command: "swiftc", args: ["-O"], outputFormat: "swift-diag", configFile: null, env: null })
-    then validate(tool: t) -> ok(tool: t, version: "5.10.1")
-    and  list(language: "swift") -> ok(tools: ts)
+
+          -> ok(tool: t, version: "5.10.1", path: "/usr/bin/swiftc", capabilities: ["cross-compile"],
+
+                 invocation: { command: "swiftc", args: ["-O"], outputFormat: "swift-diag", configFile: null, env: null })
+
+        then validate(tool: t) -> ok(tool: t, version: "5.10.1")
+
+        and  list(language: "swift") -> ok(tools: ts)
+
+  }
+
+
+  always "valid-language" {
+
+    forall t in tools:
+
+      t.language != none
+
+  }
+
+  never "orphaned-platform" {
+
+    exists t in tools:
+
+      t.platform = none
+
+  }
+
+  action resolve {
+
+    requires: language != ""
+
+    ensures ok: language != none
+
   }
 }

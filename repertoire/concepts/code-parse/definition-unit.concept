@@ -60,8 +60,36 @@ concept DefinitionUnit [D] {
     }
   }
 
-  invariant {
+  example "extract-then-findBySymbol": {
+
     after extract(tree: "t1", startByte: 0, endByte: 100) -> ok(unit: u)
-    then findBySymbol(symbol: "sym-u") -> notfound()
+
+        then findBySymbol(symbol: "sym-u") -> notfound()
+
+  }
+
+
+  always "valid-file" {
+
+    forall d in units:
+
+      d.file != none
+
+  }
+
+  never "orphaned-symbol" {
+
+    exists d in units:
+
+      d.symbol = none
+
+  }
+
+  action extract {
+
+    requires: tree != ""
+
+    ensures ok: tree != none
+
   }
 }

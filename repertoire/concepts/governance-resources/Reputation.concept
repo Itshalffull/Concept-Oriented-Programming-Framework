@@ -67,8 +67,36 @@ concept Reputation [RP] {
     }
   }
 
-  invariant {
+  example "earn-then-getScore": {
+
     after earn(participant: p, amount: 10.0, reason: _) -> earned(entry: _)
-    then getScore(participant: p) -> score(participant: p, value: _)
+
+        then getScore(participant: p) -> score(participant: p, value: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall rp in scores:
+
+      rp.participant != none
+
+  }
+
+  never "orphaned-score" {
+
+    exists rp in scores:
+
+      rp.score = none
+
+  }
+
+  action earn {
+
+    requires: participant != ""
+
+    ensures earned: participant != none
+
   }
 }

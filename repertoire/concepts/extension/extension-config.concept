@@ -87,13 +87,44 @@ concept ExtensionConfig [C] {
     }
   }
 
-  invariant {
+  example "initialize-then-getSchema": {
+
     after initialize(extensionId: _, schema: _, defaults: _) -> ok(config: c)
-    then getSchema(config: c) -> ok(schema: _)
+
+        then getSchema(config: c) -> ok(schema: _)
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(config: c, key: k, value: v) -> ok(config: c)
-    then get(config: c, key: k) -> ok(value: v)
+
+        then get(config: c, key: k) -> ok(value: v)
+
+  }
+
+
+  always "valid-extensionId" {
+
+    forall c in configs:
+
+      c.extensionId != none
+
+  }
+
+  never "orphaned-schema" {
+
+    exists c in configs:
+
+      c.schema = none
+
+  }
+
+  action initialize {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

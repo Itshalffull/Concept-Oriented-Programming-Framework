@@ -57,8 +57,36 @@ concept Polity [G] {
     }
   }
 
-  invariant {
+  example "establish-then-amend": {
+
     after establish(name: _, purpose: _, values: _, scope: _) -> established(polity: g)
-    then amend(polity: g, field: "purpose", newValue: _) -> amended(polity: g, field: "purpose")
+
+        then amend(polity: g, field: "purpose", newValue: _) -> amended(polity: g, field: "purpose")
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in polities:
+
+      g.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists g in polities:
+
+      g.purpose = none
+
+  }
+
+  action establish {
+
+    requires: name != ""
+
+    ensures established: name != none
+
   }
 }

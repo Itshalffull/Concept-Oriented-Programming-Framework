@@ -40,9 +40,38 @@ concept Group [G] {
     }
   }
 
-  invariant {
+  example "createGroup-then-checkGroupAccess": {
+
     after createGroup(group: g, name: n) -> ok()
-    then addMember(group: g, user: u, role: "member") -> ok()
-    and  checkGroupAccess(group: g, user: u, permission: "read") -> ok(granted: true)
+
+        then addMember(group: g, user: u, role: "member") -> ok()
+
+        and  checkGroupAccess(group: g, user: u, permission: "read") -> ok(granted: true)
+
+  }
+
+
+  always "valid-groupRoles" {
+
+    forall g in groups:
+
+      g.groupRoles != none
+
+  }
+
+  never "orphaned-memberships" {
+
+    exists g in groups:
+
+      g.memberships = none
+
+  }
+
+  action createGroup {
+
+    requires: group != ""
+
+    ensures ok: group != none
+
   }
 }

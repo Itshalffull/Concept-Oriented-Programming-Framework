@@ -48,8 +48,36 @@ concept AuditTrail [AT] {
     }
   }
 
-  invariant {
+  example "record-then-verifyIntegrity": {
+
     after record(eventType: _, actor: _, action: _, details: _, sourceRef: _) -> recorded(entry: at)
-    then verifyIntegrity(entry: at) -> valid(entry: at)
+
+        then verifyIntegrity(entry: at) -> valid(entry: at)
+
+  }
+
+
+  always "valid-eventType" {
+
+    forall at in entries:
+
+      at.eventType != none
+
+  }
+
+  never "orphaned-actor" {
+
+    exists at in entries:
+
+      at.actor = none
+
+  }
+
+  action record {
+
+    requires: eventType != ""
+
+    ensures recorded: eventType != none
+
   }
 }

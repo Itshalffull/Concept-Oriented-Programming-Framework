@@ -49,8 +49,36 @@ concept ADICOEvaluator [AE] {
     }
   }
 
-  invariant {
+  example "parse-then-evaluate": {
+
     after parse(ruleText: _) -> parsed(rule: ae)
-    then evaluate(rule: ae, context: _) -> permitted(rule: ae)
+
+        then evaluate(rule: ae, context: _) -> permitted(rule: ae)
+
+  }
+
+
+  always "valid-sourceText" {
+
+    forall ae in parsedRules:
+
+      ae.sourceText != none
+
+  }
+
+  never "orphaned-parsedAttributes" {
+
+    exists ae in parsedRules:
+
+      ae.parsedAttributes = none
+
+  }
+
+  action parse {
+
+    requires: ruleText != ""
+
+    ensures parsed: ruleText != none
+
   }
 }

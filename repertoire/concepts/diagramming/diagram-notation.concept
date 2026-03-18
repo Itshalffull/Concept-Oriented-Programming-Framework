@@ -85,12 +85,44 @@ concept DiagramNotation [N] {
     }
   }
 
-  invariant {
+  example "create-then-getNodePalette": {
+
     after create(name: "Flowchart", description: _) -> ok(notation: n)
-    and   addNodeType(notation: n, type_key: "decision", label: "Decision",
-                      shape: "diamond", default_fill: _, default_stroke: _,
-                      icon: _, schema_id: _) -> ok(notation: n, type_key: _)
-    then  getNodePalette(notation: n) -> ok(types: ts)
-    and   ts includes { type_key: "decision" }
+
+        and   addNodeType(notation: n, type_key: "decision", label: "Decision",
+
+                          shape: "diamond", default_fill: _, default_stroke: _,
+
+                          icon: _, schema_id: _) -> ok(notation: n, type_key: _)
+
+        then  getNodePalette(notation: n) -> ok(types: ts)
+
+        and   ts includes { type_key: "decision" }
+
+  }
+
+
+  always "valid-name" {
+
+    forall n in notations:
+
+      n.name != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists n in notations:
+
+      n.description = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

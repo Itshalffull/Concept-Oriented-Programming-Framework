@@ -68,8 +68,36 @@ concept Artifact [A] {
     }
   }
 
-  invariant {
+  example "build-then-resolve": {
+
     after build(concept: "User", spec: "user.concept", implementation: "user.impl.ts", deps: d) -> ok(artifact: a, hash: h, sizeBytes: 1024)
-    then resolve(hash: h) -> ok(artifact: a, location: loc)
+
+        then resolve(hash: h) -> ok(artifact: a, location: loc)
+
+  }
+
+
+  always "valid-hash" {
+
+    forall a in artifacts:
+
+      a.hash != none
+
+  }
+
+  never "orphaned-kitName" {
+
+    exists a in artifacts:
+
+      a.kitName = none
+
+  }
+
+  action build {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

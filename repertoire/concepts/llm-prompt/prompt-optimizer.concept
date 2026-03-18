@@ -78,9 +78,38 @@ concept PromptOptimizer [O] {
     }
   }
 
-  invariant {
+  example "create-then-optimize": {
+
     after create(target: t, metric: "accuracy", training_set: ts,
-                 strategy: "mipro_v2", max_llm_calls: 100) -> ok(optimizer: o)
-    then optimize(optimizer: o) -> ok(best_prompt: _, score: _, iterations: _)
+
+                     strategy: "mipro_v2", max_llm_calls: 100) -> ok(optimizer: o)
+
+        then optimize(optimizer: o) -> ok(best_prompt: _, score: _, iterations: _)
+
+  }
+
+
+  always "valid-target_program" {
+
+    forall o in runs:
+
+      o.target_program != none
+
+  }
+
+  never "orphaned-metric" {
+
+    exists o in runs:
+
+      o.metric = none
+
+  }
+
+  action create {
+
+    requires: target != ""
+
+    ensures ok: target != none
+
   }
 }

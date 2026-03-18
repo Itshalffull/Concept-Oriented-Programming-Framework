@@ -65,10 +65,40 @@ concept QuadraticVoting [QV] {
     }
   }
 
-  invariant {
+  example "configure-then-castVotes": {
+
     after configure(creditBudget: 100.0) -> configured(config: qv)
-    then allocateCredits(config: qv, voter: v) -> allocated(voter: v, credits: 100.0)
-    and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> cast(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
-    // 5 votes costs 25 credits (5² = 25)
+
+        then allocateCredits(config: qv, voter: v) -> allocated(voter: v, credits: 100.0)
+
+        and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> cast(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
+
+        // 5 votes costs 25 credits (5² = 25)
+
+  }
+
+
+  always "valid-voter" {
+
+    forall qv in configurations:
+
+      qv.voter != none
+
+  }
+
+  never "orphaned-creditBudget" {
+
+    exists qv in configurations:
+
+      qv.creditBudget = none
+
+  }
+
+  action configure {
+
+    requires: creditBudget != ""
+
+    ensures configured: creditBudget != none
+
   }
 }

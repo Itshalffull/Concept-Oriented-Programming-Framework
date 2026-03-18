@@ -21,7 +21,34 @@ concept ImmediateFinality [IF] {
     }
   }
 
-  invariant {
+  example "confirm-basic-flow": {
+
     after confirm(operationRef: _) -> finalized(confirmation: _)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall if in confirmations:
+
+      if.operationRef != none
+
+  }
+
+  never "orphaned-confirmedAt" {
+
+    exists if in confirmations:
+
+      if.confirmedAt = none
+
+  }
+
+  action confirm {
+
+    requires: operationRef != ""
+
+    ensures finalized: operationRef != none
+
   }
 }

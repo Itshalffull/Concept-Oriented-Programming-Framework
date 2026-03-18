@@ -49,8 +49,36 @@ concept ContentDigest [H] {
     }
   }
 
-  invariant {
+  example "compute-then-lookup": {
+
     after compute(unit: "u1", algorithm: "structural-normalized") -> ok(digest: d)
-    then lookup(hash: "h") -> ok(units: u)
+
+        then lookup(hash: "h") -> ok(units: u)
+
+  }
+
+
+  always "valid-hash" {
+
+    forall h in digests:
+
+      h.hash != none
+
+  }
+
+  never "orphaned-algorithm" {
+
+    exists h in digests:
+
+      h.algorithm = none
+
+  }
+
+  action compute {
+
+    requires: unit != ""
+
+    ensures ok: unit != none
+
   }
 }

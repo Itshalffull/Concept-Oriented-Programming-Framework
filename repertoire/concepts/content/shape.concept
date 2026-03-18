@@ -43,8 +43,36 @@ concept Shape [S] {
     }
   }
 
-  invariant {
+  example "create-then-update": {
+
     after create(kind: "rectangle", fill: "blue", stroke: "black", text: "Hello") -> ok(shape: s)
-    then update(shape: s, fill: "red", stroke: "black", text: "Hello") -> ok()
+
+        then update(shape: s, fill: "red", stroke: "black", text: "Hello") -> ok()
+
+  }
+
+
+  always "valid-shape_kind" {
+
+    forall s in shapes:
+
+      s.shape_kind != none
+
+  }
+
+  never "orphaned-shape_fill" {
+
+    exists s in shapes:
+
+      s.shape_fill = none
+
+  }
+
+  action create {
+
+    requires: kind != ""
+
+    ensures ok: kind != none
+
   }
 }

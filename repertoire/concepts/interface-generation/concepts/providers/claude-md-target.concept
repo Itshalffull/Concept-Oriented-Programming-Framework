@@ -64,8 +64,36 @@ concept ClaudeMdTarget [D] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(projection: "all-projections", config: "{\"projectName\":\"Test\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-projectName" {
+
+    forall d in documents:
+
+      d.projectName != none
+
+  }
+
+  never "orphaned-outputPath" {
+
+    exists d in documents:
+
+      d.outputPath = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

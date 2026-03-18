@@ -82,8 +82,36 @@ concept Rollout [R] {
     }
   }
 
-  invariant {
+  example "begin-then-advance": {
+
     after begin(plan: "dp-001", strategy: "canary", steps: s) -> ok(rollout: r)
-    then advance(rollout: r) -> ok(rollout: r, newWeight: 25, step: 2)
+
+        then advance(rollout: r) -> ok(rollout: r, newWeight: 25, step: 2)
+
+  }
+
+
+  always "valid-strategy" {
+
+    forall r in rollouts:
+
+      r.strategy != none
+
+  }
+
+  never "orphaned-strategy" {
+
+    exists r in rollouts:
+
+      r.strategy = none
+
+  }
+
+  action begin {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

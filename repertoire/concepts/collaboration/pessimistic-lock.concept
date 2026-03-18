@@ -88,14 +88,46 @@ concept PessimisticLock [L] {
     }
   }
 
-  invariant {
+  example "checkOut-then-checkOut-2": {
+
     after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
-    then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> alreadyLocked(holder: h, expires: _)
+
+        then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> alreadyLocked(holder: h, expires: _)
+
   }
 
-  invariant {
+  example "checkOut-then-checkOut": {
+
     after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
-    then checkIn(lockId: l) -> ok()
-    and  checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(lockId: _)
+
+        then checkIn(lockId: l) -> ok()
+
+        and  checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(lockId: _)
+
+  }
+
+
+  always "valid-resource" {
+
+    forall l in locks:
+
+      l.resource != none
+
+  }
+
+  never "orphaned-holder" {
+
+    exists l in locks:
+
+      l.holder = none
+
+  }
+
+  action checkOut {
+
+    requires: resource != ""
+
+    ensures ok: resource != none
+
   }
 }

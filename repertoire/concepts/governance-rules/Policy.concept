@@ -68,8 +68,36 @@ concept Policy [PL] {
     }
   }
 
-  invariant {
+  example "create-then-evaluate": {
+
     after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> created(policy: pl)
-    then evaluate(policy: pl, context: _) -> required(policy: pl)
+
+        then evaluate(policy: pl, context: _) -> required(policy: pl)
+
+  }
+
+
+  always "valid-attributes" {
+
+    forall pl in policies:
+
+      pl.attributes != none
+
+  }
+
+  never "orphaned-attributes" {
+
+    exists pl in policies:
+
+      pl.attributes = none
+
+  }
+
+  action create {
+
+    requires: attributes != ""
+
+    ensures created: attributes != none
+
   }
 }

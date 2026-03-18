@@ -53,13 +53,44 @@ concept TypeSystem [T] {
     }
   }
 
-  invariant {
+  example "registerType-then-resolve": {
+
     after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
-    then resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
+
+        then resolve(type: t) -> ok(type: t, schema: "{\"type\":\"string\"}")
+
   }
 
-  invariant {
+  example "registerType-then-registerType": {
+
     after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
-    then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> exists(message: "already exists")
+
+        then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> exists(message: "already exists")
+
+  }
+
+
+  always "valid-schema" {
+
+    forall t in typeDefinitions:
+
+      t.schema != none
+
+  }
+
+  never "orphaned-constraints" {
+
+    exists t in typeDefinitions:
+
+      t.constraints = none
+
+  }
+
+  action registerType {
+
+    requires: type != ""
+
+    ensures ok: type != none
+
   }
 }

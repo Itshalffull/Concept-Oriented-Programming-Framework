@@ -46,14 +46,46 @@ concept Cache [C] {
     }
   }
 
-  invariant {
+  example "set-then-get-2": {
+
     after set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()
-    then get(bin: b, key: "k") -> ok(data: "v")
+
+        then get(bin: b, key: "k") -> ok(data: "v")
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(bin: b, key: "k", data: "v", tags: "t1", maxAge: 300) -> ok()
-    then invalidateByTags(tags: "t1") -> ok(count: 1)
-    and get(bin: b, key: "k") -> miss()
+
+        then invalidateByTags(tags: "t1") -> ok(count: 1)
+
+        and get(bin: b, key: "k") -> miss()
+
+  }
+
+
+  always "valid-data" {
+
+    forall c in bins:
+
+      c.data != none
+
+  }
+
+  never "orphaned-tags" {
+
+    exists c in bins:
+
+      c.tags = none
+
+  }
+
+  action set {
+
+    requires: bin != ""
+
+    ensures ok: bin != none
+
   }
 }

@@ -59,9 +59,38 @@ concept Deliberation [DL] {
     }
   }
 
-  invariant {
+  example "open-then-close": {
+
     after open(proposalRef: _) -> opened(thread: dl)
-    then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> added(thread: dl, entryIndex: _)
-    and  close(thread: dl) -> closed(thread: dl)
+
+        then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> added(thread: dl, entryIndex: _)
+
+        and  close(thread: dl) -> closed(thread: dl)
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall dl in threads:
+
+      dl.proposalRef != none
+
+  }
+
+  never "orphaned-proposalRef" {
+
+    exists dl in threads:
+
+      dl.proposalRef = none
+
+  }
+
+  action addEntry {
+
+    requires: thread != ""
+
+    ensures added: thread != none
+
   }
 }

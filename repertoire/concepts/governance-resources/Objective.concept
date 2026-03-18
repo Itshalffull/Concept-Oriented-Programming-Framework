@@ -60,8 +60,36 @@ concept Objective [OB] {
     }
   }
 
-  invariant {
+  example "create-then-updateProgress": {
+
     after create(title: _, description: _, owner: _, targets: _) -> created(objective: ob)
-    then updateProgress(objective: ob, metricRef: _, currentValue: _) -> progressed(objective: ob, newProgress: _)
+
+        then updateProgress(objective: ob, metricRef: _, currentValue: _) -> progressed(objective: ob, newProgress: _)
+
+  }
+
+
+  always "valid-title" {
+
+    forall ob in objectives:
+
+      ob.title != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists ob in objectives:
+
+      ob.description = none
+
+  }
+
+  action create {
+
+    requires: title != ""
+
+    ensures created: title != none
+
   }
 }

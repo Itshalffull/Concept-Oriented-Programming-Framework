@@ -60,14 +60,46 @@ concept DataQuality [D] {
 
   }
 
-  invariant {
+  example "validate-then-inspect": {
+
     after validate(item: "{\"title\":\"Test\",\"body\":\"content\"}", rulesetId: "article_rules") -> ok(valid: "true", score: "0.95")
-    then inspect(itemId: "item-1") -> ok(score: "0.95", violations: "[]")
+
+        then inspect(itemId: "item-1") -> ok(score: "0.95", violations: "[]")
+
   }
 
-  invariant {
+  example "validate-then-release": {
+
     after validate(item: "{\"title\":\"\"}", rulesetId: "article_rules") -> invalid(violations: "[{\"rule\":\"required\",\"field\":\"title\"}]")
-    then quarantine(itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]") -> ok()
-    and  release(itemId: "item-1") -> ok()
+
+        then quarantine(itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]") -> ok()
+
+        and  release(itemId: "item-1") -> ok()
+
+  }
+
+
+  always "valid-rules" {
+
+    forall d in rulesets:
+
+      d.rules != none
+
+  }
+
+  never "orphaned-appliesTo" {
+
+    exists d in rulesets:
+
+      d.appliesTo = none
+
+  }
+
+  action validate {
+
+    requires: item != ""
+
+    ensures ok: item != none
+
   }
 }

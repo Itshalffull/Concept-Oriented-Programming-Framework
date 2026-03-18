@@ -81,10 +81,40 @@ concept Meeting [MT] {
     }
   }
 
-  invariant {
+  example "schedule-then-adjourn": {
+
     after schedule(title: _, agenda: _) -> scheduled(meeting: mt)
-    then callToOrder(meeting: mt, chair: _) -> called(meeting: mt)
-    and  makeMotion(meeting: mt, mover: _, motionType: _, text: _) -> moved(meeting: mt, motionIndex: _)
-    and  adjourn(meeting: mt) -> adjourned(meeting: mt)
+
+        then callToOrder(meeting: mt, chair: _) -> called(meeting: mt)
+
+        and  makeMotion(meeting: mt, mover: _, motionType: _, text: _) -> moved(meeting: mt, motionIndex: _)
+
+        and  adjourn(meeting: mt) -> adjourned(meeting: mt)
+
+  }
+
+
+  always "valid-title" {
+
+    forall mt in meetings:
+
+      mt.title != none
+
+  }
+
+  never "orphaned-title" {
+
+    exists mt in meetings:
+
+      mt.title = none
+
+  }
+
+  action schedule {
+
+    requires: title != ""
+
+    ensures scheduled: title != none
+
   }
 }

@@ -107,11 +107,42 @@ concept EvaluationDataset [V] {
     }
   }
 
-  invariant {
+  example "create-then-evaluate": {
+
     after create(name: "qa_golden", examples: [{input: "What is 2+2?",
-                 expected: "4", rubric: _, tags: ["math"]}]) -> ok(dataset: v)
-    then evaluate(dataset: v, program: "gpt-4o + default prompt",
-                  metrics: ["accuracy"]) -> ok(overall: _, per_example: _,
-                  per_metric: _)
+
+                     expected: "4", rubric: _, tags: ["math"]}]) -> ok(dataset: v)
+
+        then evaluate(dataset: v, program: "gpt-4o + default prompt",
+
+                      metrics: ["accuracy"]) -> ok(overall: _, per_example: _,
+
+                      per_metric: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall v in datasets:
+
+      v.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists v in datasets:
+
+      v.name = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

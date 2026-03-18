@@ -31,8 +31,11 @@ concept GridLayout [C] {
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b", "c", "d"]) -> ok(positions: p)
-    then apply(canvas: "c1", items: ["a"]) -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a"]) -> ok(positions: _)
+
   }
 }

@@ -54,8 +54,36 @@ concept Sdk [S] {
     }
   }
 
-  invariant {
+  example "generate-then-publish": {
+
     after generate(projection: "test-projection", language: "typescript", config: "{}") -> ok(package: s, files: f, packageJson: p)
-    then publish(package: s, registry: "npm") -> ok(package: s, publishedVersion: "1.0.0")
+
+        then publish(package: s, registry: "npm") -> ok(package: s, publishedVersion: "1.0.0")
+
+  }
+
+
+  always "valid-language" {
+
+    forall s in packages:
+
+      s.language != none
+
+  }
+
+  never "orphaned-packageName" {
+
+    exists s in packages:
+
+      s.packageName = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

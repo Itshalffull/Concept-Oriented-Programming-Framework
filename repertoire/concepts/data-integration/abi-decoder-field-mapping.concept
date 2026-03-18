@@ -62,15 +62,48 @@ concept AbiDecoderFieldMapping [F] {
     }
   }
 
-  invariant {
+  example "register-then-apply": {
+
     after register(contract_abi: "{}", entity_schema: "Article",
-                   field_rules: "{}") -> ok(mapper: m)
-    then  apply(data: "0x00", mapper: m, contract: "0xabc") -> ok(mapped: r)
+
+                       field_rules: "{}") -> ok(mapper: m)
+
+        then  apply(data: "0x00", mapper: m, contract: "0xabc") -> ok(mapped: r)
+
   }
 
-  invariant {
+  example "apply-then-reverse": {
+
     after apply(data: "0x00", mapper: "nonexistent",
-                contract: "0xabc") -> notfound(mapper: "nonexistent")
-    then  reverse(data: "{}", mapper: "nonexistent") -> notfound(mapper: "nonexistent")
+
+                    contract: "0xabc") -> notfound(mapper: "nonexistent")
+
+        then  reverse(data: "{}", mapper: "nonexistent") -> notfound(mapper: "nonexistent")
+
+  }
+
+
+  always "valid-contract_abi" {
+
+    forall f in mappings:
+
+      f.contract_abi != none
+
+  }
+
+  never "orphaned-entity_schema" {
+
+    exists f in mappings:
+
+      f.entity_schema = none
+
+  }
+
+  action register {
+
+    requires: contract_abi != ""
+
+    ensures ok: contract_abi != none
+
   }
 }

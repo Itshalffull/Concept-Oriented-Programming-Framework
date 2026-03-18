@@ -66,9 +66,38 @@ concept Component [C] {
     }
   }
 
-  invariant {
+  example "register-then-render": {
+
     after register(component: c, config: "hero-banner")          -> ok()
-    then  place(component: c, region: "header")                  -> ok()
-    and   render(component: c, context: "homepage")              -> ok(output: "hero-banner:header:homepage")
+
+        then  place(component: c, region: "header")                  -> ok()
+
+        and   render(component: c, context: "homepage")              -> ok(output: "hero-banner:header:homepage")
+
+  }
+
+
+  always "valid-config" {
+
+    forall c in components:
+
+      c.config != none
+
+  }
+
+  never "orphaned-placements" {
+
+    exists c in components:
+
+      c.placements = none
+
+  }
+
+  action register {
+
+    requires: component != ""
+
+    ensures ok: component != none
+
   }
 }

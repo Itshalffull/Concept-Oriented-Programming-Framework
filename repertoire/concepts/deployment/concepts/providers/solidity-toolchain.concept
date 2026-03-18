@@ -46,9 +46,30 @@ concept SolidityToolchain [L] {
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "evm-shanghai", versionConstraint: ">=0.8.20")
-      -> ok(toolchain: l, solcPath: "/usr/local/bin/solc", version: "0.8.25", capabilities: ["optimizer", "via-ir"])
-    then register() -> ok(name: "SolidityToolchain", language: "solidity", capabilities: caps)
+
+          -> ok(toolchain: l, solcPath: "/usr/local/bin/solc", version: "0.8.25", capabilities: ["optimizer", "via-ir"])
+
+        then register() -> ok(name: "SolidityToolchain", language: "solidity", capabilities: caps)
+
+  }
+
+
+  always "valid-solcPath" {
+
+    forall l in toolchains:
+
+      l.solcPath != none
+
+  }
+
+  never "orphaned-solcVersion" {
+
+    exists l in toolchains:
+
+      l.solcVersion = none
+
   }
 }

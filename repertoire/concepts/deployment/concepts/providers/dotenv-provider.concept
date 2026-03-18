@@ -36,8 +36,36 @@ concept DotenvProvider [D] {
     }
   }
 
-  invariant {
+  example "fetch-then-fetch": {
+
     after fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
-    then fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+
+        then fetch(name: "DB_HOST", filePath: ".env") -> ok(value: v)
+
+  }
+
+
+  always "valid-filePath" {
+
+    forall d in files:
+
+      d.filePath != none
+
+  }
+
+  never "orphaned-loadedAt" {
+
+    exists d in files:
+
+      d.loadedAt = none
+
+  }
+
+  action fetch {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

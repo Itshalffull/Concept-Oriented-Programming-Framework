@@ -145,10 +145,40 @@ concept LLMProvider [P] {
     }
   }
 
-  invariant {
+  example "register-then-healthCheck": {
+
     after register(provider_id: "test", model_id: "gpt-4",
-                   credentials: c, config: cfg, capabilities: caps)
-      -> ok(provider: p)
-    then healthCheck(provider: p) -> ok(status: "available", latency_ms: _)
+
+                       credentials: c, config: cfg, capabilities: caps)
+
+          -> ok(provider: p)
+
+        then healthCheck(provider: p) -> ok(status: "available", latency_ms: _)
+
+  }
+
+
+  always "valid-provider_id" {
+
+    forall p in providers:
+
+      p.provider_id != none
+
+  }
+
+  never "orphaned-model_id" {
+
+    exists p in providers:
+
+      p.model_id = none
+
+  }
+
+  action register {
+
+    requires: provider_id != ""
+
+    ensures ok: provider_id != none
+
   }
 }

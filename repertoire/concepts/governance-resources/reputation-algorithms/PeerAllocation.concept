@@ -60,9 +60,22 @@ concept PeerAllocation [PA] {
     }
   }
 
-  invariant {
+  example "openRound-then-finalize": {
+
     after openRound(budget: 100, deadlineDays: 7.0) -> opened(round: pa)
-    then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> allocated(round: pa)
-    and  finalize(round: pa) -> finalized(round: pa, results: _)
+
+        then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> allocated(round: pa)
+
+        and  finalize(round: pa) -> finalized(round: pa, results: _)
+
+  }
+
+
+  action openRound {
+
+    requires: budget != ""
+
+    ensures opened: budget != none
+
   }
 }

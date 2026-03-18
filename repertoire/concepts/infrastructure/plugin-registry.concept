@@ -63,9 +63,38 @@ concept PluginRegistry [P] {
     }
   }
 
-  invariant {
+  example "discover-then-getDefinitions": {
+
     after discover(type: "formatter") -> ok(plugins: ps)
-    then createInstance(plugin: p, config: "{}") -> ok(instance: i)
-    and  getDefinitions(type: "formatter") -> ok(definitions: ds)
+
+        then createInstance(plugin: p, config: "{}") -> ok(instance: i)
+
+        and  getDefinitions(type: "formatter") -> ok(definitions: ds)
+
+  }
+
+
+  always "valid-cache" {
+
+    forall p in definitions:
+
+      p.cache != none
+
+  }
+
+  never "orphaned-pluginTypes" {
+
+    exists p in definitions:
+
+      p.pluginTypes = none
+
+  }
+
+  action register {
+
+    requires: type != ""
+
+    ensures ok: type != none
+
   }
 }

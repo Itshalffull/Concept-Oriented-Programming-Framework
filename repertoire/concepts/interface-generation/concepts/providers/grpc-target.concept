@@ -73,8 +73,36 @@ concept GrpcTarget [G] {
     }
   }
 
-  invariant {
+  example "generate-then-listRpcs": {
+
     after generate(projection: "payment-projection", config: "{}") -> ok(services: s, files: f)
-    then listRpcs(concept: "Payment") -> ok(rpcs: r, streamingModes: m)
+
+        then listRpcs(concept: "Payment") -> ok(rpcs: r, streamingModes: m)
+
+  }
+
+
+  always "valid-protoPackage" {
+
+    forall g in services:
+
+      g.protoPackage != none
+
+  }
+
+  never "orphaned-goPackage" {
+
+    exists g in services:
+
+      g.goPackage = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

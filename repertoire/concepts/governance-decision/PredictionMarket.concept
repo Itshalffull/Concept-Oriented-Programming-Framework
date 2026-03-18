@@ -78,9 +78,38 @@ concept PredictionMarket [PM] {
     }
   }
 
-  invariant {
+  example "createMarket-then-resolve": {
+
     after createMarket(question: _, outcomes: _, deadline: _) -> created(market: pm)
-    then trade(market: pm, trader: _, outcome: _, amount: _) -> traded(market: pm, sharesReceived: _, newPrice: _)
-    and  resolve(market: pm, outcome: o) -> resolved(market: pm, winningOutcome: o)
+
+        then trade(market: pm, trader: _, outcome: _, amount: _) -> traded(market: pm, sharesReceived: _, newPrice: _)
+
+        and  resolve(market: pm, outcome: o) -> resolved(market: pm, winningOutcome: o)
+
+  }
+
+
+  always "valid-question" {
+
+    forall pm in markets:
+
+      pm.question != none
+
+  }
+
+  never "orphaned-outcomes" {
+
+    exists pm in markets:
+
+      pm.outcomes = none
+
+  }
+
+  action createMarket {
+
+    requires: question != ""
+
+    ensures created: question != none
+
   }
 }

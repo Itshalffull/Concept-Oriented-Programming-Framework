@@ -77,9 +77,38 @@ concept Migration [M] {
     }
   }
 
-  invariant {
+  example "plan-then-migrate": {
+
     after plan(concept: "Entity", fromVersion: 1, toVersion: 2) -> ok(migration: m, steps: s, estimatedRecords: 1000)
-    then expand(migration: m) -> ok(migration: m)
-    and migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
+
+        then expand(migration: m) -> ok(migration: m)
+
+        and migrate(migration: m) -> ok(migration: m, recordsMigrated: 1000)
+
+  }
+
+
+  always "valid-concept" {
+
+    forall m in migrations:
+
+      m.concept != none
+
+  }
+
+  never "orphaned-fromVersion" {
+
+    exists m in migrations:
+
+      m.fromVersion = none
+
+  }
+
+  action plan {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

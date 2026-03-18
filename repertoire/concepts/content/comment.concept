@@ -57,8 +57,36 @@ concept Comment [C] {
     }
   }
 
-  invariant {
+  example "addComment-then-reply": {
+
     after addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
-    then reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
+
+        then reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
+
+  }
+
+
+  always "valid-content" {
+
+    forall c in comments:
+
+      c.content != none
+
+  }
+
+  never "orphaned-author" {
+
+    exists c in comments:
+
+      c.author = none
+
+  }
+
+  action addComment {
+
+    requires: comment != ""
+
+    ensures ok: comment != none
+
   }
 }

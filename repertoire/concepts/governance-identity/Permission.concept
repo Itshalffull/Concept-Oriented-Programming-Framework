@@ -51,10 +51,40 @@ concept Permission [P] {
     }
   }
 
-  invariant {
+  example "grant-then-check": {
+
     after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> granted(permission: p)
-    then check(who: w, where: t, what: a) -> allowed(permission: p)
-    and  revoke(permission: p) -> revoked(permission: p)
-    and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+
+        then check(who: w, where: t, what: a) -> allowed(permission: p)
+
+        and  revoke(permission: p) -> revoked(permission: p)
+
+        and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+
+  }
+
+
+  always "valid-who" {
+
+    forall p in grants:
+
+      p.who != none
+
+  }
+
+  never "orphaned-where" {
+
+    exists p in grants:
+
+      p.where = none
+
+  }
+
+  action grant {
+
+    requires: who != ""
+
+    ensures granted: who != none
+
   }
 }

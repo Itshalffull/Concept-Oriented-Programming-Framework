@@ -81,12 +81,36 @@ concept SolidityBuilder [L] {
     }
   }
 
-  invariant {
+  example "build-then-test": {
+
     after build(source: "./generated/solidity/password", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: { mode: "release" })
-      -> ok(build: l, artifactPath: ".clef-artifacts/solidity/password", artifactHash: "sha256:jkl")
-    then test(build: l, toolchainPath: "/usr/local/bin/solc",
-              invocation: { command: "forge test", args: ["--json", "--gas-report"], outputFormat: "forge-test-json", configFile: "foundry.toml", env: null },
-              testType: "unit")
-      -> ok(passed: 6, failed: 0, skipped: 0, duration: 800, testType: "unit")
+
+          -> ok(build: l, artifactPath: ".clef-artifacts/solidity/password", artifactHash: "sha256:jkl")
+
+        then test(build: l, toolchainPath: "/usr/local/bin/solc",
+
+                  invocation: { command: "forge test", args: ["--json", "--gas-report"], outputFormat: "forge-test-json", configFile: "foundry.toml", env: null },
+
+                  testType: "unit")
+
+          -> ok(passed: 6, failed: 0, skipped: 0, duration: 800, testType: "unit")
+
+  }
+
+
+  always "valid-contractsPath" {
+
+    forall l in builds:
+
+      l.contractsPath != none
+
+  }
+
+  never "orphaned-outputDir" {
+
+    exists l in builds:
+
+      l.outputDir = none
+
   }
 }

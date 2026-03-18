@@ -101,13 +101,44 @@ concept ExtensionStorage [S] {
     }
   }
 
-  invariant {
+  example "provision-then-getQuota": {
+
     after provision(extensionId: e, quotaLimit: q, syncEnabled: _) -> ok(store: s)
-    then getQuota(store: s) -> ok(used: 0, limit: q)
+
+        then getQuota(store: s) -> ok(used: 0, limit: q)
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(store: s, key: k, value: v) -> ok(store: s)
-    then get(store: s, key: k) -> ok(value: v)
+
+        then get(store: s, key: k) -> ok(value: v)
+
+  }
+
+
+  always "valid-extensionId" {
+
+    forall s in stores:
+
+      s.extensionId != none
+
+  }
+
+  never "orphaned-quotaUsed" {
+
+    exists s in stores:
+
+      s.quotaUsed = none
+
+  }
+
+  action provision {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

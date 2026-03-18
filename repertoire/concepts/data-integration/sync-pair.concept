@@ -83,8 +83,36 @@ concept SyncPair [S] {
     }
   }
 
-  invariant {
+  example "link-then-sync": {
+
     after link(pairId: "pair-1", idA: "local-1", idB: "remote-1") -> ok()
-    then sync(pairId: "pair-1") -> ok(changes: "[{\"entity\":\"local-1\",\"op\":\"update\"}]")
+
+        then sync(pairId: "pair-1") -> ok(changes: "[{\"entity\":\"local-1\",\"op\":\"update\"}]")
+
+  }
+
+
+  always "valid-name" {
+
+    forall s in pairs:
+
+      s.name != none
+
+  }
+
+  never "orphaned-endpointA" {
+
+    exists s in pairs:
+
+      s.endpointA = none
+
+  }
+
+  action link {
+
+    requires: pairId != ""
+
+    ensures ok: pairId != none
+
   }
 }

@@ -46,8 +46,36 @@ concept Monitor [MN] {
     }
   }
 
-  invariant {
+  example "watch-then-observe": {
+
     after watch(subject: _, ruleRef: _) -> watching(observer: mn)
-    then observe(observer: mn, behavior: _) -> compliant(observer: mn)
+
+        then observe(observer: mn, behavior: _) -> compliant(observer: mn)
+
+  }
+
+
+  always "valid-subject" {
+
+    forall mn in observers:
+
+      mn.subject != none
+
+  }
+
+  never "orphaned-ruleRef" {
+
+    exists mn in observers:
+
+      mn.ruleRef = none
+
+  }
+
+  action watch {
+
+    requires: subject != ""
+
+    ensures watching: subject != none
+
   }
 }

@@ -59,10 +59,40 @@ concept Attestation [A] {
     }
   }
 
-  invariant {
+  example "attest-then-verify": {
+
     after attest(schema: _, attester: _, recipient: _, data: _, expiry: _) -> created(attestation: a)
-    then verify(attestation: a) -> valid(attestation: a)
-    and  revoke(attestation: a, revoker: _) -> revoked(attestation: a)
-    and  verify(attestation: a) -> revoked_status(attestation: a)
+
+        then verify(attestation: a) -> valid(attestation: a)
+
+        and  revoke(attestation: a, revoker: _) -> revoked(attestation: a)
+
+        and  verify(attestation: a) -> revoked_status(attestation: a)
+
+  }
+
+
+  always "valid-schema" {
+
+    forall a in attestations:
+
+      a.schema != none
+
+  }
+
+  never "orphaned-attester" {
+
+    exists a in attestations:
+
+      a.attester = none
+
+  }
+
+  action attest {
+
+    requires: schema != ""
+
+    ensures created: schema != none
+
   }
 }

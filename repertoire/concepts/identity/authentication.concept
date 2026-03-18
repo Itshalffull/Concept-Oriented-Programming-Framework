@@ -67,25 +67,64 @@ concept Authentication [U] {
     }
   }
 
-  invariant {
+  example "register-then-login-2": {
+
     after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
-    then login(user: x, credentials: "secret123") -> ok(token: t)
+
+        then login(user: x, credentials: "secret123") -> ok(token: t)
+
   }
 
-  invariant {
+  example "register-then-authenticate": {
+
     after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
-    and login(user: x, credentials: "secret123") -> ok(token: t)
-    then authenticate(token: t) -> ok(user: x)
+
+        and login(user: x, credentials: "secret123") -> ok(token: t)
+
+        then authenticate(token: t) -> ok(user: x)
+
   }
 
-  invariant {
+  example "register-then-register": {
+
     after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
-    then register(user: x, provider: "oauth", credentials: "token456") -> exists(message: m)
+
+        then register(user: x, provider: "oauth", credentials: "token456") -> exists(message: m)
+
   }
 
-  invariant {
+  example "register-then-login": {
+
     after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
-    and resetPassword(user: x, newCredentials: "newpass456") -> ok(user: x)
-    then login(user: x, credentials: "secret123") -> invalid(message: m)
+
+        and resetPassword(user: x, newCredentials: "newpass456") -> ok(user: x)
+
+        then login(user: x, credentials: "secret123") -> invalid(message: m)
+
+  }
+
+
+  always "valid-credentials" {
+
+    forall u in accounts:
+
+      u.credentials != none
+
+  }
+
+  never "orphaned-providers" {
+
+    exists u in accounts:
+
+      u.providers = none
+
+  }
+
+  action register {
+
+    requires: user != ""
+
+    ensures ok: user != none
+
   }
 }

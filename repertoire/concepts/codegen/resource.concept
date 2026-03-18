@@ -77,10 +77,40 @@ concept Resource [R] {
     }
   }
 
-  invariant {
+  example "upsert-then-upsert": {
+
     after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> created(resource: r)
-    then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
-    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> unchanged(resource: r)
-    and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "def456") -> changed(resource: r, previousDigest: "abc123")
+
+        then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
+
+        and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> unchanged(resource: r)
+
+        and   upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "def456") -> changed(resource: r, previousDigest: "abc123")
+
+  }
+
+
+  always "valid-locator" {
+
+    forall r in resources:
+
+      r.locator != none
+
+  }
+
+  never "orphaned-kind" {
+
+    exists r in resources:
+
+      r.kind = none
+
+  }
+
+  action upsert {
+
+    requires: locator != ""
+
+    ensures created: locator != none
+
   }
 }

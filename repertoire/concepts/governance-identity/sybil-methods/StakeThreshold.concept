@@ -57,9 +57,38 @@ concept StakeThreshold [ST] {
     }
   }
 
-  invariant {
+  example "configure-then-checkEligibility": {
+
     after configure(minimumStake: 100.0, slashOnViolation: true) -> configured(config: st)
-    then deposit(config: st, participant: p, amount: 100.0) -> deposited(participant: p)
-    and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
+
+        then deposit(config: st, participant: p, amount: 100.0) -> deposited(participant: p)
+
+        and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
+
+  }
+
+
+  always "valid-slashOnViolation" {
+
+    forall st in configurations:
+
+      st.slashOnViolation != none
+
+  }
+
+  never "orphaned-minimumStake" {
+
+    exists st in configurations:
+
+      st.minimumStake = none
+
+  }
+
+  action configure {
+
+    requires: minimumStake != ""
+
+    ensures configured: minimumStake != none
+
   }
 }

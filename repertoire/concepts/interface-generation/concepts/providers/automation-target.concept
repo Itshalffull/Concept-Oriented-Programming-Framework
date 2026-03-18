@@ -47,9 +47,38 @@ concept AutomationTarget [AT] {
     }
   }
 
-  invariant {
+  example "generate-then-list_entries": {
+
     after generate(projection: "app-projection", config: "{}") -> ok(manifest: m, entry_count: n, output_path: p)
-    then validate(manifest: m) -> ok(manifest: m)
-    then list_entries(manifest: m) -> ok(entries: es)
+
+        then validate(manifest: m) -> ok(manifest: m)
+
+        then list_entries(manifest: m) -> ok(entries: es)
+
+  }
+
+
+  always "valid-config" {
+
+    forall at in manifests:
+
+      at.config != none
+
+  }
+
+  never "orphaned-config" {
+
+    exists at in manifests:
+
+      at.config = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

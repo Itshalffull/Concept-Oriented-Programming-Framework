@@ -51,10 +51,15 @@ concept CentralityAnalysisProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "degree", config: {})
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "pagerank", config: { damping: "0.85", iterations: 100 })
-      -> ok(payload: _)
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "pagerank", config: { damping: "0.85", iterations: 100 })
+
+          -> ok(payload: _)
+
   }
 }

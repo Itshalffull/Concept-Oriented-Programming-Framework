@@ -52,8 +52,20 @@ concept RankedChoice [RC] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(eliminationMethod: "InstantRunoff", seats: 1) -> configured(config: rc)
-    then count(config: rc, rankedBallots: _, weights: _) -> winner(choice: _, finalRound: _, roundDetails: _)
+
+        then count(config: rc, rankedBallots: _, weights: _) -> winner(choice: _, finalRound: _, roundDetails: _)
+
+  }
+
+
+  action configure {
+
+    requires: eliminationMethod != ""
+
+    ensures configured: eliminationMethod != none
+
   }
 }

@@ -44,8 +44,36 @@ concept GitOps [G] {
     }
   }
 
-  invariant {
+  example "emit-then-reconciliationStatus": {
+
     after emit(plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod") -> ok(manifest: g, files: f)
-    then reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
+
+        then reconciliationStatus(manifest: g) -> ok(manifest: g, status: "synced", reconciledAt: t)
+
+  }
+
+
+  always "valid-plan" {
+
+    forall g in manifests:
+
+      g.plan != none
+
+  }
+
+  never "orphaned-controller" {
+
+    exists g in manifests:
+
+      g.controller = none
+
+  }
+
+  action emit {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

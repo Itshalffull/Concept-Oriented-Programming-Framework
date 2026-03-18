@@ -64,11 +64,42 @@ concept AutomationScope [AS] {
     }
   }
 
-  invariant {
+  example "configure-then-check": {
+
     after configure(scope: s, mode: "allowlist") -> ok(scope: s)
-    then  add_rule(scope: s, action_pattern: "Content/*", category: "content")
-          -> ok(scope: s, rule_count: 1)
-    then  check(scope: s, action_ref: "Content/save")
-          -> permitted(scope: s, action_ref: "Content/save")
+
+        then  add_rule(scope: s, action_pattern: "Content/*", category: "content")
+
+              -> ok(scope: s, rule_count: 1)
+
+        then  check(scope: s, action_ref: "Content/save")
+
+              -> permitted(scope: s, action_ref: "Content/save")
+
+  }
+
+
+  always "valid-mode" {
+
+    forall as in scopes:
+
+      as.mode != none
+
+  }
+
+  never "orphaned-mode" {
+
+    exists as in scopes:
+
+      as.mode = none
+
+  }
+
+  action add_rule {
+
+    requires: scope != ""
+
+    ensures ok: scope != none
+
   }
 }

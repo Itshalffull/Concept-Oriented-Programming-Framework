@@ -83,11 +83,34 @@ concept SyncAutomationProvider [SA] {
     }
   }
 
-  invariant {
+  example "register-then-activate": {
+
     after register() -> ok(provider_name: "sync")
-    then  define(name: "auto-tag", source_text: "sync AutoTag [eager] ...", author: "admin")
-          -> ok(sync_def: sd)
-    then  validate(sync_def: sd) -> ok(sync_def: sd)
-    then  activate(sync_def: sd) -> ok(sync_def: sd)
+
+        then  define(name: "auto-tag", source_text: "sync AutoTag [eager] ...", author: "admin")
+
+              -> ok(sync_def: sd)
+
+        then  validate(sync_def: sd) -> ok(sync_def: sd)
+
+        then  activate(sync_def: sd) -> ok(sync_def: sd)
+
+  }
+
+
+  always "valid-name" {
+
+    forall sa in user_syncs:
+
+      sa.name != none
+
+  }
+
+  never "orphaned-source_text" {
+
+    exists sa in user_syncs:
+
+      sa.source_text = none
+
   }
 }

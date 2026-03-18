@@ -73,9 +73,38 @@ concept Circle [C] {
     }
   }
 
-  invariant {
+  example "create-then-checkJurisdiction": {
+
     after create(name: _, domain: _, parent: _) -> created(circle: c)
-    then assignMember(circle: c, member: m) -> assigned(circle: c, member: m)
-    and  checkJurisdiction(circle: c, action: _) -> in_scope(circle: c)
+
+        then assignMember(circle: c, member: m) -> assigned(circle: c, member: m)
+
+        and  checkJurisdiction(circle: c, action: _) -> in_scope(circle: c)
+
+  }
+
+
+  always "valid-name" {
+
+    forall c in circles:
+
+      c.name != none
+
+  }
+
+  never "orphaned-parent" {
+
+    exists c in circles:
+
+      c.parent = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures created: name != none
+
   }
 }

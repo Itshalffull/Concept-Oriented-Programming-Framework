@@ -46,8 +46,36 @@ concept AttestationSybil [AS] {
     }
   }
 
-  invariant {
+  example "configure-then-checkParticipant": {
+
     after configure(requiredSchemas: _, trustedAttesters: _) -> configured(config: as)
-    then checkParticipant(config: as, participant: _, attestationRef: _) -> verified(participant: _)
+
+        then checkParticipant(config: as, participant: _, attestationRef: _) -> verified(participant: _)
+
+  }
+
+
+  always "valid-requiredSchemas" {
+
+    forall as in configurations:
+
+      as.requiredSchemas != none
+
+  }
+
+  never "orphaned-trustedAttesters" {
+
+    exists as in configurations:
+
+      as.trustedAttesters = none
+
+  }
+
+  action configure {
+
+    requires: requiredSchemas != ""
+
+    ensures configured: requiredSchemas != none
+
   }
 }

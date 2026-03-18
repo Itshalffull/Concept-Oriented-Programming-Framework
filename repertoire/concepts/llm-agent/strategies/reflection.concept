@@ -48,4 +48,9 @@ concept ReflectionStrategy [S] {
       }
     }
   }
+
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
+  }
 }

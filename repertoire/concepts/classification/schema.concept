@@ -37,9 +37,22 @@ concept Schema [S] {
       -> notfound(message: String) { Schema does not exist. }
     }
   }
-  invariant {
+  example "defineSchema-then-applyTo": {
     after defineSchema(schema: s, fields: "title,body") -> ok()
-    then addField(schema: s, field: "author") -> ok()
-    and applyTo(entity: "page-1", schema: s) -> ok()
+        then addField(schema: s, field: "author") -> ok()
+        and applyTo(entity: "page-1", schema: s) -> ok()
+  }
+
+  always "valid-fields" {
+    forall s in schemas:
+      s.fields != none
+  }
+  never "orphaned-extends" {
+    exists s in schemas:
+      s.extends = none
+  }
+  action addField {
+    requires: schema != ""
+    ensures ok: schema != none
   }
 }

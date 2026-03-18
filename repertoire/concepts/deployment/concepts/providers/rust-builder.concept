@@ -81,12 +81,36 @@ concept RustBuilder [R] {
     }
   }
 
-  invariant {
+  example "build-then-test": {
+
     after build(source: "./generated/rust/password", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: { mode: "release" })
-      -> ok(build: r, artifactPath: ".clef-artifacts/rust/password", artifactHash: "sha256:ghi")
-    then test(build: r, toolchainPath: "/usr/local/bin/rustc",
-              invocation: { command: "cargo test", args: ["--", "--format=json"], outputFormat: "cargo-test-json", configFile: "Cargo.toml", env: null },
-              testType: "unit")
-      -> ok(passed: 15, failed: 0, skipped: 0, duration: 2100, testType: "unit")
+
+          -> ok(build: r, artifactPath: ".clef-artifacts/rust/password", artifactHash: "sha256:ghi")
+
+        then test(build: r, toolchainPath: "/usr/local/bin/rustc",
+
+                  invocation: { command: "cargo test", args: ["--", "--format=json"], outputFormat: "cargo-test-json", configFile: "Cargo.toml", env: null },
+
+                  testType: "unit")
+
+          -> ok(passed: 15, failed: 0, skipped: 0, duration: 2100, testType: "unit")
+
+  }
+
+
+  always "valid-manifestPath" {
+
+    forall r in builds:
+
+      r.manifestPath != none
+
+  }
+
+  never "orphaned-targetDir" {
+
+    exists r in builds:
+
+      r.targetDir = none
+
   }
 }

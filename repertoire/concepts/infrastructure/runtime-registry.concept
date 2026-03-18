@@ -70,17 +70,52 @@ concept RuntimeRegistry [C] {
     }
   }
 
-  invariant {
+  example "registerConcept-then-isLoaded": {
+
     after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> ok()
-    then isLoaded(uri: "urn:clef/ContentNode")
-      -> ok(loaded: true)
+
+          -> ok()
+
+        then isLoaded(uri: "urn:clef/ContentNode")
+
+          -> ok(loaded: true)
+
   }
 
-  invariant {
+  example "registerConcept-then-registerConcept": {
+
     after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> ok()
-    then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
-      -> already_registered()
+
+          -> ok()
+
+        then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+
+          -> already_registered()
+
+  }
+
+
+  always "valid-uri" {
+
+    forall c in concepts:
+
+      c.uri != none
+
+  }
+
+  never "orphaned-has_storage" {
+
+    exists c in concepts:
+
+      c.has_storage = none
+
+  }
+
+  action registerConcept {
+
+    requires: uri != ""
+
+    ensures ok: uri != none
+
   }
 }

@@ -95,13 +95,46 @@ concept Adapter [A] {
     }
   }
 
-  invariant {
+  example "create-then-train": {
+
     after create(name: "domain_lora", base_model_id: "llama-3", rank: 16,
-                 target_modules: ["query", "value"], quantization: "4bit")
-      -> ok(adapter: a)
-    then train(adapter: a, dataset_ref: "ds1",
-               config: {learning_rate: 0.0002, epochs: 3, batch_size: 4})
-      -> ok(adapter: a, trainable_params: _, total_params: _,
-            trainable_pct: _)
+
+                     target_modules: ["query", "value"], quantization: "4bit")
+
+          -> ok(adapter: a)
+
+        then train(adapter: a, dataset_ref: "ds1",
+
+                   config: {learning_rate: 0.0002, epochs: 3, batch_size: 4})
+
+          -> ok(adapter: a, trainable_params: _, total_params: _,
+
+                trainable_pct: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall a in adapters:
+
+      a.name != none
+
+  }
+
+  never "orphaned-base_model_id" {
+
+    exists a in adapters:
+
+      a.base_model_id = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

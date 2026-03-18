@@ -55,12 +55,44 @@ concept Workflow [W] {
     }
   }
 
-  invariant {
+  example "defineState-then-getCurrentState": {
+
     after defineState(workflow: w, name: "draft", flags: "initial")       -> ok()
-    then  defineState(workflow: w, name: "published", flags: "")          -> ok()
-    and   defineTransition(workflow: w, from: "draft", to: "published",
-            label: "publish", guard: "approved")                          -> ok()
-    and   transition(workflow: w, entity: "doc1", transition: "publish")  -> ok(newState: "published")
-    and   getCurrentState(workflow: w, entity: "doc1")                    -> ok(state: "published")
+
+        then  defineState(workflow: w, name: "published", flags: "")          -> ok()
+
+        and   defineTransition(workflow: w, from: "draft", to: "published",
+
+                label: "publish", guard: "approved")                          -> ok()
+
+        and   transition(workflow: w, entity: "doc1", transition: "publish")  -> ok(newState: "published")
+
+        and   getCurrentState(workflow: w, entity: "doc1")                    -> ok(state: "published")
+
+  }
+
+
+  always "valid-states" {
+
+    forall w in workflows:
+
+      w.states != none
+
+  }
+
+  never "orphaned-transitions" {
+
+    exists w in workflows:
+
+      w.transitions = none
+
+  }
+
+  action defineState {
+
+    requires: workflow != ""
+
+    ensures ok: workflow != none
+
   }
 }

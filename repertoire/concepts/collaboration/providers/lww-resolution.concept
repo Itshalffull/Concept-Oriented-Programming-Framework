@@ -30,8 +30,11 @@ concept LWWResolution [V] {
     }
   }
 
-  invariant {
+  example "attemptResolve-then-attemptResolve": {
+
     after attemptResolve(base: _, v1: a, v2: b, context: _) -> resolved(result: r)
-    then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+
+        then attemptResolve(base: _, v1: b, v2: a, context: _) -> resolved(result: r)
+
   }
 }

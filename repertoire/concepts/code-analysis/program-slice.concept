@@ -59,8 +59,36 @@ concept ProgramSlice [Z] {
     }
   }
 
-  invariant {
+  example "compute-then-get": {
+
     after compute(criterion: "clef/state-field/Article/title", direction: "forward") -> ok(slice: z)
-    then get(slice: z) -> ok(slice: z, criterionSymbol: "clef/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+
+        then get(slice: z) -> ok(slice: z, criterionSymbol: "clef/state-field/Article/title", direction: "forward", symbolCount: _, fileCount: _, edgeCount: _)
+
+  }
+
+
+  always "valid-criterionSymbol" {
+
+    forall z in slices:
+
+      z.criterionSymbol != none
+
+  }
+
+  never "orphaned-criterionLocation" {
+
+    exists z in slices:
+
+      z.criterionLocation = none
+
+  }
+
+  action compute {
+
+    requires: criterion != ""
+
+    ensures ok: criterion != none
+
   }
 }

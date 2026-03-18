@@ -46,8 +46,36 @@ concept DisclosurePolicy [DP] {
     }
   }
 
-  invariant {
+  example "define-then-evaluate": {
+
     after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> defined(policy: dp)
-    then evaluate(subject: _, requester: _) -> disclose(details: _)
+
+        then evaluate(subject: _, requester: _) -> disclose(details: _)
+
+  }
+
+
+  always "valid-subject" {
+
+    forall dp in policies:
+
+      dp.subject != none
+
+  }
+
+  never "orphaned-audience" {
+
+    exists dp in policies:
+
+      dp.audience = none
+
+  }
+
+  action define {
+
+    requires: subject != ""
+
+    ensures defined: subject != none
+
   }
 }

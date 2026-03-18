@@ -49,8 +49,36 @@ concept DockerComposeIacProvider [I] {
     }
   }
 
-  invariant {
+  example "generate-then-apply": {
+
     after generate(plan: "dp-001") -> ok(composeFile: cf, files: f)
-    then apply(composeFile: cf) -> ok(composeFile: cf, created: c, updated: u)
+
+        then apply(composeFile: cf) -> ok(composeFile: cf, created: c, updated: u)
+
+  }
+
+
+  always "valid-composePath" {
+
+    forall i in composeFiles:
+
+      i.composePath != none
+
+  }
+
+  never "orphaned-projectName" {
+
+    exists i in composeFiles:
+
+      i.projectName = none
+
+  }
+
+  action generate {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

@@ -79,12 +79,44 @@ concept FileCatalog [E] {
     }
   }
 
-  invariant {
+  example "registerProvider-then-list": {
+
     after registerProvider(provider_name: "concept", kind: "concept", file_pattern: "*.concept")
-      -> ok()
-    then discover(base_paths: "/test/specs")
-      -> ok(found: n)
-    then list(kind: "concept")
-      -> ok(entries: es)
+
+          -> ok()
+
+        then discover(base_paths: "/test/specs")
+
+          -> ok(found: n)
+
+        then list(kind: "concept")
+
+          -> ok(entries: es)
+
+  }
+
+
+  always "valid-path" {
+
+    forall e in entries:
+
+      e.path != none
+
+  }
+
+  never "orphaned-kind" {
+
+    exists e in entries:
+
+      e.kind = none
+
+  }
+
+  action registerProvider {
+
+    requires: provider_name != ""
+
+    ensures ok: provider_name != none
+
   }
 }

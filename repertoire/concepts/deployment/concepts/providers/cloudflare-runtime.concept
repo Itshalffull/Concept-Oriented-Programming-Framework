@@ -60,8 +60,36 @@ concept CloudflareRuntime [W] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", accountId: "abc123", routes: r) -> ok(worker: w, scriptName: sn, endpoint: ep)
-    then deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
+
+        then deploy(worker: w, scriptContent: "export default { fetch() {} }") -> ok(worker: w, version: "1")
+
+  }
+
+
+  always "valid-scriptName" {
+
+    forall w in workers:
+
+      w.scriptName != none
+
+  }
+
+  never "orphaned-accountId" {
+
+    exists w in workers:
+
+      w.accountId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

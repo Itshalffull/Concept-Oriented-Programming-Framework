@@ -67,8 +67,36 @@ concept ConflictResolution [V] {
     }
   }
 
-  invariant {
+  example "detect-then-resolve": {
+
     after detect(base: _, version1: _, version2: _, context: _) -> noConflict()
-    then resolve(conflictId: _, policyOverride: _) -> resolved(result: _)
+
+        then resolve(conflictId: _, policyOverride: _) -> resolved(result: _)
+
+  }
+
+
+  always "valid-policy_name" {
+
+    forall v in policies:
+
+      v.policy_name != none
+
+  }
+
+  never "orphaned-pending" {
+
+    exists v in policies:
+
+      v.pending = none
+
+  }
+
+  action registerPolicy {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

@@ -80,15 +80,32 @@ concept Membership [M] {
     }
   }
 
-  invariant {
+  example "join-then-leave": {
+
     after join(candidate: x, evidence: e) -> accepted(member: x)
-    then leave(member: x) -> left(member: x)
+
+        then leave(member: x) -> left(member: x)
+
   }
 
-  invariant {
+  example "leave-then-join": {
+
     after leave(member: x) -> left(member: x)
-    then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
-    // Once exited, re-entry requires re-evaluation; this invariant
-    // can be overridden by join rules that allow re-entry.
+
+        then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
+
+        // Once exited, re-entry requires re-evaluation; this invariant
+
+        // can be overridden by join rules that allow re-entry.
+
+  }
+
+
+  action join {
+
+    requires: candidate != ""
+
+    ensures accepted: candidate != none
+
   }
 }

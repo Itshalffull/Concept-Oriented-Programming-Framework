@@ -66,13 +66,44 @@ concept LanguageGrammar [G] {
     }
   }
 
-  invariant {
+  example "register-then-resolve": {
+
     after register(name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}") -> ok(grammar: g)
-    then resolve(fileExtension: ".ts") -> ok(grammar: g)
+
+        then resolve(fileExtension: ".ts") -> ok(grammar: g)
+
   }
 
-  invariant {
+  example "register-then-register": {
+
     after register(name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}") -> ok(grammar: g)
-    then register(name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}") -> alreadyRegistered(existing: g)
+
+        then register(name: "typescript", extensions: "[\".ts\"]", parserWasmPath: "ts.wasm", nodeTypes: "{}") -> alreadyRegistered(existing: g)
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in grammars:
+
+      g.name != none
+
+  }
+
+  never "orphaned-extensions" {
+
+    exists g in grammars:
+
+      g.extensions = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

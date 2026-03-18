@@ -104,9 +104,38 @@ concept Outline [O] {
     }
   }
 
-  invariant {
+  example "create-then-expand": {
+
     after create(node: x) -> ok(node: x)
-    and collapse(node: x) -> ok(node: x)
-    then expand(node: x) -> ok(node: x)
+
+        and collapse(node: x) -> ok(node: x)
+
+        then expand(node: x) -> ok(node: x)
+
+  }
+
+
+  always "valid-isCollapsed" {
+
+    forall o in nodes:
+
+      o.isCollapsed != none
+
+  }
+
+  never "orphaned-parentOf" {
+
+    exists o in nodes:
+
+      o.parentOf = none
+
+  }
+
+  action create {
+
+    requires: node != ""
+
+    ensures ok: node != none
+
   }
 }

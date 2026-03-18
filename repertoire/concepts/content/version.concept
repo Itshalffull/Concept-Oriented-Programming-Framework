@@ -46,9 +46,38 @@ concept Version [H] {
     }
   }
 
-  invariant {
+  example "snapshot-then-rollback": {
+
     after snapshot(version: v1, entity: "doc", data: "original", author: "alice") -> ok(version: v1)
-    then listVersions(entity: "doc") -> ok(versions: "v1")
-    and rollback(version: v1) -> ok(data: "original")
+
+        then listVersions(entity: "doc") -> ok(versions: "v1")
+
+        and rollback(version: v1) -> ok(data: "original")
+
+  }
+
+
+  always "valid-entity" {
+
+    forall h in history:
+
+      h.entity != none
+
+  }
+
+  never "orphaned-snapshot" {
+
+    exists h in history:
+
+      h.snapshot = none
+
+  }
+
+  action snapshot {
+
+    requires: version != ""
+
+    ensures ok: version != none
+
   }
 }

@@ -72,9 +72,38 @@ concept ContentScript [S] {
     }
   }
 
-  invariant {
+  example "register-then-listInjected": {
+
     after register(extensionId: _, urlPatterns: _, runAt: _, world: _, jsFiles: _, cssFiles: _) -> ok(script: s)
-    then inject(script: s, tabId: _) -> ok(script: s)
-    and listInjected(extensionId: _) -> ok(scripts: _)
+
+        then inject(script: s, tabId: _) -> ok(script: s)
+
+        and listInjected(extensionId: _) -> ok(scripts: _)
+
+  }
+
+
+  always "valid-urlPatterns" {
+
+    forall s in scripts:
+
+      s.urlPatterns != none
+
+  }
+
+  never "orphaned-runAt" {
+
+    exists s in scripts:
+
+      s.runAt = none
+
+  }
+
+  action register {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

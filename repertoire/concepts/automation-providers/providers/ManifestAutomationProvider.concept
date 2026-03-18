@@ -61,11 +61,34 @@ concept ManifestAutomationProvider [MA] {
     }
   }
 
-  invariant {
+  example "register-then-execute": {
+
     after register() -> ok(provider_name: "manifest")
-    then  load(manifest_path: "automation-manifest.json")
-          -> ok(entry_count: n, version: v)
-    then  execute(action_ref: "Content/save", input: "{}")
-          -> ok(result: r)
+
+        then  load(manifest_path: "automation-manifest.json")
+
+              -> ok(entry_count: n, version: v)
+
+        then  execute(action_ref: "Content/save", input: "{}")
+
+              -> ok(result: r)
+
+  }
+
+
+  always "valid-concept_action" {
+
+    forall ma in entries:
+
+      ma.concept_action != none
+
+  }
+
+  never "orphaned-input_schema" {
+
+    exists ma in entries:
+
+      ma.input_schema = none
+
   }
 }

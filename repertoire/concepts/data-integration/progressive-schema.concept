@@ -72,9 +72,38 @@ concept ProgressiveSchema [P] {
     }
   }
 
-  invariant {
+  example "captureFreeform-then-acceptSuggestion": {
+
     after captureFreeform(content: "Meeting with John on 2026-03-01 about #project-x") -> ok(itemId: "ps-1")
-    then detectStructure(itemId: "ps-1") -> ok(suggestions: "[{\"field\":\"date\",\"value\":\"2026-03-01\",\"confidence\":0.95}]")
-    and  acceptSuggestion(itemId: "ps-1", suggestionId: "sug-1") -> ok()
+
+        then detectStructure(itemId: "ps-1") -> ok(suggestions: "[{\"field\":\"date\",\"value\":\"2026-03-01\",\"confidence\":0.95}]")
+
+        and  acceptSuggestion(itemId: "ps-1", suggestionId: "sug-1") -> ok()
+
+  }
+
+
+  always "valid-content" {
+
+    forall p in items:
+
+      p.content != none
+
+  }
+
+  never "orphaned-formality" {
+
+    exists p in items:
+
+      p.formality = none
+
+  }
+
+  action captureFreeform {
+
+    requires: content != ""
+
+    ensures ok: content != none
+
   }
 }

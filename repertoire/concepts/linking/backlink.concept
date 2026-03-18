@@ -33,8 +33,20 @@ concept Backlink [B] {
     }
   }
 
-  invariant {
+  example "reindex-then-getBacklinks": {
+
     after reindex() -> ok(count: n)
-    then getBacklinks(entity: x) -> ok(sources: s)
+
+        then getBacklinks(entity: x) -> ok(sources: s)
+
+  }
+
+
+  action getBacklinks {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

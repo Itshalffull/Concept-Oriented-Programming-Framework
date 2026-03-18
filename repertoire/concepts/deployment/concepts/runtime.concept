@@ -131,8 +131,36 @@ concept Runtime [I] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", runtimeType: "ecs-fargate", config: "{}") -> ok(instance: i, endpoint: "http://svc:8080")
-    then deploy(instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0") -> ok(instance: i, endpoint: "http://svc:8080")
+
+        then deploy(instance: i, artifact: "s3://artifacts/user-v1", version: "1.0.0") -> ok(instance: i, endpoint: "http://svc:8080")
+
+  }
+
+
+  always "valid-concept" {
+
+    forall i in instances:
+
+      i.concept != none
+
+  }
+
+  never "orphaned-runtimeType" {
+
+    exists i in instances:
+
+      i.runtimeType = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

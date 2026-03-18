@@ -54,9 +54,38 @@ concept RageQuit [RQ] {
     }
   }
 
-  invariant {
+  example "initiate-then-claim": {
+
     after initiate(member: _, sharesToBurn: _) -> initiated(exit: rq)
-    then calculateClaim(exit: rq, treasuryBalances: _) -> calculated(exit: rq, claims: _)
-    and  claim(exit: rq) -> claimed(exit: rq)
+
+        then calculateClaim(exit: rq, treasuryBalances: _) -> calculated(exit: rq, claims: _)
+
+        and  claim(exit: rq) -> claimed(exit: rq)
+
+  }
+
+
+  always "valid-member" {
+
+    forall rq in exits:
+
+      rq.member != none
+
+  }
+
+  never "orphaned-sharesToBurn" {
+
+    exists rq in exits:
+
+      rq.sharesToBurn = none
+
+  }
+
+  action initiate {
+
+    requires: member != ""
+
+    ensures initiated: member != none
+
   }
 }

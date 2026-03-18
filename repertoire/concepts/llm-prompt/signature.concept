@@ -78,15 +78,50 @@ concept Signature [G] {
     }
   }
 
-  invariant {
+  example "define-then-compile": {
+
     after define(name: "QA", input_fields: [{name: "context", type: "String",
-                 description: _}, {name: "question", type: "String",
-                 description: _}],
-                 output_fields: [{name: "answer", type: "String",
-                 description: _}],
-                 instruction: _, module_type: "chain_of_thought")
-      -> ok(signature: g)
-    then compile(signature: g, model_id: "gpt-4o", examples: _)
-      -> ok(compiled_prompt: _)
+
+                     description: _}, {name: "question", type: "String",
+
+                     description: _}],
+
+                     output_fields: [{name: "answer", type: "String",
+
+                     description: _}],
+
+                     instruction: _, module_type: "chain_of_thought")
+
+          -> ok(signature: g)
+
+        then compile(signature: g, model_id: "gpt-4o", examples: _)
+
+          -> ok(compiled_prompt: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall g in signatures:
+
+      g.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists g in signatures:
+
+      g.name = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

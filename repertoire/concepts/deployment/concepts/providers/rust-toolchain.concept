@@ -49,9 +49,30 @@ concept RustToolchain [R] {
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "linux-x86_64", versionConstraint: ">=1.75")
-      -> ok(toolchain: r, rustcPath: "/usr/local/bin/rustc", version: "1.78.0", capabilities: ["incremental", "proc-macros"])
-    then register() -> ok(name: "RustToolchain", language: "rust", capabilities: caps)
+
+          -> ok(toolchain: r, rustcPath: "/usr/local/bin/rustc", version: "1.78.0", capabilities: ["incremental", "proc-macros"])
+
+        then register() -> ok(name: "RustToolchain", language: "rust", capabilities: caps)
+
+  }
+
+
+  always "valid-rustcPath" {
+
+    forall r in toolchains:
+
+      r.rustcPath != none
+
+  }
+
+  never "orphaned-rustcVersion" {
+
+    exists r in toolchains:
+
+      r.rustcVersion = none
+
   }
 }

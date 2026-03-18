@@ -64,8 +64,36 @@ concept CloudFormationProvider [C] {
     }
   }
 
-  invariant {
+  example "generate-then-apply": {
+
     after generate(plan: "dp-001") -> ok(stack: s, files: f)
-    then apply(stack: s) -> ok(stack: s, stackId: sid, created: c, updated: u)
+
+        then apply(stack: s) -> ok(stack: s, stackId: sid, created: c, updated: u)
+
+  }
+
+
+  always "valid-stackName" {
+
+    forall c in stacks:
+
+      c.stackName != none
+
+  }
+
+  never "orphaned-region" {
+
+    exists c in stacks:
+
+      c.region = none
+
+  }
+
+  action generate {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

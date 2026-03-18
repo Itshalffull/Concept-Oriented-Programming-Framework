@@ -55,8 +55,36 @@ concept Attribution [A] {
     }
   }
 
-  invariant {
+  example "attribute-then-blame": {
+
     after attribute(contentRef: c, region: r, agent: a, changeRef: ch) -> ok(attributionId: id)
-    then blame(contentRef: c) -> ok(map: m)
+
+        then blame(contentRef: c) -> ok(map: m)
+
+  }
+
+
+  always "valid-contentRef" {
+
+    forall a in attributions:
+
+      a.contentRef != none
+
+  }
+
+  never "orphaned-region" {
+
+    exists a in attributions:
+
+      a.region = none
+
+  }
+
+  action attribute {
+
+    requires: contentRef != ""
+
+    ensures ok: contentRef != none
+
   }
 }

@@ -59,8 +59,36 @@ concept SemanticEmbedding [B] {
     }
   }
 
-  invariant {
+  example "compute-then-get": {
+
     after compute(unit: "def-123", model: "codeBERT") -> ok(embedding: b)
-    then get(embedding: b) -> ok(embedding: b, unit: "def-123", model: "codeBERT", dimensions: _)
+
+        then get(embedding: b) -> ok(embedding: b, unit: "def-123", model: "codeBERT", dimensions: _)
+
+  }
+
+
+  always "valid-unit" {
+
+    forall b in embeddings:
+
+      b.unit != none
+
+  }
+
+  never "orphaned-digest" {
+
+    exists b in embeddings:
+
+      b.digest = none
+
+  }
+
+  action compute {
+
+    requires: unit != ""
+
+    ensures ok: unit != none
+
   }
 }

@@ -57,4 +57,9 @@ concept ReactStrategy [S] {
       }
     }
   }
+
+  action addObservation {
+    requires: session != ""
+    ensures ok: session != none
+  }
 }

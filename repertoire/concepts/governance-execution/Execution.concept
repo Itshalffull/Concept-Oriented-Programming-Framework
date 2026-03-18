@@ -53,8 +53,36 @@ concept Execution [EX] {
     }
   }
 
-  invariant {
+  example "schedule-then-execute": {
+
     after schedule(sourceRef: _, actions: _, executor: _) -> scheduled(execution: ex)
-    then execute(execution: ex) -> completed(execution: ex, result: _)
+
+        then execute(execution: ex) -> completed(execution: ex, result: _)
+
+  }
+
+
+  always "valid-sourceRef" {
+
+    forall ex in executions:
+
+      ex.sourceRef != none
+
+  }
+
+  never "orphaned-sourceRef" {
+
+    exists ex in executions:
+
+      ex.sourceRef = none
+
+  }
+
+  action schedule {
+
+    requires: sourceRef != ""
+
+    ensures scheduled: sourceRef != none
+
   }
 }

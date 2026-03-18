@@ -50,8 +50,36 @@ concept ApiSurface [S] {
     }
   }
 
-  invariant {
+  example "compose-then-entrypoint": {
+
     after compose(suite: "test-suite", target: "rest", outputs: ["todo-output", "user-output"]) -> ok(surface: s, entrypoint: e, conceptCount: 2)
-    then entrypoint(surface: s) -> ok(content: c)
+
+        then entrypoint(surface: s) -> ok(content: c)
+
+  }
+
+
+  always "valid-suite" {
+
+    forall s in surfaces:
+
+      s.suite != none
+
+  }
+
+  never "orphaned-target" {
+
+    exists s in surfaces:
+
+      s.target = none
+
+  }
+
+  action compose {
+
+    requires: suite != ""
+
+    ensures ok: suite != none
+
   }
 }

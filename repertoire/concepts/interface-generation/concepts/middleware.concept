@@ -68,9 +68,38 @@ concept Middleware [M] {
     }
   }
 
-  invariant {
+  example "register-then-inject": {
+
     after register(trait: "auth", target: "rest", implementation: "bearer-check", position: "auth") -> ok(middleware: m)
-    then resolve(traits: ["auth"], target: "rest") -> ok(middlewares: mw, order: o)
-    and inject(output: "route-code", middlewares: ["bearer-check"], target: "rest") -> ok(output: out, injectedCount: 1)
+
+        then resolve(traits: ["auth"], target: "rest") -> ok(middlewares: mw, order: o)
+
+        and inject(output: "route-code", middlewares: ["bearer-check"], target: "rest") -> ok(output: out, injectedCount: 1)
+
+  }
+
+
+  always "valid-name" {
+
+    forall m in definitions:
+
+      m.name != none
+
+  }
+
+  never "orphaned-scope" {
+
+    exists m in definitions:
+
+      m.scope = none
+
+  }
+
+  action register {
+
+    requires: trait != ""
+
+    ensures ok: trait != none
+
   }
 }

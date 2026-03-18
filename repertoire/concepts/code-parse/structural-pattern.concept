@@ -55,8 +55,36 @@ concept StructuralPattern [P] {
     }
   }
 
-  invariant {
+  example "create-then-match": {
+
     after create(syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript") -> ok(pattern: p)
-    then match(pattern: p, tree: "some-tree") -> ok(matches: m)
+
+        then match(pattern: p, tree: "some-tree") -> ok(matches: m)
+
+  }
+
+
+  always "valid-name" {
+
+    forall p in patterns:
+
+      p.name != none
+
+  }
+
+  never "orphaned-syntax" {
+
+    exists p in patterns:
+
+      p.syntax = none
+
+  }
+
+  action create {
+
+    requires: syntax != ""
+
+    ensures ok: syntax != none
+
   }
 }

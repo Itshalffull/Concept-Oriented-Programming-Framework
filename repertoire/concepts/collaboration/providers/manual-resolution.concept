@@ -28,8 +28,11 @@ concept ManualResolution [V] {
     }
   }
 
-  invariant {
+  example "attemptResolve-then-register": {
+
     after attemptResolve(base: _, v1: _, v2: _, context: _) -> cannotResolve(reason: _)
-    then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
+
+        then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
+
   }
 }

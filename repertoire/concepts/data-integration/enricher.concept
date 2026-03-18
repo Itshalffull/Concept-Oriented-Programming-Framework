@@ -65,8 +65,36 @@ concept Enricher [E] {
     }
   }
 
-  invariant {
+  example "enrich-then-accept": {
+
     after enrich(itemId: "item-1", enricherId: "auto_tag") -> ok(enrichmentId: "enr-1", result: "[\"tech\",\"ai\"]", confidence: "0.92")
-    then accept(itemId: "item-1", enrichmentId: "enr-1") -> ok()
+
+        then accept(itemId: "item-1", enrichmentId: "enr-1") -> ok()
+
+  }
+
+
+  always "valid-itemId" {
+
+    forall e in enrichments:
+
+      e.itemId != none
+
+  }
+
+  never "orphaned-pluginId" {
+
+    exists e in enrichments:
+
+      e.pluginId = none
+
+  }
+
+  action enrich {
+
+    requires: itemId != ""
+
+    ensures ok: itemId != none
+
   }
 }

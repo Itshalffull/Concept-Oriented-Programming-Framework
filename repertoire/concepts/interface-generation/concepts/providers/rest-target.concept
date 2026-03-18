@@ -75,8 +75,36 @@ concept RestTarget [R] {
     }
   }
 
-  invariant {
+  example "generate-then-listRoutes": {
+
     after generate(projection: "user-projection", config: "{}") -> ok(routes: r, files: f)
-    then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+        then listRoutes(concept: "User") -> ok(routes: lr, methods: m)
+
+  }
+
+
+  always "valid-basePath" {
+
+    forall r in routes:
+
+      r.basePath != none
+
+  }
+
+  never "orphaned-framework" {
+
+    exists r in routes:
+
+      r.framework = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

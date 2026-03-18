@@ -57,8 +57,36 @@ concept DockerComposeRuntime [D] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", composePath: "./docker-compose.yml", ports: p) -> ok(service: s, serviceName: sn, endpoint: ep)
-    then deploy(service: s, imageUri: "user:latest") -> ok(service: s, containerId: cid)
+
+        then deploy(service: s, imageUri: "user:latest") -> ok(service: s, containerId: cid)
+
+  }
+
+
+  always "valid-composePath" {
+
+    forall d in services:
+
+      d.composePath != none
+
+  }
+
+  never "orphaned-serviceName" {
+
+    exists d in services:
+
+      d.serviceName = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

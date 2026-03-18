@@ -61,9 +61,38 @@ concept Control [K] {
     }
   }
 
-  invariant {
+  example "create-then-getValue": {
+
     after create(control: k, type: "slider", binding: "volume")  -> ok()
-    then  setValue(control: k, value: "75")                       -> ok()
-    and   getValue(control: k)                                    -> ok(value: "75")
+
+        then  setValue(control: k, value: "75")                       -> ok()
+
+        and   getValue(control: k)                                    -> ok(value: "75")
+
+  }
+
+
+  always "valid-type" {
+
+    forall k in controls:
+
+      k.type != none
+
+  }
+
+  never "orphaned-value" {
+
+    exists k in controls:
+
+      k.value = none
+
+  }
+
+  action create {
+
+    requires: control != ""
+
+    ensures ok: control != none
+
   }
 }

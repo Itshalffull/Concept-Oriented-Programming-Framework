@@ -39,8 +39,36 @@ concept ScoreVoting [SV] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> configured(config: sv)
-    then count(config: sv, scoreBallots: _, weights: _) -> winner(choice: _, aggregateScore: _, details: _)
+
+        then count(config: sv, scoreBallots: _, weights: _) -> winner(choice: _, aggregateScore: _, details: _)
+
+  }
+
+
+  always "valid-minScore" {
+
+    forall sv in configurations:
+
+      sv.minScore != none
+
+  }
+
+  never "orphaned-maxScore" {
+
+    exists sv in configurations:
+
+      sv.maxScore = none
+
+  }
+
+  action configure {
+
+    requires: minScore != ""
+
+    ensures configured: minScore != none
+
   }
 }

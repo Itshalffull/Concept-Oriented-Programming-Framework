@@ -75,8 +75,36 @@ concept McpTarget [M] {
     }
   }
 
-  invariant {
+  example "generate-then-listTools": {
+
     after generate(projection: "agent-projection", config: "{}") -> ok(tools: t, files: f)
-    then listTools(concept: "Agent") -> ok(tools: tl, resources: r, templates: tp)
+
+        then listTools(concept: "Agent") -> ok(tools: tl, resources: r, templates: tp)
+
+  }
+
+
+  always "valid-serverName" {
+
+    forall m in tools:
+
+      m.serverName != none
+
+  }
+
+  never "orphaned-transport" {
+
+    exists m in tools:
+
+      m.transport = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

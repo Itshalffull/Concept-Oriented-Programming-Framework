@@ -53,12 +53,19 @@ concept PathAnalysisProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "shortest-path",
-      config: { source: "A", target: "Z" })
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "all-paths",
-      config: { source: "A", target: "Z", max_paths: 10 })
-      -> ok(payload: _)
+
+          config: { source: "A", target: "Z" })
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "all-paths",
+
+          config: { source: "A", target: "Z", max_paths: 10 })
+
+          -> ok(payload: _)
+
   }
 }

@@ -54,9 +54,38 @@ concept AutomationRule [R] {
     }
   }
 
-  invariant {
+  example "define-then-enable": {
+
     after define(rule: r, trigger: "on_save", conditions: "status == draft",
-           actions: "notify_reviewer")                                     -> ok()
-    then  enable(rule: r)                                                  -> ok()
+
+               actions: "notify_reviewer")                                     -> ok()
+
+        then  enable(rule: r)                                                  -> ok()
+
+  }
+
+
+  always "valid-trigger" {
+
+    forall r in rules:
+
+      r.trigger != none
+
+  }
+
+  never "orphaned-conditions" {
+
+    exists r in rules:
+
+      r.conditions = none
+
+  }
+
+  action define {
+
+    requires: rule != ""
+
+    ensures ok: rule != none
+
   }
 }

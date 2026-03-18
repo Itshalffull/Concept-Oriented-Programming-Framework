@@ -93,15 +93,50 @@ concept Consensus [N] {
     }
   }
 
-  invariant {
+  example "create-then-tally": {
+
     after create(proposal: "Which approach to use?",
-                 method: "weighted", max_rounds: 3) -> ok(session: n)
-    and  vote(session: n, agent_id: "a1", position: "approach_A",
-              confidence: 0.8, reasoning: "Better coverage")
-      -> ok(session: n)
-    and  vote(session: n, agent_id: "a2", position: "approach_B",
-              confidence: 0.6, reasoning: "Lower cost")
-      -> ok(session: n)
-    then tally(session: n) -> ok(decision: _, vote_count: 2, breakdown: _)
+
+                     method: "weighted", max_rounds: 3) -> ok(session: n)
+
+        and  vote(session: n, agent_id: "a1", position: "approach_A",
+
+                  confidence: 0.8, reasoning: "Better coverage")
+
+          -> ok(session: n)
+
+        and  vote(session: n, agent_id: "a2", position: "approach_B",
+
+                  confidence: 0.6, reasoning: "Lower cost")
+
+          -> ok(session: n)
+
+        then tally(session: n) -> ok(decision: _, vote_count: 2, breakdown: _)
+
+  }
+
+
+  always "valid-proposal" {
+
+    forall n in sessions:
+
+      n.proposal != none
+
+  }
+
+  never "orphaned-proposal" {
+
+    exists n in sessions:
+
+      n.proposal = none
+
+  }
+
+  action create {
+
+    requires: proposal != ""
+
+    ensures ok: proposal != none
+
   }
 }

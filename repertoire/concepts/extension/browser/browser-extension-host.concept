@@ -74,8 +74,36 @@ concept BrowserExtensionHost [B] {
     }
   }
 
-  invariant {
+  example "activate-then-getStatus": {
+
     after activate(extension: e) -> ok(extension: e)
-    then getStatus(extension: e) -> ok(status: "active", serviceWorkerState: _)
+
+        then getStatus(extension: e) -> ok(status: "active", serviceWorkerState: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall b in extensions:
+
+      b.status != none
+
+  }
+
+  never "orphaned-serviceWorkerState" {
+
+    exists b in extensions:
+
+      b.serviceWorkerState = none
+
+  }
+
+  action activate {
+
+    requires: extension != ""
+
+    ensures ok: extension != none
+
   }
 }

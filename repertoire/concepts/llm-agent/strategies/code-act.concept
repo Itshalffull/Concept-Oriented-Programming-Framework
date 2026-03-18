@@ -61,4 +61,13 @@ concept CodeActStrategy [S] {
       }
     }
   }
+
+  always "valid-error" {
+    forall s in sessions:
+      s.error != none
+  }
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
+  }
 }

@@ -27,8 +27,36 @@ concept JavaSdkTarget [S] {
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(artifact: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(artifact: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(artifact: s2, files: f2)
+
+  }
+
+
+  always "valid-groupId" {
+
+    forall s in artifacts:
+
+      s.groupId != none
+
+  }
+
+  never "orphaned-artifactId" {
+
+    exists s in artifacts:
+
+      s.artifactId = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

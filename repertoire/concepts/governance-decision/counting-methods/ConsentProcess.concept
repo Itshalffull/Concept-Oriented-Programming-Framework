@@ -66,10 +66,40 @@ concept ConsentProcess [CP] {
     }
   }
 
-  invariant {
+  example "initiate-then-resolve": {
+
     after initiate(proposalRef: _) -> initiated(process: cp)
-    then advancePhase(process: cp) -> advanced(process: cp, newPhase: "Clarifying")
-    // After full cycle with no objections:
-    and  resolve(process: cp) -> consented(process: cp)
+
+        then advancePhase(process: cp) -> advanced(process: cp, newPhase: "Clarifying")
+
+        // After full cycle with no objections:
+
+        and  resolve(process: cp) -> consented(process: cp)
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall cp in processes:
+
+      cp.proposalRef != none
+
+  }
+
+  never "orphaned-proposalRef" {
+
+    exists cp in processes:
+
+      cp.proposalRef = none
+
+  }
+
+  action initiate {
+
+    requires: proposalRef != ""
+
+    ensures initiated: proposalRef != none
+
   }
 }

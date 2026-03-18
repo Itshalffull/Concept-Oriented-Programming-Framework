@@ -69,13 +69,44 @@ concept FileArtifact [F] {
     }
   }
 
-  invariant {
+  example "register-then-get": {
+
     after register(node: "src/handler.ts", role: "source", language: "typescript") -> ok(artifact: a)
-    then get(artifact: a) -> ok(artifact: a, node: "src/handler.ts", role: "source", language: "typescript", encoding: "utf-8")
+
+        then get(artifact: a) -> ok(artifact: a, node: "src/handler.ts", role: "source", language: "typescript", encoding: "utf-8")
+
   }
 
-  invariant {
+  example "register-then-register": {
+
     after register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(artifact: a)
-    then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> alreadyRegistered(existing: a)
+
+        then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> alreadyRegistered(existing: a)
+
+  }
+
+
+  always "valid-node" {
+
+    forall f in artifacts:
+
+      f.node != none
+
+  }
+
+  never "orphaned-role" {
+
+    exists f in artifacts:
+
+      f.role = none
+
+  }
+
+  action register {
+
+    requires: node != ""
+
+    ensures ok: node != none
+
   }
 }

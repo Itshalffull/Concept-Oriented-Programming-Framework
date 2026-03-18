@@ -59,8 +59,36 @@ concept UILibraryTarget [D] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(config: "{\"outputPath\":\"docs/reference/ui-library.md\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-outputPath" {
+
+    forall d in documents:
+
+      d.outputPath != none
+
+  }
+
+  never "orphaned-includeAccessibility" {
+
+    exists d in documents:
+
+      d.includeAccessibility = none
+
+  }
+
+  action generate {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

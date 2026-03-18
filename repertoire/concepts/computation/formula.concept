@@ -39,8 +39,36 @@ concept Formula [F] {
     }
   }
 
-  invariant {
+  example "create-then-evaluate": {
+
     after create(formula: f, expression: "price * quantity") -> ok()
-    then evaluate(formula: f) -> ok(result: "computed")
+
+        then evaluate(formula: f) -> ok(result: "computed")
+
+  }
+
+
+  always "valid-expression" {
+
+    forall f in formulas:
+
+      f.expression != none
+
+  }
+
+  never "orphaned-dependencies" {
+
+    exists f in formulas:
+
+      f.dependencies = none
+
+  }
+
+  action create {
+
+    requires: formula != ""
+
+    ensures ok: formula != none
+
   }
 }

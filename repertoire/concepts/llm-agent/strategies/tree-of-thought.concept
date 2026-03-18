@@ -62,4 +62,13 @@ concept TreeOfThoughtStrategy [S] {
       }
     }
   }
+
+  always "valid-thought" {
+    forall s in sessions:
+      s.thought != none
+  }
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
+  }
 }

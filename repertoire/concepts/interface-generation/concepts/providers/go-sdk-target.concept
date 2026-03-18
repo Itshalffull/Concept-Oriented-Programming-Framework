@@ -25,8 +25,36 @@ concept GoSdkTarget [S] {
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(module: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(module: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(module: s2, files: f2)
+
+  }
+
+
+  always "valid-modulePath" {
+
+    forall s in modules:
+
+      s.modulePath != none
+
+  }
+
+  never "orphaned-goVersion" {
+
+    exists s in modules:
+
+      s.goVersion = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

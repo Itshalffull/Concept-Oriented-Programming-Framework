@@ -61,14 +61,46 @@ concept StorageProvider [S] {
     }
   }
 
-  invariant {
+  example "provision-then-getCredentials-2": {
+
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
-    then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
+
+        then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
+
   }
 
-  invariant {
+  example "provision-then-getCredentials": {
+
     after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
-    then destroy(store: s1) -> ok(store: s1)
-    and getCredentials(store: s1) -> notfound(store: s1)
+
+        then destroy(store: s1) -> ok(store: s1)
+
+        and getCredentials(store: s1) -> notfound(store: s1)
+
+  }
+
+
+  always "valid-storeName" {
+
+    forall s in stores:
+
+      s.storeName != none
+
+  }
+
+  never "orphaned-storageType" {
+
+    exists s in stores:
+
+      s.storageType = none
+
+  }
+
+  action provision {
+
+    requires: store != ""
+
+    ensures ok: store != none
+
   }
 }

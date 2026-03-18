@@ -67,8 +67,36 @@ concept BFTFinality [BF] {
     }
   }
 
-  invariant {
+  example "configureCommittee-then-proposeFinality": {
+
     after configureCommittee(validators: _, faultTolerance: 0.333, protocol: "PBFT") -> configured(committee: bf)
-    then proposeFinality(committee: bf, operationRef: _, proposer: _) -> proposed(committee: bf, roundNumber: _)
+
+        then proposeFinality(committee: bf, operationRef: _, proposer: _) -> proposed(committee: bf, roundNumber: _)
+
+  }
+
+
+  always "valid-validators" {
+
+    forall bf in committees:
+
+      bf.validators != none
+
+  }
+
+  never "orphaned-faultTolerance" {
+
+    exists bf in committees:
+
+      bf.faultTolerance = none
+
+  }
+
+  action configureCommittee {
+
+    requires: validators != ""
+
+    ensures configured: validators != none
+
   }
 }

@@ -125,12 +125,44 @@ concept VectorIndex [X] {
     }
   }
 
-  invariant {
+  example "create-then-search": {
+
     after create(dimensions: 1536, distance_metric: "cosine",
-                 index_type: "hnsw", backend: "qdrant",
-                 embedding_model: "text-embedding-3-small") -> ok(index: x)
-    and  add(index: x, id: "doc1", vector: v, metadata: _) -> ok()
-    then search(index: x, query_vector: v, k: 1, filters: _)
-         -> ok(results: _)
+
+                     index_type: "hnsw", backend: "qdrant",
+
+                     embedding_model: "text-embedding-3-small") -> ok(index: x)
+
+        and  add(index: x, id: "doc1", vector: v, metadata: _) -> ok()
+
+        then search(index: x, query_vector: v, k: 1, filters: _)
+
+             -> ok(results: _)
+
+  }
+
+
+  always "valid-distance_metric" {
+
+    forall x in indexes:
+
+      x.distance_metric != none
+
+  }
+
+  never "orphaned-dimensions" {
+
+    exists x in indexes:
+
+      x.dimensions = none
+
+  }
+
+  action create {
+
+    requires: dimensions != ""
+
+    ensures ok: dimensions != none
+
   }
 }

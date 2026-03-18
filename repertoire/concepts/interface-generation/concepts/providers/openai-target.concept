@@ -68,8 +68,36 @@ concept OpenaiTarget [F] {
     }
   }
 
-  invariant {
+  example "generate-then-listFunctions": {
+
     after generate(projection: "score-projection", config: "{}") -> ok(functions: f, files: fl)
-    then listFunctions(concept: "ScoreApi") -> ok(functions: fns)
+
+        then listFunctions(concept: "ScoreApi") -> ok(functions: fns)
+
+  }
+
+
+  always "valid-strict" {
+
+    forall f in functions:
+
+      f.strict != none
+
+  }
+
+  never "orphaned-format" {
+
+    exists f in functions:
+
+      f.format = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

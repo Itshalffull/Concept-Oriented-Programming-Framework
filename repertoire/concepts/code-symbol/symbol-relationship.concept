@@ -65,13 +65,44 @@ concept SymbolRelationship [R] {
     }
   }
 
-  invariant {
+  example "add-then-findFrom": {
+
     after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
-    then findFrom(source: "ts/class/Handler", kind: "implements") -> ok(relationships: _)
+
+        then findFrom(source: "ts/class/Handler", kind: "implements") -> ok(relationships: _)
+
   }
 
-  invariant {
+  example "add-then-add": {
+
     after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
-    then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> alreadyExists(existing: r)
+
+        then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> alreadyExists(existing: r)
+
+  }
+
+
+  always "valid-source" {
+
+    forall r in relationships:
+
+      r.source != none
+
+  }
+
+  never "orphaned-target" {
+
+    exists r in relationships:
+
+      r.target = none
+
+  }
+
+  action add {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

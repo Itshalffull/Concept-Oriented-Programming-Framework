@@ -60,8 +60,36 @@ concept Metric [ME] {
     }
   }
 
-  invariant {
+  example "define-then-update": {
+
     after define(name: _, unit: _, source: _) -> defined(metric: me)
-    then update(metric: me, value: 50.0) -> updated(metric: me, previousValue: _)
+
+        then update(metric: me, value: 50.0) -> updated(metric: me, previousValue: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall me in metrics:
+
+      me.name != none
+
+  }
+
+  never "orphaned-value" {
+
+    exists me in metrics:
+
+      me.value = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures defined: name != none
+
   }
 }

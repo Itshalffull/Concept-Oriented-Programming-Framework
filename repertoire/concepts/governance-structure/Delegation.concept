@@ -53,11 +53,42 @@ concept Delegation [E] {
     }
   }
 
-  invariant {
+  example "delegate-then-getEffectiveWeight": {
+
     after delegate(from: a, to: b, domain: _, transitive: _) -> delegated(delegation: e)
-    then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: w)
-    // w >= 2.0 because b has own weight (1.0) + a's weight (1.0)
-    and  undelegate(delegation: e) -> revoked(delegation: e)
-    then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: 1.0)
+
+        then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: w)
+
+        // w >= 2.0 because b has own weight (1.0) + a's weight (1.0)
+
+        and  undelegate(delegation: e) -> revoked(delegation: e)
+
+        then getEffectiveWeight(participant: b, domain: _) -> weight(participant: b, effectiveWeight: 1.0)
+
+  }
+
+
+  always "valid-delegator" {
+
+    forall e in delegations:
+
+      e.delegator != none
+
+  }
+
+  never "orphaned-delegatee" {
+
+    exists e in delegations:
+
+      e.delegatee = none
+
+  }
+
+  action delegate {
+
+    requires: from != ""
+
+    ensures delegated: from != none
+
   }
 }

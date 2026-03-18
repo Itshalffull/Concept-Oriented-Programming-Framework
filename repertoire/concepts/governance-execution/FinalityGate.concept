@@ -45,8 +45,36 @@ concept FinalityGate [FG] {
     }
   }
 
-  invariant {
+  example "submit-then-confirm": {
+
     after submit(operationRef: _, provider: _) -> submitted(gate: fg)
-    then confirm(gate: fg) -> finalized(gate: fg)
+
+        then confirm(gate: fg) -> finalized(gate: fg)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall fg in gates:
+
+      fg.operationRef != none
+
+  }
+
+  never "orphaned-provider" {
+
+    exists fg in gates:
+
+      fg.provider = none
+
+  }
+
+  action submit {
+
+    requires: operationRef != ""
+
+    ensures submitted: operationRef != none
+
   }
 }

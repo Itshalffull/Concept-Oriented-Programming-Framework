@@ -57,8 +57,36 @@ concept LocalRuntime [L] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", command: "node server.js", port: 3000) -> ok(process: p, pid: pid, endpoint: ep)
-    then deploy(process: p, command: "node server.js") -> ok(process: p, pid: newPid)
+
+        then deploy(process: p, command: "node server.js") -> ok(process: p, pid: newPid)
+
+  }
+
+
+  always "valid-command" {
+
+    forall l in processes:
+
+      l.command != none
+
+  }
+
+  never "orphaned-workingDirectory" {
+
+    exists l in processes:
+
+      l.workingDirectory = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

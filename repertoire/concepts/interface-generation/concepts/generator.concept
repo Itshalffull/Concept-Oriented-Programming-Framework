@@ -61,8 +61,36 @@ concept Generator [G] {
     }
   }
 
-  invariant {
+  example "plan-then-generate": {
+
     after plan(suite: "test-suite", interfaceManifest: "valid-manifest") -> ok(plan: g, targets: t, concepts: c, estimatedFiles: 10)
-    then generate(plan: g) -> ok(plan: g, filesGenerated: 10, filesUnchanged: 0, duration: 500)
+
+        then generate(plan: g) -> ok(plan: g, filesGenerated: 10, filesUnchanged: 0, duration: 500)
+
+  }
+
+
+  always "valid-outputDir" {
+
+    forall g in plans:
+
+      g.outputDir != none
+
+  }
+
+  never "orphaned-targets" {
+
+    exists g in plans:
+
+      g.targets = none
+
+  }
+
+  action plan {
+
+    requires: suite != ""
+
+    ensures ok: suite != none
+
   }
 }

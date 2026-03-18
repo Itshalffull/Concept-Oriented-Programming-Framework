@@ -83,12 +83,36 @@ concept TypeScriptBuilder [N] {
     }
   }
 
-  invariant {
+  example "build-then-test": {
+
     after build(source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" })
-      -> ok(build: n, artifactPath: ".clef-artifacts/typescript/password", artifactHash: "sha256:def")
-    then test(build: n, toolchainPath: "/usr/local/bin/tsc",
-              invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json", configFile: "vitest.config.ts", env: null },
-              testType: "unit")
-      -> ok(passed: 8, failed: 0, skipped: 0, duration: 900, testType: "unit")
+
+          -> ok(build: n, artifactPath: ".clef-artifacts/typescript/password", artifactHash: "sha256:def")
+
+        then test(build: n, toolchainPath: "/usr/local/bin/tsc",
+
+                  invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json", configFile: "vitest.config.ts", env: null },
+
+                  testType: "unit")
+
+          -> ok(passed: 8, failed: 0, skipped: 0, duration: 900, testType: "unit")
+
+  }
+
+
+  always "valid-projectPath" {
+
+    forall n in builds:
+
+      n.projectPath != none
+
+  }
+
+  never "orphaned-outDir" {
+
+    exists n in builds:
+
+      n.outDir = none
+
   }
 }

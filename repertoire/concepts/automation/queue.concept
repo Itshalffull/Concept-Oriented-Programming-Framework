@@ -60,9 +60,38 @@ concept Queue [Q] {
     }
   }
 
-  invariant {
+  example "enqueue-then-process": {
+
     after enqueue(queue: q, item: "send_email", priority: 1)  -> ok(itemId: "item-1")
-    then  claim(queue: q, worker: "worker-a")                  -> ok(item: "send_email")
-    and   process(queue: q, itemId: "item-1", result: "sent")  -> ok()
+
+        then  claim(queue: q, worker: "worker-a")                  -> ok(item: "send_email")
+
+        and   process(queue: q, itemId: "item-1", result: "sent")  -> ok()
+
+  }
+
+
+  always "valid-items" {
+
+    forall q in queues:
+
+      q.items != none
+
+  }
+
+  never "orphaned-workers" {
+
+    exists q in queues:
+
+      q.workers = none
+
+  }
+
+  action enqueue {
+
+    requires: queue != ""
+
+    ensures ok: queue != none
+
   }
 }

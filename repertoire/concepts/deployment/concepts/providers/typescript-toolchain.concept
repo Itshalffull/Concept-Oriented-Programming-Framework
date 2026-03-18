@@ -48,9 +48,30 @@ concept TypeScriptToolchain [N] {
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "node-20", versionConstraint: ">=5.7")
-      -> ok(toolchain: n, tscPath: "/usr/local/bin/tsc", version: "5.7.2", capabilities: ["esm", "declaration-maps"])
-    then register() -> ok(name: "TypeScriptToolchain", language: "typescript", capabilities: caps)
+
+          -> ok(toolchain: n, tscPath: "/usr/local/bin/tsc", version: "5.7.2", capabilities: ["esm", "declaration-maps"])
+
+        then register() -> ok(name: "TypeScriptToolchain", language: "typescript", capabilities: caps)
+
+  }
+
+
+  always "valid-tscPath" {
+
+    forall n in toolchains:
+
+      n.tscPath != none
+
+  }
+
+  never "orphaned-tscVersion" {
+
+    exists n in toolchains:
+
+      n.tscVersion = none
+
   }
 }

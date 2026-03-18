@@ -67,8 +67,36 @@ concept AnalysisRule [U] {
     }
   }
 
-  invariant {
+  example "create-then-get": {
+
     after create(name: "dead-variants", engine: "graph-traversal", source: "...", severity: "warning", category: "dead-code") -> ok(rule: u)
-    then get(rule: u) -> ok(rule: u, name: "dead-variants", engine: "graph-traversal", severity: "warning", category: "dead-code")
+
+        then get(rule: u) -> ok(rule: u, name: "dead-variants", engine: "graph-traversal", severity: "warning", category: "dead-code")
+
+  }
+
+
+  always "valid-name" {
+
+    forall u in rules:
+
+      u.name != none
+
+  }
+
+  never "orphaned-description" {
+
+    exists u in rules:
+
+      u.description = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

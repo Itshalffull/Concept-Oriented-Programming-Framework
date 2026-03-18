@@ -100,13 +100,38 @@ concept Blackboard [B] {
     }
   }
 
-  invariant {
+  example "create-then-query": {
+
     after create(entry_schema: [{entry_type: "finding",
-                 schema: "{\"type\": \"object\"}"}]) -> ok(board: b)
-    and  post(board: b, agent_id: "a1", entry_type: "finding",
-              content: "{\"fact\": \"X\"}", confidence: 0.9)
-      -> ok(entry_id: _)
-    then query(board: b, entry_type: "finding", filters: _)
-      -> ok(entries: _)
+
+                     schema: "{\"type\": \"object\"}"}]) -> ok(board: b)
+
+        and  post(board: b, agent_id: "a1", entry_type: "finding",
+
+                  content: "{\"fact\": \"X\"}", confidence: 0.9)
+
+          -> ok(entry_id: _)
+
+        then query(board: b, entry_type: "finding", filters: _)
+
+          -> ok(entries: _)
+
+  }
+
+
+  always "valid-content" {
+
+    forall b in boards:
+
+      b.content != none
+
+  }
+
+  action create {
+
+    requires: entry_schema != ""
+
+    ensures ok: entry_schema != none
+
   }
 }

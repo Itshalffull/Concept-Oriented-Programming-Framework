@@ -50,8 +50,36 @@ concept Reference [R] {
     }
   }
 
-  invariant {
+  example "addRef-then-getRefs": {
+
     after addRef(source: x, target: "doc-1") -> ok(source: x, target: "doc-1")
-    then getRefs(source: x) -> ok(targets: "doc-1")
+
+        then getRefs(source: x) -> ok(targets: "doc-1")
+
+  }
+
+
+  always "valid-refs" {
+
+    forall r in sources:
+
+      r.refs != none
+
+  }
+
+  never "orphaned-refs" {
+
+    exists r in sources:
+
+      r.refs = none
+
+  }
+
+  action addRef {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

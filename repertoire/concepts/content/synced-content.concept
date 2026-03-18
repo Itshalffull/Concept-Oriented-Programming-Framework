@@ -50,8 +50,36 @@ concept SyncedContent [S] {
     }
   }
 
-  invariant {
+  example "createReference-then-editOriginal": {
+
     after createReference(ref: r, original: o) -> ok()
-    then editOriginal(original: o, content: "updated") -> ok()
+
+        then editOriginal(original: o, content: "updated") -> ok()
+
+  }
+
+
+  always "valid-content" {
+
+    forall s in originals:
+
+      s.content != none
+
+  }
+
+  never "orphaned-references" {
+
+    exists s in originals:
+
+      s.references = none
+
+  }
+
+  action createReference {
+
+    requires: ref != ""
+
+    ensures ok: ref != none
+
   }
 }

@@ -103,14 +103,46 @@ concept BuildCache [E] {
     }
   }
 
-  invariant {
+  example "record-then-check": {
+
     after record(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", outputHash: "xyz", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true) -> ok(entry: e)
-    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".clef-cache/ts/password")
-    and   check(stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true) -> changed(previousHash: "abc")
+
+        then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> unchanged(lastRun: t, outputRef: ".clef-cache/ts/password")
+
+        and   check(stepKey: "framework:TypeScriptGen:password", inputHash: "def", deterministic: true) -> changed(previousHash: "abc")
+
   }
 
-  invariant {
+  example "invalidate-then-check": {
+
     after invalidate(stepKey: "framework:TypeScriptGen:password") -> ok()
-    then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> changed(previousHash: "abc")
+
+        then  check(stepKey: "framework:TypeScriptGen:password", inputHash: "abc", deterministic: true) -> changed(previousHash: "abc")
+
+  }
+
+
+  always "valid-stepKey" {
+
+    forall e in entries:
+
+      e.stepKey != none
+
+  }
+
+  never "orphaned-inputHash" {
+
+    exists e in entries:
+
+      e.inputHash = none
+
+  }
+
+  action check {
+
+    requires: stepKey != ""
+
+    ensures unchanged: stepKey != none
+
   }
 }

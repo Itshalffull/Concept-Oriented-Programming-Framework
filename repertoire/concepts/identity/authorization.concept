@@ -53,16 +53,50 @@ concept Authorization [U] {
     }
   }
 
-  invariant {
+  example "grantPermission-then-checkPermission-2": {
+
     after grantPermission(role: "admin", permission: "write") -> ok(role: "admin", permission: "write")
-    and assignRole(user: x, role: "admin") -> ok(user: x, role: "admin")
-    then checkPermission(user: x, permission: "write") -> ok(granted: true)
+
+        and assignRole(user: x, role: "admin") -> ok(user: x, role: "admin")
+
+        then checkPermission(user: x, permission: "write") -> ok(granted: true)
+
   }
 
-  invariant {
+  example "grantPermission-then-checkPermission": {
+
     after grantPermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
-    and assignRole(user: x, role: "editor") -> ok(user: x, role: "editor")
-    and revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
-    then checkPermission(user: x, permission: "publish") -> ok(granted: false)
+
+        and assignRole(user: x, role: "editor") -> ok(user: x, role: "editor")
+
+        and revokePermission(role: "editor", permission: "publish") -> ok(role: "editor", permission: "publish")
+
+        then checkPermission(user: x, permission: "publish") -> ok(granted: false)
+
+  }
+
+
+  always "valid-userRoles" {
+
+    forall u in roles:
+
+      u.userRoles != none
+
+  }
+
+  never "orphaned-permissions" {
+
+    exists u in roles:
+
+      u.permissions = none
+
+  }
+
+  action grantPermission {
+
+    requires: role != ""
+
+    ensures ok: role != none
+
   }
 }

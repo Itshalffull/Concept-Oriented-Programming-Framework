@@ -46,8 +46,36 @@ concept TokenBalance [TB] {
     }
   }
 
-  invariant {
+  example "configure-then-getWeight": {
+
     after configure(tokenAddress: _) -> configured(config: tb)
-    then getWeight(config: tb, participant: _) -> weight(participant: _, balance: _)
+
+        then getWeight(config: tb, participant: _) -> weight(participant: _, balance: _)
+
+  }
+
+
+  always "valid-tokenAddress" {
+
+    forall tb in configurations:
+
+      tb.tokenAddress != none
+
+  }
+
+  never "orphaned-snapshotBlock" {
+
+    exists tb in configurations:
+
+      tb.snapshotBlock = none
+
+  }
+
+  action configure {
+
+    requires: tokenAddress != ""
+
+    ensures configured: tokenAddress != none
+
   }
 }

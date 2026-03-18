@@ -41,8 +41,36 @@ concept Spec [D] {
     }
   }
 
-  invariant {
+  example "emit-then-validate": {
+
     after emit(projections: ["proj-1"], format: "openapi", config: "{}") -> ok(document: d, content: c)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-format" {
+
+    forall d in documents:
+
+      d.format != none
+
+  }
+
+  never "orphaned-kitName" {
+
+    exists d in documents:
+
+      d.kitName = none
+
+  }
+
+  action emit {
+
+    requires: projections != ""
+
+    ensures ok: projections != none
+
   }
 }

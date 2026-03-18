@@ -28,8 +28,21 @@ concept Tag [T] {
       -> notfound(message: String) { Tag does not exist. }
     }
   }
-  invariant {
+  example "addTag-then-getByTag": {
     after addTag(entity: "page-1", tag: t) -> ok()
-    then getByTag(tag: t) -> ok(entities: "page-1")
+        then getByTag(tag: t) -> ok(entities: "page-1")
+  }
+
+  always "valid-name" {
+    forall t in tags:
+      t.name != none
+  }
+  never "orphaned-tagIndex" {
+    exists t in tags:
+      t.tagIndex = none
+  }
+  action addTag {
+    requires: entity != ""
+    ensures ok: entity != none
   }
 }

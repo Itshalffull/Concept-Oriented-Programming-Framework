@@ -57,8 +57,36 @@ concept ConceptLibraryTarget [D] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(config: "{\"outputPath\":\"docs/reference/concept-library.md\"}") -> ok(document: d, files: f)
-    then validate(document: d) -> ok(document: d)
+
+        then validate(document: d) -> ok(document: d)
+
+  }
+
+
+  always "valid-outputPath" {
+
+    forall d in documents:
+
+      d.outputPath != none
+
+  }
+
+  never "orphaned-includeSyncs" {
+
+    exists d in documents:
+
+      d.includeSyncs = none
+
+  }
+
+  action generate {
+
+    requires: config != ""
+
+    ensures ok: config != none
+
   }
 }

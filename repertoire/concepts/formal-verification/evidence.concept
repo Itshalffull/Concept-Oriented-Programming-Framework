@@ -85,9 +85,38 @@ concept Evidence [E] {
     }
   }
 
-  invariant {
+  example "record-then-validate": {
+
     after record(artifact_type: "proof_certificate", content: c, solver_metadata: m, property_ref: "prop-1", confidence_score: 1.0)
-      -> ok(evidence: e, content_hash: h)
-    then validate(evidence: e) -> ok(evidence: e, valid: true)
+
+          -> ok(evidence: e, content_hash: h)
+
+        then validate(evidence: e) -> ok(evidence: e, valid: true)
+
+  }
+
+
+  always "valid-artifact_type" {
+
+    forall e in evidence:
+
+      e.artifact_type != none
+
+  }
+
+  never "orphaned-content_path" {
+
+    exists e in evidence:
+
+      e.content_path = none
+
+  }
+
+  action record {
+
+    requires: artifact_type != ""
+
+    ensures ok: artifact_type != none
+
   }
 }

@@ -63,9 +63,38 @@ concept FieldMapping [F] {
     }
   }
 
-  invariant {
+  example "autoDiscover-then-apply": {
+
     after autoDiscover(sourceSchema: "external_post", destSchema: "Article") -> ok(mappingId: "map-1", suggestions: "[{\"src\":\"title\",\"dest\":\"title\"}]")
-    then map(mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown") -> ok()
-    and  apply(record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1") -> ok(mapped: "{\"title\":\"Hello\",\"body\":\"World\"}")
+
+        then map(mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown") -> ok()
+
+        and  apply(record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1") -> ok(mapped: "{\"title\":\"Hello\",\"body\":\"World\"}")
+
+  }
+
+
+  always "valid-name" {
+
+    forall f in mappings:
+
+      f.name != none
+
+  }
+
+  never "orphaned-sourceSchema" {
+
+    exists f in mappings:
+
+      f.sourceSchema = none
+
+  }
+
+  action map {
+
+    requires: mappingId != ""
+
+    ensures ok: mappingId != none
+
   }
 }

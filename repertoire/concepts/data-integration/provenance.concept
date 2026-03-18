@@ -71,13 +71,44 @@ concept Provenance [P] {
     }
   }
 
-  invariant {
+  example "record-then-trace": {
+
     after record(entity: "item-1", activity: "capture", agent: "system", inputs: "") -> ok(recordId: "prov-1")
-    then trace(entityId: "item-1") -> ok(chain: "[{\"activity\":\"capture\",\"agent\":\"system\"}]")
+
+        then trace(entityId: "item-1") -> ok(chain: "[{\"activity\":\"capture\",\"agent\":\"system\"}]")
+
   }
 
-  invariant {
+  example "record-then-rollback": {
+
     after record(entity: "item-1", activity: "import", agent: "system", inputs: "") -> ok(recordId: "prov-batch-1")
-    then rollback(batchId: "batch-1") -> ok(rolled: 1)
+
+        then rollback(batchId: "batch-1") -> ok(rolled: 1)
+
+  }
+
+
+  always "valid-entity" {
+
+    forall p in records:
+
+      p.entity != none
+
+  }
+
+  never "orphaned-activity" {
+
+    exists p in records:
+
+      p.activity = none
+
+  }
+
+  action record {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

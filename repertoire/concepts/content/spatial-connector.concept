@@ -72,8 +72,36 @@ concept SpatialConnector [C] {
     }
   }
 
-  invariant {
+  example "draw-then-promote": {
+
     after draw(canvas: "c1", source: "a", target: "b", type: "visual") -> ok(connector: conn)
-    then promote(connector: conn) -> ok()
+
+        then promote(connector: conn) -> ok()
+
+  }
+
+
+  always "valid-connector_canvas" {
+
+    forall c in connectors:
+
+      c.connector_canvas != none
+
+  }
+
+  never "orphaned-connector_source" {
+
+    exists c in connectors:
+
+      c.connector_source = none
+
+  }
+
+  action draw {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

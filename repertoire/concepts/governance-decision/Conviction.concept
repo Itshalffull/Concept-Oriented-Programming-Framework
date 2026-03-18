@@ -67,9 +67,38 @@ concept Conviction [K] {
     }
   }
 
-  invariant {
+  example "registerProposal-then-stake": {
+
     after registerProposal(proposalRef: _, requestedFunds: _, totalFunds: _) -> registered(proposal: k)
-    then stake(proposal: k, staker: _, amount: _) -> staked(proposal: k, staker: _, amount: _)
-    // After sufficient time and staking, conviction exceeds threshold
+
+        then stake(proposal: k, staker: _, amount: _) -> staked(proposal: k, staker: _, amount: _)
+
+        // After sufficient time and staking, conviction exceeds threshold
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall k in proposals:
+
+      k.proposalRef != none
+
+  }
+
+  never "orphaned-conviction" {
+
+    exists k in proposals:
+
+      k.conviction = none
+
+  }
+
+  action registerProposal {
+
+    requires: proposalRef != ""
+
+    ensures registered: proposalRef != none
+
   }
 }

@@ -58,8 +58,36 @@ concept Weight [W] {
     }
   }
 
-  invariant {
+  example "updateWeight-then-getWeight": {
+
     after updateWeight(participant: p, source: _, value: v) -> updated(weight: _)
-    then getWeight(participant: p, atTime: _) -> weight(participant: p, value: v)
+
+        then getWeight(participant: p, atTime: _) -> weight(participant: p, value: v)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall w in weights:
+
+      w.participant != none
+
+  }
+
+  never "orphaned-source" {
+
+    exists w in weights:
+
+      w.source = none
+
+  }
+
+  action updateWeight {
+
+    requires: participant != ""
+
+    ensures updated: participant != none
+
   }
 }

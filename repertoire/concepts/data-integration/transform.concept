@@ -48,13 +48,44 @@ concept Transform [T] {
     }
   }
 
-  invariant {
+  example "apply-then-preview": {
+
     after apply(value: "<p>Hello World</p>", transformId: "html_to_markdown") -> ok(result: "Hello World")
-    then preview(value: "test", transformId: "html_to_markdown") -> ok(before: "test", after: "test")
+
+        then preview(value: "test", transformId: "html_to_markdown") -> ok(before: "test", after: "test")
+
   }
 
-  invariant {
+  example "chain-then-preview": {
+
     after chain(value: "Hello World!", transformIds: "slugify,truncate") -> ok(result: "hello-world")
-    then preview(value: "hello-world", transformId: "slugify") -> ok(before: "hello-world", after: "hello-world")
+
+        then preview(value: "hello-world", transformId: "slugify") -> ok(before: "hello-world", after: "hello-world")
+
+  }
+
+
+  always "valid-name" {
+
+    forall t in transforms:
+
+      t.name != none
+
+  }
+
+  never "orphaned-pluginId" {
+
+    exists t in transforms:
+
+      t.pluginId = none
+
+  }
+
+  action apply {
+
+    requires: value != ""
+
+    ensures ok: value != none
+
   }
 }

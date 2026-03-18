@@ -34,4 +34,13 @@ concept TreeSitterQueryProvider [I] {
       }
     }
   }
+
+  always "valid-patternRef" {
+    forall i in instances:
+      i.patternRef != none
+  }
+  never "orphaned-patternRef" {
+    exists i in instances:
+      i.patternRef = none
+  }
 }

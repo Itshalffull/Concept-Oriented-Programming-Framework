@@ -57,9 +57,38 @@ concept Intent [I] {
     }
   }
 
-  invariant {
+  example "define-then-verify": {
+
     after define(intent: i, target: "UserAuth", purpose: "Authenticate users",
-                 operationalPrinciple: "After login, session is valid") -> ok(intent: i)
-    then verify(intent: i) -> ok(valid: v, failures: f)
+
+                     operationalPrinciple: "After login, session is valid") -> ok(intent: i)
+
+        then verify(intent: i) -> ok(valid: v, failures: f)
+
+  }
+
+
+  always "valid-purpose" {
+
+    forall i in intents:
+
+      i.purpose != none
+
+  }
+
+  never "orphaned-operationalPrinciple" {
+
+    exists i in intents:
+
+      i.operationalPrinciple = none
+
+  }
+
+  action define {
+
+    requires: intent != ""
+
+    ensures ok: intent != none
+
   }
 }

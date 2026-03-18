@@ -33,11 +33,17 @@ concept HierarchicalLayoutProvider [C] {
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["root", "child1", "child2"],
-               config: { direction: "top-down" })
-      -> ok(positions: _)
-    then apply(canvas: "c1", items: ["root"], config: {})
-      -> ok(positions: _)
+
+                   config: { direction: "top-down" })
+
+          -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["root"], config: {})
+
+          -> ok(positions: _)
+
   }
 }

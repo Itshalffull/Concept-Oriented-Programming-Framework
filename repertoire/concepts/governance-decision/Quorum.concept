@@ -43,9 +43,22 @@ concept Quorum [Q] {
     }
   }
 
-  invariant {
+  example "setThreshold-then-check": {
+
     after setThreshold(thresholdType: "Absolute", value: 10.0) -> set(rule: q)
-    then check(totalVotes: 15, totalEligible: 100) -> met(totalVotes: 15, required: 10)
-    and  check(totalVotes: 5, totalEligible: 100) -> not_met(totalVotes: 5, required: 10, shortfall: 5)
+
+        then check(totalVotes: 15, totalEligible: 100) -> met(totalVotes: 15, required: 10)
+
+        and  check(totalVotes: 5, totalEligible: 100) -> not_met(totalVotes: 5, required: 10, shortfall: 5)
+
+  }
+
+
+  action setThreshold {
+
+    requires: thresholdType != ""
+
+    ensures set: thresholdType != none
+
   }
 }

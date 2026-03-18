@@ -46,8 +46,36 @@ concept ChainFinality [CF] {
     }
   }
 
-  invariant {
+  example "track-then-checkFinality": {
+
     after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> tracking(entry: cf)
-    then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
+
+        then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall cf in tracked:
+
+      cf.operationRef != none
+
+  }
+
+  never "orphaned-txHash" {
+
+    exists cf in tracked:
+
+      cf.txHash = none
+
+  }
+
+  action track {
+
+    requires: operationRef != ""
+
+    ensures tracking: operationRef != none
+
   }
 }

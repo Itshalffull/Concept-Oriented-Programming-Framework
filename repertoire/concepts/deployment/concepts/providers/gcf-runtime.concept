@@ -65,8 +65,36 @@ concept GcfRuntime [G] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", projectId: "my-project", region: "us-central1", runtime: "nodejs20", triggerType: "http") -> ok(function: f, endpoint: ep)
-    then deploy(function: f, sourceArchive: "gs://bucket/user.zip") -> ok(function: f, version: "1")
+
+        then deploy(function: f, sourceArchive: "gs://bucket/user.zip") -> ok(function: f, version: "1")
+
+  }
+
+
+  always "valid-functionName" {
+
+    forall g in functions:
+
+      g.functionName != none
+
+  }
+
+  never "orphaned-projectId" {
+
+    exists g in functions:
+
+      g.projectId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

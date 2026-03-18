@@ -66,10 +66,40 @@ concept AgentHandoff [D] {
     }
   }
 
-  invariant {
+  example "prepare-then-execute": {
+
     after prepare(source: "agent_a", target: "agent_b",
-                  reason: "Task requires coding expertise")
-      -> ok(handoff: d, context_package: _)
-    then execute(handoff: d) -> ok(handoff: d)
+
+                      reason: "Task requires coding expertise")
+
+          -> ok(handoff: d, context_package: _)
+
+        then execute(handoff: d) -> ok(handoff: d)
+
+  }
+
+
+  always "valid-source_agent" {
+
+    forall d in handoffs:
+
+      d.source_agent != none
+
+  }
+
+  never "orphaned-target_agent" {
+
+    exists d in handoffs:
+
+      d.target_agent = none
+
+  }
+
+  action prepare {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

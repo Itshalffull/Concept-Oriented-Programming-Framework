@@ -30,8 +30,36 @@ concept SimpleAccumulator [SA] {
     }
   }
 
-  invariant {
+  example "configure-then-compute": {
+
     after configure(decayHalfLifeDays: _, initialScore: 0.0, minScore: 0.0, maxScore: _) -> configured(config: sa)
-    then compute(config: sa, currentScore: 50.0, delta: 10.0, daysSinceLastUpdate: 0.0) -> score(newScore: 60.0, decayApplied: 0.0)
+
+        then compute(config: sa, currentScore: 50.0, delta: 10.0, daysSinceLastUpdate: 0.0) -> score(newScore: 60.0, decayApplied: 0.0)
+
+  }
+
+
+  always "valid-decayHalfLifeDays" {
+
+    forall sa in configurations:
+
+      sa.decayHalfLifeDays != none
+
+  }
+
+  never "orphaned-initialScore" {
+
+    exists sa in configurations:
+
+      sa.initialScore = none
+
+  }
+
+  action configure {
+
+    requires: decayHalfLifeDays != ""
+
+    ensures configured: decayHalfLifeDays != none
+
   }
 }

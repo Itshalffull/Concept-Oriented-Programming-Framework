@@ -91,13 +91,44 @@ concept ExtensionHost [H] {
     }
   }
 
-  invariant {
+  example "install-then-getStatus": {
+
     after install(manifest: _, hostType: _) -> ok(extension: e)
-    then getStatus(extension: e) -> ok(status: "installed", hostType: _, errorState: _)
+
+        then getStatus(extension: e) -> ok(status: "installed", hostType: _, errorState: _)
+
   }
 
-  invariant {
+  example "activate-then-getStatus": {
+
     after activate(extension: e) -> ok(extension: e)
-    then getStatus(extension: e) -> ok(status: "active", hostType: _, errorState: _)
+
+        then getStatus(extension: e) -> ok(status: "active", hostType: _, errorState: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall h in extensions:
+
+      h.status != none
+
+  }
+
+  never "orphaned-hostType" {
+
+    exists h in extensions:
+
+      h.hostType = none
+
+  }
+
+  action install {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

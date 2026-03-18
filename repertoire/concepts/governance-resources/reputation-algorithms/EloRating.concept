@@ -55,8 +55,36 @@ concept EloRating [EL] {
     }
   }
 
-  invariant {
+  example "configure-then-recordOutcome": {
+
     after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> configured(config: el)
-    then recordOutcome(config: el, winner: w, loser: l) -> updated(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+
+        then recordOutcome(config: el, winner: w, loser: l) -> updated(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall el in ratings:
+
+      el.participant != none
+
+  }
+
+  never "orphaned-rating" {
+
+    exists el in ratings:
+
+      el.rating = none
+
+  }
+
+  action configure {
+
+    requires: kFactor != ""
+
+    ensures configured: kFactor != none
+
   }
 }

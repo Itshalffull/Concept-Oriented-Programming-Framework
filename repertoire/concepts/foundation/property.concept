@@ -47,14 +47,30 @@ concept Property [P] {
     }
   }
 
-  invariant {
+  example "set-then-get-2": {
+
     after set(entity: e, key: "title", value: "Hello World") -> ok(entity: e)
-    then get(entity: e, key: "title") -> ok(value: "Hello World")
+
+        then get(entity: e, key: "title") -> ok(value: "Hello World")
+
   }
 
-  invariant {
+  example "set-then-get": {
+
     after set(entity: e, key: "title", value: "Hello") -> ok(entity: e)
-    and delete(entity: e, key: "title") -> ok(entity: e)
-    then get(entity: e, key: "title") -> notfound(message: "not found")
+
+        and delete(entity: e, key: "title") -> ok(entity: e)
+
+        then get(entity: e, key: "title") -> notfound(message: "not found")
+
+  }
+
+
+  action set {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

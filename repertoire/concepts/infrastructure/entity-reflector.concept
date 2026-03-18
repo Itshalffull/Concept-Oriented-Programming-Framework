@@ -54,12 +54,44 @@ concept EntityReflector [P] {
     }
   }
 
-  invariant {
+  example "registerProvider-then-status": {
+
     after registerProvider(provider_name: "concept")
-      -> ok()
-    then reflect()
-      -> ok(created: c, skipped: s)
-    then status()
-      -> ok(providers: ps)
+
+          -> ok()
+
+        then reflect()
+
+          -> ok(created: c, skipped: s)
+
+        then status()
+
+          -> ok(providers: ps)
+
+  }
+
+
+  always "valid-provider_name" {
+
+    forall p in providers:
+
+      p.provider_name != none
+
+  }
+
+  never "orphaned-last_run" {
+
+    exists p in providers:
+
+      p.last_run = none
+
+  }
+
+  action registerProvider {
+
+    requires: provider_name != ""
+
+    ensures ok: provider_name != none
+
   }
 }

@@ -81,13 +81,44 @@ concept InlineAnnotation [A] {
     }
   }
 
-  invariant {
+  example "annotate-then-accept": {
+
     after annotate(contentRef: c, changeType: "insertion", scope: s, author: a) -> ok(annotationId: id)
-    then accept(annotationId: id) -> ok(cleanContent: _)
+
+        then accept(annotationId: id) -> ok(cleanContent: _)
+
   }
 
-  invariant {
+  example "toggleTracking-then-annotate": {
+
     after toggleTracking(contentRef: c, enabled: false) -> ok()
-    then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> trackingDisabled(message: _)
+
+        then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> trackingDisabled(message: _)
+
+  }
+
+
+  always "valid-contentRef" {
+
+    forall a in annotations:
+
+      a.contentRef != none
+
+  }
+
+  never "orphaned-changeType" {
+
+    exists a in annotations:
+
+      a.changeType = none
+
+  }
+
+  action annotate {
+
+    requires: contentRef != ""
+
+    ensures ok: contentRef != none
+
   }
 }

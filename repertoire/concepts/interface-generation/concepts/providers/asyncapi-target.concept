@@ -36,8 +36,36 @@ concept AsyncApiTarget [A] {
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projections: ["proj-1"], syncSpecs: ["sync-1"], config: "{}") -> ok(spec: a, content: c)
-    then generate(projections: ["proj-2"], syncSpecs: ["sync-2"], config: "{}") -> ok(spec: a2, content: c2)
+
+        then generate(projections: ["proj-2"], syncSpecs: ["sync-2"], config: "{}") -> ok(spec: a2, content: c2)
+
+  }
+
+
+  always "valid-version" {
+
+    forall a in specs:
+
+      a.version != none
+
+  }
+
+  never "orphaned-channels" {
+
+    exists a in specs:
+
+      a.channels = none
+
+  }
+
+  action generate {
+
+    requires: projections != ""
+
+    ensures ok: projections != none
+
   }
 }

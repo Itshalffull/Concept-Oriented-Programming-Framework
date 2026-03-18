@@ -47,8 +47,36 @@ concept AwsSmProvider [A] {
     }
   }
 
-  invariant {
+  example "fetch-then-rotate": {
+
     after fetch(secretId: "prod/db-password", versionStage: "AWSCURRENT") -> ok(value: v, versionId: vid, arn: a)
-    then rotate(secretId: "prod/db-password") -> ok(secretId: "prod/db-password", newVersionId: nv)
+
+        then rotate(secretId: "prod/db-password") -> ok(secretId: "prod/db-password", newVersionId: nv)
+
+  }
+
+
+  always "valid-region" {
+
+    forall a in secrets:
+
+      a.region != none
+
+  }
+
+  never "orphaned-kmsKeyId" {
+
+    exists a in secrets:
+
+      a.kmsKeyId = none
+
+  }
+
+  action fetch {
+
+    requires: secretId != ""
+
+    ensures ok: secretId != none
+
   }
 }

@@ -117,29 +117,70 @@ concept EmbeddingCache [E] {
     }
   }
 
-  invariant {
+  example "put-then-lookup-2": {
+
     after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
-    then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
+
+        then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
+
   }
 
-  invariant {
+  example "put-then-put": {
+
     after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> stored(entry: e)
-    then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> alreadyExists(entry: e)
+
+        then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> alreadyExists(entry: e)
+
   }
 
-  invariant {
+  example "put-then-lookup": {
+
     after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> stored(entry: e)
-    and  evict(digest: "def456") -> ok()
-    then lookup(digest: "def456") -> miss()
+
+        and  evict(digest: "def456") -> ok()
+
+        then lookup(digest: "def456") -> miss()
+
   }
 
-  invariant {
+  example "putWithConfig-then-lookupWithConfig-2": {
+
     after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
-    then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
+
+        then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
+
   }
 
-  invariant {
+  example "putWithConfig-then-lookupWithConfig": {
+
     after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e1)
-    then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
+
+        then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
+
+  }
+
+
+  always "valid-digest" {
+
+    forall e in entries:
+
+      e.digest != none
+
+  }
+
+  never "orphaned-vector" {
+
+    exists e in entries:
+
+      e.vector = none
+
+  }
+
+  action warm {
+
+    requires: path != ""
+
+    ensures ok: path != none
+
   }
 }

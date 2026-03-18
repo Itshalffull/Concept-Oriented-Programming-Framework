@@ -33,14 +33,46 @@ concept Flag [F] {
     }
   }
 
-  invariant {
+  example "flag-then-isFlagged-2": {
+
     after flag(flagging: f, flagType: t, entity: e, user: u) -> ok()
-    then isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: true)
+
+        then isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: true)
+
   }
 
-  invariant {
+  example "flag-then-isFlagged": {
+
     after flag(flagging: f, flagType: t, entity: e, user: u) -> ok()
-    then unflag(flagging: f) -> ok()
-    and isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: false)
+
+        then unflag(flagging: f) -> ok()
+
+        and isFlagged(flagType: t, entity: e, user: u) -> ok(flagged: false)
+
+  }
+
+
+  always "valid-flaggings" {
+
+    forall f in flagTypes:
+
+      f.flaggings != none
+
+  }
+
+  never "orphaned-counts" {
+
+    exists f in flagTypes:
+
+      f.counts = none
+
+  }
+
+  action flag {
+
+    requires: flagging != ""
+
+    ensures ok: flagging != none
+
   }
 }

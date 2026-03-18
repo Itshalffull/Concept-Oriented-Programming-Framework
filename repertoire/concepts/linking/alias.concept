@@ -41,8 +41,36 @@ concept Alias [A] {
     }
   }
 
-  invariant {
+  example "addAlias-then-resolve": {
+
     after addAlias(entity: x, name: "homepage") -> ok(entity: x, name: "homepage")
-    then resolve(name: "homepage") -> ok(entity: x)
+
+        then resolve(name: "homepage") -> ok(entity: x)
+
+  }
+
+
+  always "valid-aliases" {
+
+    forall a in entities:
+
+      a.aliases != none
+
+  }
+
+  never "orphaned-aliases" {
+
+    exists a in entities:
+
+      a.aliases = none
+
+  }
+
+  action addAlias {
+
+    requires: entity != ""
+
+    ensures ok: entity != none
+
   }
 }

@@ -112,12 +112,44 @@ concept KindSystem [K] {
     }
   }
 
-  invariant {
+  example "define-then-dependents": {
+
     after define(name: "ConceptAST", category: "model") -> ok(kind: ast)
-    and   define(name: "ConceptManifest", category: "model") -> ok(kind: mfst)
-    and   connect(from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen") -> ok()
-    then  validate(from: ast, to: mfst) -> ok()
-    and   route(from: ast, to: mfst) -> ok(path: p)
-    and   dependents(kind: ast) -> ok(downstream: d)
+
+        and   define(name: "ConceptManifest", category: "model") -> ok(kind: mfst)
+
+        and   connect(from: ast, to: mfst, relation: "normalizes_to", transformName: "SchemaGen") -> ok()
+
+        then  validate(from: ast, to: mfst) -> ok()
+
+        and   route(from: ast, to: mfst) -> ok(path: p)
+
+        and   dependents(kind: ast) -> ok(downstream: d)
+
+  }
+
+
+  always "valid-name" {
+
+    forall k in kinds:
+
+      k.name != none
+
+  }
+
+  never "orphaned-category" {
+
+    exists k in kinds:
+
+      k.category = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

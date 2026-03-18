@@ -70,9 +70,38 @@ concept DataSource [D] {
     }
   }
 
-  invariant {
+  example "register-then-discover": {
+
     after register(name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc") -> ok(sourceId: "src-1")
-    then connect(sourceId: "src-1") -> ok(message: "connected")
-    and  discover(sourceId: "src-1") -> ok(rawSchema: "{\"streams\":[\"posts\",\"authors\"]}")
+
+        then connect(sourceId: "src-1") -> ok(message: "connected")
+
+        and  discover(sourceId: "src-1") -> ok(rawSchema: "{\"streams\":[\"posts\",\"authors\"]}")
+
+  }
+
+
+  always "valid-name" {
+
+    forall d in sources:
+
+      d.name != none
+
+  }
+
+  never "orphaned-uri" {
+
+    exists d in sources:
+
+      d.uri = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

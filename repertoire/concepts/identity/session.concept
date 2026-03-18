@@ -81,26 +81,66 @@ concept Session [S] {
     }
   }
 
-  invariant {
+  example "create-then-validate-3": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    then validate(session: s) -> ok(valid: true)
+
+        then validate(session: s) -> ok(valid: true)
+
   }
 
-  invariant {
+  example "create-then-getContext": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    then getContext(session: s) -> ok(userId: "alice", device: "mobile")
+
+        then getContext(session: s) -> ok(userId: "alice", device: "mobile")
+
   }
 
-  invariant {
+  example "create-then-validate-2": {
+
     after create(session: s, userId: "alice", device: "mobile") -> ok(session: s, token: t)
-    and destroy(session: s) -> ok(session: s)
-    then validate(session: s) -> notfound(message: m)
+
+        and destroy(session: s) -> ok(session: s)
+
+        then validate(session: s) -> notfound(message: m)
+
   }
 
-  invariant {
+  example "create-then-validate": {
+
     after create(session: s1, userId: "alice", device: "mobile") -> ok(session: s1, token: t1)
-    and create(session: s2, userId: "alice", device: "desktop") -> ok(session: s2, token: t2)
-    and destroyAll(userId: "alice") -> ok(userId: "alice")
-    then validate(session: s1) -> notfound(message: m1)
+
+        and create(session: s2, userId: "alice", device: "desktop") -> ok(session: s2, token: t2)
+
+        and destroyAll(userId: "alice") -> ok(userId: "alice")
+
+        then validate(session: s1) -> notfound(message: m1)
+
+  }
+
+
+  always "valid-userId" {
+
+    forall s in sessions:
+
+      s.userId != none
+
+  }
+
+  never "orphaned-token" {
+
+    exists s in sessions:
+
+      s.token = none
+
+  }
+
+  action create {
+
+    requires: session != ""
+
+    ensures ok: session != none
+
   }
 }

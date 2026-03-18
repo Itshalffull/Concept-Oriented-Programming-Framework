@@ -90,26 +90,70 @@ concept SeedData [S] {
     }
   }
 
-  invariant {
+  example "register-then-status": {
+
     after register(source_path: "/test/interactor.seeds.yaml",
-                   concept_uri: "urn:clef/Interactor",
-                   action_name: "define",
-                   entries: ["{ \"name\": \"spatial-canvas\" }"])
-      -> ok(seed: s)
-    then status()
-      -> ok(seeds: ss)
-    and  ss includes { seed: s, applied: false }
+
+                       concept_uri: "urn:clef/Interactor",
+
+                       action_name: "define",
+
+                       entries: ["{ \"name\": \"spatial-canvas\" }"])
+
+          -> ok(seed: s)
+
+        then status()
+
+          -> ok(seeds: ss)
+
+        and  ss includes { seed: s, applied: false }
+
   }
 
-  invariant {
+  example "register-then-apply": {
+
     after register(source_path: "/test/schema.seeds.yaml",
-                   concept_uri: "urn:clef/Schema",
-                   action_name: "defineSchema",
-                   entries: ["{ \"schema\": \"Shape\" }"])
-      -> ok(seed: s)
-    then apply(seed: s)
-      -> ok(seed: s, applied_count: 1)
-    then apply(seed: s)
-      -> already_applied(seed: s)
+
+                       concept_uri: "urn:clef/Schema",
+
+                       action_name: "defineSchema",
+
+                       entries: ["{ \"schema\": \"Shape\" }"])
+
+          -> ok(seed: s)
+
+        then apply(seed: s)
+
+          -> ok(seed: s, applied_count: 1)
+
+        then apply(seed: s)
+
+          -> already_applied(seed: s)
+
+  }
+
+
+  always "valid-source_path" {
+
+    forall s in seeds:
+
+      s.source_path != none
+
+  }
+
+  never "orphaned-concept_uri" {
+
+    exists s in seeds:
+
+      s.concept_uri = none
+
+  }
+
+  action register {
+
+    requires: source_path != ""
+
+    ensures ok: source_path != none
+
   }
 }

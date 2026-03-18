@@ -25,8 +25,36 @@ concept EqualWeight [EW] {
     }
   }
 
-  invariant {
+  example "configure-then-getWeight": {
+
     after configure(weightValue: 1.0) -> configured(config: ew)
-    then getWeight(config: ew, participant: _) -> weight(participant: _, value: 1.0)
+
+        then getWeight(config: ew, participant: _) -> weight(participant: _, value: 1.0)
+
+  }
+
+
+  always "valid-weightValue" {
+
+    forall ew in configurations:
+
+      ew.weightValue != none
+
+  }
+
+  never "orphaned-weightValue" {
+
+    exists ew in configurations:
+
+      ew.weightValue = none
+
+  }
+
+  action configure {
+
+    requires: weightValue != ""
+
+    ensures configured: weightValue != none
+
   }
 }

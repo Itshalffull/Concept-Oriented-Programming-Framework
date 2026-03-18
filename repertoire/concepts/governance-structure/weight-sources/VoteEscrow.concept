@@ -66,10 +66,40 @@ concept VoteEscrow [VE] {
     }
   }
 
-  invariant {
+  example "configure-then-getWeight": {
+
     after configure(maxLockDurationDays: 365.0) -> configured(config: _)
-    then lock(participant: p, amount: 100.0, lockDurationDays: 365.0) -> locked(lock: ve, initialWeight: 100.0)
-    // Weight starts at 100.0 (full lock) and decays to 0 at expiry
-    and  getWeight(lock: ve) -> weight(participant: p, currentWeight: _, decayRate: _)
+
+        then lock(participant: p, amount: 100.0, lockDurationDays: 365.0) -> locked(lock: ve, initialWeight: 100.0)
+
+        // Weight starts at 100.0 (full lock) and decays to 0 at expiry
+
+        and  getWeight(lock: ve) -> weight(participant: p, currentWeight: _, decayRate: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall ve in locks:
+
+      ve.participant != none
+
+  }
+
+  never "orphaned-amount" {
+
+    exists ve in locks:
+
+      ve.amount = none
+
+  }
+
+  action configure {
+
+    requires: maxLockDurationDays != ""
+
+    ensures configured: maxLockDurationDays != none
+
   }
 }

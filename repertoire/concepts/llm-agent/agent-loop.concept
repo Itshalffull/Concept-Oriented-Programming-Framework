@@ -103,10 +103,40 @@ concept AgentLoop [L] {
     }
   }
 
-  invariant {
+  example "create-then-run": {
+
     after create(available_tools: ["search"], max_iterations: 10)
-      -> ok(agent: a)
-    then run(agent: a, goal: "Find X", context: "", strategy: "react")
-      -> ok(result: _, steps: _, tool_calls: _)
+
+          -> ok(agent: a)
+
+        then run(agent: a, goal: "Find X", context: "", strategy: "react")
+
+          -> ok(result: _, steps: _, tool_calls: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall l in agents:
+
+      l.status != none
+
+  }
+
+  never "orphaned-available_tools" {
+
+    exists l in agents:
+
+      l.available_tools = none
+
+  }
+
+  action create {
+
+    requires: available_tools != ""
+
+    ensures ok: available_tools != none
+
   }
 }

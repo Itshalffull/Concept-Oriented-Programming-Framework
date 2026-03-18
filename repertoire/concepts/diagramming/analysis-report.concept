@@ -81,9 +81,38 @@ concept AnalysisReport [R] {
     }
   }
 
-  invariant {
+  example "generate-then-getReport": {
+
     after generate(result: "r1", format: "table", title: "Centrality Scores")
-      -> ok(report: _, content: _)
-    then getReport(report: _) -> ok(report: _, result: "r1", format: "table", title: "Centrality Scores", content: _)
+
+          -> ok(report: _, content: _)
+
+        then getReport(report: _) -> ok(report: _, result: "r1", format: "table", title: "Centrality Scores", content: _)
+
+  }
+
+
+  always "valid-report_result" {
+
+    forall r in reports:
+
+      r.report_result != none
+
+  }
+
+  never "orphaned-report_format" {
+
+    exists r in reports:
+
+      r.report_format = none
+
+  }
+
+  action generate {
+
+    requires: result != ""
+
+    ensures ok: result != none
+
   }
 }

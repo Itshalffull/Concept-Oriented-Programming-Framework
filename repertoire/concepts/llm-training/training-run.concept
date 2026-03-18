@@ -116,10 +116,40 @@ concept TrainingRun [J] {
     }
   }
 
-  invariant {
+  example "create-then-start": {
+
     after create(name: "domain_ft", base_model: "llama-3", dataset_ref: "ds1",
-                 hyperparameters: {learning_rate: 0.0001, epochs: 3,
-                 batch_size: 8, warmup_steps: 100}) -> ok(run: j)
-    then start(run: j) -> ok(run: j)
+
+                     hyperparameters: {learning_rate: 0.0001, epochs: 3,
+
+                     batch_size: 8, warmup_steps: 100}) -> ok(run: j)
+
+        then start(run: j) -> ok(run: j)
+
+  }
+
+
+  always "valid-name" {
+
+    forall j in runs:
+
+      j.name != none
+
+  }
+
+  never "orphaned-base_model" {
+
+    exists j in runs:
+
+      j.base_model = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

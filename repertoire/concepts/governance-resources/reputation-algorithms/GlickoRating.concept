@@ -56,8 +56,36 @@ concept GlickoRating [GL] {
     }
   }
 
-  invariant {
+  example "configure-then-recordOutcome": {
+
     after configure(initialRating: 1500.0, initialDeviation: 350.0, initialVolatility: 0.06, inactivityGrowthRate: _) -> configured(config: gl)
-    then recordOutcome(config: gl, participant: p, opponent: _, outcome: _) -> updated(participant: p, newRating: _, newDeviation: _)
+
+        then recordOutcome(config: gl, participant: p, opponent: _, outcome: _) -> updated(participant: p, newRating: _, newDeviation: _)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall gl in ratings:
+
+      gl.participant != none
+
+  }
+
+  never "orphaned-rating" {
+
+    exists gl in ratings:
+
+      gl.rating = none
+
+  }
+
+  action configure {
+
+    requires: initialRating != ""
+
+    ensures configured: initialRating != none
+
   }
 }

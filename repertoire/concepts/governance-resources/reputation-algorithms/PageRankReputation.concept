@@ -68,9 +68,30 @@ concept PageRankReputation [PR] {
     }
   }
 
-  invariant {
+  example "configure-then-compute": {
+
     after configure(dampingFactor: 0.85, maxIterations: 100, convergenceThreshold: 0.0001, preTrusted: _) -> configured(graph: pr)
-    then addEdge(graph: pr, source: _, target: _, weight: _) -> added(graph: pr)
-    and  compute(graph: pr) -> computed(graph: pr, iterations: _, converged: _)
+
+        then addEdge(graph: pr, source: _, target: _, weight: _) -> added(graph: pr)
+
+        and  compute(graph: pr) -> computed(graph: pr, iterations: _, converged: _)
+
+  }
+
+
+  always "valid-source" {
+
+    forall pr in graphs:
+
+      pr.source != none
+
+  }
+
+  action addEdge {
+
+    requires: graph != ""
+
+    ensures added: graph != none
+
   }
 }

@@ -49,10 +49,15 @@ concept PatternDetectionProvider [C] {
     }
   }
 
-  invariant {
+  example "analyze-then-analyze": {
+
     after analyze(graph: "g1", algorithm: "bridges", config: {})
-      -> ok(payload: _)
-    then analyze(graph: "g1", algorithm: "articulation-points", config: {})
-      -> ok(payload: _)
+
+          -> ok(payload: _)
+
+        then analyze(graph: "g1", algorithm: "articulation-points", config: {})
+
+          -> ok(payload: _)
+
   }
 }

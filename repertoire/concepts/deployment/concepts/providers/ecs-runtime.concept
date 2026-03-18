@@ -75,8 +75,36 @@ concept EcsRuntime [S] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", cpu: 256, memory: 512, cluster: "prod-cluster") -> ok(service: s, serviceArn: arn, endpoint: ep)
-    then deploy(service: s, imageUri: "ecr.aws/user:latest") -> ok(service: s, taskDefinition: td)
+
+        then deploy(service: s, imageUri: "ecr.aws/user:latest") -> ok(service: s, taskDefinition: td)
+
+  }
+
+
+  always "valid-serviceArn" {
+
+    forall s in services:
+
+      s.serviceArn != none
+
+  }
+
+  never "orphaned-clusterArn" {
+
+    exists s in services:
+
+      s.clusterArn = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

@@ -35,8 +35,20 @@ concept BordaCount [BD] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure(pointScheme: "Standard") -> configured(config: bd)
-    then count(config: bd, rankedBallots: _, weights: _) -> winner(choice: _, totalPoints: _, details: _)
+
+        then count(config: bd, rankedBallots: _, weights: _) -> winner(choice: _, totalPoints: _, details: _)
+
+  }
+
+
+  action configure {
+
+    requires: pointScheme != ""
+
+    ensures configured: pointScheme != none
+
   }
 }

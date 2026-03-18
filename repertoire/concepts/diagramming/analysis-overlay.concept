@@ -82,10 +82,40 @@ concept AnalysisOverlay [O] {
     }
   }
 
-  invariant {
+  example "apply-then-toggle": {
+
     after apply(canvas: "c1", result: "r1", kind: "node-color", config: {})
-      -> ok(overlay: _, attributes: _)
-    then toggle(overlay: _) -> ok(visible: "hidden")
-    then toggle(overlay: _) -> ok(visible: "visible")
+
+          -> ok(overlay: _, attributes: _)
+
+        then toggle(overlay: _) -> ok(visible: "hidden")
+
+        then toggle(overlay: _) -> ok(visible: "visible")
+
+  }
+
+
+  always "valid-overlay_canvas" {
+
+    forall o in overlays:
+
+      o.overlay_canvas != none
+
+  }
+
+  never "orphaned-overlay_result" {
+
+    exists o in overlays:
+
+      o.overlay_result = none
+
+  }
+
+  action apply {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

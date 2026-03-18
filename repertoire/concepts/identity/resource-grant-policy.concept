@@ -48,11 +48,42 @@ concept ResourceGrantPolicy [G] {
     }
   }
 
-  invariant {
+  example "setGrant-then-resolve": {
+
     after setGrant(grant: g, scope: "schema", resourcePattern: "*",
-                   actionName: "view", roles: ["admin", "editor", "viewer"])
-      -> ok(grant: g)
-    then resolve(scope: "schema", resource: "Article", actionName: "view")
-      -> ok(grant: g, roles: ["admin", "editor", "viewer"], matchedPattern: "*")
+
+                       actionName: "view", roles: ["admin", "editor", "viewer"])
+
+          -> ok(grant: g)
+
+        then resolve(scope: "schema", resource: "Article", actionName: "view")
+
+          -> ok(grant: g, roles: ["admin", "editor", "viewer"], matchedPattern: "*")
+
+  }
+
+
+  always "valid-scope" {
+
+    forall g in grants:
+
+      g.scope != none
+
+  }
+
+  never "orphaned-resourcePattern" {
+
+    exists g in grants:
+
+      g.resourcePattern = none
+
+  }
+
+  action setGrant {
+
+    requires: grant != ""
+
+    ensures ok: grant != none
+
   }
 }

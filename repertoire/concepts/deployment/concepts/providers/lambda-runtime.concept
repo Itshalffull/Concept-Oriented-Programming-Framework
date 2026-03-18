@@ -72,8 +72,36 @@ concept LambdaRuntime [F] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", memory: 256, timeout: 30, region: "us-east-1") -> ok(function: f, functionArn: arn, endpoint: ep)
-    then deploy(function: f, artifactLocation: "s3://bucket/user.zip") -> ok(function: f, version: "1")
+
+        then deploy(function: f, artifactLocation: "s3://bucket/user.zip") -> ok(function: f, version: "1")
+
+  }
+
+
+  always "valid-functionArn" {
+
+    forall f in functions:
+
+      f.functionArn != none
+
+  }
+
+  never "orphaned-roleArn" {
+
+    exists f in functions:
+
+      f.roleArn = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

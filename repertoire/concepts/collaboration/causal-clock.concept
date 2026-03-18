@@ -52,9 +52,38 @@ concept CausalClock [T] {
     }
   }
 
-  invariant {
+  example "tick-then-compare": {
+
     after tick(replicaId: r) -> ok(timestamp: t1, clock: _)
-    then tick(replicaId: r) -> ok(timestamp: t2, clock: _)
-    and  compare(a: t1, b: t2) -> before()
+
+        then tick(replicaId: r) -> ok(timestamp: t2, clock: _)
+
+        and  compare(a: t1, b: t2) -> before()
+
+  }
+
+
+  always "valid-eventReplica" {
+
+    forall t in events:
+
+      t.eventReplica != none
+
+  }
+
+  never "orphaned-eventClock" {
+
+    exists t in events:
+
+      t.eventClock = none
+
+  }
+
+  action tick {
+
+    requires: replicaId != ""
+
+    ensures ok: replicaId != none
+
   }
 }

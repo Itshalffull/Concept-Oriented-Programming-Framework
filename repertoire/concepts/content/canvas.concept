@@ -61,8 +61,36 @@ concept Canvas [V] {
     }
   }
 
-  invariant {
+  example "addNode-then-moveNode": {
+
     after addNode(canvas: v, node: "a", x: 0, y: 0) -> ok()
-    then moveNode(canvas: v, node: "a", x: 100, y: 200) -> ok()
+
+        then moveNode(canvas: v, node: "a", x: 100, y: 200) -> ok()
+
+  }
+
+
+  always "valid-nodes" {
+
+    forall v in canvases:
+
+      v.nodes != none
+
+  }
+
+  never "orphaned-positions" {
+
+    exists v in canvases:
+
+      v.positions = none
+
+  }
+
+  action addNode {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

@@ -89,9 +89,38 @@ concept ExtensionMessaging [E] {
     }
   }
 
-  invariant {
+  example "registerChannel-then-send": {
+
     after registerChannel(name: n, schema: _) -> ok(channel: c)
-    then subscribe(channel: c, subscriber: _) -> ok(channel: c)
-    and send(channel: c, sender: _, payload: _) -> ok(channel: c)
+
+        then subscribe(channel: c, subscriber: _) -> ok(channel: c)
+
+        and send(channel: c, sender: _, payload: _) -> ok(channel: c)
+
+  }
+
+
+  always "valid-channelName" {
+
+    forall e in channels:
+
+      e.channelName != none
+
+  }
+
+  never "orphaned-schema" {
+
+    exists e in channels:
+
+      e.schema = none
+
+  }
+
+  action registerChannel {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

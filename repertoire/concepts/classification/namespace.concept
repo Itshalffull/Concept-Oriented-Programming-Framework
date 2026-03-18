@@ -25,8 +25,21 @@ concept Namespace [N] {
       -> notfound(message: String) { Node does not exist. }
     }
   }
-  invariant {
+  example "createNamespacedPage-then-getChildren": {
     after createNamespacedPage(node: n, path: "projects/alpha") -> ok()
-    then getChildren(node: n) -> ok(children: "")
+        then getChildren(node: n) -> ok(children: "")
+  }
+
+  always "valid-separator" {
+    forall n in nodes:
+      n.separator != none
+  }
+  never "orphaned-parent" {
+    exists n in nodes:
+      n.parent = none
+  }
+  action createNamespacedPage {
+    requires: node != ""
+    ensures ok: node != none
   }
 }

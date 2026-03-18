@@ -71,8 +71,36 @@ concept VercelRuntime [V] {
     }
   }
 
-  invariant {
+  example "provision-then-deploy": {
+
     after provision(concept: "User", teamId: "team-1", framework: "nextjs") -> ok(project: p, projectId: pid, endpoint: ep)
-    then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+
+        then deploy(project: p, sourceDirectory: "./dist") -> ok(project: p, deploymentId: did, deploymentUrl: url)
+
+  }
+
+
+  always "valid-projectId" {
+
+    forall v in projects:
+
+      v.projectId != none
+
+  }
+
+  never "orphaned-teamId" {
+
+    exists v in projects:
+
+      v.teamId = none
+
+  }
+
+  action provision {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

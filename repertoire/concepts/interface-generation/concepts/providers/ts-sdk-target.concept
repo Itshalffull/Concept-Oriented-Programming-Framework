@@ -29,8 +29,36 @@ concept TsSdkTarget [S] {
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(package: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(package: s2, files: f2)
+
+  }
+
+
+  always "valid-packageName" {
+
+    forall s in packages:
+
+      s.packageName != none
+
+  }
+
+  never "orphaned-runtime" {
+
+    exists s in packages:
+
+      s.runtime = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

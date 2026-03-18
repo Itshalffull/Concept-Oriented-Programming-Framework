@@ -77,9 +77,38 @@ concept ExtensionPermission [P] {
     }
   }
 
-  invariant {
+  example "declare-then-check": {
+
     after declare(extensionId: e, permission: _, scope: _) -> ok(permission: p)
-    then grant(permission: p) -> ok(permission: p)
-    and check(extensionId: e, permission: _) -> ok(granted: true)
+
+        then grant(permission: p) -> ok(permission: p)
+
+        and check(extensionId: e, permission: _) -> ok(granted: true)
+
+  }
+
+
+  always "valid-name" {
+
+    forall p in permissions:
+
+      p.name != none
+
+  }
+
+  never "orphaned-scope" {
+
+    exists p in permissions:
+
+      p.scope = none
+
+  }
+
+  action declare {
+
+    requires: extensionId != ""
+
+    ensures ok: extensionId != none
+
   }
 }

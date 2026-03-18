@@ -75,8 +75,36 @@ concept ScopeGraph [C] {
     }
   }
 
-  invariant {
+  example "build-then-get": {
+
     after build(file: "src/handler.ts", tree: "tree-123") -> ok(graph: g)
-    then get(graph: g) -> ok(graph: g, file: "src/handler.ts", scopeCount: _, declarationCount: _, unresolvedCount: _)
+
+        then get(graph: g) -> ok(graph: g, file: "src/handler.ts", scopeCount: _, declarationCount: _, unresolvedCount: _)
+
+  }
+
+
+  always "valid-file" {
+
+    forall c in graphs:
+
+      c.file != none
+
+  }
+
+  never "orphaned-scopes" {
+
+    exists c in graphs:
+
+      c.scopes = none
+
+  }
+
+  action build {
+
+    requires: file != ""
+
+    ensures ok: file != none
+
   }
 }

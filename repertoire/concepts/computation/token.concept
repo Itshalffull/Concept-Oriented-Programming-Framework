@@ -30,8 +30,36 @@ concept Token [T] {
     }
   }
 
-  invariant {
+  example "registerProvider-then-replace": {
+
     after registerProvider(token: t, provider: "userMailProvider") -> ok()
-    then replace(text: "Contact [user:mail]", context: "user") -> ok(result: "Contact user@example.com")
+
+        then replace(text: "Contact [user:mail]", context: "user") -> ok(result: "Contact user@example.com")
+
+  }
+
+
+  always "valid-patterns" {
+
+    forall t in tokenTypes:
+
+      t.patterns != none
+
+  }
+
+  never "orphaned-providers" {
+
+    exists t in tokenTypes:
+
+      t.providers = none
+
+  }
+
+  action registerProvider {
+
+    requires: token != ""
+
+    ensures ok: token != none
+
   }
 }

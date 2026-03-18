@@ -74,12 +74,44 @@ concept Assertion [T] {
     }
   }
 
-  invariant {
+  example "define-then-evaluate": {
+
     after define(name: "json_valid", constraint: "output.is_valid_json",
-                 severity: "hard", error_message: "Must be valid JSON",
-                 max_retries: 3) -> ok(assertion: t)
-    and  evaluate(assertion: t, output: "not json")
-      -> fail(retry_prompt: _, attempt: 1, max: 3)
-    then evaluate(assertion: t, output: "{\"valid\": true}") -> pass()
+
+                     severity: "hard", error_message: "Must be valid JSON",
+
+                     max_retries: 3) -> ok(assertion: t)
+
+        and  evaluate(assertion: t, output: "not json")
+
+          -> fail(retry_prompt: _, attempt: 1, max: 3)
+
+        then evaluate(assertion: t, output: "{\"valid\": true}") -> pass()
+
+  }
+
+
+  always "valid-name" {
+
+    forall t in assertions:
+
+      t.name != none
+
+  }
+
+  never "orphaned-constraint" {
+
+    exists t in assertions:
+
+      t.constraint = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

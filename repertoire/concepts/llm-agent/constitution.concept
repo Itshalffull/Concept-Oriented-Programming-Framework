@@ -86,10 +86,40 @@ concept Constitution [W] {
     }
   }
 
-  invariant {
+  example "create-then-critique": {
+
     after create(name: "safety", principles: [{text: "Never generate harmful content",
-                 category: "safety", priority: 1}]) -> ok(constitution: w)
-    then critique(constitution: w, response: "safe response", prompt: "test")
-         -> compliant(message: _)
+
+                     category: "safety", priority: 1}]) -> ok(constitution: w)
+
+        then critique(constitution: w, response: "safe response", prompt: "test")
+
+             -> compliant(message: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall w in constitutions:
+
+      w.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists w in constitutions:
+
+      w.name = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

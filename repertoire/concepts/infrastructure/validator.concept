@@ -55,9 +55,38 @@ concept Validator [V] {
     }
   }
 
-  invariant {
+  example "registerConstraint-then-validate": {
+
     after registerConstraint(validator: v, constraint: "required") -> ok()
-    then addRule(validator: v, field: "email", rule: "required|email") -> ok()
-    and  validate(validator: v, data: "{\"email\":\"\"}") -> ok(valid: false, errors: "email is required")
+
+        then addRule(validator: v, field: "email", rule: "required|email") -> ok()
+
+        and  validate(validator: v, data: "{\"email\":\"\"}") -> ok(valid: false, errors: "email is required")
+
+  }
+
+
+  always "valid-schemaRules" {
+
+    forall v in constraints:
+
+      v.schemaRules != none
+
+  }
+
+  never "orphaned-fieldRules" {
+
+    exists v in constraints:
+
+      v.fieldRules = none
+
+  }
+
+  action registerConstraint {
+
+    requires: validator != ""
+
+    ensures ok: validator != none
+
   }
 }

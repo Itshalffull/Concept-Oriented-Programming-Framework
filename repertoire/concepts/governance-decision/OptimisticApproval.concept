@@ -70,9 +70,38 @@ concept OptimisticApproval [O] {
     }
   }
 
-  invariant {
+  example "assert-then-finalize": {
+
     after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> asserted(assertion: o)
-    then finalize(assertion: o) -> approved(assertion: o)
-    // Only if challenge period expires without challenge
+
+        then finalize(assertion: o) -> approved(assertion: o)
+
+        // Only if challenge period expires without challenge
+
+  }
+
+
+  always "valid-asserter" {
+
+    forall o in assertions:
+
+      o.asserter != none
+
+  }
+
+  never "orphaned-payload" {
+
+    exists o in assertions:
+
+      o.payload = none
+
+  }
+
+  action assert {
+
+    requires: asserter != ""
+
+    ensures asserted: asserter != none
+
   }
 }

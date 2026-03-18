@@ -62,11 +62,42 @@ concept ConnectorPort [P] {
     }
   }
 
-  invariant {
+  example "addPort-then-validateConnection": {
+
     after addPort(owner: o, side: "right", offset: 0.5, direction: "out",
-                  port_type: "data", label: "Output", max_connections: 1)
-           -> ok(port: p)
-    then  validateConnection(source_port: p, target_port: p)
-           -> incompatible(source_port: p, target_port: p, reason: _)
+
+                      port_type: "data", label: "Output", max_connections: 1)
+
+               -> ok(port: p)
+
+        then  validateConnection(source_port: p, target_port: p)
+
+               -> incompatible(source_port: p, target_port: p, reason: _)
+
+  }
+
+
+  always "valid-owner" {
+
+    forall p in ports:
+
+      p.owner != none
+
+  }
+
+  never "orphaned-owner" {
+
+    exists p in ports:
+
+      p.owner = none
+
+  }
+
+  action addPort {
+
+    requires: owner != ""
+
+    ensures ok: owner != none
+
   }
 }

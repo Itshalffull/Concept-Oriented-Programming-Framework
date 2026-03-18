@@ -30,9 +30,38 @@ concept QuadraticWeight [QW] {
     }
   }
 
-  invariant {
+  example "configure-then-computeWeight": {
+
     after configure(tokenSource: _, scalingFactor: 1.0) -> configured(config: qw)
-    then computeWeight(config: qw, balance: 100.0) -> weight(value: 10.0)
-    // √100 = 10
+
+        then computeWeight(config: qw, balance: 100.0) -> weight(value: 10.0)
+
+        // √100 = 10
+
+  }
+
+
+  always "valid-tokenSource" {
+
+    forall qw in configurations:
+
+      qw.tokenSource != none
+
+  }
+
+  never "orphaned-scalingFactor" {
+
+    exists qw in configurations:
+
+      qw.scalingFactor = none
+
+  }
+
+  action configure {
+
+    requires: tokenSource != ""
+
+    ensures configured: tokenSource != none
+
   }
 }

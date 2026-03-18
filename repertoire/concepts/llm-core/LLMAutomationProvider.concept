@@ -45,9 +45,30 @@ concept LLMAutomationProvider [LA] {
     }
   }
 
-  invariant {
+  example "register-then-execute": {
+
     after register() -> ok(provider_name: "llm")
-    then  execute(action_payload: "{\"action\":\"summarize\"}", model_config: "{\"model\":\"gpt-4\"}")
-          -> ok(result: r)
+
+        then  execute(action_payload: "{\"action\":\"summarize\"}", model_config: "{\"model\":\"gpt-4\"}")
+
+              -> ok(result: r)
+
+  }
+
+
+  always "valid-action_payload" {
+
+    forall la in executions:
+
+      la.action_payload != none
+
+  }
+
+  never "orphaned-model_config" {
+
+    exists la in executions:
+
+      la.model_config = none
+
   }
 }

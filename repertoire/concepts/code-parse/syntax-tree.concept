@@ -81,8 +81,36 @@ concept SyntaxTree [T] {
     }
   }
 
-  invariant {
+  example "parse-then-get": {
+
     after parse(file: "test.ts", grammar: "typescript") -> ok(tree: t)
-    then get(tree: t) -> ok(tree: t, source: "test.ts", grammar: "typescript", byteLength: b, editVersion: 1, errorRanges: "[]")
+
+        then get(tree: t) -> ok(tree: t, source: "test.ts", grammar: "typescript", byteLength: b, editVersion: 1, errorRanges: "[]")
+
+  }
+
+
+  always "valid-source" {
+
+    forall t in trees:
+
+      t.source != none
+
+  }
+
+  never "orphaned-grammar" {
+
+    exists t in trees:
+
+      t.grammar = none
+
+  }
+
+  action parse {
+
+    requires: file != ""
+
+    ensures ok: file != none
+
   }
 }

@@ -54,8 +54,36 @@ concept DataFlowPath [W] {
     }
   }
 
-  invariant {
+  example "trace-then-get": {
+
     after trace(source: "config/db-url", sink: "ts/function/connect") -> ok(paths: p)
-    then get(path: _) -> ok(path: _, sourceSymbol: "config/db-url", sinkSymbol: "ts/function/connect", pathKind: "config-propagation", stepCount: _)
+
+        then get(path: _) -> ok(path: _, sourceSymbol: "config/db-url", sinkSymbol: "ts/function/connect", pathKind: "config-propagation", stepCount: _)
+
+  }
+
+
+  always "valid-sourceSymbol" {
+
+    forall w in paths:
+
+      w.sourceSymbol != none
+
+  }
+
+  never "orphaned-sinkSymbol" {
+
+    exists w in paths:
+
+      w.sinkSymbol = none
+
+  }
+
+  action trace {
+
+    requires: source != ""
+
+    ensures ok: source != none
+
   }
 }

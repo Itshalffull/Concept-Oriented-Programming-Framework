@@ -49,10 +49,40 @@ concept Grouping [G] {
     }
   }
 
-  invariant {
+  example "group-then-classify": {
+
     after group(items: ["A", "B", "C"], config: "per-concept")
-      -> ok(grouping: g, groups: gs, groupCount: 3)
-    then classify(actionName: "create")
-      -> ok(crudRole: "create", intent: "write", eventProducing: true, eventVerb: "created", mcpType: "tool")
+
+          -> ok(grouping: g, groups: gs, groupCount: 3)
+
+        then classify(actionName: "create")
+
+          -> ok(crudRole: "create", intent: "write", eventProducing: true, eventVerb: "created", mcpType: "tool")
+
+  }
+
+
+  always "valid-strategy" {
+
+    forall g in groupings:
+
+      g.strategy != none
+
+  }
+
+  never "orphaned-itemCount" {
+
+    exists g in groupings:
+
+      g.itemCount = none
+
+  }
+
+  action group {
+
+    requires: items != ""
+
+    ensures ok: items != none
+
   }
 }

@@ -37,4 +37,17 @@ concept AppInstallation [I] {
       }
     }
   }
+
+  always "valid-name" {
+    forall i in installations:
+      i.name != none
+  }
+  never "orphaned-version" {
+    exists i in installations:
+      i.version = none
+  }
+  action register {
+    requires: installation != ""
+    ensures ok: installation != none
+  }
 }

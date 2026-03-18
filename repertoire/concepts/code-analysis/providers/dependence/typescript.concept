@@ -28,4 +28,13 @@ concept TypeScriptDependenceProvider [I] {
       }
     }
   }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-handledLanguages" {
+    exists i in instances:
+      i.handledLanguages = none
+  }
 }

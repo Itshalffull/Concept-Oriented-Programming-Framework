@@ -79,9 +79,38 @@ concept PageAsRecord [P] {
     }
   }
 
-  invariant {
+  example "create-then-getProperty": {
+
     after create(page: p, schema: "{\"fields\":[\"title\"]}") -> ok(page: p)
-    and setProperty(page: p, key: "title", value: "My Page") -> ok(page: p)
-    then getProperty(page: p, key: "title") -> ok(value: "My Page")
+
+        and setProperty(page: p, key: "title", value: "My Page") -> ok(page: p)
+
+        then getProperty(page: p, key: "title") -> ok(value: "My Page")
+
+  }
+
+
+  always "valid-schema" {
+
+    forall p in pages:
+
+      p.schema != none
+
+  }
+
+  never "orphaned-schemaProperties" {
+
+    exists p in pages:
+
+      p.schemaProperties = none
+
+  }
+
+  action create {
+
+    requires: page != ""
+
+    ensures ok: page != none
+
   }
 }

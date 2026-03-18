@@ -45,9 +45,30 @@ concept CondorcetSchulze [CS] {
     }
   }
 
-  invariant {
+  example "configure-then-count": {
+
     after configure() -> configured(config: cs)
-    then count(config: cs, rankedBallots: _, weights: _) -> condorcet_winner(choice: _, pairwiseRecord: _)
-    // When a Condorcet winner exists
+
+        then count(config: cs, rankedBallots: _, weights: _) -> condorcet_winner(choice: _, pairwiseRecord: _)
+
+        // When a Condorcet winner exists
+
+  }
+
+
+  always "valid-pairwiseMatrix" {
+
+    forall cs in configurations:
+
+      cs.pairwiseMatrix != none
+
+  }
+
+  never "orphaned-strongestPaths" {
+
+    exists cs in configurations:
+
+      cs.strongestPaths = none
+
   }
 }

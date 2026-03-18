@@ -31,8 +31,11 @@ concept ForceDirectedLayout [C] {
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["a", "b"]) -> ok(positions: _)
-    then apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["a", "b", "c"]) -> ok(positions: _)
+
   }
 }

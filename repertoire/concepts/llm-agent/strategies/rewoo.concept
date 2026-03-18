@@ -65,4 +65,13 @@ concept ReWOOStrategy [S] {
       }
     }
   }
+
+  always "valid-arguments" {
+    forall s in sessions:
+      s.arguments != none
+  }
+  action execute {
+    requires: agent_ref != ""
+    ensures ok: agent_ref != none
+  }
 }

@@ -31,8 +31,11 @@ concept HierarchicalLayout [C] {
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["root", "child1", "child2"]) -> ok(positions: _)
-    then apply(canvas: "c1", items: ["root"]) -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["root"]) -> ok(positions: _)
+
   }
 }

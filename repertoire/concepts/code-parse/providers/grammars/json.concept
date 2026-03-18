@@ -28,4 +28,13 @@ concept TreeSitterJson [I] {
       }
     }
   }
+
+  always "valid-grammarRef" {
+    forall i in instances:
+      i.grammarRef != none
+  }
+  never "orphaned-wasmPath" {
+    exists i in instances:
+      i.wasmPath = none
+  }
 }

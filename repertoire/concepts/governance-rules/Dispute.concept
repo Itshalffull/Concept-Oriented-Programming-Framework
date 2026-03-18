@@ -62,9 +62,38 @@ concept Dispute [DS] {
     }
   }
 
-  invariant {
+  example "open-then-arbitrate": {
+
     after open(challenger: _, respondent: _, subject: _, evidence: _, bond: _) -> opened(dispute: ds)
-    then submitEvidence(dispute: ds, submitter: _, content: _) -> submitted(dispute: ds)
-    and  arbitrate(dispute: ds, arbiter: _, resolution: _) -> resolved(dispute: ds, resolution: _)
+
+        then submitEvidence(dispute: ds, submitter: _, content: _) -> submitted(dispute: ds)
+
+        and  arbitrate(dispute: ds, arbiter: _, resolution: _) -> resolved(dispute: ds, resolution: _)
+
+  }
+
+
+  always "valid-challenger" {
+
+    forall ds in disputes:
+
+      ds.challenger != none
+
+  }
+
+  never "orphaned-respondent" {
+
+    exists ds in disputes:
+
+      ds.respondent = none
+
+  }
+
+  action open {
+
+    requires: challenger != ""
+
+    ensures opened: challenger != none
+
   }
 }

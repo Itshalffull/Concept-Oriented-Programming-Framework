@@ -69,10 +69,32 @@ concept GenerationPlan [R] {
     }
   }
 
-  invariant {
+  example "begin-then-summary": {
+
     after begin() -> ok(run: r)
-    and   recordStep(stepKey: "step1", status: "done", filesProduced: 3, duration: 100, cached: false) -> ok()
-    then  status(run: r) -> ok(steps: s)
-    and   summary(run: r) -> ok(total: 1, executed: 1, cached: 0, failed: 0, totalDuration: 100, filesProduced: 3)
+
+        and   recordStep(stepKey: "step1", status: "done", filesProduced: 3, duration: 100, cached: false) -> ok()
+
+        then  status(run: r) -> ok(steps: s)
+
+        and   summary(run: r) -> ok(total: 1, executed: 1, cached: 0, failed: 0, totalDuration: 100, filesProduced: 3)
+
+  }
+
+
+  always "valid-startedAt" {
+
+    forall r in runs:
+
+      r.startedAt != none
+
+  }
+
+  never "orphaned-completedAt" {
+
+    exists r in runs:
+
+      r.completedAt = none
+
   }
 }

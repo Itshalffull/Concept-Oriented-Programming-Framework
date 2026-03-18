@@ -59,9 +59,30 @@ concept StakeWeight [SW] {
     }
   }
 
-  invariant {
+  example "configure-then-getWeight": {
+
     after configure(minimumStake: 10.0, cooldownPeriod: 24.0) -> configured(vault: sw)
-    then stake(vault: sw, participant: p, amount: 100.0, lockDurationHours: 720.0) -> staked(participant: p, unlockAt: _)
-    and  getWeight(vault: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
+
+        then stake(vault: sw, participant: p, amount: 100.0, lockDurationHours: 720.0) -> staked(participant: p, unlockAt: _)
+
+        and  getWeight(vault: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
+
+  }
+
+
+  always "valid-participant" {
+
+    forall sw in vaults:
+
+      sw.participant != none
+
+  }
+
+  action configure {
+
+    requires: minimumStake != ""
+
+    ensures configured: minimumStake != none
+
   }
 }

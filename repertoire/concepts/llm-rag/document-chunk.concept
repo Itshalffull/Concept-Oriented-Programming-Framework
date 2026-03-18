@@ -72,10 +72,40 @@ concept DocumentChunk [D] {
     }
   }
 
-  invariant {
+  example "split-then-getContext": {
+
     after split(document_id: "doc1", content: "long text",
-                strategy: "recursive", config: {chunk_size: 512,
-                chunk_overlap: 50}) -> ok(chunks: _, count: _)
-    then getContext(chunk: _, window_size: 1) -> ok(chunks: _)
+
+                    strategy: "recursive", config: {chunk_size: 512,
+
+                    chunk_overlap: 50}) -> ok(chunks: _, count: _)
+
+        then getContext(chunk: _, window_size: 1) -> ok(chunks: _)
+
+  }
+
+
+  always "valid-text" {
+
+    forall d in chunks:
+
+      d.text != none
+
+  }
+
+  never "orphaned-text" {
+
+    exists d in chunks:
+
+      d.text = none
+
+  }
+
+  action split {
+
+    requires: document_id != ""
+
+    ensures ok: document_id != none
+
   }
 }

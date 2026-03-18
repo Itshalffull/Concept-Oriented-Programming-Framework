@@ -57,10 +57,40 @@ concept Annotation [N] {
     }
   }
 
-  invariant {
+  example "annotate-then-resolve": {
+
     after annotate(concept: "SpecParser", scope: "concept",
-      content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}")
-      -> ok(annotation: n, keyCount: 2)
-    then resolve(concept: "SpecParser") -> ok(annotations: a)
+
+          content: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}")
+
+          -> ok(annotation: n, keyCount: 2)
+
+        then resolve(concept: "SpecParser") -> ok(annotations: a)
+
+  }
+
+
+  always "valid-targetConcept" {
+
+    forall n in annotations:
+
+      n.targetConcept != none
+
+  }
+
+  never "orphaned-scope" {
+
+    exists n in annotations:
+
+      n.scope = none
+
+  }
+
+  action annotate {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

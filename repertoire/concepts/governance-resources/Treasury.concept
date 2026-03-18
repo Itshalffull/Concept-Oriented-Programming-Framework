@@ -58,8 +58,36 @@ concept Treasury [TR] {
     }
   }
 
-  invariant {
+  example "deposit-then-withdraw": {
+
     after deposit(vault: v, token: t, amount: 100.0, depositor: _) -> deposited(vault: v, newBalance: _)
-    then withdraw(vault: v, token: t, amount: 50.0, recipient: _, sourceRef: _) -> withdrawn(vault: v, newBalance: _)
+
+        then withdraw(vault: v, token: t, amount: 50.0, recipient: _, sourceRef: _) -> withdrawn(vault: v, newBalance: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall tr in vaults:
+
+      tr.name != none
+
+  }
+
+  never "orphaned-name" {
+
+    exists tr in vaults:
+
+      tr.name = none
+
+  }
+
+  action deposit {
+
+    requires: vault != ""
+
+    ensures deposited: vault != none
+
   }
 }

@@ -70,10 +70,40 @@ concept Vote [V] {
     }
   }
 
-  invariant {
+  example "openSession-then-tally": {
+
     after openSession(proposalRef: _, deadline: _, snapshotRef: _) -> opened(session: s)
-    then castVote(session: s, voter: v, choice: _, weight: _) -> recorded(vote: _)
-    and  close(session: s) -> closed(session: s)
-    and  tally(session: s) -> result(session: s, outcome: _, details: _)
+
+        then castVote(session: s, voter: v, choice: _, weight: _) -> recorded(vote: _)
+
+        and  close(session: s) -> closed(session: s)
+
+        and  tally(session: s) -> result(session: s, outcome: _, details: _)
+
+  }
+
+
+  always "valid-proposalRef" {
+
+    forall v in votes:
+
+      v.proposalRef != none
+
+  }
+
+  never "orphaned-voter" {
+
+    exists v in votes:
+
+      v.voter = none
+
+  }
+
+  action openSession {
+
+    requires: proposalRef != ""
+
+    ensures opened: proposalRef != none
+
   }
 }

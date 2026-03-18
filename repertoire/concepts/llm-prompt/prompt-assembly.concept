@@ -113,15 +113,42 @@ concept PromptAssembly [P] {
     }
   }
 
-  invariant {
+  example "create-then-assemble": {
+
     after create(strategy: "priority_weighted", format: "chat_messages",
-                 tokenizer_id: "cl100k_base", context_window: 128000)
-      -> ok(assembly: p)
-    and  addSection(assembly: p, name: "system", role: "system",
-                    priority: 100, max_tokens: 500, required: true,
-                    content: "You are helpful.", template_ref: _)
-      -> ok(assembly: p)
-    then assemble(assembly: p) -> ok(prompt: _, sections_included: _,
-                  sections_truncated: _, total_tokens: _, estimated_cost: _)
+
+                     tokenizer_id: "cl100k_base", context_window: 128000)
+
+          -> ok(assembly: p)
+
+        and  addSection(assembly: p, name: "system", role: "system",
+
+                        priority: 100, max_tokens: 500, required: true,
+
+                        content: "You are helpful.", template_ref: _)
+
+          -> ok(assembly: p)
+
+        then assemble(assembly: p) -> ok(prompt: _, sections_included: _,
+
+                      sections_truncated: _, total_tokens: _, estimated_cost: _)
+
+  }
+
+
+  always "valid-template_ref" {
+
+    forall p in assemblies:
+
+      p.template_ref != none
+
+  }
+
+  action create {
+
+    requires: strategy != ""
+
+    ensures ok: strategy != none
+
   }
 }

@@ -33,10 +33,15 @@ concept TreeLayoutProvider [C] {
     }
   }
 
-  invariant {
+  example "apply-then-apply": {
+
     after apply(canvas: "c1", items: ["root", "child1", "child2"], config: _)
-           -> ok(positions: _)
-    then apply(canvas: "c1", items: ["root", "child1"], config: _)
-           -> ok(positions: _)
+
+               -> ok(positions: _)
+
+        then apply(canvas: "c1", items: ["root", "child1"], config: _)
+
+               -> ok(positions: _)
+
   }
 }

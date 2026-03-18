@@ -50,9 +50,30 @@ concept SwiftToolchain [S] {
     }
   }
 
-  invariant {
+  example "resolve-then-register": {
+
     after resolve(platform: "linux-arm64", versionConstraint: ">=5.10")
-      -> ok(toolchain: s, swiftcPath: "/usr/bin/swiftc", version: "5.10.1", capabilities: ["macros", "swift-testing"])
-    then register() -> ok(name: "SwiftToolchain", language: "swift", capabilities: caps)
+
+          -> ok(toolchain: s, swiftcPath: "/usr/bin/swiftc", version: "5.10.1", capabilities: ["macros", "swift-testing"])
+
+        then register() -> ok(name: "SwiftToolchain", language: "swift", capabilities: caps)
+
+  }
+
+
+  always "valid-swiftcPath" {
+
+    forall s in toolchains:
+
+      s.swiftcPath != none
+
+  }
+
+  never "orphaned-swiftVersion" {
+
+    exists s in toolchains:
+
+      s.swiftVersion = none
+
   }
 }

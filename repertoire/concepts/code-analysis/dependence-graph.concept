@@ -81,8 +81,36 @@ concept DependenceGraph [N] {
     }
   }
 
-  invariant {
+  example "compute-then-get": {
+
     after compute(scopeRef: "src/handler.ts") -> ok(graph: n)
-    then get(graph: n) -> ok(graph: n, scope: "file", nodeCount: _, edgeCount: _)
+
+        then get(graph: n) -> ok(graph: n, scope: "file", nodeCount: _, edgeCount: _)
+
+  }
+
+
+  always "valid-scope" {
+
+    forall n in graphs:
+
+      n.scope != none
+
+  }
+
+  never "orphaned-scopeRef" {
+
+    exists n in graphs:
+
+      n.scopeRef = none
+
+  }
+
+  action compute {
+
+    requires: scopeRef != ""
+
+    ensures ok: scopeRef != none
+
   }
 }

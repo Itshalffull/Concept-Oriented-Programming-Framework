@@ -50,9 +50,38 @@ concept ExpressionLanguage [E] {
     }
   }
 
-  invariant {
+  example "registerLanguage-then-evaluate": {
+
     after registerLanguage(name: "math", grammar: "arithmetic") -> ok()
-    then parse(expression: e, text: "2 + 3", language: "math") -> ok(ast: "add(2, 3)")
-    and evaluate(expression: e) -> ok(result: "5")
+
+        then parse(expression: e, text: "2 + 3", language: "math") -> ok(ast: "add(2, 3)")
+
+        and evaluate(expression: e) -> ok(result: "5")
+
+  }
+
+
+  always "valid-astCache" {
+
+    forall e in grammars:
+
+      e.astCache != none
+
+  }
+
+  never "orphaned-functionRegistry" {
+
+    exists e in grammars:
+
+      e.functionRegistry = none
+
+  }
+
+  action registerLanguage {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

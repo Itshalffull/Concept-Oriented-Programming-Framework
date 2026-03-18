@@ -81,8 +81,36 @@ concept IaC [R] {
     }
   }
 
-  invariant {
+  example "emit-then-apply": {
+
     after emit(plan: "dp-001", provider: "pulumi") -> ok(output: "stack-ref", fileCount: 3)
-    then apply(plan: "dp-001", provider: "pulumi") -> ok(created: c, updated: u, deleted: d)
+
+        then apply(plan: "dp-001", provider: "pulumi") -> ok(created: c, updated: u, deleted: d)
+
+  }
+
+
+  always "valid-resourceId" {
+
+    forall r in resources:
+
+      r.resourceId != none
+
+  }
+
+  never "orphaned-provider" {
+
+    exists r in resources:
+
+      r.provider = none
+
+  }
+
+  action emit {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

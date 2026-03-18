@@ -50,8 +50,36 @@ concept SafariTarget [T] {
     }
   }
 
-  invariant {
+  example "generate-then-validate": {
+
     after generate(manifest: _, options: _) -> ok(target: t, output: _)
-    then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+
+        then validate(target: t) -> ok(valid: _, errors: _, warnings: _)
+
+  }
+
+
+  always "valid-xcodeProject" {
+
+    forall t in targets:
+
+      t.xcodeProject != none
+
+  }
+
+  never "orphaned-infoPlist" {
+
+    exists t in targets:
+
+      t.infoPlist = none
+
+  }
+
+  action generate {
+
+    requires: manifest != ""
+
+    ensures ok: manifest != none
+
   }
 }

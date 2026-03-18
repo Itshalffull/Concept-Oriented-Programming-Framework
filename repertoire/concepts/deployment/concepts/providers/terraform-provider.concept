@@ -61,8 +61,36 @@ concept TerraformProvider [T] {
     }
   }
 
-  invariant {
+  example "generate-then-apply": {
+
     after generate(plan: "dp-001") -> ok(workspace: w, files: f)
-    then apply(workspace: w) -> ok(workspace: w, created: c, updated: u)
+
+        then apply(workspace: w) -> ok(workspace: w, created: c, updated: u)
+
+  }
+
+
+  always "valid-stateBackend" {
+
+    forall t in workspaces:
+
+      t.stateBackend != none
+
+  }
+
+  never "orphaned-lockTable" {
+
+    exists t in workspaces:
+
+      t.lockTable = none
+
+  }
+
+  action generate {
+
+    requires: plan != ""
+
+    ensures ok: plan != none
+
   }
 }

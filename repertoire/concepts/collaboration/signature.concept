@@ -69,8 +69,36 @@ concept Signature [G] {
     }
   }
 
-  invariant {
+  example "sign-then-verify": {
+
     after sign(contentHash: h, identity: id) -> ok(signatureId: sig)
-    then verify(contentHash: h, signatureId: sig) -> valid(identity: id, timestamp: _)
+
+        then verify(contentHash: h, signatureId: sig) -> valid(identity: id, timestamp: _)
+
+  }
+
+
+  always "valid-contentHash" {
+
+    forall g in signatures:
+
+      g.contentHash != none
+
+  }
+
+  never "orphaned-signer" {
+
+    exists g in signatures:
+
+      g.signer = none
+
+  }
+
+  action addTrustedSigner {
+
+    requires: identity != ""
+
+    ensures ok: identity != none
+
   }
 }

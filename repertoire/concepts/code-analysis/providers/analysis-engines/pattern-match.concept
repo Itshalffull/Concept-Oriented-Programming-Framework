@@ -28,4 +28,13 @@ concept PatternMatchAnalysisProvider [I] {
       }
     }
   }
+
+  always "valid-providerRef" {
+    forall i in instances:
+      i.providerRef != none
+  }
+  never "orphaned-engineType" {
+    exists i in instances:
+      i.engineType = none
+  }
 }

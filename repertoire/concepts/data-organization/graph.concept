@@ -44,10 +44,40 @@ concept Graph [G] {
     }
   }
 
-  invariant {
+  example "addNode-then-getNeighbors": {
+
     after addNode(graph: g, node: "A") -> ok()
-    then addNode(graph: g, node: "B") -> ok()
-    and addEdge(graph: g, source: "A", target: "B") -> ok()
-    and getNeighbors(graph: g, node: "A", depth: 1) -> ok(neighbors: "B")
+
+        then addNode(graph: g, node: "B") -> ok()
+
+        and addEdge(graph: g, source: "A", target: "B") -> ok()
+
+        and getNeighbors(graph: g, node: "A", depth: 1) -> ok(neighbors: "B")
+
+  }
+
+
+  always "valid-nodes" {
+
+    forall g in graphs:
+
+      g.nodes != none
+
+  }
+
+  never "orphaned-edges" {
+
+    exists g in graphs:
+
+      g.edges = none
+
+  }
+
+  action addNode {
+
+    requires: graph != ""
+
+    ensures ok: graph != none
+
   }
 }

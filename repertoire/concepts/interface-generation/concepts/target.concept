@@ -49,8 +49,36 @@ concept Target [T] {
     }
   }
 
-  invariant {
+  example "generate-then-diff": {
+
     after generate(projection: "test-projection", targetType: "rest", config: "{}") -> ok(output: t, files: f)
-    then diff(output: t) -> noPrevious(output: t)
+
+        then diff(output: t) -> noPrevious(output: t)
+
+  }
+
+
+  always "valid-targetType" {
+
+    forall t in outputs:
+
+      t.targetType != none
+
+  }
+
+  never "orphaned-concept" {
+
+    exists t in outputs:
+
+      t.concept = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

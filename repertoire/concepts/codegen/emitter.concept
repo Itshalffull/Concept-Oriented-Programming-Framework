@@ -116,14 +116,30 @@ concept Emitter [F] {
     }
   }
 
-  invariant {
+  example "write-then-write": {
+
     after write(path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: []) -> ok(written: true, path: "src/password.ts", contentHash: h1)
-    then  write(path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: []) -> ok(written: false, path: "src/password.ts", contentHash: h1)
+
+        then  write(path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: []) -> ok(written: false, path: "src/password.ts", contentHash: h1)
+
   }
 
-  invariant {
+  example "write-then-affected": {
+
     after write(path: "src/password.ts", content: "export const x = 1;", formatHint: "typescript", sources: [{ sourcePath: "./specs/password.concept" }]) -> ok(written: true, path: p, contentHash: h)
-    then  trace(outputPath: "src/password.ts") -> ok(sources: s)
-    and   affected(sourcePath: "./specs/password.concept") -> ok(outputs: o)
+
+        then  trace(outputPath: "src/password.ts") -> ok(sources: s)
+
+        and   affected(sourcePath: "./specs/password.concept") -> ok(outputs: o)
+
+  }
+
+
+  action write {
+
+    requires: path != ""
+
+    ensures ok: path != none
+
   }
 }

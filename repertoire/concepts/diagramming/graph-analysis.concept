@@ -87,8 +87,36 @@ concept GraphAnalysis [A] {
     }
   }
 
-  invariant {
+  example "register-then-analyze": {
+
     after register(algorithm: "pagerank", category: "centrality", provider: "CentralityAnalysis") -> ok()
-    then analyze(graph: "g1", algorithm: "pagerank", config: {}) -> ok(result: _, category: "centrality", payload: _)
+
+        then analyze(graph: "g1", algorithm: "pagerank", config: {}) -> ok(result: _, category: "centrality", payload: _)
+
+  }
+
+
+  always "valid-result_graph" {
+
+    forall a in results:
+
+      a.result_graph != none
+
+  }
+
+  never "orphaned-result_algorithm" {
+
+    exists a in results:
+
+      a.result_algorithm = none
+
+  }
+
+  action register {
+
+    requires: algorithm != ""
+
+    ensures ok: algorithm != none
+
   }
 }

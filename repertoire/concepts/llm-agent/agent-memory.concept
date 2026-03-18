@@ -100,10 +100,40 @@ concept AgentMemory [E] {
     }
   }
 
-  invariant {
+  example "remember-then-recall": {
+
     after remember(content: "User prefers Python", memory_type: "semantic",
-                   metadata: _) -> ok(entry: e)
-    then recall(query: "programming preference", memory_type: "semantic",
-                k: 1) -> ok(memories: _)
+
+                       metadata: _) -> ok(entry: e)
+
+        then recall(query: "programming preference", memory_type: "semantic",
+
+                    k: 1) -> ok(memories: _)
+
+  }
+
+
+  always "valid-memory_type" {
+
+    forall e in entries:
+
+      e.memory_type != none
+
+  }
+
+  never "orphaned-content" {
+
+    exists e in entries:
+
+      e.content = none
+
+  }
+
+  action remember {
+
+    requires: content != ""
+
+    ensures ok: content != none
+
   }
 }

@@ -49,8 +49,36 @@ concept RegoEvaluator [RE] {
     }
   }
 
-  invariant {
+  example "loadBundle-then-evaluate": {
+
     after loadBundle(policySource: _, dataSource: _, packageName: _) -> loaded(bundle: re)
-    then evaluate(bundle: re, input: _) -> result(decision: _, bindings: _)
+
+        then evaluate(bundle: re, input: _) -> result(decision: _, bindings: _)
+
+  }
+
+
+  always "valid-policySource" {
+
+    forall re in bundles:
+
+      re.policySource != none
+
+  }
+
+  never "orphaned-dataSource" {
+
+    exists re in bundles:
+
+      re.dataSource = none
+
+  }
+
+  action loadBundle {
+
+    requires: policySource != ""
+
+    ensures loaded: policySource != none
+
   }
 }

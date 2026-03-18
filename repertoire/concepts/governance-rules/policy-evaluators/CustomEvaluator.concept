@@ -50,8 +50,36 @@ concept CustomEvaluator [CU] {
     }
   }
 
-  invariant {
+  example "register-then-evaluate": {
+
     after register(name: _, source: _, language: _, sandbox: true) -> registered(evaluator: cu)
-    then evaluate(evaluator: cu, context: _) -> result(evaluator: cu, output: _)
+
+        then evaluate(evaluator: cu, context: _) -> result(evaluator: cu, output: _)
+
+  }
+
+
+  always "valid-name" {
+
+    forall cu in functions:
+
+      cu.name != none
+
+  }
+
+  never "orphaned-source" {
+
+    exists cu in functions:
+
+      cu.source = none
+
+  }
+
+  action register {
+
+    requires: name != ""
+
+    ensures registered: name != none
+
   }
 }

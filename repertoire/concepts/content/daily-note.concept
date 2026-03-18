@@ -36,8 +36,36 @@ concept DailyNote [D] {
     }
   }
 
-  invariant {
+  example "getOrCreateToday-then-getOrCreateToday": {
+
     after getOrCreateToday(note: n) -> ok(note: n, created: true)
-    then getOrCreateToday(note: n) -> ok(note: n, created: false)
+
+        then getOrCreateToday(note: n) -> ok(note: n, created: false)
+
+  }
+
+
+  always "valid-dateFormat" {
+
+    forall d in notes:
+
+      d.dateFormat != none
+
+  }
+
+  never "orphaned-templateId" {
+
+    exists d in notes:
+
+      d.templateId = none
+
+  }
+
+  action getOrCreateToday {
+
+    requires: note != ""
+
+    ensures ok: note != none
+
   }
 }

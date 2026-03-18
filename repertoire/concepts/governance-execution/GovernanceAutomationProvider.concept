@@ -45,9 +45,30 @@ concept GovernanceAutomationProvider [GA] {
     }
   }
 
-  invariant {
+  example "register-then-execute": {
+
     after register() -> ok(provider_name: "governance")
-    then  execute(action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}")
-          -> ok(result: r)
+
+        then  execute(action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"timelock\",\"delay\":3600}")
+
+              -> ok(result: r)
+
+  }
+
+
+  always "valid-action_payload" {
+
+    forall ga in executions:
+
+      ga.action_payload != none
+
+  }
+
+  never "orphaned-gate_config" {
+
+    exists ga in executions:
+
+      ga.gate_config = none
+
   }
 }

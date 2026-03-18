@@ -43,9 +43,38 @@ concept AutomationDispatch [AD] {
     }
   }
 
-  invariant {
+  example "dispatch-then-list_providers": {
+
     after dispatch(rule_ref: "rule-1", provider_name: "manifest", context: "{}")
-      -> ok(dispatch: d, result: r)
-    then list_providers() -> ok(providers: ps)
+
+          -> ok(dispatch: d, result: r)
+
+        then list_providers() -> ok(providers: ps)
+
+  }
+
+
+  always "valid-rule_ref" {
+
+    forall ad in dispatches:
+
+      ad.rule_ref != none
+
+  }
+
+  never "orphaned-provider_name" {
+
+    exists ad in dispatches:
+
+      ad.provider_name = none
+
+  }
+
+  action dispatch {
+
+    requires: rule_ref != ""
+
+    ensures ok: rule_ref != none
+
   }
 }

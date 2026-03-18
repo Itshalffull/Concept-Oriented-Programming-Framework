@@ -69,8 +69,36 @@ concept Frame [F] {
     }
   }
 
-  invariant {
+  example "create-then-addItem": {
+
     after create(canvas: "c1", name: "Group A", x: 0, y: 0, width: 400, height: 300) -> ok(frame: f)
-    then addItem(frame: f, item_id: "item1") -> ok()
+
+        then addItem(frame: f, item_id: "item1") -> ok()
+
+  }
+
+
+  always "valid-frame_canvas" {
+
+    forall f in frames:
+
+      f.frame_canvas != none
+
+  }
+
+  never "orphaned-frame_name" {
+
+    exists f in frames:
+
+      f.frame_name = none
+
+  }
+
+  action create {
+
+    requires: canvas != ""
+
+    ensures ok: canvas != none
+
   }
 }

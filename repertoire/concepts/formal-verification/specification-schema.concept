@@ -74,10 +74,40 @@ concept SpecificationSchema [SS] {
     }
   }
 
-  invariant {
+  example "define-then-instantiate": {
+
     after define(name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: [{name: "function", type: "String", description: "Function to guard"}])
-      -> ok(schema: s)
-    then instantiate(schema: s, parameter_values: {function: "transfer"}, target_symbol: "clef/concept/Token")
-      -> ok(property_ref: r)
+
+          -> ok(schema: s)
+
+        then instantiate(schema: s, parameter_values: {function: "transfer"}, target_symbol: "clef/concept/Token")
+
+          -> ok(property_ref: r)
+
+  }
+
+
+  always "valid-name" {
+
+    forall ss in schemas:
+
+      ss.name != none
+
+  }
+
+  never "orphaned-category" {
+
+    exists ss in schemas:
+
+      ss.category = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

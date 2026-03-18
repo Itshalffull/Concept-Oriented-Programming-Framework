@@ -26,8 +26,36 @@ concept RustSdkTarget [S] {
     }
   }
 
-  invariant {
+  example "generate-then-generate": {
+
     after generate(projection: "test-projection", config: "{}") -> ok(crate: s, files: f)
-    then generate(projection: "test-projection-2", config: "{}") -> ok(crate: s2, files: f2)
+
+        then generate(projection: "test-projection-2", config: "{}") -> ok(crate: s2, files: f2)
+
+  }
+
+
+  always "valid-crateName" {
+
+    forall s in crates:
+
+      s.crateName != none
+
+  }
+
+  never "orphaned-edition" {
+
+    exists s in crates:
+
+      s.edition = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

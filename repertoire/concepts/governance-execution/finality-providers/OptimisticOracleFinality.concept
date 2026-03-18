@@ -61,8 +61,36 @@ concept OptimisticOracleFinality [OO] {
     }
   }
 
-  invariant {
+  example "assertFinality-then-checkExpiry": {
+
     after assertFinality(operationRef: _, asserter: _, bond: _, challengeWindowHours: 48.0) -> asserted(assertion: oo)
-    then checkExpiry(assertion: oo) -> finalized(assertion: oo)
+
+        then checkExpiry(assertion: oo) -> finalized(assertion: oo)
+
+  }
+
+
+  always "valid-operationRef" {
+
+    forall oo in assertions:
+
+      oo.operationRef != none
+
+  }
+
+  never "orphaned-asserter" {
+
+    exists oo in assertions:
+
+      oo.asserter = none
+
+  }
+
+  action assertFinality {
+
+    requires: operationRef != ""
+
+    ensures asserted: operationRef != none
+
   }
 }

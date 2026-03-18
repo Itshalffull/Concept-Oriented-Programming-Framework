@@ -71,9 +71,38 @@ concept Contract [C] {
     }
   }
 
-  invariant {
+  example "define-then-verify": {
+
     after define(name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: ["user-exists-before-password"], guarantees: ["password-hash-nonzero"])
-      -> ok(contract: c)
-    then verify(contract: c) -> ok(contract: c, compatible: true)
+
+          -> ok(contract: c)
+
+        then verify(contract: c) -> ok(contract: c, compatible: true)
+
+  }
+
+
+  always "valid-name" {
+
+    forall c in contracts:
+
+      c.name != none
+
+  }
+
+  never "orphaned-source_concept" {
+
+    exists c in contracts:
+
+      c.source_concept = none
+
+  }
+
+  action define {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }

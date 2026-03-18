@@ -41,9 +41,38 @@ concept Collection [C] {
     }
   }
 
-  invariant {
+  example "create-then-getMembers": {
+
     after create(collection: c, type: "list", schema: "default") -> ok()
-    then addMember(collection: c, member: "item1") -> ok()
-    and getMembers(collection: c) -> ok(members: "item1")
+
+        then addMember(collection: c, member: "item1") -> ok()
+
+        and getMembers(collection: c) -> ok(members: "item1")
+
+  }
+
+
+  always "valid-type" {
+
+    forall c in collections:
+
+      c.type != none
+
+  }
+
+  never "orphaned-schema" {
+
+    exists c in collections:
+
+      c.schema = none
+
+  }
+
+  action create {
+
+    requires: collection != ""
+
+    ensures ok: collection != none
+
   }
 }

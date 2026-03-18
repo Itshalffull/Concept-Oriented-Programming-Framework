@@ -81,8 +81,36 @@ concept CliTarget [C] {
     }
   }
 
-  invariant {
+  example "generate-then-listCommands": {
+
     after generate(projection: "task-projection", config: "{}") -> ok(commands: c, files: f)
-    then listCommands(concept: "Task") -> ok(commands: cmds, subcommands: subs)
+
+        then listCommands(concept: "Task") -> ok(commands: cmds, subcommands: subs)
+
+  }
+
+
+  always "valid-binaryName" {
+
+    forall c in commands:
+
+      c.binaryName != none
+
+  }
+
+  never "orphaned-shell" {
+
+    exists c in commands:
+
+      c.shell = none
+
+  }
+
+  action generate {
+
+    requires: projection != ""
+
+    ensures ok: projection != none
+
   }
 }

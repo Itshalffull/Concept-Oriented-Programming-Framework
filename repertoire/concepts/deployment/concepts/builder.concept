@@ -139,10 +139,40 @@ concept Builder [B] {
     }
   }
 
-  invariant {
+  example "build-then-history": {
+
     after build(concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: { mode: "release" })
-      -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".clef-artifacts/swift/password", duration: 3200)
-    then status(build: b) -> ok(build: b, status: "done", duration: 3200)
-    and  history(concept: "password", language: "swift") -> ok(builds: bs)
+
+          -> ok(build: b, artifactHash: "sha256:abc", artifactLocation: ".clef-artifacts/swift/password", duration: 3200)
+
+        then status(build: b) -> ok(build: b, status: "done", duration: 3200)
+
+        and  history(concept: "password", language: "swift") -> ok(builds: bs)
+
+  }
+
+
+  always "valid-concept" {
+
+    forall b in builds:
+
+      b.concept != none
+
+  }
+
+  never "orphaned-language" {
+
+    exists b in builds:
+
+      b.language = none
+
+  }
+
+  action build {
+
+    requires: concept != ""
+
+    ensures ok: concept != none
+
   }
 }

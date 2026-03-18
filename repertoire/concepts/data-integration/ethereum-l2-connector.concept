@@ -70,13 +70,44 @@ concept EthereumL2Connector [C] {
     }
   }
 
-  invariant {
+  example "test-then-read": {
+
     after test(connector: c) -> ok(block_number: b, latency_ms: l)
-    then  read(connector: c, query: "{method: \"getOwner\"}") -> ok(data: d)
+
+        then  read(connector: c, query: "{method: \"getOwner\"}") -> ok(data: d)
+
   }
 
-  invariant {
+  example "read-then-write": {
+
     after read(connector: c, query: "{}") -> notfound(connector: c)
-    then  write(connector: c, data: "{}") -> notfound(connector: c)
+
+        then  write(connector: c, data: "{}") -> notfound(connector: c)
+
+  }
+
+
+  always "valid-rpc_url" {
+
+    forall c in connectors:
+
+      c.rpc_url != none
+
+  }
+
+  never "orphaned-chain_id" {
+
+    exists c in connectors:
+
+      c.chain_id = none
+
+  }
+
+  action read {
+
+    requires: connector != ""
+
+    ensures ok: connector != none
+
   }
 }

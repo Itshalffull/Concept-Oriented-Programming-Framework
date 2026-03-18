@@ -97,10 +97,40 @@ concept ModelRouter [R] {
     }
   }
 
-  invariant {
+  example "addRoute-then-route": {
+
     after addRoute(name: "fast", model_id: "gpt-4o-mini",
-                   conditions: c, priority: 1, weight: 1.0) -> ok(route: r)
-    then route(task_type: "chat", complexity: _, cost_limit: _,
-               latency_limit: _) -> ok(model_id: "gpt-4o-mini", route: r)
+
+                       conditions: c, priority: 1, weight: 1.0) -> ok(route: r)
+
+        then route(task_type: "chat", complexity: _, cost_limit: _,
+
+                   latency_limit: _) -> ok(model_id: "gpt-4o-mini", route: r)
+
+  }
+
+
+  always "valid-route_name" {
+
+    forall r in routes:
+
+      r.route_name != none
+
+  }
+
+  never "orphaned-model_id" {
+
+    exists r in routes:
+
+      r.model_id = none
+
+  }
+
+  action addRoute {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
   }
 }
