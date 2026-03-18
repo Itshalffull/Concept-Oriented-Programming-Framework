@@ -1,28 +1,12 @@
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 function grantKey(scope: string, resourcePattern: string, actionName: string) {
   return `${scope}:${resourcePattern}:${actionName}`;
-}
-
-async function listGrantRecords(storage: ConceptStorage, scope?: string) {
-  if (scope) {
-    return storage.find('grant', { scope });
-  }
-  return storage.find('grant', {});
-}
-
-function toGrantResult(record: Record<string, unknown>) {
-  const roles = Array.isArray(record.roles)
-    ? record.roles.map((role) => String(role))
-    : JSON.parse(String(record.roles ?? '[]')) as string[];
-
-  return {
-    grant: String(record.id ?? ''),
-    scope: String(record.scope ?? ''),
-    resourcePattern: String(record.resourcePattern ?? ''),
-    actionName: String(record.actionName ?? ''),
-    roles,
-  };
 }
 
 function normalizeRoles(raw: unknown): string[] {
@@ -40,8 +24,8 @@ function normalizeRoles(raw: unknown): string[] {
   return [];
 }
 
-export const resourceGrantPolicyHandler: ConceptHandler = {
-  async setGrant(input: Record<string, unknown>, storage: ConceptStorage) {
+export const resourceGrantPolicyHandler: FunctionalConceptHandler = {
+  setGrant(input: Record<string, unknown>) {
     const grant = String(input.grant ?? '');
     const scope = String(input.scope ?? '');
     const resourcePattern = String(input.resourcePattern ?? '');
@@ -49,7 +33,9 @@ export const resourceGrantPolicyHandler: ConceptHandler = {
     const roles = normalizeRoles(input.roles);
 
     const key = grant || grantKey(scope, resourcePattern, actionName);
-    await storage.put('grant', key, {
+
+    let p = createProgram();
+    p = put(p, 'grant', key, {
       id: key,
       scope,
       resourcePattern,
@@ -57,60 +43,56 @@ export const resourceGrantPolicyHandler: ConceptHandler = {
       roles: JSON.stringify(roles),
     });
 
-    return { variant: 'ok', grant: key };
+    return complete(p, 'ok', { grant: key }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getGrant(input: Record<string, unknown>, storage: ConceptStorage) {
+  getGrant(input: Record<string, unknown>) {
     const scope = String(input.scope ?? '');
     const resourcePattern = String(input.resourcePattern ?? '');
     const actionName = String(input.actionName ?? '');
     const key = grantKey(scope, resourcePattern, actionName);
-    const record = await storage.get('grant', key);
-    if (!record) {
-      return {
-        variant: 'notfound',
-        message: `No grant for ${scope}:${resourcePattern}:${actionName}`,
-      };
-    }
 
-    return { variant: 'ok', ...toGrantResult(record) };
+    let p = createProgram();
+    p = spGet(p, 'grant', key, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', { grant: key, scope, resourcePattern, actionName, roles: [] }),
+      (b) => complete(b, 'notfound', { message: `No grant for ${scope}:${resourcePattern}:${actionName}` }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const scope = String(input.scope ?? '');
     const resource = String(input.resource ?? '');
     const actionName = String(input.actionName ?? '');
-    const exact = await storage.get('grant', grantKey(scope, resource, actionName));
-    if (exact) {
-      return {
-        variant: 'ok',
-        ...toGrantResult(exact),
-        matchedPattern: resource,
-      };
-    }
 
-    const wildcard = await storage.get('grant', grantKey(scope, '*', actionName));
-    if (wildcard) {
-      return {
-        variant: 'ok',
-        ...toGrantResult(wildcard),
-        matchedPattern: '*',
-      };
-    }
+    let p = createProgram();
+    p = spGet(p, 'grant', grantKey(scope, resource, actionName), 'exact');
+    p = branch(p, 'exact',
+      (b) => complete(b, 'ok', { grant: grantKey(scope, resource, actionName), matchedPattern: resource }),
+      (b) => {
+        let b2 = spGet(b, 'grant', grantKey(scope, '*', actionName), 'wildcard');
+        b2 = branch(b2, 'wildcard',
+          (c) => complete(c, 'ok', { grant: grantKey(scope, '*', actionName), matchedPattern: '*' }),
+          (c) => complete(c, 'notfound', { message: `No grant matches ${scope}:${resource}:${actionName}` }),
+        );
+        return b2;
+      },
+    );
 
-    return {
-      variant: 'notfound',
-      message: `No grant matches ${scope}:${resource}:${actionName}`,
-    };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(input: Record<string, unknown>, storage: ConceptStorage) {
+  list(input: Record<string, unknown>) {
     const scope = typeof input.scope === 'string' && input.scope.trim() ? String(input.scope) : undefined;
-    const grants = await listGrantRecords(storage, scope);
-    return {
-      variant: 'ok',
-      grants: grants.map((record) => toGrantResult(record)),
-    };
+
+    let p = createProgram();
+    p = scope
+      ? find(p, 'grant', { scope }, 'grants')
+      : find(p, 'grant', {}, 'grants');
+
+    return complete(p, 'ok', { grants: [] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

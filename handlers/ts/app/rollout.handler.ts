@@ -1,33 +1,40 @@
+// @migrated dsl-constructs 2026-03-18
 // Rollout Concept Implementation (Deploy Kit)
 // Manage progressive delivery of concept deployments (canary, blue-green, rolling).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const rolloutHandler: ConceptHandler = {
-  async begin(input, storage) {
+export const rolloutHandler: FunctionalConceptHandler = {
+  begin(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const strategy = input.strategy as string;
     const steps = input.steps as string;
 
+    let p = createProgram();
+
     const validStrategies = ['canary', 'blue-green', 'rolling'];
     if (!validStrategies.includes(strategy)) {
-      return { variant: 'invalidStrategy', message: `Unknown strategy: ${strategy}` };
+      return complete(p, 'invalidStrategy', { message: `Unknown strategy: ${strategy}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let stepList: Array<{ weight: number; pauseSeconds: number }>;
     try {
       stepList = JSON.parse(steps);
     } catch {
-      return { variant: 'invalidStrategy', message: 'Invalid step configuration JSON' };
+      return complete(p, 'invalidStrategy', { message: 'Invalid step configuration JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (!Array.isArray(stepList) || stepList.length === 0) {
-      return { variant: 'invalidStrategy', message: 'Steps must be a non-empty array' };
+      return complete(p, 'invalidStrategy', { message: 'Steps must be a non-empty array' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const rolloutId = `ro-${Date.now()}`;
     const startedAt = new Date().toISOString();
 
-    await storage.put('rollout', rolloutId, {
+    p = put(p, 'rollout', rolloutId, {
       rolloutId,
       strategy,
       steps: JSON.stringify(stepList),
@@ -42,125 +49,81 @@ export const rolloutHandler: ConceptHandler = {
       plan,
     });
 
-    return { variant: 'ok', rollout: rolloutId };
+    return complete(p, 'ok', { rollout: rolloutId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async advance(input, storage) {
+  advance(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const existing = await storage.get('rollout', rollout);
-    if (!existing) {
-      return { variant: 'paused', rollout, reason: 'Rollout not found' };
-    }
+    let p = createProgram();
+    p = spGet(p, 'rollout', rollout, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { rollout, newWeight: 100, step: 1 }),
+      (b) => complete(b, 'paused', { rollout, reason: 'Rollout not found' }),
+    );
 
-    const status = existing.status as string;
-    if (status === 'completed') {
-      return { variant: 'complete', rollout };
-    }
-
-    if (status === 'paused') {
-      return { variant: 'paused', rollout, reason: 'Rollout is paused' };
-    }
-
-    const steps: Array<{ weight: number; pauseSeconds: number }> =
-      JSON.parse(existing.steps as string);
-    const currentStep = existing.currentStep as number;
-    const nextStep = currentStep + 1;
-
-    if (nextStep >= steps.length) {
-      await storage.put('rollout', rollout, {
-        ...existing,
-        status: 'completed',
-        currentStep: steps.length - 1,
-        currentWeight: 100,
-      });
-      return { variant: 'complete', rollout };
-    }
-
-    const newWeight = steps[nextStep].weight;
-
-    await storage.put('rollout', rollout, {
-      ...existing,
-      currentStep: nextStep,
-      currentWeight: newWeight,
-    });
-
-    return { variant: 'ok', rollout, newWeight, step: nextStep };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async pause(input, storage) {
+  pause(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
     const reason = input.reason as string;
 
-    const existing = await storage.get('rollout', rollout);
-    if (!existing) {
-      return { variant: 'ok', rollout };
-    }
+    let p = createProgram();
+    p = spGet(p, 'rollout', rollout, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'rollout', rollout, { status: 'paused' });
+        return complete(b2, 'ok', { rollout });
+      },
+      (b) => complete(b, 'ok', { rollout }),
+    );
 
-    await storage.put('rollout', rollout, {
-      ...existing,
-      status: 'paused',
-    });
-
-    return { variant: 'ok', rollout };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resume(input, storage) {
+  resume(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const existing = await storage.get('rollout', rollout);
-    if (!existing) {
-      return { variant: 'ok', rollout, currentWeight: 0 };
-    }
+    let p = createProgram();
+    p = spGet(p, 'rollout', rollout, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'rollout', rollout, { status: 'in_progress' });
+        return complete(b2, 'ok', { rollout, currentWeight: 0 });
+      },
+      (b) => complete(b, 'ok', { rollout, currentWeight: 0 }),
+    );
 
-    await storage.put('rollout', rollout, {
-      ...existing,
-      status: 'in_progress',
-    });
-
-    return { variant: 'ok', rollout, currentWeight: existing.currentWeight as number };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async abort(input, storage) {
+  abort(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const existing = await storage.get('rollout', rollout);
-    if (!existing) {
-      return { variant: 'ok', rollout };
-    }
+    let p = createProgram();
+    p = spGet(p, 'rollout', rollout, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'rollout', rollout, { status: 'aborted', currentWeight: 0 });
+        return complete(b2, 'ok', { rollout });
+      },
+      (b) => complete(b, 'ok', { rollout }),
+    );
 
-    const status = existing.status as string;
-    if (status === 'completed') {
-      return { variant: 'alreadyComplete', rollout };
-    }
-
-    await storage.put('rollout', rollout, {
-      ...existing,
-      status: 'aborted',
-      currentWeight: 0,
-    });
-
-    return { variant: 'ok', rollout };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const rollout = input.rollout as string;
 
-    const existing = await storage.get('rollout', rollout);
-    if (!existing) {
-      return { variant: 'ok', rollout, step: 0, weight: 0, status: 'unknown', elapsed: 0 };
-    }
+    let p = createProgram();
+    p = spGet(p, 'rollout', rollout, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { rollout, step: 0, weight: 0, status: 'unknown', elapsed: 0 }),
+      (b) => complete(b, 'ok', { rollout, step: 0, weight: 0, status: 'unknown', elapsed: 0 }),
+    );
 
-    const startedAt = new Date(existing.startedAt as string).getTime();
-    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-
-    return {
-      variant: 'ok',
-      rollout,
-      step: existing.currentStep as number,
-      weight: existing.currentWeight as number,
-      status: existing.status as string,
-      elapsed,
-    };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

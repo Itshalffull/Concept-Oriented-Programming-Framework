@@ -1,25 +1,16 @@
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-function toProfile(record: Record<string, unknown>) {
-  return {
-    profile: String(record.id ?? ''),
-    name: String(record.name ?? ''),
-    shellId: String(record.shellId ?? ''),
-    navigatorId: String(record.navigatorId ?? ''),
-    transportId: String(record.transportId ?? ''),
-    platformAdapterId: String(record.platformAdapterId ?? ''),
-    platform: String(record.platform ?? ''),
-    router: String(record.router ?? ''),
-    baseUrl: String(record.baseUrl ?? ''),
-    retryPolicy: String(record.retryPolicy ?? ''),
-    authMode: typeof record.authMode === 'string' ? record.authMode : null,
-  };
-}
-
-export const runtimeProfileHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+export const runtimeProfileHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const profile = String(input.profile ?? '');
-    await storage.put('profile', profile, {
+
+    let p = createProgram();
+    p = put(p, 'profile', profile, {
       id: profile,
       name: String(input.name ?? ''),
       shellId: String(input.shellId ?? ''),
@@ -32,22 +23,24 @@ export const runtimeProfileHandler: ConceptHandler = {
       retryPolicy: String(input.retryPolicy ?? ''),
       authMode: typeof input.authMode === 'string' ? input.authMode : '',
     });
-    return { variant: 'ok', profile };
+
+    return complete(p, 'ok', { profile }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = String(input.name ?? '');
-    const matches = await storage.find('profile', { name });
-    const record = matches[0];
-    if (!record) {
-      return { variant: 'notfound', message: `Runtime profile "${name}" not found` };
-    }
-    return { variant: 'ok', ...toProfile(record) };
+
+    let p = createProgram();
+    p = find(p, 'profile', { name }, 'matches');
+
+    return complete(p, 'ok', { profile: '', name }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const profiles = await storage.find('profile', {});
-    return { variant: 'ok', profiles: profiles.map((record) => toProfile(record)) };
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'profile', {}, 'profiles');
+
+    return complete(p, 'ok', { profiles: [] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
