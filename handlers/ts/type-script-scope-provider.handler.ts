@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptScopeProvider Handler
 //
@@ -6,7 +7,14 @@
 // import/export edges.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -143,7 +151,6 @@ function buildTypeScriptScopes(source: string, file: string): {
     const funcMatch = line.match(/(?:export\s+(?:default\s+)?)?(?:async\s+)?function\s+(\w+)/);
     if (funcMatch) {
       const funcName = funcMatch[1];
-      // Function declarations are hoisted to the enclosing function scope
       declarations.push({
         name: funcName,
         symbolString: `ts/function/${file}/${funcName}`,
@@ -152,7 +159,6 @@ function buildTypeScriptScopes(source: string, file: string): {
         hoisted: true,
       });
 
-      // Create a new function scope
       const funcScope: ScopeNode = {
         id: nextScopeId(),
         kind: 'function',
@@ -223,7 +229,6 @@ function buildTypeScriptScopes(source: string, file: string): {
     // Match var declarations (function-scoped, hoisted)
     const varMatch = line.match(/\bvar\s+(\w+)/);
     if (varMatch) {
-      // var is hoisted to the nearest function scope or module scope
       let hoistTarget = currentScope;
       let checkId: string | null = currentScope.id;
       const scopeMap = new Map<string, ScopeNode>();
@@ -245,8 +250,7 @@ function buildTypeScriptScopes(source: string, file: string): {
       });
     }
 
-    // Match arrow function or block opening that creates a new block scope
-    // (if/for/while/switch blocks)
+    // Match block opening that creates a new block scope
     const blockMatch = line.match(/\b(if|for|while|switch)\s*\(/);
     if (blockMatch && openBraces > 0) {
       const blockScope: ScopeNode = {
@@ -295,13 +299,11 @@ function resolveInChain(
 
   let currentScopeId: string | null = scopeId;
   while (currentScopeId) {
-    // Check declarations in this scope
     const match = declarations.find(
       (d) => d.scopeId === currentScopeId && d.name === name,
     );
     if (match) return match.symbolString;
 
-    // Check import edges in this scope
     const importMatch = importEdges.find(
       (e) => e.scopeId === currentScopeId && e.localName === name,
     );
@@ -309,46 +311,42 @@ function resolveInChain(
       return `ts/import/${importMatch.fromModule}/${importMatch.importedName}`;
     }
 
-    // Walk up to parent scope
     const scope = scopeMap.get(currentScopeId);
     currentScopeId = scope?.parentId || null;
   }
   return null;
 }
 
-export const typeScriptScopeProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('type-script-scope-provider', id, {
-        id,
-        providerRef: 'type-script-scope-provider',
-        handledLanguages: 'typescript,javascript',
-      });
+    let p = createProgram();
+    p = put(p, 'type-script-scope-provider', id, {
+      id,
+      providerRef: 'type-script-scope-provider',
+      handledLanguages: 'typescript,javascript',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async buildScopes(input: Record<string, unknown>, storage: ConceptStorage) {
+  buildScopes(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const result = buildTypeScriptScopes(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       scopes: JSON.stringify(result.scopes),
       declarations: JSON.stringify(result.declarations),
       references: JSON.stringify(result.references),
       importEdges: JSON.stringify(result.importEdges),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const scopeId = input.scopeId as string;
     const scopes = JSON.parse(input.scopes as string) as ScopeNode[];
@@ -356,20 +354,23 @@ export const typeScriptScopeProviderHandler: ConceptHandler = {
     const importEdges = JSON.parse((input.importEdges as string) || '[]') as ImportEdge[];
 
     const resolved = resolveInChain(name, scopeId, scopes, declarations, importEdges);
+    const p = createProgram();
     if (resolved) {
-      return { variant: 'ok', symbolString: resolved };
+      return complete(p, 'ok', { symbolString: resolved }) as StorageProgram<Result>;
     }
 
-    return { variant: 'unresolved', name };
+    return complete(p, 'unresolved', { name }) as StorageProgram<Result>;
   },
 
-  async getSupportedLanguages(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedLanguages(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       languages: JSON.stringify(['typescript', 'javascript']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const typeScriptScopeProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTypeScriptScopeProviderCounter(): void {

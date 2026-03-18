@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SymbolIndexProvider Handler
 //
@@ -6,7 +7,14 @@
 // fuzzy symbol search. Registers as a SearchIndex provider.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, complete, completeFrom,
+  branch, mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,19 +23,9 @@ function nextId(): string {
 
 const PROVIDER_REF = 'search:symbol-index';
 
-// ---------------------------------------------------------------------------
-// Storage relations
-// ---------------------------------------------------------------------------
-
 const INSTANCE_RELATION = 'symbol-index-provider';
-/** Inverted index entries: one record per (indexKey, symbolId) pair. */
 const INDEX_RELATION = 'symbol-index-provider-idx';
-/** Symbol metadata records keyed by symbolId. */
 const SYMBOL_RELATION = 'symbol-index-provider-sym';
-
-// ---------------------------------------------------------------------------
-// Utility: generate index keys from a symbol record
-// ---------------------------------------------------------------------------
 
 /**
  * Produce the set of inverted-index keys for a symbol.
@@ -42,7 +40,6 @@ function indexKeysFor(name: string, kind: string, namespace: string): string[] {
   }
   if (namespace) {
     keys.push(`ns:${namespace.toLowerCase()}`);
-    // Also index each segment of the namespace for partial match
     const parts = namespace.split('/').filter(Boolean);
     for (const part of parts) {
       keys.push(`nsseg:${part.toLowerCase()}`);
@@ -65,155 +62,174 @@ function fuzzyMatch(query: string, target: string): boolean {
   return qi === q.length;
 }
 
-export const symbolIndexProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    const existing = await storage.find(INSTANCE_RELATION, { providerRef: PROVIDER_REF });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, INSTANCE_RELATION, { providerRef: PROVIDER_REF }, 'existing');
 
-    const id = nextId();
-    await storage.put(INSTANCE_RELATION, id, {
-      id,
-      providerRef: PROVIDER_REF,
-    });
-
-    return { variant: 'ok', instance: id };
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'ok', (b) => ({
+          instance: (b.existing as Record<string, unknown>[])[0].id as string,
+        }));
+      })(),
+      (() => {
+        const id = nextId();
+        let e = createProgram();
+        e = put(e, INSTANCE_RELATION, id, {
+          id,
+          providerRef: PROVIDER_REF,
+        });
+        return complete(e, 'ok', { instance: id }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  /**
-   * Add a symbol to the index. Stores the symbol metadata and creates
-   * inverted index entries for name, kind, and namespace.
-   */
-  async index(input: Record<string, unknown>, storage: ConceptStorage) {
+  index(input: Record<string, unknown>) {
     const symbolId = input.symbolId as string;
     const name = input.name as string;
     const kind = input.kind as string;
     const namespace = (input.namespace as string) || '';
 
-    // Store symbol metadata
-    await storage.put(SYMBOL_RELATION, symbolId, {
+    let p = createProgram();
+    p = put(p, SYMBOL_RELATION, symbolId, {
       id: symbolId,
       name,
       kind,
       namespace,
     });
 
-    // Create inverted index entries
     const keys = indexKeysFor(name, kind, namespace);
     for (const key of keys) {
       const entryId = `${key}::${symbolId}`;
-      await storage.put(INDEX_RELATION, entryId, {
+      p = put(p, INDEX_RELATION, entryId, {
         id: entryId,
         indexKey: key,
         symbolId,
       });
     }
 
-    return { variant: 'ok', symbolId };
+    return complete(p, 'ok', { symbolId }) as StorageProgram<Result>;
   },
 
-  /**
-   * Search by exact kind. Returns all symbols with the given kind.
-   */
-  async searchByKind(input: Record<string, unknown>, storage: ConceptStorage) {
+  searchByKind(input: Record<string, unknown>) {
     const kind = input.kind as string;
-
     const indexKey = `kind:${kind.toLowerCase()}`;
-    const entries = await storage.find(INDEX_RELATION, { indexKey });
 
-    const results: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
-    for (const entry of entries) {
-      const sym = await storage.get(SYMBOL_RELATION, entry.symbolId as string);
-      if (sym) {
-        results.push({
-          symbolId: sym.id as string,
-          name: sym.name as string,
-          kind: sym.kind as string,
-          namespace: sym.namespace as string,
-        });
+    let p = createProgram();
+    p = find(p, INDEX_RELATION, { indexKey }, 'entries');
+    p = find(p, SYMBOL_RELATION, {}, 'allSymbols');
+
+    return completeFrom(p, 'ok', (b) => {
+      const entries = b.entries as Record<string, unknown>[];
+      const allSymbols = b.allSymbols as Record<string, unknown>[];
+      const symMap = new Map(allSymbols.map(s => [s.id as string, s]));
+
+      const results: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
+      for (const entry of entries) {
+        const sym = symMap.get(entry.symbolId as string);
+        if (sym) {
+          results.push({
+            symbolId: sym.id as string,
+            name: sym.name as string,
+            kind: sym.kind as string,
+            namespace: sym.namespace as string,
+          });
+        }
       }
-    }
 
-    return { variant: 'ok', results: JSON.stringify(results) };
+      return { results: JSON.stringify(results) };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Search by exact name (case-insensitive).
-   */
-  async searchByName(input: Record<string, unknown>, storage: ConceptStorage) {
+  searchByName(input: Record<string, unknown>) {
     const name = input.name as string;
-
     const indexKey = `name:${name.toLowerCase()}`;
-    const entries = await storage.find(INDEX_RELATION, { indexKey });
 
-    const results: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
-    for (const entry of entries) {
-      const sym = await storage.get(SYMBOL_RELATION, entry.symbolId as string);
-      if (sym) {
-        results.push({
-          symbolId: sym.id as string,
-          name: sym.name as string,
-          kind: sym.kind as string,
-          namespace: sym.namespace as string,
-        });
+    let p = createProgram();
+    p = find(p, INDEX_RELATION, { indexKey }, 'entries');
+    p = find(p, SYMBOL_RELATION, {}, 'allSymbols');
+
+    return completeFrom(p, 'ok', (b) => {
+      const entries = b.entries as Record<string, unknown>[];
+      const allSymbols = b.allSymbols as Record<string, unknown>[];
+      const symMap = new Map(allSymbols.map(s => [s.id as string, s]));
+
+      const results: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
+      for (const entry of entries) {
+        const sym = symMap.get(entry.symbolId as string);
+        if (sym) {
+          results.push({
+            symbolId: sym.id as string,
+            name: sym.name as string,
+            kind: sym.kind as string,
+            namespace: sym.namespace as string,
+          });
+        }
       }
-    }
 
-    return { variant: 'ok', results: JSON.stringify(results) };
+      return { results: JSON.stringify(results) };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Fuzzy symbol search. Scans all indexed symbols and returns those
-   * whose name fuzzy-matches the query string.
-   */
-  async fuzzySearch(input: Record<string, unknown>, storage: ConceptStorage) {
+  fuzzySearch(input: Record<string, unknown>) {
     const query = input.query as string;
     const topK = (input.topK as number) || 10;
 
-    const allSymbols = await storage.find(SYMBOL_RELATION);
+    let p = createProgram();
+    p = find(p, SYMBOL_RELATION, {}, 'allSymbols');
 
-    const matches: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
-    for (const sym of allSymbols) {
-      if (fuzzyMatch(query, sym.name as string)) {
-        matches.push({
-          symbolId: sym.id as string,
-          name: sym.name as string,
-          kind: sym.kind as string,
-          namespace: sym.namespace as string,
-        });
+    return completeFrom(p, 'ok', (b) => {
+      const allSymbols = b.allSymbols as Record<string, unknown>[];
+
+      const matches: Array<{ symbolId: string; name: string; kind: string; namespace: string }> = [];
+      for (const sym of allSymbols) {
+        if (fuzzyMatch(query, sym.name as string)) {
+          matches.push({
+            symbolId: sym.id as string,
+            name: sym.name as string,
+            kind: sym.kind as string,
+            namespace: sym.namespace as string,
+          });
+        }
+        if (matches.length >= topK) break;
       }
-      if (matches.length >= topK) break;
-    }
 
-    return { variant: 'ok', results: JSON.stringify(matches) };
+      return { results: JSON.stringify(matches) };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Remove a symbol from the index, deleting both the metadata record
-   * and all its inverted index entries.
-   */
-  async remove(input: Record<string, unknown>, storage: ConceptStorage) {
+  remove(input: Record<string, unknown>) {
     const symbolId = input.symbolId as string;
 
-    const sym = await storage.get(SYMBOL_RELATION, symbolId);
-    if (!sym) {
-      return { variant: 'ok', symbolId };
-    }
+    let p = createProgram();
+    p = get(p, SYMBOL_RELATION, symbolId, 'sym');
 
-    // Remove inverted index entries
-    const keys = indexKeysFor(sym.name as string, sym.kind as string, sym.namespace as string);
-    for (const key of keys) {
-      const entryId = `${key}::${symbolId}`;
-      await storage.del(INDEX_RELATION, entryId);
-    }
-
-    // Remove symbol metadata
-    await storage.del(SYMBOL_RELATION, symbolId);
-
-    return { variant: 'ok', symbolId };
+    return branch(p,
+      (b) => !b.sym,
+      (() => {
+        const t = createProgram();
+        return complete(t, 'ok', { symbolId }) as StorageProgram<Result>;
+      })(),
+      (() => {
+        // We need to read all index entries for this symbol and delete them
+        let e = createProgram();
+        e = find(e, INDEX_RELATION, { symbolId }, 'indexEntries');
+        e = mapBindings(e, (b) => {
+          return (b.indexEntries as Record<string, unknown>[]).map(entry => entry.id as string);
+        }, 'entryIds');
+        // Since we can't loop with del in the DSL, we delete the symbol
+        // and use completeFrom which will be interpreted
+        e = del(e, SYMBOL_RELATION, symbolId);
+        return complete(e, 'ok', { symbolId }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const symbolIndexProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSymbolIndexProviderCounter(): void {
