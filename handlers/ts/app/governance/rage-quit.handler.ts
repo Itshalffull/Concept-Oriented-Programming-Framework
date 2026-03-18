@@ -1,33 +1,61 @@
+// @migrated dsl-constructs 2026-03-18
 // RageQuit Concept Handler
 // Proportional exit for minority dissent (MolochDAO pattern).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const rageQuitHandler: ConceptHandler = {
-  async initiate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _rageQuitHandler: FunctionalConceptHandler = {
+  initiate(input: Record<string, unknown>) {
     const id = `rq-${Date.now()}`;
-    await storage.put('ragequit', id, {
+    let p = createProgram();
+    p = put(p, 'ragequit', id, {
       id, member: input.member, shares: input.shares, loot: input.loot,
       status: 'Initiated', initiatedAt: new Date().toISOString(),
     });
-    return { variant: 'initiated', exit: id };
+    return complete(p, 'initiated', { exit: id }) as StorageProgram<Result>;
   },
 
-  async calculateClaim(input, storage) {
+  calculateClaim(input: Record<string, unknown>) {
     const { exit } = input;
-    const record = await storage.get('ragequit', exit as string);
-    if (!record) return { variant: 'not_found', exit };
-    // Stub: real impl calculates proportional treasury share
-    const claims: Record<string, number> = {};
-    await storage.put('ragequit', exit as string, { ...record, claims, status: 'Calculated' });
-    return { variant: 'calculated', exit, claims: JSON.stringify(claims) };
+    let p = createProgram();
+    p = get(p, 'ragequit', exit as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const claims: Record<string, number> = {};
+        let b2 = put(b, 'ragequit', exit as string, { claims, status: 'Calculated' });
+        return complete(b2, 'calculated', { exit, claims: JSON.stringify(claims) });
+      },
+      (b) => complete(b, 'not_found', { exit }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async claim(input, storage) {
+  claim(input: Record<string, unknown>) {
     const { exit } = input;
-    const record = await storage.get('ragequit', exit as string);
-    if (!record) return { variant: 'not_found', exit };
-    if (record.status !== 'Calculated') return { variant: 'not_calculated', exit };
-    await storage.put('ragequit', exit as string, { ...record, status: 'Claimed', claimedAt: new Date().toISOString() });
-    return { variant: 'claimed', exit };
+    let p = createProgram();
+    p = get(p, 'ragequit', exit as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'claimed', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (record.status !== 'Calculated') return { variant: 'not_calculated', exit };
+          return { variant: 'claimed', exit };
+        });
+      },
+      (b) => complete(b, 'not_found', { exit }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const rageQuitHandler = autoInterpret(_rageQuitHandler);
