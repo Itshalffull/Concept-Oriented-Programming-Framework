@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ActionLog Concept Implementation
 //
@@ -6,21 +7,24 @@
 // queried and participate in synchronizations.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId } from '../../../runtime/types.js';
 
-export const actionLogHandler: ConceptHandler = {
-  async append(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  append(input) {
     const record = input.record as Record<string, unknown>;
     const id = generateId();
 
+    let p = createProgram();
     // Store in the "records" set relation
-    await storage.put('records', id, { id, ...record });
-
-    return { variant: 'ok', id };
+    p = put(p, 'records', id, { id, ...record });
+    p = complete(p, 'ok', { id });
+    return p;
   },
 
-  async addEdge(input, storage) {
+  addEdge(input) {
     const from = input.from as string;
     const to = input.to as string;
     const sync = input.sync as string;
@@ -28,17 +32,21 @@ export const actionLogHandler: ConceptHandler = {
     // Store the edge in the "edges" relation keyed by source record
     // Use a composite key since one record can have multiple edges
     const edgeId = `${from}:${to}`;
-    await storage.put('edges', edgeId, { from, target: to, sync });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = put(p, 'edges', edgeId, { from, target: to, sync });
+    p = complete(p, 'ok', {});
+    return p;
   },
 
-  async query(input, storage) {
+  query(input) {
     const flow = input.flow as string;
 
+    let p = createProgram();
     // Find all records matching the given flow
-    const records = await storage.find('records', { flow });
-
-    return { variant: 'ok', records };
+    p = find(p, 'records', { flow }, 'records');
+    p = completeFrom(p, 'ok', (bindings) => ({ records: bindings.records }));
+    return p;
   },
 };
+
+export const actionLogHandler = autoInterpret(_handler);
