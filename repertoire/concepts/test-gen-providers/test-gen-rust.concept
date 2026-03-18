@@ -1,0 +1,63 @@
+@version(1)
+concept TestGenRust [R] {
+
+  purpose {
+    Render a language-neutral TestPlan into Rust test code using
+    proptest for property-based testing and cargo-fuzz for fuzz
+    harnesses. Produces executable _test.rs file content covering
+    proptest properties, fuzz targets, and concrete test functions.
+  }
+
+  state {
+    results: set R
+    test_plan: R -> String
+    rendered_code: R -> String
+    file_path: R -> String
+    rendered_at: R -> DateTime
+    test_count: R -> Int
+  }
+
+  actions {
+    action render(test_plan: String, output_path: String) {
+      -> ok(result: R, rendered_code: String, file_path: String, test_count: Int) {
+        Parse the JSON TestPlan and emit Rust test code using
+        proptest strategies for forall properties, prop_assert!
+        for always/never invariants, concrete #[test] functions
+        for example vectors, and fuzz_target! macros for fuzz
+        harnesses.
+      }
+      -> invalid(message: String) {
+        The test_plan JSON is malformed or missing required fields.
+      }
+    }
+
+    action renderBatch(test_plans: String) {
+      -> ok(results: String, total_files: Int, total_tests: Int) {
+        Render multiple TestPlans in a single call.
+      }
+      -> error(message: String) {
+        One or more test plans failed to render.
+      }
+    }
+
+    action listRendered(concept_ref: String) {
+      -> ok(results: String) {
+        List all rendered Rust test files for a given concept.
+      }
+    }
+  }
+
+  example "render produces proptest code": {
+    after render(
+      test_plan: "{\"conceptName\":\"Token\",\"conceptRef\":\"clef/concept/Token\",\"handlerPath\":\"codegen/rust/src/token.rs\",\"actions\":[{\"name\":\"mint\",\"params\":[{\"name\":\"to\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}",
+      output_path: "generated/tests/token_conformance_test.rs"
+    ) -> ok(result: r, rendered_code: code, file_path: path, test_count: count)
+    then count > 0
+  }
+
+  example "invalid JSON rejected": {
+    after render(test_plan: "{bad", output_path: "test.rs")
+      -> invalid(message: msg)
+    then msg != ""
+  }
+}

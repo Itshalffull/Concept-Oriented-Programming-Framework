@@ -1,14 +1,24 @@
-@version(2)
+@version(3)
 concept TestGen [T] {
 
   purpose {
-    Coordinate automated test generation from all six invariant
-    construct types. Maps each construct to a generation strategy:
-    example → conformance vectors, forall → PBT properties,
-    always → stateful sequence tests, never → violation-attempt
-    tests, eventually → bounded liveness tests, requires/ensures
-    → contract-constrained PBT. Routes to language-specific
-    providers via PluginRegistry dispatch.
+    Coordinate automated test generation from concept specifications.
+    Parses a concept spec into a language-neutral test plan covering
+    all six invariant construct types, then routes the test plan to
+    language-specific providers for rendering into executable test code.
+
+    Test plan structure:
+    - structural: per-action program construction, purity, variant
+      coverage, read/write sets, interpreted execution, transport effects
+    - examples: 1:1 conformance vectors from example invariants
+    - properties: PBT descriptors from forall invariants
+    - stateInvariants: always/never state predicate checks
+    - liveness: bounded sequence tests from eventually invariants
+    - contracts: requires/ensures pre/postcondition tests
+
+    Providers render the test plan into language-specific code:
+    TypeScript (vitest + fast-check), Rust (proptest + cargo-fuzz),
+    Swift (SwiftCheck + XCTest), Solidity (Foundry + Echidna).
   }
 
   state {
@@ -21,6 +31,7 @@ concept TestGen [T] {
     invariant_version: T -> String
     generated_at: T -> DateTime
     strategies: T -> String
+    test_plan: T -> String
 
     config {
       num_runs: T -> Int
@@ -34,17 +45,30 @@ concept TestGen [T] {
 
     action generate(concept_ref: String, language: String, invariant_version: String) {
       -> ok(generation: T, generated_files: String, provider_used: String, strategies: String) {
-        Parse concept invariants across all six construct types and
-        compile each to the appropriate test strategy. Generates
-        conformance tests from example blocks, PBT properties from
-        forall blocks, stateful tests from always/never blocks,
-        liveness tests from eventually blocks, and contract tests
-        from requires/ensures blocks. Routes to language-specific
-        provider via PluginRegistry.
+        Read the concept spec, build a test plan from its actions and
+        invariants, store the generation record, and route to the
+        language-specific provider for rendering. The test plan covers
+        all six invariant construct types mapped to their generation
+        strategies.
       }
       -> invalid(message: String) {
         Concept has no parseable invariants, or no provider is
         registered for the requested language.
+      }
+    }
+
+    action buildTestPlan(concept_ref: String, concept_data: String) {
+      -> ok(test_plan: String, provider: String, language: String) {
+        Build a language-neutral test plan from a concept spec passed
+        directly as structured data. The test plan is a JSON-serialized
+        TestPlan containing structural tests, example conformance
+        vectors, forall PBT descriptors, always/never state invariants,
+        eventually bounded liveness tests, and requires/ensures
+        contract checks. This is the core planning action used by
+        scaffold generators and CLI tools.
+      }
+      -> invalid(message: String) {
+        concept_ref or concept_data missing or malformed.
       }
     }
 
@@ -90,6 +114,12 @@ concept TestGen [T] {
       -> ok(generation: g, generated_files: files, provider_used: "TestGenTypeScript", strategies: strats)
     then list(concept_ref: "clef/concept/Password", language: "typescript")
       -> ok(generations: gs)
+  }
+
+  example "buildTestPlan returns structured plan": {
+    after buildTestPlan(concept_ref: "clef/concept/User", concept_data: "{}")
+      -> ok(test_plan: plan, provider: "TestGenTypeScript", language: "typescript")
+    then plan != ""
   }
 
   forall "valid languages accepted": {

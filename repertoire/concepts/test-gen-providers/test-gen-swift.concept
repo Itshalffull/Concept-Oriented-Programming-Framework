@@ -1,0 +1,63 @@
+@version(1)
+concept TestGenSwift [R] {
+
+  purpose {
+    Render a language-neutral TestPlan into Swift test code using
+    SwiftCheck for property-based testing and XCTest for conformance
+    tests. Produces executable Tests.swift file content covering
+    XCTestCase functions, SwiftCheck forAll properties, and
+    precondition/postcondition checks.
+  }
+
+  state {
+    results: set R
+    test_plan: R -> String
+    rendered_code: R -> String
+    file_path: R -> String
+    rendered_at: R -> DateTime
+    test_count: R -> Int
+  }
+
+  actions {
+    action render(test_plan: String, output_path: String) {
+      -> ok(result: R, rendered_code: String, file_path: String, test_count: Int) {
+        Parse the JSON TestPlan and emit Swift test code using
+        XCTestCase for example conformance vectors, SwiftCheck
+        forAll for property-based tests, XCTAssertFalse for never
+        invariants, and precondition() for requires contracts.
+      }
+      -> invalid(message: String) {
+        The test_plan JSON is malformed or missing required fields.
+      }
+    }
+
+    action renderBatch(test_plans: String) {
+      -> ok(results: String, total_files: Int, total_tests: Int) {
+        Render multiple TestPlans in a single call.
+      }
+      -> error(message: String) {
+        One or more test plans failed to render.
+      }
+    }
+
+    action listRendered(concept_ref: String) {
+      -> ok(results: String) {
+        List all rendered Swift test files for a given concept.
+      }
+    }
+  }
+
+  example "render produces XCTest code": {
+    after render(
+      test_plan: "{\"conceptName\":\"Wallet\",\"conceptRef\":\"clef/concept/Wallet\",\"handlerPath\":\"codegen/swift/Sources/Wallet.swift\",\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"owner\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}",
+      output_path: "generated/tests/WalletConformanceTests.swift"
+    ) -> ok(result: r, rendered_code: code, file_path: path, test_count: count)
+    then count > 0
+  }
+
+  example "invalid JSON rejected": {
+    after render(test_plan: "", output_path: "test.swift")
+      -> invalid(message: msg)
+    then msg != ""
+  }
+}

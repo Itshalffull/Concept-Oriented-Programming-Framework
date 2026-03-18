@@ -1,0 +1,79 @@
+@version(1)
+concept TestGenTypeScript [R] {
+
+  purpose {
+    Render a language-neutral TestPlan into TypeScript conformance
+    test code using vitest and the StorageProgram analysis utilities.
+    Produces executable .test.ts file content covering structural
+    handler tests, example conformance vectors, forall PBT properties,
+    always/never state invariants, eventually bounded liveness tests,
+    and requires/ensures contract checks.
+  }
+
+  state {
+    results: set R
+    test_plan: R -> String
+    rendered_code: R -> String
+    file_path: R -> String
+    rendered_at: R -> DateTime
+    test_count: R -> Int
+  }
+
+  actions {
+    action render(test_plan: String, output_path: String) {
+      -> ok(result: R, rendered_code: String, file_path: String, test_count: Int) {
+        Parse the JSON TestPlan, walk its structural tests, example
+        invariants, forall properties, state invariants, liveness
+        checks, and contract tests, and emit a complete vitest file
+        importing the handler and StorageProgram analysis utilities.
+      }
+      -> invalid(message: String) {
+        The test_plan JSON is malformed or missing required fields
+        (conceptName, actions).
+      }
+    }
+
+    action renderBatch(test_plans: String) {
+      -> ok(results: String, total_files: Int, total_tests: Int) {
+        Render multiple TestPlans in a single call. Input is a JSON
+        array of { test_plan, output_path } objects. Returns a JSON
+        array of rendered results.
+      }
+      -> error(message: String) {
+        One or more test plans failed to render.
+      }
+    }
+
+    action listRendered(concept_ref: String) {
+      -> ok(results: String) {
+        List all rendered test files for a given concept reference.
+      }
+    }
+  }
+
+  example "render produces valid test code": {
+    after render(
+      test_plan: "{\"conceptName\":\"Password\",\"conceptRef\":\"clef/concept/Password\",\"handlerPath\":\"handlers/ts/password.handler.js\",\"actions\":[{\"name\":\"set\",\"params\":[{\"name\":\"user\",\"type\":\"String\"},{\"name\":\"password\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}",
+      output_path: "generated/tests/password.conformance.test.ts"
+    ) -> ok(result: r, rendered_code: code, file_path: path, test_count: count)
+    then count > 0
+    and  path = "generated/tests/password.conformance.test.ts"
+  }
+
+  example "invalid JSON rejected": {
+    after render(test_plan: "not valid json", output_path: "test.ts")
+      -> invalid(message: msg)
+    then msg != ""
+  }
+
+  always "rendered code contains vitest imports": {
+    forall r in results:
+      r.rendered_code contains "import { describe, it, expect"
+  }
+
+  never "empty rendered code stored": {
+    exists r in results:
+      r.rendered_code = ""
+      and r.test_count > 0
+  }
+}

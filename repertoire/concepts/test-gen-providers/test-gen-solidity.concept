@@ -1,0 +1,63 @@
+@version(1)
+concept TestGenSolidity [R] {
+
+  purpose {
+    Render a language-neutral TestPlan into Solidity test code using
+    Foundry for fuzz tests and Echidna for invariant property tests.
+    Produces executable .t.sol file content covering concrete test
+    functions, vm.assume fuzz constraints, and invariant_ property
+    checks.
+  }
+
+  state {
+    results: set R
+    test_plan: R -> String
+    rendered_code: R -> String
+    file_path: R -> String
+    rendered_at: R -> DateTime
+    test_count: R -> Int
+  }
+
+  actions {
+    action render(test_plan: String, output_path: String) {
+      -> ok(result: R, rendered_code: String, file_path: String, test_count: Int) {
+        Parse the JSON TestPlan and emit Solidity test code using
+        Foundry test_ functions for example vectors, vm.assume()
+        for forall constraints, invariant_ functions for always
+        properties, and assertEq/assertFalse for postconditions.
+      }
+      -> invalid(message: String) {
+        The test_plan JSON is malformed or missing required fields.
+      }
+    }
+
+    action renderBatch(test_plans: String) {
+      -> ok(results: String, total_files: Int, total_tests: Int) {
+        Render multiple TestPlans in a single call.
+      }
+      -> error(message: String) {
+        One or more test plans failed to render.
+      }
+    }
+
+    action listRendered(concept_ref: String) {
+      -> ok(results: String) {
+        List all rendered Solidity test files for a given concept.
+      }
+    }
+  }
+
+  example "render produces Foundry test code": {
+    after render(
+      test_plan: "{\"conceptName\":\"Vault\",\"conceptRef\":\"clef/concept/Vault\",\"handlerPath\":\"codegen/solidity/src/Vault.sol\",\"actions\":[{\"name\":\"deposit\",\"params\":[{\"name\":\"amount\",\"type\":\"Int\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}",
+      output_path: "generated/tests/Vault.conformance.t.sol"
+    ) -> ok(result: r, rendered_code: code, file_path: path, test_count: count)
+    then count > 0
+  }
+
+  example "invalid JSON rejected": {
+    after render(test_plan: "[]", output_path: "test.sol")
+      -> invalid(message: msg)
+    then msg != ""
+  }
+}
