@@ -29,8 +29,18 @@ concept LensExtractionProvider [E] {
     }
   }
 
-  invariant {
+  example "get instruction extracts lens reference": {
     after analyze(program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}") -> ok(result: r, lenses: l, accessPattern: a)
     then r != ""
+  }
+
+  always "results contain lens data": {
+    forall e in results:
+    e.lenses != ""
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and lenses != ""
   }
 }

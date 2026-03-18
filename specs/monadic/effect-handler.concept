@@ -57,13 +57,44 @@ concept EffectHandler [E] {
     }
   }
 
-  invariant {
+  example "register then resolve returns handler": {
     after register(protocol: "http", operation: "GET") -> ok(handler: h)
     then resolve(protocol: "http", operation: "GET") -> ok(handler: h)
   }
 
-  invariant {
+  example "resolve unregistered pair returns unresolved": {
     after resolve(protocol: "grpc", operation: "invoke") -> unresolved(protocol: p, operation: o)
     then p = "grpc"
+  }
+
+  example "deregister removes handler": {
+    after register(protocol: "http", operation: "GET") -> ok(handler: h)
+    and deregister(protocol: "http", operation: "GET") -> ok(handler: h)
+    then resolve(protocol: "http", operation: "GET") -> unresolved(protocol: p, operation: o)
+  }
+
+  example "duplicate register returns existing handler": {
+    after register(protocol: "http", operation: "GET") -> ok(handler: h)
+    then register(protocol: "http", operation: "GET") -> duplicate(handler: h)
+  }
+
+  always "registered handlers have protocol and operation": {
+    forall h in handlers:
+    h.protocol != "" and h.operation != ""
+  }
+
+  never "resolve succeeds without registration": {
+    resolve(protocol: p, operation: o) -> ok(handler: h)
+    and h not in handlers
+  }
+
+  action register {
+    requires: protocol != "" and operation != ""
+    ensures ok: handler in handlers and handler.protocol = protocol
+  }
+
+  action resolve {
+    requires: protocol != "" and operation != ""
+    ensures ok: handler in handlers
   }
 }

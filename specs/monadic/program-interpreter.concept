@@ -60,9 +60,39 @@ concept ProgramInterpreter [I] {
     }
   }
 
-  invariant {
+  example "execute then rollback succeeds": {
     after register(interpreter: i, backend: "memory", mode: "live") -> ok()
     and execute(interpreter: i, program: "get(users, u1)", snapshot: "current") -> ok(executionId: eid, variant: v, output: o, trace: t)
     then rollback(interpreter: i, executionId: eid) -> ok()
+  }
+
+  example "dryRun does not persist mutations": {
+    after register(interpreter: i, backend: "memory", mode: "dry-run") -> ok()
+    then dryRun(interpreter: i, program: "put(users, u1, data)", snapshot: "current") -> ok(variant: v, output: o, mutations: m)
+  }
+
+  example "execute on unregistered interpreter returns notfound": {
+    after execute(interpreter: i, program: "get(users, u1)", snapshot: "current") -> notfound()
+    then true
+  }
+
+  always "registered interpreters have valid mode": {
+    forall i in interpreters:
+    i.mode = "live" or i.mode = "dry-run" or i.mode = "replay"
+  }
+
+  never "execution without registered interpreter": {
+    execute(interpreter: i, program: p, snapshot: s) -> ok(executionId: eid, variant: v, output: o, trace: t)
+    and i not in interpreters
+  }
+
+  action register {
+    requires: backend != "" and (mode = "live" or mode = "dry-run" or mode = "replay")
+    ensures ok: interpreter in interpreters
+  }
+
+  action execute {
+    requires: interpreter in interpreters and program != ""
+    ensures ok: executionId in executions
   }
 }

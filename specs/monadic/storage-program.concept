@@ -118,7 +118,7 @@ concept StorageProgram [P] {
     }
   }
 
-  invariant {
+  example "create, get, put, pure terminates program": {
     after create(program: p) -> ok()
     and get(program: p, relation: "users", key: "u1", bindAs: "user") -> ok(program: p)
     and put(program: p, relation: "users", key: "u1", value: "updated") -> ok(program: p)
@@ -126,9 +126,40 @@ concept StorageProgram [P] {
     then p.terminated = true
   }
 
-  invariant {
+  example "sealed program rejects new instructions": {
     after create(program: p) -> ok()
     and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
     then get(program: p, relation: "users", key: "u1", bindAs: "x") -> sealed()
+  }
+
+  example "compose chains two programs": {
+    after create(program: a) -> ok()
+    and create(program: b) -> ok()
+    then compose(first: a, second: b, bindAs: "result") -> ok(program: c)
+  }
+
+  example "getLens appends lens read instruction": {
+    after create(program: p) -> ok()
+    then getLens(program: p, lens: "users.u1.email", bindAs: "email") -> ok(program: p)
+  }
+
+  always "terminated programs have instructions": {
+    forall p in programs:
+    p.terminated = true implies p.instructions != []
+  }
+
+  never "instruction appended after termination": {
+    get(program: p, relation: r, key: k, bindAs: b) -> ok(program: p)
+    and p.terminated = true
+  }
+
+  action create {
+    requires: program not in programs
+    ensures ok: program in programs and program.terminated = false
+  }
+
+  action pure {
+    requires: program in programs and program.terminated = false
+    ensures ok: program.terminated = true
   }
 }

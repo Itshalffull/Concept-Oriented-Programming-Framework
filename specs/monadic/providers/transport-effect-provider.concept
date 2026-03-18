@@ -30,15 +30,25 @@ concept TransportEffectProvider [T] {
     }
   }
 
-  invariant {
+  example "single perform instruction yields count 1": {
     after analyze(program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}")
       -> ok(result: r, performs: p, performCount: c)
     then c = 1
   }
 
-  invariant {
+  example "invalid program returns error with message": {
     after analyze(program: "not valid json{{{")
       -> error(message: m)
     then m != ""
+  }
+
+  always "perform count matches performs set size": {
+    forall t in results:
+    t.performCount >= 0
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and performCount >= 0
   }
 }

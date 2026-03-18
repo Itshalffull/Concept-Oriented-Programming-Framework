@@ -26,9 +26,24 @@ concept DeadBranchProvider [D] {
     }
   }
 
-  invariant {
+  example "false condition produces one dead branch": {
     after analyze(program: "branch(false, thenP, elseP)", constraints: "{}") -> ok(result: d, deadBranches: db, reachableCount: rc, totalCount: tc)
     then rc = 1
     and tc = 2
+  }
+
+  always "reachable count does not exceed total": {
+    forall d in results:
+    d.reachableCount <= d.totalCount
+  }
+
+  never "dead branches exceed total branches": {
+    analyze(program: p, constraints: c) -> ok(result: d, deadBranches: db, reachableCount: rc, totalCount: tc)
+    and rc > tc
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and reachableCount <= totalCount
   }
 }

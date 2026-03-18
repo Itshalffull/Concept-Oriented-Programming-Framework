@@ -25,11 +25,21 @@ concept InvariantExtractionProvider [I] {
     }
   }
 
-  invariant {
+  example "extraction produces non-empty properties": {
     after extract(
       program: "get(users, u1); put(users, u1, data)",
       conceptSpec: "User { state { users: set U } }"
     ) -> ok(result: i, properties: props)
     then props != ""
+  }
+
+  always "results reference a concept": {
+    forall i in results:
+    i.conceptRef != ""
+  }
+
+  action extract {
+    requires: program != "" and conceptSpec != ""
+    ensures ok: result in results and properties != ""
   }
 }

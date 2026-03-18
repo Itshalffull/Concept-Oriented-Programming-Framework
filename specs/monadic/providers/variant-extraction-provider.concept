@@ -30,15 +30,25 @@ concept VariantExtractionProvider [V] {
     }
   }
 
-  invariant {
+  example "single pure terminal has zero branches": {
     after analyze(program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}")
       -> ok(result: r, variants: v, branchCount: b)
     then b = 0
   }
 
-  invariant {
+  example "invalid program returns error with message": {
     after analyze(program: "not valid json{{{")
       -> error(message: m)
     then m != ""
+  }
+
+  always "branch count is non-negative": {
+    forall v in results:
+    v.branchCount >= 0
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and variants != ""
   }
 }

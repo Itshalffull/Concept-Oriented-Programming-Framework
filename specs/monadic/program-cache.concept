@@ -52,14 +52,45 @@ concept ProgramCache [C] {
     }
   }
 
-  invariant {
+  example "store then lookup returns hit": {
     after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
     then lookup(programHash: "abc", stateHash: "def") -> hit(entry: c, result: "ok")
   }
 
-  invariant {
+  example "invalidateByState evicts matching entries": {
     after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
     and invalidateByState(stateHash: "def") -> ok(evicted: n)
     then lookup(programHash: "abc", stateHash: "def") -> miss()
+  }
+
+  example "invalidateByProgram evicts matching entries": {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    and invalidateByProgram(programHash: "abc") -> ok(evicted: n)
+    then lookup(programHash: "abc", stateHash: "def") -> miss()
+  }
+
+  example "duplicate store returns exists": {
+    after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
+    then store(programHash: "abc", stateHash: "def", result: "ok") -> exists()
+  }
+
+  always "cached entries have valid hashes": {
+    forall e in entries:
+    e.programHash != "" and e.stateHash != ""
+  }
+
+  never "hit without prior store": {
+    lookup(programHash: h, stateHash: s) -> hit(entry: e, result: r)
+    and e not in entries
+  }
+
+  action store {
+    requires: programHash != "" and stateHash != "" and result != ""
+    ensures ok: entry in entries and entry.programHash = programHash and entry.stateHash = stateHash
+  }
+
+  action lookup {
+    requires: programHash != "" and stateHash != ""
+    ensures hit: entry in entries
   }
 }

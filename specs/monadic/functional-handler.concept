@@ -60,14 +60,44 @@ concept FunctionalHandler [H] {
     }
   }
 
-  invariant {
+  example "register then build produces program": {
     after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
     and build(handler: h, input: "{ name: 'Alice' }") -> ok(program: p)
     then p != ""
   }
 
-  invariant {
+  example "duplicate registration returns exists": {
     after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
     then register(handler: h, concept: "User", action: "create", purity: "read-write") -> exists()
+  }
+
+  example "validatePurity detects violation": {
+    after register(handler: h, concept: "User", action: "create", purity: "read-only") -> ok()
+    then validatePurity(handler: h, program: "put(users, u1, data)") -> violation(declaredPurity: dp, actualPurity: ap, message: m)
+  }
+
+  example "list returns handlers for concept": {
+    after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
+    then list(concept: "User") -> ok(handlers: hs)
+  }
+
+  always "handlers have valid purity declaration": {
+    forall h in handlers:
+    h.purity = "pure" or h.purity = "read-only" or h.purity = "read-write"
+  }
+
+  never "build succeeds for unregistered handler": {
+    build(handler: h, input: i) -> ok(program: p)
+    and h not in handlers
+  }
+
+  action register {
+    requires: concept != "" and action != "" and (purity = "pure" or purity = "read-only" or purity = "read-write")
+    ensures ok: handler in handlers
+  }
+
+  action build {
+    requires: handler in handlers and input != ""
+    ensures ok: program != ""
   }
 }

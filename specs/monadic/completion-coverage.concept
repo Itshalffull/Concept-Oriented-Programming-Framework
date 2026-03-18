@@ -56,7 +56,7 @@ concept CompletionCoverage [C] {
     }
   }
 
-  invariant {
+  example "full coverage returns covered": {
     after check(concept: "User", action: "register",
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\",\"error\"]",
@@ -65,12 +65,36 @@ concept CompletionCoverage [C] {
     then report(concept: "User") -> ok(reports: reps)
   }
 
-  invariant {
+  example "missing sync returns uncovered with diagnostics": {
     after check(concept: "User", action: "register",
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
       -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
     then uv != "[]"
+  }
+
+  example "listUncovered aggregates all gaps": {
+    after check(concept: "User", action: "register",
+                declaredVariants: "[\"ok\",\"error\"]",
+                extractedVariants: "[\"ok\"]",
+                syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
+      -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+    then listUncovered() -> ok(uncovered: u)
+  }
+
+  always "reports track concept and action": {
+    forall r in reports:
+    r.concept != "" and r.action != ""
+  }
+
+  never "covered report with uncovered variants": {
+    check(concept: c, action: a, declaredVariants: dv, extractedVariants: ev, syncPatterns: sp) -> covered(report: r)
+    and r.uncoveredVariants != {}
+  }
+
+  action check {
+    requires: concept != "" and action != "" and declaredVariants != ""
+    ensures covered: report.status = "covered" and report.uncoveredVariants = {}
   }
 }

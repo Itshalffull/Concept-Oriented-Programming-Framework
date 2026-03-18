@@ -45,13 +45,44 @@ concept ProgramAnalysis [A] {
     }
   }
 
-  invariant {
+  example "registered provider can run analysis": {
     after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
     then run(program: "get(users, u1)", provider: "read-write-sets") -> ok(analysis: a, result: r)
   }
 
-  invariant {
+  example "unregistered provider returns providerNotFound": {
     after run(program: "get(users, u1)", provider: "nonexistent") -> providerNotFound()
     then listProviders() -> ok(providers: p)
+  }
+
+  example "runAll dispatches to all registered providers": {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    and registerProvider(name: "commutativity", kind: "relational") -> ok()
+    then runAll(program: "get(users, u1)") -> ok(results: r)
+  }
+
+  example "duplicate provider registration returns exists": {
+    after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
+    then registerProvider(name: "read-write-sets", kind: "structural") -> exists()
+  }
+
+  always "registered providers are listed": {
+    forall name in providers:
+    providerKind(name) != ""
+  }
+
+  never "run succeeds for unregistered provider": {
+    run(program: p, provider: name) -> ok(analysis: a, result: r)
+    and name not in providers
+  }
+
+  action registerProvider {
+    requires: name != "" and kind != ""
+    ensures ok: name in providers
+  }
+
+  action run {
+    requires: program != "" and provider != ""
+    ensures ok: analysis in results
   }
 }
