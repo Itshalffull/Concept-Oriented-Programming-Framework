@@ -1,0 +1,57 @@
+@version(1)
+concept GitLabApiEndpoint [L] {
+
+  purpose {
+    Configure and authenticate a GitLab API endpoint for commit
+    statuses and pipeline integration. Stores the private token,
+    project ID, and configurable API base URL so that higher-level
+    concepts reference the endpoint by name.
+  }
+
+  state {
+    endpoints: set L
+    name: L -> String
+    token: L -> String
+    projectId: L -> String
+    baseUrl: L -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, token: String, projectId: String, baseUrl: String) {
+      -> ok(endpoint: L) {
+        Create a named GitLab API endpoint with private token,
+        CI project ID, and API base URL. Base URL defaults to
+        https://gitlab.com/api/v4.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: L, baseUrl: String, projectId: String, headers: String) {
+        Look up the named endpoint and return its base URL,
+        project ID, and pre-built PRIVATE-TOKEN headers.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name, baseUrl, and projectId (tokens omitted).
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "gitlab-api", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4") -> ok(endpoint: l)
+    then resolve(name: "gitlab-api") -> ok(endpoint: l, baseUrl: "https://gitlab.com/api/v4", projectId: "12345", headers: _)
+  }
+}

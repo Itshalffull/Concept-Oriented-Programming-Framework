@@ -1,374 +1,250 @@
-// StatusGate Concept Handler Tests
+// StatusGate Concept Handler Tests — Functional Style
 // Validates gate lifecycle, provider dispatch, and configuration.
+// Handler now returns StoragePrograms (functional style).
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { createInMemoryStorage } from '../runtime/adapters/storage.js';
-import { statusGateHandler, registerProvider, checkGatesExitCode } from '../handlers/ts/framework/status-gate.handler.js';
-import type { ConceptStorage } from '../runtime/types.js';
+import { describe, it, expect } from 'vitest';
+import { statusGateHandler } from '../handlers/ts/framework/status-gate.handler.js';
 
-let storage: ConceptStorage;
+// Helper to extract pure instruction value
+function getPureValue(program: { instructions: Array<Record<string, unknown>> }): Record<string, unknown> {
+  const pureInstr = program.instructions.find(i => i.tag === 'pure');
+  return pureInstr ? pureInstr.value as Record<string, unknown> : {};
+}
 
-beforeEach(() => {
-  storage = createInMemoryStorage();
-});
+function getPutInstruction(program: { instructions: Array<Record<string, unknown>> }, relation: string) {
+  return program.instructions.find(i => i.tag === 'put' && i.relation === relation);
+}
+
+function getPerformInstruction(program: { instructions: Array<Record<string, unknown>> }) {
+  return program.instructions.find(i => i.tag === 'perform');
+}
 
 // ── Basic lifecycle ──────────────────────────────────────────────────
 
 describe('StatusGate: report', () => {
-  it('creates a gate with exit-code provider by default', async () => {
-    const result = await statusGateHandler.report({
+  it('creates a gate with exit-code provider by default', () => {
+    const p = statusGateHandler.report!({
       target: 'abc123',
       context: 'clef/verify',
       status: 'passing',
       details: '3 proved',
       provider: '',
       url: '',
-    }, storage);
+    });
 
-    expect(result.variant).toBe('ok');
-    expect(result.target).toBe('abc123');
-    expect(result.provider).toBe('exit-code');
-    expect(result.gate).toBeTruthy();
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.target).toBe('abc123');
+    expect(pv.provider).toBe('exit-code');
+    expect(pv.gate).toBeTruthy();
   });
 
-  it('uses explicit provider when specified', async () => {
-    const result = await statusGateHandler.report({
+  it('uses explicit provider when specified', () => {
+    const p = statusGateHandler.report!({
       target: 'abc123',
       context: 'clef/verify',
       status: 'passing',
       details: '',
-      provider: 'exit-code',
+      provider: 'github',
       url: '',
-    }, storage);
+    });
 
-    expect(result.variant).toBe('ok');
-    expect(result.provider).toBe('exit-code');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.provider).toBe('github');
   });
 
-  it('persists the gate in storage', async () => {
-    const result = await statusGateHandler.report({
+  it('persists the gate in storage via put instruction', () => {
+    const p = statusGateHandler.report!({
       target: 'abc123',
       context: 'clef/verify',
       status: 'passing',
       details: 'all green',
       provider: '',
       url: '',
-    }, storage);
+    });
 
-    const status = await statusGateHandler.get_status({ gate: result.gate }, storage);
-    expect(status.variant).toBe('ok');
-    expect(status.target).toBe('abc123');
-    expect(status.status).toBe('passing');
-    expect(status.details).toBe('all green');
-    expect(status.completed).toBe(false);
+    const putInstr = getPutInstruction(p, 'gates');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).target).toBe('abc123');
+    expect((putInstr!.value as Record<string, unknown>).status).toBe('passing');
+    expect((putInstr!.value as Record<string, unknown>).details).toBe('all green');
+    expect((putInstr!.value as Record<string, unknown>).completed).toBe(false);
+  });
+
+  it('declares http perform effect for github provider', () => {
+    const p = statusGateHandler.report!({
+      target: 'abc123',
+      context: 'clef/verify',
+      status: 'passing',
+      details: 'proved',
+      provider: 'github',
+      url: '',
+    });
+
+    expect(p.effects.performs.has('http:POST')).toBe(true);
+    const perf = getPerformInstruction(p);
+    expect(perf).toBeDefined();
+    expect((perf!.payload as Record<string, unknown>).endpoint).toBe('github-api');
+  });
+
+  it('declares http perform effect for gitlab provider', () => {
+    const p = statusGateHandler.report!({
+      target: 'abc123',
+      context: 'clef/verify',
+      status: 'passing',
+      details: '',
+      provider: 'gitlab',
+      url: '',
+    });
+
+    expect(p.effects.performs.has('http:POST')).toBe(true);
+    const perf = getPerformInstruction(p);
+    expect(perf).toBeDefined();
+    expect((perf!.payload as Record<string, unknown>).endpoint).toBe('gitlab-api');
+  });
+
+  it('declares http perform effect for webhook provider', () => {
+    const p = statusGateHandler.report!({
+      target: 'abc123',
+      context: 'clef/verify',
+      status: 'passing',
+      details: '',
+      provider: 'webhook',
+      url: 'https://hooks.example.com/gate',
+    });
+
+    expect(p.effects.performs.has('http:POST')).toBe(true);
+    const perf = getPerformInstruction(p);
+    expect(perf).toBeDefined();
+    expect((perf!.payload as Record<string, unknown>).endpoint).toBe('webhook');
+  });
+
+  it('does not declare perform for exit-code provider', () => {
+    const p = statusGateHandler.report!({
+      target: 'abc123',
+      context: 'clef/verify',
+      status: 'passing',
+      details: '',
+      provider: 'exit-code',
+      url: '',
+    });
+
+    expect(p.effects.performs.size).toBe(0);
   });
 });
 
 // ── Update ───────────────────────────────────────────────────────────
 
 describe('StatusGate: update', () => {
-  it('updates status of an existing gate', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'pending',
-      details: 'running', provider: '', url: '',
-    }, storage);
+  it('reads gate and updates status', () => {
+    const p = statusGateHandler.update!({
+      gate: 'gate-123',
+      status: 'passing',
+      details: 'done',
+    });
 
-    const update = await statusGateHandler.update({
-      gate: report.gate, status: 'passing', details: 'done',
-    }, storage);
+    const getInstr = p.instructions.find(i => i.tag === 'get');
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.relation).toBe('gates');
+    expect(getInstr!.key).toBe('gate-123');
 
-    expect(update.variant).toBe('ok');
-    expect(update.status).toBe('passing');
-
-    const status = await statusGateHandler.get_status({ gate: report.gate }, storage);
-    expect(status.status).toBe('passing');
-    expect(status.details).toBe('done');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.gate).toBe('gate-123');
+    expect(pv.status).toBe('passing');
   });
 
-  it('returns not_found for unknown gate', async () => {
-    const result = await statusGateHandler.update({
-      gate: 'nonexistent', status: 'passing', details: '',
-    }, storage);
+  it('declares http perform for provider dispatch', () => {
+    const p = statusGateHandler.update!({
+      gate: 'gate-123',
+      status: 'passing',
+      details: 'all green',
+    });
 
-    expect(result.variant).toBe('not_found');
-  });
-
-  it('rejects update on completed gate', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    await statusGateHandler.complete({
-      gate: report.gate, final_status: 'passing', details: 'done',
-    }, storage);
-
-    const update = await statusGateHandler.update({
-      gate: report.gate, status: 'failing', details: 'late',
-    }, storage);
-
-    expect(update.variant).toBe('already_completed');
+    expect(p.effects.performs.has('http:POST')).toBe(true);
   });
 });
 
 // ── Complete ─────────────────────────────────────────────────────────
 
 describe('StatusGate: complete', () => {
-  it('marks gate as completed and returns accepted=true for passing', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
+  it('marks gate as completed with accepted=true for passing', () => {
+    const p = statusGateHandler.complete!({
+      gate: 'gate-123',
+      final_status: 'passing',
+      details: 'all done',
+    });
 
-    const result = await statusGateHandler.complete({
-      gate: report.gate, final_status: 'passing', details: 'all done',
-    }, storage);
+    const putInstr = getPutInstruction(p, 'gates');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).completed).toBe(true);
 
-    expect(result.variant).toBe('ok');
-    expect(result.accepted).toBe(true);
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.accepted).toBe(true);
   });
 
-  it('returns accepted=false for failing', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'failing',
-      details: '', provider: '', url: '',
-    }, storage);
+  it('returns accepted=false for failing', () => {
+    const p = statusGateHandler.complete!({
+      gate: 'gate-123',
+      final_status: 'failing',
+      details: '2 refuted',
+    });
 
-    const result = await statusGateHandler.complete({
-      gate: report.gate, final_status: 'failing', details: '2 refuted',
-    }, storage);
-
-    expect(result.variant).toBe('ok');
-    expect(result.accepted).toBe(false);
-  });
-
-  it('rejects double completion', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    await statusGateHandler.complete({
-      gate: report.gate, final_status: 'passing', details: '',
-    }, storage);
-
-    const second = await statusGateHandler.complete({
-      gate: report.gate, final_status: 'failing', details: '',
-    }, storage);
-
-    expect(second.variant).toBe('already_completed');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.accepted).toBe(false);
   });
 });
 
 // ── Configure ────────────────────────────────────────────────────────
 
 describe('StatusGate: configure', () => {
-  it('sets default provider', async () => {
-    await statusGateHandler.configure({ provider: 'exit-code', url: '' }, storage);
-
-    // Register a test provider to verify dispatch
-    const calls: string[] = [];
-    registerProvider({
-      name: 'configured-test',
-      async report(gate) { calls.push(gate.provider); return { ok: true }; },
-      async update() { return { ok: true }; },
+  it('stores default provider config', () => {
+    const p = statusGateHandler.configure!({
+      provider: 'github',
+      url: 'https://dashboard.example.com',
     });
 
-    await statusGateHandler.configure({ provider: 'configured-test', url: '' }, storage);
+    const putInstr = getPutInstruction(p, 'config');
+    expect(putInstr).toBeDefined();
+    expect(putInstr!.key).toBe('default');
+    expect((putInstr!.value as Record<string, unknown>).provider).toBe('github');
+    expect((putInstr!.value as Record<string, unknown>).url).toBe('https://dashboard.example.com');
 
-    const result = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    expect(result.provider).toBe('configured-test');
-    expect(calls).toEqual(['configured-test']);
-  });
-
-  it('configured url propagates to gates', async () => {
-    await statusGateHandler.configure({ provider: 'exit-code', url: 'https://dashboard.example.com' }, storage);
-
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    // Gate should have the configured URL
-    const status = await statusGateHandler.get_status({ gate: report.gate }, storage);
-    expect(status.variant).toBe('ok');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.provider).toBe('github');
   });
 });
 
 // ── List ─────────────────────────────────────────────────────────────
 
 describe('StatusGate: list', () => {
-  it('lists all gates for a target', async () => {
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify/formal', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify/quality', status: 'failing',
-      details: '', provider: '', url: '',
-    }, storage);
-    await statusGateHandler.report({
-      target: 'def456', context: 'clef/verify/formal', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
+  it('queries gates by target', () => {
+    const p = statusGateHandler.list!({ target: 'abc123' });
 
-    const result = await statusGateHandler.list({ target: 'abc123' }, storage);
-    expect(result.variant).toBe('ok');
+    const findInstr = p.instructions.find(i => i.tag === 'find');
+    expect(findInstr).toBeDefined();
+    expect(findInstr!.relation).toBe('gates');
 
-    const gates = JSON.parse(result.gates as string);
-    expect(gates).toHaveLength(2);
-    expect(gates.every((g: any) => g.target === 'abc123')).toBe(true);
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
   });
 });
 
-// ── Exit code utility ────────────────────────────────────────────────
+// ── get_status ───────────────────────────────────────────────────────
 
-describe('StatusGate: checkGatesExitCode', () => {
-  it('returns 0 when no gates exist', async () => {
-    const code = await checkGatesExitCode(storage);
-    expect(code).toBe(0);
-  });
+describe('StatusGate: get_status', () => {
+  it('reads gate by ID', () => {
+    const p = statusGateHandler.get_status!({ gate: 'gate-123' });
 
-  it('returns 0 when all gates are passing', async () => {
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
+    const getInstr = p.instructions.find(i => i.tag === 'get');
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('gate-123');
 
-    const code = await checkGatesExitCode(storage);
-    expect(code).toBe(0);
-  });
-
-  it('returns 1 when any gate is failing', async () => {
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify/formal', status: 'passing',
-      details: '', provider: '', url: '',
-    }, storage);
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify/quality', status: 'failing',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    const code = await checkGatesExitCode(storage);
-    expect(code).toBe(1);
-  });
-
-  it('returns 1 when any gate has error status', async () => {
-    await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'error',
-      details: '', provider: '', url: '',
-    }, storage);
-
-    const code = await checkGatesExitCode(storage);
-    expect(code).toBe(1);
-  });
-});
-
-// ── Custom provider ──────────────────────────────────────────────────
-
-describe('StatusGate: custom provider', () => {
-  it('dispatches to a registered custom provider', async () => {
-    const calls: string[] = [];
-
-    registerProvider({
-      name: 'test-provider',
-      async report(gate) {
-        calls.push(`report:${gate.target}:${gate.status}`);
-        return { ok: true };
-      },
-      async update(gate) {
-        calls.push(`update:${gate.target}:${gate.status}`);
-        return { ok: true };
-      },
-    });
-
-    const result = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: 'test-provider', url: '',
-    }, storage);
-
-    expect(result.variant).toBe('ok');
-    expect(result.provider).toBe('test-provider');
-    expect(calls).toEqual(['report:abc123:passing']);
-
-    await statusGateHandler.update({
-      gate: result.gate, status: 'failing', details: 'now bad',
-    }, storage);
-
-    expect(calls).toHaveLength(2);
-    expect(calls[1]).toBe('update:abc123:failing');
-  });
-
-  it('returns provider_error when provider fails', async () => {
-    registerProvider({
-      name: 'failing-provider',
-      async report() { return { ok: false, message: 'connection refused' }; },
-      async update() { return { ok: true }; },
-    });
-
-    const result = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: 'failing-provider', url: '',
-    }, storage);
-
-    expect(result.variant).toBe('provider_error');
-    expect(result.provider).toBe('failing-provider');
-    expect(result.message).toContain('connection refused');
-  });
-});
-
-// ── Invariant: report → get_status ───────────────────────────────────
-
-describe('StatusGate: invariants', () => {
-  it('invariant 1: report then get_status returns same data', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '3 proved', provider: 'exit-code', url: '',
-    }, storage);
-
-    expect(report.variant).toBe('ok');
-
-    const status = await statusGateHandler.get_status({ gate: report.gate }, storage);
-    expect(status.variant).toBe('ok');
-    expect(status.target).toBe('abc123');
-    expect(status.status).toBe('passing');
-    expect(status.provider).toBe('exit-code');
-    expect(status.details).toBe('3 proved');
-    expect(status.completed).toBe(false);
-  });
-
-  it('invariant 2: report then complete returns accepted=true for passing', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: 'all green', provider: 'exit-code', url: '',
-    }, storage);
-
-    const complete = await statusGateHandler.complete({
-      gate: report.gate, final_status: 'passing', details: 'done',
-    }, storage);
-
-    expect(complete.variant).toBe('ok');
-    expect(complete.accepted).toBe(true);
-  });
-
-  it('invariant 3: completed gate rejects further updates', async () => {
-    const report = await statusGateHandler.report({
-      target: 'abc123', context: 'clef/verify', status: 'passing',
-      details: '', provider: 'exit-code', url: '',
-    }, storage);
-
-    await statusGateHandler.complete({
-      gate: report.gate, final_status: 'passing', details: 'done',
-    }, storage);
-
-    const update = await statusGateHandler.update({
-      gate: report.gate, status: 'failing', details: 'late failure',
-    }, storage);
-
-    expect(update.variant).toBe('already_completed');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
   });
 });

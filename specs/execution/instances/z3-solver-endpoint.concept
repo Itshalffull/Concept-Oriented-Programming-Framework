@@ -1,0 +1,69 @@
+@version(1)
+concept Z3SolverEndpoint [Z] {
+
+  purpose {
+    Configure a Z3 SMT solver instance for formal verification.
+    Stores the binary path, default timeout, and solver options.
+    Executes via perform("shell",...) through the execution layer.
+  }
+
+  state {
+    endpoints: set Z
+    name: Z -> String
+    binaryPath: Z -> String
+    timeout: Z -> Int
+    options: Z -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, binaryPath: String, timeout: Int, options: String) {
+      -> ok(endpoint: Z) {
+        Create a named Z3 solver endpoint with binary path,
+        default timeout in milliseconds, and solver options.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action solve(name: String, formula: String, logic: String) {
+      -> ok(result: String, status: String, timingMs: Int) {
+        Submit an SMT-LIB formula to the Z3 solver and return
+        the result (sat/unsat/unknown) with timing.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+      -> timeout(name: String, timingMs: Int) {
+        The solver exceeded the configured timeout.
+      }
+      -> error(message: String) {
+        The solver binary could not be executed or returned
+        an unexpected error.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: Z, binaryPath: String, timeout: Int, options: String) {
+        Look up the named endpoint for diagnostics.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+  }
+
+  example "solve after register": {
+    after register(name: "z3-local", binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2") -> ok(endpoint: z)
+    then resolve(name: "z3-local") -> ok(endpoint: z, binaryPath: "/usr/bin/z3", timeout: 30000, options: "-smt2")
+  }
+
+  never "unregistered solve": {
+    exists z in endpoints:
+      z.name = "nonexistent"
+  }
+}

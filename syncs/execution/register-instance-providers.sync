@@ -71,3 +71,111 @@ then {
     metadata: { runtime: "wasm"; kind: "embedding"; dimensions: ?dims; provider: "local" }
   ]
 }
+
+sync RegisterVercelApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the Vercel API when it registers."
+when {
+  VercelApiEndpoint/register: [ name: ?name; apiToken: ?token; teamId: ?teamId ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: "https://api.vercel.com";
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "vercel"; teamId: ?teamId }
+  ]
+}
+
+sync RegisterGitHubApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the GitHub API when it registers."
+when {
+  GitHubApiEndpoint/register: [ name: ?name; token: ?token; repository: ?repo ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: "https://api.github.com";
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "github"; repository: ?repo }
+  ]
+}
+
+sync RegisterGitLabApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the GitLab API when it registers."
+when {
+  GitLabApiEndpoint/register: [ name: ?name; token: ?token; projectId: ?pid; baseUrl: ?url ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: ?url;
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "gitlab"; projectId: ?pid }
+  ]
+}
+
+sync RegisterWebhookEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for a webhook endpoint when it registers."
+when {
+  WebhookEndpoint/register: [ name: ?name; url: ?url; headers: ?headers ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: ?url;
+    headers: ?headers;
+    timeout: 10000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "webhook"; provider: "webhook"; url: ?url }
+  ]
+}
+
+sync RegisterZ3SolverEndpoint [eager]
+  purpose: "Register a Z3 solver endpoint with PluginRegistry for SolverProvider dispatch."
+when {
+  Z3SolverEndpoint/register: [ name: ?name; binaryPath: ?path; timeout: ?timeout; options: ?opts ]
+    => ok(endpoint: ?ep)
+}
+then {
+  PluginRegistry/register: [
+    type: "solver-endpoint";
+    name: ?name;
+    metadata: { solver: "z3"; binaryPath: ?path; timeout: ?timeout; kind: "smt" }
+  ]
+}
+
+sync RegisterAlloySolverEndpoint [eager]
+  purpose: "Register an Alloy solver endpoint with PluginRegistry for SolverProvider dispatch."
+when {
+  AlloySolverEndpoint/register: [ name: ?name; jarPath: ?path; scope: ?scope; timeout: ?timeout ]
+    => ok(endpoint: ?ep)
+}
+then {
+  PluginRegistry/register: [
+    type: "solver-endpoint";
+    name: ?name;
+    metadata: { solver: "alloy"; jarPath: ?path; scope: ?scope; kind: "model-checker" }
+  ]
+}

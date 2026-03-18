@@ -70,3 +70,23 @@ when {
 then {
   ShellProvider/execute: [ command: ?mod; args: ?input; env: ?cfg; cwd: ""; timeout: 30000 ]
 }
+
+sync DispatchFs [eager]
+  purpose: "Route filesystem runtime calls from LocalProcess to FsProvider."
+when {
+  LocalProcess/dispatch: [ runtime: "fs"; operation: "read"; moduleRef: ?path; input: ?input; config: ?cfg ]
+    => []
+}
+then {
+  FsProvider/read: [ path: ?path ]
+}
+
+sync DispatchFsWrite [eager]
+  purpose: "Route filesystem write calls from LocalProcess to FsProvider."
+when {
+  LocalProcess/dispatch: [ runtime: "fs"; operation: "write"; moduleRef: ?path; input: ?content; config: ?cfg ]
+    => []
+}
+then {
+  FsProvider/write: [ path: ?path; content: ?content ]
+}

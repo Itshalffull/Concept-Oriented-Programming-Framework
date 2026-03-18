@@ -1,0 +1,89 @@
+@version(1)
+concept FsProvider [F] {
+
+  purpose {
+    Read and write files through the execution layer, eliminating
+    the need for imperative handlers that directly import the fs
+    module. Routes through LocalProcess so all filesystem I/O gets
+    full observability (ConnectorCall, PerformanceProfile, etc.).
+  }
+
+  state {
+    operations: set F
+    path: F -> String
+    operation: F -> String
+    status: F -> String
+    content: F -> option String
+    error: F -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register() {
+      -> ok(name: String, kind: String, capabilities: String) {
+        Return provider metadata for PluginRegistry registration.
+        Name is "fs-provider", kind is "runtime".
+      }
+    }
+
+    action read(path: String) {
+      -> ok(content: String) {
+        Read the file at the given path and return its contents
+        as a UTF-8 string.
+      }
+      -> notFound(path: String) {
+        No file exists at the given path.
+      }
+      -> error(message: String) {
+        The file could not be read due to a permission error or
+        other I/O failure.
+      }
+    }
+
+    action write(path: String, content: String) {
+      -> ok(bytesWritten: Int) {
+        Write content to the file at the given path, creating
+        parent directories as needed. Returns the number of bytes
+        written.
+      }
+      -> error(message: String) {
+        The file could not be written due to a permission error,
+        disk space, or other I/O failure.
+      }
+    }
+
+    action exists(path: String) {
+      -> ok(exists: Bool) {
+        Check whether a file exists at the given path.
+      }
+    }
+
+    action delete(path: String) {
+      -> ok() {
+        Delete the file at the given path.
+      }
+      -> notFound(path: String) {
+        No file exists at the given path.
+      }
+    }
+
+    action list() {
+      -> ok(operations: String) {
+        Return recent operations as a serialized JSON array.
+      }
+    }
+  }
+
+  example "read after write": {
+    after write(path: "/tmp/test.txt", content: "hello") -> ok(bytesWritten: 5)
+    then read(path: "/tmp/test.txt") -> ok(content: "hello")
+  }
+
+  example "not found on missing file": {
+    after read(path: "/tmp/nonexistent-file") -> notFound(path: "/tmp/nonexistent-file")
+    then exists(path: "/tmp/nonexistent-file") -> ok(exists: false)
+  }
+}

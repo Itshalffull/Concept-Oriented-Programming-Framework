@@ -131,3 +131,192 @@ describe('SpecParser Concept', () => {
     expect(allSpecs).toHaveLength(7);
   });
 });
+
+// ============================================================
+// 3. Formal Verification Invariant Language Extensions
+// ============================================================
+
+describe('Invariant Language Extensions', () => {
+  it('parses bare invariant with kind=example and no name', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T }
+  actions { action create(item: T) { -> ok(item: T) { Creates. } } action get(item: T) { -> ok(item: T) { Gets. } } }
+  invariant {
+    after create(item: x) -> ok(item: x)
+    then get(item: x) -> ok(item: x)
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('example');
+    expect(ast.invariants[0].name).toBeUndefined();
+    expect(ast.invariants[0].afterPatterns).toHaveLength(1);
+    expect(ast.invariants[0].thenPatterns).toHaveLength(1);
+  });
+
+  it('parses named example at top level', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T }
+  actions { action create(item: T) { -> ok(item: T) { Creates. } } action get(item: T) { -> ok(item: T) { Gets. } } }
+  example "happy path": {
+    after create(item: x) -> ok(item: x)
+    then get(item: x) -> ok(item: x)
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('example');
+    expect(ast.invariants[0].name).toBe('happy path');
+    expect(ast.invariants[0].afterPatterns).toHaveLength(1);
+  });
+
+  it('parses forall with given/in binding', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T; kind: T -> String }
+  actions { action define(kind: String) { -> ok(item: T) { Defines. } } }
+  forall "valid kinds accepted": {
+    given kind in {"invariant", "precondition", "postcondition"}
+    after define(kind: kind) -> ok(item: _)
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('forall');
+    expect(ast.invariants[0].name).toBe('valid kinds accepted');
+    expect(ast.invariants[0].quantifiers).toHaveLength(1);
+    expect(ast.invariants[0].quantifiers![0].variable).toBe('kind');
+    expect(ast.invariants[0].quantifiers![0].domain.type).toBe('set_literal');
+    if (ast.invariants[0].quantifiers![0].domain.type === 'set_literal') {
+      expect(ast.invariants[0].quantifiers![0].domain.values).toEqual(['invariant', 'precondition', 'postcondition']);
+    }
+  });
+
+  it('parses always with forall/in quantifier and predicate', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T; status: T -> String }
+  actions { action check(item: T) { -> ok() { Checks. } } }
+  always "status consistency": {
+    forall p in items:
+      p.status in ["active", "inactive"]
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('always');
+    expect(ast.invariants[0].name).toBe('status consistency');
+    expect(ast.invariants[0].quantifiers).toHaveLength(1);
+    expect(ast.invariants[0].quantifiers![0].variable).toBe('p');
+    expect(ast.invariants[0].quantifiers![0].domain).toEqual({ type: 'state_field', name: 'items' });
+    expect(ast.invariants[0].thenPatterns).toHaveLength(1);
+    expect(ast.invariants[0].thenPatterns[0].kind).toBe('assertion');
+  });
+
+  it('parses never with exists quantifier', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T; status: T -> String }
+  actions { action check(item: T) { -> ok() { Checks. } } }
+  never "orphaned items": {
+    exists p in items:
+      p.status = "deleted"
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('never');
+    expect(ast.invariants[0].name).toBe('orphaned items');
+    expect(ast.invariants[0].quantifiers).toHaveLength(1);
+    expect(ast.invariants[0].quantifiers![0].variable).toBe('p');
+  });
+
+  it('parses eventually with forall/where quantifier', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { runs: set T; status: T -> String }
+  actions { action start(run: T) { -> ok() { Starts. } } }
+  eventually "runs terminate": {
+    forall r in runs where r.status = "running":
+      r.status in ["completed", "timeout"]
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('eventually');
+    expect(ast.invariants[0].name).toBe('runs terminate');
+    expect(ast.invariants[0].quantifiers).toHaveLength(1);
+    expect(ast.invariants[0].quantifiers![0].whereCondition).toBeDefined();
+  });
+
+  it('parses action requires/ensures contracts', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T; kind: T -> String }
+  actions {
+    action define(kind: String) {
+      -> ok(item: T) { Defines. }
+      -> invalid(message: String) { Invalid kind. }
+    }
+  }
+  invariant {
+    action define {
+      requires: kind in ["invariant", "precondition"]
+      ensures ok: result.kind = kind
+      ensures invalid: kind != "invariant"
+    }
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants[0].kind).toBe('requires_ensures');
+    expect(ast.invariants[0].targetAction).toBe('define');
+    expect(ast.invariants[0].contracts).toHaveLength(3);
+    expect(ast.invariants[0].contracts![0].kind).toBe('requires');
+    expect(ast.invariants[0].contracts![1].kind).toBe('ensures');
+    expect(ast.invariants[0].contracts![1].variant).toBe('ok');
+    expect(ast.invariants[0].contracts![2].kind).toBe('ensures');
+    expect(ast.invariants[0].contracts![2].variant).toBe('invalid');
+  });
+
+  it('parses multiple invariant constructs in one concept', () => {
+    const ast = parseConceptFile(`
+concept Test [T] {
+  purpose { Test }
+  state { items: set T; status: T -> String }
+  actions {
+    action create(item: T) { -> ok(item: T) { Creates. } }
+    action get(item: T) { -> ok(item: T) { Gets. } }
+  }
+  example "happy path": {
+    after create(item: x) -> ok(item: x)
+    then get(item: x) -> ok(item: x)
+  }
+  always "status valid": {
+    forall p in items:
+      p.status in ["active", "inactive"]
+  }
+  never "ghost items": {
+    exists p in items:
+      p.status = "ghost"
+  }
+}
+`);
+    expect(ast.invariants).toHaveLength(3);
+    expect(ast.invariants[0].kind).toBe('example');
+    expect(ast.invariants[0].name).toBe('happy path');
+    expect(ast.invariants[1].kind).toBe('always');
+    expect(ast.invariants[1].name).toBe('status valid');
+    expect(ast.invariants[2].kind).toBe('never');
+    expect(ast.invariants[2].name).toBe('ghost items');
+  });
+});

@@ -1085,50 +1085,53 @@ describe('CloudflareRuntime Implementation', () => {
 });
 
 describe('VercelRuntime Implementation', () => {
-  let kernel: ReturnType<typeof createKernel>;
-  beforeEach(() => {
-    kernel = createKernel();
-    kernel.registerConcept('urn:clef/VercelRuntime', vercelRuntimeHandler);
-  });
+  // Functional handler — returns StoragePrograms, not direct results.
+  // Tests validate program structure (instructions, effects) rather than
+  // executed state. Actual execution flows through ProgramInterpreter.
 
-  it('provision -> ok creates project', async () => {
-    const result = await kernel.invokeConcept('urn:clef/VercelRuntime', 'provision', {
+  function getPureValue(p: { instructions: Array<Record<string, unknown>> }) {
+    const pure = p.instructions.find(i => i.tag === 'pure');
+    return pure ? pure.value as Record<string, unknown> : {};
+  }
+
+  it('provision -> ok creates project via perform("http","POST")', () => {
+    const p = vercelRuntimeHandler.provision({
       concept: 'User', teamId: 'team-1', framework: 'nextjs',
     });
-    expect(result.variant).toBe('ok');
-    expect(result.endpoint).toContain('vercel.app');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.endpoint).toContain('vercel.app');
+    expect(p.effects.performs.has('http:POST')).toBe(true);
   });
 
-  it('deploy -> ok creates deployment', async () => {
-    const prj = await kernel.invokeConcept('urn:clef/VercelRuntime', 'provision', {
-      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+  it('deploy -> ok creates deployment via perform("http","POST") and perform("http","PATCH")', () => {
+    const p = vercelRuntimeHandler.deploy({
+      project: 'prj_user', sourceDirectory: './dist',
     });
-    const result = await kernel.invokeConcept('urn:clef/VercelRuntime', 'deploy', {
-      project: prj.project, sourceDirectory: './dist',
-    });
-    expect(result.variant).toBe('ok');
-    expect(result.deploymentUrl).toContain('vercel.app');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.deploymentUrl).toContain('vercel.app');
+    expect(p.effects.performs.has('http:POST')).toBe(true);
+    expect(p.effects.performs.has('http:PATCH')).toBe(true);
   });
 
-  it('rollback -> ok restores deployment', async () => {
-    const prj = await kernel.invokeConcept('urn:clef/VercelRuntime', 'provision', {
-      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+  it('rollback -> ok restores deployment via perform("http","POST")', () => {
+    const p = vercelRuntimeHandler.rollback({
+      project: 'prj_user', targetDeploymentId: 'dpl-prev',
     });
-    const result = await kernel.invokeConcept('urn:clef/VercelRuntime', 'rollback', {
-      project: prj.project, targetDeploymentId: 'dpl-prev',
-    });
-    expect(result.variant).toBe('ok');
-    expect(result.restoredDeploymentId).toBe('dpl-prev');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.restoredDeploymentId).toBe('dpl-prev');
+    expect(p.effects.performs.has('http:POST')).toBe(true);
   });
 
-  it('destroy -> ok removes project', async () => {
-    const prj = await kernel.invokeConcept('urn:clef/VercelRuntime', 'provision', {
-      concept: 'User', teamId: 'team-1', framework: 'nextjs',
+  it('destroy -> ok removes project via perform("http","DELETE")', () => {
+    const p = vercelRuntimeHandler.destroy({
+      project: 'prj_user',
     });
-    const result = await kernel.invokeConcept('urn:clef/VercelRuntime', 'destroy', {
-      project: prj.project,
-    });
-    expect(result.variant).toBe('ok');
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(p.effects.performs.has('http:DELETE')).toBe(true);
   });
 });
 

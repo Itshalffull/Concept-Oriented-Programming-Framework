@@ -19,11 +19,22 @@ import { webSocketProviderHandler } from '../handlers/ts/execution/providers/web
 import { wasmProviderHandler } from '../handlers/ts/execution/providers/wasm-provider.handler.js';
 import { onnxProviderHandler } from '../handlers/ts/execution/providers/onnx-provider.handler.js';
 import { shellProviderHandler } from '../handlers/ts/execution/providers/shell-provider.handler.js';
+import { fsProviderHandler } from '../handlers/ts/execution/providers/fs-provider.handler.js';
 
-// Tier 3: Instance Providers
+// Tier 3: Instance Providers (Embedding)
 import { openAiEndpointHandler } from '../handlers/ts/execution/instances/openai-endpoint.handler.js';
 import { voyageEndpointHandler } from '../handlers/ts/execution/instances/voyage-endpoint.handler.js';
 import { localModelInstanceHandler } from '../handlers/ts/execution/instances/local-model-instance.handler.js';
+
+// Tier 3: Instance Providers (API/Webhook)
+import { vercelApiEndpointHandler } from '../handlers/ts/execution/instances/vercel-api-endpoint.handler.js';
+import { githubApiEndpointHandler } from '../handlers/ts/execution/instances/github-api-endpoint.handler.js';
+import { gitlabApiEndpointHandler } from '../handlers/ts/execution/instances/gitlab-api-endpoint.handler.js';
+import { webhookEndpointHandler } from '../handlers/ts/execution/instances/webhook-endpoint.handler.js';
+
+// Tier 3: Instance Providers (Solvers)
+import { z3SolverEndpointHandler } from '../handlers/ts/execution/instances/z3-solver-endpoint.handler.js';
+import { alloySolverEndpointHandler } from '../handlers/ts/execution/instances/alloy-solver-endpoint.handler.js';
 
 // Resilience
 import { circuitBreakerHandler } from '../handlers/ts/execution/circuit-breaker.handler.js';
@@ -424,6 +435,194 @@ describe('LocalModelInstance', () => {
 });
 
 // ============================================================
+// Tier 2: FsProvider
+// ============================================================
+describe('FsProvider', () => {
+  it('register returns provider metadata', () => {
+    const p = fsProviderHandler.register!({});
+    const pv = getPureValue(p);
+    expect(pv.name).toBe('fs-provider');
+    expect(pv.kind).toBe('runtime');
+  });
+
+  it('read declares fs:read transport effect', () => {
+    const p = fsProviderHandler.read!({ path: '/tmp/test.txt' });
+    expect(p.effects.performs.has('fs:read')).toBe(true);
+  });
+
+  it('write declares fs:write transport effect', () => {
+    const p = fsProviderHandler.write!({ path: '/tmp/test.txt', content: 'hello' });
+    expect(p.effects.performs.has('fs:write')).toBe(true);
+  });
+
+  it('exists declares fs:exists transport effect', () => {
+    const p = fsProviderHandler.exists!({ path: '/tmp/test.txt' });
+    expect(p.effects.performs.has('fs:exists')).toBe(true);
+  });
+
+  it('delete declares fs:delete transport effect', () => {
+    const p = fsProviderHandler.delete!({ path: '/tmp/test.txt' });
+    expect(p.effects.performs.has('fs:delete')).toBe(true);
+  });
+});
+
+// ============================================================
+// Tier 3: Z3SolverEndpoint
+// ============================================================
+describe('Z3SolverEndpoint', () => {
+  it('register stores solver config', () => {
+    const p = z3SolverEndpointHandler.register!({
+      name: 'z3-local',
+      binaryPath: '/usr/bin/z3',
+      timeout: 30000,
+      options: '-smt2',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).binaryPath).toBe('/usr/bin/z3');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('solve declares shell:exec transport effect for Z3 execution', () => {
+    const p = z3SolverEndpointHandler.solve!({
+      name: 'z3-local',
+      formula: '(check-sat)',
+      logic: 'QF_LIA',
+    });
+    expect(p.effects.performs.has('shell:exec')).toBe(true);
+  });
+});
+
+// ============================================================
+// Tier 3: AlloySolverEndpoint
+// ============================================================
+describe('AlloySolverEndpoint', () => {
+  it('register stores model checker config', () => {
+    const p = alloySolverEndpointHandler.register!({
+      name: 'alloy-local',
+      jarPath: '/opt/alloy/alloy.jar',
+      scope: 5,
+      timeout: 60000,
+      options: '',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).jarPath).toBe('/opt/alloy/alloy.jar');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('check declares shell:exec transport effect for Alloy execution', () => {
+    const p = alloySolverEndpointHandler.check!({
+      name: 'alloy-local',
+      model: 'sig A {}',
+      predicate: 'someA',
+    });
+    expect(p.effects.performs.has('shell:exec')).toBe(true);
+  });
+});
+
+// ============================================================
+// Tier 3: VercelApiEndpoint
+// ============================================================
+describe('VercelApiEndpoint', () => {
+  it('register stores Vercel API config', () => {
+    const p = vercelApiEndpointHandler.register!({
+      name: 'vercel-api',
+      apiToken: 'vt-test-token',
+      teamId: 'team-123',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://api.vercel.com');
+    expect((putInstr!.value as Record<string, unknown>).teamId).toBe('team-123');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = vercelApiEndpointHandler.resolve!({ name: 'vercel-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('vercel-vercel-api');
+  });
+});
+
+// ============================================================
+// Tier 3: GitHubApiEndpoint
+// ============================================================
+describe('GitHubApiEndpoint', () => {
+  it('register stores GitHub API config with repository', () => {
+    const p = githubApiEndpointHandler.register!({
+      name: 'github-api',
+      token: 'ghp-test-token',
+      repository: 'owner/repo',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).repository).toBe('owner/repo');
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://api.github.com');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = githubApiEndpointHandler.resolve!({ name: 'github-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('gh-github-api');
+  });
+});
+
+// ============================================================
+// Tier 3: GitLabApiEndpoint
+// ============================================================
+describe('GitLabApiEndpoint', () => {
+  it('register stores GitLab API config with project ID', () => {
+    const p = gitlabApiEndpointHandler.register!({
+      name: 'gitlab-api',
+      token: 'glpat-test',
+      projectId: '12345',
+      baseUrl: 'https://gitlab.com/api/v4',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).projectId).toBe('12345');
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://gitlab.com/api/v4');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = gitlabApiEndpointHandler.resolve!({ name: 'gitlab-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('gl-gitlab-api');
+  });
+});
+
+// ============================================================
+// Tier 3: WebhookEndpoint
+// ============================================================
+describe('WebhookEndpoint', () => {
+  it('register stores webhook config with URL', () => {
+    const p = webhookEndpointHandler.register!({
+      name: 'deploy-hook',
+      url: 'https://hooks.example.com/deploy',
+      headers: '{"X-Secret":"abc"}',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).url).toBe('https://hooks.example.com/deploy');
+    expect((putInstr!.value as Record<string, unknown>).method).toBe('POST');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = webhookEndpointHandler.resolve!({ name: 'deploy-hook' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('wh-deploy-hook');
+  });
+});
+
+// ============================================================
 // CircuitBreaker
 // ============================================================
 describe('CircuitBreaker', () => {
@@ -532,5 +731,87 @@ describe('RateLimiter', () => {
     const getInstr = getGetInstruction(p);
     expect(getInstr).toBeDefined();
     expect(getPureVariant(p)).toBe('ok');
+  });
+});
+
+// ============================================================
+// TestGen (Invariant-Aware)
+// ============================================================
+
+// Import TestGen separately since it's in a different location
+import { testGenHandler } from '../handlers/ts/framework/test/test-gen.handler.js';
+
+describe('TestGen', () => {
+  it('generate returns strategies for all six construct types', () => {
+    const p = testGenHandler.generate!({
+      concept_ref: 'clef/concept/Password',
+      language: 'typescript',
+      invariant_version: 'v1',
+    });
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.provider_used).toBe('TestGenTypeScript');
+    expect(pv.strategies).toBeDefined();
+
+    const strategies = JSON.parse(pv.strategies as string);
+    const kinds = strategies.map((s: Record<string, unknown>) => s.construct);
+    expect(kinds).toContain('example');
+    expect(kinds).toContain('forall');
+    expect(kinds).toContain('always');
+    expect(kinds).toContain('never');
+    expect(kinds).toContain('eventually');
+    expect(kinds).toContain('requires_ensures');
+  });
+
+  it('generate produces test files for each construct type (typescript)', () => {
+    const p = testGenHandler.generate!({
+      concept_ref: 'clef/concept/CircuitBreaker',
+      language: 'typescript',
+      invariant_version: 'v1',
+    });
+    const pv = getPureValue(p);
+    const files = JSON.parse(pv.generated_files as string);
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.example.test.ts');
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.property.test.ts');
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.stateful.test.ts');
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.safety.test.ts');
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.liveness.test.ts');
+    expect(files).toContain('generated/tests/clef-concept-CircuitBreaker.contract.test.ts');
+  });
+
+  it('generate rejects invalid language', () => {
+    const p = testGenHandler.generate!({
+      concept_ref: 'clef/concept/Test',
+      language: 'python',
+      invariant_version: 'v1',
+    });
+    expect(getPureVariant(p)).toBe('invalid');
+  });
+
+  it('generate stores generation record with strategies', () => {
+    const p = testGenHandler.generate!({
+      concept_ref: 'clef/concept/Test',
+      language: 'rust',
+      invariant_version: 'v1',
+    });
+    const putInstr = getPutInstruction(p, 'test-generations');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).strategies).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).provider_used).toBe('TestGenRust');
+  });
+
+  it('coverage returns per-construct breakdown', () => {
+    const p = testGenHandler.coverage!({ concept_ref: 'clef/concept/Test' });
+    const pv = getPureValue(p);
+    expect(pv.variant).toBe('ok');
+    expect(pv.construct_coverage).toBeDefined();
+
+    const cc = JSON.parse(pv.construct_coverage as string);
+    expect(cc.example).toBeDefined();
+    expect(cc.forall).toBeDefined();
+    expect(cc.always).toBeDefined();
+    expect(cc.never).toBeDefined();
+    expect(cc.eventually).toBeDefined();
+    expect(cc.requires_ensures).toBeDefined();
   });
 });

@@ -1,0 +1,58 @@
+@version(1)
+concept GitHubApiEndpoint [G] {
+
+  purpose {
+    Configure and authenticate the GitHub API endpoint for status
+    checks, commit statuses, and other GitHub API calls. Stores the
+    personal access token and repository reference so that higher-level
+    concepts reference the endpoint by name.
+  }
+
+  state {
+    endpoints: set G
+    name: G -> String
+    token: G -> String
+    repository: G -> String
+    baseUrl: G -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, token: String, repository: String) {
+      -> ok(endpoint: G) {
+        Create a named GitHub API endpoint with token and
+        owner/repo reference. Base URL defaults to
+        https://api.github.com. The endpoint becomes addressable
+        by name for HttpProvider instance configuration via sync.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: G, baseUrl: String, repository: String, headers: String) {
+        Look up the named endpoint and return its base URL,
+        repository path, and pre-built authorization headers.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name, baseUrl, and repository (tokens omitted).
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "github-api", token: "ghp-test", repository: "owner/repo") -> ok(endpoint: g)
+    then resolve(name: "github-api") -> ok(endpoint: g, baseUrl: "https://api.github.com", repository: "owner/repo", headers: _)
+  }
+}
