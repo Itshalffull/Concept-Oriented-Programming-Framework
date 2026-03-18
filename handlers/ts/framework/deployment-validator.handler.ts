@@ -484,18 +484,22 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
-    let p = createProgram();
     const manifestRef = input.manifest as string;
     if (!manifestRef) {
-      p = complete(p, 'error', { issues: ['manifest reference is required'] }); return p;
+      let p = createProgram();
+      p = complete(p, 'error', { issues: ['manifest reference is required'] });
+      return p;
     }
 
+    let p = createProgram();
     p = get(p, 'plan', manifestRef, 'stored');
-    if (!stored || !stored.manifest) {
-      p = complete(p, 'error', { issues: ['manifest not found'] }); return p;
-    }
-
-    p = complete(p, 'error', { issues: ['full validation requires concept and sync registrations'] }); return p;
+    p = branch(p, 'stored',
+      // then: manifest found
+      (tp) => complete(tp, 'error', { issues: ['full validation requires concept and sync registrations'] }),
+      // else: not found
+      (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
+    );
+    return p;
   },
 };
 

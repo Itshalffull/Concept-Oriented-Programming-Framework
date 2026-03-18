@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Target Coordination Handler
 //
@@ -6,14 +7,18 @@
 // Architecture doc: Clef Bind, Section 1.3
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
-export const targetHandler: ConceptHandler = {
-  async generate(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const targetType = input.targetType as string;
     const config = input.config as string;
@@ -36,13 +41,12 @@ export const targetHandler: ConceptHandler = {
     return { variant: 'ok', output: outputId, files: [] };
   },
 
-  async diff(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  diff(input: Record<string, unknown>) {
     const output = input.output as string;
     const stored = await storage.get('outputs', output);
     if (!stored) return { variant: 'ok', changes: [] };
     return { variant: 'ok', changes: [] };
   },
 };
+
+export const targetHandler = autoInterpret(_handler);

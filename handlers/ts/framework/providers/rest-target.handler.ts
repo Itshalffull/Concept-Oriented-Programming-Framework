@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // REST Target Provider — Clef Bind
 //
@@ -7,9 +8,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptManifest,
   ActionSchema,
 } from '../../../../runtime/types.js';
@@ -275,8 +280,10 @@ function generateRestHelpMd(
 
 // --- Concept Handler ---
 
-export const restTargetHandler: ConceptHandler = {
-  async register() {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'RestTarget',
@@ -298,10 +305,7 @@ export const restTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and route summaries.
    */
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  generate(input: Record<string, unknown>) {
     // --- Parse inputs ---
 
     const projectionRaw = input.projection as string;
@@ -405,3 +409,5 @@ export const restTargetHandler: ConceptHandler = {
     };
   },
 };
+
+export const restTargetHandler = autoInterpret(_handler);

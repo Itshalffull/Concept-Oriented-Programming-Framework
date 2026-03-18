@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // EnrichmentRenderer Concept Handler — Template-Driven (formerly Renderer)
 //
@@ -15,7 +16,12 @@
 // Architecture doc: Clef Bind, Section 1.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 // --- Template Interpolation ---
 
@@ -659,11 +665,10 @@ export function registerCustomHandler(
 
 // --- Concept Handler ---
 
-export const rendererHandler: ConceptHandler = {
-  async register(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const key = input.key as string;
     const format = input.format as string;
     const order = (input.order as number) || 50;
@@ -695,10 +700,7 @@ export const rendererHandler: ConceptHandler = {
     return { variant: 'ok', handler: handlerId };
   },
 
-  async render(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  render(input: Record<string, unknown>) {
     const contentStr = input.content as string;
     const format = input.format as string;
 
@@ -731,10 +733,7 @@ export const rendererHandler: ConceptHandler = {
     };
   },
 
-  async listHandlers(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  listHandlers(input: Record<string, unknown>) {
     const format = input.format as string;
     const handlers = getHandlersForFormat(format);
     return {
@@ -754,3 +753,5 @@ export const rendererHandler: ConceptHandler = {
     };
   },
 };
+
+export const rendererHandler = autoInterpret(_handler);

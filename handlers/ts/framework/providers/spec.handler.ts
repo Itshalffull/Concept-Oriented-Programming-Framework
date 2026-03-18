@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Spec Coordination Handler
 //
@@ -6,14 +7,18 @@
 // Architecture doc: Clef Bind, Section 1.5
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
-export const specHandler: ConceptHandler = {
-  async emit(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const projections = input.projections as string;
     const format = input.format as string;
     const config = input.config as string;
@@ -35,10 +40,9 @@ export const specHandler: ConceptHandler = {
     return { variant: 'ok', document: docId, content: '' };
   },
 
-  async validate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  validate(input: Record<string, unknown>) {
     return { variant: 'ok', document: input.document as string };
   },
 };
+
+export const specHandler = autoInterpret(_handler);

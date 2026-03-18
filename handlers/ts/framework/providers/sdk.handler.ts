@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Sdk Coordination Handler
 //
@@ -5,14 +6,18 @@
 // Architecture doc: Clef Bind, Section 1.4
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
-export const sdkHandler: ConceptHandler = {
-  async generate(
-    input: Record<string, unknown>,
-    storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const language = input.language as string;
     const config = input.config as string;
@@ -35,10 +40,7 @@ export const sdkHandler: ConceptHandler = {
     return { variant: 'ok', package: packageId, files: [] };
   },
 
-  async publish(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  publish(input: Record<string, unknown>) {
     return {
       variant: 'ok',
       package: input.package as string,
@@ -46,3 +48,5 @@ export const sdkHandler: ConceptHandler = {
     };
   },
 };
+
+export const sdkHandler = autoInterpret(_handler);

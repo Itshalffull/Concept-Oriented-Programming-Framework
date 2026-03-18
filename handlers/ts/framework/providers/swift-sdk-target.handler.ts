@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Swift SDK Target Provider — Clef Bind
 //
@@ -8,9 +9,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   ConceptManifest,
   ActionSchema,
   ActionParamSchema,
@@ -253,8 +258,10 @@ function generatePackageSwift(packageName: string, projections: ProjectionEntry[
 
 // --- Concept Handler ---
 
-export const swiftSdkTargetHandler: ConceptHandler = {
-  async register() {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     return {
       variant: 'ok',
       name: 'SwiftSdkTarget',
@@ -276,10 +283,7 @@ export const swiftSdkTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  async generate(
-    input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  generate(input: Record<string, unknown>) {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
@@ -364,3 +368,5 @@ export const swiftSdkTargetHandler: ConceptHandler = {
     return { variant: 'ok', files, package: packageName };
   },
 };
+
+export const swiftSdkTargetHandler = autoInterpret(_handler);
