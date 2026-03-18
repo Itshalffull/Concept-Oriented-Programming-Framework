@@ -658,8 +658,8 @@ export interface WidgetManifest {
   composedWidgets: string[];
   /** Per-part data bindings from the `connect` block. */
   connect?: WidgetConnectBinding[];
-  /** Prose invariants from the `invariant` block. */
-  invariants?: string[];
+  /** Structured invariants from the `invariant` block (or legacy prose strings upgraded to kind='example'). */
+  invariants?: InvariantDecl[];
 }
 
 // --- Theme Manifest (Surface IR) ---
