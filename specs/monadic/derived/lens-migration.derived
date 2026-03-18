@@ -1,0 +1,39 @@
+derived LensMigration [L] {
+
+  purpose {
+    When a schema version is registered, automatically compute a bidirectional
+    migration patch using lens-based structural diffing. Composes Lens, Diff,
+    Patch, and SchemaEvolution so that forward and backward migrations are
+    derived from structural differences expressed as lens operations.
+  }
+
+  composes {
+    Lens [L]
+    Diff [L]
+    Patch [L]
+    SchemaEvolution [L]
+  }
+
+  syncs {
+    required: [register-lens-structural-diff-provider]
+  }
+
+  surface {
+    action migrate(concept: String, fromVersion: String, toVersion: String) {
+      entry: true
+      trigger: SchemaEvolution/register
+      derivedContext: "lens-migration"
+    }
+
+    query migrationPath(concept: String, v1: String, v2: String)
+      -> Patch/list(concept: concept, from: v1, to: v2)
+  }
+
+  principle {
+    after SchemaEvolution/register(concept: c, version: v2) succeeds
+    then  Diff/diff using lens-structural-diff provider produces an edit script
+    and   Patch/create from the edit script succeeds
+    and   Patch/invert produces the backward migration
+    and   migrationPath(concept: c, v1: previous, v2: v2) returns both patches
+  }
+}

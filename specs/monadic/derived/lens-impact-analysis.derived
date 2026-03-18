@@ -1,0 +1,37 @@
+derived LensImpactAnalysis [L] {
+
+  purpose {
+    Given a lens (state field reference), compute all concepts, actions, syncs,
+    and generated code affected by changing that field. Composes Lens,
+    DependenceGraph, and DataFlowPath to produce comprehensive impact reports
+    before a change is made.
+  }
+
+  composes {
+    Lens [L]
+    DependenceGraph [L]
+    DataFlowPath [L]
+  }
+
+  syncs {
+    required: [dispatch-lens-extraction]
+  }
+
+  surface {
+    action impact(lensId: String) {
+      entry: true
+      trigger: Lens/validate
+      derivedContext: "lens-impact"
+    }
+
+    query affectedEntities(lensId: String)
+      -> DependenceGraph/query(root: lensId, direction: "forward")
+  }
+
+  principle {
+    after Lens/validate(lensId: id, conceptName: c, version: v) returns valid
+    then  DependenceGraph/query finds all dependents of the lens target
+    and   DataFlowPath/trace traces data flow through each dependent
+    and   affectedEntities(lensId: id) returns concepts, actions, syncs, and files
+  }
+}
