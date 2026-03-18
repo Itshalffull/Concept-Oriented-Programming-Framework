@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptSymbolExtractor Handler
 //
@@ -6,7 +7,14 @@
 // and module exports as symbols using regex-based pattern matching.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -39,7 +47,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
     const line = lines[i];
     const lineNum = i + 1;
 
-    // Match function declarations: export function name or function name or async function name
+    // Match function declarations
     const funcMatch = line.match(/(?:export\s+(?:default\s+)?)?(?:async\s+)?function\s+(\w+)\s*(?:<[^>]*>)?\s*\(/);
     if (funcMatch) {
       const funcName = funcMatch[1];
@@ -64,7 +72,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match class declarations: export class ClassName or class ClassName
+    // Match class declarations
     const classMatch = line.match(/(?:export\s+(?:default\s+)?)?(?:abstract\s+)?class\s+(\w+)/);
     if (classMatch) {
       const className = classMatch[1];
@@ -89,7 +97,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match interface declarations: export interface InterfaceName
+    // Match interface declarations
     const ifaceMatch = line.match(/(?:export\s+)?interface\s+(\w+)/);
     if (ifaceMatch) {
       const ifaceName = ifaceMatch[1];
@@ -114,7 +122,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match type alias declarations: export type TypeName = ...
+    // Match type alias declarations
     const typeMatch = line.match(/(?:export\s+)?type\s+(\w+)\s*(?:<[^>]*>)?\s*=/);
     if (typeMatch) {
       const typeName = typeMatch[1];
@@ -139,7 +147,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match enum declarations: export enum EnumName
+    // Match enum declarations
     const enumMatch = line.match(/(?:export\s+)?(?:const\s+)?enum\s+(\w+)/);
     if (enumMatch) {
       const enumName = enumMatch[1];
@@ -164,11 +172,10 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match const/let/var declarations: export const varName = ...
+    // Match const/let/var declarations
     const varMatch = line.match(/(?:export\s+)?(?:const|let|var)\s+(\w+)\s*(?::\s*[^=]+)?\s*=/);
     if (varMatch) {
       const varName = varMatch[1];
-      // Skip if already matched as function/class (arrow functions assigned to const)
       const isExported = /export\s+/.test(line);
       symbols.push({
         symbolString: `ts/variable/${file}/${varName}`,
@@ -190,7 +197,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match import statements: import { Name } from 'module' or import Name from 'module'
+    // Match import statements
     const importMatch = line.match(/import\s+(?:type\s+)?(?:\{([^}]+)\}|(\w+))\s+from\s+['"]([^'"]+)['"]/);
     if (importMatch) {
       const namedImports = importMatch[1];
@@ -227,7 +234,7 @@ function extractFromTypeScript(source: string, file: string): Array<{
       }
     }
 
-    // Match re-exports: export { Name } from 'module'
+    // Match re-exports
     const reexportMatch = line.match(/export\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/);
     if (reexportMatch) {
       const names = reexportMatch[1].split(',').map((n) => n.trim().split(/\s+as\s+/)[0].trim());
@@ -264,43 +271,42 @@ function extractFromTypeScript(source: string, file: string): Array<{
   return symbols;
 }
 
-export const typeScriptSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('type-script-symbol-extractor', id, {
-        id,
-        extractorRef: 'type-script-symbol-extractor',
-        handledExtensions: '.ts,.tsx',
-        language: 'typescript',
-      });
+    let p = createProgram();
+    p = put(p, 'type-script-symbol-extractor', id, {
+      id,
+      extractorRef: 'type-script-symbol-extractor',
+      handledExtensions: '.ts,.tsx',
+      language: 'typescript',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromTypeScript(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.ts', '.tsx']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const typeScriptSymbolExtractorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTypeScriptSymbolExtractorCounter(): void {

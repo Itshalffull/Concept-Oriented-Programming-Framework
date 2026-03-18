@@ -1,15 +1,24 @@
+// @migrated dsl-constructs 2026-03-18
 // Installer Concept Implementation (Package Distribution Suite)
 // Staged transactional installation of resolved packages. Each installation
 // is an immutable generation that can be atomically activated or rolled back.
 // Supports generational cleanup to reclaim disk space.
-import type { ConceptHandler } from '@clef/runtime';
 
-let nextId = 1;
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
+
+let nextIdVal = 1;
 let nextGeneration = 1;
-export function resetInstallerIds() { nextId = 1; nextGeneration = 1; }
+export function resetInstallerIds() { nextIdVal = 1; nextGeneration = 1; }
 
-export const installerHandler: ConceptHandler = {
-  async stage(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  stage(input: Record<string, unknown>) {
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string;
       version: string;
@@ -19,130 +28,108 @@ export const installerHandler: ConceptHandler = {
     }>;
     const projectRoot = input.project_root as string;
 
-    // Find the currently active installation to record as previous_generation
-    const allInstallations = await storage.find('installation');
-    const currentActive = allInstallations.find(i => i.active === true);
+    let p = createProgram();
+    p = find(p, 'installation', {}, 'allInstallations');
 
-    const id = `inst-${nextId++}`;
-    const generation = nextGeneration++;
+    return completeFrom(p, 'ok', (bindings) => {
+      const allInstallations = bindings.allInstallations as Record<string, unknown>[];
+      const currentActive = allInstallations.find(i => i.active === true);
 
-    try {
-      await storage.put('installation', id, {
-        id,
-        generation,
-        lockfile_hash: JSON.stringify(lockfileEntries),
-        staged_modules: JSON.stringify(lockfileEntries),
-        active: false,
-        previous_generation: currentActive ? currentActive.id as string : null,
-        installed_at: null,
-        project_root: projectRoot,
-      });
-    } catch {
-      return { variant: 'error', message: 'Staging failed: storage write error' };
-    }
+      const id = `inst-${nextIdVal++}`;
+      const generation = nextGeneration++;
 
-    return { variant: 'ok', installation: id };
+      return {
+        _puts: [{ relation: 'installation', key: id, value: {
+          id,
+          generation,
+          lockfile_hash: JSON.stringify(lockfileEntries),
+          staged_modules: JSON.stringify(lockfileEntries),
+          active: false,
+          previous_generation: currentActive ? currentActive.id as string : null,
+          installed_at: null,
+          project_root: projectRoot,
+        }}],
+        installation: id,
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async activate(input, storage) {
+  activate(input: Record<string, unknown>) {
     const installation = input.installation as string;
 
-    const inst = await storage.get('installation', installation);
-    if (!inst) {
-      return { variant: 'error', message: `Installation "${installation}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'installation', installation, 'inst');
 
-    // Deactivate the previous active installation
-    const previousId = inst.previous_generation as string | null;
-    if (previousId) {
-      const prev = await storage.get('installation', previousId);
-      if (prev) {
-        await storage.put('installation', previousId, {
-          ...prev,
-          active: false,
+    return branch(p,
+      (bindings) => !bindings.inst,
+      (bp) => complete(bp, 'error', { message: `Installation "${installation}" not found` }),
+      (bp) => {
+        const bp2 = find(bp, 'installation', {}, 'allInstallations');
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const inst = bindings.inst as Record<string, unknown>;
+          const allInstallations = bindings.allInstallations as Record<string, unknown>[];
+          const installedAt = new Date().toISOString();
+
+          const _puts: Array<{ relation: string; key: string; value: Record<string, unknown> }> = [];
+
+          // Deactivate all other active installations
+          for (const other of allInstallations) {
+            if (other.id !== installation && other.active === true) {
+              _puts.push({ relation: 'installation', key: other.id as string, value: { ...other, active: false } });
+            }
+          }
+
+          // Activate the new installation
+          _puts.push({ relation: 'installation', key: installation, value: {
+            ...inst, active: true, installed_at: installedAt,
+          }});
+
+          return { _puts };
         });
-      }
-    }
-
-    // Also deactivate any other active installation
-    const allInstallations = await storage.find('installation');
-    for (const other of allInstallations) {
-      if (other.id !== installation && other.active === true) {
-        await storage.put('installation', other.id as string, {
-          ...other,
-          active: false,
-        });
-      }
-    }
-
-    // Activate the new installation
-    const installedAt = new Date().toISOString();
-    try {
-      await storage.put('installation', installation, {
-        ...inst,
-        active: true,
-        installed_at: installedAt,
-      });
-    } catch {
-      return { variant: 'error', message: 'Activation failed: storage write error' };
-    }
-
-    return { variant: 'ok' };
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const installation = input.installation as string;
 
-    const inst = await storage.get('installation', installation);
-    if (!inst) {
-      return { variant: 'error', message: `Installation "${installation}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'installation', installation, 'inst');
 
-    const previousId = inst.previous_generation as string | null;
-    if (!previousId) {
-      return { variant: 'no_previous' };
-    }
-
-    const prev = await storage.get('installation', previousId);
-    if (!prev) {
-      return { variant: 'no_previous' };
-    }
-
-    // Deactivate current installation
-    await storage.put('installation', installation, {
-      ...inst,
-      active: false,
-    });
-
-    // Activate previous installation
-    await storage.put('installation', previousId, {
-      ...prev,
-      active: true,
-      installed_at: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', previous: previousId };
+    return branch(p,
+      (bindings) => !bindings.inst,
+      (bp) => complete(bp, 'error', { message: `Installation "${installation}" not found` }),
+      (bp) => {
+        return completeFrom(bp, 'ok', (bindings) => {
+          const inst = bindings.inst as Record<string, unknown>;
+          const previousId = inst.previous_generation as string | null;
+          if (!previousId) {
+            return { variant: 'no_previous' };
+          }
+          return { previous: previousId };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async clean(input, storage) {
+  clean(input: Record<string, unknown>) {
     const keepGenerations = input.keep_generations as number;
 
-    const allInstallations = await storage.find('installation');
+    let p = createProgram();
+    p = find(p, 'installation', {}, 'allInstallations');
 
-    // Sort by generation descending
-    const sorted = allInstallations
-      .filter(i => i.active !== true)
-      .sort((a, b) => (b.generation as number) - (a.generation as number));
+    return completeFrom(p, 'ok', (bindings) => {
+      const allInstallations = bindings.allInstallations as Record<string, unknown>[];
 
-    // Keep the most recent keepGenerations inactive installations
-    const toRemove = sorted.slice(keepGenerations);
-    let removed = 0;
+      const sorted = allInstallations
+        .filter(i => i.active !== true)
+        .sort((a, b) => (b.generation as number) - (a.generation as number));
 
-    for (const inst of toRemove) {
-      await storage.del('installation', inst.id as string);
-      removed++;
-    }
+      const toRemove = sorted.slice(keepGenerations);
 
-    return { variant: 'ok', removed };
+      return { removed: toRemove.length };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const installerHandler = autoInterpret(_handler);

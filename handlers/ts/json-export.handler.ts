@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // JsonExportProvider Handler
 //
@@ -6,64 +7,79 @@
 // round-trip import/export.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const jsonExportHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const existing = await storage.get('export-provider', 'json');
-    if (existing) {
-      return { variant: 'ok', name: 'json', category: 'diagram_export' };
-    }
+type Result = { variant: string; [key: string]: unknown };
 
-    await storage.put('export-provider', 'json', {
-      id: 'json',
-      name: 'json',
-      category: 'diagram_export',
-      mime_type: 'application/json',
-      supports_import: true,
-    });
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = get(p, 'export-provider', 'json', 'existing');
 
-    return { variant: 'ok', name: 'json', category: 'diagram_export' };
+    return branch(p,
+      (bindings) => !!bindings.existing,
+      (bp) => complete(bp, 'ok', { name: 'json', category: 'diagram_export' }),
+      (bp) => {
+        const bp2 = put(bp, 'export-provider', 'json', {
+          id: 'json',
+          name: 'json',
+          category: 'diagram_export',
+          mime_type: 'application/json',
+          supports_import: true,
+        });
+        return complete(bp2, 'ok', { name: 'json', category: 'diagram_export' });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async export(input: Record<string, unknown>, storage: ConceptStorage) {
+  export(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
     const options = (input.options as Record<string, unknown>) ?? {};
 
-    // Collect all canvas items for this canvas
-    const items = await storage.find('canvas-item', { canvas: canvasId });
-    const connectors = await storage.find('canvas-connector', { canvas: canvasId });
+    let p = createProgram();
+    p = find(p, 'canvas-item', { canvas: canvasId }, 'items');
+    p = find(p, 'canvas-connector', { canvas: canvasId }, 'connectors');
 
-    const document = {
-      version: '1.0',
-      canvas: canvasId,
-      exported_at: new Date().toISOString(),
-      items: items.map((item) => ({
-        id: item.id,
-        kind: item.kind,
-        x: item.x,
-        y: item.y,
-        width: item.width,
-        height: item.height,
-        label: item.label ?? null,
-        shape: item.shape ?? null,
-        data: item.data ?? null,
-      })),
-      connectors: connectors.map((conn) => ({
-        id: conn.id,
-        source: conn.source,
-        target: conn.target,
-        label: conn.label ?? null,
-        style: conn.style ?? null,
-      })),
-      options,
-    };
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = bindings.items as Record<string, unknown>[];
+      const connectors = bindings.connectors as Record<string, unknown>[];
 
-    const output = JSON.stringify(document, null, 2);
-    return { variant: 'ok', data: output, mime_type: 'application/json' };
+      const document = {
+        version: '1.0',
+        canvas: canvasId,
+        exported_at: new Date().toISOString(),
+        items: items.map((item) => ({
+          id: item.id,
+          kind: item.kind,
+          x: item.x,
+          y: item.y,
+          width: item.width,
+          height: item.height,
+          label: item.label ?? null,
+          shape: item.shape ?? null,
+          data: item.data ?? null,
+        })),
+        connectors: connectors.map((conn) => ({
+          id: conn.id,
+          source: conn.source,
+          target: conn.target,
+          label: conn.label ?? null,
+          style: conn.style ?? null,
+        })),
+        options,
+      };
+
+      const output = JSON.stringify(document, null, 2);
+      return { data: output, mime_type: 'application/json' };
+    }) as StorageProgram<Result>;
   },
 
-  async importData(input: Record<string, unknown>, storage: ConceptStorage) {
+  importData(input: Record<string, unknown>) {
     const data = input.data as string;
     const targetCanvas = (input.target_canvas as string) ?? 'canvas-import';
 
@@ -71,16 +87,19 @@ export const jsonExportHandler: ConceptHandler = {
     try {
       document = JSON.parse(data) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', message: 'Invalid JSON data' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid JSON data' }) as StorageProgram<Result>;
     }
 
     const items = (document.items as Record<string, unknown>[]) ?? [];
     const connectors = (document.connectors as Record<string, unknown>[]) ?? [];
 
+    let p = createProgram();
+
     let itemsCreated = 0;
     for (const item of items) {
       const id = (item.id as string) ?? `item-${itemsCreated}`;
-      await storage.put('canvas-item', id, {
+      p = put(p, 'canvas-item', id, {
         ...item,
         id,
         canvas: targetCanvas,
@@ -91,7 +110,7 @@ export const jsonExportHandler: ConceptHandler = {
     let connectorsCreated = 0;
     for (const conn of connectors) {
       const id = (conn.id as string) ?? `conn-${connectorsCreated}`;
-      await storage.put('canvas-connector', id, {
+      p = put(p, 'canvas-connector', id, {
         ...conn,
         id,
         canvas: targetCanvas,
@@ -99,13 +118,14 @@ export const jsonExportHandler: ConceptHandler = {
       connectorsCreated++;
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       canvas_id: targetCanvas,
       items_created: itemsCreated,
       connectors_created: connectorsCreated,
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const jsonExportHandler = autoInterpret(_handler);
 
 export default jsonExportHandler;
