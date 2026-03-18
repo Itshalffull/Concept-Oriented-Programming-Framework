@@ -36,18 +36,21 @@ function nextTreeId(): string {
 const liveTreeCache = new Map<string, Parser.Tree>();
 const parserCache = new Map<string, Parser>();
 
-/** Get or create a parser for a grammar (side-effectful, outside StorageProgram). */
-async function getParserDirect(grammarId: string, wasmPath: string): Promise<Parser | null> {
-  if (parserCache.has(grammarId)) return parserCache.get(grammarId)!;
-  try {
-    const language = await loadLanguage(wasmPath);
-    const parser = await createParser();
-    parser.setLanguage(language);
-    parserCache.set(grammarId, parser);
-    return parser;
-  } catch {
-    return null;
-  }
+/**
+ * Get a cached parser for a grammar (synchronous lookup only).
+ * Parser initialization must happen before handler invocation via
+ * the tree-sitter-loader bootstrap. The handler only uses cached parsers.
+ */
+function getCachedParser(grammarId: string): Parser | null {
+  return parserCache.get(grammarId) ?? null;
+}
+
+/**
+ * Register a pre-initialized parser into the cache.
+ * Called by the runtime bootstrap before any handler actions.
+ */
+export function registerParser(grammarId: string, parser: Parser): void {
+  parserCache.set(grammarId, parser);
 }
 
 /** Count ERROR nodes in a tree. */

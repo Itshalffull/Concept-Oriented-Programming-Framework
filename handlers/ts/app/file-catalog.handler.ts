@@ -15,10 +15,13 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-// Lazy-load parsers only when needed (avoids circular deps at import time)
-async function loadParsers() {
-  const { parseConceptFile } = await import('../framework/parser.js');
-  const { parseSyncFile } = await import('../framework/sync-parser.js');
+// Lazy-load parsers only when needed (avoids circular deps at import time).
+// Uses synchronous require — the modules are expected to be pre-loaded by
+// the runtime before the handler is invoked.
+function loadParsers(): { parseConceptFile: (s: string) => unknown; parseSyncFile: (s: string) => unknown[] } {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { parseConceptFile } = require('../framework/parser.js');
+  const { parseSyncFile } = require('../framework/sync-parser.js');
   return { parseConceptFile, parseSyncFile };
 }
 

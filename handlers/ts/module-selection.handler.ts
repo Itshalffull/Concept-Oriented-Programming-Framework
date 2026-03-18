@@ -6,7 +6,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -27,16 +27,15 @@ const _handler: FunctionalConceptHandler = {
     const templateName = input.template_name as string | undefined;
     const profileName = input.profile_name as string | undefined;
 
+    const id = makeId();
+    const now = new Date().toISOString();
+
     let p = createProgram();
     p = find(p, 'appTemplate', {}, 'templates');
     p = find(p, 'targetProfile', {}, 'profiles');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const templates = bindings.templates as Record<string, unknown>[];
       const profiles = bindings.profiles as Record<string, unknown>[];
-
-      const id = makeId();
-      const now = new Date().toISOString();
 
       let concepts: Array<{ module_id: string; features: string[] }> = [];
       let syncs: string[] = [];
@@ -64,7 +63,6 @@ const _handler: FunctionalConceptHandler = {
             k8s: ['K8sRuntime'], 'docker-compose': ['DockerComposeRuntime'],
             local: ['DockerComposeRuntime'],
           };
-
           for (const dt of deployTargets) {
             const mods = moduleSets[dt];
             if (mods) infraModules.push(...mods);
@@ -94,21 +92,35 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
+      return { concepts, syncs, infraModules };
+    }, 'computed');
+
+    p = putFrom(p, 'moduleSelection', id, (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      const concepts = computed.concepts as Array<{ module_id: string; features: string[] }>;
+      const syncs = computed.syncs as string[];
+      const infraModules = computed.infraModules as string[];
       return {
-        _puts: [{ relation: 'moduleSelection', key: id, value: {
-          id,
-          templateName: templateName || '',
-          profileName: profileName || '',
-          concepts: JSON.stringify(concepts),
-          syncs: JSON.stringify(syncs),
-          infraModules: JSON.stringify(infraModules),
-          handlerChoices: JSON.stringify({}),
-          widgets: JSON.stringify([]),
-          theme: '',
-          derived: JSON.stringify([]),
-          createdAt: now,
-          updatedAt: now,
-        }}],
+        id,
+        templateName: templateName || '',
+        profileName: profileName || '',
+        concepts: JSON.stringify(concepts),
+        syncs: JSON.stringify(syncs),
+        infraModules: JSON.stringify(infraModules),
+        handlerChoices: JSON.stringify({}),
+        widgets: JSON.stringify([]),
+        theme: '',
+        derived: JSON.stringify([]),
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      const concepts = computed.concepts as Array<unknown>;
+      const infraModules = computed.infraModules as string[];
+      return {
         selectionId: id,
         conceptCount: concepts.length,
         infraCount: infraModules.length,
@@ -127,17 +139,36 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const sel = bindings.sel as Record<string, unknown>;
-        const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string; features: string[] }>;
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string; features: string[] }>;
+          if (concepts.some(c => c.module_id === moduleId)) {
+            return { error: 'exists' };
+          }
+          concepts.push({ module_id: moduleId, features });
+          return { error: null, concepts, conceptCount: concepts.length };
+        }, 'addResult');
 
-        if (concepts.some(c => c.module_id === moduleId)) {
-          return { variant: 'exists', message: `Module "${moduleId}" already in selection` };
-        }
+        bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const res = bindings.addResult as Record<string, unknown>;
+          if (res.error) return sel;
+          return {
+            ...sel,
+            concepts: JSON.stringify(res.concepts),
+            updatedAt: new Date().toISOString(),
+          };
+        });
 
-        concepts.push({ module_id: moduleId, features });
-        return { conceptCount: concepts.length };
-      }),
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.addResult as Record<string, unknown>;
+          if (res.error === 'exists') {
+            return { variant: 'exists', message: `Module "${moduleId}" already in selection` };
+          }
+          return { conceptCount: res.conceptCount as number };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -151,32 +182,54 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const sel = bindings.sel as Record<string, unknown>;
-        const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string; features: string[] }>;
-        const syncs = JSON.parse(sel.syncs as string) as string[];
-        const derived = JSON.parse(sel.derived as string) as Array<{ name: string; composes: string[] }>;
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string; features: string[] }>;
+          const syncs = JSON.parse(sel.syncs as string) as string[];
+          const derived = JSON.parse(sel.derived as string) as Array<{ name: string; composes: string[] }>;
 
-        const dependentDerived = derived.filter(d => d.composes.includes(moduleId));
-        if (dependentDerived.length > 0) {
+          const dependentDerived = derived.filter(d => d.composes.includes(moduleId));
+          if (dependentDerived.length > 0) {
+            return {
+              error: 'hasDependents',
+              message: `Module "${moduleId}" is used by derived concepts: ${dependentDerived.map(d => d.name).join(', ')}`,
+            };
+          }
+
+          const dependentSyncs = syncs.filter(s => s.split('->').includes(moduleId));
+          const filtered = concepts.filter(c => c.module_id !== moduleId);
+          if (filtered.length === concepts.length) {
+            return { error: 'notfound', message: `Module "${moduleId}" not in selection` };
+          }
+
+          const filteredSyncs = syncs.filter(s => !s.split('->').includes(moduleId));
+          return { error: null, concepts: filtered, syncs: filteredSyncs, conceptCount: filtered.length, removedSyncs: dependentSyncs.length };
+        }, 'removeResult');
+
+        bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const res = bindings.removeResult as Record<string, unknown>;
+          if (res.error) return sel;
           return {
-            variant: 'hasDependents',
-            message: `Module "${moduleId}" is used by derived concepts: ${dependentDerived.map(d => d.name).join(', ')}`,
+            ...sel,
+            concepts: JSON.stringify(res.concepts),
+            syncs: JSON.stringify(res.syncs),
+            updatedAt: new Date().toISOString(),
           };
-        }
-
-        const dependentSyncs = syncs.filter(s => {
-          const parts = s.split('->');
-          return parts.includes(moduleId);
         });
 
-        const filtered = concepts.filter(c => c.module_id !== moduleId);
-        if (filtered.length === concepts.length) {
-          return { variant: 'notfound', message: `Module "${moduleId}" not in selection` };
-        }
-
-        return { conceptCount: filtered.length, removedSyncs: dependentSyncs.length };
-      }),
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.removeResult as Record<string, unknown>;
+          if (res.error === 'hasDependents') {
+            return { variant: 'hasDependents', message: res.message as string };
+          }
+          if (res.error === 'notfound') {
+            return { variant: 'notfound', message: res.message as string };
+          }
+          return { conceptCount: res.conceptCount as number, removedSyncs: res.removedSyncs as number };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -191,14 +244,37 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const sel = bindings.sel as Record<string, unknown>;
-        const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string }>;
-        if (!concepts.some(c => c.module_id === conceptModule)) {
-          return { variant: 'notfound', message: `Concept "${conceptModule}" not in selection` };
-        }
-        return {};
-      }),
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string }>;
+          if (!concepts.some(c => c.module_id === conceptModule)) {
+            return { error: 'notfound' };
+          }
+          const choices = JSON.parse(sel.handlerChoices as string) as Record<string, string>;
+          choices[conceptModule] = handlerModule;
+          return { error: null, choices };
+        }, 'choiceResult');
+
+        bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const res = bindings.choiceResult as Record<string, unknown>;
+          if (res.error) return sel;
+          return {
+            ...sel,
+            handlerChoices: JSON.stringify(res.choices),
+            updatedAt: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.choiceResult as Record<string, unknown>;
+          if (res.error === 'notfound') {
+            return { variant: 'notfound', message: `Concept "${conceptModule}" not in selection` };
+          }
+          return {};
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -212,17 +288,36 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const sel = bindings.sel as Record<string, unknown>;
-        const widgets = JSON.parse(sel.widgets as string) as string[];
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const widgets = JSON.parse(sel.widgets as string) as string[];
+          if (widgets.includes(moduleId)) {
+            return { error: 'exists' };
+          }
+          widgets.push(moduleId);
+          return { error: null, widgets, widgetCount: widgets.length };
+        }, 'widgetResult');
 
-        if (widgets.includes(moduleId)) {
-          return { variant: 'exists', message: `Widget "${moduleId}" already added` };
-        }
+        bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const res = bindings.widgetResult as Record<string, unknown>;
+          if (res.error) return sel;
+          return {
+            ...sel,
+            widgets: JSON.stringify(res.widgets),
+            updatedAt: new Date().toISOString(),
+          };
+        });
 
-        widgets.push(moduleId);
-        return { widgetCount: widgets.length };
-      }),
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.widgetResult as Record<string, unknown>;
+          if (res.error === 'exists') {
+            return { variant: 'exists', message: `Widget "${moduleId}" already added` };
+          }
+          return { widgetCount: res.widgetCount as number };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -236,7 +331,13 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => complete(bp, 'ok', { theme: themeModule }),
+      (bp) => {
+        const bp2 = putFrom(bp, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          return { ...sel, theme: themeModule, updatedAt: new Date().toISOString() };
+        });
+        return complete(bp2, 'ok', { theme: themeModule });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -251,26 +352,45 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.sel,
       (bp) => complete(bp, 'notfound', { message: `Selection "${selectionId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const sel = bindings.sel as Record<string, unknown>;
-        const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string }>;
-        const derived = JSON.parse(sel.derived as string) as Array<{ name: string; composes: string[] }>;
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const concepts = JSON.parse(sel.concepts as string) as Array<{ module_id: string }>;
+          const derived = JSON.parse(sel.derived as string) as Array<{ name: string; composes: string[] }>;
 
-        const missing = composes.filter(c => !concepts.some(con => con.module_id === c));
-        if (missing.length > 0) {
+          const missing = composes.filter(c => !concepts.some(con => con.module_id === c));
+          if (missing.length > 0) {
+            return { error: 'missingConcepts', message: `Composed concepts not in selection: ${missing.join(', ')}` };
+          }
+          if (derived.some(d => d.name === name)) {
+            return { error: 'duplicate', message: `Derived concept "${name}" already exists` };
+          }
+          derived.push({ name, composes });
+          return { error: null, derived, derivedCount: derived.length };
+        }, 'derivedResult');
+
+        bp2 = putFrom(bp2, 'moduleSelection', selectionId, (bindings) => {
+          const sel = bindings.sel as Record<string, unknown>;
+          const res = bindings.derivedResult as Record<string, unknown>;
+          if (res.error) return sel;
           return {
-            variant: 'missingConcepts',
-            message: `Composed concepts not in selection: ${missing.join(', ')}`,
+            ...sel,
+            derived: JSON.stringify(res.derived),
+            updatedAt: new Date().toISOString(),
           };
-        }
+        });
 
-        if (derived.some(d => d.name === name)) {
-          return { variant: 'duplicate', message: `Derived concept "${name}" already exists` };
-        }
-
-        derived.push({ name, composes });
-        return { derivedCount: derived.length };
-      }),
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.derivedResult as Record<string, unknown>;
+          if (res.error === 'missingConcepts') {
+            return { variant: 'missingConcepts', message: res.message as string };
+          }
+          if (res.error === 'duplicate') {
+            return { variant: 'duplicate', message: res.message as string };
+          }
+          return { derivedCount: res.derivedCount as number };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -293,7 +413,6 @@ const _handler: FunctionalConceptHandler = {
         const handlerChoices = JSON.parse(sel.handlerChoices as string) as Record<string, string>;
 
         const allModules: string[] = [];
-
         for (const c of concepts) allModules.push(c.module_id);
         for (const handler of Object.values(handlerChoices)) {
           if (!allModules.includes(handler)) allModules.push(handler);

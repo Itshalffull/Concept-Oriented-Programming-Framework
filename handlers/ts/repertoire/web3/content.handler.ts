@@ -28,29 +28,24 @@ const _contentHandler: FunctionalConceptHandler = {
     const contentType = input.contentType as string;
 
     let p = createProgram();
-    // IPFS add via transport effect
-    p = perform(p, 'ipfs', 'add', { data }, 'ipfsResult');
-    p = mapBindings(p, (bindings) => {
-      const result = bindings.ipfsResult as Record<string, unknown>;
-      return result.cid as string;
-    }, 'cid');
-    p = mapBindings(p, (bindings) => {
-      const result = bindings.ipfsResult as Record<string, unknown>;
-      return result.size as number;
-    }, 'size');
-    // Store metadata using putFrom to derive value from bindings
-    p = putFrom(p, 'items', '_dynamic', (bindings) => ({
-      cid: bindings.cid as string,
+    // IPFS add + metadata storage via transport effect.
+    // The ipfs transport adapter adds bytes, returns { cid, size },
+    // and the interpreter persists metadata to the 'items' relation
+    // using the CID as key (keyed by the result's cid field).
+    p = perform(p, 'ipfs', 'add', {
+      data,
       name,
       contentType,
-      size: bindings.size as number,
       pinned: false,
       createdAt: new Date().toISOString(),
-    }));
-    return completeFrom(p, 'ok', (bindings) => ({
-      cid: bindings.cid as string,
-      size: bindings.size as number,
-    })) as StorageProgram<Result>;
+    }, 'ipfsResult');
+    return completeFrom(p, 'ok', (bindings) => {
+      const result = bindings.ipfsResult as Record<string, unknown>;
+      return {
+        cid: result.cid as string,
+        size: result.size as number,
+      };
+    }) as StorageProgram<Result>;
   },
 
   pin(input: Record<string, unknown>) {
