@@ -9,7 +9,7 @@
 
 import { createHash, randomUUID } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get, find, put, putFrom, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { ConceptManifest,
   ActionSchema } from '../../../runtime/types.js';
@@ -387,7 +387,7 @@ const _handler: FunctionalConceptHandler = {
     };
 
     // Persist projection
-    await storage.put(PROJECTION_RELATION, projectionId, projection as unknown as Record<string, unknown>);
+    p = put(p, PROJECTION_RELATION, projectionId, projection as unknown as Record<string, unknown>);
 
     p = complete(p, 'ok', { projection: projectionId,
       shapes: shapes.length,
@@ -404,86 +404,88 @@ const _handler: FunctionalConceptHandler = {
     const projectionId = input.projection as string;
 
     // Load the projection
-    const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
-    if (!projectionData) {
-      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
-        missing: ['Projection not found in storage'] }); return p;
-    }
+    p = get(p, PROJECTION_RELATION, projectionId, 'projectionData');
 
-    const projection = projectionData as unknown as ProjectionRecord;
-    const warnings: string[] = [];
+    return branch(p, 'projectionData',
+      // Projection found
+      (pFound) => {
+        // Load history records for breaking-change detection
+        let p2 = find(pFound, HISTORY_RELATION, { conceptName: projectionId }, 'historyRecords');
 
-    // Parse the embedded manifest for validation checks
-    let manifest: ConceptManifest;
-    try {
-      manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
-    } catch {
-      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
-        missing: ['Stored projection contains invalid manifest JSON'] }); return p;
-    }
+        return completeFrom(p2, '_deferred', (bindings) => {
+          const projectionData = bindings.projectionData as Record<string, unknown>;
+          const projection = projectionData as unknown as ProjectionRecord;
+          const historyRecords = (bindings.historyRecords || []) as Array<Record<string, unknown>>;
+          const warnings: string[] = [];
 
-    // Check for missing resource mapping when actions exist
-    if (!projection.resourceMapping && manifest.actions.length > 0) {
-      warnings.push('No resource mapping defined; REST targets will use convention-based defaults');
-    }
+          // Parse the embedded manifest for validation checks
+          let manifest: ConceptManifest;
+          try {
+            manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
+          } catch {
+            return { variant: 'incompleteAnnotation', projection: projectionId,
+              missing: ['Stored projection contains invalid manifest JSON'] };
+          }
 
-    // Check for actions without trait coverage
-    const traitScopes = new Set<string>();
-    for (const trait of projection.traits) {
-      if (trait.scope === '*') {
-        // Wildcard covers all actions
-        for (const action of manifest.actions) {
-          traitScopes.add(action.name);
-        }
-      } else {
-        for (const s of trait.scope.split(',')) {
-          traitScopes.add(s.trim());
-        }
-      }
-    }
+          // Check for missing resource mapping when actions exist
+          if (!projection.resourceMapping && manifest.actions.length > 0) {
+            warnings.push('No resource mapping defined; REST targets will use convention-based defaults');
+          }
 
-    for (const action of manifest.actions) {
-      if (!traitScopes.has(action.name) && projection.traits.length > 0) {
-        warnings.push(`Action "${action.name}" has no trait bindings`);
-      }
-    }
+          // Check for actions without trait coverage
+          const traitScopes = new Set<string>();
+          for (const trait of projection.traits) {
+            if (trait.scope === '*') {
+              for (const action of manifest.actions) {
+                traitScopes.add(action.name);
+              }
+            } else {
+              for (const s of trait.scope.split(',')) {
+                traitScopes.add(s.trim());
+              }
+            }
+          }
 
-    // Check for breaking changes against previous version in history
-    const historyRecords = await storage.find(HISTORY_RELATION, { conceptName: projection.conceptName });
-    if (historyRecords.length > 0) {
-      // Compare the most recent historical projection
-      const previous = historyRecords[historyRecords.length - 1] as unknown as ProjectionRecord;
-      const breakingChanges = detectBreakingChanges(projection, previous);
-      if (breakingChanges.length > 0) {
-        p = complete(p, 'breakingChange', { projection: projectionId,
-          changes: breakingChanges }); return p;
-      }
-    }
+          for (const action of manifest.actions) {
+            if (!traitScopes.has(action.name) && projection.traits.length > 0) {
+              warnings.push(`Action "${action.name}" has no trait bindings`);
+            }
+          }
 
-    // Check for incomplete annotations for configured targets
-    const missingAnnotations: string[] = [];
-    for (const override of projection.targetOverrides) {
-      if (override.target.includes('rest') && !projection.resourceMapping) {
-        missingAnnotations.push(
-          `REST target "${override.target}" configured but no resource mapping defined`,
-        );
-      }
-    }
+          // Check for breaking changes against previous version in history
+          if (historyRecords.length > 0) {
+            const previous = historyRecords[historyRecords.length - 1] as unknown as ProjectionRecord;
+            const breakingChanges = detectBreakingChanges(projection, previous);
+            if (breakingChanges.length > 0) {
+              return { variant: 'breakingChange', projection: projectionId,
+                changes: breakingChanges };
+            }
+          }
 
-    if (missingAnnotations.length > 0) {
-      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
-        missing: missingAnnotations }); return p;
-    }
+          // Check for incomplete annotations for configured targets
+          const missingAnnotations: string[] = [];
+          for (const override of projection.targetOverrides) {
+            if (override.target.includes('rest') && !projection.resourceMapping) {
+              missingAnnotations.push(
+                `REST target "${override.target}" configured but no resource mapping defined`,
+              );
+            }
+          }
 
-    // Store in history for future breaking-change detection
-    await storage.put(
-      HISTORY_RELATION,
-      `${projection.conceptName}:${projection.id}`,
-      projection as unknown as Record<string, unknown>,
+          if (missingAnnotations.length > 0) {
+            return { variant: 'incompleteAnnotation', projection: projectionId,
+              missing: missingAnnotations };
+          }
+
+          return { variant: 'ok', projection: projectionId, warnings };
+        });
+      },
+      // Projection not found
+      (pMissing) => {
+        return complete(pMissing, 'incompleteAnnotation', { projection: projectionId,
+          missing: ['Projection not found in storage'] });
+      },
     );
-
-    p = complete(p, 'ok', { projection: projectionId,
-      warnings }); return p;
   },
 
   /**

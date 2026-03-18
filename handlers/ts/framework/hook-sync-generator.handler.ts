@@ -14,6 +14,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { SchemaDef, SchemaHooks } from './schema-yaml-parser.handler.js';
+import { parseSchemaYaml } from './schema-yaml-parser.handler.js';
 
 export interface GeneratedHookSync {
   name: string;        // e.g., "Media_onSave"
@@ -221,8 +222,6 @@ const _handler: FunctionalConceptHandler = {
       p = complete(p, 'error', { message: 'source must be a parsed YAML object' }); return p;
     }
 
-    // Dynamically import to avoid circular deps
-    const { parseSchemaYaml } = await import('./schema-yaml-parser.handler.js');
     const parseResult = parseSchemaYaml(source);
 
     if (parseResult.errors.length > 0) {

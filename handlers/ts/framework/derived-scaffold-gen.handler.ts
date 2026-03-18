@@ -218,12 +218,7 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
-    const result = await derivedScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    { let p = createProgram(); p = complete(p, 'ok', { files,
-      wouldWrite: files.length,
-      wouldSkip: 0 }); return p; }
+    return _handler.generate(input);
   },
 };
 

@@ -305,12 +305,7 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
-    const result = await registryScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = typeof result.files === 'string' ? JSON.parse(result.files) : result.files;
-    { let p = createProgram(); p = complete(p, 'ok', { files: result.files,
-      wouldWrite: Array.isArray(files) ? files.length : 0,
-      wouldSkip: 0 }); return p; }
+    return _handler.generate(input);
   },
 };
 
