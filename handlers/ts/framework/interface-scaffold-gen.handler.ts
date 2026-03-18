@@ -170,20 +170,17 @@ function buildInterfaceYaml(input: Record<string, unknown>): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'InterfaceScaffoldGen',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'InterfaceScaffoldGen',
       inputKind: 'InterfaceConfig',
       outputKind: 'InterfaceManifest',
-      capabilities: JSON.stringify(['interface-yaml', 'target-config', 'sdk-config']),
-    };
+      capabilities: JSON.stringify(['interface-yaml', 'target-config', 'sdk-config']) }); return p; }
   },
 
   generate(input: Record<string, unknown>) {
     const name = (input.name as string) || 'my-interface';
 
     if (!name || typeof name !== 'string') {
-      return { variant: 'error', message: 'Interface name is required' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Interface name is required' }); return p; }
     }
 
     try {
@@ -193,11 +190,11 @@ const _handler: FunctionalConceptHandler = {
         { path: `interfaces/${toKebab(name)}.stub.interface.yaml`, content: interfaceYaml },
       ];
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 
@@ -205,12 +202,9 @@ const _handler: FunctionalConceptHandler = {
     const result = await interfaceScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
+    { let p = createProgram(); p = complete(p, 'ok', { files,
       wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+      wouldSkip: 0 }); return p; }
   },
 };
 

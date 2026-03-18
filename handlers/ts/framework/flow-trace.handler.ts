@@ -697,13 +697,13 @@ const _handler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
     const flowId = input.flowId as string;
     if (!flowId) {
-      return { variant: 'error', message: 'flowId is required' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'flowId is required' }); return p; }
     }
 
     // Building a trace requires ActionLog and SyncIndex which are
     // only available via the engine runtime. Return error for
     // standalone invocations.
-    return { variant: 'error', message: 'No action log available for flow: ' + flowId };
+    { let p = createProgram(); p = complete(p, 'error', { message: 'No action log available for flow: ' + flowId }); return p; }
   },
 
   render(input: Record<string, unknown>) {
@@ -711,11 +711,11 @@ const _handler: FunctionalConceptHandler = {
     const options = input.options as { failed?: boolean; json?: boolean } | undefined;
 
     if (!trace || !trace.flowId) {
-      return { variant: 'ok', output: '' };
+      { let p = createProgram(); p = complete(p, 'ok', { output: '' }); return p; }
     }
 
     const output = renderFlowTrace(trace, options || {});
-    return { variant: 'ok', output };
+    { let p = createProgram(); p = complete(p, 'ok', { output }); return p; }
   },
 };
 

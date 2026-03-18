@@ -461,9 +461,10 @@ export function validateDeploymentManifest(
 
 const _handler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
+    let p = createProgram();
     const raw = input.raw as string;
     if (!raw || typeof raw !== 'string') {
-      return { variant: 'error', message: 'raw is required and must be a string' };
+      p = complete(p, 'error', { message: 'raw is required and must be a string' }); return p;
     }
 
     try {
@@ -471,29 +472,30 @@ const _handler: FunctionalConceptHandler = {
       const manifest = parseDeploymentManifest(parsed);
       const manifestId = generateId();
 
-      await storage.put('manifests', manifestId, { manifestId });
-      await storage.put('plan', manifestId, { manifestId, manifest });
+      p = put(p, 'manifests', manifestId, { manifestId });
+      p = put(p, 'plan', manifestId, { manifestId, manifest });
 
-      return { variant: 'ok', manifest: manifestId };
+      p = complete(p, 'ok', { manifest: manifestId }); return p;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p;
     }
   },
 
   validate(input: Record<string, unknown>) {
+    let p = createProgram();
     const manifestRef = input.manifest as string;
     if (!manifestRef) {
-      return { variant: 'error', issues: ['manifest reference is required'] };
+      p = complete(p, 'error', { issues: ['manifest reference is required'] }); return p;
     }
 
-    const stored = await storage.get('plan', manifestRef);
+    p = get(p, 'plan', manifestRef, 'stored');
     if (!stored || !stored.manifest) {
-      return { variant: 'error', issues: ['manifest not found'] };
+      p = complete(p, 'error', { issues: ['manifest not found'] }); return p;
     }
 
-    return { variant: 'error', issues: ['full validation requires concept and sync registrations'] };
+    p = complete(p, 'error', { issues: ['full validation requires concept and sync registrations'] }); return p;
   },
 };
 

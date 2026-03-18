@@ -303,6 +303,7 @@ const _handler: FunctionalConceptHandler = {
    * Compute resource mappings, count shapes/actions/traits, and persist.
    */
   project(input: Record<string, unknown>) {
+    let p = createProgram();
     const manifestJson = input.manifest as string;
     const annotationsJson = input.annotations as string;
 
@@ -311,11 +312,8 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = JSON.parse(manifestJson) as ConceptManifest;
     } catch {
-      return {
-        variant: 'annotationError',
-        concept: 'unknown',
-        errors: ['Invalid JSON in manifest input'],
-      };
+      p = complete(p, 'annotationError', { concept: 'unknown',
+        errors: ['Invalid JSON in manifest input'] }); return p;
     }
 
     const conceptName = manifest.name;
@@ -323,22 +321,16 @@ const _handler: FunctionalConceptHandler = {
     // Parse and validate annotations
     const annotationResult = parseAnnotations(annotationsJson, conceptName);
     if (!annotationResult.ok) {
-      return {
-        variant: 'annotationError',
-        concept: conceptName,
-        errors: annotationResult.errors,
-      };
+      p = complete(p, 'annotationError', { concept: conceptName,
+        errors: annotationResult.errors }); return p;
     }
     const annotations = annotationResult.annotations;
 
     // Check for unresolved references in annotations
     const unresolvedRefs = findUnresolvedReferences(annotations, manifest);
     if (unresolvedRefs.length > 0) {
-      return {
-        variant: 'unresolvedReference',
-        concept: conceptName,
-        missing: unresolvedRefs,
-      };
+      p = complete(p, 'unresolvedReference', { concept: conceptName,
+        missing: unresolvedRefs }); return p;
     }
 
     // Build trait bindings
@@ -351,13 +343,10 @@ const _handler: FunctionalConceptHandler = {
     // Check for trait conflicts
     const conflict = findTraitConflict(traits);
     if (conflict) {
-      return {
-        variant: 'traitConflict',
-        concept: conceptName,
+      p = complete(p, 'traitConflict', { concept: conceptName,
         trait1: conflict.trait1,
         trait2: conflict.trait2,
-        reason: conflict.reason,
-      };
+        reason: conflict.reason }); return p;
     }
 
     // Extract shapes from the manifest type graph
@@ -400,13 +389,10 @@ const _handler: FunctionalConceptHandler = {
     // Persist projection
     await storage.put(PROJECTION_RELATION, projectionId, projection as unknown as Record<string, unknown>);
 
-    return {
-      variant: 'ok',
-      projection: projectionId,
+    p = complete(p, 'ok', { projection: projectionId,
       shapes: shapes.length,
       actions: manifest.actions.length,
-      traits: traits.length,
-    };
+      traits: traits.length }); return p;
   },
 
   /**
@@ -414,16 +400,14 @@ const _handler: FunctionalConceptHandler = {
    * previous versions, and verify annotation completeness.
    */
   validate(input: Record<string, unknown>) {
+    let p = createProgram();
     const projectionId = input.projection as string;
 
     // Load the projection
     const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
     if (!projectionData) {
-      return {
-        variant: 'incompleteAnnotation',
-        projection: projectionId,
-        missing: ['Projection not found in storage'],
-      };
+      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
+        missing: ['Projection not found in storage'] }); return p;
     }
 
     const projection = projectionData as unknown as ProjectionRecord;
@@ -434,11 +418,8 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
     } catch {
-      return {
-        variant: 'incompleteAnnotation',
-        projection: projectionId,
-        missing: ['Stored projection contains invalid manifest JSON'],
-      };
+      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
+        missing: ['Stored projection contains invalid manifest JSON'] }); return p;
     }
 
     // Check for missing resource mapping when actions exist
@@ -474,11 +455,8 @@ const _handler: FunctionalConceptHandler = {
       const previous = historyRecords[historyRecords.length - 1] as unknown as ProjectionRecord;
       const breakingChanges = detectBreakingChanges(projection, previous);
       if (breakingChanges.length > 0) {
-        return {
-          variant: 'breakingChange',
-          projection: projectionId,
-          changes: breakingChanges,
-        };
+        p = complete(p, 'breakingChange', { projection: projectionId,
+          changes: breakingChanges }); return p;
       }
     }
 
@@ -493,11 +471,8 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (missingAnnotations.length > 0) {
-      return {
-        variant: 'incompleteAnnotation',
-        projection: projectionId,
-        missing: missingAnnotations,
-      };
+      p = complete(p, 'incompleteAnnotation', { projection: projectionId,
+        missing: missingAnnotations }); return p;
     }
 
     // Store in history for future breaking-change detection
@@ -507,17 +482,15 @@ const _handler: FunctionalConceptHandler = {
       projection as unknown as Record<string, unknown>,
     );
 
-    return {
-      variant: 'ok',
-      projection: projectionId,
-      warnings,
-    };
+    p = complete(p, 'ok', { projection: projectionId,
+      warnings }); return p;
   },
 
   /**
    * Compare two projections and return added/removed/changed fields.
    */
   diff(input: Record<string, unknown>) {
+    let p = createProgram();
     const projectionId = input.projection as string;
     const previousId = input.previous as string;
 
@@ -526,10 +499,7 @@ const _handler: FunctionalConceptHandler = {
     const previousData = await storage.get(PROJECTION_RELATION, previousId);
 
     if (!currentData || !previousData) {
-      return {
-        variant: 'incompatible',
-        reason: 'One or both projections not found in storage',
-      };
+      p = complete(p, 'incompatible', { reason: 'One or both projections not found in storage' }); return p;
     }
 
     const current = currentData as unknown as ProjectionRecord;
@@ -537,10 +507,7 @@ const _handler: FunctionalConceptHandler = {
 
     // Verify both projections are for the same concept
     if (current.conceptName !== previous.conceptName) {
-      return {
-        variant: 'incompatible',
-        reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"`,
-      };
+      p = complete(p, 'incompatible', { reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"` }); return p;
     }
 
     // Compare shapes
@@ -620,12 +587,9 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
-      added,
+    p = complete(p, 'ok', { added,
       removed,
-      changed,
-    };
+      changed }); return p;
   },
 
   /**
@@ -633,16 +597,14 @@ const _handler: FunctionalConceptHandler = {
    * convention-based HTTP method and path inference.
    */
   inferResources(input: Record<string, unknown>) {
+    let p = createProgram();
     const projectionId = input.projection as string;
 
     // Load the projection
     const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
     if (!projectionData) {
-      return {
-        variant: 'ok',
-        projection: projectionId,
-        resources: [],
-      };
+      p = complete(p, 'ok', { projection: projectionId,
+        resources: [] }); return p;
     }
 
     const projection = projectionData as unknown as ProjectionRecord;
@@ -652,11 +614,8 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
     } catch {
-      return {
-        variant: 'ok',
-        projection: projectionId,
-        resources: [],
-      };
+      p = complete(p, 'ok', { projection: projectionId,
+        resources: [] }); return p;
     }
 
     // Derive the resource base path and ID field
@@ -690,11 +649,8 @@ const _handler: FunctionalConceptHandler = {
       projection as unknown as Record<string, unknown>,
     );
 
-    return {
-      variant: 'ok',
-      projection: projectionId,
-      resources,
-    };
+    p = complete(p, 'ok', { projection: projectionId,
+      resources }); return p;
   },
 };
 

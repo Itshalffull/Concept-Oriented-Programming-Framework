@@ -329,15 +329,12 @@ function generateSchemaFile(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'GraphqlTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'GraphqlTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GraphQLSchema',
       capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical']),
       targetKey: 'graphql',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -364,10 +361,7 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Validate and parse projection ---
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'projection is required and must be a JSON string',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
     let manifest: ConceptManifest;
@@ -375,19 +369,16 @@ const _handler: FunctionalConceptHandler = {
       const projection = JSON.parse(projectionRaw) as Record<string, unknown>;
       const manifestJson = projection.conceptManifest as string;
       if (!manifestJson || typeof manifestJson !== 'string') {
-        return {
-          variant: 'error',
-          reason: 'projection must contain a conceptManifest JSON string',
-        };
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'projection must contain a conceptManifest JSON string' }); return p; }
       }
       manifest = JSON.parse(manifestJson) as ConceptManifest;
     } catch (err: unknown) {
       const reason = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', reason: `failed to parse projection: ${reason}` };
+      { let p = createProgram(); p = complete(p, 'error', { reason: `failed to parse projection: ${reason}` }); return p; }
     }
 
     if (!manifest.name || typeof manifest.name !== 'string') {
-      return { variant: 'error', reason: 'conceptManifest must contain a name field' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest must contain a name field' }); return p; }
     }
 
     // --- Parse optional config ---
@@ -435,11 +426,8 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
-      files,
-      types,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files,
+      types }); return p; }
   },
 };
 

@@ -952,7 +952,7 @@ const _handler: FunctionalConceptHandler = {
     const manifest = input.manifest as ConceptManifest;
 
     if (!manifest || !manifest.name) {
-      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Invalid manifest: missing concept name' }); return p; }
     }
 
     try {
@@ -969,11 +969,11 @@ const _handler: FunctionalConceptHandler = {
         files.push({ path: `${lowerName}/conformance.stub.test.ts`, content: conformanceTest });
       }
 
-      return { variant: 'ok', files };
+      { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 };

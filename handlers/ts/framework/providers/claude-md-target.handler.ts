@@ -208,15 +208,12 @@ function assembleClaudeMd(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'ClaudeMdTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeMdTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeMd',
       capabilities: JSON.stringify(['claude-md', 'project-context']),
       targetKey: 'claude-md',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -239,14 +236,14 @@ const _handler: FunctionalConceptHandler = {
     // --- Parse current projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     const conceptName = projection.conceptName as string;
@@ -266,7 +263,7 @@ const _handler: FunctionalConceptHandler = {
         : undefined;
 
       if (firstConceptName && conceptName !== firstConceptName) {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     }
 
@@ -314,18 +311,15 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (summaries.length === 0) {
-      return { variant: 'noProjections', reason: 'No valid concept manifests found in projections' };
+      { let p = createProgram(); p = complete(p, 'noProjections', { reason: 'No valid concept manifests found in projections' }); return p; }
     }
 
     // --- Assemble document ---
     const document = assembleClaudeMd(config, summaries);
     const outputPath = config.outputPath || 'CLAUDE.md';
 
-    return {
-      variant: 'ok',
-      files: [{ path: outputPath, content: document }],
-      document,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: outputPath, content: document }],
+      document }); return p; }
   },
 };
 

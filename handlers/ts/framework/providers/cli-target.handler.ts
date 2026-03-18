@@ -363,15 +363,12 @@ function generateCliHelpMd(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'CliTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'CliTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'CliCommands',
       capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
       targetKey: 'cli',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -390,14 +387,14 @@ const _handler: FunctionalConceptHandler = {
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -408,7 +405,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -454,7 +451,7 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    return { variant: 'ok', files };
+    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
   },
 };
 

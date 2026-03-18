@@ -45,6 +45,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const trait = input.trait as string;
     const target = input.target as string;
     const implementation = input.implementation as string;
@@ -53,14 +54,14 @@ const _handler: FunctionalConceptHandler = {
     const compositeKey = `${trait}:${target}`;
 
     // Check for duplicate registration
-    const existing = await storage.get('middleware', compositeKey);
+    p = get(p, 'middleware', compositeKey, 'existing');
     if (existing) {
-      return { variant: 'duplicateRegistration', trait, target };
+      p = complete(p, 'duplicateRegistration', { trait, target }); return p;
     }
 
     const middlewareId = randomUUID();
 
-    await storage.put('middleware', compositeKey, {
+    p = put(p, 'middleware', compositeKey, {
       id: middlewareId,
       trait,
       target,
@@ -69,10 +70,7 @@ const _handler: FunctionalConceptHandler = {
       positionOrder: POSITION_ORDER[position] ?? 999,
     });
 
-    return {
-      variant: 'ok',
-      middleware: middlewareId,
-    };
+    p = complete(p, 'ok', { middleware: middlewareId }); return p;
   },
 
   /**
@@ -89,6 +87,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const traits = input.traits as string[];
     const target = input.target as string;
 
@@ -102,9 +101,9 @@ const _handler: FunctionalConceptHandler = {
 
     for (const trait of traits) {
       const compositeKey = `${trait}:${target}`;
-      const record = await storage.get('middleware', compositeKey);
+      p = get(p, 'middleware', compositeKey, 'record');
       if (!record) {
-        return { variant: 'missingImplementation', trait, target };
+        p = complete(p, 'missingImplementation', { trait, target }); return p;
       }
       entries.push({
         trait,
@@ -123,12 +122,9 @@ const _handler: FunctionalConceptHandler = {
           (await storage.get('incompatibility', ruleKey1)) ||
           (await storage.get('incompatibility', ruleKey2));
         if (rule) {
-          return {
-            variant: 'incompatibleTraits',
-            trait1: traits[i],
+          p = complete(p, 'incompatibleTraits', { trait1: traits[i],
             trait2: traits[j],
-            reason: rule.reason as string,
-          };
+            reason: rule.reason as string }); return p;
         }
       }
     }
@@ -139,7 +135,7 @@ const _handler: FunctionalConceptHandler = {
     const middlewares = entries.map((e) => e.implementation);
     const order = entries.map((e) => e.positionOrder);
 
-    return { variant: 'ok', middlewares, order };
+    p = complete(p, 'ok', { middlewares, order }); return p;
   },
 
   /**
@@ -153,6 +149,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const output = input.output as string;
     const middlewares = input.middlewares as string[];
     const target = input.target as string;
@@ -166,7 +163,7 @@ const _handler: FunctionalConceptHandler = {
       injectedCount++;
     }
 
-    return { variant: 'ok', output: result, injectedCount };
+    p = complete(p, 'ok', { output: result, injectedCount }); return p;
   },
 };
 

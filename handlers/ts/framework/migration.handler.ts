@@ -154,27 +154,27 @@ const _handler: FunctionalConceptHandler = {
     const specVersion = input.specVersion as number;
 
     if (specVersion === undefined || specVersion === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
     const result = await checkMigrationNeeded(specVersion, storage);
 
     if (result === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
-    return { variant: 'needsMigration', from: result.currentVersion, to: result.requiredVersion };
+    { let p = createProgram(); p = complete(p, 'needsMigration', { from: result.currentVersion, to: result.requiredVersion }); return p; }
   },
 
   complete(input: Record<string, unknown>) {
     const version = input.version as number;
 
     if (version === undefined || version === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
     await setStoredVersion(storage, version);
-    return { variant: 'ok' };
+    { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
   },
 };
 

@@ -126,20 +126,17 @@ function buildDeployYaml(input: Record<string, unknown>): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'DeployScaffoldGen',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'DeployScaffoldGen',
       inputKind: 'DeployConfig',
       outputKind: 'DeployManifest',
-      capabilities: JSON.stringify(['deploy-yaml', 'runtime-config', 'infrastructure']),
-    };
+      capabilities: JSON.stringify(['deploy-yaml', 'runtime-config', 'infrastructure']) }); return p; }
   },
 
   generate(input: Record<string, unknown>) {
     const appName = (input.appName as string) || 'my-app';
 
     if (!appName || typeof appName !== 'string') {
-      return { variant: 'error', message: 'App name is required' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'App name is required' }); return p; }
     }
 
     try {
@@ -149,11 +146,11 @@ const _handler: FunctionalConceptHandler = {
         { path: `deploys/${toKebab(appName)}.stub.deploy.yaml`, content: deployYaml },
       ];
 
-      return { variant: 'ok', files, filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
     }
   },
 
@@ -161,12 +158,9 @@ const _handler: FunctionalConceptHandler = {
     const result = await deployScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = result.files as Array<{ path: string; content: string }>;
-    return {
-      variant: 'ok',
-      files,
+    { let p = createProgram(); p = complete(p, 'ok', { files,
       wouldWrite: files.length,
-      wouldSkip: 0,
-    };
+      wouldSkip: 0 }); return p; }
   },
 };
 

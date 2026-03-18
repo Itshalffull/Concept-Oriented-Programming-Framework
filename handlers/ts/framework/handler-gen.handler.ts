@@ -451,18 +451,15 @@ const _handler: FunctionalConceptHandler = {
     const manifest = input.manifest as ConceptManifest;
 
     if (!manifest || !manifest.name) {
-      return { variant: 'error', message: 'Missing manifest' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Missing manifest' }); return p; }
     }
 
     const outputPath = determineOutputPath(manifest, specPath);
     const relKernel = determineRelativeKernelPath(outputPath);
     const content = generateHandlerImpl(manifest, relKernel);
 
-    return {
-      variant: 'ok',
-      files: [{ path: outputPath, content }],
-      message: `Generated handler for ${manifest.name}`,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: outputPath, content }],
+      message: `Generated handler for ${manifest.name}` }); return p; }
   },
 };
 

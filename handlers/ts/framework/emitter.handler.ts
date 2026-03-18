@@ -180,6 +180,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const path = input.path as string;
     const content = input.content as string;
     const target = input.target as string | undefined;
@@ -187,11 +188,8 @@ const _handler: FunctionalConceptHandler = {
     const sources = input.sources as SourceEntry[] | undefined;
 
     if (!path) {
-      return {
-        variant: 'error',
-        message: 'path is required',
-        path: path ?? '',
-      };
+      p = complete(p, 'error', { message: 'path is required',
+        path: path ?? '' }); return p;
     }
 
     try {
@@ -203,17 +201,14 @@ const _handler: FunctionalConceptHandler = {
         await updateManifestOnWrite(storage, path, result.sizeBytes, existing);
       }
 
-      return {
-        variant: 'ok',
-        written: result.written,
+      p = complete(p, 'ok', { written: result.written,
         path: result.path,
         contentHash: result.contentHash,
         file: result.fileId,
-        hash: result.contentHash,
-      };
+        hash: result.contentHash }); return p;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message, path };
+      p = complete(p, 'error', { message, path }); return p;
     }
   },
 
@@ -225,6 +220,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const files = input.files as Array<{
       path: string;
       content: string;
@@ -235,7 +231,7 @@ const _handler: FunctionalConceptHandler = {
     }>;
 
     if (!files || !Array.isArray(files) || files.length === 0) {
-      return { variant: 'ok', results: [] };
+      p = complete(p, 'ok', { results: [] }); return p;
     }
 
     try {
@@ -263,11 +259,11 @@ const _handler: FunctionalConceptHandler = {
         });
       }
 
-      return { variant: 'ok', results };
+      p = complete(p, 'ok', { results }); return p;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const failedPath = files[0]?.path || '';
-      return { variant: 'error', message, failedPath };
+      p = complete(p, 'error', { message, failedPath }); return p;
     }
   },
 
@@ -284,6 +280,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     // Support both path-based (generation suite) and file-ID-based (legacy) signatures
     const pathInput = input.path as string | undefined;
     const fileId = input.file as string | undefined;
@@ -300,16 +297,16 @@ const _handler: FunctionalConceptHandler = {
       // File ID-based lookup (legacy Clef Bind pattern)
       const allFiles = await storage.find(FILES_RELATION, { id: fileId });
       if (allFiles.length === 0) {
-        return { variant: 'error', message: `file ${fileId} not found in storage` };
+        p = complete(p, 'error', { message: `file ${fileId} not found in storage` }); return p;
       }
       fileRecord = allFiles[0];
       key = fileKey(fileRecord.path as string);
     } else {
-      return { variant: 'error', message: 'path or file ID is required' };
+      p = complete(p, 'error', { message: 'path or file ID is required' }); return p;
     }
 
     if (!fileRecord) {
-      return { variant: 'error', message: `file not found at ${pathInput}` };
+      p = complete(p, 'error', { message: `file not found at ${pathInput}` }); return p;
     }
 
     // Determine formatter: explicit > extension-based
@@ -319,11 +316,11 @@ const _handler: FunctionalConceptHandler = {
 
     if (!formatter) {
       // No formatter for this extension — no-op
-      return { variant: 'ok', changed: false };
+      p = complete(p, 'ok', { changed: false }); return p;
     }
 
     if (!KNOWN_FORMATTERS.has(formatter)) {
-      return { variant: 'ok', changed: false };
+      p = complete(p, 'ok', { changed: false }); return p;
     }
 
     try {
@@ -335,11 +332,11 @@ const _handler: FunctionalConceptHandler = {
         formatted: true,
       });
 
-      return { variant: 'ok', changed: true, file: fileRecord.id };
+      p = complete(p, 'ok', { changed: true, file: fileRecord.id }); return p;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+      p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p;
     }
   },
 
@@ -354,6 +351,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const outputDir = input.outputDir as string;
     // Support both new (currentManifest) and legacy (currentFiles) parameter names
     const currentList = (input.currentManifest || input.currentFiles) as string[];
@@ -380,7 +378,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', removed };
+    p = complete(p, 'ok', { removed }); return p;
   },
 
   /**
@@ -390,6 +388,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
@@ -410,7 +409,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files, totalBytes };
+    p = complete(p, 'ok', { files, totalBytes }); return p;
   },
 
   /**
@@ -421,12 +420,13 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const outputPath = input.outputPath as string;
     const key = fileKey(outputPath);
 
     const fileRecord = await storage.get(FILES_RELATION, key);
     if (!fileRecord) {
-      return { variant: 'notFound', path: outputPath };
+      p = complete(p, 'notFound', { path: outputPath }); return p;
     }
 
     const sourceMapRecord = await storage.get(SOURCE_MAP_RELATION, key);
@@ -434,7 +434,7 @@ const _handler: FunctionalConceptHandler = {
       ? (sourceMapRecord.sources as SourceEntry[])
       : [];
 
-    return { variant: 'ok', sources };
+    p = complete(p, 'ok', { sources }); return p;
   },
 
   /**
@@ -445,6 +445,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const sourcePath = input.sourcePath as string;
 
     const allSourceMaps = await storage.find(SOURCE_MAP_RELATION);
@@ -457,7 +458,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', outputs };
+    p = complete(p, 'ok', { outputs }); return p;
   },
 
   /**
@@ -472,6 +473,7 @@ const _handler: FunctionalConceptHandler = {
     input: Record<string, unknown>,
     storage: ConceptStorage,
   ) {
+    let p = createProgram();
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
@@ -522,7 +524,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', status };
+    p = complete(p, 'ok', { status }); return p;
   },
 };
 

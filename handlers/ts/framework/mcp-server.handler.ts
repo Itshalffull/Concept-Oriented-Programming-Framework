@@ -68,11 +68,12 @@ export function inferActionFromToolName(toolName: string, conceptName: string): 
 const _handler: FunctionalConceptHandler = {
 
   start(input: Record<string, unknown>) {
+    let p = createProgram();
     const manifestPath = input.manifestPath as string;
     const transport = input.transport as string;
 
     if (!transport || (transport !== 'stdio' && transport !== 'sse')) {
-      return { variant: 'error', message: `Unsupported transport "${transport}". Use "stdio" or "sse".` };
+      p = complete(p, 'error', { message: `Unsupported transport "${transport}". Use "stdio" or "sse".` }); return p;
     }
 
     try {
@@ -89,7 +90,7 @@ const _handler: FunctionalConceptHandler = {
       const mcpTarget = manifest?.targets?.mcp;
 
       if (!mcpTarget) {
-        return { variant: 'error', message: `No MCP target found in manifest: ${manifestPath}` };
+        p = complete(p, 'error', { message: `No MCP target found in manifest: ${manifestPath}` }); return p;
       }
 
       const outputDir = path.resolve(
@@ -100,6 +101,7 @@ const _handler: FunctionalConceptHandler = {
       // Discover all .tools.ts files in the output directory
       const toolFiles: string[] = [];
       function walkDir(dir: string) {
+    let p = createProgram();
         if (!fs.existsSync(dir)) return;
         for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
           if (entry.isDirectory()) {
@@ -144,23 +146,21 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      await storage.put('status', 'server', {
+      p = put(p, 'status', 'server', {
         status: 'running',
         transport,
         manifestPath,
         toolCount: totalTools,
       });
 
-      return { variant: 'ok', status: 'running', toolCount: totalTools };
+      p = complete(p, 'ok', { status: 'running', toolCount: totalTools }); return p;
     } catch (err) {
-      return {
-        variant: 'error',
-        message: err instanceof Error ? err.message : String(err),
-      };
+      p = complete(p, 'error', { message: err instanceof Error ? err.message : String(err) }); return p;
     }
   },
 
   registerTool(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const concept = input.concept as string;
     const action = input.action as string;
@@ -168,7 +168,7 @@ const _handler: FunctionalConceptHandler = {
     const schema = input.schema as string;
 
     if (toolRegistry.has(name)) {
-      return { variant: 'duplicate', name };
+      p = complete(p, 'duplicate', { name }); return p;
     }
 
     let inputSchema: Record<string, unknown>;
@@ -189,7 +189,7 @@ const _handler: FunctionalConceptHandler = {
 
     toolRegistry.set(name, tool);
 
-    await storage.put('tools', `tool:${name}`, {
+    p = put(p, 'tools', `tool:${name}`, {
       toolName: name,
       toolConcept: concept,
       toolAction: action,
@@ -197,16 +197,17 @@ const _handler: FunctionalConceptHandler = {
       toolSchema: schema,
     });
 
-    return { variant: 'ok', tool: name };
+    p = complete(p, 'ok', { tool: name }); return p;
   },
 
   handleCall(input: Record<string, unknown>) {
+    let p = createProgram();
     const toolName = input.toolName as string;
     const argsStr = input.arguments as string;
 
     const tool = toolRegistry.get(toolName);
     if (!tool) {
-      return { variant: 'notfound', toolName };
+      p = complete(p, 'notfound', { toolName }); return p;
     }
 
     try {
@@ -221,31 +222,27 @@ const _handler: FunctionalConceptHandler = {
       // The actual handler dispatch happens through the kernel's
       // concept transport. For the standalone MCP server, we
       // import and call handlers directly.
-      return {
-        variant: 'ok',
-        result: JSON.stringify({
+      p = complete(p, 'ok', { result: JSON.stringify({
           tool: tool.name,
           concept: tool.concept,
           action: tool.action,
           args,
           note: 'Handler dispatch via kernel transport',
-        }),
-      };
+        }) }); return p;
     } catch (err) {
-      return {
-        variant: 'error',
-        message: err instanceof Error ? err.message : String(err),
-      };
+      p = complete(p, 'error', { message: err instanceof Error ? err.message : String(err) }); return p;
     }
   },
 
   stop(input: Record<string, unknown>) {
+    let p = createProgram();
     toolRegistry.clear();
-    await storage.put('status', 'server', { status: 'stopped' });
-    return { variant: 'ok', status: 'stopped' };
+    p = put(p, 'status', 'server', { status: 'stopped' });
+    p = complete(p, 'ok', { status: 'stopped' }); return p;
   },
 
   listTools(input: Record<string, unknown>) {
+    let p = createProgram();
     const tools = Array.from(toolRegistry.values()).map(t => ({
       name: t.name,
       type: t.type,
@@ -253,7 +250,7 @@ const _handler: FunctionalConceptHandler = {
       action: t.action,
       description: t.description.slice(0, 120),
     }));
-    return { variant: 'ok', tools: JSON.stringify(tools, null, 2) };
+    p = complete(p, 'ok', { tools: JSON.stringify(tools, null, 2) }); return p;
   },
 };
 

@@ -182,19 +182,17 @@ const _handler: FunctionalConceptHandler = {
    * Input: { schemas: SchemaDef[] }
    */
   generate(input: Record<string, unknown>) {
+    let p = createProgram();
     const schemas = input.schemas as SchemaDef[] | undefined;
     if (!schemas || !Array.isArray(schemas)) {
-      return { variant: 'error', message: 'schemas must be an array of SchemaDef objects' };
+      p = complete(p, 'error', { message: 'schemas must be an array of SchemaDef objects' }); return p;
     }
 
     const result = generateAllHookSyncs(schemas);
 
     if (result.errors.length > 0) {
-      return {
-        variant: 'error',
-        message: `Hook sync generation had ${result.errors.length} error(s)`,
-        errors: result.errors,
-      };
+      p = complete(p, 'error', { message: `Hook sync generation had ${result.errors.length} error(s)`,
+        errors: result.errors }); return p;
     }
 
     const id = `hook-syncs-${++counter}`;
@@ -203,12 +201,12 @@ const _handler: FunctionalConceptHandler = {
       content: s.content,
     }));
 
-    await storage.put('generated_hook_syncs', id, {
+    p = put(p, 'generated_hook_syncs', id, {
       id,
       syncs: syncFiles,
     });
 
-    return { variant: 'ok', id, sync_files: syncFiles };
+    p = complete(p, 'ok', { id, sync_files: syncFiles }); return p;
   },
 
   /**
@@ -217,9 +215,10 @@ const _handler: FunctionalConceptHandler = {
    * Input: { source: Record<string, unknown> }
    */
   generateFromYaml(input: Record<string, unknown>) {
+    let p = createProgram();
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      return { variant: 'error', message: 'source must be a parsed YAML object' };
+      p = complete(p, 'error', { message: 'source must be a parsed YAML object' }); return p;
     }
 
     // Dynamically import to avoid circular deps
@@ -227,11 +226,8 @@ const _handler: FunctionalConceptHandler = {
     const parseResult = parseSchemaYaml(source);
 
     if (parseResult.errors.length > 0) {
-      return {
-        variant: 'error',
-        message: `schema.yaml has ${parseResult.errors.length} validation error(s)`,
-        errors: parseResult.errors,
-      };
+      p = complete(p, 'error', { message: `schema.yaml has ${parseResult.errors.length} validation error(s)`,
+        errors: parseResult.errors }); return p;
     }
 
     // Delegate to generate action
@@ -243,18 +239,19 @@ const _handler: FunctionalConceptHandler = {
    * without storing anything.
    */
   preview(input: Record<string, unknown>) {
+    let p = createProgram();
     const schemaName = input.schema_name as string | undefined;
     const hooks = input.hooks as Record<string, string> | undefined;
     const concept = input.concept as string | undefined;
 
     if (!schemaName) {
-      return { variant: 'error', message: 'schema_name is required' };
+      p = complete(p, 'error', { message: 'schema_name is required' }); return p;
     }
     if (!hooks || typeof hooks !== 'object') {
-      return { variant: 'error', message: 'hooks must be an object mapping hook types to action references' };
+      p = complete(p, 'error', { message: 'hooks must be an object mapping hook types to action references' }); return p;
     }
     if (!concept) {
-      return { variant: 'error', message: 'concept is required for hook sync generation' };
+      p = complete(p, 'error', { message: 'concept is required for hook sync generation' }); return p;
     }
 
     const previews: Array<{ name: string; hookType: string; content: string }> = [];
@@ -271,10 +268,10 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (errors.length > 0) {
-      return { variant: 'error', message: 'Some hooks have errors', errors };
+      p = complete(p, 'error', { message: 'Some hooks have errors', errors }); return p;
     }
 
-    return { variant: 'ok', previews };
+    p = complete(p, 'ok', { previews }); return p;
   },
 };
 

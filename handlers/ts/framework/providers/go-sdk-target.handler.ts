@@ -264,15 +264,12 @@ function generateGoMainClient(projections: ProjectionEntry[], goPackage: string)
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'GoSdkTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'GoSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GoSdk',
       capabilities: JSON.stringify(['client', 'types', 'go-mod']),
       targetKey: 'go',
-      providerType: 'sdk',
-    };
+      providerType: 'sdk' }); return p; }
   },
 
   /**
@@ -292,26 +289,26 @@ const _handler: FunctionalConceptHandler = {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is not valid JSON' }); return p; }
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -331,7 +328,7 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      return { variant: 'ok', files: [], package: packageName };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [], package: packageName }); return p; }
     }
 
     // --- Generate concept client file ---
@@ -372,7 +369,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files, package: packageName };
+    { let p = createProgram(); p = complete(p, 'ok', { files, package: packageName }); return p; }
   },
 };
 

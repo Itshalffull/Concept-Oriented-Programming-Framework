@@ -208,17 +208,14 @@ const _handler: FunctionalConceptHandler = {
     const environment = (input.environment as string) || 'production';
 
     if (!existsSync(manifestPath)) {
-      return { variant: 'manifestNotFound', path: manifestPath };
+      { let p = createProgram(); p = complete(p, 'manifestNotFound', { path: manifestPath }); return p; }
     }
 
     // Get the kernel from globalThis (set by KernelBoot)
     const kernel = (globalThis as Record<string, unknown>).kernel as Kernel | undefined;
     if (!kernel) {
-      return {
-        variant: 'deployFailed',
-        appName: 'unknown',
-        errors: ['Kernel not booted. Run kernel-boot boot first.'],
-      };
+      { let p = createProgram(); p = complete(p, 'deployFailed', { appName: 'unknown',
+        errors: ['Kernel not booted. Run kernel-boot boot first.'] }); return p; }
     }
 
     const manifestJson = readManifest(manifestPath);
@@ -252,13 +249,10 @@ const _handler: FunctionalConceptHandler = {
         deploymentUrl: result.url,
         completedAt,
       });
-      return {
-        variant: 'ok',
-        run: runId,
+      { let p = createProgram(); p = complete(p, 'ok', { run: runId,
         appName,
         deploymentUrl: result.url || '',
-        duration,
-      };
+        duration }); return p; }
     }
 
     runs.set(runId, { ...runs.get(runId)!, status: 'failed' });
@@ -271,15 +265,12 @@ const _handler: FunctionalConceptHandler = {
 
     const apps = findDeployableApps(projectRoot);
     if (apps.length === 0) {
-      return { variant: 'noAppsFound', projectRoot };
+      { let p = createProgram(); p = complete(p, 'noAppsFound', { projectRoot }); return p; }
     }
 
     const kernel = (globalThis as Record<string, unknown>).kernel as Kernel | undefined;
     if (!kernel) {
-      return {
-        variant: 'noAppsFound',
-        projectRoot,
-      };
+      { let p = createProgram(); p = complete(p, 'noAppsFound', { projectRoot }); return p; }
     }
 
     const deployed: string[] = [];
@@ -383,7 +374,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', deployed, urls, failed, configuredApps };
+    { let p = createProgram(); p = complete(p, 'ok', { deployed, urls, failed, configuredApps }); return p; }
   },
 
   status(input: Record<string, unknown>) {
@@ -391,16 +382,13 @@ const _handler: FunctionalConceptHandler = {
     const run = runs.get(runId);
 
     if (!run) {
-      return { variant: 'notfound', run: runId };
+      { let p = createProgram(); p = complete(p, 'notfound', { run: runId }); return p; }
     }
 
-    return {
-      variant: 'ok',
-      run: runId,
+    { let p = createProgram(); p = complete(p, 'ok', { run: runId,
       appName: run.appName,
       status: run.status,
-      deploymentUrl: run.deploymentUrl,
-    };
+      deploymentUrl: run.deploymentUrl }); return p; }
   },
 };
 

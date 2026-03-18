@@ -535,15 +535,12 @@ function assembleAsyncApiDocument(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'AsyncapiTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'AsyncapiTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'AsyncApiSpec',
       capabilities: JSON.stringify(['asyncapi-3.0', 'yaml', 'channels']),
       targetKey: 'asyncapi',
-      providerType: 'spec',
-    };
+      providerType: 'spec' }); return p; }
   },
 
   /**
@@ -565,24 +562,18 @@ const _handler: FunctionalConceptHandler = {
 
     const projectionsRaw = input.allProjections as string;
     if (!projectionsRaw || typeof projectionsRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'allProjections is required and must be a JSON string',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections is required and must be a JSON string' }); return p; }
     }
 
     let projections: Record<string, unknown>[];
     try {
       projections = JSON.parse(projectionsRaw) as Record<string, unknown>[];
     } catch {
-      return { variant: 'error', reason: 'allProjections is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections is not valid JSON' }); return p; }
     }
 
     if (!Array.isArray(projections) || projections.length === 0) {
-      return {
-        variant: 'error',
-        reason: 'allProjections must be a non-empty array',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections must be a non-empty array' }); return p; }
     }
 
     // --- Parse config ---
@@ -628,21 +619,15 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (manifests.length === 0) {
-      return {
-        variant: 'error',
-        reason: 'No valid concept manifests found in projections',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'No valid concept manifests found in projections' }); return p; }
     }
 
     // --- Generate AsyncAPI document ---
 
     const document = assembleAsyncApiDocument(manifests, manifestYaml, config);
 
-    return {
-      variant: 'ok',
-      files: [{ path: 'asyncapi.yaml', content: document }],
-      document,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: 'asyncapi.yaml', content: document }],
+      document }); return p; }
   },
 };
 

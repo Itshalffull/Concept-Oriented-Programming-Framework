@@ -266,13 +266,10 @@ function unquote(s: string): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'RegistryScaffoldGen',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'RegistryScaffoldGen',
       inputKind: 'DeployManifest',
       outputKind: 'KernelRegistry',
-      capabilities: JSON.stringify(['registry-ts', 'boot-code', 'import-map']),
-    };
+      capabilities: JSON.stringify(['registry-ts', 'boot-code', 'import-map']) }); return p; }
   },
 
   generate(input: Record<string, unknown>) {
@@ -281,11 +278,11 @@ const _handler: FunctionalConceptHandler = {
     const language = (input.language as string) || 'typescript';
 
     if (!deployManifestPath) {
-      return { variant: 'error', message: 'deployManifest path is required' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'deployManifest path is required' }); return p; }
     }
 
     if (language !== 'typescript') {
-      return { variant: 'error', message: `Language "${language}" is not yet supported. Only "typescript" is available.` };
+      { let p = createProgram(); p = complete(p, 'error', { message: `Language "${language}" is not yet supported. Only "typescript" is available.` }); return p; }
     }
 
     try {
@@ -294,16 +291,16 @@ const _handler: FunctionalConceptHandler = {
       const { concepts, syncs } = parseDeployManifest(manifestContent);
 
       if (concepts.length === 0) {
-        return { variant: 'error', message: 'No concepts found in deploy manifest' };
+        { let p = createProgram(); p = complete(p, 'error', { message: 'No concepts found in deploy manifest' }); return p; }
       }
 
       const content = generateTypeScript(concepts, syncs, outputPath, projectRoot);
       const files = [{ path: outputPath, content }];
 
-      return { variant: 'ok', files: JSON.stringify(files), filesGenerated: files.length };
+      { let p = createProgram(); p = complete(p, 'ok', { files: JSON.stringify(files), filesGenerated: files.length }); return p; }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
+      { let p = createProgram(); p = complete(p, 'error', { message }); return p; }
     }
   },
 
@@ -311,12 +308,9 @@ const _handler: FunctionalConceptHandler = {
     const result = await registryScaffoldGenHandler.generate!(input, storage);
     if (result.variant === 'error') return result;
     const files = typeof result.files === 'string' ? JSON.parse(result.files) : result.files;
-    return {
-      variant: 'ok',
-      files: result.files,
+    { let p = createProgram(); p = complete(p, 'ok', { files: result.files,
       wouldWrite: Array.isArray(files) ? files.length : 0,
-      wouldSkip: 0,
-    };
+      wouldSkip: 0 }); return p; }
   },
 };
 

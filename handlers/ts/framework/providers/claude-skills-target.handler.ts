@@ -586,15 +586,12 @@ function generateCommandRunner(
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'ClaudeSkillsTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeSkillsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeSkills',
       capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
       targetKey: 'claude-skills',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -622,14 +619,14 @@ const _handler: FunctionalConceptHandler = {
     // --- Single concept path (per-concept mode or called per-concept by generator) ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -640,7 +637,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -767,7 +764,7 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files };
+    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
   },
 };
 

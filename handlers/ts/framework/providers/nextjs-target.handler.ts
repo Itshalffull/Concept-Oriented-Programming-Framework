@@ -294,15 +294,12 @@ function generateServerActionsFile(manifest: ConceptManifest): string {
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    return {
-      variant: 'ok',
-      name: 'NextjsTarget',
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'NextjsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'NextjsRouteFiles',
       capabilities: JSON.stringify(['server-components', 'server-actions', 'app-router', 'fp-ts']),
       targetKey: 'nextjs',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   generate(input: Record<string, unknown>) {
@@ -319,11 +316,11 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = typeof manifestStr === 'string' ? JSON.parse(manifestStr) : manifestStr;
     } catch {
-      return { variant: 'error', message: 'Failed to parse conceptManifest from projection' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Failed to parse conceptManifest from projection' }); return p; }
     }
 
     if (!manifest?.name) {
-      return { variant: 'error', message: 'Projection missing conceptManifest with name' };
+      { let p = createProgram(); p = complete(p, 'error', { message: 'Projection missing conceptManifest with name' }); return p; }
     }
 
     const overrides = typeof input.overrides === 'string'
@@ -362,11 +359,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
-    return { variant: 'ok', route: input.route };
+    { let p = createProgram(); p = complete(p, 'ok', { route: input.route }); return p; }
   },
 
   listRoutes(input: Record<string, unknown>) {
-    return { variant: 'ok', routes: [], methods: [] };
+    { let p = createProgram(); p = complete(p, 'ok', { routes: [], methods: [] }); return p; }
   },
 };
 
