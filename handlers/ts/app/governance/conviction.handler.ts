@@ -74,11 +74,25 @@ const _convictionHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
+        // Check if conviction meets threshold
+        thenP = mapBindings(thenP, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return (record.totalStaked as number) >= (record.threshold as number);
+        }, 'triggered');
+
+        // Write 'Triggered' status if threshold met
+        thenP = putFrom(thenP, 'conviction', proposal as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (bindings.triggered) {
+            return { ...record, status: 'Triggered' };
+          }
+          return record;
+        });
+
         return completeFrom(thenP, 'conviction_update', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const conviction = record.totalStaked as number;
-          const threshold = record.threshold as number;
-          if (conviction >= threshold) {
+          if (bindings.triggered) {
             return { variant: 'triggered', proposal, conviction };
           }
           return { variant: 'updated', proposal, conviction };

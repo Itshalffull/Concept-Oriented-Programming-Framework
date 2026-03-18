@@ -42,18 +42,32 @@ const _chainFinalityHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'finality_check', (bindings) => {
+        // Compute finality status
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const required = record.requiredConfirmations as number;
           const submittedBlock = record.submittedBlock as number;
           const current = (currentBlock as number) ?? submittedBlock;
           const confirmations = Math.max(0, current - submittedBlock);
+          return { confirmations, required, isFinalized: confirmations >= required };
+        }, 'finalityCheck');
 
-          if (confirmations >= required) {
-            return { variant: 'finalized', entry, currentConfirmations: confirmations, required };
+        // Write status if finalized
+        thenP = putFrom(thenP, 'chain_final', entry as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const check = bindings.finalityCheck as { isFinalized: boolean };
+          if (check.isFinalized) {
+            return { ...record, status: 'Finalized' };
           }
+          return record;
+        });
 
-          return { variant: 'pending', entry, currentConfirmations: confirmations, required };
+        return completeFrom(thenP, 'finality_result', (bindings) => {
+          const check = bindings.finalityCheck as { confirmations: number; required: number; isFinalized: boolean };
+          if (check.isFinalized) {
+            return { variant: 'finalized', entry, currentConfirmations: check.confirmations, required: check.required };
+          }
+          return { variant: 'pending', entry, currentConfirmations: check.confirmations, required: check.required };
         });
       },
       (elseP) => complete(elseP, 'not_found', { entry }),

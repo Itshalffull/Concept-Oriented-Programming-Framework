@@ -1,45 +1,81 @@
+// @migrated dsl-constructs 2026-03-18
 // Objective Concept Handler
 // OKR / Balanced Scorecard objective tracking.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const objectiveHandler: ConceptHandler = {
-  async create(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _objectiveHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const id = `objective-${Date.now()}`;
-    await storage.put('objective', id, {
+    let p = createProgram();
+    p = put(p, 'objective', id, {
       id, title: input.title, description: input.description,
       metricRefs: input.metricRefs ?? [],
       targetDate: input.targetDate, owner: input.owner,
       status: 'Active', progress: 0, createdAt: new Date().toISOString(),
     });
-    return { variant: 'created', objective: id };
+    return complete(p, 'created', { objective: id }) as StorageProgram<Result>;
   },
 
-  async updateProgress(input, storage) {
-    const { objective, metricRef, currentValue } = input;
-    const record = await storage.get('objective', objective as string);
-    if (!record) return { variant: 'not_found', objective };
-    await storage.put('objective', objective as string, { ...record, progress: currentValue, updatedAt: new Date().toISOString() });
-    return { variant: 'updated', objective, progress: currentValue };
+  updateProgress(input: Record<string, unknown>) {
+    const { objective, currentValue } = input;
+    let p = createProgram();
+    p = get(p, 'objective', objective as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'objective', objective as string, { progress: currentValue, updatedAt: new Date().toISOString() });
+        return complete(b2, 'updated', { objective, progress: currentValue });
+      },
+      (b) => complete(b, 'not_found', { objective }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const { objective } = input;
-    const record = await storage.get('objective', objective as string);
-    if (!record) return { variant: 'not_found', objective };
-    // Stub: real impl evaluates progress against target
-    const achieved = (record.progress as number) >= 100;
-    const newStatus = achieved ? 'Achieved' : 'Missed';
-    await storage.put('objective', objective as string, { ...record, status: newStatus });
-    return achieved
-      ? { variant: 'achieved', objective }
-      : { variant: 'missed', objective, progress: record.progress };
+    let p = createProgram();
+    p = get(p, 'objective', objective as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'achieved', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const achieved = (record.progress as number) >= 100;
+          if (achieved) {
+            return { variant: 'achieved', objective };
+          }
+          return { variant: 'missed', objective, progress: record.progress };
+        });
+      },
+      (b) => complete(b, 'not_found', { objective }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async cancel(input, storage) {
+  cancel(input: Record<string, unknown>) {
     const { objective, reason } = input;
-    const record = await storage.get('objective', objective as string);
-    if (!record) return { variant: 'not_found', objective };
-    await storage.put('objective', objective as string, { ...record, status: 'Cancelled', cancelReason: reason });
-    return { variant: 'cancelled', objective };
+    let p = createProgram();
+    p = get(p, 'objective', objective as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'objective', objective as string, { status: 'Cancelled', cancelReason: reason });
+        return complete(b2, 'cancelled', { objective });
+      },
+      (b) => complete(b, 'not_found', { objective }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const objectiveHandler = autoInterpret(_objectiveHandler);

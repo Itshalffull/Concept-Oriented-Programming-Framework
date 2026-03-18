@@ -1,14 +1,23 @@
+// @migrated dsl-constructs 2026-03-18
 // OptimisticOracleFinality Provider
 // Optimistic finality with assertion, challenge window, bond, and dispute resolution.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const optimisticOracleFinalityHandler: ConceptHandler = {
-  async assertFinality(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _optimisticOracleFinalityHandler: FunctionalConceptHandler = {
+  assertFinality(input: Record<string, unknown>) {
     const id = `oo-${Date.now()}`;
     const challengeWindowHours = (input.challengeWindowHours as number) ?? 24;
     const expiresAt = new Date(Date.now() + challengeWindowHours * 3600000).toISOString();
+    let p = createProgram();
 
-    await storage.put('oo_final', id, {
+    p = put(p, 'oo_final', id, {
       id,
       operationRef: input.operationRef,
       asserter: input.asserter,
@@ -20,90 +29,93 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       challengeBond: null,
     });
 
-    await storage.put('plugin-registry', `finality-provider:${id}`, {
+    p = put(p, 'plugin-registry', `finality-provider:${id}`, {
       id: `finality-provider:${id}`,
       pluginKind: 'finality-provider',
       provider: 'OptimisticOracleFinality',
       instanceId: id,
     });
 
-    return { variant: 'asserted', assertion: id };
+    return complete(p, 'asserted', { assertion: id }) as StorageProgram<Result>;
   },
 
-  async challenge(input, storage) {
+  challenge(input: Record<string, unknown>) {
     const { assertion, challenger, bond } = input;
-    const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
-    if (record.status !== 'Pending') return { variant: 'not_pending', assertion, status: record.status };
+    let p = createProgram();
+    p = get(p, 'oo_final', assertion as string, 'record');
 
-    await storage.put('oo_final', assertion as string, {
-      ...record,
-      status: 'Challenged',
-      challenger,
-      challengeBond: bond ?? record.bond,
-      challengedAt: new Date().toISOString(),
-    });
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'challenged', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (record.status !== 'Pending') {
+            return { variant: 'not_pending', assertion, status: record.status };
+          }
+          return { variant: 'challenged', assertion };
+        });
+      },
+      (b) => complete(b, 'not_found', { assertion }),
+    );
 
-    return { variant: 'challenged', assertion };
+    return p as StorageProgram<Result>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const { assertion, validAssertion } = input;
-    const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
+    let p = createProgram();
+    p = get(p, 'oo_final', assertion as string, 'record');
 
-    if (validAssertion) {
-      // Asserter wins: gets their bond back + challenger's bond
-      await storage.put('oo_final', assertion as string, {
-        ...record,
-        status: 'Finalized',
-        resolvedAt: new Date().toISOString(),
-        bondRecipient: record.asserter,
-      });
-      return {
-        variant: 'finalized', assertion,
-        bondRecipient: record.asserter,
-        totalBond: (record.bond as number) + ((record.challengeBond as number) ?? 0),
-      };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'finalized', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (validAssertion) {
+            return {
+              variant: 'finalized', assertion,
+              bondRecipient: record.asserter,
+              totalBond: (record.bond as number) + ((record.challengeBond as number) ?? 0),
+            };
+          }
+          return {
+            variant: 'rejected', assertion,
+            bondRecipient: record.challenger,
+            totalBond: (record.bond as number) + ((record.challengeBond as number) ?? 0),
+          };
+        });
+      },
+      (b) => complete(b, 'not_found', { assertion }),
+    );
 
-    // Challenger wins: gets their bond back + asserter's bond
-    await storage.put('oo_final', assertion as string, {
-      ...record,
-      status: 'Rejected',
-      resolvedAt: new Date().toISOString(),
-      bondRecipient: record.challenger,
-    });
-    return {
-      variant: 'rejected', assertion,
-      bondRecipient: record.challenger,
-      totalBond: (record.bond as number) + ((record.challengeBond as number) ?? 0),
-    };
+    return p as StorageProgram<Result>;
   },
 
-  async checkExpiry(input, storage) {
+  checkExpiry(input: Record<string, unknown>) {
     const { assertion } = input;
-    const record = await storage.get('oo_final', assertion as string);
-    if (!record) return { variant: 'not_found', assertion };
+    let p = createProgram();
+    p = get(p, 'oo_final', assertion as string, 'record');
 
-    if (record.status !== 'Pending') {
-      return { variant: record.status as string, assertion };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'still_pending', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          if (record.status !== 'Pending') {
+            return { variant: record.status as string, assertion };
+          }
+          const expiresAt = new Date(record.expiresAt as string).getTime();
+          const now = Date.now();
+          if (now >= expiresAt) {
+            return { variant: 'finalized', assertion };
+          }
+          const remainingMs = expiresAt - now;
+          const remainingHours = remainingMs / 3600000;
+          return { variant: 'still_pending', assertion, remainingHours };
+        });
+      },
+      (b) => complete(b, 'not_found', { assertion }),
+    );
 
-    const expiresAt = new Date(record.expiresAt as string).getTime();
-    const now = Date.now();
-
-    if (now >= expiresAt) {
-      await storage.put('oo_final', assertion as string, {
-        ...record,
-        status: 'Finalized',
-        resolvedAt: new Date().toISOString(),
-      });
-      return { variant: 'finalized', assertion };
-    }
-
-    const remainingMs = expiresAt - now;
-    const remainingHours = remainingMs / 3600000;
-    return { variant: 'still_pending', assertion, remainingHours };
+    return p as StorageProgram<Result>;
   },
 };
+
+export const optimisticOracleFinalityHandler = autoInterpret(_optimisticOracleFinalityHandler);

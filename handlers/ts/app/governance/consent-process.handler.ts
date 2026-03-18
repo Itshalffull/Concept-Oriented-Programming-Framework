@@ -49,23 +49,43 @@ const _consentProcessHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'advanced', (bindings) => {
+        // Compute next phase or error condition
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const currentPhase = record.phase as Phase;
 
-          // Cannot advance past Objecting if unresolved objections exist
           if (currentPhase === 'Objecting') {
             const objections = JSON.parse(record.objections as string) as Array<{ resolved: boolean }>;
             const unresolved = objections.filter(o => !o.resolved);
             if (unresolved.length > 0) {
-              return { variant: 'unresolved_objections', round, count: unresolved.length };
+              return { status: 'blocked', count: unresolved.length };
             }
           }
 
           const next = nextPhase(currentPhase);
-          if (!next) return { variant: 'already_final', round, phase: currentPhase };
+          if (!next) return { status: 'final', phase: currentPhase };
+          return { status: 'ok', phase: next };
+        }, 'advance');
 
-          return { variant: 'advanced', round, phase: next };
+        // Write updated phase if advancing
+        thenP = putFrom(thenP, 'consent', round as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const advance = bindings.advance as { status: string; phase?: string };
+          if (advance.status === 'ok') {
+            return { ...record, phase: advance.phase };
+          }
+          return record;
+        });
+
+        return completeFrom(thenP, 'advance_result', (bindings) => {
+          const advance = bindings.advance as { status: string; phase?: string; count?: number };
+          if (advance.status === 'blocked') {
+            return { variant: 'unresolved_objections', round, count: advance.count };
+          }
+          if (advance.status === 'final') {
+            return { variant: 'already_final', round, phase: advance.phase };
+          }
+          return { variant: 'advanced', round, phase: advance.phase };
         });
       },
       (elseP) => complete(elseP, 'not_found', { round }),
@@ -79,16 +99,35 @@ const _consentProcessHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'objection_raised', (bindings) => {
+        // Check phase validity
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const phase = record.phase as Phase;
-          if (phase !== 'Objecting' && phase !== 'Reacting') {
-            return { variant: 'wrong_phase', round, phase };
-          }
+          return (phase === 'Objecting' || phase === 'Reacting');
+        }, 'validPhase');
 
-          const objId = `obj-${Date.now()}`;
-          return { variant: 'objection_raised', round, objectionId: objId };
-        });
+        return branch(thenP, 'validPhase',
+          (validP) => {
+            const objId = `obj-${Date.now()}`;
+            validP = putFrom(validP, 'consent', round as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const objections = JSON.parse(record.objections as string) as unknown[];
+              objections.push({ id: objId, raiser, text: objection, resolved: false });
+              return {
+                ...record,
+                phase: 'Objecting',
+                objections: JSON.stringify(objections),
+              };
+            });
+            return complete(validP, 'objection_raised', { round, objectionId: objId });
+          },
+          (invalidP) => {
+            return completeFrom(invalidP, 'wrong_phase', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { variant: 'wrong_phase', round, phase: record.phase };
+            });
+          },
+        );
       },
       (elseP) => complete(elseP, 'not_found', { round }),
     ) as StorageProgram<Result>;
@@ -101,14 +140,35 @@ const _consentProcessHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'objection_resolved', (bindings) => {
+        // Check if objection exists
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const objections = JSON.parse(record.objections as string) as Array<{ id: string; resolved: boolean; resolution?: string }>;
-          const target = objections.find(o => o.id === objection);
-          if (!target) return { variant: 'objection_not_found', round, objection };
+          const objections = JSON.parse(record.objections as string) as Array<{ id: string }>;
+          return objections.some(o => o.id === objection);
+        }, 'objFound');
 
-          return { variant: 'objection_resolved', round };
-        });
+        return branch(thenP, 'objFound',
+          (foundP) => {
+            foundP = putFrom(foundP, 'consent', round as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const objections = JSON.parse(record.objections as string) as Array<{ id: string; resolved: boolean; resolution?: string }>;
+              const target = objections.find(o => o.id === objection)!;
+              target.resolved = true;
+              target.resolution = resolution as string;
+
+              const amendments = JSON.parse(record.amendments as string) as unknown[];
+              amendments.push({ objectionId: objection, resolution, appliedAt: new Date().toISOString() });
+
+              return {
+                ...record,
+                objections: JSON.stringify(objections),
+                amendments: JSON.stringify(amendments),
+              };
+            });
+            return complete(foundP, 'objection_resolved', { round });
+          },
+          (notFoundP) => complete(notFoundP, 'objection_not_found', { round, objection }),
+        );
       },
       (elseP) => complete(elseP, 'not_found', { round }),
     ) as StorageProgram<Result>;
@@ -121,16 +181,32 @@ const _consentProcessHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'consented', (bindings) => {
+        // Check for unresolved objections
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const objections = JSON.parse(record.objections as string) as Array<{ resolved: boolean }>;
           const unresolved = objections.filter(o => !o.resolved);
-          if (unresolved.length > 0) {
-            return { variant: 'unresolved_objections', round, count: unresolved.length };
-          }
+          return unresolved.length;
+        }, 'unresolvedCount');
 
-          return { variant: 'consented', round, amendments: record.amendments };
-        });
+        return branch(thenP,
+          (bindings) => (bindings.unresolvedCount as number) === 0,
+          (okP) => {
+            okP = putFrom(okP, 'consent', round as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, phase: 'Consented' };
+            });
+            return completeFrom(okP, 'consented', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { variant: 'consented', round, amendments: record.amendments };
+            });
+          },
+          (blockedP) => {
+            return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
+              return { variant: 'unresolved_objections', round, count: bindings.unresolvedCount };
+            });
+          },
+        );
       },
       (elseP) => complete(elseP, 'not_found', { round }),
     ) as StorageProgram<Result>;

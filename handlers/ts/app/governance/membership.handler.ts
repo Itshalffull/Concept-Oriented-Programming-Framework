@@ -1,52 +1,103 @@
+// @migrated dsl-constructs 2026-03-18
 // Membership Concept Handler
 // Manage members joining, leaving, and participating in a governed polity.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const membershipHandler: ConceptHandler = {
-  async join(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _membershipHandler: FunctionalConceptHandler = {
+  join(input: Record<string, unknown>) {
     const member = input.member as string;
     const polity = input.polity as string;
-    const existing = await storage.get('member', member);
-    if (existing) return { variant: 'already_member', member };
-    await storage.put('member', member, { member, polity, status: 'Active', joinedAt: new Date().toISOString() });
-    return { variant: 'joined', membership: member };
+    let p = createProgram();
+    p = get(p, 'member', member, 'existing');
+
+    p = branch(p, 'existing',
+      (b) => complete(b, 'already_member', { member }),
+      (b) => {
+        let b2 = put(b, 'member', member, { member, polity, status: 'Active', joinedAt: new Date().toISOString() });
+        return complete(b2, 'joined', { membership: member });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async leave(input, storage) {
+  leave(input: Record<string, unknown>) {
     const member = input.member as string;
-    const record = await storage.get('member', member);
-    if (!record) return { variant: 'not_found', member };
-    await storage.del('member', member);
-    return { variant: 'left', member };
+    let p = createProgram();
+    p = get(p, 'member', member, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'member', member);
+        return complete(b2, 'left', { member });
+      },
+      (b) => complete(b, 'not_found', { member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async suspend(input, storage) {
+  suspend(input: Record<string, unknown>) {
     const member = input.member as string;
-    const record = await storage.get('member', member);
-    if (!record) return { variant: 'not_found', member };
-    await storage.put('member', member, { ...record, status: 'Suspended', suspendedUntil: input.until });
-    return { variant: 'suspended', member };
+    let p = createProgram();
+    p = get(p, 'member', member, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'member', member, { ...(input as Record<string, unknown>), status: 'Suspended', suspendedUntil: input.until });
+        return complete(b2, 'suspended', { member });
+      },
+      (b) => complete(b, 'not_found', { member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async reinstate(input, storage) {
+  reinstate(input: Record<string, unknown>) {
     const member = input.member as string;
-    const record = await storage.get('member', member);
-    if (!record) return { variant: 'not_found', member };
-    await storage.put('member', member, { ...record, status: 'Active', suspendedUntil: null });
-    return { variant: 'reinstated', member };
+    let p = createProgram();
+    p = get(p, 'member', member, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'member', member, { status: 'Active', suspendedUntil: null });
+        return complete(b2, 'reinstated', { member });
+      },
+      (b) => complete(b, 'not_found', { member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async kick(input, storage) {
+  kick(input: Record<string, unknown>) {
     const member = input.member as string;
-    const record = await storage.get('member', member);
-    if (!record) return { variant: 'not_found', member };
-    await storage.del('member', member);
-    return { variant: 'kicked', member };
+    let p = createProgram();
+    p = get(p, 'member', member, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'member', member);
+        return complete(b2, 'kicked', { member });
+      },
+      (b) => complete(b, 'not_found', { member }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async updateRules(input, storage) {
+  updateRules(input: Record<string, unknown>) {
     const polity = input.polity as string;
-    await storage.put('rules', polity, { joinConditions: input.joinConditions, exitConditions: input.exitConditions });
-    return { variant: 'updated', polity };
+    let p = createProgram();
+    p = put(p, 'rules', polity, { joinConditions: input.joinConditions, exitConditions: input.exitConditions });
+    return complete(p, 'updated', { polity }) as StorageProgram<Result>;
   },
 };
+
+export const membershipHandler = autoInterpret(_membershipHandler);
