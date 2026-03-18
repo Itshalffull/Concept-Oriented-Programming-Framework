@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ThemeImplementationEntity Concept Implementation
 //
 // Queryable representation of generated theme implementation files.
@@ -7,11 +8,18 @@
 // token resolution tracing from component styling to theme spec
 // declarations.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const themeImplementationEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const platform = input.platform as string;
     const sourceFile = input.sourceFile as string;
@@ -42,7 +50,7 @@ export const themeImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const platform = input.platform as string;
 
@@ -54,7 +62,7 @@ export const themeImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: entry.id };
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
     const sourceFile = input.sourceFile as string;
 
     const all = await storage.find('theme-implementations');
@@ -66,21 +74,21 @@ export const themeImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: entry.id };
   },
 
-  async findByTheme(input, storage) {
+  findByTheme(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const all = await storage.find('theme-implementations', { theme });
 
     return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  async findByPlatform(input, storage) {
+  findByPlatform(input: Record<string, unknown>) {
     const platform = input.platform as string;
     const all = await storage.find('theme-implementations', { platform });
 
     return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  async resolveToken(input, storage) {
+  resolveToken(input: Record<string, unknown>) {
     const implId = input.impl as string;
     const tokenPath = input.tokenPath as string;
 
@@ -104,7 +112,7 @@ export const themeImplementationEntityHandler: ConceptHandler = {
     };
   },
 
-  async diffFromSpec(input, storage) {
+  diffFromSpec(input: Record<string, unknown>) {
     const implId = input.impl as string;
 
     const all = await storage.find('theme-implementations');
@@ -117,3 +125,5 @@ export const themeImplementationEntityHandler: ConceptHandler = {
     return { variant: 'inSync' };
   },
 };
+
+export const themeImplementationEntityHandler = autoInterpret(_handler);

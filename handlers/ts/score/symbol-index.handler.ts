@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SymbolIndex Handler
 //
@@ -6,7 +7,12 @@
 // symbol resolution and lookup.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(): string {
@@ -15,8 +21,10 @@ function nextId(): string {
 
 export function resetCounter(): void { counter = 0; }
 
-export const symbolIndexHandler: ConceptHandler = {
-  async initialize(_input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
     await storage.put('symbol-index', id, {
       id,
@@ -26,3 +34,5 @@ export const symbolIndexHandler: ConceptHandler = {
     return { variant: 'ok', instance: id };
   },
 };
+
+export const symbolIndexHandler = autoInterpret(_handler);

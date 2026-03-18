@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // InfrastructureEntity Concept Implementation
 //
 // Queryable representation of storage and transport adapter
@@ -6,11 +7,18 @@
 // runtimes. Enables infrastructure topology queries and shared
 // backend analysis.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const infrastructureEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const kind = input.kind as string;
     const sourceFile = input.sourceFile as string;
@@ -42,7 +50,7 @@ export const infrastructureEntityHandler: ConceptHandler = {
     return { variant: 'ok', adapter: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
     const kind = input.kind as string;
 
@@ -54,14 +62,14 @@ export const infrastructureEntityHandler: ConceptHandler = {
     return { variant: 'ok', adapter: entry.id };
   },
 
-  async findByBackend(input, storage) {
+  findByBackend(input: Record<string, unknown>) {
     const backend = input.backend as string;
     const all = await storage.find('infrastructure', { backend });
 
     return { variant: 'ok', adapters: JSON.stringify(all) };
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const all = await storage.find('infrastructure');
 
@@ -79,14 +87,14 @@ export const infrastructureEntityHandler: ConceptHandler = {
     return { variant: 'ok', adapters: JSON.stringify(result) };
   },
 
-  async findByRuntime(input, storage) {
+  findByRuntime(input: Record<string, unknown>) {
     const runtime = input.runtime as string;
     const all = await storage.find('infrastructure', { boundRuntime: runtime });
 
     return { variant: 'ok', adapters: JSON.stringify(all) };
   },
 
-  async sharedBackends(_input, storage) {
+  sharedBackends(_input: Record<string, unknown>) {
     const all = await storage.find('infrastructure');
 
     const backendMap = new Map<string, Array<{ adapter: string; kind: string; concepts: string[] }>>();
@@ -118,7 +126,7 @@ export const infrastructureEntityHandler: ConceptHandler = {
     return { variant: 'ok', groups: JSON.stringify(groups) };
   },
 
-  async networkTopology(_input, storage) {
+  networkTopology(_input: Record<string, unknown>) {
     const all = await storage.find('infrastructure', { kind: 'transport' });
 
     const runtimes = new Set<string>();
@@ -147,3 +155,5 @@ export const infrastructureEntityHandler: ConceptHandler = {
     return { variant: 'ok', graph: JSON.stringify({ nodes, edges }) };
   },
 };
+
+export const infrastructureEntityHandler = autoInterpret(_handler);

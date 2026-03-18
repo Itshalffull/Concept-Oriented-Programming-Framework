@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // EnvironmentEntity Concept Implementation
 //
 // Queryable representation of environment configuration, secret
@@ -5,11 +6,18 @@
 // Enables cross-environment comparison, secret auditing, and
 // feature flag management queries.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const environmentEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const environment = input.environment as string;
     const kind = input.kind as string;
@@ -42,7 +50,7 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', entry: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
     const environment = input.environment as string;
 
@@ -54,7 +62,7 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', entry: entry.id };
   },
 
-  async findByEnvironment(input, storage) {
+  findByEnvironment(input: Record<string, unknown>) {
     const environment = input.environment as string;
     const all = await storage.find('environment-entries', { environment });
 
@@ -70,21 +78,21 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', entries: JSON.stringify(entries) };
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const all = await storage.find('environment-entries', { boundConcept: concept });
 
     return { variant: 'ok', entries: JSON.stringify(all) };
   },
 
-  async findByRuntime(input, storage) {
+  findByRuntime(input: Record<string, unknown>) {
     const runtime = input.runtime as string;
     const all = await storage.find('environment-entries', { boundRuntime: runtime });
 
     return { variant: 'ok', entries: JSON.stringify(all) };
   },
 
-  async diffEnvironments(input, storage) {
+  diffEnvironments(input: Record<string, unknown>) {
     const envA = input.envA as string;
     const envB = input.envB as string;
 
@@ -145,7 +153,7 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', differences: JSON.stringify(differences) };
   },
 
-  async secretsAudit(input, storage) {
+  secretsAudit(input: Record<string, unknown>) {
     const environment = input.environment as string;
     const all = await storage.find('environment-entries', { environment });
     const secrets = all.filter(e => e.kind === 'secret');
@@ -160,7 +168,7 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', secrets: JSON.stringify(result) };
   },
 
-  async featureFlags(input, storage) {
+  featureFlags(input: Record<string, unknown>) {
     const environment = input.environment as string;
     const all = await storage.find('environment-entries', { environment });
     const flags = all.filter(e => e.kind === 'feature-flag');
@@ -174,3 +182,5 @@ export const environmentEntityHandler: ConceptHandler = {
     return { variant: 'ok', flags: JSON.stringify(result) };
   },
 };
+
+export const environmentEntityHandler = autoInterpret(_handler);

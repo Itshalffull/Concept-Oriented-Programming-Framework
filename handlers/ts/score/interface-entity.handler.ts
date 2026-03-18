@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // InterfaceEntity Concept Implementation
 //
 // Queryable representation of parsed interface manifests (interface.yaml)
@@ -5,11 +6,18 @@
 // generated from them. Bridges concept specs and their external-facing
 // interfaces for provenance tracing and exposure analysis.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const interfaceEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
@@ -40,7 +48,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', interface: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
 
     const entry = await storage.get('interfaces', `interface:${name}`);
@@ -51,7 +59,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', interface: entry.id };
   },
 
-  async listEndpoints(input, storage) {
+  listEndpoints(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
     const target = input.target as string;
 
@@ -69,7 +77,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', endpoints: JSON.stringify(filtered) };
   },
 
-  async listCommands(input, storage) {
+  listCommands(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
 
     const all = await storage.find('interfaces');
@@ -81,7 +89,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', commands: entry.generatedCommands as string || '[]' };
   },
 
-  async listTools(input, storage) {
+  listTools(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
 
     const all = await storage.find('interfaces');
@@ -93,7 +101,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', tools: entry.generatedTools as string || '[]' };
   },
 
-  async listSkills(input, storage) {
+  listSkills(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
 
     const all = await storage.find('interfaces');
@@ -109,7 +117,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', skills: JSON.stringify(skills) };
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const all = await storage.find('interfaces');
 
@@ -157,7 +165,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', exposures: JSON.stringify(exposures) };
   },
 
-  async findByAction(input, storage) {
+  findByAction(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const action = input.action as string;
     const all = await storage.find('interfaces');
@@ -206,7 +214,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', exposures: JSON.stringify(exposures) };
   },
 
-  async traceEndpointToAction(input, storage) {
+  traceEndpointToAction(input: Record<string, unknown>) {
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
@@ -233,7 +241,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'notfound' };
   },
 
-  async traceToolToAction(input, storage) {
+  traceToolToAction(input: Record<string, unknown>) {
     const toolName = input.toolName as string;
 
     const all = await storage.find('interfaces');
@@ -255,7 +263,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'notfound' };
   },
 
-  async generatedSchemas(input, storage) {
+  generatedSchemas(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
 
     const all = await storage.find('interfaces');
@@ -267,7 +275,7 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', schemas: entry.generatedSchemas as string || '[]' };
   },
 
-  async validateAgainstSpecs(input, storage) {
+  validateAgainstSpecs(input: Record<string, unknown>) {
     const interfaceId = input.interface as string;
 
     const all = await storage.find('interfaces');
@@ -280,3 +288,5 @@ export const interfaceEntityHandler: ConceptHandler = {
     return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
   },
 };
+
+export const interfaceEntityHandler = autoInterpret(_handler);

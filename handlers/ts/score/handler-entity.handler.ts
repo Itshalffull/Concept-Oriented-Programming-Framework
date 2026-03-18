@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // HandlerEntity Concept Implementation
 //
 // Queryable representation of concept handler implementation files.
@@ -5,11 +6,18 @@
 // dependencies, and runtime behavior. Enables stack trace correlation,
 // error root-cause analysis, and implementation coverage tracking.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const handlerEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const sourceFile = input.sourceFile as string;
     const language = input.language as string;
@@ -47,7 +55,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', handler: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const language = input.language as string;
 
@@ -59,7 +67,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', handler: entry.id };
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
     const sourceFile = input.sourceFile as string;
 
     const all = await storage.find('handlers');
@@ -71,21 +79,21 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', handler: entry.id };
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const all = await storage.find('handlers', { concept });
 
     return { variant: 'ok', handlers: JSON.stringify(all) };
   },
 
-  async findByLanguage(input, storage) {
+  findByLanguage(input: Record<string, unknown>) {
     const language = input.language as string;
     const all = await storage.find('handlers', { language });
 
     return { variant: 'ok', handlers: JSON.stringify(all) };
   },
 
-  async getActionMethod(input, storage) {
+  getActionMethod(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
@@ -104,7 +112,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', method: JSON.stringify(method) };
   },
 
-  async implementationGaps(input, storage) {
+  implementationGaps(input: Record<string, unknown>) {
     const concept = input.concept as string;
 
     const handlers = await storage.find('handlers', { concept });
@@ -120,7 +128,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'fullyImplemented', actionCount: methods.length };
   },
 
-  async getDependencies(input, storage) {
+  getDependencies(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
 
     const all = await storage.find('handlers');
@@ -141,7 +149,7 @@ export const handlerEntityHandler: ConceptHandler = {
     };
   },
 
-  async getStorageUsage(input, storage) {
+  getStorageUsage(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
 
     const all = await storage.find('handlers');
@@ -153,7 +161,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', collections: entry.storageCollections as string || '[]' };
   },
 
-  async resolveStackFrame(input, storage) {
+  resolveStackFrame(input: Record<string, unknown>) {
     const file = input.file as string;
     const line = input.line as number;
     const col = input.col as number;
@@ -186,7 +194,7 @@ export const handlerEntityHandler: ConceptHandler = {
     };
   },
 
-  async resolveToAstNode(input, storage) {
+  resolveToAstNode(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
     const line = input.line as number;
     const col = input.col as number;
@@ -220,7 +228,7 @@ export const handlerEntityHandler: ConceptHandler = {
     };
   },
 
-  async resolveStackTrace(input, storage) {
+  resolveStackTrace(input: Record<string, unknown>) {
     const stackTrace = input.stackTrace as string;
 
     // Parse stack trace lines to extract file:line:col
@@ -252,7 +260,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', frames: JSON.stringify(frames) };
   },
 
-  async traceToVariantReturn(input, storage) {
+  traceToVariantReturn(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
@@ -266,7 +274,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', returns: '[]' };
   },
 
-  async traceToStorageCalls(input, storage) {
+  traceToStorageCalls(input: Record<string, unknown>) {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
@@ -280,7 +288,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', calls: '[]' };
   },
 
-  async findByError(input, storage) {
+  findByError(input: Record<string, unknown>) {
     const errorSymbol = input.errorSymbol as string;
     const since = input.since as string;
 
@@ -290,7 +298,7 @@ export const handlerEntityHandler: ConceptHandler = {
     return { variant: 'ok', handlers: JSON.stringify([]) };
   },
 
-  async sourceForAction(input, storage) {
+  sourceForAction(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const actionName = input.actionName as string;
 
@@ -315,3 +323,5 @@ export const handlerEntityHandler: ConceptHandler = {
     };
   },
 };
+
+export const handlerEntityHandler = autoInterpret(_handler);

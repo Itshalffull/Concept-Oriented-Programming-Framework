@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConnectorEntity Handler (Score Layer)
 //
@@ -8,15 +9,22 @@
 // connectors" or "trace connections between items".
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `connector-entity-${++idCounter}`;
 }
 
-export const connectorEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const connectorId = input.connector_id as string;
     const canvasId = input.canvas_id as string;
 
@@ -46,7 +54,7 @@ export const connectorEntityHandler: ConceptHandler = {
     return { variant: 'ok', id, symbol };
   },
 
-  async updateKind(input: Record<string, unknown>, storage: ConceptStorage) {
+  updateKind(input: Record<string, unknown>) {
     const connectorId = input.connector_id as string;
     const kind = input.kind as string;
 
@@ -64,7 +72,7 @@ export const connectorEntityHandler: ConceptHandler = {
     return { variant: 'ok', connector_id: connectorId, kind };
   },
 
-  async listByCanvas(input: Record<string, unknown>, storage: ConceptStorage) {
+  listByCanvas(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
     const connectors = await storage.find('canvas-connector-entity', { canvas_id: canvasId });
     return {
@@ -81,7 +89,7 @@ export const connectorEntityHandler: ConceptHandler = {
     };
   },
 
-  async listByKind(input: Record<string, unknown>, storage: ConceptStorage) {
+  listByKind(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const canvasId = (input.canvas_id as string | undefined);
 
@@ -104,7 +112,7 @@ export const connectorEntityHandler: ConceptHandler = {
     };
   },
 
-  async getConnectionsBetween(input: Record<string, unknown>, storage: ConceptStorage) {
+  getConnectionsBetween(input: Record<string, unknown>) {
     const itemA = input.item_a as string;
     const itemB = input.item_b as string;
 
@@ -128,6 +136,8 @@ export const connectorEntityHandler: ConceptHandler = {
     };
   },
 };
+
+export const connectorEntityHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetConnectorEntityCounter(): void {

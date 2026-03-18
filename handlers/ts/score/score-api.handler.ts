@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ScoreApi Concept Implementation
 //
 // Unified facade over the five Score suites providing a single
@@ -9,7 +10,12 @@
 // and to the underlying Score suite concepts for complex queries
 // (dependence graph traversal, data flow analysis, embeddings).
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { getScoreKernel } from './score-kernel.handler.js';
 
 // ─── Kernel Dispatch ────────────────────────────────────
@@ -112,11 +118,13 @@ function buildTreeFromPaths(paths: string[], rootPath: string, maxDepth: number)
 
 // ─── ScoreApi Handler ────────────────────────────────────
 
-export const scoreApiHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
 
   // ─── Structural Queries (Parse Layer) ─────────────────
 
-  async listFiles(input, storage) {
+  listFiles(input: Record<string, unknown>) {
     const pattern = (input.pattern as string) || '*';
     const allFiles = await storage.find('files');
 
@@ -136,7 +144,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', files };
   },
 
-  async getFileTree(input, storage) {
+  getFileTree(input: Record<string, unknown>) {
     const path = (input.path as string) || '.';
     const depth = (input.depth as number) || 0;
 
@@ -152,7 +160,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', tree, fileCount, dirCount };
   },
 
-  async getFileContent(input, storage) {
+  getFileContent(input: Record<string, unknown>) {
     const path = input.path as string;
     if (!path) {
       return { variant: 'notFound', path: '' };
@@ -176,7 +184,7 @@ export const scoreApiHandler: ConceptHandler = {
     };
   },
 
-  async getDefinitions(input, storage) {
+  getDefinitions(input: Record<string, unknown>) {
     const path = input.path as string;
     if (!path) {
       return { variant: 'notFound', path: '' };
@@ -197,7 +205,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', definitions };
   },
 
-  async matchPattern(input, storage) {
+  matchPattern(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
     const language = input.language as string;
 
@@ -232,7 +240,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Symbol Queries (Symbol Layer) ────────────────────
 
-  async findSymbol(input, storage) {
+  findSymbol(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
       return { variant: 'notFound', name: '' };
@@ -258,7 +266,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', symbols };
   },
 
-  async getReferences(input, storage) {
+  getReferences(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
       return { variant: 'notFound', symbol: '' };
@@ -288,7 +296,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', definition, references };
   },
 
-  async getScope(input, storage) {
+  getScope(input: Record<string, unknown>) {
     const file = input.file as string;
     const line = input.line as number;
 
@@ -322,7 +330,7 @@ export const scoreApiHandler: ConceptHandler = {
     };
   },
 
-  async getRelationships(input, storage) {
+  getRelationships(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
       return { variant: 'notFound', symbol: '' };
@@ -357,7 +365,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Semantic Queries (Semantic Layer) ────────────────
 
-  async listConcepts(_input, storage) {
+  listConcepts(_input: Record<string, unknown>) {
     const allConcepts = await storage.find('concepts');
 
     const concepts = allConcepts.map(c => ({
@@ -371,7 +379,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', concepts };
   },
 
-  async getConcept(input, storage) {
+  getConcept(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
       return { variant: 'notFound', name: '' };
@@ -403,7 +411,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', concept };
   },
 
-  async getAction(input, storage) {
+  getAction(input: Record<string, unknown>) {
     const conceptName = input.concept as string;
     const actionName = input.action as string;
 
@@ -441,7 +449,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', action };
   },
 
-  async listSyncs(_input, storage) {
+  listSyncs(_input: Record<string, unknown>) {
     const allSyncs = await storage.find('syncs');
 
     const syncs = allSyncs.map(s => ({
@@ -455,7 +463,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', syncs };
   },
 
-  async getSync(input, storage) {
+  getSync(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
       return { variant: 'notFound', name: '' };
@@ -478,7 +486,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', sync };
   },
 
-  async getFlow(input, storage) {
+  getFlow(input: Record<string, unknown>) {
     const startConcept = input.startConcept as string;
     const startAction = input.startAction as string;
 
@@ -531,7 +539,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Analysis Queries (Analysis Layer) ────────────────
 
-  async getDependencies(input, _storage) {
+  getDependencies(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
       return { variant: 'notFound', symbol: '' };
@@ -556,7 +564,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', directDeps: [], transitiveDeps: [] };
   },
 
-  async getDependents(input, _storage) {
+  getDependents(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
       return { variant: 'notFound', symbol: '' };
@@ -581,7 +589,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', directDeps: [], transitiveDeps: [] };
   },
 
-  async getImpact(input, _storage) {
+  getImpact(input: Record<string, unknown>) {
     const file = input.file as string;
     if (!file) {
       return { variant: 'notFound', file: '' };
@@ -605,7 +613,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', directImpact: [], transitiveImpact: [] };
   },
 
-  async getDataFlow(input, _storage) {
+  getDataFlow(input: Record<string, unknown>) {
     const from = input.from as string;
     const to = input.to as string;
 
@@ -630,7 +638,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Discovery Queries (Discovery Layer) ──────────────
 
-  async search(input, storage) {
+  search(input: Record<string, unknown>) {
     const query = (input.query as string) || '';
     const limit = (input.limit as number) || 20;
 
@@ -702,7 +710,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', results: limited };
   },
 
-  async explain(input, storage) {
+  explain(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     if (!symbol) {
       return { variant: 'notFound', symbol: '' };
@@ -769,7 +777,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Implementation Queries ─────────────────────────────
 
-  async implementationGaps(_input, storage) {
+  implementationGaps(_input: Record<string, unknown>) {
     const allConcepts = await storage.find('concepts');
     const allHandlers = await storage.find('handlers');
 
@@ -820,7 +828,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', gaps };
   },
 
-  async resolveStackTrace(input, storage) {
+  resolveStackTrace(input: Record<string, unknown>) {
     const stackTrace = input.stackTrace as string;
     if (!stackTrace) {
       return { variant: 'ok', frames: [] };
@@ -853,7 +861,7 @@ export const scoreApiHandler: ConceptHandler = {
     return { variant: 'ok', frames };
   },
 
-  async traceEndpoint(input, _storage) {
+  traceEndpoint(input: Record<string, unknown>) {
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
@@ -873,7 +881,7 @@ export const scoreApiHandler: ConceptHandler = {
 
   // ─── Index Management ─────────────────────────────────
 
-  async status(_input, storage) {
+  status(_input: Record<string, unknown>) {
     const concepts = await storage.find('concepts');
     const syncs = await storage.find('syncs');
     const symbols = await storage.find('symbols');
@@ -891,7 +899,7 @@ export const scoreApiHandler: ConceptHandler = {
     };
   },
 
-  async reindex(_input, storage) {
+  reindex(_input: Record<string, unknown>) {
     const start = Date.now();
 
     // Clear existing index
@@ -923,3 +931,5 @@ export const scoreApiHandler: ConceptHandler = {
     };
   },
 };
+
+export const scoreApiHandler = autoInterpret(_handler);

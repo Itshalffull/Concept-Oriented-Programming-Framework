@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // DeploymentHealth Concept Implementation
 //
 // Live deployment monitoring — runtime health, transport connectivity,
@@ -6,11 +7,18 @@
 // static deployment topology and concept structure for operational
 // insight queries.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const deploymentHealthHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async record(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  record(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
     const snapshot = input.snapshot as string;
 
@@ -34,7 +42,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', check: id };
   },
 
-  async runtimeHealth(input, storage) {
+  runtimeHealth(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -50,7 +58,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', runtimes: latest.runtimeStatuses as string || '[]' };
   },
 
-  async transportHealth(input, storage) {
+  transportHealth(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -65,7 +73,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', transports: latest.transportStatuses as string || '[]' };
   },
 
-  async storageHealth(input, storage) {
+  storageHealth(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -80,7 +88,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', adapters: latest.storageStatuses as string || '[]' };
   },
 
-  async syncDelivery(input, storage) {
+  syncDelivery(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
     const since = input.since as string;
 
@@ -100,7 +108,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', syncs: latest.syncDeliveryRates as string || '[]' };
   },
 
-  async conceptInstances(input, storage) {
+  conceptInstances(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -115,7 +123,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', instances: latest.conceptInstanceCounts as string || '[]' };
   },
 
-  async crossRuntimeLatency(input, storage) {
+  crossRuntimeLatency(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -130,7 +138,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', matrix: latest.crossRuntimeLatency as string || '[]' };
   },
 
-  async hotspots(input, storage) {
+  hotspots(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
     const since = input.since as string;
     const topN = (input.topN as number) || 10;
@@ -189,7 +197,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', hotspots: JSON.stringify(hotspots) };
   },
 
-  async correlateWithErrors(input, storage) {
+  correlateWithErrors(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
     const since = input.since as string;
 
@@ -223,7 +231,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', correlations: JSON.stringify(correlations) };
   },
 
-  async compareWindows(input, storage) {
+  compareWindows(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
     const windowA = input.windowA as string;
     const windowB = input.windowB as string;
@@ -290,7 +298,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', comparison: JSON.stringify(comparison) };
   },
 
-  async deployDiagnostics(input, storage) {
+  deployDiagnostics(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     // Collect all health records for this deployment
@@ -333,7 +341,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     };
   },
 
-  async sloStatus(input, storage) {
+  sloStatus(input: Record<string, unknown>) {
     const deployment = input.deployment as string;
 
     const all = await storage.find('deployment-health', { deployment });
@@ -399,3 +407,5 @@ export const deploymentHealthHandler: ConceptHandler = {
     return { variant: 'ok', slos: JSON.stringify(slos) };
   },
 };
+
+export const deploymentHealthHandler = autoInterpret(_handler);

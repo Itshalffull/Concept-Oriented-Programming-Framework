@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // DeploymentEntity Concept Implementation
 //
 // Queryable representation of parsed deployment manifests (deploy.yaml).
@@ -5,11 +6,18 @@
 // transport adapter bindings, sync engine configurations, and environment
 // overlays. Enables deployment structure queries and topology analysis.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const deploymentEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
@@ -43,7 +51,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', deployment: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
 
     const entry = await storage.get('deployments', `deployment:${name}`);
@@ -54,7 +62,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', deployment: entry.id };
   },
 
-  async listRuntimes(input, storage) {
+  listRuntimes(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
     const all = await storage.find('deployments');
@@ -66,7 +74,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', runtimes: entry.runtimes as string || '[]' };
   },
 
-  async findConceptRuntime(input, storage) {
+  findConceptRuntime(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const concept = input.concept as string;
 
@@ -90,7 +98,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     };
   },
 
-  async findSyncEngine(input, storage) {
+  findSyncEngine(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const sync = input.sync as string;
 
@@ -113,7 +121,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     };
   },
 
-  async topology(input, storage) {
+  topology(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
     const all = await storage.find('deployments');
@@ -140,7 +148,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', graph: JSON.stringify({ nodes, edges }) };
   },
 
-  async transportRoutes(input, storage) {
+  transportRoutes(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
     const fromConcept = input.fromConcept as string;
     const toConcept = input.toConcept as string;
@@ -184,7 +192,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     };
   },
 
-  async storageTopology(input, storage) {
+  storageTopology(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
     const all = await storage.find('deployments');
@@ -196,7 +204,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', bindings: entry.storageBindings as string || '[]' };
   },
 
-  async environmentDiff(input, storage) {
+  environmentDiff(input: Record<string, unknown>) {
     const deploymentAId = input.deploymentA as string;
     const deploymentBId = input.deploymentB as string;
 
@@ -221,7 +229,7 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', differences: JSON.stringify(differences) };
   },
 
-  async validateAgainstSpecs(input, storage) {
+  validateAgainstSpecs(input: Record<string, unknown>) {
     const deploymentId = input.deployment as string;
 
     const all = await storage.find('deployments');
@@ -234,3 +242,5 @@ export const deploymentEntityHandler: ConceptHandler = {
     return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
   },
 };
+
+export const deploymentEntityHandler = autoInterpret(_handler);

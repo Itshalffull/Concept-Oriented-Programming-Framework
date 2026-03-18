@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CanvasEntity Handler (Score Layer)
 //
@@ -8,15 +9,22 @@
 // A and B", "what notation is active".
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `canvas-entity-${++idCounter}`;
 }
 
-export const canvasEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
     const name = input.name as string;
 
@@ -49,7 +57,7 @@ export const canvasEntityHandler: ConceptHandler = {
     return { variant: 'ok', id, symbol };
   },
 
-  async updateStats(input: Record<string, unknown>, storage: ConceptStorage) {
+  updateStats(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
 
     const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
@@ -76,7 +84,7 @@ export const canvasEntityHandler: ConceptHandler = {
     return { variant: 'ok', canvas_id: canvasId };
   },
 
-  async getCanvas(input: Record<string, unknown>, storage: ConceptStorage) {
+  getCanvas(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
     const entities = await storage.find('canvas-entity', { canvas_id: canvasId });
     if (entities.length === 0) {
@@ -85,7 +93,7 @@ export const canvasEntityHandler: ConceptHandler = {
     return { variant: 'ok', entity: entities[0] };
   },
 
-  async listCanvases(_input: Record<string, unknown>, storage: ConceptStorage) {
+  listCanvases(_input: Record<string, unknown>) {
     const all = await storage.list('canvas-entity');
     return {
       variant: 'ok',
@@ -101,7 +109,7 @@ export const canvasEntityHandler: ConceptHandler = {
     };
   },
 
-  async getConnectorGraph(input: Record<string, unknown>, storage: ConceptStorage) {
+  getConnectorGraph(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
 
     // Return connector relationship data for Score graph queries
@@ -120,6 +128,8 @@ export const canvasEntityHandler: ConceptHandler = {
     };
   },
 };
+
+export const canvasEntityHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetCanvasEntityCounter(): void {

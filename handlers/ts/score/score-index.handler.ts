@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ScoreIndex Concept Implementation
 //
 // Materialized index backing ScoreApi queries. Maintains
@@ -5,10 +6,16 @@
 // fast LLM-friendly lookups. Auto-registered as a built-in
 // concept in every Clef runtime.
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const scoreIndexHandler: ConceptHandler = {
-  async upsertConcept(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  upsertConcept(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
       return { variant: 'error', message: 'name is required' };
@@ -33,7 +40,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', index: id };
   },
 
-  async upsertSync(input, storage) {
+  upsertSync(input: Record<string, unknown>) {
     const name = input.name as string;
     if (!name) {
       return { variant: 'error', message: 'name is required' };
@@ -58,7 +65,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', index: id };
   },
 
-  async upsertSymbol(input, storage) {
+  upsertSymbol(input: Record<string, unknown>) {
     const name = input.name as string;
     const file = input.file as string;
     const line = input.line as number;
@@ -85,7 +92,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', index: id };
   },
 
-  async upsertFile(input, storage) {
+  upsertFile(input: Record<string, unknown>) {
     const path = input.path as string;
     if (!path) {
       return { variant: 'error', message: 'path is required' };
@@ -109,7 +116,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', index: id };
   },
 
-  async removeByFile(input, storage) {
+  removeByFile(input: Record<string, unknown>) {
     const path = input.path as string;
     if (!path) {
       return { variant: 'ok', removed: 0 };
@@ -152,7 +159,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', removed };
   },
 
-  async clear(_input, storage) {
+  clear(_input: Record<string, unknown>) {
     const concepts = await storage.find('concepts');
     const syncs = await storage.find('syncs');
     const symbols = await storage.find('symbols');
@@ -168,7 +175,7 @@ export const scoreIndexHandler: ConceptHandler = {
     return { variant: 'ok', cleared: total };
   },
 
-  async stats(_input, storage) {
+  stats(_input: Record<string, unknown>) {
     const concepts = await storage.find('concepts');
     const syncs = await storage.find('syncs');
     const symbols = await storage.find('symbols');
@@ -185,3 +192,5 @@ export const scoreIndexHandler: ConceptHandler = {
     };
   },
 };
+
+export const scoreIndexHandler = autoInterpret(_handler);

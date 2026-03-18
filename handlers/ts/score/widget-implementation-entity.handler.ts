@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // WidgetImplementationEntity Concept Implementation
 //
 // Queryable representation of generated widget implementation files.
@@ -6,11 +7,18 @@
 // of generated code and enables stack trace correlation for widget
 // rendering errors.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const widgetImplementationEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const framework = input.framework as string;
     const sourceFile = input.sourceFile as string;
@@ -45,7 +53,7 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const framework = input.framework as string;
 
@@ -57,7 +65,7 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: entry.id };
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
     const sourceFile = input.sourceFile as string;
 
     const all = await storage.find('widget-implementations');
@@ -69,21 +77,21 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', impl: entry.id };
   },
 
-  async findByWidget(input, storage) {
+  findByWidget(input: Record<string, unknown>) {
     const widget = input.widget as string;
     const all = await storage.find('widget-implementations', { widget });
 
     return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  async findByFramework(input, storage) {
+  findByFramework(input: Record<string, unknown>) {
     const framework = input.framework as string;
     const all = await storage.find('widget-implementations', { framework });
 
     return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  async anatomyMapping(input, storage) {
+  anatomyMapping(input: Record<string, unknown>) {
     const implId = input.impl as string;
 
     const all = await storage.find('widget-implementations');
@@ -103,7 +111,7 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     return { variant: 'ok', mapping: JSON.stringify(mapping) };
   },
 
-  async diffFromSpec(input, storage) {
+  diffFromSpec(input: Record<string, unknown>) {
     const implId = input.impl as string;
 
     const all = await storage.find('widget-implementations');
@@ -116,7 +124,7 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     return { variant: 'inSync' };
   },
 
-  async resolveRenderFrame(input, storage) {
+  resolveRenderFrame(input: Record<string, unknown>) {
     const file = input.file as string;
     const line = input.line as number;
     const col = input.col as number;
@@ -148,7 +156,7 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     };
   },
 
-  async resolveToAstNode(input, storage) {
+  resolveToAstNode(input: Record<string, unknown>) {
     const implId = input.impl as string;
     const line = input.line as number;
     const col = input.col as number;
@@ -177,3 +185,5 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
     };
   },
 };
+
+export const widgetImplementationEntityHandler = autoInterpret(_handler);

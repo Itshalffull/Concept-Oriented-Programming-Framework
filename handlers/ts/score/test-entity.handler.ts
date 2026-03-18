@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // TestEntity Concept Implementation
 //
 // Queryable representation of test suites, conformance checks, and
@@ -5,11 +6,18 @@
 // and widgets they validate. Enables coverage analysis, failure
 // tracking, and untested action/invariant discovery.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const testEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const sourceFile = input.sourceFile as string;
     const kind = input.kind as string;
@@ -42,7 +50,7 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', test: id };
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
 
     const entry = await storage.get('tests', `test:${name}`);
@@ -53,7 +61,7 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', test: entry.id };
   },
 
-  async findByEntity(input, storage) {
+  findByEntity(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const all = await storage.find('tests', { targetEntity: entity });
 
@@ -67,7 +75,7 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', tests: JSON.stringify(tests) };
   },
 
-  async findByAction(input, storage) {
+  findByAction(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const action = input.action as string;
     const all = await storage.find('tests', { targetEntity: concept });
@@ -79,14 +87,14 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', tests: JSON.stringify(filtered) };
   },
 
-  async findByKind(input, storage) {
+  findByKind(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const all = await storage.find('tests', { kind });
 
     return { variant: 'ok', tests: JSON.stringify(all) };
   },
 
-  async findFailing(_input, storage) {
+  findFailing(_input: Record<string, unknown>) {
     const all = await storage.find('tests');
     const failing = all.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
 
@@ -105,7 +113,7 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', tests: JSON.stringify(tests) };
   },
 
-  async coverageReport(input, storage) {
+  coverageReport(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const tests = await storage.find('tests', { targetEntity: entity });
 
@@ -127,18 +135,18 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', report: JSON.stringify(report) };
   },
 
-  async untestedActions(_input, storage) {
+  untestedActions(_input: Record<string, unknown>) {
     // TODO: Cross-reference all ConceptEntity actions with TestEntity coverage
     // For now, report full coverage as a stub
     return { variant: 'fullCoverage' };
   },
 
-  async untestedInvariants(_input, storage) {
+  untestedInvariants(_input: Record<string, unknown>) {
     // TODO: Cross-reference all concept invariants with TestEntity coverage
     return { variant: 'fullCoverage' };
   },
 
-  async recordResult(input, storage) {
+  recordResult(input: Record<string, unknown>) {
     const testId = input.test as string;
     const result = input.result as string;
     const duration = input.duration as number;
@@ -158,3 +166,5 @@ export const testEntityHandler: ConceptHandler = {
     return { variant: 'ok', test: testId };
   },
 };
+
+export const testEntityHandler = autoInterpret(_handler);
