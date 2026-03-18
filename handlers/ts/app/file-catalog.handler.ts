@@ -7,7 +7,12 @@
 // parsing logic.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, perform,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 // Lazy-load parsers only when needed (avoids circular deps at import time)
 async function loadParsers() {
@@ -352,188 +357,68 @@ function collectSyncPaths(
 
 // --- Handler ---
 
-export const fileCatalogHandler: ConceptHandler = {
-  async registerProvider(input, storage) {
+export const fileCatalogHandler: FunctionalConceptHandler = {
+  registerProvider(input: Record<string, unknown>) {
     const providerName = input.provider_name as string;
     const kind = input.kind as string;
     const filePattern = input.file_pattern as string;
 
-    const existing = await storage.get('provider', providerName);
-    if (existing) {
-      return { variant: 'already_registered' };
-    }
-
-    await storage.put('provider', providerName, {
-      id: providerName,
-      provider_name: providerName,
-      kind,
-      file_pattern: filePattern,
-    });
-
-    return { variant: 'ok' };
-  },
-
-  async discover(input, storage) {
-    const basePaths = (input.base_paths as string).split(',').map(p => p.trim());
-
-    const fs = await import('fs');
-    const path = await import('path');
-    const parsers = await loadParsers();
-
-    // Load registered providers (or use built-in defaults)
-    let providers = await storage.find('provider', {});
-    if (providers.length === 0) {
-      // Auto-register built-in providers
-      for (const bp of BUILT_IN_PROVIDERS) {
-        await storage.put('provider', bp.provider_name, {
-          id: bp.provider_name,
-          provider_name: bp.provider_name,
-          kind: bp.kind,
-          file_pattern: bp.file_pattern,
+    let p = createProgram();
+    p = spGet(p, 'provider', providerName, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'already_registered', {}),
+      (b) => {
+        let b2 = put(b, 'provider', providerName, {
+          id: providerName, provider_name: providerName, kind, file_pattern: filePattern,
         });
-      }
-      providers = BUILT_IN_PROVIDERS.map(bp => ({
-        id: bp.provider_name,
-        ...bp,
-      }));
-    }
-
-    let found = 0;
-
-    for (const basePath of basePaths) {
-      const resolvedBase = path.resolve(basePath);
-      let allFiles: string[];
-      try {
-        allFiles = walkDir(resolvedBase, fs, path);
-      } catch {
-        continue;
-      }
-
-      for (const filePath of allFiles) {
-        const fileName = path.basename(filePath);
-
-        for (const provider of providers) {
-          const pattern = provider.file_pattern as string;
-          if (!fileName.endsWith(pattern)) continue;
-
-          const kind = provider.kind as string;
-          let source: string;
-          try {
-            source = fs.readFileSync(filePath, 'utf-8');
-          } catch {
-            continue;
-          }
-
-          // Determine suite from directory structure
-          const suite = inferSuite(filePath, resolvedBase, path);
-
-          if (kind === 'concept') {
-            const result = extractConceptMetadata(source, parsers.parseConceptFile);
-            if (result) {
-              const entryId = `${kind}:${result.name}`;
-              await storage.put('entry', entryId, {
-                id: entryId,
-                path: filePath,
-                kind,
-                name: result.name,
-                suite,
-                metadata: JSON.stringify(result.metadata),
-              });
-              found++;
-            }
-          } else if (kind === 'sync') {
-            const results = extractSyncMetadata(source, parsers.parseSyncFile);
-            for (const result of results) {
-              const entryId = `${kind}:${result.name}`;
-              await storage.put('entry', entryId, {
-                id: entryId,
-                path: filePath,
-                kind,
-                name: result.name,
-                suite,
-                metadata: JSON.stringify(result.metadata),
-              });
-              found++;
-            }
-          } else if (kind === 'suite') {
-            const result = extractSuiteMetadata(source);
-            if (result) {
-              const entryId = `${kind}:${result.name}`;
-              await storage.put('entry', entryId, {
-                id: entryId,
-                path: filePath,
-                kind,
-                name: result.name,
-                suite: result.name,
-                metadata: JSON.stringify(result.metadata),
-              });
-              found++;
-            }
-          } else {
-            // widget, theme, derived — generic extraction
-            const result = extractGenericMetadata(source, kind);
-            if (result) {
-              const entryId = `${kind}:${result.name}`;
-              await storage.put('entry', entryId, {
-                id: entryId,
-                path: filePath,
-                kind,
-                name: result.name,
-                suite,
-                metadata: JSON.stringify(result.metadata),
-              });
-              found++;
-            }
-          }
-        }
-      }
-    }
-
-    return { variant: 'ok', found };
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async get(input, storage) {
+  discover(input: Record<string, unknown>) {
+    const basePaths = (input.base_paths as string);
+    // Delegate filesystem walk to FsProvider via transport effect.
+    // The effect handler reads the directory tree and returns file entries.
+    let p = createProgram();
+    p = perform(p, 'fs', 'discover', { base_paths: basePaths }, 'discoveryResult');
+    return complete(p, 'ok', { found: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  get(input: Record<string, unknown>) {
     const name = input.name as string;
     const kind = input.kind as string;
     const entryId = `${kind}:${name}`;
-    const entry = await storage.get('entry', entryId);
-    if (!entry) return { variant: 'notfound' };
-    return { variant: 'ok', entry: JSON.stringify(entry) };
+
+    let p = createProgram();
+    p = spGet(p, 'entry', entryId, 'entry');
+    p = branch(p, 'entry',
+      (b) => complete(b, 'ok', { entry: '' }),
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(input, storage) {
-    const kind = input.kind as string | undefined;
-    const allEntries = await storage.find('entry', {});
-    const filtered = kind
-      ? allEntries.filter(e => e.kind === kind)
-      : allEntries;
-    return { variant: 'ok', entries: JSON.stringify(filtered) };
+  list(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'entry', {}, 'allEntries');
+    return complete(p, 'ok', { entries: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listForSuite(input, storage) {
+  listForSuite(input: Record<string, unknown>) {
     const suite = input.suite as string;
-    const allEntries = await storage.find('entry', {});
-    const filtered = allEntries.filter(e => e.suite === suite);
-    return { variant: 'ok', entries: JSON.stringify(filtered) };
+    let p = createProgram();
+    p = find(p, 'entry', {}, 'allEntries');
+    return complete(p, 'ok', { entries: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async syncFilePathsForSuite(input, storage) {
+  syncFilePathsForSuite(input: Record<string, unknown>) {
     const suite = input.suite as string;
-    const searchPathsStr = input.search_paths as string | undefined;
-    const searchPaths = searchPathsStr
-      ? searchPathsStr.split(',').map(p => p.trim())
-      : ['suites/', '../repertoire/concepts/'];
-
-    const fs = await import('fs');
-    const path = await import('path');
-
-    const manifest = findSuiteManifest(suite, searchPaths, fs, path);
-    if (!manifest) {
-      return { variant: 'error', message: `Suite manifest not found: ${suite}` };
-    }
-
-    const paths = collectSyncPaths(manifest, searchPaths, fs, path);
-    return { variant: 'ok', paths: JSON.stringify(paths) };
+    // Delegate suite manifest reading to FsProvider via transport effect.
+    let p = createProgram();
+    p = perform(p, 'fs', 'readSuiteManifest', { suite }, 'manifestResult');
+    return complete(p, 'ok', { paths: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
