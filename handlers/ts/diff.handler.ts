@@ -1,12 +1,18 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
-// Diff Handler
+// Diff Handler — Functional (StorageProgram) style
 //
 // Compute the minimal representation of differences between two
 // content states, using a pluggable algorithm selected by content
 // type and context.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, pure, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -18,10 +24,6 @@ function computeLineDiff(a: string, b: string): { editScript: string; distance: 
   const linesA = a.split('\n');
   const linesB = b.split('\n');
 
-  const ops: string[] = [];
-  let distance = 0;
-
-  // Simple LCS-based diff
   const m = linesA.length;
   const n = linesB.length;
 
@@ -41,6 +43,7 @@ function computeLineDiff(a: string, b: string): { editScript: string; distance: 
   let i = m;
   let j = n;
   const editOps: Array<{ type: string; line: number; content: string }> = [];
+  let distance = 0;
 
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && linesA[i - 1] === linesB[j - 1]) {
@@ -71,7 +74,6 @@ function applyEditScript(content: string, editScript: string): string | null {
       if (op.type === 'equal' || op.type === 'insert') {
         resultLines.push(op.content);
       }
-      // 'delete' lines are skipped
     }
 
     return resultLines.join('\n');
@@ -80,73 +82,97 @@ function applyEditScript(content: string, editScript: string): string | null {
   }
 }
 
-export const diffHandler: ConceptHandler = {
-  async registerProvider(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _diffHandler: FunctionalConceptHandler = {
+
+  registerProvider(input: Record<string, unknown>) {
     const name = input.name as string;
-    const contentTypes = input.contentTypes as string[];
+    const contentTypes = input.contentTypes as string[] | undefined;
 
-    // Check for duplicates
-    const existing = await storage.find('diff-provider', { name });
-    if (existing.length > 0) {
-      return { variant: 'duplicate', message: `A provider with name '${name}' already exists` };
-    }
+    let p = createProgram();
+    p = find(p, 'diff-provider', { name }, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const results = (bindings.existing as Array<Record<string, unknown>>) || [];
+      return results.length;
+    }, 'existingCount');
 
-    const id = nextId();
-    await storage.put('diff-provider', id, {
-      id,
-      name,
-      contentTypes: Array.isArray(contentTypes) ? contentTypes : [],
-    });
-
-    return { variant: 'ok', provider: id };
+    p = branch(p, 'existingCount',
+      (b) => complete(b, 'duplicate', { message: `A provider with name '${name}' already exists` }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'diff-provider', id, {
+          id,
+          name,
+          contentTypes: Array.isArray(contentTypes) ? contentTypes : [],
+        });
+        return complete(b2, 'ok', { provider: id });
+      },
+    );
+    return p as StorageProgram<Result>;
   },
 
-  async diff(input: Record<string, unknown>, storage: ConceptStorage) {
+  diff(input: Record<string, unknown>) {
     const contentA = input.contentA as string;
     const contentB = input.contentB as string;
     const algorithm = input.algorithm as string | null | undefined;
 
     // Check for identical content
     if (contentA === contentB) {
-      return { variant: 'identical' };
+      return complete(createProgram(), 'identical', {}) as StorageProgram<Result>;
     }
 
-    // If algorithm specified, look up provider
+    let p = createProgram();
+
     if (algorithm) {
-      const providers = await storage.find('diff-provider', { name: algorithm });
-      if (providers.length === 0) {
-        return { variant: 'noProvider', message: `No registered provider handles algorithm '${algorithm}'` };
-      }
+      // Look up provider for requested algorithm
+      p = find(p, 'diff-provider', { name: algorithm }, 'providers');
+      p = mapBindings(p, (bindings) => {
+        const results = (bindings.providers as Array<Record<string, unknown>>) || [];
+        return results.length;
+      }, 'providerCount');
+
+      p = branch(p, (bindings) => (bindings.providerCount as number) === 0,
+        (b) => complete(b, 'noProvider', { message: `No registered provider handles algorithm '${algorithm}'` }),
+        (b) => {
+          // Compute diff and cache
+          const { editScript, distance } = computeLineDiff(contentA, contentB);
+          const cacheId = nextId();
+          let b2 = put(b, 'diff-cache', cacheId, {
+            id: cacheId, contentA, contentB, editScript, distance,
+          });
+          return complete(b2, 'diffed', { editScript, distance });
+        },
+      );
+    } else {
+      // No algorithm specified — use built-in line diff
+      const { editScript, distance } = computeLineDiff(contentA, contentB);
+      const cacheId = nextId();
+      p = put(p, 'diff-cache', cacheId, {
+        id: cacheId, contentA, contentB, editScript, distance,
+      });
+      p = complete(p, 'diffed', { editScript, distance });
     }
 
-    // Use built-in line diff
-    const { editScript, distance } = computeLineDiff(contentA, contentB);
-
-    // Cache the result
-    const cacheId = nextId();
-    await storage.put('diff-cache', cacheId, {
-      id: cacheId,
-      contentA,
-      contentB,
-      editScript,
-      distance,
-    });
-
-    return { variant: 'diffed', editScript, distance };
+    return p as StorageProgram<Result>;
   },
 
-  async patch(input: Record<string, unknown>, storage: ConceptStorage) {
+  patch(input: Record<string, unknown>) {
     const content = input.content as string;
     const editScript = input.editScript as string;
 
     const result = applyEditScript(content, editScript);
     if (result === null) {
-      return { variant: 'incompatible', message: 'Edit script does not apply cleanly to this content' };
+      return complete(createProgram(), 'incompatible', {
+        message: 'Edit script does not apply cleanly to this content',
+      }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', result };
+    return complete(createProgram(), 'ok', { result }) as StorageProgram<Result>;
   },
 };
+
+export const diffHandler = autoInterpret(_diffHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDiffCounter(): void {
