@@ -1,0 +1,56 @@
+@version(1)
+concept WebhookEndpoint [W] {
+
+  purpose {
+    Configure a named webhook endpoint for outbound status
+    notifications. Stores the target URL and optional authentication
+    headers so that higher-level concepts can POST to webhooks by
+    name without embedding URLs.
+  }
+
+  state {
+    endpoints: set W
+    name: W -> String
+    url: W -> String
+    headers: W -> String
+    method: W -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, url: String, headers: String) {
+      -> ok(endpoint: W) {
+        Create a named webhook endpoint with target URL and
+        optional authentication headers. Method defaults to POST.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: W, url: String, headers: String) {
+        Look up the named endpoint and return its URL and headers
+        ready for HTTP calls.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name and url.
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{}") -> ok(endpoint: w)
+    then resolve(name: "deploy-webhook") -> ok(endpoint: w, url: "https://hooks.example.com/deploy", headers: "{}")
+  }
+}

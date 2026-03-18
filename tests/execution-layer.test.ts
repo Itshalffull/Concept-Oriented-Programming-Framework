@@ -20,10 +20,16 @@ import { wasmProviderHandler } from '../handlers/ts/execution/providers/wasm-pro
 import { onnxProviderHandler } from '../handlers/ts/execution/providers/onnx-provider.handler.js';
 import { shellProviderHandler } from '../handlers/ts/execution/providers/shell-provider.handler.js';
 
-// Tier 3: Instance Providers
+// Tier 3: Instance Providers (Embedding)
 import { openAiEndpointHandler } from '../handlers/ts/execution/instances/openai-endpoint.handler.js';
 import { voyageEndpointHandler } from '../handlers/ts/execution/instances/voyage-endpoint.handler.js';
 import { localModelInstanceHandler } from '../handlers/ts/execution/instances/local-model-instance.handler.js';
+
+// Tier 3: Instance Providers (API/Webhook)
+import { vercelApiEndpointHandler } from '../handlers/ts/execution/instances/vercel-api-endpoint.handler.js';
+import { githubApiEndpointHandler } from '../handlers/ts/execution/instances/github-api-endpoint.handler.js';
+import { gitlabApiEndpointHandler } from '../handlers/ts/execution/instances/gitlab-api-endpoint.handler.js';
+import { webhookEndpointHandler } from '../handlers/ts/execution/instances/webhook-endpoint.handler.js';
 
 // Resilience
 import { circuitBreakerHandler } from '../handlers/ts/execution/circuit-breaker.handler.js';
@@ -420,6 +426,107 @@ describe('LocalModelInstance', () => {
     const getInstr = getGetInstruction(p);
     expect(getInstr).toBeDefined();
     expect(getInstr!.key).toBe('local-codebert-base');
+  });
+});
+
+// ============================================================
+// Tier 3: VercelApiEndpoint
+// ============================================================
+describe('VercelApiEndpoint', () => {
+  it('register stores Vercel API config', () => {
+    const p = vercelApiEndpointHandler.register!({
+      name: 'vercel-api',
+      apiToken: 'vt-test-token',
+      teamId: 'team-123',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://api.vercel.com');
+    expect((putInstr!.value as Record<string, unknown>).teamId).toBe('team-123');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = vercelApiEndpointHandler.resolve!({ name: 'vercel-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('vercel-vercel-api');
+  });
+});
+
+// ============================================================
+// Tier 3: GitHubApiEndpoint
+// ============================================================
+describe('GitHubApiEndpoint', () => {
+  it('register stores GitHub API config with repository', () => {
+    const p = githubApiEndpointHandler.register!({
+      name: 'github-api',
+      token: 'ghp-test-token',
+      repository: 'owner/repo',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).repository).toBe('owner/repo');
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://api.github.com');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = githubApiEndpointHandler.resolve!({ name: 'github-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('gh-github-api');
+  });
+});
+
+// ============================================================
+// Tier 3: GitLabApiEndpoint
+// ============================================================
+describe('GitLabApiEndpoint', () => {
+  it('register stores GitLab API config with project ID', () => {
+    const p = gitlabApiEndpointHandler.register!({
+      name: 'gitlab-api',
+      token: 'glpat-test',
+      projectId: '12345',
+      baseUrl: 'https://gitlab.com/api/v4',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).projectId).toBe('12345');
+    expect((putInstr!.value as Record<string, unknown>).baseUrl).toBe('https://gitlab.com/api/v4');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = gitlabApiEndpointHandler.resolve!({ name: 'gitlab-api' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('gl-gitlab-api');
+  });
+});
+
+// ============================================================
+// Tier 3: WebhookEndpoint
+// ============================================================
+describe('WebhookEndpoint', () => {
+  it('register stores webhook config with URL', () => {
+    const p = webhookEndpointHandler.register!({
+      name: 'deploy-hook',
+      url: 'https://hooks.example.com/deploy',
+      headers: '{"X-Secret":"abc"}',
+    });
+    const putInstr = getPutInstruction(p, 'endpoints');
+    expect(putInstr).toBeDefined();
+    expect((putInstr!.value as Record<string, unknown>).url).toBe('https://hooks.example.com/deploy');
+    expect((putInstr!.value as Record<string, unknown>).method).toBe('POST');
+    expect(getPureVariant(p)).toBe('ok');
+  });
+
+  it('resolve reads endpoint by name', () => {
+    const p = webhookEndpointHandler.resolve!({ name: 'deploy-hook' });
+    const getInstr = getGetInstruction(p);
+    expect(getInstr).toBeDefined();
+    expect(getInstr!.key).toBe('wh-deploy-hook');
   });
 });
 

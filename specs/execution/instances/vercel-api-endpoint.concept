@@ -1,0 +1,59 @@
+@version(1)
+concept VercelApiEndpoint [V] {
+
+  purpose {
+    Configure and authenticate the Vercel API endpoint for deployment,
+    storage provisioning, and project management calls. Stores the API
+    token and optional team ID so that higher-level concepts reference
+    the endpoint by name rather than embedding credentials.
+  }
+
+  state {
+    endpoints: set V
+    name: V -> String
+    apiToken: V -> String
+    teamId: V -> option String
+    baseUrl: V -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(name: String, apiToken: String, teamId: String) {
+      -> ok(endpoint: V) {
+        Create a named Vercel API endpoint configuration with API
+        token and optional team ID. Base URL defaults to
+        https://api.vercel.com. The endpoint becomes addressable
+        by name for HttpProvider instance configuration via sync.
+      }
+      -> exists(name: String) {
+        An endpoint with this name is already registered.
+      }
+    }
+
+    action resolve(name: String) {
+      -> ok(endpoint: V, baseUrl: String, headers: String, teamId: String) {
+        Look up the named endpoint and return its base URL,
+        pre-built authorization headers, and team ID for query
+        parameter injection.
+      }
+      -> notFound(name: String) {
+        No endpoint is registered with this name.
+      }
+    }
+
+    action list() {
+      -> ok(endpoints: String) {
+        Return all registered endpoints as a serialized JSON array
+        with name and baseUrl (tokens omitted).
+      }
+    }
+  }
+
+  invariant {
+    after register(name: "vercel-api", apiToken: "vt-test", teamId: "team-123") -> ok(endpoint: v)
+    then resolve(name: "vercel-api") -> ok(endpoint: v, baseUrl: "https://api.vercel.com", headers: _, teamId: "team-123")
+  }
+}

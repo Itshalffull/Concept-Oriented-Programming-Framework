@@ -71,3 +71,83 @@ then {
     metadata: { runtime: "wasm"; kind: "embedding"; dimensions: ?dims; provider: "local" }
   ]
 }
+
+sync RegisterVercelApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the Vercel API when it registers."
+when {
+  VercelApiEndpoint/register: [ name: ?name; apiToken: ?token; teamId: ?teamId ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: "https://api.vercel.com";
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "vercel"; teamId: ?teamId }
+  ]
+}
+
+sync RegisterGitHubApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the GitHub API when it registers."
+when {
+  GitHubApiEndpoint/register: [ name: ?name; token: ?token; repository: ?repo ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: "https://api.github.com";
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "github"; repository: ?repo }
+  ]
+}
+
+sync RegisterGitLabApiEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for the GitLab API when it registers."
+when {
+  GitLabApiEndpoint/register: [ name: ?name; token: ?token; projectId: ?pid; baseUrl: ?url ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: ?url;
+    headers: "{}";
+    timeout: 30000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "api"; provider: "gitlab"; projectId: ?pid }
+  ]
+}
+
+sync RegisterWebhookEndpoint [eager]
+  purpose: "Configure an HttpProvider instance for a webhook endpoint when it registers."
+when {
+  WebhookEndpoint/register: [ name: ?name; url: ?url; headers: ?headers ]
+    => ok(endpoint: ?ep)
+}
+then {
+  HttpProvider/configure: [
+    name: ?name;
+    baseUrl: ?url;
+    headers: ?headers;
+    timeout: 10000
+  ]
+  PluginRegistry/register: [
+    type: "instance-provider";
+    name: ?name;
+    metadata: { kind: "webhook"; provider: "webhook"; url: ?url }
+  ]
+}
