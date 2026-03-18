@@ -328,17 +328,118 @@ invariant {
 
 Use short, single-letter names. Variables are bound on first occurrence and reused by name.
 
+## Formal Verification Invariant Constructs
+
+Six constructs are supported (see docs/plans/clef-fv.md Section 1). Bare `invariant { ... }` blocks default to `example` kind.
+
+### `example` — Named Conformance Test (Tier 1)
+```
+example "happy path": {
+  after create(name: "alice") -> ok(user: u)
+  then get(user: u) -> ok(user: u, name: "alice")
+}
+```
+Generates a 1:1 test vector. This is the same as bare `invariant { ... }` but with a name.
+
+### `forall` — Universally Quantified Property (Tier 2-3)
+```
+forall "valid kinds accepted": {
+  given kind in {"invariant", "precondition", "postcondition"}
+  after define(kind: kind) -> ok(property: _)
+}
+```
+Generates one PBT (property-based test) property per clause. Solver target: Alloy (finite) / Z3 (infinite).
+
+### `always` — State Predicate (Tier 2-3)
+```
+always "status consistency": {
+  forall p in items:
+    p.status in ["active", "inactive", "archived"]
+}
+```
+Must hold in every reachable state. Generates stateful sequence tests. Solver target: Z3 / Alloy.
+
+### `never` — Safety Property (Tier 2-3)
+```
+never "orphaned items": {
+  exists p in items:
+    p.status = "deleted"
+}
+```
+A bad state that must never be reachable. Generates violation-attempt sequence tests. Solver target: Z3 (negated existential).
+
+### `eventually` — Liveness Property (Tier 3)
+```
+eventually "runs terminate": {
+  forall r in runs where r.status = "running":
+    r.status in ["completed", "timeout", "cancelled"]
+}
+```
+An outcome that must eventually occur. Generates bounded sequence tests. Solver target: TLC (TLA+).
+
+### `action requires/ensures` — Pre/Postcondition Contracts (Tier 2-3)
+```
+invariant {
+  action define {
+    requires: kind in ["invariant", "precondition"]
+    requires: propertyText.length > 0
+    ensures ok: result.kind = kind
+    ensures invalid: kind != "invariant"
+  }
+}
+```
+Pre/postconditions on actions. Generates PBT generators constrained by requires, assertions from ensures. Solver target: Z3 / Dafny.
+
+### Property Assertions in Then-Chains
+```
+invariant {
+  after configure(endpoint: "api", threshold: 5) -> ok(breaker: b)
+  then b.failureCount = 0
+  and  b.status != "open"
+}
+```
+Supported operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`
+
+### `when` Guard Clauses
+```
+invariant {
+  when r.runtime = "onnx"
+  after register(name: "model", runtime: "onnx") -> ok(instance: r)
+  then resolve(name: "model") -> ok(instance: r, runtime: "onnx", config: _)
+}
+```
+
 ## How Many Invariants?
 
-| Concept Type | Recommended | Reasoning |
-|-------------|-------------|-----------|
-| Domain entity (CRUD) | 1-2 | One for create-query, one for lifecycle |
-| Relationship (toggle) | 1 | One showing full cycle: add, verify, remove |
-| Authentication | 1 | One showing set, check-correct, check-wrong |
-| Constraint enforcement | 1 | One showing the constraint violation |
-| Infrastructure/pipeline | 1-2 | One for valid structured input → ok, one for invalid → error |
+**Invariants should be comprehensive** — they are the concept's behavioral contract and the source of all test generation and formal verification. Cover all qualities you want to prove:
 
-**Every concept should have at least one invariant.** This includes framework/infrastructure concepts — use record and list literals (Pattern 8) to pass minimal valid structured inputs. A concept without invariants has no machine-verifiable behavioral contract.
+| Concept Type | Recommended | What to Cover |
+|-------------|-------------|---------------|
+| Domain entity (CRUD) | 3-5 | Create→query, update→verify, delete→notfound, constraint violation, field correctness |
+| Relationship (toggle) | 2-3 | Full cycle, idempotency, negative check |
+| Authentication | 2-3 | Correct password, wrong password, missing user |
+| Constraint enforcement | 2-3 | Violation triggered, boundary values, valid inputs near boundary |
+| Registry/dispatch | 3-5 | Register→resolve, duplicate→exists, not-found, list all, dispatch routing |
+| State machine (FSM) | 3-5 | Each major transition, invalid transition rejection, reset |
+| Infrastructure/pipeline | 2-4 | Valid input → ok, invalid → error, structured data handling, edge cases |
+| Provider | 2-3 | Registration metadata, transport effects declared, resolution by name |
+
+### Comprehensive Coverage Checklist
+
+For every concept, ask whether you've covered:
+
+- [ ] **Core operational principle** — The defining "if you do X, then Y" story (`example`)
+- [ ] **State correctness** — Data stored matches data retrieved (`example` with field checks)
+- [ ] **Error paths** — Each error variant is reachable (`example` with invalid input)
+- [ ] **Constraint enforcement** — Uniqueness, bounds, business rules (`example` + `never`)
+- [ ] **Idempotency** — Repeated calls behave correctly (`example`)
+- [ ] **Boundary conditions** — Empty inputs, zero values, max capacity (`forall` with `given`)
+- [ ] **State transitions** — FSM correctness (`always` for valid states, `never` for invalid)
+- [ ] **Liveness** — Long-running operations eventually complete (`eventually`)
+- [ ] **Contracts** — Pre/postconditions on actions (`action requires/ensures`)
+- [ ] **Composition readiness** — Resolve/dispatch returns correct metadata (`example`)
+
+**Every concept should have at least one invariant.** Most should have 3-5 using a mix of constructs. A concept without invariants has no machine-verifiable behavioral contract.
 
 ## Test Value Guidelines
 

@@ -237,12 +237,63 @@ export interface ReturnVariant {
   description?: string;
 }
 
+/**
+ * An invariant declaration. Supports six construct kinds from the
+ * formal verification language extensions (see docs/plans/clef-fv.md Section 1):
+ *
+ * - `example` (default): Named conformance test — after/then/and steps
+ * - `forall`: Universally quantified property with given/in bindings
+ * - `always`: State predicate that must hold in every reachable state
+ * - `never`: Safety property — a bad state that must never be reachable
+ * - `eventually`: Liveness property — an outcome that must eventually occur
+ * - `requires/ensures`: Pre/postcondition contracts on actions
+ *
+ * Bare `invariant { after ... then ... }` defaults to kind='example' with no name.
+ */
 export interface InvariantDecl {
+  /** Construct kind. Defaults to 'example' for bare invariant blocks. */
+  kind: 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'requires_ensures';
+  /** Optional human-readable name (e.g. "happy path", "valid kinds accepted"). */
+  name?: string;
+  /** Setup steps (for example/forall). */
   afterPatterns: ActionPattern[];
-  /** Sequence of action patterns and/or property assertions. */
+  /** Verification steps and/or property assertions (for example). */
   thenPatterns: InvariantASTStep[];
   /** Optional `when` guard clause. */
   whenClause?: InvariantWhenClause;
+  /** Quantifier bindings for forall/always/never/eventually. */
+  quantifiers?: QuantifierBinding[];
+  /** Pre/postconditions for requires_ensures kind. */
+  contracts?: ActionContract[];
+  /** The action name this contract applies to (for requires_ensures). */
+  targetAction?: string;
+}
+
+/**
+ * A quantifier binding: `given x in {set}` or `forall p in state_field`.
+ */
+export interface QuantifierBinding {
+  variable: string;
+  /** The domain: a state field name, a set literal, or 'state'. */
+  domain: QuantifierDomain;
+  /** Optional filter condition: `where predicate`. */
+  whereCondition?: InvariantAssertion;
+}
+
+export type QuantifierDomain =
+  | { type: 'state_field'; name: string }
+  | { type: 'set_literal'; values: string[] }
+  | { type: 'type_ref'; name: string };
+
+/**
+ * A pre/postcondition contract on an action.
+ */
+export interface ActionContract {
+  kind: 'requires' | 'ensures';
+  /** For ensures: which variant this postcondition applies to. */
+  variant?: string;
+  /** The predicate expression. */
+  predicate: InvariantAssertion;
 }
 
 /**

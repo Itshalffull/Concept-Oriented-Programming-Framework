@@ -2631,7 +2631,7 @@ workflows:
           2. Write a purpose block explaining why the concept exists (not how it works).
           3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields.
           4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID.
-          5. Write invariants with after/then/and chains.
+          5. Write invariants comprehensively using all six constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions.
           6. Add capabilities block if the concept is a generator or plugin.
     checklists:
       generate:
@@ -2658,7 +2658,7 @@ workflows:
       - title: "Sufficiency & Necessity"
         rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
       - title: "Invariant Completeness"
-        rule: "Key properties are captured as formal invariants documenting what must be true after each action."
+        rule: "Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept."
       - title: "Description Quality"
         rule: "Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true."
     references:
@@ -2759,12 +2759,75 @@ workflows:
 
           ## Invariants
 
+          Six invariant constructs are supported (see docs/plans/clef-fv.md Section 1):
+
+          ### `example` — Named conformance test (Tier 1)
           ```
-          invariant {
+          example "happy path": {
             after create(name: "alice") -> ok(user: u)
-            then create(name: "alice") -> duplicate(email: _)
+            then get(user: u) -> ok(user: u, name: "alice")
           }
           ```
+          Bare `invariant { ... }` blocks default to kind=example with no name.
+
+          ### `forall` — Universally quantified property (Tier 2-3)
+          ```
+          forall "valid kinds accepted": {
+            given kind in {"invariant", "precondition", "postcondition"}
+            after define(kind: kind) -> ok(property: _)
+          }
+          ```
+
+          ### `always` — State predicate (Tier 2-3)
+          ```
+          always "status consistency": {
+            forall p in items:
+              p.status in ["active", "inactive", "archived"]
+          }
+          ```
+
+          ### `never` — Safety property (Tier 2-3)
+          ```
+          never "orphaned items": {
+            exists p in items:
+              p.status = "deleted"
+          }
+          ```
+
+          ### `eventually` — Liveness property (Tier 3)
+          ```
+          eventually "runs terminate": {
+            forall r in runs where r.status = "running":
+              r.status in ["completed", "timeout", "cancelled"]
+          }
+          ```
+
+          ### `action requires/ensures` — Pre/postcondition contracts (Tier 2-3)
+          ```
+          invariant {
+            action define {
+              requires: kind in ["invariant", "precondition"]
+              requires: propertyText.length > 0
+              ensures ok: result.kind = kind
+              ensures invalid: kind != "invariant"
+            }
+          }
+          ```
+
+          ### Property assertions in then-chains
+          ```
+          invariant {
+            after configure(endpoint: "api", threshold: 5) -> ok(breaker: b)
+            then b.failureCount = 0
+            and  b.status != "open"
+          }
+          ```
+          Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`
+
+          ### Comprehensive coverage
+          Invariants should cover: core purpose, state correctness, error paths,
+          constraint enforcement, idempotency, boundary conditions, state transitions,
+          and composition readiness. Aim for 2-5 invariants per concept.
     validation-commands:
       - label: "Generate a concept scaffold"
         command: "npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,delete"
@@ -3151,7 +3214,15 @@ workflows:
         prose: "Generate a TypeScript .handler.ts handler with register() action, typed action methods, input extraction, storage patterns, and an optional conformance test. Sync rules then cascade: create-handler-emit.sync routes files through Emitter, create-handler-record-cache.sync records output in BuildCache, and create-handler-observer.sync tracks the run in GenerationPlan."
       - action: edit
         title: "Edit the Handler Implementation"
-        prose: "Refine the generated handler: implement each action method with domain logic, extract inputs from the request with proper type casts, interact with storage using the correct relation names, and return the correct variant with all fields declared in the concept spec."
+        prose: >
+          Refine the generated handler. Default style is FUNCTIONAL (StorageProgram):
+          1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure().
+          2. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API.
+          3. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model.
+          4. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring.
+          5. Use branch() for conditionals (not if/else), complete() for terminal values.
+          6. Lens-based access with getLens(), putLens(), modifyLens() where possible.
+          Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
     checklists:
       generate:
         - "Handler export name follows convention (camelCase + 'Handler')?"
@@ -3173,6 +3244,10 @@ workflows:
         rule: "Each concept owns its storage exclusively — no shared databases, no cross-concept state access."
       - title: "Input Extraction"
         rule: "Extract inputs with `as` casts at the top of each method. Validate required fields before processing."
+      - title: "Functional First"
+        rule: "Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable."
+      - title: "No Direct I/O"
+        rule: "Never use fetch(), execSync(), or other direct I/O in handlers. Use perform() to declare transport effects — the execution layer (ExternalCall/LocalProcess → protocol providers → instance providers) handles resolution with full observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage)."
     references:
       - path: references/handler-implementation-guide.md
         label: "Handler implementation patterns"
@@ -3182,7 +3257,62 @@ workflows:
 
           How to implement CLEF concept handlers in TypeScript.
 
-          ## ConceptHandler Interface
+          ## FunctionalConceptHandler (Default — Preferred)
+
+          ```typescript
+          import type { FunctionalConceptHandler } from 'runtime/functional-handler.ts';
+          import { createProgram, get, put, find, del, pure, perform, branch, complete } from 'runtime/storage-program.ts';
+
+          export const myHandler: FunctionalConceptHandler = {
+            create(input: Record<string, unknown>) {
+              const name = input.name as string;
+              let p = createProgram();
+              p = put(p, 'items', name, { name, status: 'active' });
+              p = pure(p, { variant: 'ok', item: name });
+              return p;
+            },
+          };
+          ```
+
+          ## External API Calls (Execution Layer)
+
+          NEVER use direct fetch(). Use perform() which routes through the
+          three-tier execution layer with full observability:
+
+          ```typescript
+          // HTTP API call (e.g. OpenAI, Vercel, GitHub)
+          p = perform(p, 'http', 'POST', {
+            endpoint: 'openai-embeddings',  // Tier 3 instance provider name
+            path: '/embeddings',
+            body: JSON.stringify({ model: 'text-embedding-3-small', input: text }),
+          }, 'apiResponse');
+
+          // Local ML inference (e.g. CodeBERT via ONNX)
+          p = perform(p, 'onnx', 'infer', {
+            session: 'codebert-base',  // Tier 3 instance provider name
+            inputs: JSON.stringify(tokenized),
+          }, 'inferResult');
+
+          // Shell command
+          p = perform(p, 'shell', 'exec', {
+            command: 'echo', args: 'hello',
+          }, 'shellResult');
+          ```
+
+          Resolution chain: perform() → EffectHandler → ExternalCall/LocalProcess
+          → HttpProvider/OnnxProvider/etc → Instance endpoint concept.
+
+          Each call automatically gets: ConnectorCall tracking, RetryPolicy,
+          CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation,
+          RuntimeCoverage — via sync wiring.
+
+          For each new API endpoint, create a Tier 3 instance provider concept
+          (like OpenAiEndpoint, VercelApiEndpoint, GitHubApiEndpoint) that stores
+          credentials and registers with HttpProvider via sync.
+
+          ## Imperative ConceptHandler (Fallback Only)
+
+          Use ONLY when functional style cannot work (direct filesystem, FFI):
 
           ```typescript
           interface ConceptHandler {
@@ -3193,45 +3323,16 @@ workflows:
           }
           ```
 
-          ## Standard Pattern
+          ## Storage Patterns (Functional DSL)
 
-          ```typescript
-          export const myConceptHandler: ConceptHandler = {
-            async register() {
-              return {
-                variant: 'ok',
-                name: 'MyConcept',
-                inputKind: 'MyInput',
-                outputKind: 'MyOutput',
-                capabilities: JSON.stringify(['cap1', 'cap2']),
-              };
-            },
-
-            async create(input, storage) {
-              const name = input.name as string;
-              if (!name) return { variant: 'error', message: 'name required' };
-
-              try {
-                const id = crypto.randomUUID();
-                await storage.put('items', id, { id, name });
-                return { variant: 'ok', item: id };
-              } catch (err) {
-                const msg = err instanceof Error ? err.message : String(err);
-                return { variant: 'error', message: msg };
-              }
-            },
-          };
-          ```
-
-          ## Storage Patterns
-
-          | Operation | Method | Example |
-          |-----------|--------|---------|
-          | Create/Update | `storage.put(rel, key, value)` | `put('items', id, data)` |
-          | Read | `storage.get(rel, key)` | `get('items', id)` |
-          | Query | `storage.find(rel, criteria)` | `find('items', { status: 'active' })` |
-          | Delete | `storage.del(rel, key)` | `del('items', id)` |
-          | Bulk delete | `storage.delMany(rel, criteria)` | `delMany('items', { expired: true })` |
+          | Operation | DSL Function | Example |
+          |-----------|-------------|---------|
+          | Create/Update | `put(p, rel, key, value)` | `put(p, 'items', id, data)` |
+          | Read | `get(p, rel, key, bindAs)` | `get(p, 'items', id, 'item')` |
+          | Query | `find(p, rel, criteria, bindAs)` | `find(p, 'items', {}, 'all')` |
+          | Delete | `del(p, rel, key)` | `del(p, 'items', id)` |
+          | Branch | `branch(p, cond, thenP, elseP)` | Conditional logic |
+          | Transport | `perform(p, proto, op, payload, bindAs)` | External/internal calls |
 
           ## Type Mapping
 
