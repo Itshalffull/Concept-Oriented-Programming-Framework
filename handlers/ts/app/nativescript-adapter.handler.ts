@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // NativeScriptAdapter Handler
 //
@@ -5,7 +6,11 @@
 // on({ tap: handler }), native view properties.
 // ============================================================
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 const NATIVESCRIPT_EVENT_MAP: Record<string, string> = {
   onclick: 'tap',
@@ -23,26 +28,27 @@ const NATIVESCRIPT_EVENT_MAP: Record<string, string> = {
   onblur: 'blur',
 };
 
-export const nativeScriptAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
+export const nativeScriptAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
 
+    let p = createProgram();
+
     if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
+      return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(props);
     } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
+      return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const normalized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through as accessibility
       if (key.startsWith('aria-')) {
         const a11yProp = key.replace('aria-', 'accessible-');
         normalized[a11yProp] = value;
@@ -54,13 +60,11 @@ export const nativeScriptAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // class -> NativeScript CSS class
       if (key === 'class') {
         normalized['cssClass'] = value;
         continue;
       }
 
-      // Event handlers -> NativeScript on({ event: handler })
       if (key.startsWith('on')) {
         const nsEvent = NATIVESCRIPT_EVENT_MAP[key.toLowerCase()];
         if (nsEvent) {
@@ -72,13 +76,11 @@ export const nativeScriptAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // style -> NativeScript inline style
       if (key === 'style') {
         normalized['style'] = value;
         continue;
       }
 
-      // Layout -> NativeScript layout containers
       if (key === 'layout') {
         let layoutConfig: Record<string, unknown>;
         try {
@@ -125,7 +127,6 @@ export const nativeScriptAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // Theme -> NativeScript CSS variables
       if (key === 'theme') {
         let theme: Record<string, unknown>;
         try {
@@ -140,12 +141,11 @@ export const nativeScriptAdapterHandler: ConceptHandler = {
         continue;
       }
 
-      // All other props -> native view property
       normalized[key] = value;
     }
 
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
 
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
