@@ -12,7 +12,6 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const FRAMEWORK_ADAPTER_MAP: Record<string, string> = {
   react: 'react-adapter',
@@ -38,7 +37,7 @@ const FRAMEWORK_ADAPTER_MAP: Record<string, string> = {
   wearcompose: 'wear-compose-adapter',
 };
 
-const frameworkAdapterHandlerFunctional: FunctionalConceptHandler = {
+export const frameworkAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -167,8 +166,3 @@ const frameworkAdapterHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const frameworkAdapterHandler = wrapFunctional(frameworkAdapterHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { frameworkAdapterHandlerFunctional };

@@ -4,9 +4,8 @@ import {
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const typeSystemHandlerFunctional: FunctionalConceptHandler = {
+export const typeSystemHandler: FunctionalConceptHandler = {
   registerType(input: Record<string, unknown>) {
     const type = input.type as string;
     const schema = input.schema as string;
@@ -99,8 +98,3 @@ const typeSystemHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const typeSystemHandler = wrapFunctional(typeSystemHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { typeSystemHandlerFunctional };

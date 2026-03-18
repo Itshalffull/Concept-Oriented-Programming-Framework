@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const formBuilderHandlerFunctional: FunctionalConceptHandler = {
+export const formBuilderHandler: FunctionalConceptHandler = {
   buildForm(input: Record<string, unknown>) {
     const form = input.form as string;
     const schema = input.schema as string;
@@ -108,8 +107,3 @@ const formBuilderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const formBuilderHandler = wrapFunctional(formBuilderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { formBuilderHandlerFunctional };

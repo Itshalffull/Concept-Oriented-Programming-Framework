@@ -7,11 +7,10 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let affordanceCounter = 0;
 
-const affordanceHandlerFunctional: FunctionalConceptHandler = {
+export const affordanceHandler: FunctionalConceptHandler = {
   declare(input: Record<string, unknown>) {
     const affordance = input.affordance as string;
     const widget = input.widget as string;
@@ -102,8 +101,3 @@ const affordanceHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const affordanceHandler = wrapFunctional(affordanceHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { affordanceHandlerFunctional };

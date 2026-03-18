@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 interface ContractSlot { name: string; type: string; }
 interface ContractRequires { version?: number; fields?: ContractSlot[]; actions?: Array<{ name: string }>; }
@@ -45,7 +44,7 @@ function validateContract(requires: ContractRequires, conceptFields: Array<{ nam
   return { status: (unresolvedSlots.length > 0 || typeMismatches.length > 0 || missingActions.length > 0) ? 'error' : 'ok', resolvedSlots, unresolvedSlots, typeMismatches, missingActions, bindingMap };
 }
 
-const widgetResolverHandlerFunctional: FunctionalConceptHandler = {
+export const widgetResolverHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const resolver = input.resolver as string; const element = input.element as string; const context = input.context as string;
     // Widget resolution involves complex scoring with multiple affordance lookups.
@@ -137,8 +136,3 @@ const widgetResolverHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const widgetResolverHandler = wrapFunctional(widgetResolverHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { widgetResolverHandlerFunctional };

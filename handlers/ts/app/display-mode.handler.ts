@@ -8,13 +8,12 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function compositeKey(schema: string, modeId: string): string {
   return `${schema}:${modeId}`;
 }
 
-const displayModeHandlerFunctional: FunctionalConceptHandler = {
+export const displayModeHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'displayMode', {}, 'items');
@@ -265,8 +264,3 @@ const displayModeHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const displayModeHandler = wrapFunctional(displayModeHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { displayModeHandlerFunctional };

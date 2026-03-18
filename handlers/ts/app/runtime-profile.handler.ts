@@ -4,9 +4,8 @@ import {
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const runtimeProfileHandlerFunctional: FunctionalConceptHandler = {
+export const runtimeProfileHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const profile = String(input.profile ?? '');
 
@@ -46,8 +45,3 @@ const runtimeProfileHandlerFunctional: FunctionalConceptHandler = {
 };
 
 export default runtimeProfileHandler;
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const runtimeProfileHandler = wrapFunctional(runtimeProfileHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { runtimeProfileHandlerFunctional };

@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function generateId(): string {
   return `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -177,7 +176,7 @@ function exportToMarkdown(content: Record<string, unknown>): string {
   return lines.join('\n').trim();
 }
 
-const analysisReportHandlerFunctional: FunctionalConceptHandler = {
+export const analysisReportHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const result = input.result as string;
     const format = input.format as string;
@@ -335,8 +334,3 @@ const analysisReportHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const analysisReportHandler = wrapFunctional(analysisReportHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { analysisReportHandlerFunctional };

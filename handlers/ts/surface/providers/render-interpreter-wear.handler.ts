@@ -1,7 +1,6 @@
 // RenderInterpreterWear — self-registering provider for "wear" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:wear';
 let idCounter = 0;
 function nextId(): string { return `ri-wear-${++idCounter}`; }
 
-const renderInterpreterWearHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterWearHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'wear' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterWearHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const renderInterpreterWearHandler = wrapFunctional(renderInterpreterWearHandlerFunctional);
-export { renderInterpreterWearHandlerFunctional };
 
 export function resetRenderInterpreterWearCounter(): void { idCounter = 0; }

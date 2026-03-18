@@ -6,14 +6,13 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const VALID_KINDS = ['field', 'group', 'layout', 'action', 'display', 'container', 'slot'];
 
-const elementHandlerFunctional: FunctionalConceptHandler = {
+export const elementHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const element = input.element as string;
     const kind = input.kind as string;
@@ -146,8 +145,3 @@ const elementHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const elementHandler = wrapFunctional(elementHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { elementHandlerFunctional };

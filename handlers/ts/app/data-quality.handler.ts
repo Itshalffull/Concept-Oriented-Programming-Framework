@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const dataQualityHandlerFunctional: FunctionalConceptHandler = {
+export const dataQualityHandler: FunctionalConceptHandler = {
   validate(input: Record<string, unknown>) {
     const item = input.item as string;
     const rulesetId = input.rulesetId as string;
@@ -87,8 +86,3 @@ const dataQualityHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { clusters: '[]' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const dataQualityHandler = wrapFunctional(dataQualityHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { dataQualityHandlerFunctional };

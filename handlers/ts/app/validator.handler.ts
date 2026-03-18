@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const validatorHandlerFunctional: FunctionalConceptHandler = {
+export const validatorHandler: FunctionalConceptHandler = {
   registerConstraint(input: Record<string, unknown>) {
     const validator = input.validator as string;
     const constraint = input.constraint as string;
@@ -141,8 +140,3 @@ const validatorHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const validatorHandler = wrapFunctional(validatorHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { validatorHandlerFunctional };

@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
@@ -68,7 +67,7 @@ export function applyA11yAdapt(
  * bindings, focus management) to RenderProgram instruction sequences.
  * Registered with RenderTransform as kind "a11y-adapt" through sync wiring.
  */
-const a11yAdaptProviderHandlerFunctional: FunctionalConceptHandler = {
+export const a11yAdaptProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'A11yAdaptProvider',
@@ -121,6 +120,3 @@ const a11yAdaptProviderHandlerFunctional: FunctionalConceptHandler = {
     }
   },
 };
-
-export const a11yAdaptProviderHandler = wrapFunctional(a11yAdaptProviderHandlerFunctional);
-export { a11yAdaptProviderHandlerFunctional };

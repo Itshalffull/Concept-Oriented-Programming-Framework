@@ -1,7 +1,6 @@
 // RenderInterpreterReactNative — self-registering provider for "react-native" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:react-native';
 let idCounter = 0;
 function nextId(): string { return `ri-reactnative-${++idCounter}`; }
 
-const renderInterpreterReactNativeHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterReactNativeHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react-native' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterReactNativeHandlerFunctional: FunctionalConceptHandler = 
   },
 };
 
-export const renderInterpreterReactNativeHandler = wrapFunctional(renderInterpreterReactNativeHandlerFunctional);
-export { renderInterpreterReactNativeHandlerFunctional };
 
 export function resetRenderInterpreterReactNativeCounter(): void { idCounter = 0; }

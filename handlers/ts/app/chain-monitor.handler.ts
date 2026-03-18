@@ -9,7 +9,6 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /** Maximum wait time (ms) before a finality request times out */
 const FINALITY_TIMEOUT_MS = 300_000; // 5 minutes
@@ -17,7 +16,7 @@ const FINALITY_TIMEOUT_MS = 300_000; // 5 minutes
 /** Default confirmation threshold when no chain config overrides it */
 const DEFAULT_CONFIRMATION_THRESHOLD = 12;
 
-const chainMonitorHandlerFunctional: FunctionalConceptHandler = {
+export const chainMonitorHandler: FunctionalConceptHandler = {
   awaitFinality(input: Record<string, unknown>) {
     const txHash = input.txHash as string;
     const level = (input.level as string) || 'confirmations';
@@ -91,8 +90,3 @@ const chainMonitorHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { chainId, blockNumber }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const chainMonitorHandler = wrapFunctional(chainMonitorHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { chainMonitorHandlerFunctional };

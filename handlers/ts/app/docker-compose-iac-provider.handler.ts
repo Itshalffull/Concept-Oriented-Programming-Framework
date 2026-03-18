@@ -8,9 +8,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const dockerComposeIacProviderHandlerFunctional: FunctionalConceptHandler = {
+export const dockerComposeIacProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
@@ -124,8 +123,3 @@ const dockerComposeIacProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const dockerComposeIacProviderHandler = wrapFunctional(dockerComposeIacProviderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { dockerComposeIacProviderHandlerFunctional };

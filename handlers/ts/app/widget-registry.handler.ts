@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const widgetRegistryHandlerFunctional: FunctionalConceptHandler = {
+export const widgetRegistryHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const entry = input.entry as string; const widget = input.widget as string; const interactor = input.interactor as string;
     const concept = input.concept as string | null; const suite = input.suite as string | null;
@@ -49,8 +48,3 @@ const widgetRegistryHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const widgetRegistryHandler = wrapFunctional(widgetRegistryHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { widgetRegistryHandlerFunctional };

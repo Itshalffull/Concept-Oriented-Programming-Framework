@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const notificationHandlerFunctional: FunctionalConceptHandler = {
+export const notificationHandler: FunctionalConceptHandler = {
   registerChannel(input: Record<string, unknown>) {
     const name = input.name as string;
     const config = input.config as string;
@@ -137,8 +136,3 @@ const notificationHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { notifications: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const notificationHandler = wrapFunctional(notificationHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { notificationHandlerFunctional };

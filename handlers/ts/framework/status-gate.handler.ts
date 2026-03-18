@@ -6,7 +6,6 @@
 // Default provider: "exit-code" (works in any CI with zero config).
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
@@ -14,7 +13,7 @@ import {
 
 // ── Handler ──────────────────────────────────────────────────────────
 
-const statusGateHandlerFunctional: FunctionalConceptHandler = {
+export const statusGateHandler: FunctionalConceptHandler = {
 
   report(input: Record<string, unknown>) {
     const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -180,8 +179,6 @@ const statusGateHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const statusGateHandler = wrapFunctional(statusGateHandlerFunctional);
-export { statusGateHandlerFunctional };
 
 // ── Utility: check if all gates for a target are passing ─────────────
 

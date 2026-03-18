@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, put, pure,
   type StorageProgram,
@@ -57,7 +56,7 @@ function analyzeDeadParts(parts: string[], instructions: RenderInstruction[]): {
   return { deadParts, unreachableStates };
 }
 
-const deadPartProviderHandlerFunctional: FunctionalConceptHandler = {
+export const deadPartProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
     const analysis = input.analysis as string;
     const program = input.program as string;
@@ -106,6 +105,3 @@ const deadPartProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-export const deadPartProviderHandler = wrapFunctional(deadPartProviderHandlerFunctional);
-export { deadPartProviderHandlerFunctional };

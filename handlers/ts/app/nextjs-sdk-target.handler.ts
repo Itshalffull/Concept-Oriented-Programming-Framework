@@ -6,9 +6,8 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const nextjsSdkTargetHandlerFunctional: FunctionalConceptHandler = {
+export const nextjsSdkTargetHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -50,8 +49,3 @@ const nextjsSdkTargetHandlerFunctional: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const nextjsSdkTargetHandler = wrapFunctional(nextjsSdkTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { nextjsSdkTargetHandlerFunctional };

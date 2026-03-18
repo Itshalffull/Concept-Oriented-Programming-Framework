@@ -5,7 +5,6 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function slugify(title: string): string {
   return title
@@ -14,7 +13,7 @@ function slugify(title: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-const articleHandlerFunctional: FunctionalConceptHandler = {
+export const articleHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const article = input.article as string;
     const title = input.title as string;
@@ -107,8 +106,3 @@ const articleHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const articleHandler = wrapFunctional(articleHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { articleHandlerFunctional };

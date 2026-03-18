@@ -8,7 +8,6 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const TERMINAL_KEY_MAP: Record<string, string> = {
   onclick: 'enter', onsubmit: 'enter', onkeydown: 'keypress', onkeyup: 'keypress',
@@ -23,7 +22,7 @@ const ANSI_CLASS_MAP: Record<string, string> = {
 };
 const ANSI_RESET = '\x1b[0m';
 
-const terminalAdapterHandlerFunctional: FunctionalConceptHandler = {
+export const terminalAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -54,8 +53,3 @@ const terminalAdapterHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const terminalAdapterHandler = wrapFunctional(terminalAdapterHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { terminalAdapterHandlerFunctional };

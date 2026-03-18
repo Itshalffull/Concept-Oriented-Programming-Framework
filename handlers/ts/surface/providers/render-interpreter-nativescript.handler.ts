@@ -1,7 +1,6 @@
 // RenderInterpreterNativescript — self-registering provider for "nativescript" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:nativescript';
 let idCounter = 0;
 function nextId(): string { return `ri-nativescript-${++idCounter}`; }
 
-const renderInterpreterNativescriptHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterNativescriptHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'nativescript' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterNativescriptHandlerFunctional: FunctionalConceptHandler =
   },
 };
 
-export const renderInterpreterNativescriptHandler = wrapFunctional(renderInterpreterNativescriptHandlerFunctional);
-export { renderInterpreterNativescriptHandlerFunctional };
 
 export function resetRenderInterpreterNativescriptCounter(): void { idCounter = 0; }

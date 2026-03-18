@@ -9,7 +9,6 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 // ---------------------------------------------------------------------------
 // Internal graph representation
@@ -724,7 +723,7 @@ const ALGORITHM_DISPATCH: Record<string, { category: string; fn: (g: Graph, conf
 // Handler
 // ---------------------------------------------------------------------------
 
-const graphAnalysisHandlerFunctional: FunctionalConceptHandler = {
+export const graphAnalysisHandler: FunctionalConceptHandler = {
 
   analyze(input: Record<string, unknown>) {
     const graphJson = input.graph as string;
@@ -824,8 +823,3 @@ const graphAnalysisHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { cleared: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const graphAnalysisHandler = wrapFunctional(graphAnalysisHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { graphAnalysisHandlerFunctional };

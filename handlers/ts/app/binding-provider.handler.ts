@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -14,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const PLUGIN_REF = 'surface-provider:binding';
 const VALID_MODES = ['coupled', 'rest', 'graphql', 'static'];
 
-const bindingProviderHandlerFunctional: FunctionalConceptHandler = {
+export const bindingProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -139,8 +138,3 @@ const bindingProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const bindingProviderHandler = wrapFunctional(bindingProviderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { bindingProviderHandlerFunctional };

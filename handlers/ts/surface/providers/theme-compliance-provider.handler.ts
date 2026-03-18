@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, put, pure,
   type StorageProgram,
@@ -61,7 +60,7 @@ function verifyCompliance(tokens: string[], manifestKeys: Set<string>): {
   };
 }
 
-const themeComplianceProviderHandlerFunctional: FunctionalConceptHandler = {
+export const themeComplianceProviderHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
     const check = input.check as string;
     const program = input.program as string;
@@ -125,6 +124,3 @@ const themeComplianceProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-export const themeComplianceProviderHandler = wrapFunctional(themeComplianceProviderHandlerFunctional);
-export { themeComplianceProviderHandlerFunctional };

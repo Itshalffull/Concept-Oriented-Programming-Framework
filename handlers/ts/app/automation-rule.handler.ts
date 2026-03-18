@@ -6,9 +6,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const automationRuleHandlerFunctional: FunctionalConceptHandler = {
+export const automationRuleHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'automationRule', {}, 'items');
@@ -101,8 +100,3 @@ const automationRuleHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const automationRuleHandler = wrapFunctional(automationRuleHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { automationRuleHandlerFunctional };

@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const gcfRuntimeHandlerFunctional: FunctionalConceptHandler = {
+export const gcfRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const projectId = input.projectId as string;
@@ -125,8 +124,3 @@ const gcfRuntimeHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { function: fn }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const gcfRuntimeHandler = wrapFunctional(gcfRuntimeHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { gcfRuntimeHandlerFunctional };

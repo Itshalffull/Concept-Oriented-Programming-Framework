@@ -1,7 +1,6 @@
 // RenderInterpreterSwiftui — self-registering provider for "swiftui" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:swiftui';
 let idCounter = 0;
 function nextId(): string { return `ri-swiftui-${++idCounter}`; }
 
-const renderInterpreterSwiftuiHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterSwiftuiHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'swiftui' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterSwiftuiHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const renderInterpreterSwiftuiHandler = wrapFunctional(renderInterpreterSwiftuiHandlerFunctional);
-export { renderInterpreterSwiftuiHandlerFunctional };
 
 export function resetRenderInterpreterSwiftuiCounter(): void { idCounter = 0; }

@@ -1,7 +1,6 @@
 // RenderInterpreterVue — self-registering provider for "vue" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:vue';
 let idCounter = 0;
 function nextId(): string { return `ri-vue-${++idCounter}`; }
 
-const renderInterpreterVueHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterVueHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'vue' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterVueHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const renderInterpreterVueHandler = wrapFunctional(renderInterpreterVueHandlerFunctional);
-export { renderInterpreterVueHandlerFunctional };
 
 export function resetRenderInterpreterVueCounter(): void { idCounter = 0; }

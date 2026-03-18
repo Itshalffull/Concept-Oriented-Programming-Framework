@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const commentThreadedHandlerFunctional: FunctionalConceptHandler = {
+export const commentThreadedHandler: FunctionalConceptHandler = {
   addComment(input: Record<string, unknown>) {
     const comment = input.comment as string;
     const entity = input.entity as string;
@@ -89,8 +88,3 @@ const commentThreadedHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const commentThreadedHandler = wrapFunctional(commentThreadedHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { commentThreadedHandlerFunctional };

@@ -11,9 +11,8 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const browserAdapterHandlerFunctional: FunctionalConceptHandler = {
+export const browserAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -70,8 +69,3 @@ const browserAdapterHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const browserAdapterHandler = wrapFunctional(browserAdapterHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { browserAdapterHandlerFunctional };

@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
@@ -15,7 +14,7 @@ const resultsRel = relation('results');
  * RenderProgram, enabling provenance queries about which
  * transforms produced a given output.
  */
-const transformExtractionProviderHandlerFunctional: FunctionalConceptHandler = {
+export const transformExtractionProviderHandler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
     const programStr = input.program as string;
 
@@ -47,6 +46,3 @@ const transformExtractionProviderHandlerFunctional: FunctionalConceptHandler = {
     }
   },
 };
-
-export const transformExtractionProviderHandler = wrapFunctional(transformExtractionProviderHandlerFunctional);
-export { transformExtractionProviderHandlerFunctional };

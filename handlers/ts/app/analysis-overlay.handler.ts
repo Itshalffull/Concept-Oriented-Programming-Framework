@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /**
  * Interpolate HSL color along a blue->yellow->red gradient based on a 0-1 score.
@@ -181,7 +180,7 @@ function computeAttributes(
   }
 }
 
-const analysisOverlayHandlerFunctional: FunctionalConceptHandler = {
+export const analysisOverlayHandler: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const result = input.result as string;
@@ -292,8 +291,3 @@ const analysisOverlayHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const analysisOverlayHandler = wrapFunctional(analysisOverlayHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { analysisOverlayHandlerFunctional };

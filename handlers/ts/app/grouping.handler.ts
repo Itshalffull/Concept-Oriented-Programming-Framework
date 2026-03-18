@@ -5,7 +5,6 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /** Classify a single action name by its operational properties. */
 function classifyAction(actionName: string): {
@@ -58,7 +57,7 @@ function classifyAction(actionName: string): {
   return { crudRole, intent, eventProducing, eventVerb, mcpType };
 }
 
-const groupingHandlerFunctional: FunctionalConceptHandler = {
+export const groupingHandler: FunctionalConceptHandler = {
   group(input: Record<string, unknown>) {
     const items = JSON.parse(input.items as string) as string[];
     const config = input.config as string;
@@ -174,8 +173,3 @@ const groupingHandlerFunctional: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const groupingHandler = wrapFunctional(groupingHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { groupingHandlerFunctional };

@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const cacheHandlerFunctional: FunctionalConceptHandler = {
+export const cacheHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {
     const bin = input.bin as string;
     const key = input.key as string;
@@ -74,8 +73,3 @@ const cacheHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const cacheHandler = wrapFunctional(cacheHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { cacheHandlerFunctional };

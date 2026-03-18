@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const graphqlTargetHandlerFunctional: FunctionalConceptHandler = {
+export const graphqlTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -106,8 +105,3 @@ const graphqlTargetHandlerFunctional: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const graphqlTargetHandler = wrapFunctional(graphqlTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { graphqlTargetHandlerFunctional };

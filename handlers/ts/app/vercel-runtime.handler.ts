@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, del, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const vercelRuntimeHandlerFunctional: FunctionalConceptHandler = {
+export const vercelRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string; const teamId = input.teamId as string; const framework = input.framework as string;
     const projectId = `prj-${concept.toLowerCase()}-${Date.now()}`; const endpoint = `https://${concept.toLowerCase()}.vercel.app`;
@@ -66,8 +65,3 @@ const vercelRuntimeHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { project }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const vercelRuntimeHandler = wrapFunctional(vercelRuntimeHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { vercelRuntimeHandlerFunctional };

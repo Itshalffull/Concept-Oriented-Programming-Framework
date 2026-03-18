@@ -5,7 +5,6 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function slugify(input: string): string {
   return input
@@ -17,7 +16,7 @@ function slugify(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-const pathautoHandlerFunctional: FunctionalConceptHandler = {
+export const pathautoHandler: FunctionalConceptHandler = {
   generateAlias(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
     const entity = input.entity as string;
@@ -74,8 +73,3 @@ const pathautoHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { cleaned }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const pathautoHandler = wrapFunctional(pathautoHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { pathautoHandlerFunctional };

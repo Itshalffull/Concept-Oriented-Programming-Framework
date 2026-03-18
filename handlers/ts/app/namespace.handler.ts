@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const namespaceHandlerFunctional: FunctionalConceptHandler = {
+export const namespaceHandler: FunctionalConceptHandler = {
   createNamespacedPage(input: Record<string, unknown>) {
     const node = input.node as string;
     const path = input.path as string;
@@ -93,8 +92,3 @@ const namespaceHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const namespaceHandler = wrapFunctional(namespaceHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { namespaceHandlerFunctional };

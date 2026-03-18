@@ -7,7 +7,6 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /**
  * Simple recursive-descent parser and evaluator for arithmetic expressions.
@@ -147,7 +146,7 @@ function parseAndEvaluate(
   return { result: result.value, ast: result.ast };
 }
 
-const expressionLanguageHandlerFunctional: FunctionalConceptHandler = {
+export const expressionLanguageHandler: FunctionalConceptHandler = {
   registerLanguage(input: Record<string, unknown>) {
     const name = input.name as string;
     const grammar = input.grammar as string;
@@ -294,8 +293,3 @@ const expressionLanguageHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const expressionLanguageHandler = wrapFunctional(expressionLanguageHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { expressionLanguageHandlerFunctional };

@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
@@ -37,7 +36,7 @@ export function applyTokenRemap(
  * sequences. Registered with RenderTransform as kind "token-remap"
  * through sync wiring.
  */
-const tokenRemapProviderHandlerFunctional: FunctionalConceptHandler = {
+export const tokenRemapProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'TokenRemapProvider',
@@ -89,6 +88,3 @@ const tokenRemapProviderHandlerFunctional: FunctionalConceptHandler = {
     }
   },
 };
-
-export const tokenRemapProviderHandler = wrapFunctional(tokenRemapProviderHandlerFunctional);
-export { tokenRemapProviderHandlerFunctional };

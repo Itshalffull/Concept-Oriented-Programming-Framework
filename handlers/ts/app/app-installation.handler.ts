@@ -4,9 +4,8 @@ import {
   createProgram, put, find, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const appInstallationHandlerFunctional: FunctionalConceptHandler = {
+export const appInstallationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const installation = String(input.installation ?? '');
     let p = createProgram();
@@ -36,8 +35,3 @@ const appInstallationHandlerFunctional: FunctionalConceptHandler = {
 };
 
 export default appInstallationHandler;
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const appInstallationHandler = wrapFunctional(appInstallationHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { appInstallationHandlerFunctional };

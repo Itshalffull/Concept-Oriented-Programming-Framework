@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const generatorHandlerFunctional: FunctionalConceptHandler = {
+export const generatorHandler: FunctionalConceptHandler = {
   plan(input: Record<string, unknown>) {
     const suite = input.suite as string;
     const interfaceManifest = input.interfaceManifest as string;
@@ -141,8 +140,3 @@ const generatorHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const generatorHandler = wrapFunctional(generatorHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { generatorHandlerFunctional };

@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function simulateEcrecover(address: string, message: string, signature: string): string {
   return '0x' + createHash('sha256').update(address).update(message).update(signature).digest('hex').slice(0, 40);
@@ -16,7 +15,7 @@ function verifyTypedDataSignature(address: string, domain: string, types: string
   return simulateEcrecover(address, combinedMessage, signature);
 }
 
-const walletHandlerFunctional: FunctionalConceptHandler = {
+export const walletHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase(); const message = input.message as string; const signature = input.signature as string;
     if (!address || !message || !signature) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields: address, message, signature' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -57,8 +56,3 @@ const walletHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { address, nonce: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const walletHandler = wrapFunctional(walletHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { walletHandlerFunctional };

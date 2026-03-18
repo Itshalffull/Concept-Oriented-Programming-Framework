@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const enricherHandlerFunctional: FunctionalConceptHandler = {
+export const enricherHandler: FunctionalConceptHandler = {
   enrich(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const enricherId = input.enricherId as string;
@@ -86,8 +85,3 @@ const enricherHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { refreshed: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const enricherHandler = wrapFunctional(enricherHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { enricherHandlerFunctional };

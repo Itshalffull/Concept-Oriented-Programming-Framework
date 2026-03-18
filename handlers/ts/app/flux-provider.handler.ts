@@ -8,9 +8,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const fluxProviderHandlerFunctional: FunctionalConceptHandler = {
+export const fluxProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
@@ -117,8 +116,3 @@ const fluxProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const fluxProviderHandler = wrapFunctional(fluxProviderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { fluxProviderHandlerFunctional };

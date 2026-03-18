@@ -5,9 +5,8 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const rustSdkTargetHandlerFunctional: FunctionalConceptHandler = {
+export const rustSdkTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -44,8 +43,3 @@ const rustSdkTargetHandlerFunctional: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const rustSdkTargetHandler = wrapFunctional(rustSdkTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { rustSdkTargetHandlerFunctional };

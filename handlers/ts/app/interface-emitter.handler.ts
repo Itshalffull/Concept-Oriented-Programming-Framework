@@ -5,7 +5,6 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function computeHash(content: string): string {
   let hash = 0;
@@ -16,7 +15,7 @@ function computeHash(content: string): string {
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-const interfaceEmitterHandlerFunctional: FunctionalConceptHandler = {
+export const interfaceEmitterHandler: FunctionalConceptHandler = {
   write(input: Record<string, unknown>) {
     const path = input.path as string;
     const content = input.content as string;
@@ -94,8 +93,3 @@ const interfaceEmitterHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { files: JSON.stringify([]), totalBytes: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const interfaceEmitterHandler = wrapFunctional(interfaceEmitterHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { interfaceEmitterHandlerFunctional };

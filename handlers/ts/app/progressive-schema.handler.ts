@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const progressiveSchemaHandlerFunctional: FunctionalConceptHandler = {
+export const progressiveSchemaHandler: FunctionalConceptHandler = {
   captureFreeform(input: Record<string, unknown>) {
     const content = input.content as string;
 
@@ -117,8 +116,3 @@ const progressiveSchemaHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { proposedSchema: JSON.stringify({ fields: [] }) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const progressiveSchemaHandler = wrapFunctional(progressiveSchemaHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { progressiveSchemaHandlerFunctional };

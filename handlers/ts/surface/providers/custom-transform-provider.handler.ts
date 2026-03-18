@@ -1,5 +1,4 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
@@ -45,7 +44,7 @@ export function applyCustomTransform(
  * instructions. Registered with RenderTransform as kind "custom"
  * through sync wiring.
  */
-const customTransformProviderHandlerFunctional: FunctionalConceptHandler = {
+export const customTransformProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'CustomTransformProvider',
@@ -98,6 +97,3 @@ const customTransformProviderHandlerFunctional: FunctionalConceptHandler = {
     }
   },
 };
-
-export const customTransformProviderHandler = wrapFunctional(customTransformProviderHandlerFunctional);
-export { customTransformProviderHandlerFunctional };

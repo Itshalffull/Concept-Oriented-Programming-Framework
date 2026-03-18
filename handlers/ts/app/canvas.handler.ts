@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const canvasHandlerFunctional: FunctionalConceptHandler = {
+export const canvasHandler: FunctionalConceptHandler = {
   addNode(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const node = input.node as string;
@@ -129,8 +128,3 @@ const canvasHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const canvasHandler = wrapFunctional(canvasHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { canvasHandlerFunctional };

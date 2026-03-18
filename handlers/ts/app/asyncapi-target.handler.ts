@@ -5,9 +5,8 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const asyncapiTargetHandlerFunctional: FunctionalConceptHandler = {
+export const asyncapiTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const syncSpecs = input.syncSpecs as string[];
@@ -61,8 +60,3 @@ const asyncapiTargetHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { spec: specId, content }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const asyncapiTargetHandler = wrapFunctional(asyncapiTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { asyncapiTargetHandlerFunctional };

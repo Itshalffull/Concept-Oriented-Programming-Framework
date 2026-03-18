@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const relationHandlerFunctional: FunctionalConceptHandler = {
+export const relationHandler: FunctionalConceptHandler = {
   defineRelation(input: Record<string, unknown>) {
     const relation = input.relation as string;
     const schema = input.schema as string;
@@ -153,8 +152,3 @@ const relationHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { items: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const relationHandler = wrapFunctional(relationHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { relationHandlerFunctional };

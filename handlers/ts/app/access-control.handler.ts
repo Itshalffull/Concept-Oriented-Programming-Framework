@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const accessControlHandlerFunctional: FunctionalConceptHandler = {
+export const accessControlHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const resource = input.resource as string;
     const action = input.action as string;
@@ -70,8 +69,3 @@ const accessControlHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { result: 'neutral' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const accessControlHandler = wrapFunctional(accessControlHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { accessControlHandlerFunctional };

@@ -5,7 +5,6 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -13,7 +12,7 @@ const DEFAULT_BREAKPOINTS: Record<string, { min: number; max: number }> = { xs: 
 function detectBreakpoint(width: number, breakpoints: Record<string, { min: number; max: number }>): string { for (const [name, range] of Object.entries(breakpoints)) { if (width >= range.min && width <= range.max) return name; } return 'unknown'; }
 function detectOrientation(width: number, height: number): string { if (width > height) return 'landscape'; if (height > width) return 'portrait'; return 'square'; }
 
-const viewportHandlerFunctional: FunctionalConceptHandler = {
+export const viewportHandler: FunctionalConceptHandler = {
   observe(input: Record<string, unknown>) {
     const viewport = input.viewport as string; const width = input.width as number; const height = input.height as number;
     const id = viewport || nextId('V');
@@ -48,8 +47,3 @@ const viewportHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const viewportHandler = wrapFunctional(viewportHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { viewportHandlerFunctional };

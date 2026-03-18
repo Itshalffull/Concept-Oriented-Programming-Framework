@@ -2,12 +2,11 @@
 // WatchAdapter Handler — Transforms framework-neutral props into watchOS bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const WATCH_EVENT_MAP: Record<string, string> = { onclick: 'onTapGesture', onlongpress: 'onLongPressGesture', onchange: 'onChange', onappear: 'onAppear', ondisappear: 'onDisappear', onscroll: 'digitalCrownRotation' };
 const UNSUPPORTED_WATCH_EVENTS = new Set(['ondoubleclick','ondrag','ondrop','onhover','onmouseenter','onmouseleave','onkeydown','onkeyup','onresize','oncontextmenu']);
 
-const watchAdapterHandlerFunctional: FunctionalConceptHandler = {
+export const watchAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string; const props = input.props as string;
     if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -27,8 +26,3 @@ const watchAdapterHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const watchAdapterHandler = wrapFunctional(watchAdapterHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { watchAdapterHandlerFunctional };

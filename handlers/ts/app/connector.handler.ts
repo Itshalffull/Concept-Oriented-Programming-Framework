@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const connectorHandlerFunctional: FunctionalConceptHandler = {
+export const connectorHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const sourceId = input.sourceId as string;
     const protocolId = input.protocolId as string;
@@ -106,8 +105,3 @@ const connectorHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const connectorHandler = wrapFunctional(connectorHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { connectorHandlerFunctional };

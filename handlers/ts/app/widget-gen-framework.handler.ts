@@ -5,12 +5,11 @@ import {
   createProgram, find, put, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string { return `widget-gen-framework-${++idCounter}`; }
 
-const widgetGenFrameworkHandlerFunctional: FunctionalConceptHandler = {
+export const widgetGenFrameworkHandler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
     const id = nextId(); const providerRef = 'widget-gen-provider:framework';
     let p = createProgram();
@@ -42,8 +41,3 @@ const widgetGenFrameworkHandlerFunctional: FunctionalConceptHandler = {
 };
 
 export function resetWidgetGenFrameworkCounter(): void { idCounter = 0; }
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const widgetGenFrameworkHandler = wrapFunctional(widgetGenFrameworkHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { widgetGenFrameworkHandlerFunctional };

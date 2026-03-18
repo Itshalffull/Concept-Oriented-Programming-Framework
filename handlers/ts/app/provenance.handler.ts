@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const provenanceHandlerFunctional: FunctionalConceptHandler = {
+export const provenanceHandler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const activity = input.activity as string;
@@ -90,8 +89,3 @@ const provenanceHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { plan: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const provenanceHandler = wrapFunctional(provenanceHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { provenanceHandlerFunctional };

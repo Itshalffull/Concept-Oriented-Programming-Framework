@@ -2,9 +2,8 @@
 // SwiftSdkTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const swiftSdkTargetHandlerFunctional: FunctionalConceptHandler = {
+export const swiftSdkTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -205,8 +204,3 @@ const swiftSdkTargetHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { package: packageId, files }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const swiftSdkTargetHandler = wrapFunctional(swiftSdkTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { swiftSdkTargetHandlerFunctional };

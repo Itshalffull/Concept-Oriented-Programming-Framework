@@ -5,9 +5,8 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const interfaceMiddlewareHandlerFunctional: FunctionalConceptHandler = {
+export const interfaceMiddlewareHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const traits = JSON.parse(input.traits as string) as string[];
     const target = input.target as string;
@@ -71,8 +70,3 @@ const interfaceMiddlewareHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const interfaceMiddlewareHandler = wrapFunctional(interfaceMiddlewareHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { interfaceMiddlewareHandlerFunctional };

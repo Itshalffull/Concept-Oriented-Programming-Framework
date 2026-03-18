@@ -1,7 +1,6 @@
 // RenderInterpreterGtk — self-registering provider for "gtk" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:gtk';
 let idCounter = 0;
 function nextId(): string { return `ri-gtk-${++idCounter}`; }
 
-const renderInterpreterGtkHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterGtkHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'gtk' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterGtkHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const renderInterpreterGtkHandler = wrapFunctional(renderInterpreterGtkHandlerFunctional);
-export { renderInterpreterGtkHandlerFunctional };
 
 export function resetRenderInterpreterGtkCounter(): void { idCounter = 0; }

@@ -6,7 +6,6 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -14,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const PLUGIN_REF = 'surface-provider:design-token';
 const VALID_FORMATS = ['css', 'dtcg', 'scss', 'json', 'tailwind', 'swift', 'kotlin'];
 
-const designTokenProviderHandlerFunctional: FunctionalConceptHandler = {
+export const designTokenProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -112,8 +111,3 @@ const designTokenProviderHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { output: '', format }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const designTokenProviderHandler = wrapFunctional(designTokenProviderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { designTokenProviderHandlerFunctional };

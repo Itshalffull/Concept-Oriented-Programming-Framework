@@ -5,12 +5,11 @@ import {
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-const widgetParserHandlerFunctional: FunctionalConceptHandler = {
+export const widgetParserHandler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const widget = input.widget as string; const source = input.source as string;
     const id = widget || nextId('W');
@@ -50,8 +49,3 @@ const widgetParserHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const widgetParserHandler = wrapFunctional(widgetParserHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { widgetParserHandlerFunctional };

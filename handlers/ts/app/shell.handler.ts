@@ -6,12 +6,11 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-const shellHandlerFunctional: FunctionalConceptHandler = {
+export const shellHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const shell = input.shell as string;
     const zones = input.zones as string;
@@ -188,8 +187,3 @@ const shellHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const shellHandler = wrapFunctional(shellHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { shellHandlerFunctional };

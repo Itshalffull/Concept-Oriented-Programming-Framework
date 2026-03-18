@@ -5,9 +5,8 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const openapiTargetHandlerFunctional: FunctionalConceptHandler = {
+export const openapiTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const config = input.config as string;
@@ -174,8 +173,3 @@ const openapiTargetHandlerFunctional: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const openapiTargetHandler = wrapFunctional(openapiTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { openapiTargetHandlerFunctional };

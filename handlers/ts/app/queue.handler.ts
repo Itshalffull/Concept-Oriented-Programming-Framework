@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const queueHandlerFunctional: FunctionalConceptHandler = {
+export const queueHandler: FunctionalConceptHandler = {
   enqueue(input: Record<string, unknown>) {
     const queue = input.queue as string;
     const item = input.item as string;
@@ -102,8 +101,3 @@ const queueHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const queueHandler = wrapFunctional(queueHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { queueHandlerFunctional };

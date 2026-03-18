@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const pulumiProviderHandlerFunctional: FunctionalConceptHandler = {
+export const pulumiProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     let p = createProgram();
     return complete(p, 'ok', {
@@ -117,8 +116,3 @@ const pulumiProviderHandlerFunctional: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const pulumiProviderHandler = wrapFunctional(pulumiProviderHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { pulumiProviderHandlerFunctional };

@@ -7,9 +7,8 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-const k8sRuntimeHandlerFunctional: FunctionalConceptHandler = {
+export const k8sRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const namespace = input.namespace as string;
@@ -124,8 +123,3 @@ const k8sRuntimeHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { deployment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const k8sRuntimeHandler = wrapFunctional(k8sRuntimeHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { k8sRuntimeHandlerFunctional };

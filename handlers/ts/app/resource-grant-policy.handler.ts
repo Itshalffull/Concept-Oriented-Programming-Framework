@@ -4,7 +4,6 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function grantKey(scope: string, resourcePattern: string, actionName: string) {
   return `${scope}:${resourcePattern}:${actionName}`;
@@ -25,7 +24,7 @@ function normalizeRoles(raw: unknown): string[] {
   return [];
 }
 
-const resourceGrantPolicyHandlerFunctional: FunctionalConceptHandler = {
+export const resourceGrantPolicyHandler: FunctionalConceptHandler = {
   setGrant(input: Record<string, unknown>) {
     const grant = String(input.grant ?? '');
     const scope = String(input.scope ?? '');
@@ -98,8 +97,3 @@ const resourceGrantPolicyHandlerFunctional: FunctionalConceptHandler = {
 };
 
 export default resourceGrantPolicyHandler;
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const resourceGrantPolicyHandler = wrapFunctional(resourceGrantPolicyHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { resourceGrantPolicyHandlerFunctional };

@@ -1,7 +1,6 @@
 // RenderInterpreterAppkit — self-registering provider for "appkit" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -14,7 +13,7 @@ const PROVIDER_REF = 'render-interpreter-provider:appkit';
 let idCounter = 0;
 function nextId(): string { return `ri-appkit-${++idCounter}`; }
 
-const renderInterpreterAppkitHandlerFunctional: FunctionalConceptHandler = {
+export const renderInterpreterAppkitHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'appkit' }, 'existing');
@@ -75,7 +74,5 @@ const renderInterpreterAppkitHandlerFunctional: FunctionalConceptHandler = {
   },
 };
 
-export const renderInterpreterAppkitHandler = wrapFunctional(renderInterpreterAppkitHandlerFunctional);
-export { renderInterpreterAppkitHandlerFunctional };
 
 export function resetRenderInterpreterAppkitCounter(): void { idCounter = 0; }

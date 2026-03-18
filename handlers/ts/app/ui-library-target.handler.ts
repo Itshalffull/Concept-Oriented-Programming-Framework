@@ -9,7 +9,6 @@ import { parseThemeFile } from '../framework/theme-spec-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { join, basename, relative, dirname } from 'path';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const SKIP_DIRS = new Set(['node_modules','.git','.claude','dist','build','out','.next','.turbo','coverage','__pycache__']);
 function globRecursive(dir: string, ext: string): string[] {
@@ -26,7 +25,7 @@ function findNearestSuiteDir(filePath: string, suitesByDir: Map<string, SuiteLit
   return null;
 }
 
-const uiLibraryTargetHandlerFunctional: FunctionalConceptHandler = {
+export const uiLibraryTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/ui-library.md';
@@ -62,8 +61,3 @@ const uiLibraryTargetHandlerFunctional: FunctionalConceptHandler = {
     return complete(p, 'ok', { document: docId, files: [outputPath] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
-
-/** Backward-compatible imperative wrapper — delegates to interpret(). */
-export const uiLibraryTargetHandler = wrapFunctional(uiLibraryTargetHandlerFunctional);
-/** The raw functional handler returning StorageProgram. */
-export { uiLibraryTargetHandlerFunctional };
