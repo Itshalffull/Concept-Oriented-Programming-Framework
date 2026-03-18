@@ -3,11 +3,12 @@
 // Discoverable, configurable UI units with conditional placement rules for composing page layouts.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const componentHandler: FunctionalConceptHandler = {
+const _componentHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const component = input.component as string;
     const config = input.config as string;
@@ -118,3 +119,6 @@ export const componentHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { item_type: itemType, item_ref: itemRef, context }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const componentHandler = autoInterpret(_componentHandler);
+

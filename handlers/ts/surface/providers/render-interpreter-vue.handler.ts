@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretVue } from '../interpreter-targets/vue.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:vue';
 
 let idCounter = 0;
 function nextId(): string { return `ri-vue-${++idCounter}`; }
 
-export const renderInterpreterVueHandler: FunctionalConceptHandler = {
+const _renderInterpreterVueHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'vue' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterVueHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterVueHandler = autoInterpret(_renderInterpreterVueHandler);
+
 
 
 export function resetRenderInterpreterVueCounter(): void { idCounter = 0; }

@@ -2,11 +2,12 @@
 // OpenApiTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const openapiTargetHandler: FunctionalConceptHandler = {
+const _openapiTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const config = input.config as string;
@@ -173,3 +174,6 @@ export const openapiTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const openapiTargetHandler = autoInterpret(_openapiTargetHandler);
+

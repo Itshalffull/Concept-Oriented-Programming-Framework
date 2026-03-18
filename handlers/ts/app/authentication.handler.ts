@@ -4,11 +4,12 @@
 import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const authenticationHandler: FunctionalConceptHandler = {
+const _authenticationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const user = input.user as string;
     const provider = input.provider as string;
@@ -98,3 +99,6 @@ export const authenticationHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const authenticationHandler = autoInterpret(_authenticationHandler);
+

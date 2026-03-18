@@ -4,13 +4,14 @@
 // Supports field-level and entity-level matching, including density and motif metadata.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
 let affordanceCounter = 0;
 
-export const affordanceHandler: FunctionalConceptHandler = {
+const _affordanceHandler: FunctionalConceptHandler = {
   declare(input: Record<string, unknown>) {
     const affordance = input.affordance as string;
     const widget = input.widget as string;
@@ -101,3 +102,6 @@ export const affordanceHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const affordanceHandler = autoInterpret(_affordanceHandler);
+

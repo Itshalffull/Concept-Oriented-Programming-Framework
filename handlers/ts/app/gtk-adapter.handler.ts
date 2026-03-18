@@ -8,6 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -29,7 +30,7 @@ const GTK_SIGNAL_MAP: Record<string, string> = {
   onresize: 'size-allocate',
 };
 
-export const gtkAdapterHandler: FunctionalConceptHandler = {
+const _gtkAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -158,3 +159,6 @@ export const gtkAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gtkAdapterHandler = autoInterpret(_gtkAdapterHandler);
+

@@ -2,11 +2,12 @@
 // Relation Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const relationHandler: FunctionalConceptHandler = {
+const _relationHandler: FunctionalConceptHandler = {
   defineRelation(input: Record<string, unknown>) {
     const relation = input.relation as string;
     const schema = input.schema as string;
@@ -152,3 +153,6 @@ export const relationHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { items: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const relationHandler = autoInterpret(_relationHandler);
+

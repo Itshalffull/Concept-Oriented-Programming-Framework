@@ -4,11 +4,12 @@
 // KMS key accessibility, and rotation schedule tracking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const awsSmProviderHandler: FunctionalConceptHandler = {
+const _awsSmProviderHandler: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const secretId = input.secretId as string;
     const versionStage = input.versionStage as string;
@@ -70,3 +71,6 @@ export const awsSmProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const awsSmProviderHandler = autoInterpret(_awsSmProviderHandler);
+

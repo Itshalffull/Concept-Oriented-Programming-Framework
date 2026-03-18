@@ -8,11 +8,12 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const browserAdapterHandler: FunctionalConceptHandler = {
+const _browserAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -69,3 +70,6 @@ export const browserAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const browserAdapterHandler = autoInterpret(_browserAdapterHandler);
+

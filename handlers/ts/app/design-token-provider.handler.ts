@@ -3,6 +3,7 @@
 // Provider lifecycle for design token resolution with plugin-registry integration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -13,7 +14,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const PLUGIN_REF = 'surface-provider:design-token';
 const VALID_FORMATS = ['css', 'dtcg', 'scss', 'json', 'tailwind', 'swift', 'kotlin'];
 
-export const designTokenProviderHandler: FunctionalConceptHandler = {
+const _designTokenProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -111,3 +112,6 @@ export const designTokenProviderHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { output: '', format }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const designTokenProviderHandler = autoInterpret(_designTokenProviderHandler);
+

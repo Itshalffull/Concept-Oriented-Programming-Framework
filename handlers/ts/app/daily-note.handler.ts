@@ -2,11 +2,12 @@
 // DailyNote Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const dailyNoteHandler: FunctionalConceptHandler = {
+const _dailyNoteHandler: FunctionalConceptHandler = {
   getOrCreateToday(input: Record<string, unknown>) {
     const note = input.note as string;
     const today = new Date().toISOString().slice(0, 10);
@@ -42,3 +43,6 @@ export const dailyNoteHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { notes: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const dailyNoteHandler = autoInterpret(_dailyNoteHandler);
+

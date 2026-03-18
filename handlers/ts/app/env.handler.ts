@@ -3,11 +3,12 @@
 // Manage deployment environments with composable configuration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const envHandler: FunctionalConceptHandler = {
+const _envHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const environment = input.environment as string;
 
@@ -62,3 +63,6 @@ export const envHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { differences: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const envHandler = autoInterpret(_envHandler);
+

@@ -3,11 +3,12 @@
 // Generate and apply Terraform HCL modules from Clef deploy plans.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const terraformProviderHandler: FunctionalConceptHandler = {
+const _terraformProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     let p = createProgram();
     return complete(p, 'ok', {
@@ -79,3 +80,6 @@ export const terraformProviderHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { workspace, destroyed }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const terraformProviderHandler = autoInterpret(_terraformProviderHandler);
+

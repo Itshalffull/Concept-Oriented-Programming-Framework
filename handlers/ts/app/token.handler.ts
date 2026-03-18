@@ -3,6 +3,7 @@
 // Replace typed placeholders in text using chain-traversal patterns.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -20,7 +21,7 @@ function resolveBuiltinToken(tokenPath: string): string | null {
   return builtins[tokenPath] ?? null;
 }
 
-export const tokenHandler: FunctionalConceptHandler = {
+const _tokenHandler: FunctionalConceptHandler = {
   replace(input: Record<string, unknown>) {
     const text = input.text as string;
     // Token replacement with provider lookups is complex with sequential storage access.
@@ -73,3 +74,6 @@ export const tokenHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const tokenHandler = autoInterpret(_tokenHandler);
+

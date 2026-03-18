@@ -2,11 +2,12 @@
 // Cache Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const cacheHandler: FunctionalConceptHandler = {
+const _cacheHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {
     const bin = input.bin as string;
     const key = input.key as string;
@@ -73,3 +74,6 @@ export const cacheHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const cacheHandler = autoInterpret(_cacheHandler);
+

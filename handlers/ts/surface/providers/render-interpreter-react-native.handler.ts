@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretReactNative } from '../interpreter-targets/react-native.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:react-native';
 
 let idCounter = 0;
 function nextId(): string { return `ri-reactnative-${++idCounter}`; }
 
-export const renderInterpreterReactNativeHandler: FunctionalConceptHandler = {
+const _renderInterpreterReactNativeHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react-native' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterReactNativeHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterReactNativeHandler = autoInterpret(_renderInterpreterReactNativeHandler);
+
 
 
 export function resetRenderInterpreterReactNativeCounter(): void { idCounter = 0; }

@@ -4,6 +4,7 @@ import {
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const resultsRel = relation('results');
 
@@ -67,7 +68,7 @@ export function applyA11yAdapt(
  * bindings, focus management) to RenderProgram instruction sequences.
  * Registered with RenderTransform as kind "a11y-adapt" through sync wiring.
  */
-export const a11yAdaptProviderHandler: FunctionalConceptHandler = {
+const _a11yAdaptProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'A11yAdaptProvider',
@@ -120,3 +121,6 @@ export const a11yAdaptProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const a11yAdaptProviderHandler = autoInterpret(_a11yAdaptProviderHandler);
+

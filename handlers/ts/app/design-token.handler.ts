@@ -3,6 +3,7 @@
 // Hierarchical design tokens with alias chains, tier classification, and multi-format export.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -14,7 +15,7 @@ const VALID_TYPES = ['color', 'dimension', 'fontFamily', 'fontWeight', 'duration
 const VALID_TIERS = ['primitive', 'semantic', 'component'];
 const VALID_EXPORT_FORMATS = ['css', 'dtcg', 'scss', 'json', 'tailwind'];
 
-export const designTokenHandler: FunctionalConceptHandler = {
+const _designTokenHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const token = input.token as string;
     const name = input.name as string;
@@ -130,3 +131,6 @@ export const designTokenHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { output, format }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const designTokenHandler = autoInterpret(_designTokenHandler);
+

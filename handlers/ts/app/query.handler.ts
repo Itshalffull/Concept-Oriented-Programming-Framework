@@ -5,11 +5,12 @@
 import { randomBytes } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const queryHandler: FunctionalConceptHandler = {
+const _queryHandler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const query = input.query as string;
     const expression = input.expression as string;
@@ -124,3 +125,6 @@ export const queryHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const queryHandler = autoInterpret(_queryHandler);
+

@@ -2,11 +2,12 @@
 // GoSdkTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const goSdkTargetHandler: FunctionalConceptHandler = {
+const _goSdkTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -145,3 +146,6 @@ export const goSdkTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const goSdkTargetHandler = autoInterpret(_goSdkTargetHandler);
+

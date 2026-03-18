@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const intentHandler: FunctionalConceptHandler = {
+const _intentHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const intent = input.intent as string;
     const target = input.target as string;
@@ -79,3 +80,6 @@ export const intentHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { suggested: JSON.stringify(suggested) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const intentHandler = autoInterpret(_intentHandler);
+

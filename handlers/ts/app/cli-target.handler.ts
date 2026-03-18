@@ -2,11 +2,12 @@
 // CliTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const cliTargetHandler: FunctionalConceptHandler = {
+const _cliTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -132,3 +133,6 @@ export const cliTargetHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { commands: [], subcommands: [] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const cliTargetHandler = autoInterpret(_cliTargetHandler);
+

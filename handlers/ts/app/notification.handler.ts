@@ -4,11 +4,12 @@
 // templating, and inbox tracking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const notificationHandler: FunctionalConceptHandler = {
+const _notificationHandler: FunctionalConceptHandler = {
   registerChannel(input: Record<string, unknown>) {
     const name = input.name as string;
     const config = input.config as string;
@@ -136,3 +137,6 @@ export const notificationHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { notifications: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const notificationHandler = autoInterpret(_notificationHandler);
+

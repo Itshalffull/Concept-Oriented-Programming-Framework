@@ -3,11 +3,12 @@
 // Orchestrate storage schema migrations using the expand/contract pattern.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const migrationHandler: FunctionalConceptHandler = {
+const _migrationHandler: FunctionalConceptHandler = {
   plan(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const fromVersion = input.fromVersion as number;
@@ -134,3 +135,6 @@ export const migrationHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const migrationHandler = autoInterpret(_migrationHandler);
+

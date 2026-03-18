@@ -3,11 +3,12 @@
 // Build and maintain full-text and faceted search indexes with a pluggable processor pipeline.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const searchIndexHandler: FunctionalConceptHandler = {
+const _searchIndexHandler: FunctionalConceptHandler = {
   createIndex(input: Record<string, unknown>) {
     const index = input.index as string;
     const config = input.config as string;
@@ -163,3 +164,6 @@ export const searchIndexHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const searchIndexHandler = autoInterpret(_searchIndexHandler);
+

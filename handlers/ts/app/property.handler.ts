@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const propertyHandler: FunctionalConceptHandler = {
+const _propertyHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const key = input.key as string;
@@ -83,3 +84,6 @@ export const propertyHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { properties: JSON.stringify({}) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const propertyHandler = autoInterpret(_propertyHandler);
+

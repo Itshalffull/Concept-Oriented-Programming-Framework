@@ -1,5 +1,6 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
   createProgram, put, pure,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
@@ -80,7 +81,7 @@ function analyzeA11y(instructions: RenderInstruction[], parts: string[]): { find
   return { findings, passed: findings.length === 0 };
 }
 
-export const a11yAuditProviderHandler: FunctionalConceptHandler = {
+const _a11yAuditProviderHandler: FunctionalConceptHandler = {
   audit(input: Record<string, unknown>) {
     const audit = input.audit as string;
     const program = input.program as string;
@@ -131,3 +132,6 @@ export const a11yAuditProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const a11yAuditProviderHandler = autoInterpret(_a11yAuditProviderHandler);
+

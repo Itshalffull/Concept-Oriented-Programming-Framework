@@ -3,6 +3,7 @@
 // Application shell with named zones, role assignment, and overlay stack management.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -10,7 +11,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const shellHandler: FunctionalConceptHandler = {
+const _shellHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const shell = input.shell as string;
     const zones = input.zones as string;
@@ -187,3 +188,6 @@ export const shellHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const shellHandler = autoInterpret(_shellHandler);
+

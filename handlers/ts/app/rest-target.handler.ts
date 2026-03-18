@@ -2,11 +2,12 @@
 // RestTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const restTargetHandler: FunctionalConceptHandler = {
+const _restTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -96,3 +97,6 @@ export const restTargetHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { routes, methods }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const restTargetHandler = autoInterpret(_restTargetHandler);
+

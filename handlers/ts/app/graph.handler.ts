@@ -4,11 +4,12 @@
 // and depth-limited neighborhood exploration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const graphHandler: FunctionalConceptHandler = {
+const _graphHandler: FunctionalConceptHandler = {
   addNode(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const node = input.node as string;
@@ -177,3 +178,6 @@ export const graphHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const graphHandler = autoInterpret(_graphHandler);
+

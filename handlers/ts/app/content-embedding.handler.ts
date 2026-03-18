@@ -1,6 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -62,7 +63,7 @@ function buildExcerpt(text: string): string {
   return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
 }
 
-export const contentEmbeddingHandler: FunctionalConceptHandler = {
+const _contentEmbeddingHandler: FunctionalConceptHandler = {
   index(input: Record<string, unknown>) {
     const entityId = input.entity_id as string;
     const sourceType = input.source_type as string;
@@ -128,6 +129,9 @@ export const contentEmbeddingHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { results: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contentEmbeddingHandler = autoInterpret(_contentEmbeddingHandler);
+
 
 export function resetContentEmbeddingCounter(): void {
   idCounter = 0;

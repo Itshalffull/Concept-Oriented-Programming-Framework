@@ -3,6 +3,7 @@
 // Data transport layer with multi-protocol support, caching, retry policies, and offline queue.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -11,7 +12,7 @@ let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const VALID_KINDS = ['rest', 'graphql', 'websocket'];
 
-export const transportHandler: FunctionalConceptHandler = {
+const _transportHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const transport = input.transport as string;
     const kind = input.kind as string;
@@ -98,3 +99,6 @@ export const transportHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const transportHandler = autoInterpret(_transportHandler);
+

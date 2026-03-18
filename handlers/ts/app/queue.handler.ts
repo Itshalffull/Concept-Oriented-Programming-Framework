@@ -4,11 +4,12 @@
 // and pluggable backends.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const queueHandler: FunctionalConceptHandler = {
+const _queueHandler: FunctionalConceptHandler = {
   enqueue(input: Record<string, unknown>) {
     const queue = input.queue as string;
     const item = input.item as string;
@@ -101,3 +102,6 @@ export const queueHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const queueHandler = autoInterpret(_queueHandler);
+

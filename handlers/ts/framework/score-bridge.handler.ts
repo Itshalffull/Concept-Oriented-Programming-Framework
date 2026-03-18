@@ -8,6 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get, find, put, del, perform, branch, pure, complete,
   getLens, putLens, modifyLens, mapBindings,
   relation, at, field,
@@ -27,7 +28,7 @@ function bridgeId(endpoint: string): string {
 
 // --- Handler ---
 
-export const scoreBridgeHandler: FunctionalConceptHandler = {
+const _scoreBridgeHandler: FunctionalConceptHandler = {
 
   connect(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
@@ -389,3 +390,6 @@ export const scoreBridgeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const scoreBridgeHandler = autoInterpret(_scoreBridgeHandler);
+

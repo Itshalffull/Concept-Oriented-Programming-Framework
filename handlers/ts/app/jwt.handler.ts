@@ -4,6 +4,7 @@
 import { createHmac, randomBytes } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -37,7 +38,7 @@ function verifyToken(token: string): Record<string, unknown> | null {
   }
 }
 
-export const jwtHandler: FunctionalConceptHandler = {
+const _jwtHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const user = input.user as string;
     const token = signToken({ user, iat: Date.now() });
@@ -59,3 +60,6 @@ export const jwtHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { user: payload.user as string }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const jwtHandler = autoInterpret(_jwtHandler);
+

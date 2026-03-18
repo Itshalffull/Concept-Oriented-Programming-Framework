@@ -3,6 +3,7 @@
 // Validates widget contracts against concept specs statically.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -16,7 +17,7 @@ function isTypeCompatible(expected: string, actual: string): boolean {
   return false;
 }
 
-export const contractCheckerHandler: FunctionalConceptHandler = {
+const _contractCheckerHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const checker = input.checker as string;
     const widgetName = input.widget as string;
@@ -87,3 +88,6 @@ export const contractCheckerHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { checker, suggestions: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contractCheckerHandler = autoInterpret(_contractCheckerHandler);
+

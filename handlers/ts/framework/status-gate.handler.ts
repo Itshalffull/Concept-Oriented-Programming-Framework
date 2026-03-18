@@ -7,13 +7,14 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
 // ── Handler ──────────────────────────────────────────────────────────
 
-export const statusGateHandler: FunctionalConceptHandler = {
+const _statusGateHandler: FunctionalConceptHandler = {
 
   report(input: Record<string, unknown>) {
     const id = `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -178,6 +179,9 @@ export const statusGateHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const statusGateHandler = autoInterpret(_statusGateHandler);
+
 
 
 // ── Utility: check if all gates for a target are passing ─────────────

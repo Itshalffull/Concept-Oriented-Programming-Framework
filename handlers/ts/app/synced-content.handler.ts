@@ -2,11 +2,12 @@
 // SyncedContent Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const syncedContentHandler: FunctionalConceptHandler = {
+const _syncedContentHandler: FunctionalConceptHandler = {
   createReference(input: Record<string, unknown>) {
     const ref = input.ref as string;
     const original = input.original as string;
@@ -88,3 +89,6 @@ export const syncedContentHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const syncedContentHandler = autoInterpret(_syncedContentHandler);
+

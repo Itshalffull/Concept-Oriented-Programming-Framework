@@ -3,6 +3,7 @@
 // Provider lifecycle for concept-to-UI data binding with connection state management.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -13,7 +14,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const PLUGIN_REF = 'surface-provider:binding';
 const VALID_MODES = ['coupled', 'rest', 'graphql', 'static'];
 
-export const bindingProviderHandler: FunctionalConceptHandler = {
+const _bindingProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -138,3 +139,6 @@ export const bindingProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const bindingProviderHandler = autoInterpret(_bindingProviderHandler);
+

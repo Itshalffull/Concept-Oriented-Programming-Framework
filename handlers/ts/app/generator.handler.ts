@@ -2,11 +2,12 @@
 // Generator Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const generatorHandler: FunctionalConceptHandler = {
+const _generatorHandler: FunctionalConceptHandler = {
   plan(input: Record<string, unknown>) {
     const suite = input.suite as string;
     const interfaceManifest = input.interfaceManifest as string;
@@ -140,3 +141,6 @@ export const generatorHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const generatorHandler = autoInterpret(_generatorHandler);
+

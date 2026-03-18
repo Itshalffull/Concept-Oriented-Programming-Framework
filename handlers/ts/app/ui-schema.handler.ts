@@ -2,6 +2,7 @@
 // UISchema Concept Implementation [S, C]
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -9,7 +10,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const uiSchemaHandler: FunctionalConceptHandler = {
+const _uiSchemaHandler: FunctionalConceptHandler = {
   inspect(input: Record<string, unknown>) {
     const schema = input.schema as string; const conceptSpec = input.conceptSpec as string;
     let parsed: Record<string, unknown>;
@@ -83,3 +84,6 @@ export const uiSchemaHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const uiSchemaHandler = autoInterpret(_uiSchemaHandler);
+

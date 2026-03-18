@@ -2,11 +2,12 @@
 // WidgetRegistry Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const widgetRegistryHandler: FunctionalConceptHandler = {
+const _widgetRegistryHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const entry = input.entry as string; const widget = input.widget as string; const interactor = input.interactor as string;
     const concept = input.concept as string | null; const suite = input.suite as string | null;
@@ -48,3 +49,6 @@ export const widgetRegistryHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const widgetRegistryHandler = autoInterpret(_widgetRegistryHandler);
+

@@ -4,11 +4,12 @@
 // PIDs, port assignments, log file paths, and restart policies.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const localRuntimeHandler: FunctionalConceptHandler = {
+const _localRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const command = input.command as string;
@@ -119,3 +120,6 @@ export const localRuntimeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const localRuntimeHandler = autoInterpret(_localRuntimeHandler);
+

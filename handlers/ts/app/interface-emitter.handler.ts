@@ -2,6 +2,7 @@
 // Emitter Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -15,7 +16,7 @@ function computeHash(content: string): string {
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-export const interfaceEmitterHandler: FunctionalConceptHandler = {
+const _interfaceEmitterHandler: FunctionalConceptHandler = {
   write(input: Record<string, unknown>) {
     const path = input.path as string;
     const content = input.content as string;
@@ -93,3 +94,6 @@ export const interfaceEmitterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { files: JSON.stringify([]), totalBytes: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const interfaceEmitterHandler = autoInterpret(_interfaceEmitterHandler);
+

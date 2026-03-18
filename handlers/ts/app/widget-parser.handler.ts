@@ -2,6 +2,7 @@
 // WidgetParser Concept Implementation [W]
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -9,7 +10,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const widgetParserHandler: FunctionalConceptHandler = {
+const _widgetParserHandler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const widget = input.widget as string; const source = input.source as string;
     const id = widget || nextId('W');
@@ -49,3 +50,6 @@ export const widgetParserHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const widgetParserHandler = autoInterpret(_widgetParserHandler);
+

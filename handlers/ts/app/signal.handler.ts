@@ -3,6 +3,7 @@
 // Reactive signals with state, computed, and effect kinds for fine-grained reactivity.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const VALID_KINDS = ['state', 'computed', 'effect'];
 
-export const signalHandler: FunctionalConceptHandler = {
+const _signalHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const signal = input.signal as string;
     const kind = input.kind as string;
@@ -139,3 +140,6 @@ export const signalHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const signalHandler = autoInterpret(_signalHandler);
+

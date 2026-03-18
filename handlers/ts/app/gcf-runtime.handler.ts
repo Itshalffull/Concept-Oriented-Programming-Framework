@@ -4,11 +4,12 @@
 // configurations, gen1 and gen2 distinctions, and invocation metrics.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const gcfRuntimeHandler: FunctionalConceptHandler = {
+const _gcfRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const projectId = input.projectId as string;
@@ -124,3 +125,6 @@ export const gcfRuntimeHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { function: fn }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gcfRuntimeHandler = autoInterpret(_gcfRuntimeHandler);
+

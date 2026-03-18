@@ -2,6 +2,7 @@
 // InkAdapter Handler — Transforms framework-neutral props into Ink (terminal React) bindings
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -14,7 +15,7 @@ const INK_EVENT_MAP: Record<string, string> = {
   onsubmit: 'onSubmit',
 };
 
-export const inkAdapterHandler: FunctionalConceptHandler = {
+const _inkAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -82,3 +83,6 @@ export const inkAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const inkAdapterHandler = autoInterpret(_inkAdapterHandler);
+

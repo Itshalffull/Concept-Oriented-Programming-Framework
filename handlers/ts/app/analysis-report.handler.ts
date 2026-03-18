@@ -3,6 +3,7 @@
 // Generates structured reports from graph analysis results.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -176,7 +177,7 @@ function exportToMarkdown(content: Record<string, unknown>): string {
   return lines.join('\n').trim();
 }
 
-export const analysisReportHandler: FunctionalConceptHandler = {
+const _analysisReportHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const result = input.result as string;
     const format = input.format as string;
@@ -334,3 +335,6 @@ export const analysisReportHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const analysisReportHandler = autoInterpret(_analysisReportHandler);
+

@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, find, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const appInstallationHandler: FunctionalConceptHandler = {
+const _appInstallationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const installation = String(input.installation ?? '');
     let p = createProgram();
@@ -33,5 +34,8 @@ export const appInstallationHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { installations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const appInstallationHandler = autoInterpret(_appInstallationHandler);
+
 
 export default appInstallationHandler;

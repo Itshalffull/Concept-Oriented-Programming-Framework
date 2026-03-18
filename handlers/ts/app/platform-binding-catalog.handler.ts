@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const platformBindingCatalogHandler: FunctionalConceptHandler = {
+const _platformBindingCatalogHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const binding = String(input.binding ?? '');
 
@@ -44,5 +45,8 @@ export const platformBindingCatalogHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { bindings: [] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const platformBindingCatalogHandler = autoInterpret(_platformBindingCatalogHandler);
+
 
 export default platformBindingCatalogHandler;

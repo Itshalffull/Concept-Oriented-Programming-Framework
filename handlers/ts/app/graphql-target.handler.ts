@@ -2,11 +2,12 @@
 // GraphqlTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const graphqlTargetHandler: FunctionalConceptHandler = {
+const _graphqlTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -105,3 +106,6 @@ export const graphqlTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const graphqlTargetHandler = autoInterpret(_graphqlTargetHandler);
+

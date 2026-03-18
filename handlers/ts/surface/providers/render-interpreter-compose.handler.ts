@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretCompose } from '../interpreter-targets/compose.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:compose';
 
 let idCounter = 0;
 function nextId(): string { return `ri-compose-${++idCounter}`; }
 
-export const renderInterpreterComposeHandler: FunctionalConceptHandler = {
+const _renderInterpreterComposeHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'compose' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterComposeHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterComposeHandler = autoInterpret(_renderInterpreterComposeHandler);
+
 
 
 export function resetRenderInterpreterComposeCounter(): void { idCounter = 0; }

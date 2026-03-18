@@ -2,11 +2,12 @@
 // JavaSdkTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const javaSdkTargetHandler: FunctionalConceptHandler = {
+const _javaSdkTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -53,3 +54,6 @@ export const javaSdkTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const javaSdkTargetHandler = autoInterpret(_javaSdkTargetHandler);
+

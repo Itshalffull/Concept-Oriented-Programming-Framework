@@ -2,11 +2,12 @@
 // Projection Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const interfaceProjectionHandler: FunctionalConceptHandler = {
+const _interfaceProjectionHandler: FunctionalConceptHandler = {
   project(input: Record<string, unknown>) {
     const manifest = input.manifest as string;
     const annotations = input.annotations as string;
@@ -105,3 +106,6 @@ export const interfaceProjectionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const interfaceProjectionHandler = autoInterpret(_interfaceProjectionHandler);
+

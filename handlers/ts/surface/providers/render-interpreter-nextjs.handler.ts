@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretNextjs } from '../interpreter-targets/nextjs.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:nextjs';
 
 let idCounter = 0;
 function nextId(): string { return `ri-nextjs-${++idCounter}`; }
 
-export const renderInterpreterNextjsHandler: FunctionalConceptHandler = {
+const _renderInterpreterNextjsHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'nextjs' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterNextjsHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterNextjsHandler = autoInterpret(_renderInterpreterNextjsHandler);
+
 
 
 export function resetRenderInterpreterNextjsCounter(): void { idCounter = 0; }

@@ -2,11 +2,12 @@
 // DataSource Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const dataSourceHandler: FunctionalConceptHandler = {
+const _dataSourceHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const name = input.name as string;
     const uri = input.uri as string;
@@ -96,3 +97,6 @@ export const dataSourceHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const dataSourceHandler = autoInterpret(_dataSourceHandler);
+

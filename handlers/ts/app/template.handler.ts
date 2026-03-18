@@ -2,11 +2,12 @@
 // Template Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const templateHandler: FunctionalConceptHandler = {
+const _templateHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const template = input.template as string;
     const body = input.body as string;
@@ -91,3 +92,6 @@ export const templateHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const templateHandler = autoInterpret(_templateHandler);
+

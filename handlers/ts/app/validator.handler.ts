@@ -2,11 +2,12 @@
 // Validator Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const validatorHandler: FunctionalConceptHandler = {
+const _validatorHandler: FunctionalConceptHandler = {
   registerConstraint(input: Record<string, unknown>) {
     const validator = input.validator as string;
     const constraint = input.constraint as string;
@@ -140,3 +141,6 @@ export const validatorHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const validatorHandler = autoInterpret(_validatorHandler);
+

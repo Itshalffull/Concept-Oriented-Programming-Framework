@@ -5,6 +5,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -21,7 +22,7 @@ function parseStructuredValue(value: unknown): Record<string, unknown> | null {
   }
 }
 
-export const contentNodeHandler: FunctionalConceptHandler = {
+const _contentNodeHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const node = input.node as string;
     const type = (input.type as string | undefined) ?? '';
@@ -123,3 +124,6 @@ export const contentNodeHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contentNodeHandler = autoInterpret(_contentNodeHandler);
+

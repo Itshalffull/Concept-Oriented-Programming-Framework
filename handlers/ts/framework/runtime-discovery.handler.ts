@@ -8,6 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get, find, put, del, perform, branch, pure, complete,
   getLens, putLens, modifyLens, mapBindings,
   relation, at, field,
@@ -101,7 +102,7 @@ function resolveEnvVar(value: string, env: Record<string, string | undefined>): 
 
 // --- Handler ---
 
-export const runtimeDiscoveryHandler: FunctionalConceptHandler = {
+const _runtimeDiscoveryHandler: FunctionalConceptHandler = {
 
   scan(input: Record<string, unknown>) {
     const directory = input.directory as string;
@@ -443,3 +444,6 @@ export const runtimeDiscoveryHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+
+export const runtimeDiscoveryHandler = autoInterpret(_runtimeDiscoveryHandler);

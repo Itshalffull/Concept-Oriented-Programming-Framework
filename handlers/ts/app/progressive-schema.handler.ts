@@ -2,11 +2,12 @@
 // ProgressiveSchema Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const progressiveSchemaHandler: FunctionalConceptHandler = {
+const _progressiveSchemaHandler: FunctionalConceptHandler = {
   captureFreeform(input: Record<string, unknown>) {
     const content = input.content as string;
 
@@ -116,3 +117,6 @@ export const progressiveSchemaHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { proposedSchema: JSON.stringify({ fields: [] }) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const progressiveSchemaHandler = autoInterpret(_progressiveSchemaHandler);
+

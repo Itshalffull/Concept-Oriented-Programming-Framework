@@ -2,6 +2,7 @@
 // Viewport Concept Implementation [V]
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ const DEFAULT_BREAKPOINTS: Record<string, { min: number; max: number }> = { xs: 
 function detectBreakpoint(width: number, breakpoints: Record<string, { min: number; max: number }>): string { for (const [name, range] of Object.entries(breakpoints)) { if (width >= range.min && width <= range.max) return name; } return 'unknown'; }
 function detectOrientation(width: number, height: number): string { if (width > height) return 'landscape'; if (height > width) return 'portrait'; return 'square'; }
 
-export const viewportHandler: FunctionalConceptHandler = {
+const _viewportHandler: FunctionalConceptHandler = {
   observe(input: Record<string, unknown>) {
     const viewport = input.viewport as string; const width = input.width as number; const height = input.height as number;
     const id = viewport || nextId('V');
@@ -47,3 +48,6 @@ export const viewportHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const viewportHandler = autoInterpret(_viewportHandler);
+

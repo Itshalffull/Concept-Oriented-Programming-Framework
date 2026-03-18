@@ -4,6 +4,7 @@ import {
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const resultsRel = relation('results');
 
@@ -44,7 +45,7 @@ export function applyCustomTransform(
  * instructions. Registered with RenderTransform as kind "custom"
  * through sync wiring.
  */
-export const customTransformProviderHandler: FunctionalConceptHandler = {
+const _customTransformProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'CustomTransformProvider',
@@ -97,3 +98,6 @@ export const customTransformProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const customTransformProviderHandler = autoInterpret(_customTransformProviderHandler);
+

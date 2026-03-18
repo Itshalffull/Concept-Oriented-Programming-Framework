@@ -2,6 +2,7 @@
 // Article Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -13,7 +14,7 @@ function slugify(title: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-export const articleHandler: FunctionalConceptHandler = {
+const _articleHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const article = input.article as string;
     const title = input.title as string;
@@ -106,3 +107,6 @@ export const articleHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const articleHandler = autoInterpret(_articleHandler);
+

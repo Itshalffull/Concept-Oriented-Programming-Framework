@@ -3,11 +3,12 @@
 // Verify deployment health at concept, sync, and suite levels.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const healthHandler: FunctionalConceptHandler = {
+const _healthHandler: FunctionalConceptHandler = {
   checkConcept(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const runtime = input.runtime as string;
@@ -100,3 +101,6 @@ export const healthHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { check: checkId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const healthHandler = autoInterpret(_healthHandler);
+

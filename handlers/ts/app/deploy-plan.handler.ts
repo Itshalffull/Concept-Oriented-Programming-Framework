@@ -3,11 +3,12 @@
 // Compute, validate, and execute deployment plans for suites.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const deployPlanHandler: FunctionalConceptHandler = {
+const _deployPlanHandler: FunctionalConceptHandler = {
   plan(input: Record<string, unknown>) {
     const manifest = input.manifest as string;
     const environment = input.environment as string;
@@ -157,3 +158,6 @@ export const deployPlanHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const deployPlanHandler = autoInterpret(_deployPlanHandler);
+

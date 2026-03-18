@@ -3,6 +3,7 @@
 // Parses expressive theme definitions into a normalized AST with derived tokens.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -69,7 +70,7 @@ function extractContrastPairs(tokens: Record<string, string>): Array<[string, st
   return pairs;
 }
 
-export const themeParserHandler: FunctionalConceptHandler = {
+const _themeParserHandler: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const source = input.source as string;
@@ -131,3 +132,6 @@ export const themeParserHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const themeParserHandler = autoInterpret(_themeParserHandler);
+

@@ -6,6 +6,7 @@
 // validity proof). See Architecture doc for gate convention details.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -16,7 +17,7 @@ const FINALITY_TIMEOUT_MS = 300_000; // 5 minutes
 /** Default confirmation threshold when no chain config overrides it */
 const DEFAULT_CONFIRMATION_THRESHOLD = 12;
 
-export const chainMonitorHandler: FunctionalConceptHandler = {
+const _chainMonitorHandler: FunctionalConceptHandler = {
   awaitFinality(input: Record<string, unknown>) {
     const txHash = input.txHash as string;
     const level = (input.level as string) || 'confirmations';
@@ -90,3 +91,6 @@ export const chainMonitorHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { chainId, blockNumber }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const chainMonitorHandler = autoInterpret(_chainMonitorHandler);
+

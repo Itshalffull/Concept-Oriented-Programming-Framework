@@ -3,11 +3,12 @@
 // Manage observability configuration for deployed concepts.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const telemetryHandler: FunctionalConceptHandler = {
+const _telemetryHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const endpoint = input.endpoint as string;
@@ -61,3 +62,6 @@ export const telemetryHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const telemetryHandler = autoInterpret(_telemetryHandler);
+

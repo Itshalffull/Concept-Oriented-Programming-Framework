@@ -13,13 +13,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretReact } from '../interpreter-targets/react.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:react';
 
 let idCounter = 0;
 function nextId(): string { return `ri-react-${++idCounter}`; }
 
-export const renderInterpreterReactHandler: FunctionalConceptHandler = {
+const _renderInterpreterReactHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react' }, 'existing');
@@ -79,6 +80,9 @@ export const renderInterpreterReactHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterReactHandler = autoInterpret(_renderInterpreterReactHandler);
+
 
 
 export function resetRenderInterpreterReactCounter(): void { idCounter = 0; }

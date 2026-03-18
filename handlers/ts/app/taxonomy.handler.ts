@@ -2,11 +2,12 @@
 // Taxonomy Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const taxonomyHandler: FunctionalConceptHandler = {
+const _taxonomyHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'taxonomy', {}, 'items');
@@ -118,3 +119,6 @@ export const taxonomyHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const taxonomyHandler = autoInterpret(_taxonomyHandler);
+

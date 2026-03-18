@@ -2,11 +2,12 @@
 // Workflow Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const interfaceWorkflowHandler: FunctionalConceptHandler = {
+const _interfaceWorkflowHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const steps = JSON.parse(input.steps as string) as string[];
@@ -81,3 +82,6 @@ export const interfaceWorkflowHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const interfaceWorkflowHandler = autoInterpret(_interfaceWorkflowHandler);
+

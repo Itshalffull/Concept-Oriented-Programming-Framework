@@ -2,11 +2,12 @@
 // Capture Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const captureHandler: FunctionalConceptHandler = {
+const _captureHandler: FunctionalConceptHandler = {
   clip(input: Record<string, unknown>) {
     const url = input.url as string;
     const mode = input.mode as string;
@@ -104,3 +105,6 @@ export const captureHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const captureHandler = autoInterpret(_captureHandler);
+

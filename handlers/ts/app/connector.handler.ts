@@ -2,11 +2,12 @@
 // Connector Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const connectorHandler: FunctionalConceptHandler = {
+const _connectorHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const sourceId = input.sourceId as string;
     const protocolId = input.protocolId as string;
@@ -105,3 +106,6 @@ export const connectorHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const connectorHandler = autoInterpret(_connectorHandler);
+

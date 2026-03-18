@@ -2,11 +2,12 @@
 // AsyncApiTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const asyncapiTargetHandler: FunctionalConceptHandler = {
+const _asyncapiTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const syncSpecs = input.syncSpecs as string[];
@@ -60,3 +61,6 @@ export const asyncapiTargetHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { spec: specId, content }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const asyncapiTargetHandler = autoInterpret(_asyncapiTargetHandler);
+

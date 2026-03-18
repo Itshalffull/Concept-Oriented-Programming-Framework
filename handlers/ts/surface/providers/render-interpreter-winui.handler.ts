@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretWinUI } from '../interpreter-targets/winui.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:winui';
 
 let idCounter = 0;
 function nextId(): string { return `ri-winui-${++idCounter}`; }
 
-export const renderInterpreterWinuiHandler: FunctionalConceptHandler = {
+const _renderInterpreterWinuiHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'winui' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterWinuiHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterWinuiHandler = autoInterpret(_renderInterpreterWinuiHandler);
+
 
 
 export function resetRenderInterpreterWinuiCounter(): void { idCounter = 0; }

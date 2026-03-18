@@ -3,6 +3,7 @@
 // Scores and selects the best widget for a given interface element based on context and overrides.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -44,7 +45,7 @@ function validateContract(requires: ContractRequires, conceptFields: Array<{ nam
   return { status: (unresolvedSlots.length > 0 || typeMismatches.length > 0 || missingActions.length > 0) ? 'error' : 'ok', resolvedSlots, unresolvedSlots, typeMismatches, missingActions, bindingMap };
 }
 
-export const widgetResolverHandler: FunctionalConceptHandler = {
+const _widgetResolverHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const resolver = input.resolver as string; const element = input.element as string; const context = input.context as string;
     // Widget resolution involves complex scoring with multiple affordance lookups.
@@ -136,3 +137,6 @@ export const widgetResolverHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const widgetResolverHandler = autoInterpret(_widgetResolverHandler);
+

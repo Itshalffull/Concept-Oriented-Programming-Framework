@@ -2,11 +2,12 @@
 // Renderer Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const rendererHandler: FunctionalConceptHandler = {
+const _rendererHandler: FunctionalConceptHandler = {
   render(input: Record<string, unknown>) {
     const renderer = input.renderer as string;
     const tree = input.tree as string;
@@ -104,3 +105,6 @@ export const rendererHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const rendererHandler = autoInterpret(_rendererHandler);
+

@@ -3,11 +3,12 @@
 // Coordinate manifest generation for GitOps controllers.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const gitopsHandler: FunctionalConceptHandler = {
+const _gitopsHandler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const controller = input.controller as string;
@@ -65,3 +66,6 @@ export const gitopsHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gitopsHandler = autoInterpret(_gitopsHandler);
+

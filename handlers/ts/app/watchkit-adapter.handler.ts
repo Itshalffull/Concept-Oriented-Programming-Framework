@@ -2,11 +2,12 @@
 // WatchKitAdapter Handler — Transforms framework-neutral props into legacy WatchKit bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const WATCHKIT_ACTION_MAP: Record<string, string> = { onclick: 'IBAction:buttonTapped', onchange: 'IBAction:valueChanged', onselect: 'IBAction:itemSelected' };
 const UNSUPPORTED_WATCHKIT_EVENTS = new Set(['ondoubleclick','onlongpress','ondrag','ondrop','onhover','onmouseenter','onmouseleave','onkeydown','onkeyup','onresize','oncontextmenu','onscroll','onfocus','onblur']);
 
-export const watchKitAdapterHandler: FunctionalConceptHandler = {
+const _watchKitAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string; const props = input.props as string;
     if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -44,3 +45,6 @@ export const watchKitAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const watchKitAdapterHandler = autoInterpret(_watchKitAdapterHandler);
+

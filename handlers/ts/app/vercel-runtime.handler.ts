@@ -2,11 +2,12 @@
 // VercelRuntime Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const vercelRuntimeHandler: FunctionalConceptHandler = {
+const _vercelRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string; const teamId = input.teamId as string; const framework = input.framework as string;
     const projectId = `prj-${concept.toLowerCase()}-${Date.now()}`; const endpoint = `https://${concept.toLowerCase()}.vercel.app`;
@@ -65,3 +66,6 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { project }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const vercelRuntimeHandler = autoInterpret(_vercelRuntimeHandler);
+

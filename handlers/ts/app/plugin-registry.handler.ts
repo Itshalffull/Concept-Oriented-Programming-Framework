@@ -2,11 +2,12 @@
 // PluginRegistry Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const pluginRegistryHandler: FunctionalConceptHandler = {
+const _pluginRegistryHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const category = (input.category ?? input.type ?? '') as string;
     const providerId = (input.provider_id ?? input.name ?? '') as string;
@@ -115,3 +116,6 @@ export const pluginRegistryHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const pluginRegistryHandler = autoInterpret(_pluginRegistryHandler);
+

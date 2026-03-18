@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretGtk } from '../interpreter-targets/gtk.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:gtk';
 
 let idCounter = 0;
 function nextId(): string { return `ri-gtk-${++idCounter}`; }
 
-export const renderInterpreterGtkHandler: FunctionalConceptHandler = {
+const _renderInterpreterGtkHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'gtk' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterGtkHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterGtkHandler = autoInterpret(_renderInterpreterGtkHandler);
+
 
 
 export function resetRenderInterpreterGtkCounter(): void { idCounter = 0; }

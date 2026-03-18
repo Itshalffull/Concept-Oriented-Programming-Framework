@@ -2,11 +2,12 @@
 // Reference Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const referenceHandler: FunctionalConceptHandler = {
+const _referenceHandler: FunctionalConceptHandler = {
   addRef(input: Record<string, unknown>) {
     const source = input.source as string;
     const target = input.target as string;
@@ -64,3 +65,6 @@ export const referenceHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { exists: false }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const referenceHandler = autoInterpret(_referenceHandler);
+

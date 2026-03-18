@@ -2,11 +2,12 @@
 // SyncPair Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const syncPairHandler: FunctionalConceptHandler = {
+const _syncPairHandler: FunctionalConceptHandler = {
   link(input: Record<string, unknown>) {
     const pairId = input.pairId as string;
     const idA = input.idA as string;
@@ -137,3 +138,6 @@ export const syncPairHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const syncPairHandler = autoInterpret(_syncPairHandler);
+

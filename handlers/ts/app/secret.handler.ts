@@ -4,11 +4,12 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createHash, randomBytes } from 'crypto';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const secretHandler: FunctionalConceptHandler = {
+const _secretHandler: FunctionalConceptHandler = {
   resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const provider = input.provider as string;
@@ -96,3 +97,6 @@ export const secretHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { secret: name }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const secretHandler = autoInterpret(_secretHandler);
+

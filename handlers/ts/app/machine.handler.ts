@@ -3,13 +3,14 @@
 // Manages stateful UI component lifecycles through finite state machine transitions.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
 let machineCounter = 0;
 
-export const machineHandler: FunctionalConceptHandler = {
+const _machineHandler: FunctionalConceptHandler = {
   spawn(input: Record<string, unknown>) {
     const machine = input.machine as string;
     const widget = input.widget as string;
@@ -120,3 +121,6 @@ export const machineHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const machineHandler = autoInterpret(_machineHandler);
+

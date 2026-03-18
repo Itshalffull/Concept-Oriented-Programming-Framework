@@ -3,6 +3,7 @@
 // Color palette generation with role assignment and WCAG contrast checking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -10,7 +11,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const paletteHandler: FunctionalConceptHandler = {
+const _paletteHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const palette = input.palette as string;
     const name = input.name as string;
@@ -89,3 +90,6 @@ export const paletteHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const paletteHandler = autoInterpret(_paletteHandler);
+

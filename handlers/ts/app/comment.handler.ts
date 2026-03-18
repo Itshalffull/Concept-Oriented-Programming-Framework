@@ -2,11 +2,12 @@
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const commentHandler: FunctionalConceptHandler = {
+const _commentHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const comment = input.comment as string;
     const body = input.body as string;
@@ -117,3 +118,6 @@ export const commentHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const commentHandler = autoInterpret(_commentHandler);
+

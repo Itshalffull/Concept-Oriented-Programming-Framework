@@ -3,6 +3,7 @@
 // Structural containers that organize child components with directional flow, grid, and responsive rules.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -11,7 +12,7 @@ const VALID_KINDS = ['stack', 'grid', 'split', 'overlay', 'flow', 'sidebar', 'ce
 
 let layoutCounter = 0;
 
-export const layoutHandler: FunctionalConceptHandler = {
+const _layoutHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'layout', {}, 'items');
@@ -156,3 +157,6 @@ export const layoutHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const layoutHandler = autoInterpret(_layoutHandler);
+

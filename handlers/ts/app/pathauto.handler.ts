@@ -2,6 +2,7 @@
 // Pathauto Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -16,7 +17,7 @@ function slugify(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export const pathautoHandler: FunctionalConceptHandler = {
+const _pathautoHandler: FunctionalConceptHandler = {
   generateAlias(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
     const entity = input.entity as string;
@@ -73,3 +74,6 @@ export const pathautoHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { cleaned }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const pathautoHandler = autoInterpret(_pathautoHandler);
+

@@ -2,11 +2,12 @@
 // Annotation Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const annotationHandler: FunctionalConceptHandler = {
+const _annotationHandler: FunctionalConceptHandler = {
   annotate(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const scope = input.scope as string;
@@ -62,3 +63,6 @@ export const annotationHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { annotations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const annotationHandler = autoInterpret(_annotationHandler);
+

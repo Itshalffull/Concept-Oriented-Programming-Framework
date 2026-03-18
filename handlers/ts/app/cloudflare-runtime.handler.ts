@@ -4,11 +4,12 @@
 // KV namespace bindings, and Durable Object configurations.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const cloudflareRuntimeHandler: FunctionalConceptHandler = {
+const _cloudflareRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const accountId = input.accountId as string;
@@ -103,3 +104,6 @@ export const cloudflareRuntimeHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { worker }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const cloudflareRuntimeHandler = autoInterpret(_cloudflareRuntimeHandler);
+

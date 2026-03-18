@@ -2,11 +2,12 @@
 // Tag Concept Implementation (Classification Kit)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const tagHandler: FunctionalConceptHandler = {
+const _tagHandler: FunctionalConceptHandler = {
   add(input: Record<string, unknown>) {
     const tag = input.tag as string;
     const article = input.article as string;
@@ -128,3 +129,6 @@ export const tagHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const tagHandler = autoInterpret(_tagHandler);
+

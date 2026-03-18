@@ -3,6 +3,7 @@
 // Animation durations, easings, and transition definitions with reduced-motion awareness.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -10,7 +11,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const motionHandler: FunctionalConceptHandler = {
+const _motionHandler: FunctionalConceptHandler = {
   defineDuration(input: Record<string, unknown>) {
     const motion = input.motion as string;
     const name = input.name as string;
@@ -89,3 +90,6 @@ export const motionHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { motion: id }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const motionHandler = autoInterpret(_motionHandler);
+

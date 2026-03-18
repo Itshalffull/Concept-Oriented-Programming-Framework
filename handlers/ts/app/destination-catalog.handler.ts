@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const destinationCatalogHandler: FunctionalConceptHandler = {
+const _destinationCatalogHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const destination = String(input.destination ?? '');
     const name = String(input.name ?? '');
@@ -50,5 +51,8 @@ export const destinationCatalogHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { destinations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const destinationCatalogHandler = autoInterpret(_destinationCatalogHandler);
+
 
 export default destinationCatalogHandler;

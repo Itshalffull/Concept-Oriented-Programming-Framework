@@ -2,6 +2,7 @@
 // Spec Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -9,7 +10,7 @@ import {
 /** Known specification formats and their validators. */
 const KNOWN_FORMATS = ['openapi', 'asyncapi', 'jsonschema', 'graphql-schema', 'protobuf'];
 
-export const specHandler: FunctionalConceptHandler = {
+const _specHandler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
     const projections = JSON.parse(input.projections as string) as string[];
     const format = input.format as string;
@@ -116,3 +117,6 @@ export const specHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const specHandler = autoInterpret(_specHandler);
+

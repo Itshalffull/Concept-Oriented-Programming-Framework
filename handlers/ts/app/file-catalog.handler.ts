@@ -10,6 +10,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, perform,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -357,7 +358,7 @@ function collectSyncPaths(
 
 // --- Handler ---
 
-export const fileCatalogHandler: FunctionalConceptHandler = {
+const _fileCatalogHandler: FunctionalConceptHandler = {
   registerProvider(input: Record<string, unknown>) {
     const providerName = input.provider_name as string;
     const kind = input.kind as string;
@@ -421,6 +422,9 @@ export const fileCatalogHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { paths: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fileCatalogHandler = autoInterpret(_fileCatalogHandler);
+
 
 // --- Helpers ---
 

@@ -2,11 +2,12 @@
 // ConfigSync Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const configSyncHandler: FunctionalConceptHandler = {
+const _configSyncHandler: FunctionalConceptHandler = {
   export(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -78,3 +79,6 @@ export const configSyncHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { changes: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const configSyncHandler = autoInterpret(_configSyncHandler);
+

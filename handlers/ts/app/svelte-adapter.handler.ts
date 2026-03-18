@@ -8,8 +8,9 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const svelteAdapterHandler: FunctionalConceptHandler = {
+const _svelteAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -143,3 +144,6 @@ export const svelteAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const svelteAdapterHandler = autoInterpret(_svelteAdapterHandler);
+

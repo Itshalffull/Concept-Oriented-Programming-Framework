@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretSolid } from '../interpreter-targets/solid.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:solid';
 
 let idCounter = 0;
 function nextId(): string { return `ri-solid-${++idCounter}`; }
 
-export const renderInterpreterSolidHandler: FunctionalConceptHandler = {
+const _renderInterpreterSolidHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'solid' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterSolidHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterSolidHandler = autoInterpret(_renderInterpreterSolidHandler);
+
 
 
 export function resetRenderInterpreterSolidCounter(): void { idCounter = 0; }

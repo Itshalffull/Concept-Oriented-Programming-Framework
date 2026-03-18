@@ -13,13 +13,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretSvelte } from '../interpreter-targets/svelte.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:svelte';
 
 let idCounter = 0;
 function nextId(): string { return `ri-svelte-${++idCounter}`; }
 
-export const renderInterpreterSvelteHandler: FunctionalConceptHandler = {
+const _renderInterpreterSvelteHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'svelte' }, 'existing');
@@ -79,6 +80,9 @@ export const renderInterpreterSvelteHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterSvelteHandler = autoInterpret(_renderInterpreterSvelteHandler);
+
 
 
 export function resetRenderInterpreterSvelteCounter(): void { idCounter = 0; }

@@ -4,6 +4,7 @@
 // with dependency tracking and automatic invalidation.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -59,7 +60,7 @@ function evaluateExpression(
   }
 }
 
-export const formulaHandler: FunctionalConceptHandler = {
+const _formulaHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const formula = input.formula as string;
     const expression = input.expression as string;
@@ -155,3 +156,6 @@ export const formulaHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const formulaHandler = autoInterpret(_formulaHandler);
+

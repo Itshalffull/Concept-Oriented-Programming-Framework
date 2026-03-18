@@ -3,6 +3,7 @@
 // Provider lifecycle for widget state machine execution with machine pool management.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -28,7 +29,7 @@ function resolveTransition(current: string, event: string): string | null {
   return transitions[current]?.[event] ?? null;
 }
 
-export const machineProviderHandler: FunctionalConceptHandler = {
+const _machineProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -176,3 +177,6 @@ export const machineProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const machineProviderHandler = autoInterpret(_machineProviderHandler);
+

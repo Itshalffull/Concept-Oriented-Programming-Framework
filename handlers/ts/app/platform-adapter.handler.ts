@@ -7,6 +7,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -90,7 +91,7 @@ function handleEventForPlatform(platform: string, event: Record<string, unknown>
   }
 }
 
-export const platformAdapterHandler: FunctionalConceptHandler = {
+const _platformAdapterHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const platform = String(input.platform ?? '').toLowerCase();
@@ -174,3 +175,6 @@ export const platformAdapterHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const platformAdapterHandler = autoInterpret(_platformAdapterHandler);
+

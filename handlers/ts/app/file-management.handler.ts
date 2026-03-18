@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const fileManagementHandler: FunctionalConceptHandler = {
+const _fileManagementHandler: FunctionalConceptHandler = {
   upload(input: Record<string, unknown>) {
     const file = input.file as string;
     const data = input.data as string;
@@ -78,3 +79,6 @@ export const fileManagementHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fileManagementHandler = autoInterpret(_fileManagementHandler);
+

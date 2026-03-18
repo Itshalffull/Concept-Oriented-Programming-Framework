@@ -2,11 +2,12 @@
 // Backlink Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const backlinkHandler: FunctionalConceptHandler = {
+const _backlinkHandler: FunctionalConceptHandler = {
   getBacklinks(input: Record<string, unknown>) {
     const entity = input.entity as string;
 
@@ -38,3 +39,6 @@ export const backlinkHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const backlinkHandler = autoInterpret(_backlinkHandler);
+

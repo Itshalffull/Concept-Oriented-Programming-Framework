@@ -3,11 +3,12 @@
 // Organize content into queryable sets: concrete (manually curated) or virtual (computed from a query).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const collectionHandler: FunctionalConceptHandler = {
+const _collectionHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const type = input.type as string;
@@ -148,3 +149,6 @@ export const collectionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const collectionHandler = autoInterpret(_collectionHandler);
+

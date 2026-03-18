@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretSwiftUI } from '../interpreter-targets/swiftui.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:swiftui';
 
 let idCounter = 0;
 function nextId(): string { return `ri-swiftui-${++idCounter}`; }
 
-export const renderInterpreterSwiftuiHandler: FunctionalConceptHandler = {
+const _renderInterpreterSwiftuiHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'swiftui' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterSwiftuiHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterSwiftuiHandler = autoInterpret(_renderInterpreterSwiftuiHandler);
+
 
 
 export function resetRenderInterpreterSwiftuiCounter(): void { idCounter = 0; }

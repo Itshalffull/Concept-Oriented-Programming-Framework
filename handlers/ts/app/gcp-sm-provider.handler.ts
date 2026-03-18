@@ -4,11 +4,12 @@
 // and secret IDs, IAM binding state, version tracking, and access configuration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const gcpSmProviderHandler: FunctionalConceptHandler = {
+const _gcpSmProviderHandler: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const secretId = input.secretId as string;
     const version = input.version as string;
@@ -72,3 +73,6 @@ export const gcpSmProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const gcpSmProviderHandler = autoInterpret(_gcpSmProviderHandler);
+

@@ -3,6 +3,7 @@
 // Typographic scales, font stacks, and text style definitions.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -11,7 +12,7 @@ let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const VALID_CATEGORIES = ['serif', 'sans-serif', 'monospace', 'display', 'handwriting'];
 
-export const typographyHandler: FunctionalConceptHandler = {
+const _typographyHandler: FunctionalConceptHandler = {
   defineScale(input: Record<string, unknown>) {
     const typography = input.typography as string;
     const baseSize = input.baseSize as number;
@@ -70,3 +71,6 @@ export const typographyHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { typography: id }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const typographyHandler = autoInterpret(_typographyHandler);
+

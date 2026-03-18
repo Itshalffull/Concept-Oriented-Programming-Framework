@@ -3,6 +3,7 @@
 // Provider lifecycle for component composition slots with centralized registry.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const PLUGIN_REF = 'surface-provider:slot';
 
-export const slotProviderHandler: FunctionalConceptHandler = {
+const _slotProviderHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -117,3 +118,6 @@ export const slotProviderHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { slots: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const slotProviderHandler = autoInterpret(_slotProviderHandler);
+

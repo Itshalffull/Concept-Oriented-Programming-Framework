@@ -2,11 +2,12 @@
 // Enricher Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const enricherHandler: FunctionalConceptHandler = {
+const _enricherHandler: FunctionalConceptHandler = {
   enrich(input: Record<string, unknown>) {
     const itemId = input.itemId as string;
     const enricherId = input.enricherId as string;
@@ -85,3 +86,6 @@ export const enricherHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { refreshed: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const enricherHandler = autoInterpret(_enricherHandler);
+

@@ -6,11 +6,12 @@
 // entity↔schema membership (applyTo, removeFrom, getSchemasFor).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const schemaHandler: FunctionalConceptHandler = {
+const _schemaHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'schema', {}, 'items');
@@ -223,3 +224,6 @@ export const schemaHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const schemaHandler = autoInterpret(_schemaHandler);
+

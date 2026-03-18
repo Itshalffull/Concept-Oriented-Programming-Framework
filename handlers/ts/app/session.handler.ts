@@ -5,6 +5,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { randomUUID } from 'crypto';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -16,7 +17,7 @@ function nextGeneratedId(): string {
   return `u-test-invariant-${String(next).padStart(3, '0')}`;
 }
 
-export const sessionHandler: FunctionalConceptHandler = {
+const _sessionHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const session = (input.session as string) || randomUUID();
     const userId = input.userId as string;
@@ -125,3 +126,6 @@ export const sessionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const sessionHandler = autoInterpret(_sessionHandler);
+

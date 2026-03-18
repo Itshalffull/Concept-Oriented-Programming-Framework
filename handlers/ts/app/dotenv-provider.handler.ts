@@ -5,11 +5,12 @@
 // secret management.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const dotenvProviderHandler: FunctionalConceptHandler = {
+const _dotenvProviderHandler: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const name = input.name as string;
     const filePath = input.filePath as string;
@@ -59,3 +60,6 @@ export const dotenvProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const dotenvProviderHandler = autoInterpret(_dotenvProviderHandler);
+

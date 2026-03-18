@@ -3,6 +3,7 @@
 // Generates target output from a normalized expressive theme AST.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string): string { return prefix + '-' + (++counter); }
@@ -18,7 +19,7 @@ function inferTokenType(path: string): string {
 function readTokens(ast: Json): Record<string, string> { const tokens = isObject(ast.tokens) ? ast.tokens : {}; const result: Record<string, string> = {}; for (const [key, value] of Object.entries(tokens)) result[key] = String(value); return result; }
 function readContext(ast: Json): Record<string, string> { const context = isObject(ast.context) ? ast.context : {}; const result: Record<string, string> = {}; for (const [key, value] of Object.entries(context)) result[key] = String(value); return result; }
 
-export const themeGenHandler: FunctionalConceptHandler = {
+const _themeGenHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const gen = input.gen as string;
     const target = input.target as string;
@@ -41,3 +42,6 @@ export const themeGenHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { output }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const themeGenHandler = autoInterpret(_themeGenHandler);
+

@@ -2,11 +2,12 @@
 // Provenance Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const provenanceHandler: FunctionalConceptHandler = {
+const _provenanceHandler: FunctionalConceptHandler = {
   record(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const activity = input.activity as string;
@@ -89,3 +90,6 @@ export const provenanceHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { plan: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const provenanceHandler = autoInterpret(_provenanceHandler);
+

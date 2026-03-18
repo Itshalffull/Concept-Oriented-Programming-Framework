@@ -4,11 +4,12 @@
 // Policies are composable via logical OR and AND combinators.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const accessControlHandler: FunctionalConceptHandler = {
+const _accessControlHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const resource = input.resource as string;
     const action = input.action as string;
@@ -69,3 +70,6 @@ export const accessControlHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { result: 'neutral' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const accessControlHandler = autoInterpret(_accessControlHandler);
+

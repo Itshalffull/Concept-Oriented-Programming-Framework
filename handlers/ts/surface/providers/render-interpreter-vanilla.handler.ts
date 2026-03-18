@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretVanilla } from '../interpreter-targets/vanilla.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:vanilla';
 
 let idCounter = 0;
 function nextId(): string { return `ri-vanilla-${++idCounter}`; }
 
-export const renderInterpreterVanillaHandler: FunctionalConceptHandler = {
+const _renderInterpreterVanillaHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'vanilla' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterVanillaHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterVanillaHandler = autoInterpret(_renderInterpreterVanillaHandler);
+
 
 
 export function resetRenderInterpreterVanillaCounter(): void { idCounter = 0; }

@@ -2,6 +2,7 @@
 // Target Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function computeHash(content: string): string {
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-export const targetHandler: FunctionalConceptHandler = {
+const _targetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const targetType = input.targetType as string;
@@ -82,3 +83,6 @@ export const targetHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const targetHandler = autoInterpret(_targetHandler);
+

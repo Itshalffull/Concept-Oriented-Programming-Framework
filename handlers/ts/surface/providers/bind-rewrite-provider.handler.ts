@@ -4,6 +4,7 @@ import {
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const resultsRel = relation('results');
 
@@ -36,7 +37,7 @@ export function applyBindRewrite(
  * sequences. Registered with RenderTransform as kind "bind-rewrite"
  * through sync wiring.
  */
-export const bindRewriteProviderHandler: FunctionalConceptHandler = {
+const _bindRewriteProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'BindRewriteProvider',
@@ -88,3 +89,6 @@ export const bindRewriteProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const bindRewriteProviderHandler = autoInterpret(_bindRewriteProviderHandler);
+

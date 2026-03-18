@@ -3,11 +3,12 @@
 // Coordinate compute provisioning across cloud providers.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const runtimeHandler: FunctionalConceptHandler = {
+const _runtimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const runtimeType = input.runtimeType as string;
@@ -127,3 +128,6 @@ export const runtimeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const runtimeHandler = autoInterpret(_runtimeHandler);
+

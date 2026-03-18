@@ -9,6 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -22,7 +23,7 @@ function toReactEventName(key: string): string {
   return 'on' + eventPart.charAt(0).toUpperCase() + eventPart.slice(1);
 }
 
-export const nextjsAdapterHandler: FunctionalConceptHandler = {
+const _nextjsAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -147,3 +148,6 @@ export const nextjsAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const nextjsAdapterHandler = autoInterpret(_nextjsAdapterHandler);
+

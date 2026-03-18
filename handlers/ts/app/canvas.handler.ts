@@ -2,11 +2,12 @@
 // Canvas Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const canvasHandler: FunctionalConceptHandler = {
+const _canvasHandler: FunctionalConceptHandler = {
   addNode(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const node = input.node as string;
@@ -128,3 +129,6 @@ export const canvasHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const canvasHandler = autoInterpret(_canvasHandler);
+

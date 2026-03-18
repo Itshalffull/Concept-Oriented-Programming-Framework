@@ -5,11 +5,12 @@
 // status tracking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const fluxProviderHandler: FunctionalConceptHandler = {
+const _fluxProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
     return complete(p, 'ok', {
@@ -116,3 +117,6 @@ export const fluxProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fluxProviderHandler = autoInterpret(_fluxProviderHandler);
+

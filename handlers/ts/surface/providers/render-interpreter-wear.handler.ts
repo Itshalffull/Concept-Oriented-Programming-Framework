@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretWear } from '../interpreter-targets/wear.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:wear';
 
 let idCounter = 0;
 function nextId(): string { return `ri-wear-${++idCounter}`; }
 
-export const renderInterpreterWearHandler: FunctionalConceptHandler = {
+const _renderInterpreterWearHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'wear' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterWearHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterWearHandler = autoInterpret(_renderInterpreterWearHandler);
+
 
 
 export function resetRenderInterpreterWearCounter(): void { idCounter = 0; }

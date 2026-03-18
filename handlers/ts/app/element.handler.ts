@@ -3,6 +3,7 @@
 // UI elements with kind classification, nesting, constraints, interactors, and widget assignment.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const VALID_KINDS = ['field', 'group', 'layout', 'action', 'display', 'container', 'slot'];
 
-export const elementHandler: FunctionalConceptHandler = {
+const _elementHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const element = input.element as string;
     const kind = input.kind as string;
@@ -145,3 +146,6 @@ export const elementHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const elementHandler = autoInterpret(_elementHandler);
+

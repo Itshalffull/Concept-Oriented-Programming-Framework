@@ -3,6 +3,7 @@
 // Maps graph analysis results to visual attributes for canvas overlays.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -180,7 +181,7 @@ function computeAttributes(
   }
 }
 
-export const analysisOverlayHandler: FunctionalConceptHandler = {
+const _analysisOverlayHandler: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const result = input.result as string;
@@ -291,3 +292,6 @@ export const analysisOverlayHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const analysisOverlayHandler = autoInterpret(_analysisOverlayHandler);
+

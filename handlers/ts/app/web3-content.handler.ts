@@ -3,6 +3,7 @@
 import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function generateCid(data: Buffer | Uint8Array | string): string {
   return 'Qm' + createHash('sha256').update(bytes).digest('hex').slice(0, 44);
 }
 
-export const web3ContentHandler: FunctionalConceptHandler = {
+const _web3ContentHandler: FunctionalConceptHandler = {
   store(input: Record<string, unknown>) {
     const data = input.data as string | Uint8Array; const name = input.name as string; const contentType = input.contentType as string;
     if (!data || !name || !contentType) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields: data, name, contentType' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -51,3 +52,6 @@ export const web3ContentHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const web3ContentHandler = autoInterpret(_web3ContentHandler);
+

@@ -1,11 +1,12 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const pageAsRecordHandler: FunctionalConceptHandler = {
+const _pageAsRecordHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const page = input.page as string;
     const schema = input.schema as string;
@@ -124,3 +125,6 @@ export const pageAsRecordHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const pageAsRecordHandler = autoInterpret(_pageAsRecordHandler);
+

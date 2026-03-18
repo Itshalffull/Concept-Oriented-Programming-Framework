@@ -2,11 +2,12 @@
 // RustSdkTarget Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const rustSdkTargetHandler: FunctionalConceptHandler = {
+const _rustSdkTargetHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
@@ -43,3 +44,6 @@ export const rustSdkTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const rustSdkTargetHandler = autoInterpret(_rustSdkTargetHandler);
+

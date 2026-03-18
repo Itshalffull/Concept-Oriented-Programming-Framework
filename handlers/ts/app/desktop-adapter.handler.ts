@@ -8,6 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -30,7 +31,7 @@ const DESKTOP_IPC_MAP: Record<string, string> = {
   ondrop: 'drop',
 };
 
-export const desktopAdapterHandler: FunctionalConceptHandler = {
+const _desktopAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -81,3 +82,6 @@ export const desktopAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const desktopAdapterHandler = autoInterpret(_desktopAdapterHandler);
+

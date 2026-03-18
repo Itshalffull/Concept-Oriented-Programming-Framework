@@ -2,11 +2,12 @@
 // EventBus Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const eventBusHandler: FunctionalConceptHandler = {
+const _eventBusHandler: FunctionalConceptHandler = {
   registerEventType(input: Record<string, unknown>) {
     const name = input.name as string;
     const schema = input.schema as string;
@@ -104,3 +105,6 @@ export const eventBusHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { entries: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const eventBusHandler = autoInterpret(_eventBusHandler);
+

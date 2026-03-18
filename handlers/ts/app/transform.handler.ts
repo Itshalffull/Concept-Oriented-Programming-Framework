@@ -2,6 +2,7 @@
 // Transform Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -17,7 +18,7 @@ function applyTransform(pluginId: string, value: string): string {
   }
 }
 
-export const transformHandler: FunctionalConceptHandler = {
+const _transformHandler: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
@@ -62,3 +63,6 @@ export const transformHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const transformHandler = autoInterpret(_transformHandler);
+

@@ -7,13 +7,14 @@ import {
 } from '../../../../runtime/storage-program.ts';
 import { interpretAppKit } from '../interpreter-targets/appkit.ts';
 import type { RenderInstruction } from '../render-program-builder.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const PROVIDER_REF = 'render-interpreter-provider:appkit';
 
 let idCounter = 0;
 function nextId(): string { return `ri-appkit-${++idCounter}`; }
 
-export const renderInterpreterAppkitHandler: FunctionalConceptHandler = {
+const _renderInterpreterAppkitHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'appkit' }, 'existing');
@@ -73,6 +74,9 @@ export const renderInterpreterAppkitHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterAppkitHandler = autoInterpret(_renderInterpreterAppkitHandler);
+
 
 
 export function resetRenderInterpreterAppkitCounter(): void { idCounter = 0; }

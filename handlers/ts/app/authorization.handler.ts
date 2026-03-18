@@ -4,11 +4,12 @@
 // Roles group permissions into reusable bundles; users inherit permissions through role assignment.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const authorizationHandler: FunctionalConceptHandler = {
+const _authorizationHandler: FunctionalConceptHandler = {
   grantPermission(input: Record<string, unknown>) {
     const role = input.role as string;
     const permission = input.permission as string;
@@ -82,3 +83,6 @@ export const authorizationHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const authorizationHandler = autoInterpret(_authorizationHandler);
+

@@ -1,6 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -24,7 +25,7 @@ function normalizeRoles(raw: unknown): string[] {
   return [];
 }
 
-export const resourceGrantPolicyHandler: FunctionalConceptHandler = {
+const _resourceGrantPolicyHandler: FunctionalConceptHandler = {
   setGrant(input: Record<string, unknown>) {
     const grant = String(input.grant ?? '');
     const scope = String(input.scope ?? '');
@@ -95,5 +96,8 @@ export const resourceGrantPolicyHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { grants: [] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const resourceGrantPolicyHandler = autoInterpret(_resourceGrantPolicyHandler);
+
 
 export default resourceGrantPolicyHandler;

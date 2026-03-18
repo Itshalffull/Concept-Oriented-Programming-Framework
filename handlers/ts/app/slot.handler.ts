@@ -3,10 +3,11 @@
 // Named insertion points within host components for composable content projection.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, get as spGet, put, putFrom, branch, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let slotCounter = 0;
 
-export const slotHandler: FunctionalConceptHandler = {
+const _slotHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const slot = input.slot as string;
     const name = input.name as string;
@@ -72,3 +73,6 @@ export const slotHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const slotHandler = autoInterpret(_slotHandler);
+

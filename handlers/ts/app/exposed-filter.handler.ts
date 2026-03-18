@@ -4,11 +4,12 @@
 // allowing them to modify query parameters through the UI.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const exposedFilterHandler: FunctionalConceptHandler = {
+const _exposedFilterHandler: FunctionalConceptHandler = {
   expose(input: Record<string, unknown>) {
     const filter = input.filter as string;
     const fieldName = input.fieldName as string;
@@ -76,3 +77,6 @@ export const exposedFilterHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const exposedFilterHandler = autoInterpret(_exposedFilterHandler);
+

@@ -2,11 +2,12 @@
 // FieldMapping Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const fieldMappingHandler: FunctionalConceptHandler = {
+const _fieldMappingHandler: FunctionalConceptHandler = {
   map(input: Record<string, unknown>) {
     const mappingId = input.mappingId as string;
     const sourceField = input.sourceField as string;
@@ -119,3 +120,6 @@ export const fieldMappingHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fieldMappingHandler = autoInterpret(_fieldMappingHandler);
+

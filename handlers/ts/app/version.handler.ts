@@ -2,11 +2,12 @@
 // Version Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const versionHandler: FunctionalConceptHandler = {
+const _versionHandler: FunctionalConceptHandler = {
   snapshot(input: Record<string, unknown>) {
     const version = input.version as string; const entity = input.entity as string;
     const data = input.data as string; const author = input.author as string;
@@ -59,3 +60,6 @@ export const versionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const versionHandler = autoInterpret(_versionHandler);
+

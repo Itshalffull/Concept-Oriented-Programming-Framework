@@ -4,11 +4,12 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createHash } from 'crypto';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const artifactHandler: FunctionalConceptHandler = {
+const _artifactHandler: FunctionalConceptHandler = {
   build(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const spec = input.spec as string;
@@ -81,3 +82,6 @@ export const artifactHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { removed: 0, freedBytes: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const artifactHandler = autoInterpret(_artifactHandler);
+

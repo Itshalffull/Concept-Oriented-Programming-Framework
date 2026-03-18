@@ -2,11 +2,12 @@
 // Follow Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const followHandler: FunctionalConceptHandler = {
+const _followHandler: FunctionalConceptHandler = {
   follow(input: Record<string, unknown>) {
     const user = input.user as string;
     const target = input.target as string;
@@ -67,3 +68,6 @@ export const followHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const followHandler = autoInterpret(_followHandler);
+

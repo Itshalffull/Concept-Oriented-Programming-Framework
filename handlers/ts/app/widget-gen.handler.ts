@@ -20,6 +20,7 @@ import { interpretWinUI } from '../../ts/surface/interpreter-targets/winui.js';
 import { interpretGtk } from '../../ts/surface/interpreter-targets/gtk.js';
 import type { RenderInstruction } from '../../ts/surface/render-program-builder.js';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type InterpreterFn = (instructions: RenderInstruction[], componentName: string) => { output: string; trace: string[] };
 const interpreters: Record<string, InterpreterFn> = { react: interpretReact, vue: interpretVue, solid: interpretSolid, svelte: interpretSvelte, vanilla: interpretVanilla, nextjs: interpretNextjs, 'react-native': interpretReactNative, ink: interpretInk, nativescript: interpretNativescript, compose: interpretCompose, wear: interpretWear, swiftui: interpretSwiftUI, watchkit: interpretWatchKit, appkit: interpretAppKit, winui: interpretWinUI, gtk: interpretGtk };
@@ -36,7 +37,7 @@ function astToManifest(ast: Record<string, unknown>): Record<string, unknown> {
   return { name: ast.name as string || 'Widget', props, anatomy, states, accessibility: { role: accessibility.role as string || null, keyboard: (accessibility.keyboard || []) as Array<Record<string, unknown>>, focus: accessibility.focus as Record<string, unknown> || {}, ariaBindings: accessibility.ariaBindings as Array<Record<string, unknown>> || [], ariaAttrs: accessibility.ariaAttrs as Array<Record<string, unknown>> || [] }, connect: ast.connect as Array<Record<string, unknown>> || [], composedWidgets: ast.composedWidgets as string[] || [], invariants: ast.invariants as string[] || [] };
 }
 
-export const widgetGenHandler: FunctionalConceptHandler = {
+const _widgetGenHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const gen = input.gen as string; const target = input.target as string; const widgetAst = input.widgetAst as string;
     const interpret = interpreters[target];
@@ -55,3 +56,6 @@ export const widgetGenHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { targets: JSON.stringify(Object.keys(interpreters).sort()) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const widgetGenHandler = autoInterpret(_widgetGenHandler);
+

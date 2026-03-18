@@ -4,6 +4,7 @@
 // functions, operators, and autocompletion.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -146,7 +147,7 @@ function parseAndEvaluate(
   return { result: result.value, ast: result.ast };
 }
 
-export const expressionLanguageHandler: FunctionalConceptHandler = {
+const _expressionLanguageHandler: FunctionalConceptHandler = {
   registerLanguage(input: Record<string, unknown>) {
     const name = input.name as string;
     const grammar = input.grammar as string;
@@ -293,3 +294,6 @@ export const expressionLanguageHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const expressionLanguageHandler = autoInterpret(_expressionLanguageHandler);
+

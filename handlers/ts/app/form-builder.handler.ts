@@ -2,11 +2,12 @@
 // FormBuilder Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const formBuilderHandler: FunctionalConceptHandler = {
+const _formBuilderHandler: FunctionalConceptHandler = {
   buildForm(input: Record<string, unknown>) {
     const form = input.form as string;
     const schema = input.schema as string;
@@ -107,3 +108,6 @@ export const formBuilderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const formBuilderHandler = autoInterpret(_formBuilderHandler);
+

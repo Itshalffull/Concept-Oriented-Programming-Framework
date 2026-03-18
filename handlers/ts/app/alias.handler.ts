@@ -2,11 +2,12 @@
 // Alias Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const aliasHandler: FunctionalConceptHandler = {
+const _aliasHandler: FunctionalConceptHandler = {
   addAlias(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const name = input.name as string;
@@ -64,3 +65,6 @@ export const aliasHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { entity: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const aliasHandler = autoInterpret(_aliasHandler);
+

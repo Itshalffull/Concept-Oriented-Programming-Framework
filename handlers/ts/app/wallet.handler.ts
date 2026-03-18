@@ -3,6 +3,7 @@
 import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -15,7 +16,7 @@ function verifyTypedDataSignature(address: string, domain: string, types: string
   return simulateEcrecover(address, combinedMessage, signature);
 }
 
-export const walletHandler: FunctionalConceptHandler = {
+const _walletHandler: FunctionalConceptHandler = {
   verify(input: Record<string, unknown>) {
     const address = (input.address as string).toLowerCase(); const message = input.message as string; const signature = input.signature as string;
     if (!address || !message || !signature) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields: address, message, signature' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -56,3 +57,6 @@ export const walletHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { address, nonce: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const walletHandler = autoInterpret(_walletHandler);
+

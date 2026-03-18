@@ -3,6 +3,7 @@
 // Mounts concepts into UI views with lifecycle management, zone placement, and resource tracking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -10,7 +11,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const hostHandler: FunctionalConceptHandler = {
+const _hostHandler: FunctionalConceptHandler = {
   mount(input: Record<string, unknown>) {
     const host = input.host as string;
     const concept = input.concept as string;
@@ -126,3 +127,6 @@ export const hostHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const hostHandler = autoInterpret(_hostHandler);
+

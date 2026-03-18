@@ -3,6 +3,7 @@
 // Client-side navigation with route registration, history stack, guards, and programmatic navigation.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -10,7 +11,7 @@ import {
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const navigatorHandler: FunctionalConceptHandler = {
+const _navigatorHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const nav = input.nav as string;
     const name = input.name as string;
@@ -167,3 +168,6 @@ export const navigatorHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const navigatorHandler = autoInterpret(_navigatorHandler);
+

@@ -5,6 +5,7 @@
 // Strategy: Layout with FieldPlacements, ComponentMapping takeover, or flat field list.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -13,7 +14,7 @@ function compositeKey(schema: string, modeId: string): string {
   return `${schema}:${modeId}`;
 }
 
-export const displayModeHandler: FunctionalConceptHandler = {
+const _displayModeHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'displayMode', {}, 'items');
@@ -264,3 +265,6 @@ export const displayModeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const displayModeHandler = autoInterpret(_displayModeHandler);
+

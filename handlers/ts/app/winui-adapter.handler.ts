@@ -2,10 +2,11 @@
 // WinUIAdapter Handler — Transforms framework-neutral props into WinUI/XAML bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const WINUI_EVENT_MAP: Record<string, string> = { onclick: 'Click', ondoubleclick: 'DoubleTapped', onchange: 'TextChanged', onfocus: 'GotFocus', onblur: 'LostFocus', onkeydown: 'KeyDown', onkeyup: 'KeyUp', onpointerenter: 'PointerEntered', onpointerleave: 'PointerExited', onpointerdown: 'PointerPressed', onpointerup: 'PointerReleased', onloaded: 'Loaded', onunloaded: 'Unloaded', onscroll: 'ViewChanged', ondrag: 'DragStarting', ondrop: 'Drop' };
 
-export const winUIAdapterHandler: FunctionalConceptHandler = {
+const _winUIAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string; const props = input.props as string;
     if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -33,3 +34,6 @@ export const winUIAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const winUIAdapterHandler = autoInterpret(_winUIAdapterHandler);
+

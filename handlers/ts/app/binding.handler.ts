@@ -3,6 +3,7 @@
 // Surface core binding between concepts and UI surfaces with mode-aware synchronization.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -12,7 +13,7 @@ function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const VALID_MODES = ['coupled', 'rest', 'graphql', 'static'];
 
-export const bindingHandler: FunctionalConceptHandler = {
+const _bindingHandler: FunctionalConceptHandler = {
   bind(input: Record<string, unknown>) {
     const binding = input.binding as string;
     const concept = input.concept as string;
@@ -86,3 +87,6 @@ export const bindingHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const bindingHandler = autoInterpret(_bindingHandler);
+

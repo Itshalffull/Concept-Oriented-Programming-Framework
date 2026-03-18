@@ -9,6 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -928,7 +929,7 @@ export const APPKIT_WIDGET_MAP: Record<string, WidgetMapping> = {
 // Handler actions
 // ============================================================
 
-export const appKitAdapterHandler: FunctionalConceptHandler = {
+const _appKitAdapterHandler: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -1104,3 +1105,6 @@ export const appKitAdapterHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const appKitAdapterHandler = autoInterpret(_appKitAdapterHandler);
+

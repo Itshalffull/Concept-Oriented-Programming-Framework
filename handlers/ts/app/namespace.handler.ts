@@ -2,11 +2,12 @@
 // Namespace Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
-export const namespaceHandler: FunctionalConceptHandler = {
+const _namespaceHandler: FunctionalConceptHandler = {
   createNamespacedPage(input: Record<string, unknown>) {
     const node = input.node as string;
     const path = input.path as string;
@@ -92,3 +93,6 @@ export const namespaceHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const namespaceHandler = autoInterpret(_namespaceHandler);
+

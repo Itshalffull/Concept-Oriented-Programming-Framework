@@ -2,6 +2,7 @@
 // WidgetGenFramework — Framework-agnostic TypeScript widget generation provider
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -9,7 +10,7 @@ import {
 let idCounter = 0;
 function nextId(): string { return `widget-gen-framework-${++idCounter}`; }
 
-export const widgetGenFrameworkHandler: FunctionalConceptHandler = {
+const _widgetGenFrameworkHandler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
     const id = nextId(); const providerRef = 'widget-gen-provider:framework';
     let p = createProgram();
@@ -39,5 +40,8 @@ export const widgetGenFrameworkHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { output }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const widgetGenFrameworkHandler = autoInterpret(_widgetGenFrameworkHandler);
+
 
 export function resetWidgetGenFrameworkCounter(): void { idCounter = 0; }
