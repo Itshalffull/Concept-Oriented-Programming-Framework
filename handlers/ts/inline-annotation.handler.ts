@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -75,12 +75,11 @@ const _handler: FunctionalConceptHandler = {
           message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
         })),
         (bp2) => {
-          const bp3 = mapBindings(bp2, (bindings) => {
+          const bp3 = putFrom(bp2, 'inline-annotation', annotationId, (bindings) => {
             const record = bindings.record as Record<string, unknown>;
             return { ...record, status: 'accepted' };
-          }, 'updatedRecord');
-          const bp4 = put(bp3, 'inline-annotation', annotationId, {});
-          return completeFrom(bp4, 'ok', (bindings) => ({
+          });
+          return completeFrom(bp3, 'ok', (bindings) => ({
             cleanContent: (bindings.record as Record<string, unknown>).scope as string,
           }));
         },
@@ -103,7 +102,10 @@ const _handler: FunctionalConceptHandler = {
           message: `Annotation "${annotationId}" was already ${(bindings.record as Record<string, unknown>).status}`,
         })),
         (bp2) => {
-          const bp3 = put(bp2, 'inline-annotation', annotationId, {});
+          const bp3 = putFrom(bp2, 'inline-annotation', annotationId, (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { ...record, status: 'rejected' };
+          });
           return complete(bp3, 'ok', { cleanContent: '' });
         },
       ),

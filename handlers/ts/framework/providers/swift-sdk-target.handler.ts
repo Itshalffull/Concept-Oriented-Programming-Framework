@@ -291,7 +291,7 @@ const _handler: FunctionalConceptHandler = {
     if (!projectionRaw || typeof projectionRaw !== 'string') {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'projection is required and must be a JSON string' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'projection is required and must be a JSON string' }) as StorageProgram<Result>;
     }
 
     let projection: Record<string, unknown>;
@@ -300,14 +300,14 @@ const _handler: FunctionalConceptHandler = {
     } catch {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'projection.conceptManifest is required and must be a JSON string' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }) as StorageProgram<Result>;
     }
 
     let manifest: ConceptManifest;
@@ -316,7 +316,7 @@ const _handler: FunctionalConceptHandler = {
     } catch {
       const p = createProgram();
 
-      return complete(p, 'error', {, reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
+      return complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -337,7 +337,7 @@ const _handler: FunctionalConceptHandler = {
     if (!manifest.actions || manifest.actions.length === 0) {
       const p = createProgram();
 
-      return complete(p, 'ok', {, files: [], package: packageName }) as StorageProgram<Result>;
+      return complete(p, 'ok', { files: [], package: packageName }) as StorageProgram<Result>;
     }
 
     // --- Generate concept client file ---
@@ -377,7 +377,8 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files, package: packageName };
+    const p = createProgram();
+    return complete(p, 'ok', { files, package: packageName }) as StorageProgram<Result>;
   },
 };
 

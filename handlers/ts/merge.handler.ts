@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, del, delFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -154,24 +154,46 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.mergeRecord,
       (bp) => complete(bp, 'invalidIndex', { message: `Merge '${mergeId}' not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
-        const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
+      (bp) => {
+        // Compute updated conflicts and write back
+        let bp2 = mapBindings(bp, (bindings) => {
+          const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
+          const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
 
-        if (conflictIndex < 0 || conflictIndex >= conflicts.length) {
-          return { variant: 'invalidIndex', message: `Conflict index ${conflictIndex} out of range [0, ${conflicts.length - 1}]` };
-        }
+          if (conflictIndex < 0 || conflictIndex >= conflicts.length) {
+            return { error: 'invalidIndex', message: `Conflict index ${conflictIndex} out of range [0, ${conflicts.length - 1}]` };
+          }
 
-        if (conflicts[conflictIndex].status === 'resolved') {
-          return { variant: 'alreadyResolved', message: `Conflict at index ${conflictIndex} was already resolved` };
-        }
+          if (conflicts[conflictIndex].status === 'resolved') {
+            return { error: 'alreadyResolved', message: `Conflict at index ${conflictIndex} was already resolved` };
+          }
 
-        conflicts[conflictIndex].status = 'resolved';
-        conflicts[conflictIndex].resolution = resolution;
+          conflicts[conflictIndex].status = 'resolved';
+          conflicts[conflictIndex].resolution = resolution;
 
-        const remaining = conflicts.filter(c => c.status !== 'resolved').length;
-        return { remaining };
-      }),
+          const remaining = conflicts.filter(c => c.status !== 'resolved').length;
+          return { error: null, conflicts: JSON.stringify(conflicts), remaining };
+        }, 'resolution');
+
+        // Write the updated merge record
+        bp2 = putFrom(bp2, 'merge-active', mergeId, (bindings) => {
+          const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
+          const res = bindings.resolution as Record<string, unknown>;
+          if (res.error) return mergeRecord; // Don't update on error
+          return { ...mergeRecord, conflicts: res.conflicts as string };
+        });
+
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.resolution as Record<string, unknown>;
+          if (res.error === 'invalidIndex') {
+            return { variant: 'invalidIndex', message: res.message as string };
+          }
+          if (res.error === 'alreadyResolved') {
+            return { variant: 'alreadyResolved', message: res.message as string };
+          }
+          return { remaining: res.remaining as number };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -184,47 +206,59 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.mergeRecord,
       (bp) => complete(bp, 'unresolvedConflicts', { count: 0 }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
-        const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
-        const unresolved = conflicts.filter(c => c.status !== 'resolved');
+      (bp) => {
+        // Compute result and delete the merge record
+        let bp2 = mapBindings(bp, (bindings) => {
+          const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
+          const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
+          const unresolved = conflicts.filter(c => c.status !== 'resolved');
 
-        if (unresolved.length > 0) {
-          return { variant: 'unresolvedConflicts', count: unresolved.length };
-        }
-
-        const base = mergeRecord.base as string;
-        const ours = mergeRecord.ours as string;
-        const theirs = mergeRecord.theirs as string;
-        const baseLines = base.split('\n');
-        const ourLines = ours.split('\n');
-        const theirLines = theirs.split('\n');
-        const maxLen = Math.max(baseLines.length, ourLines.length, theirLines.length);
-        const resultLines: string[] = [];
-        let conflictIdx = 0;
-
-        for (let i = 0; i < maxLen; i++) {
-          const baseLine = i < baseLines.length ? baseLines[i] : undefined;
-          const ourLine = i < ourLines.length ? ourLines[i] : undefined;
-          const theirLine = i < theirLines.length ? theirLines[i] : undefined;
-
-          if (ourLine === theirLine) {
-            if (ourLine !== undefined) resultLines.push(ourLine);
-          } else if (ourLine === baseLine) {
-            if (theirLine !== undefined) resultLines.push(theirLine);
-          } else if (theirLine === baseLine) {
-            if (ourLine !== undefined) resultLines.push(ourLine);
-          } else {
-            if (conflictIdx < conflicts.length && conflicts[conflictIdx].resolution !== undefined) {
-              resultLines.push(conflicts[conflictIdx].resolution!);
-            }
-            conflictIdx++;
+          if (unresolved.length > 0) {
+            return { error: true, count: unresolved.length };
           }
-        }
 
-        const result = resultLines.join('\n');
-        return { result };
-      }),
+          const base = mergeRecord.base as string;
+          const ours = mergeRecord.ours as string;
+          const theirs = mergeRecord.theirs as string;
+          const baseLines = base.split('\n');
+          const ourLines = ours.split('\n');
+          const theirLines = theirs.split('\n');
+          const maxLen = Math.max(baseLines.length, ourLines.length, theirLines.length);
+          const resultLines: string[] = [];
+          let conflictIdx = 0;
+
+          for (let i = 0; i < maxLen; i++) {
+            const baseLine = i < baseLines.length ? baseLines[i] : undefined;
+            const ourLine = i < ourLines.length ? ourLines[i] : undefined;
+            const theirLine = i < theirLines.length ? theirLines[i] : undefined;
+
+            if (ourLine === theirLine) {
+              if (ourLine !== undefined) resultLines.push(ourLine);
+            } else if (ourLine === baseLine) {
+              if (theirLine !== undefined) resultLines.push(theirLine);
+            } else if (theirLine === baseLine) {
+              if (ourLine !== undefined) resultLines.push(ourLine);
+            } else {
+              if (conflictIdx < conflicts.length && conflicts[conflictIdx].resolution !== undefined) {
+                resultLines.push(conflicts[conflictIdx].resolution!);
+              }
+              conflictIdx++;
+            }
+          }
+
+          return { error: false, result: resultLines.join('\n') };
+        }, 'finalResult');
+
+        bp2 = del(bp2, 'merge-active', mergeId);
+
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const fr = bindings.finalResult as Record<string, unknown>;
+          if (fr.error) {
+            return { variant: 'unresolvedConflicts', count: fr.count as number };
+          }
+          return { result: fr.result as string };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 };

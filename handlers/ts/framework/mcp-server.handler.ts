@@ -76,87 +76,18 @@ const _handler: FunctionalConceptHandler = {
       p = complete(p, 'error', { message: `Unsupported transport "${transport}". Use "stdio" or "sse".` }); return p;
     }
 
-    try {
-      // Read the interface manifest to find MCP output dir
-      const fs = await import('fs');
-      const path = await import('path');
-      const yaml = await import('yaml');
+    // Tool discovery and registration happens in the standalone
+    // bootMcpServer() entry point which is intentionally async.
+    // The concept handler records the server configuration and
+    // delegates actual boot to the runtime.
+    p = put(p, 'status', 'server', {
+      status: 'starting',
+      transport,
+      manifestPath,
+      toolCount: toolRegistry.size,
+    });
 
-      const manifestContent = fs.readFileSync(
-        path.resolve(manifestPath),
-        'utf-8',
-      );
-      const manifest = yaml.parse(manifestContent);
-      const mcpTarget = manifest?.targets?.mcp;
-
-      if (!mcpTarget) {
-        p = complete(p, 'error', { message: `No MCP target found in manifest: ${manifestPath}` }); return p;
-      }
-
-      const outputDir = path.resolve(
-        path.dirname(manifestPath),
-        mcpTarget.outputDir || './.claude/mcp',
-      );
-
-      // Discover all .tools.ts files in the output directory
-      const toolFiles: string[] = [];
-      function walkDir(dir: string) {
-    let p = createProgram();
-        if (!fs.existsSync(dir)) return;
-        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-          if (entry.isDirectory()) {
-            walkDir(path.join(dir, entry.name));
-          } else if (entry.name.endsWith('.tools.ts')) {
-            toolFiles.push(path.join(dir, entry.name));
-          }
-        }
-      }
-      walkDir(outputDir);
-
-      // Dynamically import each tool file and register tools
-      toolRegistry.clear();
-      let totalTools = 0;
-
-      for (const toolFile of toolFiles) {
-        try {
-          const mod = await import(`file://${toolFile.replace(/\\/g, '/')}`);
-          // Each module exports a *Tools array (e.g., scoreApiTools)
-          for (const exportName of Object.keys(mod)) {
-            const arr = mod[exportName];
-            if (!Array.isArray(arr)) continue;
-            for (const entry of arr) {
-              if (!entry.name) continue;
-              // Only register tools (not resources/templates for now)
-              const inferredConcept = inferConceptFromToolFile(toolFile);
-              const tool: RegisteredTool = {
-                name: entry.name,
-                description: entry.description || '',
-                inputSchema: entry.inputSchema || { type: 'object', properties: {}, required: [] },
-                type: entry.type || 'tool',
-                concept: entry.concept || inferredConcept || inferConcept(entry.name),
-                action: entry.action || inferActionFromToolName(entry.name, entry.concept || inferredConcept || inferConcept(entry.name)),
-              };
-              toolRegistry.set(tool.name, tool);
-              totalTools++;
-            }
-          }
-        } catch (err) {
-          // Skip files that fail to import
-          console.error(`Warning: failed to import ${toolFile}:`, err);
-        }
-      }
-
-      p = put(p, 'status', 'server', {
-        status: 'running',
-        transport,
-        manifestPath,
-        toolCount: totalTools,
-      });
-
-      p = complete(p, 'ok', { status: 'running', toolCount: totalTools }); return p;
-    } catch (err) {
-      p = complete(p, 'error', { message: err instanceof Error ? err.message : String(err) }); return p;
-    }
+    p = complete(p, 'ok', { status: 'starting', toolCount: toolRegistry.size, manifestPath }); return p;
   },
 
   registerTool(input: Record<string, unknown>) {
@@ -680,5 +611,25 @@ export async function bootMcpServer(manifestPath: string) {
         content: [{ type: 'text' as const, text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
         isError: true,
       };
+    }
+  });
+
+  // Start stdio transport
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error(`[clef-mcp] Server running on stdio (${allTools.length} tools)`);
+}
+
+/** Resolve a handler module by concept name */
+async function resolveHandler(conceptName: string): Promise<Record<string, (...args: unknown[]) => Promise<Record<string, unknown>>> | null> {
+  try {
+    const kebab = conceptName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+    const mod = await import(`./${kebab}.handler.js`);
+    const handlerKey = Object.keys(mod).find(k => k.endsWith('Handler'));
+    return handlerKey ? mod[handlerKey] : null;
+  } catch {
+    return null;
+  }
+}
 
 export const mcpServerHandler = autoInterpret(_handler);
