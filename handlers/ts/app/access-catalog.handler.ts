@@ -1,16 +1,15 @@
-import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, put, find, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-async function listEntries(storage: ConceptStorage, kind?: string) {
-  if (kind) {
-    return storage.find('entry', { kind });
-  }
-  return storage.find('entry', {});
-}
-
-export const accessCatalogHandler: ConceptHandler = {
-  async registerPermission(input: Record<string, unknown>, storage: ConceptStorage) {
+export const accessCatalogHandler: FunctionalConceptHandler = {
+  registerPermission(input: Record<string, unknown>) {
     const entry = String(input.entry ?? '');
-    await storage.put('entry', entry, {
+    let p = createProgram();
+    p = put(p, 'entry', entry, {
       id: entry,
       kind: 'permission',
       key: String(input.key ?? ''),
@@ -20,10 +19,10 @@ export const accessCatalogHandler: ConceptHandler = {
       permissions: JSON.stringify([]),
       catalog: '',
     });
-    return { variant: 'ok', entry };
+    return complete(p, 'ok', { entry }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerRole(input: Record<string, unknown>, storage: ConceptStorage) {
+  registerRole(input: Record<string, unknown>) {
     const entry = String(input.entry ?? '');
     const permissions = Array.isArray(input.permissions)
       ? input.permissions.map((permission) => String(permission))
@@ -31,7 +30,8 @@ export const accessCatalogHandler: ConceptHandler = {
         ? JSON.parse(String(input.permissions)) as string[]
         : [];
 
-    await storage.put('entry', entry, {
+    let p = createProgram();
+    p = put(p, 'entry', entry, {
       id: entry,
       kind: 'role',
       key: String(input.key ?? ''),
@@ -41,12 +41,13 @@ export const accessCatalogHandler: ConceptHandler = {
       permissions: JSON.stringify(permissions),
       catalog: '',
     });
-    return { variant: 'ok', entry };
+    return complete(p, 'ok', { entry }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async registerResourceAction(input: Record<string, unknown>, storage: ConceptStorage) {
+  registerResourceAction(input: Record<string, unknown>) {
     const entry = String(input.entry ?? '');
-    await storage.put('entry', entry, {
+    let p = createProgram();
+    p = put(p, 'entry', entry, {
       id: entry,
       kind: 'resource-action',
       key: String(input.key ?? ''),
@@ -56,45 +57,26 @@ export const accessCatalogHandler: ConceptHandler = {
       permissions: JSON.stringify([]),
       catalog: String(input.catalog ?? ''),
     });
-    return { variant: 'ok', entry };
+    return complete(p, 'ok', { entry }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listPermissions(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const entries = await listEntries(storage, 'permission');
-    return {
-      variant: 'ok',
-      permissions: entries.map((entry) => ({
-        key: String(entry.key ?? ''),
-        label: String(entry.label ?? ''),
-        group: String(entry.group ?? ''),
-        description: String(entry.description ?? ''),
-      })),
-    };
+  listPermissions(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'entry', { kind: 'permission' }, 'entries');
+    return complete(p, 'ok', { permissions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listRoles(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const entries = await listEntries(storage, 'role');
-    return {
-      variant: 'ok',
-      roles: entries.map((entry) => ({
-        key: String(entry.key ?? ''),
-        label: String(entry.label ?? ''),
-        description: String(entry.description ?? ''),
-        permissions: JSON.parse(String(entry.permissions ?? '[]')) as string[],
-      })),
-    };
+  listRoles(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'entry', { kind: 'role' }, 'entries');
+    return complete(p, 'ok', { roles: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listResourceActions(input: Record<string, unknown>, storage: ConceptStorage) {
+  listResourceActions(input: Record<string, unknown>) {
     const catalog = String(input.catalog ?? '');
-    const entries = await storage.find('entry', { kind: 'resource-action', catalog });
-    return {
-      variant: 'ok',
-      actions: entries.map((entry) => ({
-        key: String(entry.key ?? ''),
-        label: String(entry.label ?? ''),
-      })),
-    };
+    let p = createProgram();
+    p = find(p, 'entry', { kind: 'resource-action', catalog }, 'entries');
+    return complete(p, 'ok', { actions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

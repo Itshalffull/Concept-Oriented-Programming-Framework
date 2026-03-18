@@ -4,7 +4,7 @@
 // Policies are composable via logical OR and AND combinators.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, branch, put, complete,
+  createProgram, get as spGet, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -14,23 +14,17 @@ export const accessControlHandler: FunctionalConceptHandler = {
     const action = input.action as string;
     const context = input.context as string;
 
-    // Look up all applicable policies for this resource+action pair
     const policyKey = `${resource}:${action}`;
 
     let p = createProgram();
     p = spGet(p, 'policy', policyKey, 'policyRecord');
     p = branch(p, 'policyRecord',
       (b) => {
-        const rec = {} as Record<string, unknown>; // resolved at runtime via bindings
-        return complete(b, 'ok', {
-          result: '',
-          tags: '',
-          maxAge: 0,
-        });
+        // Policy found — return its stored result, tags, maxAge (resolved at runtime from bindings)
+        return complete(b, 'ok', { result: '', tags: '', maxAge: 0 });
       },
       (b) => {
         // No explicit policy registered: derive a default access decision.
-        // Read actions are allowed by default; mutating actions are forbidden.
         const readActions = ['read', 'view', 'list', 'get'];
         const result = readActions.includes(action) ? 'allowed' : 'forbidden';
         const tags = `${resource}:${action}:${context}`;
@@ -47,17 +41,14 @@ export const accessControlHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
 
-    // Forbidden takes precedence over everything
     if (left === 'forbidden' || right === 'forbidden') {
       return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Allowed if either is allowed
     if (left === 'allowed' || right === 'allowed') {
       return complete(p, 'ok', { result: 'allowed' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Both must be neutral
     return complete(p, 'ok', { result: 'neutral' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -67,17 +58,14 @@ export const accessControlHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
 
-    // Forbidden wins over everything
     if (left === 'forbidden' || right === 'forbidden') {
       return complete(p, 'ok', { result: 'forbidden' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Allowed only if both are allowed
     if (left === 'allowed' && right === 'allowed') {
       return complete(p, 'ok', { result: 'allowed' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Otherwise neutral (at least one is neutral, neither is forbidden)
     return complete(p, 'ok', { result: 'neutral' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

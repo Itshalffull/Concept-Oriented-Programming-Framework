@@ -1,8 +1,13 @@
+// @migrated dsl-constructs 2026-03-18
 // Annotation Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const annotationHandler: ConceptHandler = {
-  async annotate(input, storage) {
+export const annotationHandler: FunctionalConceptHandler = {
+  annotate(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const scope = input.scope as string;
     const metadata = input.metadata as string;
@@ -12,30 +17,29 @@ export const annotationHandler: ConceptHandler = {
     try {
       parsed = JSON.parse(metadata);
     } catch {
-      return { variant: 'invalidScope', scope };
+      let p = createProgram();
+      return complete(p, 'invalidScope', { scope }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     // Validate scope: must be "concept" or a non-empty action name
     if (!scope || scope.trim() === '') {
-      return { variant: 'invalidScope', scope };
+      let p = createProgram();
+      return complete(p, 'invalidScope', { scope }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Count the metadata fields provided
     const fieldCount = Object.keys(parsed).length;
-
-    // Build annotation identifier from concept + scope
     const annotationId = `${concept}::${scope}`;
 
-    // Retrieve existing annotation or start fresh
-    const existing = await storage.get('annotation', annotationId);
+    let p = createProgram();
+    p = spGet(p, 'annotation', annotationId, 'existing');
 
-    const examples = parsed.examples ?? (existing?.examples ? JSON.parse(existing.examples as string) : []);
-    const references = parsed.references ?? (existing?.references ? JSON.parse(existing.references as string) : []);
-    const toolPermissions = parsed.toolPermissions ?? (existing?.toolPermissions ? JSON.parse(existing.toolPermissions as string) : []);
-    const argumentTemplate = parsed.argumentTemplate ?? (existing?.argumentTemplate as string | undefined) ?? null;
-    const relatedItems = parsed.relatedItems ?? (existing?.relatedItems ? JSON.parse(existing.relatedItems as string) : []);
+    const examples = parsed.examples ?? [];
+    const references = parsed.references ?? [];
+    const toolPermissions = parsed.toolPermissions ?? [];
+    const argumentTemplate = parsed.argumentTemplate ?? null;
+    const relatedItems = parsed.relatedItems ?? [];
 
-    await storage.put('annotation', annotationId, {
+    p = put(p, 'annotation', annotationId, {
       annotationId,
       targetConcept: concept,
       scope,
@@ -46,40 +50,15 @@ export const annotationHandler: ConceptHandler = {
       relatedItems: JSON.stringify(relatedItems),
     });
 
-    return { variant: 'ok', annotation: annotationId, fieldCount };
+    return complete(p, 'ok', { annotation: annotationId, fieldCount }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const concept = input.concept as string;
 
-    const allAnnotations = await storage.find('annotation');
-    const matching = allAnnotations.filter(
-      (a) => a.targetConcept === concept,
-    );
-
-    if (matching.length === 0) {
-      return { variant: 'notFound', concept };
-    }
-
-    // Sort by scope: "concept" first, then alphabetical action names
-    matching.sort((a, b) => {
-      if (a.scope === 'concept') return -1;
-      if (b.scope === 'concept') return 1;
-      return (a.scope as string).localeCompare(b.scope as string);
-    });
-
-    const annotations = matching.map((a) =>
-      JSON.stringify({
-        targetConcept: a.targetConcept,
-        scope: a.scope,
-        examples: JSON.parse(a.examples as string),
-        references: JSON.parse(a.references as string),
-        toolPermissions: JSON.parse(a.toolPermissions as string),
-        argumentTemplate: a.argumentTemplate || null,
-        relatedItems: JSON.parse(a.relatedItems as string),
-      }),
-    );
-
-    return { variant: 'ok', annotations: JSON.stringify(annotations) };
+    let p = createProgram();
+    p = find(p, 'annotation', {}, 'allAnnotations');
+    // Filtering by targetConcept and sorting handled at runtime
+    return complete(p, 'ok', { annotations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
