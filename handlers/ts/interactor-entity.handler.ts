@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // InteractorEntity Handler
 //
@@ -7,15 +8,22 @@
 // widgets match this interactor in a given context?"
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `interactor-entity-${++idCounter}`;
 }
 
-export const interactorEntityHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _interactorEntityHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const name = input.name as string;
     const category = input.category as string;
     const properties = input.properties as string;
@@ -23,7 +31,8 @@ export const interactorEntityHandler: ConceptHandler = {
     const id = nextId();
     const symbol = `clef/interactor/${name}`;
 
-    await storage.put('interactor-entity', id, {
+    let p = createProgram();
+    p = put(p, 'interactor-entity', id, {
       id,
       name,
       symbol,
@@ -31,127 +40,158 @@ export const interactorEntityHandler: ConceptHandler = {
       properties,
       classificationRules: '[]',
     });
-
-    return { variant: 'ok', entity: id };
+    return complete(p, 'ok', { entity: id }) as StorageProgram<Result>;
   },
 
-  async findByCategory(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByCategory(input: Record<string, unknown>) {
     const category = input.category as string;
 
-    const results = await storage.find('interactor-entity', { category });
-
-    return { variant: 'ok', interactors: JSON.stringify(results) };
+    let p = createProgram();
+    p = find(p, 'interactor-entity', { category }, 'results');
+    return completeFrom(p, 'ok', (bindings) => ({
+      interactors: JSON.stringify(bindings.results),
+    })) as StorageProgram<Result>;
   },
 
-  async matchingWidgets(input: Record<string, unknown>, storage: ConceptStorage) {
+  matchingWidgets(input: Record<string, unknown>) {
     const interactor = input.interactor as string;
     const context = input.context as string;
 
-    const record = await storage.get('interactor-entity', interactor);
-    if (!record) {
-      return { variant: 'ok', widgets: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'interactor-entity', interactor, 'record');
 
-    const interactorName = record.name as string;
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = find(b, 'widget-entity', {}, 'allWidgets');
+        b2 = mapBindings(b2, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const interactorName = record.name as string;
+          const allWidgets = (bindings.allWidgets as Array<Record<string, unknown>>) || [];
 
-    // Find all widgets that declare affordance for this interactor
-    const allWidgets = await storage.find('widget-entity');
-    const matching = allWidgets.filter((w) => {
-      try {
-        const ast = JSON.parse(w.ast as string || '{}');
-        const affordances = ast.affordances || [];
-        return affordances.some((a: Record<string, unknown>) => a.interactor === interactorName);
-      } catch {
-        return false;
-      }
-    }).map((w) => ({
-      widget: w.name,
-      affordanceSpecificity: 1,
-      conditionsMet: true,
-    }));
+          const matching = allWidgets.filter((w) => {
+            try {
+              const ast = JSON.parse(w.ast as string || '{}');
+              const affordances = ast.affordances || [];
+              return affordances.some((a: Record<string, unknown>) => a.interactor === interactorName);
+            } catch {
+              return false;
+            }
+          }).map((w) => ({
+            widget: w.name,
+            affordanceSpecificity: 1,
+            conditionsMet: true,
+          }));
 
-    return { variant: 'ok', widgets: JSON.stringify(matching) };
+          return JSON.stringify(matching);
+        }, 'widgets');
+        return completeFrom(b2, 'ok', (bindings) => ({ widgets: bindings.widgets as string }));
+      },
+      (b) => complete(b, 'ok', { widgets: '[]' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async classifiedFields(input: Record<string, unknown>, storage: ConceptStorage) {
+  classifiedFields(input: Record<string, unknown>) {
     const interactor = input.interactor as string;
 
-    const record = await storage.get('interactor-entity', interactor);
-    if (!record) {
-      return { variant: 'ok', fields: '[]' };
-    }
+    let p = createProgram();
+    p = get(p, 'interactor-entity', interactor, 'record');
 
-    // Parse the interactor properties to determine classification criteria
-    let props: Record<string, unknown> = {};
-    try {
-      props = JSON.parse(record.properties as string || '{}');
-    } catch {
-      // empty
-    }
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = find(b, 'state-field', {}, 'allFields');
+        b2 = mapBindings(b2, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          let props: Record<string, unknown> = {};
+          try {
+            props = JSON.parse(record.properties as string || '{}');
+          } catch {
+            // empty
+          }
 
-    // Search state fields that match the interactor's classification
-    const allFields = await storage.find('state-field');
-    const classified = allFields.filter((f) => {
-      // Match based on cardinality/type alignment with interactor properties
-      const dataType = props.dataType as string | undefined;
-      const cardinality = props.cardinality as string | undefined;
-      if (dataType && f.typeExpr && !(f.typeExpr as string).includes(dataType)) return false;
-      if (cardinality && f.cardinality !== cardinality) return false;
-      return true;
-    }).map((f) => ({
-      concept: f.concept,
-      field: f.name,
-      confidence: 1.0,
-    }));
+          const allFields = (bindings.allFields as Array<Record<string, unknown>>) || [];
+          const classified = allFields.filter((f) => {
+            const dataType = props.dataType as string | undefined;
+            const cardinality = props.cardinality as string | undefined;
+            if (dataType && f.typeExpr && !(f.typeExpr as string).includes(dataType)) return false;
+            if (cardinality && f.cardinality !== cardinality) return false;
+            return true;
+          }).map((f) => ({
+            concept: f.concept,
+            field: f.name,
+            confidence: 1.0,
+          }));
 
-    return { variant: 'ok', fields: JSON.stringify(classified) };
+          return JSON.stringify(classified);
+        }, 'fields');
+        return completeFrom(b2, 'ok', (bindings) => ({ fields: bindings.fields as string }));
+      },
+      (b) => complete(b, 'ok', { fields: '[]' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async coverageReport(_input: Record<string, unknown>, storage: ConceptStorage) {
-    const allInteractors = await storage.find('interactor-entity');
-    const allWidgets = await storage.find('widget-entity');
+  coverageReport(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'interactor-entity', {}, 'allInteractors');
+    p = find(p, 'widget-entity', {}, 'allWidgets');
 
-    const report = allInteractors.map((interactor) => {
-      const interactorName = interactor.name as string;
+    p = mapBindings(p, (bindings) => {
+      const allInteractors = (bindings.allInteractors as Array<Record<string, unknown>>) || [];
+      const allWidgets = (bindings.allWidgets as Array<Record<string, unknown>>) || [];
 
-      // Count widgets with matching affordances
-      const matchingWidgets = allWidgets.filter((w) => {
-        try {
-          const ast = JSON.parse(w.ast as string || '{}');
-          const affordances = ast.affordances || [];
-          return affordances.some((a: Record<string, unknown>) => a.interactor === interactorName);
-        } catch {
-          return false;
-        }
+      const report = allInteractors.map((interactor) => {
+        const interactorName = interactor.name as string;
+
+        const matchingWidgets = allWidgets.filter((w) => {
+          try {
+            const ast = JSON.parse(w.ast as string || '{}');
+            const affordances = ast.affordances || [];
+            return affordances.some((a: Record<string, unknown>) => a.interactor === interactorName);
+          } catch {
+            return false;
+          }
+        });
+
+        return {
+          interactor: interactorName,
+          widgetCount: matchingWidgets.length,
+          uncoveredContexts: [] as string[],
+        };
       });
 
-      return {
-        interactor: interactorName,
-        widgetCount: matchingWidgets.length,
-        uncoveredContexts: [] as string[],
-      };
-    });
+      return JSON.stringify(report);
+    }, 'report');
 
-    return { variant: 'ok', report: JSON.stringify(report) };
+    return completeFrom(p, 'ok', (bindings) => ({ report: bindings.report as string })) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const interactor = input.interactor as string;
 
-    const record = await storage.get('interactor-entity', interactor);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'interactor-entity', interactor, 'record');
 
-    return {
-      variant: 'ok',
-      interactor: record.id as string,
-      name: record.name as string,
-      category: record.category as string,
-      properties: record.properties as string,
-    };
+    p = branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          interactor: record.id as string,
+          name: record.name as string,
+          category: record.category as string,
+          properties: record.properties as string,
+        };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const interactorEntityHandler = autoInterpret(_interactorEntityHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetInteractorEntityCounter(): void {

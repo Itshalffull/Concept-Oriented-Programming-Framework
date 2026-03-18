@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TreeSitterWidgetSpec Handler
 //
@@ -6,7 +7,12 @@
 // props, connect, affordance, compose, invariant.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
@@ -627,79 +633,108 @@ function queryTree(node: ParseNode, pattern: string): ParseNode[] {
   return results;
 }
 
-export const treeSitterWidgetSpecHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _treeSitterWidgetSpecHandler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      const existing = await storage.find(RELATION, { language: 'widget-spec' });
-      if (existing.length > 0) {
-        return { variant: 'ok', instance: existing[0].id as string };
-      }
+    let p = createProgram();
+    p = find(p, RELATION, { language: 'widget-spec' }, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const results = (bindings.existing as Array<Record<string, unknown>>) || [];
+      return results.length;
+    }, 'existingCount');
 
-      await storage.put(RELATION, id, {
-        id,
-        grammarRef: 'tree-sitter-widget-spec',
-        wasmPath: 'tree-sitter-widget-spec.wasm',
-        language: 'widget-spec',
-        extensions: JSON.stringify(['.widget']),
-        grammarVersion: '1.0.0',
-      });
+    p = branch(p,
+      (bindings) => (bindings.existingCount as number) > 0,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const results = (bindings.existing as Array<Record<string, unknown>>) || [];
+        return { instance: results[0].id as string };
+      }),
+      (b) => {
+        let b2 = put(b, RELATION, id, {
+          id,
+          grammarRef: 'tree-sitter-widget-spec',
+          wasmPath: 'tree-sitter-widget-spec.wasm',
+          language: 'widget-spec',
+          extensions: JSON.stringify(['.widget']),
+          grammarVersion: '1.0.0',
+        });
+        return complete(b2, 'ok', { instance: id });
+      },
+    );
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return p as StorageProgram<Result>;
   },
 
-  async parse(input: Record<string, unknown>, storage: ConceptStorage) {
+  parse(input: Record<string, unknown>) {
     const source = input.source as string;
 
     try {
       const tree = parseWidgetSpec(source);
-      return { variant: 'ok', tree: JSON.stringify(tree) };
+      const p = createProgram();
+      return complete(p, 'ok', { tree: JSON.stringify(tree) }) as StorageProgram<Result>;
     } catch (e) {
-      return { variant: 'parseError', message: String(e) };
+      const p = createProgram();
+      return complete(p, 'parseError', { message: String(e) }) as StorageProgram<Result>;
     }
   },
 
-  async highlight(input: Record<string, unknown>, storage: ConceptStorage) {
+  highlight(input: Record<string, unknown>) {
     const source = input.source as string;
 
     try {
       const ranges = highlightWidgetSpec(source);
-      return { variant: 'ok', highlights: JSON.stringify(ranges) };
+      const p = createProgram();
+      return complete(p, 'ok', { highlights: JSON.stringify(ranges) }) as StorageProgram<Result>;
     } catch (e) {
-      return { variant: 'highlightError', message: String(e) };
+      const p = createProgram();
+      return complete(p, 'highlightError', { message: String(e) }) as StorageProgram<Result>;
     }
   },
 
-  async query(input: Record<string, unknown>, storage: ConceptStorage) {
+  query(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
     const source = input.source as string;
 
     try {
       const tree = parseWidgetSpec(source);
       const matches = queryTree(tree, pattern);
-      return { variant: 'ok', matches: JSON.stringify(matches) };
+      const p = createProgram();
+      return complete(p, 'ok', { matches: JSON.stringify(matches) }) as StorageProgram<Result>;
     } catch (e) {
-      return { variant: 'queryError', message: String(e) };
+      const p = createProgram();
+      return complete(p, 'queryError', { message: String(e) }) as StorageProgram<Result>;
     }
   },
 
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+  register(input: Record<string, unknown>) {
     const instanceId = input.instance as string | undefined;
-    const record = instanceId ? await storage.get(RELATION, instanceId) : null;
 
-    return {
-      variant: 'ok',
+    if (!instanceId) {
+      const p = createProgram();
+      return complete(p, 'ok', {
+        language: 'widget-spec',
+        extensions: JSON.stringify(['.widget']),
+        grammarVersion: '1.0.0',
+        registered: false,
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, RELATION, instanceId, 'record');
+
+    return completeFrom(p, 'ok', (bindings) => ({
       language: 'widget-spec',
       extensions: JSON.stringify(['.widget']),
       grammarVersion: '1.0.0',
-      registered: record !== null,
-    };
+      registered: bindings.record !== null && bindings.record !== undefined,
+    })) as StorageProgram<Result>;
   },
 };
+
+export const treeSitterWidgetSpecHandler = autoInterpret(_treeSitterWidgetSpecHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTreeSitterWidgetSpecCounter(): void {
