@@ -2,10 +2,10 @@
 // User Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete, completeFrom, mapBindings, branch,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _userHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {

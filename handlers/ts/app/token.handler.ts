@@ -3,10 +3,10 @@
 // Replace typed placeholders in text using chain-traversal patterns.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const TOKEN_PATTERN = /\[([a-zA-Z_][a-zA-Z_0-9]*(?::[a-zA-Z_][a-zA-Z_0-9]*)*)\]/g;
 function scanTokens(text: string): string[] {

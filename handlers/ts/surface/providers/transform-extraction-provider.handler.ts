@@ -1,9 +1,9 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 // Lens for storing analysis results — dogfooding the lens DSL
 const resultsRel = relation('results');

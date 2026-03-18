@@ -3,10 +3,10 @@
 // Generates structured reports from graph analysis results.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function generateId(): string {
   return `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

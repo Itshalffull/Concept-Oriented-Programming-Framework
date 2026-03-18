@@ -3,10 +3,10 @@
 // Manage progressive delivery of concept deployments (canary, blue-green, rolling).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _rolloutHandler: FunctionalConceptHandler = {
   begin(input: Record<string, unknown>) {

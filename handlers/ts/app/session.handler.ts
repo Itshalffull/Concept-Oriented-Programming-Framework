@@ -5,10 +5,10 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { randomUUID } from 'crypto';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let idCounter = 1;

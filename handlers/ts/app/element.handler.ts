@@ -3,10 +3,10 @@
 // UI elements with kind classification, nesting, constraints, interactors, and widget assignment.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }

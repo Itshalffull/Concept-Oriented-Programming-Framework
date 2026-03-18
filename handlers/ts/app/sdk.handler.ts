@@ -2,10 +2,10 @@
 // Sdk Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const PACKAGE_MANIFESTS: Record<string, string> = { typescript: 'package.json', javascript: 'package.json', python: 'pyproject.toml', go: 'go.mod', rust: 'Cargo.toml', java: 'pom.xml', swift: 'Package.swift' };
 const FILE_EXTENSIONS: Record<string, string> = { typescript: '.ts', javascript: '.js', python: '.py', go: '.go', rust: '.rs', java: '.java', swift: '.swift' };

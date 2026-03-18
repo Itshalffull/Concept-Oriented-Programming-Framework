@@ -1,10 +1,10 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _runtimeProfileHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {

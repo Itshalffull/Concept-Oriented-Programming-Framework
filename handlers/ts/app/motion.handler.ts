@@ -3,10 +3,10 @@
 // Animation durations, easings, and transition definitions with reduced-motion awareness.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }

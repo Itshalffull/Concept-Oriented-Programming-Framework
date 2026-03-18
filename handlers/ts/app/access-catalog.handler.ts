@@ -1,10 +1,10 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, find, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _accessCatalogHandler: FunctionalConceptHandler = {
   registerPermission(input: Record<string, unknown>) {

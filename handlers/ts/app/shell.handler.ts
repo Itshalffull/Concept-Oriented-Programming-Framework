@@ -3,10 +3,10 @@
 // Application shell with named zones, role assignment, and overlay stack management.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }

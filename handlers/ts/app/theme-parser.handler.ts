@@ -3,10 +3,10 @@
 // Parses expressive theme definitions into a normalized AST with derived tokens.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string): string { return prefix + '-' + (++counter); }

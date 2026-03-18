@@ -3,10 +3,10 @@
 // Coordinate infrastructure-as-code generation and application across IaC providers.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, find, put, del, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _iacHandler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {

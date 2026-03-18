@@ -6,10 +6,10 @@
 // validity proof). See Architecture doc for gate convention details.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 /** Maximum wait time (ms) before a finality request times out */
 const FINALITY_TIMEOUT_MS = 300_000; // 5 minutes

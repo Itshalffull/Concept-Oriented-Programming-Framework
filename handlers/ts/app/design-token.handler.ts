@@ -3,10 +3,10 @@
 // Hierarchical design tokens with alias chains, tier classification, and multi-format export.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }

@@ -8,12 +8,12 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get, find, put, del, perform, branch, pure, complete,
   getLens, putLens, modifyLens, mapBindings,
   relation, at, field,
   type StorageProgram, type Bindings,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // --- Lenses ---
 

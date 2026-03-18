@@ -3,10 +3,10 @@
 // User-configurable event-condition-action rules that fire automatically when conditions are met.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _automationRuleHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {

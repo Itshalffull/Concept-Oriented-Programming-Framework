@@ -2,10 +2,10 @@
 // Echo Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _echoHandler: FunctionalConceptHandler = {
   send(input: Record<string, unknown>) {

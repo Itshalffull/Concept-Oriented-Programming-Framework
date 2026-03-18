@@ -3,10 +3,10 @@
 // Isolated content spaces with group-level role-based access control for multi-tenant collaboration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _groupHandler: FunctionalConceptHandler = {
   createGroup(input: Record<string, unknown>) {

@@ -3,10 +3,10 @@
 // Generalized user-entity toggle interactions (bookmarks, likes, follows, spam reports) with counts.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _flagHandler: FunctionalConceptHandler = {
   flag(input: Record<string, unknown>) {

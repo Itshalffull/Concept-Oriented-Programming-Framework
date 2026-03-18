@@ -3,10 +3,10 @@
 // Interface target concept for generating Next.js SDK client code from projections.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _nextjsSdkTargetHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {

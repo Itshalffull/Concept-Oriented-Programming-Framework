@@ -3,10 +3,10 @@
 // Scores and selects the best widget for a given interface element based on context and overrides.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 interface ContractSlot { name: string; type: string; }
 interface ContractRequires { version?: number; fields?: ContractSlot[]; actions?: Array<{ name: string }>; }

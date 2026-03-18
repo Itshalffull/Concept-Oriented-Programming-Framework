@@ -2,10 +2,10 @@
 // Grouping Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 /** Classify a single action name by its operational properties. */
 function classifyAction(actionName: string): {

@@ -3,10 +3,10 @@
 // Maps graph analysis results to visual attributes for canvas overlays.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 /**
  * Interpolate HSL color along a blue->yellow->red gradient based on a 0-1 score.

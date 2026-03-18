@@ -3,10 +3,10 @@
 // Source-abstracted asset facade with metadata extraction and thumbnail generation.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _mediaAssetHandler: FunctionalConceptHandler = {
   createMedia(input: Record<string, unknown>) {

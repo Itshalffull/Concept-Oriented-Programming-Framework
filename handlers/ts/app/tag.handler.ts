@@ -2,10 +2,10 @@
 // Tag Concept Implementation (Classification Kit)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _tagHandler: FunctionalConceptHandler = {
   add(input: Record<string, unknown>) {

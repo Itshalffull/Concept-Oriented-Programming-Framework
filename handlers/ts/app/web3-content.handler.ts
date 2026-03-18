@@ -3,10 +3,10 @@
 import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function generateCid(data: Buffer | Uint8Array | string): string {
   const bytes = typeof data === 'string' ? Buffer.from(data, 'utf-8') : Buffer.from(data);

@@ -3,10 +3,10 @@
 import { createHash, randomBytes } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _passwordHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {

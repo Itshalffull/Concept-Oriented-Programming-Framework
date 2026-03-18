@@ -10,10 +10,10 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, find, put, branch, complete, perform,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 // Lazy-load parsers only when needed (avoids circular deps at import time)
 async function loadParsers() {

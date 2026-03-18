@@ -3,10 +3,10 @@
 import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function simulateEcrecover(address: string, message: string, signature: string): string {
   return '0x' + createHash('sha256').update(address).update(message).update(signature).digest('hex').slice(0, 40);

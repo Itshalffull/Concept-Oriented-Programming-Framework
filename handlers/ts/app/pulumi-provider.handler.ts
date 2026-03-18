@@ -4,10 +4,10 @@
 // Owns Pulumi stack state, backend configuration, and plugin versioning.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _pulumiProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
