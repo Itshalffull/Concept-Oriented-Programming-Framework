@@ -287,6 +287,11 @@ export const syntaxTreeHandler: ConceptHandler = {
   },
 };
 
+/** Get a live tree from the cache by ID. Used by DefinitionUnit handler. */
+export function getLiveTree(treeId: string): Parser.Tree | undefined {
+  return liveTreeCache.get(treeId);
+}
+
 /** Clear the in-memory tree and parser caches. Useful for testing. */
 export function clearTreeCaches(): void {
   liveTreeCache.clear();
