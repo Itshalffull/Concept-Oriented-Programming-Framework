@@ -2633,6 +2633,23 @@ workflows:
           4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID.
           5. Write invariants comprehensively using all six constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions.
           6. Add capabilities block if the concept is a generator or plugin.
+      - action: test-gen
+        title: "Generate Tests from Invariants"
+        prose: >
+          After writing invariants, generate comprehensive tests using TestGen.
+          Invoke `/create-implementation --concept <Name>` first to create the handler,
+          then generate tests from invariants:
+          1. Run `TestGen/generate` (MCP: `test_gen_generate`) with concept_ref and language to compile all six invariant construct types into tests:
+             - example blocks → conformance test vectors (1:1 after/then mapping)
+             - forall blocks → property-based tests with generated domains
+             - always blocks → stateful sequence tests checking state predicates
+             - never blocks → violation-attempt tests trying to reach bad states
+             - eventually blocks → bounded liveness tests
+             - requires/ensures → contract-constrained PBT with pre/postconditions
+          2. Review generated test files — they should NOT need manual editing for example/forall/always/never constructs. Contract tests (requires/ensures) may need manual generator tuning for complex domain types.
+          3. Run `TestGen/coverage` (MCP: `test_gen_coverage`) to verify all invariant constructs have generated tests. Check the construct_coverage breakdown — each kind should show covered > 0.
+          4. Run `npx vitest run generated/tests/<concept>.*` to verify generated tests pass.
+          5. If coverage gaps exist, add more invariants to the concept spec (go back to the edit step) and re-run `TestGen/regenerate`.
     checklists:
       generate:
         - "Concept name is PascalCase?"
@@ -2833,6 +2850,12 @@ workflows:
         command: "npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,delete"
       - label: "Validate generated concept"
         command: "npx tsx cli/src/index.ts check specs/app/user.concept"
+      - label: "Generate tests from invariants"
+        command: "npx tsx cli/src/index.ts test-gen --concept User --language typescript"
+      - label: "Run generated invariant tests"
+        command: "npx vitest run generated/tests/User.*"
+      - label: "Check invariant coverage"
+        command: "npx tsx cli/src/index.ts test-gen --coverage --concept User"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
@@ -2857,6 +2880,8 @@ workflows:
         description: "Generate handler implementations for the concept"
       - name: create-sync
         description: "Generate sync rules connecting the concept"
+      - name: test-gen
+        description: "Generate tests from invariants (TestGen/generate, TestGen/coverage)"
     anti-patterns:
       - title: "Purpose describes implementation"
         description: "Purpose block says how the concept works instead of why it exists."
@@ -3344,11 +3369,28 @@ workflows:
           | list T | T[] |
           | set T | Map<string, T> |
           | option T | T \| undefined |
+      - action: test-gen
+        title: "Generate Tests from Invariants"
+        prose: >
+          After implementing the handler, generate tests from the concept's invariants:
+          1. Run `TestGen/generate` (MCP: `test_gen_generate`) with the concept_ref and target language.
+             TestGen compiles each invariant construct to the appropriate test strategy:
+             example → conformance vectors, forall → PBT properties, always → stateful sequences,
+             never → violation attempts, eventually → bounded liveness, requires/ensures → contract PBT.
+          2. Generated tests import the handler and validate it against the concept's behavioral contract.
+             For functional handlers (StorageProgram), tests validate program structure, transport effects
+             (perform() declarations), and storage instructions. For imperative handlers, tests validate
+             action results via storage execution.
+          3. Run `npx vitest run generated/tests/<concept>.*` to verify all generated tests pass.
+          4. If a generated test fails, fix the handler (not the test) — the test is the spec's truth.
+          5. Run `TestGen/coverage` to verify all invariant constructs are covered.
     validation-commands:
       - label: "Generate a handler scaffold"
         command: "npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update,delete"
       - label: "Run generated conformance test"
         command: "npx vitest run tests/user.conformance.test.ts"
+      - label: "Generate tests from invariants"
+        command: "npx tsx cli/src/index.ts test-gen --concept User --language typescript"
       - label: "Run scaffold generator tests"
         command: "npx vitest run tests/scaffold-generators.test.ts"
     quick-reference:
