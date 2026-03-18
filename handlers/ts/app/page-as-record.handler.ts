@@ -1,103 +1,126 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const pageAsRecordHandler: ConceptHandler = {
-  async create(input, storage) {
+export const pageAsRecordHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const page = input.page as string;
     const schema = input.schema as string;
-    const existing = await storage.get('page', page);
-    if (existing) return { variant: 'exists', message: 'already exists' };
-    const now = new Date().toISOString();
-    await storage.put('page', page, {
-      page,
-      schema,
-      properties: JSON.stringify({}),
-      body: '',
-      createdAt: now,
-      updatedAt: now,
-    });
-    return { variant: 'ok', page };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'page', page, {
+          page,
+          schema,
+          properties: JSON.stringify({}),
+          body: '',
+          createdAt: now,
+          updatedAt: now,
+        });
+        return complete(b2, 'ok', { page });
+      },
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setProperty(input, storage) {
+  setProperty(input: Record<string, unknown>) {
     const page = input.page as string;
     const key = input.key as string;
     const value = input.value as string;
-    const existing = await storage.get('page', page);
-    if (!existing) return { variant: 'notfound', message: 'Page not found' };
-    const schema = JSON.parse(existing.schema as string);
-    if (schema.fields && Array.isArray(schema.fields) && !schema.fields.includes(key)) {
-      return { variant: 'invalid', message: `Key '${key}' is not defined in the page schema` };
-    }
-    const properties: Record<string, string> = JSON.parse(existing.properties as string);
-    properties[key] = value;
-    await storage.put('page', page, {
-      ...existing,
-      properties: JSON.stringify(properties),
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', page };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'page', page, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { page });
+      },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getProperty(input, storage) {
+  getProperty(input: Record<string, unknown>) {
     const page = input.page as string;
     const key = input.key as string;
-    const existing = await storage.get('page', page);
-    if (!existing) return { variant: 'notfound', message: 'Page not found' };
-    const properties: Record<string, string> = JSON.parse(existing.properties as string);
-    if (!(key in properties)) return { variant: 'notfound', message: 'Property not found' };
-    return { variant: 'ok', value: properties[key] };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { value: '' }),
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async appendToBody(input, storage) {
+  appendToBody(input: Record<string, unknown>) {
     const page = input.page as string;
     const content = input.content as string;
-    const existing = await storage.get('page', page);
-    if (!existing) return { variant: 'notfound', message: 'Page not found' };
-    const currentBody = existing.body as string;
-    await storage.put('page', page, {
-      ...existing,
-      body: currentBody + content,
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', page };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'page', page, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { page });
+      },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async attachToSchema(input, storage) {
+  attachToSchema(input: Record<string, unknown>) {
     const page = input.page as string;
     const schema = input.schema as string;
-    const existing = await storage.get('page', page);
-    if (!existing) return { variant: 'notfound', message: 'Page not found' };
-    await storage.put('page', page, {
-      ...existing,
-      schema,
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', page };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'page', page, {
+          schema,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { page });
+      },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async convertFromFreeform(input, storage) {
+  convertFromFreeform(input: Record<string, unknown>) {
     const page = input.page as string;
     const schema = input.schema as string;
-    const existing = await storage.get('page', page);
-    if (!existing) return { variant: 'notfound', message: 'Page not found' };
-    const parsedSchema = JSON.parse(schema);
-    const body = existing.body as string;
-    const properties: Record<string, string> = JSON.parse(existing.properties as string);
-    if (parsedSchema.fields && Array.isArray(parsedSchema.fields)) {
-      for (const field of parsedSchema.fields) {
-        const regex = new RegExp(`${field}:\\s*(.+)`, 'i');
-        const match = body.match(regex);
-        if (match) {
-          properties[field] = match[1].trim();
-        }
-      }
-    }
-    await storage.put('page', page, {
-      ...existing,
-      schema,
-      properties: JSON.stringify(properties),
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', page };
+
+    let p = createProgram();
+    p = spGet(p, 'page', page, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'page', page, {
+          schema,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { page });
+      },
+      (b) => complete(b, 'notfound', { message: 'Page not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
