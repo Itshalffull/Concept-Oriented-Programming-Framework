@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AsyncApiTarget Handler
 //
@@ -11,15 +12,22 @@
 // See Architecture doc Section 2.7.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 function nextId(): string {
   return `async-api-target-${++idCounter}`;
 }
 
-export const asyncApiTargetHandler: ConceptHandler = {
-  async generate(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _asyncApiTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projections = input.projections as string[];
     const syncSpecs = input.syncSpecs as string[];
     const config = input.config as string;
@@ -42,10 +50,7 @@ export const asyncApiTargetHandler: ConceptHandler = {
     let operationCount = 0;
 
     for (const projection of projections) {
-      // Derive channel name from projection identifier
       const channelName = projection.replace(/[^a-zA-Z0-9-]/g, '-');
-
-      // Create a channel for events from this projection
       const channelKey = `${channelName}/events`;
       channels[channelKey] = {
         address: channelKey,
@@ -64,7 +69,6 @@ export const asyncApiTargetHandler: ConceptHandler = {
       };
       channelCount++;
 
-      // Create subscribe operation
       operations[`receive${channelName.replace(/-/g, '')}Events`] = {
         action: 'receive',
         channel: { $ref: `#/channels/${channelKey}` },
@@ -136,7 +140,8 @@ export const asyncApiTargetHandler: ConceptHandler = {
 
     const id = nextId();
     const now = new Date().toISOString();
-    await storage.put('async-api-target', id, {
+    let p = createProgram();
+    p = put(p, 'async-api-target', id, {
       id,
       version: '3.0.0',
       channels: channelCount,
@@ -144,10 +149,11 @@ export const asyncApiTargetHandler: ConceptHandler = {
       content,
       createdAt: now,
     });
-
-    return { variant: 'ok', spec: id, content };
+    return complete(p, 'ok', { spec: id, content }) as StorageProgram<Result>;
   },
 };
+
+export const asyncApiTargetHandler = autoInterpret(_asyncApiTargetHandler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetAsyncApiTargetCounter(): void {

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RadialLayoutProvider Handler
 //
@@ -6,21 +7,29 @@
 // network hop visualizations.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const radialLayoutHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, _storage: ConceptStorage) {
-    return { variant: 'ok', name: 'radial', category: 'layout' };
+type Result = { variant: string; [key: string]: unknown };
+
+const _radialLayoutHandler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', { name: 'radial', category: 'layout' }) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, _storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const canvas = input.canvas as string;
     const items = input.items as string[];
     const config = (input.config as Record<string, unknown>) ?? {};
     const spacingX = (config.spacing_x as number) ?? 120;
 
     if (!items || items.length === 0) {
-      return { variant: 'error', message: 'No items to layout' };
+      return complete(createProgram(), 'error', { message: 'No items to layout' }) as StorageProgram<Result>;
     }
 
     const positions: { item_id: string; x: number; y: number }[] = [];
@@ -43,8 +52,11 @@ export const radialLayoutHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', positions };
+    const p = createProgram();
+    return complete(p, 'ok', { positions }) as StorageProgram<Result>;
   },
 };
+
+export const radialLayoutHandler = autoInterpret(_radialLayoutHandler);
 
 export default radialLayoutHandler;
