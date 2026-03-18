@@ -108,15 +108,35 @@ concept CircuitBreaker [B] {
     }
   }
 
-  invariant {
+  example "newly configured breaker is closed": {
     after configure(endpoint: "openai-api", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000) -> ok(breaker: b)
     then check(endpoint: "openai-api") -> closed(breaker: b)
   }
 
-  invariant {
+  example "breaker trips after reaching failure threshold": {
     after configure(endpoint: "test-api", failureThreshold: 2, successThreshold: 1, resetTimeoutMs: 1000) -> ok(breaker: b)
     and  recordFailure(endpoint: "test-api") -> ok(breaker: b, status: _)
     and  recordFailure(endpoint: "test-api") -> tripped(breaker: b, failureCount: 2)
     then get(endpoint: "test-api") -> ok(breaker: b, status: "open", failureCount: 2, successCount: 0)
+  }
+
+  always "breakers have valid endpoint": {
+    forall b in breakers:
+      b.endpoint != none
+  }
+
+  never "negative failure count": {
+    exists b in breakers:
+      b.failureCount = -1
+  }
+
+  action configure {
+    requires: endpoint != ""
+    ensures ok: failureThreshold != none
+  }
+
+  action check {
+    requires: endpoint != ""
+    ensures closed: endpoint != none
   }
 }

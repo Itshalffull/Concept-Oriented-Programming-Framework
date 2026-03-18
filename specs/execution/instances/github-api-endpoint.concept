@@ -51,8 +51,23 @@ concept GitHubApiEndpoint [G] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "github-api", token: "ghp-test", repository: "owner/repo") -> ok(endpoint: g)
     then resolve(name: "github-api") -> ok(endpoint: g, baseUrl: "https://api.github.com", repository: "owner/repo", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall g in endpoints:
+      g.name != none
+  }
+
+  never "endpoint without repository": {
+    exists g in endpoints:
+      g.repository = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

@@ -49,8 +49,23 @@ concept WebhookEndpoint [W] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{}") -> ok(endpoint: w)
     then resolve(name: "deploy-webhook") -> ok(endpoint: w, url: "https://hooks.example.com/deploy", headers: "{}")
+  }
+
+  always "endpoints have valid name": {
+    forall w in endpoints:
+      w.name != none
+  }
+
+  never "endpoint without URL": {
+    exists w in endpoints:
+      w.url = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

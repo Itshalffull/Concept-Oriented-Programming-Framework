@@ -56,8 +56,23 @@ concept LocalModelInstance [I] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: 512, dimensions: 768) -> ok(instance: i)
     then resolve(name: "codebert-base") -> ok(instance: i, runtime: "onnx", modelPath: "/models/codebert.onnx", config: _)
+  }
+
+  always "instances have valid name": {
+    forall i in instances:
+      i.name != none
+  }
+
+  never "instance without model path": {
+    exists i in instances:
+      i.modelPath = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: instance != none
   }
 }

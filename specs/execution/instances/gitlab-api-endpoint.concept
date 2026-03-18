@@ -50,8 +50,23 @@ concept GitLabApiEndpoint [L] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "gitlab-api", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4") -> ok(endpoint: l)
     then resolve(name: "gitlab-api") -> ok(endpoint: l, baseUrl: "https://gitlab.com/api/v4", projectId: "12345", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall l in endpoints:
+      l.name != none
+  }
+
+  never "endpoint without project ID": {
+    exists l in endpoints:
+      l.projectId = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

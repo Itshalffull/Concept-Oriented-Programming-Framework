@@ -53,13 +53,28 @@ concept OpenAiEndpoint [O] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "embeddings", apiKey: "sk-test", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: 1536) -> ok(endpoint: o)
     then resolve(name: "embeddings") -> ok(endpoint: o, baseUrl: "https://api.openai.com/v1", model: "text-embedding-3-small", headers: _)
   }
 
-  invariant {
+  example "resolve notFound then register succeeds": {
     after resolve(name: "nonexistent") -> notFound(name: "nonexistent")
     then register(name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0) -> ok(endpoint: _)
+  }
+
+  always "endpoints have valid name": {
+    forall o in endpoints:
+      o.name != none
+  }
+
+  never "endpoint without model": {
+    exists o in endpoints:
+      o.model = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

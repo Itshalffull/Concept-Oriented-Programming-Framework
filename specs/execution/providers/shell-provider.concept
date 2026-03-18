@@ -54,8 +54,23 @@ concept ShellProvider [S] {
     }
   }
 
-  invariant {
+  example "echo exits with zero": {
     after execute(command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000) -> ok(execution: s, stdout: out, stderr: err, exitCode: code)
     then code = 0
+  }
+
+  always "executions have valid command": {
+    forall s in executions:
+      s.command != none
+  }
+
+  never "execution without status": {
+    exists s in executions:
+      s.status = ""
+  }
+
+  action execute {
+    requires: command != ""
+    ensures ok: execution != none
   }
 }

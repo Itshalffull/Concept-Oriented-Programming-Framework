@@ -68,13 +68,33 @@ concept ExternalCall [X] {
     }
   }
 
-  invariant {
+  example "dispatch fails without registered protocol": {
     after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> protocolNotFound(protocol: "http")
     then registerProtocol(protocol: "http", providerName: "HttpProvider") -> ok()
   }
 
-  invariant {
+  example "duplicate protocol registration rejected": {
     after registerProtocol(protocol: "grpc", providerName: "GrpcProvider") -> ok()
     then registerProtocol(protocol: "grpc", providerName: "AnotherProvider") -> duplicate(protocol: "grpc")
+  }
+
+  always "calls have valid protocol": {
+    forall x in calls:
+      x.protocol != none
+  }
+
+  never "call without endpoint": {
+    exists x in calls:
+      x.endpoint = ""
+  }
+
+  action dispatch {
+    requires: protocol != ""
+    ensures ok: result != none
+  }
+
+  action registerProtocol {
+    requires: protocol != ""
+    ensures ok: protocol != none
   }
 }

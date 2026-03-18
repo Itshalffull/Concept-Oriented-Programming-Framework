@@ -67,8 +67,23 @@ concept HttpProvider [H] {
     }
   }
 
-  invariant {
+  example "execute fails for unknown instance": {
     after configure(name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000) -> ok(instance: h)
     then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> notFound(instance: "unknown-api")
+  }
+
+  always "instances have valid name": {
+    forall h in instances:
+      h.name != none
+  }
+
+  never "instance without base URL": {
+    exists h in instances:
+      h.baseUrl = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: instance != none
   }
 }

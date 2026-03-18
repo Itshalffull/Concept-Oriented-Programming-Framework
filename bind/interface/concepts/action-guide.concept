@@ -67,9 +67,26 @@ concept ActionGuide [W] {
   }
 
   invariant {
-    after define(concept: "SpecParser", steps: ["parse"],
-      content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}")
-      -> ok(workflow: w, stepCount: 1)
-    then render(workflow: w, format: "skill-md") -> ok(content: c)
+    example "define then render succeeds" {
+      after define(concept: "SpecParser", steps: ["parse"],
+        content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}")
+        -> ok(workflow: w, stepCount: 1)
+      then render(workflow: w, format: "skill-md") -> ok(content: c)
+    }
+
+    always {
+      forall w in workflows:
+        w.concept != none
+    }
+
+    never {
+      exists w in workflows:
+        w.concept = ""
+    }
+
+    action define {
+      requires: concept != ""
+      ensures ok: stepCount != none
+    }
   }
 }

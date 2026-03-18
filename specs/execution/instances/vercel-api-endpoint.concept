@@ -52,8 +52,23 @@ concept VercelApiEndpoint [V] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "vercel-api", apiToken: "vt-test", teamId: "team-123") -> ok(endpoint: v)
     then resolve(name: "vercel-api") -> ok(endpoint: v, baseUrl: "https://api.vercel.com", headers: _, teamId: "team-123")
+  }
+
+  always "endpoints have valid name": {
+    forall v in endpoints:
+      v.name != none
+  }
+
+  never "endpoint without base URL": {
+    exists v in endpoints:
+      v.baseUrl = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

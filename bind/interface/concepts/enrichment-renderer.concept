@@ -87,12 +87,29 @@ concept EnrichmentRenderer [R] {
   }
 
   invariant {
-    after register(key: "migration-guide", format: "skill-md", order: 75,
-      pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}")
-      -> ok(handler: h)
-    then render(
-      content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}",
-      format: "skill-md")
-      -> ok(output: o, sectionCount: 1, unhandledKeys: u)
+    example "register handler then render succeeds" {
+      after register(key: "migration-guide", format: "skill-md", order: 75,
+        pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}")
+        -> ok(handler: h)
+      then render(
+        content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}",
+        format: "skill-md")
+        -> ok(output: o, sectionCount: 1, unhandledKeys: u)
+    }
+
+    always {
+      forall r in handlers:
+        r.key != none
+    }
+
+    never {
+      exists r in handlers:
+        r.pattern = ""
+    }
+
+    action register {
+      requires: key != ""
+      ensures ok: handler != none
+    }
   }
 }

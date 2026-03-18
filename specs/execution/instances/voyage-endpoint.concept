@@ -51,8 +51,23 @@ concept VoyageEndpoint [V] {
     }
   }
 
-  invariant {
+  example "resolve after register": {
     after register(name: "code-search", apiKey: "vk-test", model: "voyage-code-3", inputType: "document") -> ok(endpoint: v)
     then resolve(name: "code-search") -> ok(endpoint: v, baseUrl: _, model: "voyage-code-3", headers: _)
+  }
+
+  always "endpoints have valid name": {
+    forall v in endpoints:
+      v.name != none
+  }
+
+  never "endpoint without model": {
+    exists v in endpoints:
+      v.model = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

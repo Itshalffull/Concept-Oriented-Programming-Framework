@@ -63,8 +63,23 @@ concept GraphqlProvider [Q] {
     }
   }
 
-  invariant {
+  example "execute fails for unknown endpoint": {
     after configure(name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "") -> ok(endpoint: q)
     then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> notFound(endpoint: "unknown-api")
+  }
+
+  always "endpoints have valid name": {
+    forall q in endpoints:
+      q.name != none
+  }
+
+  never "endpoint without URL": {
+    exists q in endpoints:
+      q.url = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: endpoint != none
   }
 }

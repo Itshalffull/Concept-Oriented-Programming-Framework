@@ -67,8 +67,23 @@ concept WasmProvider [M] {
     }
   }
 
-  invariant {
+  example "execute fails for unknown module": {
     after load(name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536) -> ok(module: m)
     then execute(module: "unknown", function: "tokenize", args: "[]") -> notFound(module: "unknown")
+  }
+
+  always "modules have valid name": {
+    forall m in modules:
+      m.name != none
+  }
+
+  never "module without wasm path": {
+    exists m in modules:
+      m.wasmPath = ""
+  }
+
+  action load {
+    requires: name != ""
+    ensures ok: module != none
   }
 }

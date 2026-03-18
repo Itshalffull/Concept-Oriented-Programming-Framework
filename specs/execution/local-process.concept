@@ -67,13 +67,33 @@ concept LocalProcess [L] {
     }
   }
 
-  invariant {
+  example "dispatch fails without registered runtime": {
     after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> runtimeNotFound(runtime: "onnx")
     then registerRuntime(runtime: "onnx", providerName: "OnnxProvider") -> ok()
   }
 
-  invariant {
+  example "duplicate runtime registration rejected": {
     after registerRuntime(runtime: "wasm", providerName: "WasmProvider") -> ok()
     then registerRuntime(runtime: "wasm", providerName: "AnotherProvider") -> duplicate(runtime: "wasm")
+  }
+
+  always "processes have valid runtime": {
+    forall l in processes:
+      l.runtime != none
+  }
+
+  never "process without module reference": {
+    exists l in processes:
+      l.moduleRef = ""
+  }
+
+  action dispatch {
+    requires: runtime != ""
+    ensures ok: result != none
+  }
+
+  action registerRuntime {
+    requires: runtime != ""
+    ensures ok: runtime != none
   }
 }

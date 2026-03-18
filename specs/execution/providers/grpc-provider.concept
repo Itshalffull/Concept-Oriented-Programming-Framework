@@ -60,8 +60,23 @@ concept GrpcProvider [G] {
     }
   }
 
-  invariant {
+  example "execute fails for unknown channel": {
     after configure(name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}") -> ok(channel: g)
     then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> notFound(channel: "unknown-service")
+  }
+
+  always "channels have valid name": {
+    forall g in channels:
+      g.name != none
+  }
+
+  never "channel without target": {
+    exists g in channels:
+      g.target = ""
+  }
+
+  action configure {
+    requires: name != ""
+    ensures ok: channel != none
   }
 }

@@ -72,8 +72,23 @@ concept OnnxProvider [N] {
     }
   }
 
-  invariant {
+  example "infer fails for unknown session": {
     after load(name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}") -> ok(session: n)
     then infer(session: "unknown", inputs: "[]", options: "{}") -> notFound(session: "unknown")
+  }
+
+  always "sessions have valid name": {
+    forall n in sessions:
+      n.name != none
+  }
+
+  never "session without model path": {
+    exists n in sessions:
+      n.modelPath = ""
+  }
+
+  action load {
+    requires: name != ""
+    ensures ok: session != none
   }
 }

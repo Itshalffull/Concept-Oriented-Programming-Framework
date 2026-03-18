@@ -95,8 +95,25 @@ concept Projection [P] {
   }
 
   invariant {
-    after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
-    then validate(projection: p) -> ok(projection: p, warnings: w)
-    and inferResources(projection: p) -> ok(projection: p, resources: r)
+    example "project then validate and infer succeeds" {
+      after project(manifest: "valid-manifest", annotations: "valid-annotations") -> ok(projection: p, shapes: 3, actions: 4, traits: 2)
+      then validate(projection: p) -> ok(projection: p, warnings: w)
+      and inferResources(projection: p) -> ok(projection: p, resources: r)
+    }
+
+    always {
+      forall p in projections:
+        p.concept != none
+    }
+
+    never {
+      exists p in projections:
+        p.concept = ""
+    }
+
+    action project {
+      requires: manifest != ""
+      ensures ok: projection != none
+    }
   }
 }
