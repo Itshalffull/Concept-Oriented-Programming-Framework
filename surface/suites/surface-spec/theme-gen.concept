@@ -25,9 +25,25 @@ concept ThemeGen [G] {
   }
 
   invariant {
-    after generate(gen: g, target: "css-variables", themeAst: _)
-      -> ok(gen: g, output: _)
-    then generate(gen: g, target: "css-variables", themeAst: _)
-      -> ok(gen: g, output: _)
+    example "generate is idempotent for same target": {
+      after generate(gen: g, target: "css-variables", themeAst: _)
+        -> ok(gen: g, output: _)
+      then generate(gen: g, target: "css-variables", themeAst: _)
+        -> ok(gen: g, output: _)
+    }
+
+    always "output format matches the requested target" {
+      generate -> ok implies output is in the format native to the target platform
+    }
+
+    never "generate succeeds with an unrecognized target" {
+      generate -> ok when target not in {"css-variables", "tailwind", "react-native", "terminal", "w3c-dtcg"}
+    }
+
+    action generate requires {
+      target is a recognized platform and themeAst is a valid ThemeAST
+    } ensures {
+      output contains platform-native token definitions
+    }
   }
 }

@@ -31,8 +31,30 @@ concept ThemeParser [H] {
   }
 
   invariant {
-    after parse(theme: h, source: "theme light { ... }")
-      -> ok(theme: h, ast: _)
-    then checkContrast(theme: h) -> ok(theme: h)
+    example "parsed theme can pass contrast check": {
+      after parse(theme: h, source: "theme light { ... }")
+        -> ok(theme: h, ast: _)
+      then checkContrast(theme: h) -> ok(theme: h)
+    }
+
+    always "successful parse produces a non-empty AST" {
+      parse -> ok implies ast is a valid non-empty ThemeAST
+    }
+
+    never "checkContrast succeeds on unparsed theme" {
+      checkContrast -> ok when theme has not been successfully parsed
+    }
+
+    action parse requires {
+      source is a non-empty string conforming to .theme grammar
+    } ensures {
+      ast is set with block metadata, derived tokens, and any warnings
+    }
+
+    action checkContrast requires {
+      theme has been parsed via parse -> ok
+    } ensures {
+      all role pairings have been evaluated against WCAG contrast ratios
+    }
   }
 }

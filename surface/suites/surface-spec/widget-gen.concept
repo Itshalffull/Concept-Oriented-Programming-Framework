@@ -28,9 +28,25 @@ concept WidgetGen [G] {
   }
 
   invariant {
-    after generate(gen: g, target: "react", widgetAst: _)
-      -> ok(gen: g, output: _)
-    then generate(gen: g, target: "react", widgetAst: _)
-      -> ok(gen: g, output: _)
+    example "generate is idempotent for same target": {
+      after generate(gen: g, target: "react", widgetAst: _)
+        -> ok(gen: g, output: _)
+      then generate(gen: g, target: "react", widgetAst: _)
+        -> ok(gen: g, output: _)
+    }
+
+    always "output is a complete component for the target framework" {
+      generate -> ok implies output contains a renderable component definition
+    }
+
+    never "generate succeeds without a registered provider for the target" {
+      generate -> ok when no widget-gen-provider is registered for the target
+    }
+
+    action generate requires {
+      target has a registered widget-gen-provider and widgetAst is a valid WidgetAST
+    } ensures {
+      output contains a framework-specific component implementation
+    }
   }
 }
