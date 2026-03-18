@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ChainMonitor Concept Implementation
 //
@@ -10,10 +11,12 @@
 // confirmations. Reorg detection compares parent hashes.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-} from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete,
+  mapBindings, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /** Chain finality configuration */
 interface ChainConfig {
@@ -40,13 +43,15 @@ const blockHeights = new Map<number, number>();
 // Known block hashes for reorg detection: chainId → blockNumber → hash
 const blockHashes = new Map<number, Map<number, string>>();
 
-export const chainMonitorHandler: ConceptHandler = {
-  async awaitFinality(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _chainMonitorHandler: FunctionalConceptHandler = {
+  awaitFinality(input: Record<string, unknown>) {
     const txHash = input.txHash as string;
     const level = (input.level as string) || 'default';
 
-    // Store the pending request
-    await storage.put('subscriptions', txHash, {
+    let p = createProgram();
+    p = put(p, 'subscriptions', txHash, {
       txHash,
       level,
       status: 'pending',
@@ -56,15 +61,14 @@ export const chainMonitorHandler: ConceptHandler = {
     // In a real implementation, this would be held open (gate pattern).
     // For the skeleton, we return immediately with the current state.
     // The sync engine's eventual delivery queue handles the async completion.
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       chain: 'pending',
       block: 0,
       confirmations: 0,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async subscribe(input, storage) {
+  subscribe(input: Record<string, unknown>) {
     const chainId = input.chainId as number;
     const rpcUrl = input.rpcUrl as string;
 
@@ -78,15 +82,16 @@ export const chainMonitorHandler: ConceptHandler = {
     blockHeights.set(chainId, 0);
     blockHashes.set(chainId, new Map());
 
-    await storage.put('chainConfig', String(chainId), {
+    let p = createProgram();
+    p = put(p, 'chainConfig', String(chainId), {
       rpcUrl,
       ...config,
     });
 
-    return { variant: 'ok', chainId };
+    return complete(p, 'ok', { chainId }) as StorageProgram<Result>;
   },
 
-  async onBlock(input, storage) {
+  onBlock(input: Record<string, unknown>) {
     const chainId = input.chainId as number;
     const blockNumber = input.blockNumber as number;
     const blockHash = input.blockHash as string;
@@ -103,10 +108,13 @@ export const chainMonitorHandler: ConceptHandler = {
         chainBlockHashes.delete(i);
       }
 
+      // Build program to clean up reorged subscriptions
+      let p = createProgram();
+
       // Resolve pending requests for affected transactions as reorged
       for (const [txHash, req] of pendingRequests.entries()) {
         if (req.chainId === chainId && req.submittedBlock >= blockNumber) {
-          await storage.del('subscriptions', txHash);
+          p = del(p, 'subscriptions', txHash);
           pendingRequests.delete(txHash);
         }
       }
@@ -114,12 +122,11 @@ export const chainMonitorHandler: ConceptHandler = {
       blockHeights.set(chainId, blockNumber);
       blockHashes.set(chainId, chainBlockHashes);
 
-      return {
-        variant: 'reorg',
+      return complete(p, 'reorg', {
         chainId,
         depth: reorgDepth,
         fromBlock: blockNumber,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Normal block: update height and check pending finality requests
@@ -128,19 +135,22 @@ export const chainMonitorHandler: ConceptHandler = {
     blockHashes.set(chainId, chainBlockHashes);
 
     // Check pending requests for this chain
+    let p = createProgram();
     const config = chainConfigs.get(chainId);
     if (config) {
       for (const [txHash, req] of pendingRequests.entries()) {
         if (req.chainId === chainId) {
           const confirmations = blockNumber - req.submittedBlock;
           if (confirmations >= config.threshold) {
-            await storage.del('subscriptions', txHash);
+            p = del(p, 'subscriptions', txHash);
             pendingRequests.delete(txHash);
           }
         }
       }
     }
 
-    return { variant: 'ok', chainId, blockNumber };
+    return complete(p, 'ok', { chainId, blockNumber }) as StorageProgram<Result>;
   },
 };
+
+export const chainMonitorHandler = autoInterpret(_chainMonitorHandler);
