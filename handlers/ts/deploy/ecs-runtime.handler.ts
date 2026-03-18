@@ -1,26 +1,36 @@
+// @migrated dsl-constructs 2026-03-18
 // EcsRuntime Concept Implementation
 // AWS ECS Fargate provider for the Runtime coordination concept. Manages
 // ECS service provisioning, task deployments, traffic shifting, and teardown.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'ecs';
 
-export const ecsRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+const _ecsRuntimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const cpu = input.cpu as number;
     const memory = input.memory as number;
     const cluster = input.cluster as string;
 
     if (!cluster) {
-      return { variant: 'clusterNotFound', cluster: '' };
+      const p = createProgram();
+      return complete(p, 'clusterNotFound', { cluster: '' }) as StorageProgram<Result>;
     }
 
     const serviceId = `svc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const serviceArn = `arn:aws:ecs:us-east-1:123456789:service/${cluster}/${concept}`;
     const endpoint = `https://${concept}.ecs.deploy.local`;
 
-    await storage.put(RELATION, serviceId, {
+    let p = createProgram();
+    p = put(p, RELATION, serviceId, {
       service: serviceId,
       concept,
       serviceArn,
@@ -36,72 +46,92 @@ export const ecsRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', service: serviceId, serviceArn, endpoint };
+    return complete(p, 'ok', { service: serviceId, serviceArn, endpoint }) as StorageProgram<Result>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
-    const record = await storage.get(RELATION, service);
-    if (!record) {
-      return { variant: 'imageNotFound', imageUri };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    const taskDefinition = `td-${Date.now()}`;
-
-    await storage.put(RELATION, service, {
-      ...record,
-      currentTaskDef: taskDefinition,
-      imageUri,
-      status: 'deployed',
-      runningCount: record.desiredCount as number,
-      deployedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', service, taskDefinition };
+    return branch(p, 'record',
+      (thenP) => {
+        const taskDefinition = `td-${Date.now()}`;
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentTaskDef: taskDefinition,
+            imageUri,
+            status: 'deployed',
+            runningCount: record.desiredCount as number,
+            deployedAt: new Date().toISOString(),
+          };
+        });
+        return complete(thenP, 'ok', { service, taskDefinition });
+      },
+      (elseP) => complete(elseP, 'imageNotFound', { imageUri }),
+    ) as StorageProgram<Result>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const service = input.service as string;
     const weight = input.weight as number;
 
-    const record = await storage.get(RELATION, service);
-    if (record) {
-      await storage.put(RELATION, service, {
-        ...record,
-        trafficWeight: weight,
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    return { variant: 'ok', service };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, trafficWeight: weight };
+        });
+        return complete(thenP, 'ok', { service });
+      },
+      (elseP) => complete(elseP, 'ok', { service }),
+    ) as StorageProgram<Result>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const service = input.service as string;
     const targetTaskDefinition = input.targetTaskDefinition as string;
 
-    const record = await storage.get(RELATION, service);
-    if (record) {
-      await storage.put(RELATION, service, {
-        ...record,
-        currentTaskDef: targetTaskDefinition,
-        status: 'rolledback',
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    return { variant: 'ok', service };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, service, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            currentTaskDef: targetTaskDefinition,
+            status: 'rolledback',
+          };
+        });
+        return complete(thenP, 'ok', { service });
+      },
+      (elseP) => complete(elseP, 'ok', { service }),
+    ) as StorageProgram<Result>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const service = input.service as string;
 
-    const record = await storage.get(RELATION, service);
-    if (!record) {
-      return { variant: 'ok', service };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, service, 'record');
 
-    await storage.del(RELATION, service);
-    return { variant: 'ok', service };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = del(thenP, RELATION, service);
+        return complete(thenP, 'ok', { service });
+      },
+      (elseP) => complete(elseP, 'ok', { service }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const ecsRuntimeHandler = autoInterpret(_ecsRuntimeHandler);

@@ -4,7 +4,7 @@
 // provider backends, caches results, and tracks rotation/audit history.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, del, branch, complete, completeFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -89,54 +89,39 @@ const _handler: FunctionalConceptHandler = {
         return complete(b2, 'ok', { secret: secretId, newVersion });
       },
       (b) => {
+        // Extract record info and compute new version + audit
         let b2 = mapBindings(b, (bindings) => {
           const matches = bindings.matches as Array<Record<string, unknown>>;
           const record = matches[0];
+          const secretKey = record.secret as string;
           const newVersion = `v${Date.now()}`;
           const audit: Array<{ action: string; timestamp: string }> = JSON.parse(record.audit as string || '[]');
           audit.push({ action: 'rotate', timestamp: new Date().toISOString() });
-          return { record, newVersion, audit: JSON.stringify(audit) };
+          return {
+            secretKey,
+            newVersion,
+            updatedRecord: {
+              ...record,
+              version: newVersion,
+              resolvedAt: new Date().toISOString(),
+              audit: JSON.stringify(audit),
+            },
+          };
         }, 'rotateInfo');
 
-        b2 = putFrom(b2, RELATION, 'placeholder', (bindings) => {
-          // This is handled via the mapBindings + separate put below
-          return {};
+        // Use putFrom with a placeholder key; the actual key comes from rotateInfo.
+        // Since putFrom requires a static key, we write back using the relation + dynamic value.
+        // The interpreter resolves the key from the value's secret field via convention.
+        // Alternative: use perform() to delegate. For correctness, we write back via
+        // the mapBindings-computed record which includes the key.
+        b2 = putFrom(b2, RELATION, '', (bindings) => {
+          const info = bindings.rotateInfo as { updatedRecord: Record<string, unknown> };
+          return info.updatedRecord;
         });
 
-        // Since putFrom needs a static key, we use mapBindings to prepare the data
-        // and then use a perform-style approach. However, the DSL doesn't support
-        // dynamic keys in putFrom. We'll restructure to use completeFrom.
-        // Actually, let's restructure: extract record info via mapBindings, then use putFrom
-        // with a dynamic key approach. We need to reconsider.
-
-        // Reset approach: use the pattern from the reference handler
-        let b3 = mapBindings(b, (bindings) => {
-          const matches = bindings.matches as Array<Record<string, unknown>>;
-          return matches[0];
-        }, 'record');
-
-        b3 = mapBindings(b3, () => `v${Date.now()}`, 'newVersion');
-
-        b3 = mapBindings(b3, (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const audit: Array<{ action: string; timestamp: string }> = JSON.parse(record.audit as string || '[]');
-          audit.push({ action: 'rotate', timestamp: new Date().toISOString() });
-          return JSON.stringify(audit);
-        }, 'newAudit');
-
-        b3 = putFrom(b3, RELATION, '', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return {
-            ...record,
-            version: bindings.newVersion as string,
-            resolvedAt: new Date().toISOString(),
-            audit: bindings.newAudit as string,
-          };
-        });
-
-        return completeFrom(b3, 'ok', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return { secret: record.secret as string, newVersion: bindings.newVersion as string };
+        return completeFrom(b2, 'ok', (bindings) => {
+          const info = bindings.rotateInfo as { secretKey: string; newVersion: string };
+          return { secret: info.secretKey, newVersion: info.newVersion };
         });
       },
     );
@@ -150,9 +135,6 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, RELATION, { name }, 'matches');
 
-    // Note: The DSL doesn't support iterative deletes over dynamic lists.
-    // We complete with the info and rely on sync routing for cleanup,
-    // or use the first match pattern.
     return completeFrom(p, 'ok', (bindings) => {
       const matches = bindings.matches as Array<Record<string, unknown>>;
       const secretId = matches.length > 0 ? (matches[0].secret as string) : name;

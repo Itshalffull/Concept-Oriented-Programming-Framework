@@ -1,16 +1,25 @@
+// @migrated dsl-constructs 2026-03-18
 // Env Concept Implementation
 // Environment management for deployment targets. Resolves environment
 // configurations, handles promotion pipelines, and computes diffs.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'env';
 
-export const envHandler: ConceptHandler = {
-  async resolve(input, storage) {
+const _envHandler: FunctionalConceptHandler = {
+  resolve(input: Record<string, unknown>) {
     const environment = input.environment as string;
 
     if (!environment || environment.trim() === '') {
-      return { variant: 'missingBase', environment };
+      const p = createProgram();
+      return complete(p, 'missingBase', { environment }) as StorageProgram<Result>;
     }
 
     const envId = `env-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -20,60 +29,75 @@ export const envHandler: ConceptHandler = {
       tier: environment === 'production' ? 'production' : 'preview',
     });
 
-    await storage.put(RELATION, envId, {
+    let p = createProgram();
+    p = put(p, RELATION, envId, {
       environment: envId,
       name: environment,
       resolved,
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', environment: envId, resolved };
+    return complete(p, 'ok', { environment: envId, resolved }) as StorageProgram<Result>;
   },
 
-  async promote(input, storage) {
+  promote(input: Record<string, unknown>) {
     const fromEnv = input.fromEnv as string;
     const toEnv = input.toEnv as string;
     const suiteName = input.suiteName as string;
 
-    const fromRecord = await storage.get(RELATION, fromEnv);
-    if (!fromRecord) {
-      return { variant: 'notValidated', fromEnv, suiteName };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, fromEnv, 'fromRecord');
 
-    const version = '1.0.0';
+    return branch(p, 'fromRecord',
+      (thenP) => {
+        const version = '1.0.0';
+        const toId = toEnv || `env-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const toId = toEnv || `env-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await storage.put(RELATION, toId, {
-      environment: toId,
-      name: toEnv,
-      resolved: fromRecord.resolved,
-      promotedFrom: fromEnv,
-      promotedVersion: version,
-      createdAt: new Date().toISOString(),
-    });
+        thenP = putFrom(thenP, RELATION, toId, (bindings) => {
+          const fromRecord = bindings.fromRecord as Record<string, unknown>;
+          return {
+            environment: toId,
+            name: toEnv,
+            resolved: fromRecord.resolved,
+            promotedFrom: fromEnv,
+            promotedVersion: version,
+            createdAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', toEnv: toId, version };
+        return complete(thenP, 'ok', { toEnv: toId, version });
+      },
+      (elseP) => complete(elseP, 'notValidated', { fromEnv, suiteName }),
+    ) as StorageProgram<Result>;
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
     const envA = input.envA as string;
     const envB = input.envB as string;
 
-    const recordA = await storage.get(RELATION, envA);
-    const recordB = await storage.get(RELATION, envB);
+    let p = createProgram();
+    p = get(p, RELATION, envA, 'recordA');
+    p = get(p, RELATION, envB, 'recordB');
 
-    const differences: string[] = [];
-    if (recordA && recordB) {
-      const resolvedA = recordA.resolved as string;
-      const resolvedB = recordB.resolved as string;
-      if (resolvedA !== resolvedB) {
-        differences.push(`config differs between ${envA} and ${envB}`);
+    return completeFrom(p, 'ok', (bindings) => {
+      const recordA = bindings.recordA as Record<string, unknown> | null;
+      const recordB = bindings.recordB as Record<string, unknown> | null;
+
+      const differences: string[] = [];
+      if (recordA && recordB) {
+        const resolvedA = recordA.resolved as string;
+        const resolvedB = recordB.resolved as string;
+        if (resolvedA !== resolvedB) {
+          differences.push(`config differs between ${envA} and ${envB}`);
+        }
+      } else {
+        if (!recordA) differences.push(`${envA} not found`);
+        if (!recordB) differences.push(`${envB} not found`);
       }
-    } else {
-      if (!recordA) differences.push(`${envA} not found`);
-      if (!recordB) differences.push(`${envB} not found`);
-    }
 
-    return { variant: 'ok', differences };
+      return { differences };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const envHandler = autoInterpret(_envHandler);

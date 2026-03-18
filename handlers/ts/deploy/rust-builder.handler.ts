@@ -4,7 +4,7 @@
 // cargo build, cargo test, and crate packaging.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, putFrom,
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';

@@ -1,7 +1,15 @@
+// @migrated dsl-constructs 2026-03-18
 // SolidityBuilder Concept Implementation
 // Solidity provider for the Builder coordination concept. Manages
 // solc compilation, test execution, and ABI packaging.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings, putFrom,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'sol-build';
 
@@ -15,18 +23,18 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const solidityBuilderHandler: ConceptHandler = {
-  async build(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  build(input: Record<string, unknown>) {
     const source = input.source as string;
     const toolchainPath = input.toolchainPath as string;
     const platform = input.platform as string;
     const config = input.config as { mode: string; features: string[] };
 
     if (!source || !toolchainPath) {
-      return {
-        variant: 'compilationError',
+      let p = createProgram();
+      return complete(p, 'compilationError', {
         errors: [{ file: source || 'unknown', line: 0, message: 'Source and toolchainPath are required' }],
-      };
+      }) as StorageProgram<Result>;
     }
 
     const requiredPragma = (config.features || []).find(f => f.startsWith('pragma:'));
@@ -34,7 +42,8 @@ export const solidityBuilderHandler: ConceptHandler = {
       const required = requiredPragma.replace('pragma:', '');
       const installed = '0.8.21';
       if (required !== installed) {
-        return { variant: 'pragmaMismatch', required, installed };
+        let p = createProgram();
+        return complete(p, 'pragmaMismatch', { required, installed }) as StorageProgram<Result>;
       }
     }
 
@@ -45,7 +54,8 @@ export const solidityBuilderHandler: ConceptHandler = {
     const artifactPath = `build/solidity/${platform}/${config.mode}/${buildId}`;
     const duration = Date.now() - startTime;
 
-    await storage.put(RELATION, buildId, {
+    let p = createProgram();
+    p = put(p, RELATION, buildId, {
       build: buildId,
       source,
       toolchainPath,
@@ -59,82 +69,106 @@ export const solidityBuilderHandler: ConceptHandler = {
       builtAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', build: buildId, artifactPath, artifactHash };
+    return complete(p, 'ok', { build: buildId, artifactPath, artifactHash }) as StorageProgram<Result>;
   },
 
-  async test(input, storage) {
+  test(input: Record<string, unknown>) {
     const build = input.build as string;
     const toolchainPath = input.toolchainPath as string;
     const invocation = input.invocation as { command: string; args: string[]; outputFormat: string; configFile?: string; env?: Record<string, string> } | undefined;
     const testType = (input.testType as string) || 'unit';
 
-    const record = await storage.get(RELATION, build);
-    if (!record) {
-      return {
-        variant: 'testFailure',
+    let p = createProgram();
+    p = get(p, RELATION, build, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const startTime = Date.now();
+        const runnerCommand = invocation?.command || 'forge test';
+        const passed = 28;
+        const failed = 0;
+        const skipped = 1;
+        const duration = Date.now() - startTime;
+
+        const b2 = putFrom(b, RELATION, build, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            testPassed: passed,
+            testFailed: failed,
+            testSkipped: skipped,
+            testDuration: duration,
+            testType,
+            testRunner: runnerCommand,
+            testedAt: new Date().toISOString(),
+          };
+        });
+
+        return complete(b2, 'ok', { passed, failed, skipped, duration, testType });
+      },
+      (b) => complete(b, 'testFailure', {
         passed: 0,
         failed: 1,
         failures: [{ test: 'lookup', message: `Build ${build} not found` }],
         testType,
-      };
-    }
+      }),
+    );
 
-    const startTime = Date.now();
-    // Use invocation profile to determine which runner executes.
-    const runnerCommand = invocation?.command || 'forge test';
-    const passed = 28;
-    const failed = 0;
-    const skipped = 1;
-    const duration = Date.now() - startTime;
-
-    await storage.put(RELATION, build, {
-      ...record,
-      testPassed: passed,
-      testFailed: failed,
-      testSkipped: skipped,
-      testDuration: duration,
-      testType,
-      testRunner: runnerCommand,
-      testedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', passed, failed, skipped, duration, testType };
+    return p as StorageProgram<Result>;
   },
 
-  async package(input, storage) {
+  package(input: Record<string, unknown>) {
     const build = input.build as string;
     const format = input.format as string;
 
-    const record = await storage.get(RELATION, build);
-    if (!record) {
-      return { variant: 'formatUnsupported', format };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, build, 'record');
 
-    const capabilities = ['abi-bundle', 'hardhat-artifacts', 'foundry-out'];
-    if (!capabilities.includes(format)) {
-      return { variant: 'formatUnsupported', format };
-    }
+    p = branch(p, 'record',
+      (b) => {
+        const capabilities = ['abi-bundle', 'hardhat-artifacts', 'foundry-out'];
+        if (!capabilities.includes(format)) {
+          return complete(b, 'formatUnsupported', { format });
+        }
 
-    const artifactPath = `dist/solidity/${format}/${build}.json`;
-    const artifactHash = simpleHash(`${build}:${format}:${record.artifactHash}`);
+        const artifactPath = `dist/solidity/${format}/${build}.json`;
 
-    await storage.put(RELATION, build, {
-      ...record,
-      packagedFormat: format,
-      packagedPath: artifactPath,
-      packagedHash: artifactHash,
-      packagedAt: new Date().toISOString(),
-    });
+        const b2 = putFrom(b, RELATION, build, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const artifactHash = simpleHash(`${build}:${format}:${record.artifactHash}`);
+          return {
+            ...record,
+            packagedFormat: format,
+            packagedPath: artifactPath,
+            packagedHash: artifactHash,
+            packagedAt: new Date().toISOString(),
+          };
+        });
 
-    return { variant: 'ok', artifactPath, artifactHash };
+        let b3 = mapBindings(b2, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return simpleHash(`${build}:${format}:${record.artifactHash}`);
+        }, 'artifactHash');
+
+        return completeFrom(b3, 'ok', (bindings) => ({
+          artifactPath,
+          artifactHash: bindings.artifactHash as string,
+        }));
+      },
+      (b) => complete(b, 'formatUnsupported', { format }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async register(_input, _storage) {
-    return {
-      variant: 'ok',
+  register(_input: Record<string, unknown>) {
+    let p = createProgram();
+    return complete(p, 'ok', {
       name: 'SolidityBuilder',
       language: 'solidity',
       capabilities: ['abi-bundle', 'hardhat-artifacts', 'foundry-out'],
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const solidityBuilderHandler = autoInterpret(_handler);

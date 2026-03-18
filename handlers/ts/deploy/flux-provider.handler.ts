@@ -1,12 +1,20 @@
+// @migrated dsl-constructs 2026-03-18
 // FluxProvider Concept Implementation
 // Flux GitOps provider. Generates Flux Kustomization CRDs, manages
 // HelmRelease objects, and tracks reconciliation status.
-import type { ConceptHandler } from '../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const RELATION = 'flux';
 
-export const fluxProviderHandler: ConceptHandler = {
-  async emit(input, storage) {
+const _fluxProviderHandler: FunctionalConceptHandler = {
+  emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
@@ -14,8 +22,8 @@ export const fluxProviderHandler: ConceptHandler = {
     const kustomizationId = `ks-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const files = ['kustomization.yaml', 'source.yaml'];
 
-    // Store concept state only — file output is routed through Emitter via syncs
-    await storage.put(RELATION, kustomizationId, {
+    let p = createProgram();
+    p = put(p, RELATION, kustomizationId, {
       kustomization: kustomizationId,
       plan,
       repo,
@@ -25,53 +33,67 @@ export const fluxProviderHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', kustomization: kustomizationId, files };
+    return complete(p, 'ok', { kustomization: kustomizationId, files }) as StorageProgram<Result>;
   },
 
-  async reconciliationStatus(input, storage) {
+  reconciliationStatus(input: Record<string, unknown>) {
     const kustomization = input.kustomization as string;
 
-    const record = await storage.get(RELATION, kustomization);
-    if (!record) {
-      return { variant: 'failed', kustomization, reason: 'Kustomization not found' };
-    }
+    let p = createProgram();
+    p = get(p, RELATION, kustomization, 'record');
 
-    const reconciledAt = new Date();
-    const appliedRevision = `main@sha1:${Date.now().toString(16)}`;
+    return branch(p, 'record',
+      (thenP) => {
+        const reconciledAt = new Date();
+        const appliedRevision = `main@sha1:${Date.now().toString(16)}`;
 
-    await storage.put(RELATION, kustomization, {
-      ...record,
-      readyStatus: 'True',
-      lastAppliedRevision: appliedRevision,
-      reconciledAt: reconciledAt.toISOString(),
-    });
+        thenP = putFrom(thenP, RELATION, kustomization, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            readyStatus: 'True',
+            lastAppliedRevision: appliedRevision,
+            reconciledAt: reconciledAt.toISOString(),
+          };
+        });
 
-    return {
-      variant: 'ok',
-      kustomization,
-      readyStatus: 'True',
-      appliedRevision,
-      reconciledAt,
-    };
+        return complete(thenP, 'ok', {
+          kustomization,
+          readyStatus: 'True',
+          appliedRevision,
+          reconciledAt,
+        });
+      },
+      (elseP) => complete(elseP, 'failed', { kustomization, reason: 'Kustomization not found' }),
+    ) as StorageProgram<Result>;
   },
 
-  async helmRelease(input, storage) {
+  helmRelease(input: Record<string, unknown>) {
     const kustomization = input.kustomization as string;
     const chart = input.chart as string;
     const values = input.values as string;
 
     const releaseName = `${chart}-release`;
 
-    const record = await storage.get(RELATION, kustomization);
-    if (record) {
-      await storage.put(RELATION, kustomization, {
-        ...record,
-        releaseName,
-        chart,
-        values,
-      });
-    }
+    let p = createProgram();
+    p = get(p, RELATION, kustomization, 'record');
 
-    return { variant: 'ok', kustomization, releaseName };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, RELATION, kustomization, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            releaseName,
+            chart,
+            values,
+          };
+        });
+        return complete(thenP, 'ok', { kustomization, releaseName });
+      },
+      (elseP) => complete(elseP, 'ok', { kustomization, releaseName }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const fluxProviderHandler = autoInterpret(_fluxProviderHandler);
