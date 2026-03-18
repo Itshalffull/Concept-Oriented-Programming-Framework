@@ -17,13 +17,19 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   compute(_input: Record<string, unknown>) {
-    return { variant: 'unsupportedAlgorithm', algorithm: 'stub — not yet implemented' };
+    const p = createProgram();
+
+    return complete(p, 'unsupportedAlgorithm', {, algorithm: 'stub — not yet implemented' }) as StorageProgram<Result>;
   },
   lookup(_input: Record<string, unknown>) {
-    return { variant: 'notfound' };
+    const p = createProgram();
+
+    return complete(p, 'notfound', { }) as StorageProgram<Result>;
   },
   equivalent(_input: Record<string, unknown>) {
-    return { variant: 'no', diffSummary: 'stub — not yet implemented' };
+    const p = createProgram();
+
+    return complete(p, 'no', {, diffSummary: 'stub — not yet implemented' }) as StorageProgram<Result>;
   },
 };
 

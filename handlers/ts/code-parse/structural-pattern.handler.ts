@@ -17,13 +17,19 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   create(_input: Record<string, unknown>) {
-    return { variant: 'invalidSyntax', message: 'stub — not yet implemented', position: 0 };
+    const p = createProgram();
+
+    return complete(p, 'invalidSyntax', {, message: 'stub — not yet implemented', position: 0 }) as StorageProgram<Result>;
   },
   match(_input: Record<string, unknown>) {
-    return { variant: 'noMatches' };
+    const p = createProgram();
+
+    return complete(p, 'noMatches', { }) as StorageProgram<Result>;
   },
   matchProject(_input: Record<string, unknown>) {
-    return { variant: 'noMatches' };
+    const p = createProgram();
+
+    return complete(p, 'noMatches', { }) as StorageProgram<Result>;
   },
 };
 
