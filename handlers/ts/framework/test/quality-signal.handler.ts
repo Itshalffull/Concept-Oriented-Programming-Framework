@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // QualitySignal Concept Implementation
 //
@@ -9,7 +10,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SIGNALS = 'quality-signals';
 
@@ -47,8 +53,10 @@ function generateSignalId(): string {
   return `qs-${Date.now()}-${counter}`;
 }
 
-export const qualitySignalHandler: ConceptHandler = {
-  async record(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  record(input: Record<string, unknown>) {
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
     const status = input.status as string | undefined;
@@ -113,7 +121,7 @@ export const qualitySignalHandler: ConceptHandler = {
     return { variant: 'ok', id: signalId, observed_at: observedAt };
   },
 
-  async latest(input, storage) {
+  latest(input: Record<string, unknown>) {
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
 
@@ -154,7 +162,7 @@ export const qualitySignalHandler: ConceptHandler = {
     };
   },
 
-  async rollup(input, storage) {
+  rollup(input: Record<string, unknown>) {
     const targetSymbols = input.target_symbols as string[] | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
@@ -260,7 +268,7 @@ export const qualitySignalHandler: ConceptHandler = {
     };
   },
 
-  async explain(input, storage) {
+  explain(input: Record<string, unknown>) {
     const targetSymbol = input.target_symbol as string | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
@@ -303,3 +311,5 @@ export const qualitySignalHandler: ConceptHandler = {
     };
   },
 };
+
+export const qualitySignalHandler = autoInterpret(_handler);

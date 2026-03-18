@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ContractTest Concept Implementation
 //
@@ -7,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const CONTRACTS = 'contract-definitions';
 const VERIFICATIONS = 'contract-verifications';
@@ -22,8 +28,10 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const contractTestHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
@@ -67,7 +75,7 @@ export const contractTestHandler: ConceptHandler = {
     return { variant: 'ok', contract: contractId, definition };
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
     const contract = input.contract as string;
     const producerArtifact = input.producerArtifact as string;
     const producerLanguage = input.producerLanguage as string;
@@ -131,7 +139,7 @@ export const contractTestHandler: ConceptHandler = {
     return { variant: 'ok', contract, passed, total };
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
     const concepts = input.concepts as string[] | undefined;
 
     const allVerifications = await storage.find(VERIFICATIONS);
@@ -177,7 +185,7 @@ export const contractTestHandler: ConceptHandler = {
     return { variant: 'ok', matrix };
   },
 
-  async canDeploy(input, storage) {
+  canDeploy(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const language = input.language as string;
 
@@ -244,3 +252,5 @@ export const contractTestHandler: ConceptHandler = {
     return { variant: 'ok', safe: true, verifiedAgainst };
   },
 };
+
+export const contractTestHandler = autoInterpret(_handler);

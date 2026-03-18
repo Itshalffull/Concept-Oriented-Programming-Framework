@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TestSelection Concept Implementation
 //
@@ -7,14 +8,21 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const MAPPINGS = 'test-selection-mappings';
 const SELECTIONS = 'test-selection-history';
 const STATS = 'test-selection-stats';
 
-export const testSelectionHandler: ConceptHandler = {
-  async analyze(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  analyze(input: Record<string, unknown>) {
     const changedSources = input.changedSources as string[];
 
     if (!changedSources || changedSources.length === 0) {
@@ -93,7 +101,7 @@ export const testSelectionHandler: ConceptHandler = {
     return { variant: 'ok', affectedTests: deduplicated };
   },
 
-  async select(input, storage) {
+  select(input: Record<string, unknown>) {
     const affectedTests = input.affectedTests as Array<{
       testId: string;
       language: string;
@@ -170,7 +178,7 @@ export const testSelectionHandler: ConceptHandler = {
     return { variant: 'ok', selected, estimatedDuration: totalEstimatedDuration, confidence };
   },
 
-  async record(input, storage) {
+  record(input: Record<string, unknown>) {
     const testId = input.testId as string;
     const language = input.language as string;
     const testType = (input.testType as string) || 'unit';
@@ -211,7 +219,7 @@ export const testSelectionHandler: ConceptHandler = {
     return { variant: 'ok', mapping: mappingId };
   },
 
-  async statistics(input, storage) {
+  statistics(input: Record<string, unknown>) {
     const allMappings = await storage.find(MAPPINGS);
     const allSelections = await storage.find(SELECTIONS);
 
@@ -256,3 +264,5 @@ export const testSelectionHandler: ConceptHandler = {
     };
   },
 };
+
+export const testSelectionHandler = autoInterpret(_handler);

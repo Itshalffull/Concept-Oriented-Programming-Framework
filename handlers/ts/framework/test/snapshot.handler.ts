@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Snapshot Concept Implementation
 //
@@ -6,7 +7,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const BASELINES = 'snapshot-baselines';
 const COMPARISONS = 'snapshot-comparisons';
@@ -34,8 +40,10 @@ function computeDiff(
   };
 }
 
-export const snapshotHandler: ConceptHandler = {
-  async compare(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  compare(input: Record<string, unknown>) {
     const outputPath = input.outputPath as string;
     const currentContent = input.currentContent as string;
     const currentHash = simpleHash(currentContent);
@@ -89,7 +97,7 @@ export const snapshotHandler: ConceptHandler = {
     };
   },
 
-  async approve(input, storage) {
+  approve(input: Record<string, unknown>) {
     const path = input.path as string;
     const approver = input.approver as string | undefined;
 
@@ -123,7 +131,7 @@ export const snapshotHandler: ConceptHandler = {
     return { variant: 'ok', snapshot: snapshotId };
   },
 
-  async approveAll(input, storage) {
+  approveAll(input: Record<string, unknown>) {
     const paths = input.paths as string[] | undefined;
 
     const allComparisons = await storage.find(COMPARISONS);
@@ -163,7 +171,7 @@ export const snapshotHandler: ConceptHandler = {
     return { variant: 'ok', approved };
   },
 
-  async reject(input, storage) {
+  reject(input: Record<string, unknown>) {
     const path = input.path as string;
 
     const comparison = await storage.get(COMPARISONS, path);
@@ -187,7 +195,7 @@ export const snapshotHandler: ConceptHandler = {
     };
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const paths = input.paths as string[] | undefined;
 
     const allComparisons = await storage.find(COMPARISONS);
@@ -220,7 +228,7 @@ export const snapshotHandler: ConceptHandler = {
     return { variant: 'ok', results };
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
     const path = input.path as string;
 
     const baseline = await storage.get(BASELINES, path);
@@ -240,7 +248,7 @@ export const snapshotHandler: ConceptHandler = {
     return { variant: 'ok', diff, linesAdded, linesRemoved };
   },
 
-  async clean(input, storage) {
+  clean(input: Record<string, unknown>) {
     const _outputDir = input.outputDir as string;
 
     // Remove baselines that have no corresponding comparison (orphaned)
@@ -259,3 +267,5 @@ export const snapshotHandler: ConceptHandler = {
     return { variant: 'ok', removed };
   },
 };
+
+export const snapshotHandler = autoInterpret(_handler);

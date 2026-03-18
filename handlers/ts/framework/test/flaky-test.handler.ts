@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FlakyTest Concept Implementation
 //
@@ -7,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const TESTS = 'flaky-tests';
 const POLICY = 'flaky-policy';
@@ -48,8 +54,10 @@ function parseWindowMs(window: string): number {
   }
 }
 
-export const flakyTestHandler: ConceptHandler = {
-  async record(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  record(input: Record<string, unknown>) {
     const testId = input.testId as string;
     const language = input.language as string;
     const builder = input.builder as string;
@@ -157,7 +165,7 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'ok', test: testRef };
   },
 
-  async quarantine(input, storage) {
+  quarantine(input: Record<string, unknown>) {
     const testId = input.testId as string;
     const reasonText = input.reason as string;
     const owner = input.owner as string | undefined;
@@ -188,7 +196,7 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'ok', test: test.id as string };
   },
 
-  async release(input, storage) {
+  release(input: Record<string, unknown>) {
     const testId = input.testId as string;
 
     const allTests = await storage.find(TESTS, { testId });
@@ -214,7 +222,7 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'ok', test: test.id as string };
   },
 
-  async isQuarantined(input, storage) {
+  isQuarantined(input: Record<string, unknown>) {
     const testId = input.testId as string;
 
     const allTests = await storage.find(TESTS, { testId });
@@ -236,7 +244,7 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'no', test: test.id as string };
   },
 
-  async report(input, storage) {
+  report(input: Record<string, unknown>) {
     const testTypeFilter = input.testType as string | undefined;
     const allTests = await storage.find(TESTS);
     const policy = await getPolicy(storage);
@@ -303,7 +311,7 @@ export const flakyTestHandler: ConceptHandler = {
     };
   },
 
-  async setPolicy(input, storage) {
+  setPolicy(input: Record<string, unknown>) {
     const existing = await getPolicy(storage);
 
     const newPolicy = {
@@ -318,3 +326,5 @@ export const flakyTestHandler: ConceptHandler = {
     return { variant: 'ok' };
   },
 };
+
+export const flakyTestHandler = autoInterpret(_handler);

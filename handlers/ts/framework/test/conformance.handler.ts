@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Conformance Concept Implementation
 //
@@ -7,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SUITES = 'conformance-suites';
 const VECTORS = 'conformance-vectors';
@@ -24,8 +30,10 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const conformanceHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
@@ -92,7 +100,7 @@ export const conformanceHandler: ConceptHandler = {
     return { variant: 'ok', suite: suiteId, testVectors };
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
     const suite = input.suite as string;
     const language = input.language as string;
     const artifactLocation = input.artifactLocation as string;
@@ -145,7 +153,7 @@ export const conformanceHandler: ConceptHandler = {
     return { variant: 'ok', passed, total, coveredRequirements };
   },
 
-  async registerDeviation(input, storage) {
+  registerDeviation(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const language = input.language as string;
     const requirement = input.requirement as string;
@@ -167,7 +175,7 @@ export const conformanceHandler: ConceptHandler = {
     return { variant: 'ok', suite: suiteId };
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
     const concepts = input.concepts as string[] | undefined;
 
     const allResults = await storage.find(RESULTS);
@@ -239,7 +247,7 @@ export const conformanceHandler: ConceptHandler = {
     return { variant: 'ok', matrix };
   },
 
-  async traceability(input, storage) {
+  traceability(input: Record<string, unknown>) {
     const concept = input.concept as string;
 
     const suites = await storage.find(SUITES, { concept });
@@ -281,3 +289,5 @@ export const conformanceHandler: ConceptHandler = {
     return { variant: 'ok', requirements: traceability };
   },
 };
+
+export const conformanceHandler = autoInterpret(_handler);
