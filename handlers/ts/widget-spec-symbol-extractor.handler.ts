@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // WidgetSpecSymbolExtractor Handler
 //
@@ -7,7 +8,14 @@
 // affordance interactor bindings as symbols in the surface/* namespace.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -42,7 +50,6 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
     const line = lines[i];
     const lineNum = i + 1;
 
-    // Match widget declaration: widget WidgetName { or name: WidgetName
     const widgetMatch = line.match(/^\s*(?:widget\s+(\w[\w-]*)|name\s*:\s*['"]?([\w-]+)['"]?)\s*/);
     if (widgetMatch) {
       widgetName = widgetMatch[1] || widgetMatch[2];
@@ -59,160 +66,90 @@ function extractFromWidgetSpec(source: string, file: string): Array<{
       continue;
     }
 
-    // Track sections: anatomy, states, transitions, props, slots, compose, affordances
     const sectionMatch = line.match(/^\s*(anatomy|states?|transitions?|props?|slots?|compose|affordances?|interactors?)\s*[:{]/);
     if (sectionMatch) {
       currentSection = sectionMatch[1];
       continue;
     }
 
-    // Match declarations within sections
     const declMatch = line.match(/^\s+([\w-]+)\s*[:({]/);
     if (declMatch && widgetName && currentSection) {
       const itemName = declMatch[1];
-      // Skip common structure keywords
       if (['true', 'false', 'null', 'description', 'type', 'value', 'default',
         'required', 'optional'].includes(itemName)) continue;
 
       const prefix = `surface/widget/${widgetName}`;
 
       if (currentSection === 'anatomy') {
-        symbols.push({
-          symbolString: `${prefix}/part/${itemName}`,
-          kind: 'state-field',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/part/${itemName}`, kind: 'state-field', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'states' || currentSection === 'state') {
-        symbols.push({
-          symbolString: `${prefix}/state/${itemName}`,
-          kind: 'state-field',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/state/${itemName}`, kind: 'state-field', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'transitions' || currentSection === 'transition') {
-        symbols.push({
-          symbolString: `${prefix}/transition/${itemName}`,
-          kind: 'action',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/transition/${itemName}`, kind: 'action', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'props' || currentSection === 'prop') {
-        symbols.push({
-          symbolString: `${prefix}/prop/${itemName}`,
-          kind: 'state-field',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/prop/${itemName}`, kind: 'state-field', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'slots' || currentSection === 'slot') {
-        symbols.push({
-          symbolString: `${prefix}/slot/${itemName}`,
-          kind: 'state-field',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/slot/${itemName}`, kind: 'state-field', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'compose') {
-        // Composed widget references
-        symbols.push({
-          symbolString: `surface/widget/${itemName}`,
-          kind: 'concept',
-          displayName: itemName,
-          role: 'reference',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `surface/widget/${itemName}`, kind: 'concept', displayName: itemName, role: 'reference', line: lineNum, col: line.indexOf(itemName) + 1 });
       } else if (currentSection === 'affordances' || currentSection === 'affordance' ||
                  currentSection === 'interactors' || currentSection === 'interactor') {
-        symbols.push({
-          symbolString: `${prefix}/affordance/${itemName}`,
-          kind: 'action',
-          displayName: itemName,
-          role: 'definition',
-          line: lineNum,
-          col: line.indexOf(itemName) + 1,
-        });
+        symbols.push({ symbolString: `${prefix}/affordance/${itemName}`, kind: 'action', displayName: itemName, role: 'definition', line: lineNum, col: line.indexOf(itemName) + 1 });
       }
     }
 
-    // Match widget references in compose or extends context
     const extendsMatch = line.match(/extends\s+([\w-]+)/);
     if (extendsMatch) {
       const refName = extendsMatch[1];
-      symbols.push({
-        symbolString: `surface/widget/${refName}`,
-        kind: 'concept',
-        displayName: refName,
-        role: 'reference',
-        line: lineNum,
-        col: line.indexOf(refName) + 1,
-      });
+      symbols.push({ symbolString: `surface/widget/${refName}`, kind: 'concept', displayName: refName, role: 'reference', line: lineNum, col: line.indexOf(refName) + 1 });
     }
 
-    // Match event references in transitions: on event -> state
     const eventMatch = line.match(/on\s+([\w-]+)\s*->/);
     if (eventMatch && widgetName) {
       const eventName = eventMatch[1];
-      symbols.push({
-        symbolString: `surface/widget/${widgetName}/event/${eventName}`,
-        kind: 'action',
-        displayName: eventName,
-        role: 'reference',
-        line: lineNum,
-        col: line.indexOf(eventName) + 1,
-      });
+      symbols.push({ symbolString: `surface/widget/${widgetName}/event/${eventName}`, kind: 'action', displayName: eventName, role: 'reference', line: lineNum, col: line.indexOf(eventName) + 1 });
     }
   }
 
   return symbols;
 }
 
-export const widgetSpecSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('widget-spec-symbol-extractor', id, {
-        id,
-        extractorRef: 'widget-spec-symbol-extractor',
-        handledExtensions: '.widget',
-        language: 'widget-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'widget-spec-symbol-extractor', id, {
+      id,
+      extractorRef: 'widget-spec-symbol-extractor',
+      handledExtensions: '.widget',
+      language: 'widget-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromWidgetSpec(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.widget']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const widgetSpecSymbolExtractorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetWidgetSpecSymbolExtractorCounter(): void {
