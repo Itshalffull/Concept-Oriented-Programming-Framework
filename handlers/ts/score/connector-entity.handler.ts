@@ -25,116 +25,130 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    let p = createProgram();
     const connectorId = input.connector_id as string;
     const canvasId = input.canvas_id as string;
 
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', { connector_id: connectorId }, 'existing');
-    if (existing.length > 0) {
-      return complete(p, 'alreadyRegistered', { existing: existing[0].id as string }) as StorageProgram<Result>;
-    }
 
-    const id = nextId();
-    const symbol = `clef/canvas/${canvasId}/connector/${connectorId}`;
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => completeFrom(thenP, 'alreadyRegistered', (bindings) => ({
+        existing: (bindings.existing as Record<string, unknown>[])[0].id as string,
+      })),
+      (elseP) => {
+        const id = nextId();
+        const symbol = `clef/canvas/${canvasId}/connector/${connectorId}`;
 
-    p = put(p, 'canvas-connector-entity', id, {
-      id,
-      connector_id: connectorId,
-      canvas_id: canvasId,
-      symbol,
-      source_item: input.source_item as string,
-      target_item: input.target_item as string,
-      kind: (input.kind as string) ?? 'local',
-      label: (input.label as string | undefined) ?? null,
-      type_key: (input.type_key as string | undefined) ?? null,
-      source_port: (input.source_port as string | undefined) ?? null,
-      target_port: (input.target_port as string | undefined) ?? null,
-      reference_id: (input.reference_id as string | undefined) ?? null,
-    });
+        elseP = put(elseP, 'canvas-connector-entity', id, {
+          id,
+          connector_id: connectorId,
+          canvas_id: canvasId,
+          symbol,
+          source_item: input.source_item as string,
+          target_item: input.target_item as string,
+          kind: (input.kind as string) ?? 'local',
+          label: (input.label as string | undefined) ?? null,
+          type_key: (input.type_key as string | undefined) ?? null,
+          source_port: (input.source_port as string | undefined) ?? null,
+          target_port: (input.target_port as string | undefined) ?? null,
+          reference_id: (input.reference_id as string | undefined) ?? null,
+        });
 
-    return complete(p, 'ok', { id, symbol }) as StorageProgram<Result>;
+        return complete(elseP, 'ok', { id, symbol });
+      },
+    ) as StorageProgram<Result>;
   },
 
   updateKind(input: Record<string, unknown>) {
-    let p = createProgram();
     const connectorId = input.connector_id as string;
     const kind = input.kind as string;
 
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', { connector_id: connectorId }, 'entities');
-    if (entities.length === 0) {
-      return complete(p, 'notfound', { message: `Connector entity for '${connectorId}' not found` }) as StorageProgram<Result>;
-    }
 
-    p = put(p, 'canvas-connector-entity', entities[0].id as string, {
-      ...entities[0],
-      kind,
-      reference_id: (input.reference_id as string | undefined) ?? entities[0].reference_id,
-    });
-
-    return complete(p, 'ok', { connector_id: connectorId, kind }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => (bindings.entities as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'notfound', { message: `Connector entity for '${connectorId}' not found` }),
+      (elseP) => completeFrom(elseP, 'ok', (_bindings) => ({
+        connector_id: connectorId,
+        kind,
+      })),
+    ) as StorageProgram<Result>;
   },
 
   listByCanvas(input: Record<string, unknown>) {
-    let p = createProgram();
     const canvasId = input.canvas_id as string;
+
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', { canvas_id: canvasId }, 'connectors');
-    return complete(p, 'ok', {
-      connectors: connectors.map((c: Record<string, unknown>) => ({
-        id: c.id,
-        connector_id: c.connector_id,
-        source_item: c.source_item,
-        target_item: c.target_item,
-        kind: c.kind,
-        label: c.label,
-        type_key: c.type_key,
-      })),
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const connectors = bindings.connectors as Record<string, unknown>[];
+      return {
+        connectors: connectors.map((c) => ({
+          id: c.id,
+          connector_id: c.connector_id,
+          source_item: c.source_item,
+          target_item: c.target_item,
+          kind: c.kind,
+          label: c.label,
+          type_key: c.type_key,
+        })),
+      };
     }) as StorageProgram<Result>;
   },
 
   listByKind(input: Record<string, unknown>) {
-    let p = createProgram();
     const kind = input.kind as string;
-    const canvasId = (input.canvas_id as string | undefined);
+    const canvasId = input.canvas_id as string | undefined;
 
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', { kind }, 'connectors');
-    if (canvasId) {
-      connectors = connectors.filter((c: Record<string, unknown>) => c.canvas_id === canvasId);
-    }
 
-    return complete(p, 'ok', {
-      connectors: connectors.map((c: Record<string, unknown>) => ({
-        id: c.id,
-        connector_id: c.connector_id,
-        canvas_id: c.canvas_id,
-        source_item: c.source_item,
-        target_item: c.target_item,
-        kind: c.kind,
-        label: c.label,
-      })),
+    return completeFrom(p, 'ok', (bindings) => {
+      let connectors = bindings.connectors as Record<string, unknown>[];
+      if (canvasId) {
+        connectors = connectors.filter((c) => c.canvas_id === canvasId);
+      }
+      return {
+        connectors: connectors.map((c) => ({
+          id: c.id,
+          connector_id: c.connector_id,
+          canvas_id: c.canvas_id,
+          source_item: c.source_item,
+          target_item: c.target_item,
+          kind: c.kind,
+          label: c.label,
+        })),
+      };
     }) as StorageProgram<Result>;
   },
 
   getConnectionsBetween(input: Record<string, unknown>) {
-    let p = createProgram();
     const itemA = input.item_a as string;
     const itemB = input.item_b as string;
 
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', {}, 'all');
-    const connections = all.filter((c: Record<string, unknown>) =>
-      (c.source_item === itemA && c.target_item === itemB) ||
-      (c.source_item === itemB && c.target_item === itemA)
-    );
 
-    return complete(p, 'ok', {
-      connections: connections.map((c: Record<string, unknown>) => ({
-        id: c.id,
-        connector_id: c.connector_id,
-        canvas_id: c.canvas_id,
-        source_item: c.source_item,
-        target_item: c.target_item,
-        kind: c.kind,
-        label: c.label,
-      })),
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      const connections = all.filter((c) =>
+        (c.source_item === itemA && c.target_item === itemB) ||
+        (c.source_item === itemB && c.target_item === itemA),
+      );
+      return {
+        connections: connections.map((c) => ({
+          id: c.id,
+          connector_id: c.connector_id,
+          canvas_id: c.canvas_id,
+          source_item: c.source_item,
+          target_item: c.target_item,
+          kind: c.kind,
+          label: c.label,
+        })),
+      };
     }) as StorageProgram<Result>;
   },
 };

@@ -25,108 +25,111 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    let p = createProgram();
     const canvasId = input.canvas_id as string;
     const name = input.name as string;
 
+    let p = createProgram();
     p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'existing');
-    if (existing.length > 0) {
-      return complete(p, 'alreadyRegistered', { existing: existing[0].id as string }) as StorageProgram<Result>;
-    }
 
-    const id = nextId();
-    const symbol = `clef/canvas/${name}`;
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => completeFrom(thenP, 'alreadyRegistered', (bindings) => ({
+        existing: (bindings.existing as Record<string, unknown>[])[0].id as string,
+      })),
+      (elseP) => {
+        const id = nextId();
+        const symbol = `clef/canvas/${name}`;
 
-    p = put(p, 'canvas-entity', id, {
-      id,
-      canvas_id: canvasId,
-      name,
-      symbol,
-      item_count: 0,
-      connector_count: 0,
-      local_item_count: 0,
-      referenced_item_count: 0,
-      local_connector_count: 0,
-      semantic_connector_count: 0,
-      surfaced_connector_count: 0,
-      notation_id: null,
-      notation_name: null,
-      frame_count: 0,
-      group_count: 0,
-    });
+        elseP = put(elseP, 'canvas-entity', id, {
+          id,
+          canvas_id: canvasId,
+          name,
+          symbol,
+          item_count: 0,
+          connector_count: 0,
+          local_item_count: 0,
+          referenced_item_count: 0,
+          local_connector_count: 0,
+          semantic_connector_count: 0,
+          surfaced_connector_count: 0,
+          notation_id: null,
+          notation_name: null,
+          frame_count: 0,
+          group_count: 0,
+        });
 
-    return complete(p, 'ok', { id, symbol }) as StorageProgram<Result>;
+        return complete(elseP, 'ok', { id, symbol });
+      },
+    ) as StorageProgram<Result>;
   },
 
   updateStats(input: Record<string, unknown>) {
-    let p = createProgram();
     const canvasId = input.canvas_id as string;
 
+    let p = createProgram();
     p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'entities');
-    if (entities.length === 0) {
-      return complete(p, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }) as StorageProgram<Result>;
-    }
 
-    const entity = entities[0];
-    p = put(p, 'canvas-entity', entity.id as string, {
-      ...entity,
-      item_count: (input.item_count as number) ?? entity.item_count,
-      connector_count: (input.connector_count as number) ?? entity.connector_count,
-      local_item_count: (input.local_item_count as number) ?? entity.local_item_count,
-      referenced_item_count: (input.referenced_item_count as number) ?? entity.referenced_item_count,
-      local_connector_count: (input.local_connector_count as number) ?? entity.local_connector_count,
-      semantic_connector_count: (input.semantic_connector_count as number) ?? entity.semantic_connector_count,
-      surfaced_connector_count: (input.surfaced_connector_count as number) ?? entity.surfaced_connector_count,
-      notation_id: (input.notation_id as string) ?? entity.notation_id,
-      notation_name: (input.notation_name as string) ?? entity.notation_name,
-      frame_count: (input.frame_count as number) ?? entity.frame_count,
-      group_count: (input.group_count as number) ?? entity.group_count,
-    });
-
-    return complete(p, 'ok', { canvas_id: canvasId }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => (bindings.entities as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }),
+      (elseP) => completeFrom(elseP, 'ok', (_bindings) => ({ canvas_id: canvasId })),
+    ) as StorageProgram<Result>;
   },
 
   getCanvas(input: Record<string, unknown>) {
-    let p = createProgram();
     const canvasId = input.canvas_id as string;
+
+    let p = createProgram();
     p = find(p, 'canvas-entity', { canvas_id: canvasId }, 'entities');
-    if (entities.length === 0) {
-      return complete(p, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }) as StorageProgram<Result>;
-    }
-    return complete(p, 'ok', { entity: entities[0] }) as StorageProgram<Result>;
+
+    return branch(p,
+      (bindings) => (bindings.entities as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'notfound', { message: `Canvas entity for '${canvasId}' not found` }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => ({
+        entity: (bindings.entities as Record<string, unknown>[])[0],
+      })),
+    ) as StorageProgram<Result>;
   },
 
   listCanvases(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'canvas-entity', {}, 'all');
-    return complete(p, 'ok', {
-      canvases: all.map((e: Record<string, unknown>) => ({
-        id: e.id,
-        canvas_id: e.canvas_id,
-        name: e.name,
-        symbol: e.symbol,
-        item_count: e.item_count,
-        connector_count: e.connector_count,
-        notation_name: e.notation_name,
-      })),
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return {
+        canvases: all.map((e) => ({
+          id: e.id,
+          canvas_id: e.canvas_id,
+          name: e.name,
+          symbol: e.symbol,
+          item_count: e.item_count,
+          connector_count: e.connector_count,
+          notation_name: e.notation_name,
+        })),
+      };
     }) as StorageProgram<Result>;
   },
 
   getConnectorGraph(input: Record<string, unknown>) {
     const canvasId = input.canvas_id as string;
 
-    // Return connector relationship data for Score graph queries
+    let p = createProgram();
     p = find(p, 'canvas-connector-entity', { canvas_id: canvasId }, 'connectors');
-    return complete(p, 'ok', {
-      canvas_id: canvasId,
-      edges: connectors.map((c: Record<string, unknown>) => ({
-        id: c.id,
-        source: c.source_item,
-        target: c.target_item,
-        kind: c.kind,
-        label: c.label,
-        type_key: c.type_key,
-      })),
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const connectors = bindings.connectors as Record<string, unknown>[];
+      return {
+        canvas_id: canvasId,
+        edges: connectors.map((c) => ({
+          id: c.id,
+          source: c.source_item,
+          target: c.target_item,
+          kind: c.kind,
+          label: c.label,
+          type_key: c.type_key,
+        })),
+      };
     }) as StorageProgram<Result>;
   },
 };

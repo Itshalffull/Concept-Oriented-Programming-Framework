@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SpatialLayout Handler
 //
@@ -6,31 +7,47 @@
 // dispatches to the registered provider.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
 
-export const spatialLayoutHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const algorithm = input.algorithm as string;
     const provider = input.provider as string;
 
-    await storage.put('layout_algorithm', algorithm, {
+    let p = createProgram();
+    p = put(p, 'layout_algorithm', algorithm, {
       algorithm,
       provider,
     });
 
-    return { variant: 'ok' };
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
-  async apply(input: Record<string, unknown>, storage: ConceptStorage) {
+  apply(input: Record<string, unknown>) {
     const algorithm = input.algorithm as string;
 
-    const record = await storage.get('layout_algorithm', algorithm);
-    if (!record) {
-      return { variant: 'unknown_algorithm', message: `Algorithm '${algorithm}' is not registered` };
-    }
+    let p = createProgram();
+    p = get(p, 'layout_algorithm', algorithm, 'record');
 
-    return { variant: 'ok', provider: record.provider };
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { provider: record.provider };
+        });
+      },
+      (elseP) => complete(elseP, 'unknown_algorithm', { message: `Algorithm '${algorithm}' is not registered` }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const spatialLayoutHandler = autoInterpret(_handler);
 
 export default spatialLayoutHandler;
