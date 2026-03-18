@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Merge Handler
 //
@@ -6,7 +7,14 @@
 // Strategy is selected by content type and configuration.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -40,23 +48,18 @@ function threeWayMerge(base: string, ours: string, theirs: string): {
     const theirLine = i < theirLines.length ? theirLines[i] : undefined;
 
     if (ourLine === theirLine) {
-      // Both agree
       if (ourLine !== undefined) resultLines.push(ourLine);
     } else if (ourLine === baseLine) {
-      // Only theirs changed
       if (theirLine !== undefined) resultLines.push(theirLine);
     } else if (theirLine === baseLine) {
-      // Only ours changed
       if (ourLine !== undefined) resultLines.push(ourLine);
     } else {
-      // Both changed differently -- conflict
       conflicts.push({
         region: `line ${i + 1}`,
         oursContent: ourLine ?? '',
         theirsContent: theirLine ?? '',
         status: 'unresolved',
       });
-      // Add conflict marker to result
       resultLines.push(`<<<<<<< ours`);
       if (ourLine !== undefined) resultLines.push(ourLine);
       resultLines.push(`=======`);
@@ -72,149 +75,161 @@ function threeWayMerge(base: string, ours: string, theirs: string): {
   return { result: null, conflicts };
 }
 
-export const mergeHandler: ConceptHandler = {
-  async registerStrategy(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  registerStrategy(input: Record<string, unknown>) {
     const name = input.name as string;
     const contentTypes = input.contentTypes as string[];
 
-    // Check for duplicates
-    const existing = await storage.find('merge-strategy', { name });
-    if (existing.length > 0) {
-      return { variant: 'duplicate', message: `Strategy '${name}' already registered` };
-    }
+    let p = createProgram();
+    p = find(p, 'merge-strategy', { name }, 'existing');
 
-    const id = nextId();
-    await storage.put('merge-strategy', id, {
-      id,
-      name,
-      contentTypes: Array.isArray(contentTypes) ? contentTypes : [],
-    });
-
-    return { variant: 'ok', strategy: id };
+    return branch(p,
+      (bindings) => (bindings.existing as Record<string, unknown>[]).length > 0,
+      (bp) => complete(bp, 'duplicate', { message: `Strategy '${name}' already registered` }),
+      (bp) => {
+        const id = nextId();
+        const bp2 = put(bp, 'merge-strategy', id, {
+          id,
+          name,
+          contentTypes: Array.isArray(contentTypes) ? contentTypes : [],
+        });
+        return complete(bp2, 'ok', { strategy: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async merge(input: Record<string, unknown>, storage: ConceptStorage) {
+  merge(input: Record<string, unknown>) {
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
     const strategy = input.strategy as string | null | undefined;
 
-    // If strategy specified, verify it exists
     if (strategy) {
-      const strategies = await storage.find('merge-strategy', { name: strategy });
-      if (strategies.length === 0) {
-        return { variant: 'noStrategy', message: `No strategy registered for '${strategy}'` };
-      }
+      let p = createProgram();
+      p = find(p, 'merge-strategy', { name: strategy }, 'strategies');
+
+      return branch(p,
+        (bindings) => (bindings.strategies as Record<string, unknown>[]).length === 0,
+        (bp) => complete(bp, 'noStrategy', { message: `No strategy registered for '${strategy}'` }),
+        (bp) => {
+          const { result, conflicts } = threeWayMerge(base, ours, theirs);
+          if (result !== null && conflicts.length === 0) {
+            return complete(bp, 'clean', { result });
+          }
+          const mergeId = nextId();
+          const bp2 = put(bp, 'merge-active', mergeId, {
+            id: mergeId, base, ours, theirs,
+            conflicts: JSON.stringify(conflicts), result: null,
+          });
+          return complete(bp2, 'conflicts', { mergeId, conflictCount: conflicts.length });
+        },
+      ) as StorageProgram<Result>;
     }
 
-    // Perform three-way merge
     const { result, conflicts } = threeWayMerge(base, ours, theirs);
 
     if (result !== null && conflicts.length === 0) {
-      return { variant: 'clean', result };
+      const p = createProgram();
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
-    // Create active merge record with conflicts
     const mergeId = nextId();
-    await storage.put('merge-active', mergeId, {
-      id: mergeId,
-      base,
-      ours,
-      theirs,
-      conflicts: JSON.stringify(conflicts),
-      result: null,
+    let p = createProgram();
+    p = put(p, 'merge-active', mergeId, {
+      id: mergeId, base, ours, theirs,
+      conflicts: JSON.stringify(conflicts), result: null,
     });
 
-    return { variant: 'conflicts', mergeId, conflictCount: conflicts.length };
+    return complete(p, 'conflicts', { mergeId, conflictCount: conflicts.length }) as StorageProgram<Result>;
   },
 
-  async resolveConflict(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolveConflict(input: Record<string, unknown>) {
     const mergeId = input.mergeId as string;
     const conflictIndex = input.conflictIndex as number;
     const resolution = input.resolution as string;
 
-    const mergeRecord = await storage.get('merge-active', mergeId);
-    if (!mergeRecord) {
-      return { variant: 'invalidIndex', message: `Merge '${mergeId}' not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'merge-active', mergeId, 'mergeRecord');
 
-    const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
+    return branch(p,
+      (bindings) => !bindings.mergeRecord,
+      (bp) => complete(bp, 'invalidIndex', { message: `Merge '${mergeId}' not found` }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
+        const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
 
-    if (conflictIndex < 0 || conflictIndex >= conflicts.length) {
-      return { variant: 'invalidIndex', message: `Conflict index ${conflictIndex} out of range [0, ${conflicts.length - 1}]` };
-    }
+        if (conflictIndex < 0 || conflictIndex >= conflicts.length) {
+          return { variant: 'invalidIndex', message: `Conflict index ${conflictIndex} out of range [0, ${conflicts.length - 1}]` };
+        }
 
-    if (conflicts[conflictIndex].status === 'resolved') {
-      return { variant: 'alreadyResolved', message: `Conflict at index ${conflictIndex} was already resolved` };
-    }
+        if (conflicts[conflictIndex].status === 'resolved') {
+          return { variant: 'alreadyResolved', message: `Conflict at index ${conflictIndex} was already resolved` };
+        }
 
-    conflicts[conflictIndex].status = 'resolved';
-    conflicts[conflictIndex].resolution = resolution;
+        conflicts[conflictIndex].status = 'resolved';
+        conflicts[conflictIndex].resolution = resolution;
 
-    const remaining = conflicts.filter(c => c.status !== 'resolved').length;
-
-    await storage.put('merge-active', mergeId, {
-      ...mergeRecord,
-      conflicts: JSON.stringify(conflicts),
-    });
-
-    return { variant: 'ok', remaining };
+        const remaining = conflicts.filter(c => c.status !== 'resolved').length;
+        return { remaining };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async finalize(input: Record<string, unknown>, storage: ConceptStorage) {
+  finalize(input: Record<string, unknown>) {
     const mergeId = input.mergeId as string;
 
-    const mergeRecord = await storage.get('merge-active', mergeId);
-    if (!mergeRecord) {
-      return { variant: 'unresolvedConflicts', count: 0 };
-    }
+    let p = createProgram();
+    p = get(p, 'merge-active', mergeId, 'mergeRecord');
 
-    const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
-    const unresolved = conflicts.filter(c => c.status !== 'resolved');
+    return branch(p,
+      (bindings) => !bindings.mergeRecord,
+      (bp) => complete(bp, 'unresolvedConflicts', { count: 0 }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const mergeRecord = bindings.mergeRecord as Record<string, unknown>;
+        const conflicts = JSON.parse(mergeRecord.conflicts as string) as ConflictRegion[];
+        const unresolved = conflicts.filter(c => c.status !== 'resolved');
 
-    if (unresolved.length > 0) {
-      return { variant: 'unresolvedConflicts', count: unresolved.length };
-    }
-
-    // Build final result by applying resolutions
-    const base = mergeRecord.base as string;
-    const ours = mergeRecord.ours as string;
-    const theirs = mergeRecord.theirs as string;
-    const baseLines = base.split('\n');
-    const ourLines = ours.split('\n');
-    const theirLines = theirs.split('\n');
-    const maxLen = Math.max(baseLines.length, ourLines.length, theirLines.length);
-    const resultLines: string[] = [];
-    let conflictIdx = 0;
-
-    for (let i = 0; i < maxLen; i++) {
-      const baseLine = i < baseLines.length ? baseLines[i] : undefined;
-      const ourLine = i < ourLines.length ? ourLines[i] : undefined;
-      const theirLine = i < theirLines.length ? theirLines[i] : undefined;
-
-      if (ourLine === theirLine) {
-        if (ourLine !== undefined) resultLines.push(ourLine);
-      } else if (ourLine === baseLine) {
-        if (theirLine !== undefined) resultLines.push(theirLine);
-      } else if (theirLine === baseLine) {
-        if (ourLine !== undefined) resultLines.push(ourLine);
-      } else {
-        // This was a conflict -- use resolution
-        if (conflictIdx < conflicts.length && conflicts[conflictIdx].resolution !== undefined) {
-          resultLines.push(conflicts[conflictIdx].resolution!);
+        if (unresolved.length > 0) {
+          return { variant: 'unresolvedConflicts', count: unresolved.length };
         }
-        conflictIdx++;
-      }
-    }
 
-    const result = resultLines.join('\n');
+        const base = mergeRecord.base as string;
+        const ours = mergeRecord.ours as string;
+        const theirs = mergeRecord.theirs as string;
+        const baseLines = base.split('\n');
+        const ourLines = ours.split('\n');
+        const theirLines = theirs.split('\n');
+        const maxLen = Math.max(baseLines.length, ourLines.length, theirLines.length);
+        const resultLines: string[] = [];
+        let conflictIdx = 0;
 
-    // Clean up active merge
-    await storage.del('merge-active', mergeId);
+        for (let i = 0; i < maxLen; i++) {
+          const baseLine = i < baseLines.length ? baseLines[i] : undefined;
+          const ourLine = i < ourLines.length ? ourLines[i] : undefined;
+          const theirLine = i < theirLines.length ? theirLines[i] : undefined;
 
-    return { variant: 'ok', result };
+          if (ourLine === theirLine) {
+            if (ourLine !== undefined) resultLines.push(ourLine);
+          } else if (ourLine === baseLine) {
+            if (theirLine !== undefined) resultLines.push(theirLine);
+          } else if (theirLine === baseLine) {
+            if (ourLine !== undefined) resultLines.push(ourLine);
+          } else {
+            if (conflictIdx < conflicts.length && conflicts[conflictIdx].resolution !== undefined) {
+              resultLines.push(conflicts[conflictIdx].resolution!);
+            }
+            conflictIdx++;
+          }
+        }
+
+        const result = resultLines.join('\n');
+        return { result };
+      }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const mergeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetMergeCounter(): void {
