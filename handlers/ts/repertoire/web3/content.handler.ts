@@ -1,15 +1,24 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Content Concept Implementation
 //
 // Manage IPFS content storage with CID tracking, pinning,
 // and retrieval. Stores content metadata in concept storage;
 // actual bytes go to IPFS via the configured storage adapter.
+//
+// NOTE: This handler uses perform() for IPFS transport effects
+// rather than direct ipfsClient calls, making the transport
+// dependency explicit and inspectable. The imperative ipfsClient
+// interface is preserved for backward compatibility via
+// setIPFSClient(), but the functional handler uses perform().
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-} from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  mapBindings, perform, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 /** IPFS client interface — injected at concept instantiation */
 interface IPFSClient {
@@ -40,90 +49,116 @@ export function setIPFSClient(client: IPFSClient): void {
   ipfsClient = client;
 }
 
-export const contentHandler: ConceptHandler = {
-  async store(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _contentHandler: FunctionalConceptHandler = {
+  store(input: Record<string, unknown>) {
     const data = input.data as Uint8Array | string;
     const name = input.name as string;
     const contentType = input.contentType as string;
 
-    try {
-      const result = await ipfsClient.add(data);
+    let p = createProgram();
+    // Use perform for IPFS add transport effect
+    p = perform(p, 'ipfs', 'add', { data }, 'ipfsResult');
 
-      await storage.put('items', result.cid, {
-        cid: result.cid,
-        name,
-        contentType,
-        size: result.size,
-        pinned: false,
-        createdAt: new Date().toISOString(),
-      });
+    p = mapBindings(p, (bindings) => {
+      const result = bindings.ipfsResult as { cid: string; size: number };
+      return result;
+    }, 'addResult');
 
-      return {
-        variant: 'ok',
-        cid: result.cid,
-        size: result.size,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message };
-    }
+    p = branch(p,
+      (bindings) => !!(bindings.addResult as Record<string, unknown>)?.cid,
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const result = bindings.addResult as { cid: string; size: number };
+          return result.cid;
+        }, 'cid');
+        b2 = mapBindings(b2, (bindings) => {
+          const result = bindings.addResult as { cid: string; size: number };
+          return result.size;
+        }, 'size');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const cid = bindings.cid as string;
+          const size = bindings.size as number;
+          return { cid, size };
+        });
+      },
+      (b) => complete(b, 'error', { message: 'IPFS add failed' }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async pin(input, storage) {
+  pin(input: Record<string, unknown>) {
     const cid = input.cid as string;
 
-    try {
-      await ipfsClient.pin(cid);
+    let p = createProgram();
+    // Use perform for IPFS pin transport effect
+    p = perform(p, 'ipfs', 'pin', { cid }, 'pinResult');
+    p = get(p, 'items', cid, 'existing');
 
-      const existing = await storage.get('items', cid);
-      if (existing) {
-        await storage.put('items', cid, { ...existing, pinned: true });
-      }
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, pinned: true };
+        }, 'updated');
+        b2 = put(b2, 'items', cid, {});
+        return complete(b2, 'ok', { cid });
+      },
+      (b) => complete(b, 'ok', { cid }),
+    );
 
-      return { variant: 'ok', cid };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', cid, message };
-    }
+    return p as StorageProgram<Result>;
   },
 
-  async unpin(input, storage) {
+  unpin(input: Record<string, unknown>) {
     const cid = input.cid as string;
 
-    try {
-      await ipfsClient.unpin(cid);
+    let p = createProgram();
+    // Use perform for IPFS unpin transport effect
+    p = perform(p, 'ipfs', 'unpin', { cid }, 'unpinResult');
+    p = get(p, 'items', cid, 'existing');
 
-      const existing = await storage.get('items', cid);
-      if (existing) {
-        await storage.put('items', cid, { ...existing, pinned: false });
-      }
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, pinned: false };
+        }, 'updated');
+        b2 = put(b2, 'items', cid, {});
+        return complete(b2, 'ok', { cid });
+      },
+      (b) => complete(b, 'ok', { cid }),
+    );
 
-      return { variant: 'ok', cid };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', cid, message };
-    }
+    return p as StorageProgram<Result>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const cid = input.cid as string;
 
-    const meta = await storage.get('items', cid);
-    if (!meta) {
-      return { variant: 'notFound', cid };
-    }
+    let p = createProgram();
+    p = get(p, 'items', cid, 'meta');
 
-    try {
-      const data = await ipfsClient.get(cid);
-      return {
-        variant: 'ok',
-        data,
-        contentType: meta.contentType as string,
-        size: meta.size as number,
-      };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { variant: 'unavailable', cid, message };
-    }
+    p = branch(p, 'meta',
+      (b) => {
+        // Use perform for IPFS get transport effect
+        let b2 = perform(b, 'ipfs', 'get', { cid }, 'ipfsData');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const meta = bindings.meta as Record<string, unknown>;
+          return {
+            data: bindings.ipfsData,
+            contentType: meta.contentType as string,
+            size: meta.size as number,
+          };
+        });
+      },
+      (b) => complete(b, 'notFound', { cid }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const contentHandler = autoInterpret(_contentHandler);
