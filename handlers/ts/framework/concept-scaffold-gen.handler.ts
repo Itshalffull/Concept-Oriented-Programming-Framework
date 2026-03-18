@@ -216,12 +216,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   preview(input: Record<string, unknown>) {
-    const result = await conceptScaffoldGenHandler.generate!(input, storage);
-    if (result.variant === 'error') return result;
-    const files = result.files as Array<{ path: string; content: string }>;
-    { let p = createProgram(); p = complete(p, 'ok', { files,
-      wouldWrite: files.length,
-      wouldSkip: 0 }); return p; }
+    // Preview delegates to generate — same logic, just returns what would be written
+    const program = _handler.generate(input);
+    return program;
   },
 };
 
