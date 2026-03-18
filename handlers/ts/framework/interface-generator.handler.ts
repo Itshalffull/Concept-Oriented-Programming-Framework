@@ -11,6 +11,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { generateId, timestamp } from '../../../runtime/types.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 
