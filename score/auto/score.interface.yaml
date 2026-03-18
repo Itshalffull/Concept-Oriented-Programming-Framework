@@ -860,3 +860,90 @@ annotations:
           - label: Trace registration flow
             language: bash
             code: score flow User register
+
+# ─── SCORE QUERY + NAVIGATOR + KERNEL ────────────────
+#
+# These concepts were previously hand-coded as MCP devtools.
+# Now they are declared in the interface manifest and generated
+# by Bind like all other concepts.
+
+  ScoreQuery:
+    concept:
+      auto-register: true
+      description: >
+        Run GraphQL queries against the Score index. Resolves
+        field selections to entity handler actions through the kernel.
+    actions:
+      query:
+        mcp:
+          type: tool
+          name: score_query
+          description: >
+            Run a GraphQL query against the Score index.
+            Collections: concepts, syncs, symbols, files, handlers,
+            widgets, themes, deployments, suites, interfaces.
+            Example: { concepts { conceptName purpose actions } }
+
+  ScoreNavigator:
+    concept:
+      auto-register: true
+      description: >
+        Interactive traversal of Score entities with session state.
+        Show, traverse relationships, go back, list entities.
+    actions:
+      show:
+        mcp:
+          type: tool
+          name: score_show
+          description: >
+            Show a Score entity by kind and name with all related items.
+            Kinds: concept, sync, symbol, file, handler, widget, theme,
+            deployment, suite, interface.
+      traverse:
+        mcp:
+          type: tool
+          name: score_traverse
+          description: >
+            Traverse a relationship from the current Score item to a
+            related item. Use after score_show to navigate the graph.
+      back:
+        mcp:
+          type: tool
+          name: score_back
+          description: >
+            Go back to the previous Score item in the traversal history.
+      list:
+        mcp:
+          type: tool
+          name: score_list
+          description: >
+            List all Score entities of a given kind.
+            Kinds: concept, sync, symbol, file, handler, widget, theme,
+            deployment, suite, interface.
+
+  ScoreKernel:
+    concept:
+      auto-register: true
+      description: >
+        Boot and manage the Score kernel lifecycle. The shared runtime
+        that all interfaces connect to.
+    actions:
+      boot:
+        mcp:
+          type: tool
+          name: score_kernel_boot
+          description: >
+            Bootstrap a Score kernel with all layer concepts registered.
+      discover:
+        mcp:
+          type: tool
+          name: score_kernel_discover
+          description: >
+            Walk project paths and register files, triggering the full
+            parse-symbol-entity pipeline.
+      status:
+        mcp:
+          type: tool
+          name: score_api_status
+          description: >
+            Get the current status of the Score index.

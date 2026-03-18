@@ -1,5 +1,73 @@
 # Score Graph Architecture Proposals
 
+## Implementation Status (2026-03-18)
+
+**Decision: Proposal C (Kernel Bridge) — implemented as ScoreKernel concept.**
+
+All five Score layers now have complete handler implementations registered
+through a shared `ScoreKernel` concept. The MCP server boots via
+`ScoreKernel/boot` (with fallback to `seedScoreIndex`). Key changes:
+
+### What was implemented
+
+1. **15 new entity handlers** (functional style, StorageProgram DSL):
+   - Core semantic: ConceptEntity, ActionEntity, VariantEntity, StateField, SyncEntity, DerivedEntity
+   - Surface: WidgetEntity, ThemeEntity, AnatomyPartEntity, WidgetStateEntity, WidgetPropEntity, InteractorEntity
+   - Runtime: RuntimeFlow, RuntimeCoverage, PerformanceProfile
+
+2. **ScoreKernel concept** (`score/auto/score-kernel.concept` + handler):
+   - `boot(projectRoot)` → registers all 40+ Score layer concepts via `bootKernel()`
+   - `discover(kernel, basePaths)` → triggers FileCatalog → parse → entity pipeline
+   - `status(kernel)` → layer health and coverage
+   - `connectRuntime(kernel, endpoint)` → future ChangeStream bridge
+
+3. **MCP server refactor** (`mcp-server.handler.ts`):
+   - Primary path: `ScoreKernel/boot` + kernel dispatch
+   - Fallback: legacy `seedScoreIndex` if kernel boot fails
+   - Tool calls route through kernel for Score concepts
+
+4. **Interface manifest** (`score.interface.yaml`):
+   - Added ScoreQuery, ScoreNavigator, ScoreKernel action mappings
+   - All tools now declaratively defined (no hand-coded devtools)
+
+5. **Kernel boot sync** (`score/auto/syncs/kernel-boot-discover.sync`):
+   - ScoreKernel/boot → ScoreKernel/discover (auto file discovery)
+
+### Architecture
+
+```
+ScoreKernel/boot
+  → bootKernel({ 40+ concepts, score syncs })
+  → bootstrapScore(registry, syncs)
+  → ScoreKernel/discover
+    → FileArtifact/register → syncs → entity registration → ScoreIndex/upsert
+
+Every interface (MCP, CLI, REST, frontend):
+  1. ScoreKernel/boot(projectRoot)
+  2. kernel.invokeConcept(concept, action, args)
+```
+
+### Design principles
+
+- **Concepts stay independent** — no concept imports another. Cross-concept
+  data flows through syncs or is populated by cache fields.
+- **Functional by default** — all 15 new handlers use StorageProgram DSL
+  (free monad). ScoreKernel uses imperative (system-level bootstrap with
+  filesystem access).
+- **ScoreKernel is a concept** — participates in sync/bind system. Not a
+  utility module.
+- **GraphQL resolves via entity handlers** — ScoreQuery dispatches to entity
+  concept actions through the kernel (Option A). Not direct storage reads.
+
+### Remaining work
+
+- Wire ScoreApi stub actions to real entity handler dispatch
+- Replace DefinitionUnit stub with tree-sitter-based implementation
+- Build ChangeStream bridge for live runtime data ingestion
+- Full ScoreQuery GraphQL → kernel dispatch integration
+
+---
+
 ## Problem Statement
 
 Score's purpose is to provide a queryable graph over a Clef application's

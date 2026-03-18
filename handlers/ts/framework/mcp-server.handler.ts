@@ -426,13 +426,34 @@ export async function bootMcpServer(manifestPath: string) {
     toolRegistry.set(tool.name, tool);
   }
 
-  // Start Score seeding in the background so initialize can complete quickly.
+  // Boot the Score kernel — registers all Score layer concepts and wires syncs.
+  // Falls back to legacy seedScoreIndex if kernel boot fails.
   const sharedStorage = createInMemoryStorage();
   const conceptsNeedingScoreSeed = new Set(['ScoreApi', 'ScoreIndex', 'ScoreNavigator', 'ScoreQuery', 'ToolDiscovery']);
-  const scoreSeedPromise = seedScoreIndex(sharedStorage).catch((err) => {
-    console.error('Failed to seed Score index for MCP server:', err);
-    throw err;
-  });
+
+  let scoreKernelRef: Awaited<ReturnType<typeof import('../score/score-kernel.handler.js')['getScoreKernel']>> = null;
+  const scoreSeedPromise = (async () => {
+    try {
+      const { scoreKernelHandler, getScoreKernel } = await import('../score/score-kernel.handler.js');
+      const bootResult = await scoreKernelHandler.boot({ projectRoot: process.cwd() }, sharedStorage);
+      if (bootResult.variant === 'ok' || bootResult.variant === 'alreadyBooted') {
+        scoreKernelRef = getScoreKernel();
+        // Discover project files — triggers parse/symbol/entity pipeline via syncs
+        if (bootResult.variant === 'ok') {
+          const kernelId = bootResult.kernel || bootResult.kernel;
+          await scoreKernelHandler.discover({
+            kernel: kernelId,
+            basePaths: 'specs,syncs,surface,handlers,repertoire,score,bind',
+          }, sharedStorage);
+        }
+        console.error(`[clef-mcp] Score kernel booted: ${bootResult.conceptCount || 0} concepts`);
+      }
+    } catch (kernelErr) {
+      // Kernel boot failed — fall back to legacy seedScoreIndex
+      console.error('[clef-mcp] Score kernel boot failed, falling back to seedScoreIndex:', kernelErr instanceof Error ? kernelErr.message : String(kernelErr));
+      await seedScoreIndex(sharedStorage);
+    }
+  })();
 
   // ─── Populate ToolDiscovery catalog ────────────────────
   // Register all tools in the discovery catalog for lazy loading.
@@ -613,16 +634,25 @@ export async function bootMcpServer(manifestPath: string) {
         await scoreSeedPromise;
       }
 
-      const handler = await resolveHandler(tool.concept);
-      if (!handler) {
-        return {
-          content: [{ type: 'text' as const, text: `No handler for concept: ${tool.concept}` }],
-          isError: true,
-        };
+      // Try kernel dispatch first (if ScoreKernel booted successfully),
+      // fall back to direct handler resolution for non-kernel concepts
+      let result: Record<string, unknown>;
+      if (scoreKernelRef && conceptsNeedingScoreSeed.has(tool.concept)) {
+        // Route through the booted Score kernel
+        result = await scoreKernelRef.invokeConcept(
+          `urn:clef/${tool.concept}`, tool.action, args,
+        ) as Record<string, unknown>;
+      } else {
+        const handler = await resolveHandler(tool.concept);
+        if (!handler) {
+          return {
+            content: [{ type: 'text' as const, text: `No handler for concept: ${tool.concept}` }],
+            isError: true,
+          };
+        }
+        // Use shared storage so ScoreNavigator cursor persists across calls
+        result = await handler[tool.action](args, sharedStorage);
       }
-
-      // Use shared storage so ScoreNavigator cursor persists across calls
-      const result = await handler[tool.action](args, sharedStorage);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };

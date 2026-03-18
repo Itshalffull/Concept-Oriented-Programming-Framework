@@ -1,0 +1,21 @@
+// ScoreKernel boot → discover pipeline
+//
+// When ScoreKernel boots successfully, automatically discover
+// project files to populate the Score index.
+
+sync ScoreKernelBootDiscover [eager]
+  when {
+    ScoreKernel/boot: [
+      projectRoot: ?root
+    ] => [
+      kernel: ?k;
+      conceptCount: ?_;
+      syncCount: ?_
+    ]
+  }
+  then {
+    ScoreKernel/discover: [
+      kernel: ?k;
+      basePaths: "specs,syncs,surface,handlers,repertoire,score,bind"
+    ]
+  }

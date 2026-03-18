@@ -1,0 +1,86 @@
+@version(1)
+concept ScoreKernel [K] {
+
+  purpose {
+    Boot and manage the Score kernel lifecycle — the shared runtime
+    that registers all Score layer concepts and makes them available
+    for interface dispatch. Every interface (MCP, CLI, REST, frontend)
+    boots a ScoreKernel to gain access to project structure, symbols,
+    semantics, analysis, and discovery.
+  }
+
+  state {
+    kernels: set K
+    projectRoot: K -> String
+    status: K -> String
+    conceptCount: K -> Int
+    syncCount: K -> Int
+    fileCount: K -> Int
+    bootedAt: K -> String
+    layers: K -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action boot(projectRoot: String) {
+      -> ok(kernel: K, conceptCount: Int, syncCount: Int) {
+        Bootstrap a kernel instance with all Score layer concepts
+        (parse, symbol, semantic, analysis, discovery) registered
+        and all Score syncs compiled. The kernel is ready for
+        action dispatch.
+      }
+      -> alreadyBooted(kernel: K) {
+        A kernel for this project root is already running.
+      }
+    }
+
+    action discover(kernel: K, basePaths: String) {
+      -> ok(fileCount: Int) {
+        Walk the given base paths and register every file via
+        FileCatalog, triggering the parse-symbol-entity pipeline
+        through syncs. Returns the total number of files discovered.
+      }
+      -> notBooted() {
+        No kernel has been booted yet. Call boot first.
+      }
+    }
+
+    action status(kernel: K) {
+      -> ok(status: String, layers: String, coverage: String) {
+        Return the current kernel state: which layers are active,
+        how many entities are indexed per layer, and what
+        percentage of the project is covered.
+      }
+      -> notfound() {
+        No kernel with this identifier exists.
+      }
+    }
+
+    action connectRuntime(kernel: K, endpoint: String) {
+      -> ok(connectionId: String) {
+        Connect a runtime event source (ChangeStream endpoint)
+        for live ingestion of ActionLog events, coverage data,
+        and performance profiles.
+      }
+      -> notBooted() {
+        No kernel has been booted yet. Call boot first.
+      }
+      -> connectionFailed(reason: String) {
+        The endpoint was unreachable or rejected the connection.
+      }
+    }
+  }
+
+  invariant {
+    after boot(projectRoot: "/tmp/test-project") -> ok(kernel: k, conceptCount: _, syncCount: _)
+    then status(kernel: k) -> ok(status: _, layers: _, coverage: _)
+  }
+
+  invariant {
+    after boot(projectRoot: "/tmp/test-project") -> ok(kernel: k, conceptCount: _, syncCount: _)
+    then boot(projectRoot: "/tmp/test-project") -> alreadyBooted(kernel: k)
+  }
+}
