@@ -153,6 +153,5 @@ widget textarea {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "maxLength => length(?value) <= ?maxLength; rows > 0;";
-    "example \"INPUT from content\": { after transition(from: \"content\", event: \"INPUT\") -> ok then state = \"filled\" } example \"CLEAR from content\": { after transition(from: \"content\", event: \"CLEAR\") -> ok then state = \"empty\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

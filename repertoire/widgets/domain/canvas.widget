@@ -326,7 +326,6 @@ widget canvas {
     "Keyboard nudge must respect snap-to-grid setting";
     "Minimap viewport indicator must reflect the visible portion of the canvas";
     "Property panel must display only when at least one element is selected";
-    "example \"SWITCH_HAND from select\": { after transition(from: \"select\", event: \"SWITCH_HAND\") -> ok then state = \"hand\" } example \"SWITCH_DRAW from select\": { after transition(from: \"select\", event: \"SWITCH_DRAW\") -> ok then state = \"draw\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -88,7 +88,6 @@ widget notation-badge {
     example "HOVER from active": { after transition(from: "active", event: "HOVER") -> ok then state = "hovered" }
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
-    "example \"CLICK from active\": { after transition(from: \"active\", event: \"CLICK\") -> ok then state = \"selecting\" } example \"HOVER from active\": { after transition(from: \"active\", event: \"HOVER\") -> ok then state = \"hovered\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

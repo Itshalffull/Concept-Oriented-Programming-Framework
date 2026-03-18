@@ -175,6 +175,5 @@ widget canvas-panel {
     "Resize handle must be on the edge opposite the dock side";
     "Only one tab may be active at a time";
     "Keyboard Escape must collapse an expanded panel, not close it entirely";
-    "example \"COLLAPSE from visibility\": { after transition(from: \"visibility\", event: \"COLLAPSE\") -> ok then state = \"collapsed\" } example \"MINIMIZE from visibility\": { after transition(from: \"visibility\", event: \"MINIMIZE\") -> ok then state = \"minimized\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

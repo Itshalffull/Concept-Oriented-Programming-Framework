@@ -139,7 +139,6 @@ widget tabs {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "exactly one trigger has aria-selected \"true\" at all times; active content matches selected trigger aria-controls; when ?activationMode == \"automatic\" then focus implies select;";
-    "example \"SELECT from tab\": { after transition(from: \"tab\", event: \"SELECT\") -> ok then state = \"active\" } example \"DESELECT from tab\": { after transition(from: \"tab\", event: \"DESELECT\") -> ok then state = \"inactive\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

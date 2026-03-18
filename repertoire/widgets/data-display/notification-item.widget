@@ -164,7 +164,6 @@ widget notification-item {
     "title and timestamp must always be present";
     "Actions must stop event propagation to prevent triggering root activation";
     "Read state must persist across re-renders unless explicitly toggled";
-    "example \"MARK_READ from unread\": { after transition(from: \"unread\", event: \"MARK_READ\") -> ok then state = \"read\" } example \"HOVER from unread\": { after transition(from: \"unread\", event: \"HOVER\") -> ok then state = \"hoveredUnread\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -212,7 +212,6 @@ widget image-gallery {
     "Prev button must be disabled on the first image when loop is false";
     "Next button must be disabled on the last image when loop is false";
     "Lazy-loaded thumbnails must load when they enter the viewport";
-    "example \"OPEN_LIGHTBOX from grid\": { after transition(from: \"grid\", event: \"OPEN_LIGHTBOX\") -> ok then state = \"lightbox\" } example \"CLOSE from lightbox\": { after transition(from: \"lightbox\", event: \"CLOSE\") -> ok then state = \"grid\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

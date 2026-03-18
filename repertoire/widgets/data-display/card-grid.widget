@@ -107,7 +107,6 @@ widget card-grid {
     "Grid must maintain minimum card width even at narrow viewports";
     "Loading state must set aria-busy on root";
     "Each item must have role listitem for assistive technology";
-    "example \"LOAD from static\": { after transition(from: \"static\", event: \"LOAD\") -> ok then state = \"loading\" } example \"DATA_EMPTY from static\": { after transition(from: \"static\", event: \"DATA_EMPTY\") -> ok then state = \"empty\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

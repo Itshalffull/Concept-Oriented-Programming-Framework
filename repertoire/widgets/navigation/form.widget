@@ -155,7 +155,6 @@ widget form {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "when state.submission == \"submitting\" then submitButton is disabled; when state.submission == \"error\" then errorSummary is visible and first error is focused; Enter in last field triggers SUBMIT; RESET clears all field values and validation state;";
-    "example \"SUBMIT from submission\": { after transition(from: \"submission\", event: \"SUBMIT\") -> ok then state = \"validating\" } example \"RESET from submission\": { after transition(from: \"submission\", event: \"RESET\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -147,7 +147,6 @@ widget chip {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "after send(SELECT) from idle -> state is selected; then aria-selected is \"true\"; and data-state is \"selected\"; after send(DESELECT) from selected -> state is idle; then aria-selected is \"false\"; and data-state is \"idle\"; after send(DELETE) -> state is removed; then REMOVE event is dispatched;";
-    "example \"SELECT from idle\": { after transition(from: \"idle\", event: \"SELECT\") -> ok then state = \"selected\" } example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

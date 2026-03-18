@@ -101,6 +101,5 @@ widget progress-bar {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "min < max; ?value => ?value >= min; ?value => ?value <= max;";
-    "example \"SET_VALUE from mode\": { after transition(from: \"mode\", event: \"SET_VALUE\") -> ok then state = \"determinate\" } example \"CLEAR_VALUE from mode\": { after transition(from: \"mode\", event: \"CLEAR_VALUE\") -> ok then state = \"indeterminate\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

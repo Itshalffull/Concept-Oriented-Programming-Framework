@@ -289,6 +289,5 @@ widget graph-analysis-panel {
     "Returning from report or compare view must preserve the last result";
     "Algorithm config form must update when switching algorithms";
     "Auto-overlay must apply default overlay kinds when results arrive if enabled";
-    "example \"SELECT_CATEGORY from workflow\": { after transition(from: \"workflow\", event: \"SELECT_CATEGORY\") -> ok then state = \"configuring\" } example \"LOAD_PREVIOUS_RESULT from workflow\": { after transition(from: \"workflow\", event: \"LOAD_PREVIOUS_RESULT\") -> ok then state = \"showingResults\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

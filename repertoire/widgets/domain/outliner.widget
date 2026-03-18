@@ -258,7 +258,6 @@ widget outliner {
     "Breadcrumb must reflect the full path from root to the current zoom level";
     "Indent must not exceed parent depth + 1 (no orphan nesting)";
     "Tab/Shift+Tab for indent/outdent must not move focus out of the tree";
-    "example \"COLLAPSE from item\": { after transition(from: \"item\", event: \"COLLAPSE\") -> ok then state = \"collapsed\" } example \"EXPAND from item\": { after transition(from: \"item\", event: \"EXPAND\") -> ok then state = \"expanded\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

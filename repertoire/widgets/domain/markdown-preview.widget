@@ -94,7 +94,6 @@ widget markdown-preview {
     "Code blocks must receive syntax highlighting classes when syntaxHighlight is true";
     "Images must include alt text from the markdown source";
     "Tables must render with proper thead, tbody, and th/td structure";
-    "example \"SOURCE_CHANGE from static\": { after transition(from: \"static\", event: \"SOURCE_CHANGE\") -> ok then state = \"rendering\" } example \"RENDER_COMPLETE from rendering\": { after transition(from: \"rendering\", event: \"RENDER_COMPLETE\") -> ok then state = \"static\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

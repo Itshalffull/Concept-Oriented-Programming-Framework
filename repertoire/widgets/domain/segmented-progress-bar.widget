@@ -129,7 +129,6 @@ widget segmented-progress-bar {
     "Animations must respect prefers-reduced-motion";
     "Legend must match segment colors to status labels";
     "Empty segments must not render (zero-width)";
-    "example \"HOVER_SEGMENT from idle\": { after transition(from: \"idle\", event: \"HOVER_SEGMENT\") -> ok then state = \"segmentHovered\" } example \"ANIMATE_IN from idle\": { after transition(from: \"idle\", event: \"ANIMATE_IN\") -> ok then state = \"animating\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

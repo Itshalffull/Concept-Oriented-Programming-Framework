@@ -208,7 +208,6 @@ widget canvas-connector {
     "Step-style paths must route with orthogonal segments only";
     "Label must be positioned at the visual midpoint of the rendered path";
     "Deleting a connected node must also delete this connector";
-    "example \"SELECT from idle\": { after transition(from: \"idle\", event: \"SELECT\") -> ok then state = \"selected\" } example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

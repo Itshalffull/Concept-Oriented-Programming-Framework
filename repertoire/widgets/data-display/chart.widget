@@ -168,7 +168,6 @@ widget chart {
     "aria-busy must be true during loading state";
     "Keyboard navigation must cycle through all data segments";
     "Legend visibility must be controllable via showLegend prop";
-    "example \"RENDER_COMPLETE from loading\": { after transition(from: \"loading\", event: \"RENDER_COMPLETE\") -> ok then state = \"rendered\" } example \"HOVER_SEGMENT from rendered\": { after transition(from: \"rendered\", event: \"HOVER_SEGMENT\") -> ok then state = \"highlighted\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

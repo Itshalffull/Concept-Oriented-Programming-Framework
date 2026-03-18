@@ -275,7 +275,6 @@ widget automation-builder {
     "Branching must create two or more parallel step sequences";
     "Connectors must visually link adjacent steps in the correct order";
     "aria-busy must be true during testing state on root and active step";
-    "example \"SELECT_STEP from idle\": { after transition(from: \"idle\", event: \"SELECT_STEP\") -> ok then state = \"stepSelected\" } example \"ADD_STEP from idle\": { after transition(from: \"idle\", event: \"ADD_STEP\") -> ok then state = \"addingStep\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -137,7 +137,6 @@ widget stat-card {
     "label and value must always be present and non-empty";
     "trend region must only render when trend prop is provided";
     "aria-live must be polite on value to announce changes without interrupting";
-    "example \"TREND_UP from static\": { after transition(from: \"static\", event: \"TREND_UP\") -> ok then state = \"up\" } example \"TREND_DOWN from static\": { after transition(from: \"static\", event: \"TREND_DOWN\") -> ok then state = \"down\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

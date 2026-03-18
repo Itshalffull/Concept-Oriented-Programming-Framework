@@ -154,7 +154,6 @@ widget step-indicator {
     "Clickable mode must allow navigating to completed steps only, not upcoming ones";
     "Step number must display a check icon for completed steps";
     "Orientation must affect the layout direction of steps and connectors";
-    "example \"ACTIVATE from step\": { after transition(from: \"step\", event: \"ACTIVATE\") -> ok then state = \"current\" } example \"COMPLETE from step\": { after transition(from: \"step\", event: \"COMPLETE\") -> ok then state = \"completed\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

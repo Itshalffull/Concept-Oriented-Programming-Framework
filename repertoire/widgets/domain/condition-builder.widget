@@ -208,7 +208,6 @@ widget condition-builder {
     "At least one condition row must always be present";
     "Row count must not exceed maxRows";
     "Logic toggle must apply uniformly to all row junctions when allowGroups is false";
-    "example \"CHANGE_FIELD from idle\": { after transition(from: \"idle\", event: \"CHANGE_FIELD\") -> ok then state = \"fieldChanged\" } example \"OPERATOR_RESET from fieldChanged\": { after transition(from: \"fieldChanged\", event: \"OPERATOR_RESET\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

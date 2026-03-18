@@ -121,7 +121,6 @@ widget gauge {
     "Threshold colours must change at the defined warning and critical boundaries";
     "aria-valuenow must always reflect the current value prop";
     "value >= min; value <= max; min < max;";
-    "example \"THRESHOLD_WARNING from static\": { after transition(from: \"static\", event: \"THRESHOLD_WARNING\") -> ok then state = \"warning\" } example \"THRESHOLD_CRITICAL from static\": { after transition(from: \"static\", event: \"THRESHOLD_CRITICAL\") -> ok then state = \"critical\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

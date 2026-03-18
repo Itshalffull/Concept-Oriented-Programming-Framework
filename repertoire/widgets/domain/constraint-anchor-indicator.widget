@@ -98,7 +98,6 @@ widget constraint-anchor-indicator {
     example "SELECT from idle": { after transition(from: "idle", event: "SELECT") -> ok then state = "selected" }
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
-    "example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } example \"SELECT from idle\": { after transition(from: \"idle\", event: \"SELECT\") -> ok then state = \"selected\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

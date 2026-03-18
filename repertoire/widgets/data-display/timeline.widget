@@ -232,7 +232,6 @@ widget timeline {
     "Roving focus must traverse bars in row-then-column order";
     "Zoom level must not cause bars to overlap their row boundaries";
     "Scale changes must preserve the currently selected or focused bar";
-    "example \"SCROLL from idle\": { after transition(from: \"idle\", event: \"SCROLL\") -> ok then state = \"scrolling\" } example \"RESIZE_BAR from idle\": { after transition(from: \"idle\", event: \"RESIZE_BAR\") -> ok then state = \"resizing\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

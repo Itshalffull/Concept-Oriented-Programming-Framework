@@ -99,6 +99,5 @@ widget canvas-minimap {
     "Item dots must proportionally represent item positions on the canvas";
     "Dragging camera-rect must immediately pan the main viewport";
     "Click on minimap background must center the viewport at that position";
-    "example \"DRAG_START from idle\": { after transition(from: \"idle\", event: \"DRAG_START\") -> ok then state = \"dragging\" } example \"DRAG_END from dragging\": { after transition(from: \"dragging\", event: \"DRAG_END\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

@@ -101,7 +101,6 @@ widget toolbar {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "root is a single tab stop; internal navigation uses arrow keys; exactly one item within root has tabindex \"0\" at all times; separator is not focusable;";
-    "example \"FOCUS from focus\": { after transition(from: \"focus\", event: \"FOCUS\") -> ok then state = \"focused\" } example \"BLUR from focus\": { after transition(from: \"focus\", event: \"BLUR\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

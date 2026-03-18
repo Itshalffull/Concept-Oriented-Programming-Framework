@@ -76,7 +76,6 @@ widget presence {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "after send(SHOW) -> state is mounting; then root is in layout; and data-state is \"entering\"; after send(ANIMATION_END) from mounting -> state is mounted; then data-state is \"open\"; and data-present is \"true\"; after send(HIDE) -> state is unmounting; then data-state is \"exiting\"; after send(ANIMATION_END) from unmounting -> state is unmounted; then data-state is \"closed\"; and root is removed from layout;";
-    "example \"SHOW from unmounted\": { after transition(from: \"unmounted\", event: \"SHOW\") -> ok then state = \"mounting\" } example \"ANIMATION_END from mounting\": { after transition(from: \"mounting\", event: \"ANIMATION_END\") -> ok then state = \"mounted\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

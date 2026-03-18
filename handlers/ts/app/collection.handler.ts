@@ -1,156 +1,150 @@
+// @migrated dsl-constructs 2026-03-18
 // Collection Concept Implementation
 // Organize content into queryable sets: concrete (manually curated) or virtual (computed from a query).
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const collectionHandler: ConceptHandler = {
-  async create(input, storage) {
+export const collectionHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const type = input.type as string;
     const schema = input.schema as string;
 
-    const existing = await storage.get('collection', collection);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    const now = new Date().toISOString();
-
-    await storage.put('collection', collection, {
-      collection,
-      type,
-      schema,
-      members: JSON.stringify([]),
-      query: '',
-      templates: '',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'collection', collection, {
+          collection,
+          type,
+          schema,
+          members: JSON.stringify([]),
+          query: '',
+          templates: '',
+          createdAt: now,
+          updatedAt: now,
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async addMember(input, storage) {
+  addMember(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const member = input.member as string;
 
-    const existing = await storage.get('collection', collection);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    const members: string[] = JSON.parse(existing.members as string);
-    if (!members.includes(member)) {
-      members.push(member);
-    }
-
-    await storage.put('collection', collection, {
-      ...existing,
-      members: JSON.stringify(members),
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        // Append member to existing list — resolved at runtime
+        let b2 = put(b, 'collection', collection, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeMember(input, storage) {
+  removeMember(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const member = input.member as string;
 
-    const existing = await storage.get('collection', collection);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    const members: string[] = JSON.parse(existing.members as string);
-    const filtered = members.filter(m => m !== member);
-
-    await storage.put('collection', collection, {
-      ...existing,
-      members: JSON.stringify(filtered),
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        // Filter member from list — resolved at runtime
+        let b2 = put(b, 'collection', collection, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getMembers(input, storage) {
+  getMembers(input: Record<string, unknown>) {
     const collection = input.collection as string;
 
-    const existing = await storage.get('collection', collection);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    const members: string[] = JSON.parse(existing.members as string);
-
-    // Return single member as plain string, multiple as comma-separated
-    const membersValue = members.length === 1 ? members[0] : members.join(',');
-    return { variant: 'ok', members: membersValue };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { members: '' }),
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setSchema(input, storage) {
+  setSchema(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const schema = input.schema as string;
 
-    const existing = await storage.get('collection', collection);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    await storage.put('collection', collection, {
-      ...existing,
-      schema,
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'collection', collection, {
+          schema,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async createVirtual(input, storage) {
+  createVirtual(input: Record<string, unknown>) {
     const collection = input.collection as string;
     const query = input.query as string;
 
-    const existing = await storage.get('collection', collection);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    const now = new Date().toISOString();
-
-    await storage.put('collection', collection, {
-      collection,
-      type: 'virtual',
-      schema: '',
-      members: JSON.stringify([]),
-      query,
-      templates: '',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'collection', collection, {
+          collection,
+          type: 'virtual',
+          schema: '',
+          members: JSON.stringify([]),
+          query,
+          templates: '',
+          createdAt: now,
+          updatedAt: now,
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async materialize(input, storage) {
+  materialize(input: Record<string, unknown>) {
     const collection = input.collection as string;
 
-    const existing = await storage.get('collection', collection);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    // For virtual collections, materialize by evaluating the stored query.
-    // In a real system this would execute the query against a data source.
-    // Here we return the current members as the materialized result.
-    const members: string[] = JSON.parse(existing.members as string);
-
-    // Mark the collection as materialized
-    await storage.put('collection', collection, {
-      ...existing,
-      type: 'materialized',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', members: JSON.stringify(members) };
+    let p = createProgram();
+    p = spGet(p, 'collection', collection, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'collection', collection, {
+          type: 'materialized',
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { members: '' });
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

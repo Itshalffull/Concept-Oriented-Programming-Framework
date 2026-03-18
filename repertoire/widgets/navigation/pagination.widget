@@ -144,7 +144,6 @@ widget pagination {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "?page >= 1 and ?page <= ?totalPages; ?siblingCount >= 0; prevButton disabled when ?page == 1; nextButton disabled when ?page == ?totalPages; exactly one item has aria-current \"page\";";
-    "example \"NAVIGATE_NEXT from position\": { after transition(from: \"position\", event: \"NAVIGATE_NEXT\") -> ok then state = \"middle\" } example \"REACH_FIRST from position\": { after transition(from: \"position\", event: \"REACH_FIRST\") -> ok then state = \"atFirst\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

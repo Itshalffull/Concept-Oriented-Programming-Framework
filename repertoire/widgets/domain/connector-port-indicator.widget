@@ -100,7 +100,6 @@ widget connector-port-indicator {
     example "CONNECT_START from idle": { after transition(from: "idle", event: "CONNECT_START") -> ok then state = "connecting" }
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
-    "example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } example \"CONNECT_START from idle\": { after transition(from: \"idle\", event: \"CONNECT_START\") -> ok then state = \"connecting\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -130,6 +130,5 @@ widget canvas-properties-panel {
     "Only one properties section visible at a time";
     "Properties must update when selection changes";
     "Editing a property must immediately update the canvas element";
-    "example \"SELECT_ITEM from empty\": { after transition(from: \"empty\", event: \"SELECT_ITEM\") -> ok then state = \"showingItem\" } example \"SELECT_CONNECTOR from empty\": { after transition(from: \"empty\", event: \"SELECT_CONNECTOR\") -> ok then state = \"showingConnector\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

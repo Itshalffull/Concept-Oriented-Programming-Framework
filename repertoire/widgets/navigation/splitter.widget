@@ -126,7 +126,6 @@ widget splitter {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "?defaultSize >= ?min and ?defaultSize <= ?max; ?min >= 0 and ?max <= 100; ?min < ?max; panelBefore size + panelAfter size == 100%; aria-valuenow always reflects current split percentage;";
-    "example \"DRAG_START from interaction\": { after transition(from: \"interaction\", event: \"DRAG_START\") -> ok then state = \"dragging\" } example \"FOCUS from interaction\": { after transition(from: \"interaction\", event: \"FOCUS\") -> ok then state = \"focused\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

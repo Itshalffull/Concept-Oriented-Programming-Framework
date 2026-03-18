@@ -117,7 +117,6 @@ widget view-toggle {
     "Roving tabindex must place tabindex 0 on the active item only";
     "Selection must loop from last to first and first to last on arrow keys";
     "Icon must be aria-hidden since the item itself carries the aria-label";
-    "example \"SELECT from item\": { after transition(from: \"item\", event: \"SELECT\") -> ok then state = \"active\" } example \"DESELECT from item\": { after transition(from: \"item\", event: \"DESELECT\") -> ok then state = \"inactive\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -251,7 +251,6 @@ widget workflow-editor {
     "Deleting a node must also delete all edges connected to it";
     "Execution result badges must persist until dismissed or a new execution begins";
     "aria-busy must be true on root during executing state";
-    "example \"SELECT_NODE from idle\": { after transition(from: \"idle\", event: \"SELECT_NODE\") -> ok then state = \"nodeSelected\" } example \"ADD_NODE from idle\": { after transition(from: \"idle\", event: \"ADD_NODE\") -> ok then state = \"placing\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -129,7 +129,6 @@ widget toast {
     "Screen readers must announce the toast via aria-live region";
     "Removed state must clean up all timers and DOM references";
     "Enter and exit animations must complete before state transitions";
-    "example \"ANIMATION_END from entering\": { after transition(from: \"entering\", event: \"ANIMATION_END\") -> ok then state = \"visible\" } example \"POINTER_ENTER from visible\": { after transition(from: \"visible\", event: \"POINTER_ENTER\") -> ok then state = \"paused\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -166,6 +166,5 @@ widget number-input {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "?min and ?max => ?min <= ?max; ?value and ?min => ?value >= ?min; ?value and ?max => ?value <= ?max; step > 0; ?precision => ?precision >= 0;";
-    "example \"FOCUS from focus\": { after transition(from: \"focus\", event: \"FOCUS\") -> ok then state = \"focused\" } example \"BLUR from focus\": { after transition(from: \"focus\", event: \"BLUR\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

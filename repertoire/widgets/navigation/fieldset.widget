@@ -125,7 +125,6 @@ widget fieldset {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "when ?disabled == true then all child form controls are disabled; when ?collapsible == false then content is always visible; legend always serves as the accessible label for root;";
-    "example \"COLLAPSE from disclosure\": { after transition(from: \"disclosure\", event: \"COLLAPSE\") -> ok then state = \"collapsed\" } example \"EXPAND from disclosure\": { after transition(from: \"disclosure\", event: \"EXPAND\") -> ok then state = \"expanded\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

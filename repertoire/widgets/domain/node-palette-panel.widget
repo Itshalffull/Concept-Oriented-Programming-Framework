@@ -98,6 +98,5 @@ widget node-palette-panel {
     "Palette must update when notation changes";
     "Drag preview must match the node type's shape and fill color";
     "Search must filter types by label substring match";
-    "example \"SEARCH from idle\": { after transition(from: \"idle\", event: \"SEARCH\") -> ok then state = \"filtering\" } example \"DRAG_START from idle\": { after transition(from: \"idle\", event: \"DRAG_START\") -> ok then state = \"dragging\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

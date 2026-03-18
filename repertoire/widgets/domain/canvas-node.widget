@@ -212,7 +212,6 @@ widget canvas-node {
     "Frame nodes must clip children to their bounding box";
     "Label editing must be disabled for locked nodes";
     "aria-grabbed must be true only during the dragging state";
-    "example \"SELECT from idle\": { after transition(from: \"idle\", event: \"SELECT\") -> ok then state = \"selected\" } example \"DRAG_START from idle\": { after transition(from: \"idle\", event: \"DRAG_START\") -> ok then state = \"dragging\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

@@ -89,7 +89,6 @@ widget toast-manager {
     "Oldest toasts must be dismissed first when max is reached";
     "Toasts must stack in insertion order matching the placement axis";
     "Region must remain in the DOM even when empty for aria-live to work";
-    "example \"TOAST_ADDED from empty\": { after transition(from: \"empty\", event: \"TOAST_ADDED\") -> ok then state = \"hasToasts\" } example \"ALL_REMOVED from hasToasts\": { after transition(from: \"hasToasts\", event: \"ALL_REMOVED\") -> ok then state = \"empty\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

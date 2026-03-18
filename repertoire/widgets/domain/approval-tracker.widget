@@ -161,7 +161,6 @@ widget approval-tracker {
     "Signer list must show all signers regardless of approval status";
     "Progress bar must fill proportionally to current/threshold ratio";
     "Sequential variant must show signers in required order";
-    "example \"THRESHOLD_MET from pending\": { after transition(from: \"pending\", event: \"THRESHOLD_MET\") -> ok then state = \"ready\" } example \"EXECUTE from ready\": { after transition(from: \"ready\", event: \"EXECUTE\") -> ok then state = \"executing\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

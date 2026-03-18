@@ -202,7 +202,6 @@ widget minimap {
     "Zoom out must be disabled when at minZoom";
     "Zoom fit must calculate scale to show all content within the minimap bounds";
     "Minimap must re-render when content dimensions change";
-    "example \"PAN_START from idle\": { after transition(from: \"idle\", event: \"PAN_START\") -> ok then state = \"panning\" } example \"PAN_END from panning\": { after transition(from: \"panning\", event: \"PAN_END\") -> ok then state = \"idle\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

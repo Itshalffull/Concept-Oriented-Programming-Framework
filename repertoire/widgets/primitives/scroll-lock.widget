@@ -60,7 +60,6 @@ widget scroll-lock {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "after send(LOCK) -> state is locked; then body scroll is disabled; and scroll position is saved; after send(UNLOCK) -> state is unlocked; then body scroll is restored; and scroll position is restored;";
-    "example \"LOCK from unlocked\": { after transition(from: \"unlocked\", event: \"LOCK\") -> ok then state = \"locked\" } example \"UNLOCK from locked\": { after transition(from: \"locked\", event: \"UNLOCK\") -> ok then state = \"unlocked\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

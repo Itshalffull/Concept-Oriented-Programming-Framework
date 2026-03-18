@@ -207,7 +207,6 @@ widget field-mapper {
     "Required target fields must be visually distinguished from optional fields";
     "Inserting a token must place it at the current cursor position";
     "Read-only mode must disable all inputs and hide insert buttons";
-    "example \"FOCUS_INPUT from idle\": { after transition(from: \"idle\", event: \"FOCUS_INPUT\") -> ok then state = \"editing\" } example \"OPEN_PICKER from idle\": { after transition(from: \"idle\", event: \"OPEN_PICKER\") -> ok then state = \"picking\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

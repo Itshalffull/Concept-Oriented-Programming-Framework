@@ -175,7 +175,6 @@ widget code-block {
     "Code content must be selectable for manual copying";
     "Line numbers must not be included when copying code to clipboard";
     "Wrap mode must break long lines instead of scrolling horizontally";
-    "example \"COPY from idle\": { after transition(from: \"idle\", event: \"COPY\") -> ok then state = \"copied\" } example \"HOVER from idle\": { after transition(from: \"idle\", event: \"HOVER\") -> ok then state = \"hovered\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

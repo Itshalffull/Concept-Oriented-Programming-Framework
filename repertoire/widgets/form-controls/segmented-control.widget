@@ -118,6 +118,5 @@ widget segmented-control {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "length(?options) >= 2; exists(?options, o -> o.value == ?value);";
-    "example \"SELECT from item\": { after transition(from: \"item\", event: \"SELECT\") -> ok then state = \"selected\" } example \"DESELECT from item\": { after transition(from: \"item\", event: \"DESELECT\") -> ok then state = \"unselected\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 }

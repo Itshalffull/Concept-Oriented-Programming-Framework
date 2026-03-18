@@ -186,7 +186,6 @@ widget text-input {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "after send(CLEAR) -> state is empty; then value is \"\"; and data-empty is \"true\"; after send(INVALIDATE) -> state is invalid; then aria-invalid is \"true\"; and error data-visible is \"true\"; after send(FOCUS) -> state is focused; then data-focused is \"true\";";
-    "example \"INPUT from empty\": { after transition(from: \"empty\", event: \"INPUT\") -> ok then state = \"filled\" } example \"CLEAR from filled\": { after transition(from: \"filled\", event: \"CLEAR\") -> ok then state = \"empty\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }

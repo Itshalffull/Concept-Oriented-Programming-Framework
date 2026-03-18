@@ -83,7 +83,6 @@ widget focus-trap {
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
     "after send(ACTIVATE) -> state is active; then focus is within root; and sentinelStart tabindex is \"0\"; and sentinelEnd tabindex is \"0\"; after send(DEACTIVATE) -> state is inactive; then focus is returned if returnFocus; and sentinelStart tabindex is \"-1\"; and sentinelEnd tabindex is \"-1\";";
-    "example \"ACTIVATE from inactive\": { after transition(from: \"inactive\", event: \"ACTIVATE\") -> ok then state = \"active\" } example \"DEACTIVATE from active\": { after transition(from: \"active\", event: \"DEACTIVATE\") -> ok then state = \"inactive\" } always \"FSM deterministic\": { forall s in states: s.transitions_count <= 1 } never \"unreachable state\": { exists s in states: s.inbound_count = 0 }";
   }
 
 }
