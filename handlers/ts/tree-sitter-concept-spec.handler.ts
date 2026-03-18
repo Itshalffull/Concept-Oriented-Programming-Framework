@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TreeSitterConceptSpec Handler
 //
@@ -6,7 +7,14 @@
 // a custom Tree-sitter grammar is available.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, complete, completeFrom,
+  branch, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -30,8 +38,6 @@ interface ParseNode {
 
 /**
  * Parse concept-spec source into a simplified AST.
- * Detects: concept declarations, state blocks, action declarations,
- * variant arrows, purpose blocks, capabilities blocks, annotations.
  */
 function parseConceptSpec(source: string): ParseNode {
   const root: ParseNode = {
@@ -55,7 +61,6 @@ function parseConceptSpec(source: string): ParseNode {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Annotations: @version(N), @gate, @category(...), etc.
     const annoMatch = line.match(/^\s*(@\w+(?:\(.*?\))?)/);
     if (annoMatch) {
       root.children.push({
@@ -70,7 +75,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Concept declaration
     const conceptMatch = line.match(/^\s*concept\s+(\w+)\s*(?:\[([^\]]*)\])?\s*\{/);
     if (conceptMatch) {
       currentConcept = {
@@ -107,7 +111,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Section headers: purpose, state, actions, capabilities, invariant
     const sectionMatch = line.match(/^\s+(purpose|state|actions|capabilities|invariant)\s*\{/);
     if (sectionMatch && currentConcept) {
       currentSection = {
@@ -124,7 +127,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Action declaration
     const actionMatch = line.match(/^\s+action\s+(\w+)\s*\(([^)]*)\)\s*\{/);
     if (actionMatch && currentSection?.type === 'actions_section') {
       currentAction = {
@@ -146,7 +148,6 @@ function parseConceptSpec(source: string): ParseNode {
           },
         ],
       };
-      // Parse params if present
       if (actionMatch[2].trim()) {
         const params = actionMatch[2].split(',').map((p) => p.trim());
         for (const param of params) {
@@ -168,7 +169,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Variant arrow: -> variantName(...)
     const variantMatch = line.match(/^\s+->\s+(\w+)\s*\(([^)]*)\)\s*\{?/);
     if (variantMatch && currentAction) {
       const variant: ParseNode = {
@@ -208,7 +208,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // State field: fieldName: set T  or  fieldName: T -> T
     const stateMatch = line.match(/^\s+(\w+)\s*:\s*(.+)\s*$/);
     if (stateMatch && currentSection?.type === 'state_section') {
       const fieldName = stateMatch[1];
@@ -245,7 +244,6 @@ function parseConceptSpec(source: string): ParseNode {
       continue;
     }
 
-    // Capability requirement: requires <cap>
     const capMatch = line.match(/^\s+requires\s+(.+)\s*$/);
     if (capMatch && currentSection?.type === 'capabilities_section') {
       currentSection.children.push({
@@ -288,7 +286,6 @@ function highlightConceptSpec(source: string): Array<{
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Annotations
     const annoMatch = line.match(/@\w+(?:\([^)]*\))?/g);
     if (annoMatch) {
       for (const m of annoMatch) {
@@ -297,13 +294,11 @@ function highlightConceptSpec(source: string): Array<{
       }
     }
 
-    // Variant arrow
     if (line.match(/^\s+->/)) {
       const col = line.indexOf('->');
       highlights.push({ startLine: i, startCol: col, endLine: i, endCol: col + 2, tokenType: 'operator' });
     }
 
-    // Keywords
     for (const kw of keywords) {
       const kwRegex = new RegExp(`\\b${kw}\\b`, 'g');
       let m: RegExpExecArray | null;
@@ -312,7 +307,6 @@ function highlightConceptSpec(source: string): Array<{
       }
     }
 
-    // Type names
     for (const tn of typeKeywords) {
       const tnRegex = new RegExp(`\\b${tn}\\b`, 'g');
       let m: RegExpExecArray | null;
@@ -325,88 +319,11 @@ function highlightConceptSpec(source: string): Array<{
   return highlights;
 }
 
-export const treeSitterConceptSpecHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    const id = nextId();
-
-    try {
-      // Check for existing registration
-      const existing = await storage.find(RELATION, { language: 'concept-spec' });
-      if (existing.length > 0) {
-        return { variant: 'ok', instance: existing[0].id as string };
-      }
-
-      await storage.put(RELATION, id, {
-        id,
-        grammarRef: 'tree-sitter-concept-spec',
-        wasmPath: 'tree-sitter-concept-spec.wasm',
-        language: 'concept-spec',
-        extensions: JSON.stringify(['.concept']),
-        grammarVersion: '1.0.0',
-      });
-
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
-  },
-
-  async parse(input: Record<string, unknown>, storage: ConceptStorage) {
-    const source = input.source as string;
-
-    try {
-      const tree = parseConceptSpec(source);
-      return { variant: 'ok', tree: JSON.stringify(tree) };
-    } catch (e) {
-      return { variant: 'parseError', message: String(e) };
-    }
-  },
-
-  async highlight(input: Record<string, unknown>, storage: ConceptStorage) {
-    const source = input.source as string;
-
-    try {
-      const ranges = highlightConceptSpec(source);
-      return { variant: 'ok', highlights: JSON.stringify(ranges) };
-    } catch (e) {
-      return { variant: 'highlightError', message: String(e) };
-    }
-  },
-
-  async query(input: Record<string, unknown>, storage: ConceptStorage) {
-    const pattern = input.pattern as string;
-    const source = input.source as string;
-
-    try {
-      const tree = parseConceptSpec(source);
-      const matches = queryTree(tree, pattern);
-      return { variant: 'ok', matches: JSON.stringify(matches) };
-    } catch (e) {
-      return { variant: 'queryError', message: String(e) };
-    }
-  },
-
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    const instanceId = input.instance as string | undefined;
-    const record = instanceId ? await storage.get(RELATION, instanceId) : null;
-
-    return {
-      variant: 'ok',
-      language: 'concept-spec',
-      extensions: JSON.stringify(['.concept']),
-      grammarVersion: '1.0.0',
-      registered: record !== null,
-    };
-  },
-};
-
 /**
  * Execute a simplified tree-sitter-style query against a parse tree.
- * Supports matching by node type: (type_name) matches all nodes of that type.
  */
 function queryTree(node: ParseNode, pattern: string): ParseNode[] {
   const results: ParseNode[] = [];
-  // Extract node type from S-expression pattern, e.g. "(concept_declaration)" or "(action_name)"
   const typeMatch = pattern.match(/\(\s*(\w+)/);
   if (!typeMatch) return results;
   const targetType = typeMatch[1];
@@ -423,6 +340,103 @@ function queryTree(node: ParseNode, pattern: string): ParseNode[] {
   walk(node);
   return results;
 }
+
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
+    const id = nextId();
+
+    let p = createProgram();
+    p = find(p, RELATION, { language: 'concept-spec' }, 'existing');
+
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'ok', (b) => ({
+          instance: (b.existing as Record<string, unknown>[])[0].id as string,
+        }));
+      })(),
+      (() => {
+        let e = createProgram();
+        e = put(e, RELATION, id, {
+          id,
+          grammarRef: 'tree-sitter-concept-spec',
+          wasmPath: 'tree-sitter-concept-spec.wasm',
+          language: 'concept-spec',
+          extensions: JSON.stringify(['.concept']),
+          grammarVersion: '1.0.0',
+        });
+        return complete(e, 'ok', { instance: id }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
+  },
+
+  parse(input: Record<string, unknown>) {
+    const source = input.source as string;
+
+    try {
+      const tree = parseConceptSpec(source);
+      const p = createProgram();
+      return complete(p, 'ok', { tree: JSON.stringify(tree) }) as StorageProgram<Result>;
+    } catch (e) {
+      const p = createProgram();
+      return complete(p, 'parseError', { message: String(e) }) as StorageProgram<Result>;
+    }
+  },
+
+  highlight(input: Record<string, unknown>) {
+    const source = input.source as string;
+
+    try {
+      const ranges = highlightConceptSpec(source);
+      const p = createProgram();
+      return complete(p, 'ok', { highlights: JSON.stringify(ranges) }) as StorageProgram<Result>;
+    } catch (e) {
+      const p = createProgram();
+      return complete(p, 'highlightError', { message: String(e) }) as StorageProgram<Result>;
+    }
+  },
+
+  query(input: Record<string, unknown>) {
+    const pattern = input.pattern as string;
+    const source = input.source as string;
+
+    try {
+      const tree = parseConceptSpec(source);
+      const matches = queryTree(tree, pattern);
+      const p = createProgram();
+      return complete(p, 'ok', { matches: JSON.stringify(matches) }) as StorageProgram<Result>;
+    } catch (e) {
+      const p = createProgram();
+      return complete(p, 'queryError', { message: String(e) }) as StorageProgram<Result>;
+    }
+  },
+
+  register(input: Record<string, unknown>) {
+    const instanceId = input.instance as string | undefined;
+
+    if (instanceId) {
+      let p = createProgram();
+      p = get(p, RELATION, instanceId, 'record');
+      return completeFrom(p, 'ok', (b) => ({
+        language: 'concept-spec',
+        extensions: JSON.stringify(['.concept']),
+        grammarVersion: '1.0.0',
+        registered: b.record !== null,
+      }));
+    }
+
+    const p = createProgram();
+    return complete(p, 'ok', {
+      language: 'concept-spec',
+      extensions: JSON.stringify(['.concept']),
+      grammarVersion: '1.0.0',
+      registered: false,
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const treeSitterConceptSpecHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTreeSitterConceptSpecCounter(): void {
