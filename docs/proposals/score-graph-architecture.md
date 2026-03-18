@@ -30,6 +30,175 @@ tests, deployments, and their relationships. Currently:
    RuntimeTelemetry, StaticScore, RuntimeScore are declared but have no
    handlers and aren't used by the MCP server.
 
+## Score Layer Inventory: What's Real vs. Stub vs. Spec-Only
+
+Score declares **6 suites** with **5 conceptual layers**. Here's what actually
+works end-to-end in the MCP server today vs. what's declared but disconnected.
+
+### Layer 1: Parse (score-parse suite)
+
+Declares: `TreeSitterConceptSpec`, `TreeSitterSyncSpec`, `TreeSitterWidgetSpec`,
+`TreeSitterThemeSpec` — grammar providers extending the `code-parse` suite's
+`SyntaxTree`, `LanguageGrammar`, `FileArtifact`, `DefinitionUnit`, `ContentDigest`.
+
+**Status: Bypassed.** The MCP server's `seedScoreIndex()` uses regex extractors
+(`extractConceptName`, `extractActions`, `extractSyncs`, etc.) instead of the
+tree-sitter parse pipeline. The tree-sitter WASM grammars are copied at install
+time but never used for Score indexing. ScoreApi's `matchPattern` action returns
+an empty stub (`matches: []`). `getFileContent` returns `[File: path]` — no
+actual content or AST.
+
+**What's missing:** Real tree-sitter parsing → SyntaxTree → DefinitionUnit →
+ContentDigest pipeline. This would give Score structured ASTs instead of
+regex-extracted field names.
+
+### Layer 2: Symbol (score-symbol suite)
+
+Declares: `ConceptSpecSymbolExtractor`, `SyncSpecSymbolExtractor`, etc. —
+extractors feeding the `code-symbol` suite's `Symbol`, `SymbolOccurrence`,
+`ScopeGraph`, `SymbolRelationship`.
+
+**Status: Partially real.** `seedScoreIndex()` calls `extractSymbols()` which
+does regex-based symbol extraction (function names, class names, exports) and
+writes to the `symbols` collection. `SymbolIndex` handler exists but only has
+an `initialize` action (stub). ScoreApi's `findSymbol` and `getDefinitions`
+work against the flat symbol list. But:
+
+- `getReferences` — returns the definition + other occurrences of same name,
+  but no actual cross-file reference tracking (no SymbolOccurrence concept)
+- `getScope` — finds nearest symbol by line number, no real scope graph
+- `getRelationships` — **pure stub**, returns `relationships: []`
+
+**What's missing:** Real `ScopeGraph` construction, `SymbolOccurrence` tracking
+(definition vs reference vs import), `SymbolRelationship` edges (implements,
+extends, overrides, generates, tests). These are the backbone for go-to-definition,
+find-references, and rename refactoring.
+
+### Layer 3: Semantic (semantic suite — the largest)
+
+Declares 16 entity concepts in 3 groups:
+
+**Clef entities** (6): `ConceptEntity`, `ActionEntity`, `VariantEntity`,
+`StateField`, `SyncEntity`, `DerivedEntity`
+
+**Surface entities** (6): `WidgetEntity`, `AnatomyPartEntity`,
+`WidgetStateEntity`, `WidgetPropEntity`, `ThemeEntity`, `InteractorEntity`
+
+**Runtime entities** (4): `RuntimeFlow`, `RuntimeCoverage`,
+`PerformanceProfile`, `ErrorCorrelation`
+
+Plus 8 required syncs, 9 recommended syncs, and 22 integration syncs.
+
+**Status: Mixed.**
+
+| Entity | Handler exists? | Seeded by MCP? | Used by ScoreApi? |
+|--------|----------------|----------------|-------------------|
+| ConceptEntity | No handler file | seedScoreIndex writes to `concepts` collection | ScoreApi reads `concepts` directly |
+| ActionEntity | No | No (actions are string arrays on concept entries) | getAction returns stub with empty params/variants |
+| VariantEntity | No | No | Not exposed |
+| StateField | No | No (state fields are string arrays on concept entries) | getConcept returns stub with `type: 'unknown'` |
+| SyncEntity | No | seedScoreIndex writes to `syncs` collection | ScoreApi reads `syncs` directly |
+| DerivedEntity | No | No | Not exposed |
+| WidgetEntity | No | No (seedScoreIndex doesn't parse .widget files) | Not exposed |
+| AnatomyPartEntity | No | No | Not exposed |
+| WidgetStateEntity | No | No | Not exposed |
+| WidgetPropEntity | No | No | Not exposed |
+| ThemeEntity | No | No (seedScoreIndex doesn't parse .theme files) | Not exposed |
+| InteractorEntity | No | No | Not exposed |
+| RuntimeFlow | No | No (no runtime connection) | Not exposed |
+| RuntimeCoverage | No | No | Not exposed |
+| PerformanceProfile | No | No | Not exposed |
+| ErrorCorrelation | No | No | Not exposed |
+
+**However**, these entity handlers DO exist in `handlers/ts/score/`:
+- `HandlerEntity` — register, get, getByFile, findByConcept (real implementation)
+- `TestEntity` — register, get, findByConcept (real implementation)
+- `DeploymentEntity` — register, get (real implementation)
+- `SuiteManifestEntity` — register, get (real implementation)
+- `InterfaceEntity` — register, get (real implementation)
+- `InfrastructureEntity` — register, get (real implementation)
+- `EnvironmentEntity` — register, get (real implementation)
+- `DeploymentHealth` — record, get (real implementation)
+- `GenerationProvenance` — record, get (real implementation)
+- `WidgetImplementationEntity` — register, get (real implementation)
+- `ThemeImplementationEntity` — register, get (real implementation)
+
+**Key gap:** The 6 core Clef entities (Concept, Action, Variant, StateField,
+Sync, Derived) and 6 Surface entities don't have handler files. The MCP server
+bypasses them entirely — `seedScoreIndex()` writes flat denormalized records
+and `ScoreApi` reads those directly. The entity handlers that DO exist
+(HandlerEntity, TestEntity, etc.) are never called by the MCP server either —
+they're orphaned.
+
+### Layer 4: Analysis (score-analysis suite)
+
+Declares: `ConceptDependenceProvider`, `SyncDependenceProvider`, etc. —
+extending `code-analysis`'s `DependenceGraph`, `DataFlowPath`, `ProgramSlice`,
+`AnalysisRule`. Plus graph analysis providers for centrality and community
+detection.
+
+**Status: Pure stubs.** ScoreApi actions:
+- `getDependencies` — returns `{ directDeps: [], transitiveDeps: [] }`
+- `getDependents` — returns `{ directDeps: [], transitiveDeps: [] }`
+- `getImpact` — returns `{ directImpact: [], transitiveImpact: [] }`
+- `getDataFlow` — returns `{ paths: [] }`
+
+No dependence graph is built. No data flow tracking. No program slicing.
+The `getFlow` action does work — it walks syncs BFS-style to trace action
+chains — but it's ad-hoc string matching, not a real graph traversal.
+
+### Layer 5: Discovery (score-discovery suite)
+
+Declares: Re-exports `code-discovery`'s `SemanticEmbedding`.
+
+**Status: Stub.** ScoreApi's `search` does substring matching over concept
+names, sync names, and symbol names. No embeddings, no vector search, no
+semantic similarity. The `explain` action works reasonably well — it looks
+up concepts, syncs, and symbols and generates natural language summaries.
+
+### Layer 6: Auto (score-auto suite)
+
+Declares: `ScoreApi`, `ScoreIndex` + 4 syncs for auto-registration and
+incremental indexing.
+
+**Status: Partially real.** ScoreApi and ScoreIndex handlers exist and work.
+But the syncs (auto-register on boot, index on parse, score on generate,
+score on deploy) are spec-only — there's no sync engine running in the MCP
+server to fire them. Instead, `seedScoreIndex()` does a one-shot walk.
+
+### Summary: The Gap Map
+
+```
+                    REAL                          STUB                         SPEC-ONLY
+                    ────                          ────                         ─────────
+Parse:              regex extractors              matchPattern                 TreeSitter grammars
+                                                  getFileContent               SyntaxTree/DefinitionUnit
+
+Symbol:             flat symbol list              getReferences (no xref)      ScopeGraph
+                    findSymbol                    getScope (nearest line)      SymbolOccurrence
+                    getDefinitions                getRelationships (empty)     SymbolRelationship
+
+Semantic:           concepts/syncs/handlers       getAction (no params/vars)   ConceptEntity handler
+                    in flat collections           getConcept (type: unknown)   ActionEntity handler
+                    HandlerEntity handler         Surface entities             VariantEntity handler
+                    TestEntity handler            Runtime entities             StateField handler
+                    DeploymentEntity handler                                   SyncEntity handler
+                    + 8 more entity handlers                                   DerivedEntity handler
+                    (all orphaned from MCP)                                    + 6 Surface entity handlers
+
+Analysis:           getFlow (ad-hoc BFS)          getDependencies (empty)      DependenceGraph
+                                                  getDependents (empty)        DataFlowPath
+                                                  getImpact (empty)            ProgramSlice
+                                                  getDataFlow (empty)          AnalysisRule
+
+Discovery:          search (substring match)                                   SemanticEmbedding
+                    explain (works well)                                       Vector search
+
+Auto:               ScoreApi handler                                           Auto-register sync
+                    ScoreIndex handler                                         Index-on-parse sync
+                    seedScoreIndex (one-shot)                                  Score-on-generate sync
+```
+
 ## Current Architecture
 
 ```
@@ -336,3 +505,121 @@ This is orthogonal to the graph architecture — it's a transport/deployment
 concern. The Score entity concepts and derived concepts are already designed
 for it (RuntimeTelemetry composes RuntimeFlow, ErrorCorrelation, etc.). The
 architecture just needs the plumbing.
+
+---
+
+## Appendix: Per-Layer Connection Strategy
+
+Each Score layer has different data sources and different runtime needs.
+The right connection strategy depends on the layer.
+
+### Parse Layer → File System + Tree-Sitter
+
+**Data source:** Files on disk.
+**Connection:** File watcher (chokidar/fs.watch) fires on change →
+`SyntaxTree/parse` → `DefinitionUnit/extract` → ScoreIndex upsert.
+
+**Runtime aspect:** The parse layer is purely static — no live app needed.
+A file watcher in the MCP server process is sufficient. Tree-sitter WASM
+grammars already ship with the project.
+
+**Current gap:** `seedScoreIndex()` does one-shot regex extraction.
+Replace with: file watcher → tree-sitter parse → entity registration.
+
+### Symbol Layer → Parse Layer + Cross-File Resolution
+
+**Data source:** Parsed ASTs from the parse layer.
+**Connection:** Syncs from `SyntaxTree/parse` completion →
+`SymbolExtractor/extract` → `Symbol/register`, `SymbolOccurrence/record`,
+`ScopeGraph/build`.
+
+**Runtime aspect:** Static — derives from parsed files. Cross-file
+resolution (imports, re-exports) requires the scope graph to walk
+import edges.
+
+**Current gap:** Regex extracts function/class names. No scope graph,
+no cross-file resolution, no reference tracking.
+
+### Semantic Layer → Parse + Symbol + File System (static entities) / App Runtime (runtime entities)
+
+**Static entities (Concept, Action, Variant, StateField, Sync, Derived,
+Widget, Theme):**
+- Data source: Parsed spec files.
+- Connection: Syncs from `SpecParser/parse` → entity registration.
+- Purely static — no live app needed.
+
+**Implementation entities (Handler, WidgetImpl, ThemeImpl, Test):**
+- Data source: Parsed handler/generated files.
+- Connection: File watcher + AST parsing.
+- Partially static, partially build-time (generation provenance).
+
+**Runtime entities (RuntimeFlow, RuntimeCoverage, PerformanceProfile,
+ErrorCorrelation):**
+- Data source: **Live running app** — ActionLog events, SyncEngine
+  firings, Telemetry flushes.
+- Connection options:
+  1. **ChangeStream subscription** — app publishes ActionLog events,
+     Score kernel subscribes and ingests.
+  2. **Shared storage** — app writes ActionLog to shared DB, Score reads.
+  3. **Transport bridge** — Score queries app kernel on demand.
+- Option 1 (ChangeStream) is best: decoupled, resumable, supports
+  offline/replay. The `ChangeStream` concept already exists in the
+  repertoire.
+
+### Analysis Layer → Semantic + Symbol Layers
+
+**Data source:** Computed from semantic entities and symbol graph.
+**Connection:** Syncs from entity registration → DependenceGraph/addEdge,
+DataFlowPath/trace. Analysis is materialized incrementally.
+
+**Runtime aspect:** Mostly static analysis over the codebase structure.
+Runtime data flow tracing (actual paths taken) comes from RuntimeFlow
+correlation in the semantic layer.
+
+### Discovery Layer → All Other Layers
+
+**Data source:** Embeddings computed from DefinitionUnits.
+**Connection:** Sync from `DefinitionUnit/extract` completion →
+`SemanticEmbedding/compute`. Cached by content digest.
+
+**Runtime aspect:** Static. Embeddings are recomputed only when code changes.
+
+### Runtime Bridge Architecture (for Layer 4)
+
+```
+    App Kernel (running app process)
+    ├── ActionLog ──┐
+    ├── SyncEngine ──┤──→ ChangeStream/publish
+    ├── Telemetry ──┘
+    │
+    ├── ChangeStream (ordered, resumable event stream)
+    │   └── Events: action-dispatched, sync-fired, action-completed,
+    │               error-occurred, telemetry-flushed
+    │
+    └── Transport: WebSocket / SSE / shared DB
+
+    Score Kernel (MCP server process)
+    ├── ChangeStream/subscribe (resumes from last acknowledged offset)
+    │   └── Ingestion syncs:
+    │       ActionLog event → RuntimeFlow/correlate
+    │       SyncEngine event → RuntimeCoverage/record
+    │       Error event → ErrorCorrelation/record
+    │       Telemetry event → PerformanceProfile/aggregate
+    │
+    ├── DeploymentHealth/record (periodic probe or push from app)
+    │
+    └── All runtime entities now queryable through ScoreApi
+        "show me failing syncs" → ErrorCorrelation + SyncEntity
+        "what's slow?" → PerformanceProfile + ActionEntity
+        "what code paths are untested?" → RuntimeCoverage + VariantEntity
+```
+
+**Key insight:** The `ChangeStream` concept (already in repertoire) is the
+natural transport. It provides ordered, resumable, exactly-once delivery
+with consumer offset tracking. The app kernel publishes; the Score kernel
+subscribes. If the MCP server restarts, it resumes from its last acknowledged
+offset — no data loss, no duplicate processing.
+
+This means the runtime bridge is not a custom integration — it's a standard
+Clef sync pattern: `ChangeStream/receive → RuntimeFlow/correlate`. The only
+new thing is the transport adapter connecting the two kernels.
