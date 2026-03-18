@@ -181,15 +181,11 @@ Actions can reference types not defined in the concept. The parser accepts any i
 
 ## Invariant Section
 
-```
-invariant {
-  after set(user: x, password: "secret") -> ok(user: x)
-  then check(user: x, password: "secret") -> ok(valid: true)
-  and  check(user: x, password: "wrong")  -> ok(valid: false)
-}
-```
+Invariants express **operational principles** — defining stories that prove the concept fulfills its purpose. They are the primary mechanism for machine-verifiable behavioral contracts and conformance test generation.
 
-### Invariant Structure
+**Design goal**: Invariants should comprehensively cover all qualities you want to prove about the concept — not just the happy path, but boundary conditions, error handling, state transitions, constraint enforcement, and composition behavior.
+
+### Basic Structure
 
 ```
 invariant {
@@ -199,10 +195,76 @@ invariant {
 }
 ```
 
-- **after**: Setup steps that establish state (one or more)
-- **then**: First assertion step
-- **and**: Additional assertion steps (zero or more)
-- Multiple `invariant` blocks are allowed (one per scenario)
+- **after**: Setup steps that establish state (one or more, joined by `and`)
+- **then**: First verification step
+- **and**: Additional verification steps (zero or more)
+- Multiple `invariant` blocks are allowed — use one per scenario
+
+### Action Invocation Steps
+
+Each step invokes an action and asserts its return variant:
+```
+action_name(param: value, ...) -> variant_name(field: value, ...)
+```
+
+### Property Assertion Steps
+
+Then-chains can also contain **property assertions** that test state directly:
+```
+invariant {
+  after configure(endpoint: "api", threshold: 5) -> ok(breaker: b)
+  and  recordFailure(endpoint: "api") -> ok(breaker: b, status: s)
+  then b.failureCount = 1
+  and  s != "open"
+}
+```
+
+Assertions support dot-access into bound variables and comparison against literals or other variables.
+
+### Supported Assertion Operators
+
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `=` | Equality | `d.status = "complete"` |
+| `!=` | Inequality | `s != "open"` |
+| `>` | Greater than | `i.generation > 0` |
+| `<` | Less than | `c.failureCount < 5` |
+| `>=` | Greater or equal | `r.tokens >= 0` |
+| `<=` | Less or equal | `t.attempts <= 3` |
+| `in` | Membership | `p.protocol in ["http", "grpc"]` |
+
+### Assertion Expression Types
+
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| `var.field` | Dot-access on bound variable | `b.status`, `r.count` |
+| `var` | Bare variable reference | `s`, `count` |
+| `"text"` | String literal | `"complete"` |
+| `123` | Numeric literal | `0`, `42` |
+| `true`/`false` | Boolean literal | `true` |
+| `none` | Null/absent value | `none` |
+| `[a, b, c]` | List literal | `["http", "grpc"]` |
+
+### `when` Guard Clauses
+
+Invariants can include a `when` clause that specifies preconditions:
+```
+invariant {
+  when f1.module_id = f2.module_id
+  after fetch(module: f1) -> ok(download: d1)
+  and   fetch(module: f2) -> cached()
+  then d1.status = "complete"
+}
+```
+
+The `when` clause can appear before `after` or after the `then` chain. Conditions are joined by `and`:
+```
+invariant {
+  when r.runtime = "onnx" and r.device = "cpu"
+  after register(name: "model", runtime: "onnx", device: "cpu") -> ok(instance: r)
+  then resolve(name: "model") -> ok(instance: r, runtime: "onnx", config: _)
+}
+```
 
 ### Argument Values
 
@@ -212,6 +274,8 @@ invariant {
 | `param: "literal"` | String literal | `password: "secret"` |
 | `param: 123` | Numeric literal | `count: 0` |
 | `param: true/false` | Boolean literal | `valid: true` |
+| `param: none` | Null/absent value | `error: none` |
+| `param: _` | Wildcard (any value) | `headers: _` |
 | `param: { f: "v", g: 42 }` | Record literal | `manifest: { name: "Ping" }` |
 | `param: ["a", "b"]` | List literal | `items: ["x", "y"]` |
 | `param: []` | Empty list | `manifests: []` |
@@ -228,6 +292,24 @@ param: {
 Multi-line record/list literals are supported — newlines inside `{ }` and `[ ]` are ignored by the parser.
 
 Free variables (like `x`, `y`) are bound on first use and reused across steps. They receive deterministic test values during conformance test generation (e.g., `"u-test-invariant-001"`).
+
+### Comprehensive Invariant Coverage
+
+Every concept should have invariants covering **all qualities worth proving**:
+
+| Quality | What to test | Example pattern |
+|---------|-------------|-----------------|
+| Core purpose | The defining operational principle | Create → Query returns same data |
+| State correctness | Fields stored accurately | Create → Get, check each field |
+| Constraint enforcement | Uniqueness, bounds, rules | Register → Register duplicate → error |
+| Error handling | Invalid inputs rejected properly | Bad input → error variant with message |
+| State transitions | FSM correctness | Configure (closed) → failures → tripped (open) |
+| Idempotency | Repeated calls are safe | Register → Register same → exists (not error) |
+| Boundary conditions | Edge cases, empty inputs, limits | Zero tokens → limited, max capacity → ok |
+| Reversibility | Undo operations work | Follow → Unfollow → isFollowing = false |
+| Composition readiness | Works when composed via syncs | Register → resolve returns correct metadata |
+
+Aim for 2-5 invariants per concept. A concept with only 1 invariant testing the happy path has weak guarantees.
 
 ## Complete Example
 
