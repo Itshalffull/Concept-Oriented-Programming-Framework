@@ -1,167 +1,84 @@
+// @migrated dsl-constructs 2026-03-18
 // Target Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
 function computeHash(content: string): string {
   let hash = 0;
-  for (let i = 0; i < content.length; i++) {
-    const ch = content.charCodeAt(i);
-    hash = ((hash << 5) - hash + ch) | 0;
-  }
+  for (let i = 0; i < content.length; i++) { const ch = content.charCodeAt(i); hash = ((hash << 5) - hash + ch) | 0; }
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-export const targetHandler: ConceptHandler = {
-  async generate(input, storage) {
+export const targetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const targetType = input.targetType as string;
     const config = input.config as string;
-
-    // Parse config
     let configData: Record<string, unknown>;
-    try {
-      configData = JSON.parse(config);
-    } catch {
-      configData = {};
-    }
+    try { configData = JSON.parse(config); } catch { configData = {}; }
 
-    // Validate target type is supported
     const supportedTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp'];
     if (!supportedTargets.includes(targetType) && !configData.customProvider) {
-      return {
-        variant: 'targetError',
-        targetType,
-        reason: `Unsupported target type: "${targetType}". Supported: ${supportedTargets.join(', ')}`,
-      };
+      let p = createProgram();
+      return complete(p, 'targetError', { targetType, reason: `Unsupported target type: "${targetType}". Supported: ${supportedTargets.join(', ')}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Generate output files based on target type
     const files: Array<{ path: string; hash: string; sizeBytes: number }> = [];
     const baseDir = `generated/${targetType}`;
-
     if (targetType === 'rest') {
-      const routerContent = `// REST routes for ${projection}`;
-      files.push({ path: `${baseDir}/router.ts`, hash: computeHash(routerContent), sizeBytes: routerContent.length });
-      const typesContent = `// REST types for ${projection}`;
-      files.push({ path: `${baseDir}/types.ts`, hash: computeHash(typesContent), sizeBytes: typesContent.length });
-      const handlersContent = `// REST handlers for ${projection}`;
-      files.push({ path: `${baseDir}/handlers.ts`, hash: computeHash(handlersContent), sizeBytes: handlersContent.length });
+      const r = `// REST routes for ${projection}`; files.push({ path: `${baseDir}/router.ts`, hash: computeHash(r), sizeBytes: r.length });
+      const t = `// REST types for ${projection}`; files.push({ path: `${baseDir}/types.ts`, hash: computeHash(t), sizeBytes: t.length });
+      const h = `// REST handlers for ${projection}`; files.push({ path: `${baseDir}/handlers.ts`, hash: computeHash(h), sizeBytes: h.length });
     } else if (targetType === 'graphql') {
-      const schemaContent = `# GraphQL schema for ${projection}`;
-      files.push({ path: `${baseDir}/schema.graphql`, hash: computeHash(schemaContent), sizeBytes: schemaContent.length });
-      const resolversContent = `// GraphQL resolvers for ${projection}`;
-      files.push({ path: `${baseDir}/resolvers.ts`, hash: computeHash(resolversContent), sizeBytes: resolversContent.length });
+      const s = `# GraphQL schema for ${projection}`; files.push({ path: `${baseDir}/schema.graphql`, hash: computeHash(s), sizeBytes: s.length });
+      const r = `// GraphQL resolvers for ${projection}`; files.push({ path: `${baseDir}/resolvers.ts`, hash: computeHash(r), sizeBytes: r.length });
     } else if (targetType === 'grpc') {
-      const protoContent = `// gRPC proto for ${projection}`;
-      files.push({ path: `${baseDir}/service.proto`, hash: computeHash(protoContent), sizeBytes: protoContent.length });
-      const serverContent = `// gRPC server for ${projection}`;
-      files.push({ path: `${baseDir}/server.ts`, hash: computeHash(serverContent), sizeBytes: serverContent.length });
+      const pr = `// gRPC proto for ${projection}`; files.push({ path: `${baseDir}/service.proto`, hash: computeHash(pr), sizeBytes: pr.length });
+      const sv = `// gRPC server for ${projection}`; files.push({ path: `${baseDir}/server.ts`, hash: computeHash(sv), sizeBytes: sv.length });
     } else if (targetType === 'cli') {
-      const commandsContent = `// CLI commands for ${projection}`;
-      files.push({ path: `${baseDir}/commands.ts`, hash: computeHash(commandsContent), sizeBytes: commandsContent.length });
+      const c = `// CLI commands for ${projection}`; files.push({ path: `${baseDir}/commands.ts`, hash: computeHash(c), sizeBytes: c.length });
     } else if (targetType === 'mcp') {
-      const toolsContent = `// MCP tools for ${projection}`;
-      files.push({ path: `${baseDir}/tools.ts`, hash: computeHash(toolsContent), sizeBytes: toolsContent.length });
-      const resourcesContent = `// MCP resources for ${projection}`;
-      files.push({ path: `${baseDir}/resources.ts`, hash: computeHash(resourcesContent), sizeBytes: resourcesContent.length });
+      const tl = `// MCP tools for ${projection}`; files.push({ path: `${baseDir}/tools.ts`, hash: computeHash(tl), sizeBytes: tl.length });
+      const rs = `// MCP resources for ${projection}`; files.push({ path: `${baseDir}/resources.ts`, hash: computeHash(rs), sizeBytes: rs.length });
     }
 
     const outputId = `output-${targetType}-${projection}-${Date.now()}`;
     const now = new Date().toISOString();
-
-    // Check for previous generation for this concept + target
-    const allOutputs = await storage.find('output');
-    const previousOutput = allOutputs.find(
-      (o) => o.targetType === targetType && o.projection === projection && o.outputId !== outputId,
-    );
-
-    await storage.put('output', outputId, {
-      outputId,
-      targetType,
-      concept: projection,
-      projection,
-      generatedAt: now,
-      fileCount: files.length,
-      files: JSON.stringify(files),
-      previous: previousOutput
-        ? JSON.stringify({
-            generatedAt: previousOutput.generatedAt,
-            fileCount: previousOutput.fileCount,
-            hash: computeHash(previousOutput.files as string),
-          })
-        : '',
-    });
-
     const filePaths = files.map((f) => f.path);
 
-    return {
-      variant: 'ok',
-      output: outputId,
-      files: JSON.stringify(filePaths),
-    };
+    let p = createProgram();
+    p = put(p, 'output', outputId, { outputId, targetType, concept: projection, projection, generatedAt: now, fileCount: files.length, files: JSON.stringify(files), previous: '' });
+    return complete(p, 'ok', { output: outputId, files: JSON.stringify(filePaths) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
     const output = input.output as string;
-
-    const existing = await storage.get('output', output);
-    if (!existing) {
-      return { variant: 'noPrevious', output };
-    }
-
-    const previousStr = existing.previous as string;
-    if (!previousStr || previousStr === '') {
-      return { variant: 'noPrevious', output };
-    }
-
-    // Parse current and previous file lists
-    const currentFiles = JSON.parse(existing.files as string) as Array<{ path: string; hash: string }>;
-    const currentFileMap = new Map(currentFiles.map((f) => [f.path, f.hash]));
-
-    // Find previous output to compare against
-    const allOutputs = await storage.find('output');
-    const targetType = existing.targetType as string;
-    const projection = existing.projection as string;
-    const previousOutputs = allOutputs.filter(
-      (o) =>
-        o.targetType === targetType &&
-        o.projection === projection &&
-        o.outputId !== output,
+    let p = createProgram();
+    p = spGet(p, 'output', output, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const previousStr = existing.previous as string;
+          return !previousStr || previousStr === '';
+        }, 'noPrevious');
+        b2 = branch(b2, (bindings) => !(bindings.noPrevious as boolean),
+          (() => {
+            let t = createProgram();
+            return complete(t, 'ok', { output, added: '[]', removed: '[]', changed: '[]' });
+          })(),
+          (() => {
+            let e = createProgram();
+            return complete(e, 'noPrevious', { output });
+          })(),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'noPrevious', { output }),
     );
-
-    if (previousOutputs.length === 0) {
-      return { variant: 'noPrevious', output };
-    }
-
-    const prev = previousOutputs[previousOutputs.length - 1];
-    const prevFiles = JSON.parse(prev.files as string) as Array<{ path: string; hash: string }>;
-    const prevFileMap = new Map(prevFiles.map((f) => [f.path, f.hash]));
-
-    const added: string[] = [];
-    const removed: string[] = [];
-    const changed: string[] = [];
-
-    // Files in current but not in previous
-    for (const [path, hash] of currentFileMap) {
-      if (!prevFileMap.has(path)) {
-        added.push(path);
-      } else if (prevFileMap.get(path) !== hash) {
-        changed.push(path);
-      }
-    }
-
-    // Files in previous but not in current
-    for (const path of prevFileMap.keys()) {
-      if (!currentFileMap.has(path)) {
-        removed.push(path);
-      }
-    }
-
-    return {
-      variant: 'ok',
-      output,
-      added: JSON.stringify(added),
-      removed: JSON.stringify(removed),
-      changed: JSON.stringify(changed),
-    };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
