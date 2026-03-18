@@ -1,95 +1,28 @@
-// ============================================================
-// WatchAdapter Handler
-//
-// Transforms framework-neutral props into watchOS bindings:
-// reduced interaction set for small watch displays,
-// tap gestures, Digital Crown input.
-// ============================================================
+// @migrated dsl-constructs 2026-03-18
+// WatchAdapter Handler — Transforms framework-neutral props into watchOS bindings.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 
-import type { ConceptHandler } from '@clef/runtime';
+const WATCH_EVENT_MAP: Record<string, string> = { onclick: 'onTapGesture', onlongpress: 'onLongPressGesture', onchange: 'onChange', onappear: 'onAppear', ondisappear: 'onDisappear', onscroll: 'digitalCrownRotation' };
+const UNSUPPORTED_WATCH_EVENTS = new Set(['ondoubleclick','ondrag','ondrop','onhover','onmouseenter','onmouseleave','onkeydown','onkeyup','onresize','oncontextmenu']);
 
-// watchOS supports a reduced event set due to small screen
-const WATCH_EVENT_MAP: Record<string, string> = {
-  onclick: 'onTapGesture',
-  onlongpress: 'onLongPressGesture',
-  onchange: 'onChange',
-  onappear: 'onAppear',
-  ondisappear: 'onDisappear',
-  onscroll: 'digitalCrownRotation',
-};
-
-// Events not supported on watch platform
-const UNSUPPORTED_WATCH_EVENTS = new Set([
-  'ondoubleclick', 'ondrag', 'ondrop', 'onhover',
-  'onmouseenter', 'onmouseleave', 'onkeydown', 'onkeyup',
-  'onresize', 'oncontextmenu',
-]);
-
-export const watchAdapterHandler: ConceptHandler = {
-  async normalize(input, storage) {
-    const adapter = input.adapter as string;
-    const props = input.props as string;
-
-    if (!props || props.trim() === '') {
-      return { variant: 'error', message: 'Props cannot be empty' };
-    }
-
+export const watchAdapterHandler: FunctionalConceptHandler = {
+  normalize(input: Record<string, unknown>) {
+    const adapter = input.adapter as string; const props = input.props as string;
+    if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(props);
-    } catch {
-      return { variant: 'error', message: 'Props must be valid JSON' };
-    }
-
+    try { parsed = JSON.parse(props); } catch { let p = createProgram(); return complete(p, 'error', { message: 'Props must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     const normalized: Record<string, unknown> = {};
-
     for (const [key, value] of Object.entries(parsed)) {
-      // ARIA and data-* pass through as accessibility modifiers
-      if (key.startsWith('aria-')) {
-        const a11yProp = key.replace('aria-', 'accessibility');
-        normalized[a11yProp] = value;
-        continue;
-      }
-
-      if (key.startsWith('data-')) {
-        normalized[key] = value;
-        continue;
-      }
-
-      // class -> watch style class reference
-      if (key === 'class') {
-        normalized['__styleClass'] = value;
-        continue;
-      }
-
-      // Event handlers -> watchOS events (reduced set)
-      if (key.startsWith('on')) {
-        if (UNSUPPORTED_WATCH_EVENTS.has(key.toLowerCase())) {
-          normalized[`__unsupported:${key}`] = value;
-          continue;
-        }
-        const watchEvent = WATCH_EVENT_MAP[key.toLowerCase()];
-        if (watchEvent) {
-          normalized[watchEvent] = value;
-        } else {
-          const eventName = key.slice(2).toLowerCase();
-          normalized[`on${eventName.charAt(0).toUpperCase()}${eventName.slice(1)}`] = value;
-        }
-        continue;
-      }
-
-      // style -> watch view modifiers (compact)
-      if (key === 'style') {
-        normalized['__modifiers'] = value;
-        continue;
-      }
-
-      // All other props pass through
+      if (key.startsWith('aria-')) { normalized[key.replace('aria-', 'accessibility')] = value; continue; }
+      if (key.startsWith('data-')) { normalized[key] = value; continue; }
+      if (key === 'class') { normalized['__styleClass'] = value; continue; }
+      if (key.startsWith('on')) { if (UNSUPPORTED_WATCH_EVENTS.has(key.toLowerCase())) { normalized[`__unsupported:${key}`] = value; continue; } const we = WATCH_EVENT_MAP[key.toLowerCase()]; if (we) { normalized[we] = value; } else { const en = key.slice(2).toLowerCase(); normalized[`on${en.charAt(0).toUpperCase()}${en.slice(1)}`] = value; } continue; }
+      if (key === 'style') { normalized['__modifiers'] = value; continue; }
       normalized[key] = value;
     }
-
-    await storage.put('output', adapter, { adapter, normalized: JSON.stringify(normalized) });
-
-    return { variant: 'ok', adapter, normalized: JSON.stringify(normalized) };
+    let p = createProgram();
+    p = put(p, 'output', adapter, { adapter, normalized: JSON.stringify(normalized) });
+    return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
