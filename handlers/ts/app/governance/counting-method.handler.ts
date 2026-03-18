@@ -1,25 +1,42 @@
+// @migrated dsl-constructs 2026-03-18
 // CountingMethod Concept Handler
 // Coordination concept routing vote aggregation to pluggable counting providers.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const countingMethodHandler: ConceptHandler = {
-  async register(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _countingMethodHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const id = `counting-${Date.now()}`;
-    await storage.put('counting', id, { id, name: input.name, providerRef: input.providerRef });
-    return { variant: 'registered', method: id };
+    let p = createProgram();
+    p = put(p, 'counting', id, { id, name: input.name, providerRef: input.providerRef });
+    return complete(p, 'registered', { method: id }) as StorageProgram<Result>;
   },
 
-  async aggregate(input, storage) {
-    const { method, ballots, weights } = input;
-    const record = await storage.get('counting', method as string);
-    if (!record) return { variant: 'not_found', method };
-    // Stub: delegates to provider in real implementation
-    return { variant: 'result', outcome: 'stub_result', details: '{}' };
-  },
-
-  async deregister(input, storage) {
+  aggregate(input: Record<string, unknown>) {
     const { method } = input;
-    await storage.del('counting', method as string);
-    return { variant: 'deregistered', method };
+    let p = createProgram();
+    p = get(p, 'counting', method as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => complete(b, 'result', { outcome: 'stub_result', details: '{}' }),
+      (b) => complete(b, 'not_found', { method }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  deregister(input: Record<string, unknown>) {
+    const { method } = input;
+    let p = createProgram();
+    p = del(p, 'counting', method as string);
+    return complete(p, 'deregistered', { method }) as StorageProgram<Result>;
   },
 };
+
+export const countingMethodHandler = autoInterpret(_countingMethodHandler);

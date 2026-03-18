@@ -1,53 +1,100 @@
+// @migrated dsl-constructs 2026-03-18
 // AgenticDelegate Concept Handler
 // Register and constrain AI agents participating in governance.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const agenticDelegateHandler: ConceptHandler = {
-  async register(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _agenticDelegateHandler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const id = `delegate-${Date.now()}`;
-    await storage.put('delegate', id, {
+    let p = createProgram();
+    p = put(p, 'delegate', id, {
       id, name: input.name, principal: input.principal,
       autonomyLevel: input.autonomyLevel, allowedActions: input.allowedActions,
       registeredAt: new Date().toISOString(), active: true,
     });
-    return { variant: 'registered', delegate: id };
+    return complete(p, 'registered', { delegate: id }) as StorageProgram<Result>;
   },
 
-  async assumeRole(input, storage) {
+  assumeRole(input: Record<string, unknown>) {
     const { delegate, role } = input;
-    const record = await storage.get('delegate', delegate as string);
-    if (!record) return { variant: 'not_found', delegate };
-    await storage.put('delegate', delegate as string, { ...record, currentRole: role });
-    return { variant: 'role_assumed', delegate, role };
+    let p = createProgram();
+    p = get(p, 'delegate', delegate as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, currentRole: role };
+        });
+        return complete(thenP, 'role_assumed', { delegate, role });
+      },
+      (elseP) => complete(elseP, 'not_found', { delegate }),
+    ) as StorageProgram<Result>;
   },
 
-  async releaseRole(input, storage) {
+  releaseRole(input: Record<string, unknown>) {
     const { delegate } = input;
-    const record = await storage.get('delegate', delegate as string);
-    if (!record) return { variant: 'not_found', delegate };
-    await storage.put('delegate', delegate as string, { ...record, currentRole: null });
-    return { variant: 'role_released', delegate };
+    let p = createProgram();
+    p = get(p, 'delegate', delegate as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, currentRole: null };
+        });
+        return complete(thenP, 'role_released', { delegate });
+      },
+      (elseP) => complete(elseP, 'not_found', { delegate }),
+    ) as StorageProgram<Result>;
   },
 
-  async proposeAction(input, storage) {
+  proposeAction(input: Record<string, unknown>) {
     const { delegate, action, rationale } = input;
-    const record = await storage.get('delegate', delegate as string);
-    if (!record) return { variant: 'not_found', delegate };
-    const allowed = (record.allowedActions as string[]).includes(action as string);
-    if (!allowed) return { variant: 'action_denied', delegate, action };
-    return { variant: 'proposed', delegate, action };
+    let p = createProgram();
+    p = get(p, 'delegate', delegate as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        return completeFrom(thenP, 'proposed', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const allowed = (record.allowedActions as string[]).includes(action as string);
+          if (!allowed) return { variant: 'action_denied', delegate, action };
+          return { variant: 'proposed', delegate, action };
+        });
+      },
+      (elseP) => complete(elseP, 'not_found', { delegate }),
+    ) as StorageProgram<Result>;
   },
 
-  async escalate(input, storage) {
+  escalate(input: Record<string, unknown>) {
     const { delegate, action, reason } = input;
-    return { variant: 'escalated', delegate, action, reason };
+    return complete(createProgram(), 'escalated', { delegate, action, reason }) as StorageProgram<Result>;
   },
 
-  async updateAutonomy(input, storage) {
+  updateAutonomy(input: Record<string, unknown>) {
     const { delegate, autonomyLevel } = input;
-    const record = await storage.get('delegate', delegate as string);
-    if (!record) return { variant: 'not_found', delegate };
-    await storage.put('delegate', delegate as string, { ...record, autonomyLevel });
-    return { variant: 'updated', delegate };
+    let p = createProgram();
+    p = get(p, 'delegate', delegate as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'delegate', delegate as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, autonomyLevel };
+        });
+        return complete(thenP, 'updated', { delegate });
+      },
+      (elseP) => complete(elseP, 'not_found', { delegate }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const agenticDelegateHandler = autoInterpret(_agenticDelegateHandler);

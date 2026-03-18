@@ -1,29 +1,58 @@
+// @migrated dsl-constructs 2026-03-18
 // Delegation Concept Handler
 // Transitive decision power transfer with cycle detection.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const delegationHandler: ConceptHandler = {
-  async delegate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _delegationHandler: FunctionalConceptHandler = {
+  delegate(input: Record<string, unknown>) {
     const { from, to, scope, expiresAt } = input;
-    // Simple cycle detection: check if 'to' already delegates to 'from'
-    const reverse = await storage.get('delegation', `${to}:${from}`);
-    if (reverse) return { variant: 'cycle_detected', from, to };
-    const id = `deleg-${Date.now()}`;
-    await storage.put('delegation', `${from}:${to}`, { id, from, to, scope, expiresAt: expiresAt ?? null, createdAt: new Date().toISOString() });
-    return { variant: 'delegated', edge: id };
+    let p = createProgram();
+    p = get(p, 'delegation', `${to}:${from}`, 'reverse');
+
+    p = branch(p, 'reverse',
+      (b) => complete(b, 'cycle_detected', { from, to }),
+      (b) => {
+        const id = `deleg-${Date.now()}`;
+        let b2 = put(b, 'delegation', `${from}:${to}`, {
+          id, from, to, scope, expiresAt: expiresAt ?? null,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'delegated', { edge: id });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async undelegate(input, storage) {
+  undelegate(input: Record<string, unknown>) {
     const { from, to } = input;
-    const record = await storage.get('delegation', `${from}:${to}`);
-    if (!record) return { variant: 'not_found', from, to };
-    await storage.del('delegation', `${from}:${to}`);
-    return { variant: 'undelegated', from, to };
+    let p = createProgram();
+    p = get(p, 'delegation', `${from}:${to}`, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'delegation', `${from}:${to}`);
+        return complete(b2, 'undelegated', { from, to });
+      },
+      (b) => complete(b, 'not_found', { from, to }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async getEffectiveWeight(input, storage) {
+  getEffectiveWeight(input: Record<string, unknown>) {
     const { participant } = input;
+    let p = createProgram();
     // Stub: return base weight of 1 (real impl would traverse delegation graph)
-    return { variant: 'weight', participant, effectiveWeight: 1.0, delegators: [] };
+    return complete(p, 'weight', { participant, effectiveWeight: 1.0, delegators: [] }) as StorageProgram<Result>;
   },
 };
+
+export const delegationHandler = autoInterpret(_delegationHandler);

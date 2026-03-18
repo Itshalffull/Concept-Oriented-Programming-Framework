@@ -1,32 +1,65 @@
+// @migrated dsl-constructs 2026-03-18
 // DisclosurePolicy Concept Handler
 // Governance transparency and disclosure timing rules.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const disclosurePolicyHandler: ConceptHandler = {
-  async define(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _disclosurePolicyHandler: FunctionalConceptHandler = {
+  define(input: Record<string, unknown>) {
     const id = `disclosure-${Date.now()}`;
-    await storage.put('disclosure', id, {
+    let p = createProgram();
+    p = put(p, 'disclosure', id, {
       id, scope: input.scope, timing: input.timing,
       audience: input.audience, format: input.format ?? null,
       status: 'Active', createdAt: new Date().toISOString(),
     });
-    return { variant: 'defined', policy: id };
+    return complete(p, 'defined', { policy: id }) as StorageProgram<Result>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const { policy, event, requestor } = input;
-    const record = await storage.get('disclosure', policy as string);
-    if (!record) return { variant: 'not_found', policy };
-    if (record.status !== 'Active') return { variant: 'suspended', policy };
-    // Stub: real impl checks audience and timing rules
-    return { variant: 'disclosable', policy, disclosedTo: requestor };
+    let p = createProgram();
+    p = get(p, 'disclosure', policy as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return branch(b,
+          (bindings) => (bindings.record as Record<string, unknown>).status !== 'Active',
+          (b2) => complete(b2, 'suspended', { policy }),
+          (b2) => complete(b2, 'disclosable', { policy, disclosedTo: requestor }),
+        );
+      },
+      (b) => complete(b, 'not_found', { policy }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async suspend(input, storage) {
+  suspend(input: Record<string, unknown>) {
     const { policy, reason } = input;
-    const record = await storage.get('disclosure', policy as string);
-    if (!record) return { variant: 'not_found', policy };
-    await storage.put('disclosure', policy as string, { ...record, status: 'Suspended', suspendReason: reason });
-    return { variant: 'suspended', policy };
+    let p = createProgram();
+    p = get(p, 'disclosure', policy as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, status: 'Suspended', suspendReason: reason };
+        }, 'updated');
+        b2 = put(b2, 'disclosure', policy as string, {});
+        return complete(b2, 'suspended', { policy });
+      },
+      (b) => complete(b, 'not_found', { policy }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
+
+export const disclosurePolicyHandler = autoInterpret(_disclosurePolicyHandler);
