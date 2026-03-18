@@ -1,8 +1,17 @@
+// @migrated dsl-constructs 2026-03-18
 // Lockfile Concept Implementation
 // Serialized resolved dependency graph capturing exact module versions,
 // content hashes, artifact URLs, and enabled features for deterministic
 // and reproducible installations across environments.
-import type { ConceptHandler } from '@clef/runtime';
+
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let nextId = 1;
 
@@ -36,7 +45,6 @@ function computeIntegrityHash(entries: LockfileEntry[]): string {
   const content = sorted
     .map((e) => `${e.module_id}@${e.version}:${e.content_hash}`)
     .join('|');
-  // Simple hash for handler purposes
   let hash = 0;
   for (let i = 0; i < content.length; i++) {
     const char = content.charCodeAt(i);
@@ -46,32 +54,31 @@ function computeIntegrityHash(entries: LockfileEntry[]): string {
   return `sha256:${Math.abs(hash).toString(16).padStart(8, '0')}`;
 }
 
-export const lockfileHandler: ConceptHandler = {
-  async write(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  write(input: Record<string, unknown>) {
     const projectHash = input.project_hash as string;
     const entries = input.entries as LockfileEntry[];
     const metadata = input.metadata as LockfileMetadata;
 
-    // Validate entries
     if (!entries || !Array.isArray(entries)) {
-      return { variant: 'error', message: 'Entries must be a non-empty array' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Entries must be a non-empty array' }) as StorageProgram<Result>;
     }
 
-    // Check for circular references (simplified: check for self-referencing dependencies)
     for (const entry of entries) {
       if (entry.dependencies && entry.dependencies.includes(entry.module_id)) {
-        return { variant: 'error', message: `Circular self-reference detected in module "${entry.module_id}"` };
+        const p = createProgram();
+        return complete(p, 'error', { message: `Circular self-reference detected in module "${entry.module_id}"` }) as StorageProgram<Result>;
       }
     }
 
-    // Validate content hashes
     for (const entry of entries) {
       if (!entry.content_hash || !entry.content_hash.includes(':')) {
-        return { variant: 'error', message: `Invalid content_hash for module "${entry.module_id}"` };
+        const p = createProgram();
+        return complete(p, 'error', { message: `Invalid content_hash for module "${entry.module_id}"` }) as StorageProgram<Result>;
       }
     }
 
-    // Sort entries deterministically by module_id for reproducible output
     const sortedEntries = [...entries].sort((a, b) =>
       a.module_id.localeCompare(b.module_id),
     );
@@ -79,7 +86,8 @@ export const lockfileHandler: ConceptHandler = {
     const lockfileId = `lock-${nextId++}`;
     const lockfileHash = computeIntegrityHash(sortedEntries);
 
-    await storage.put('lockfile', lockfileId, {
+    let p = createProgram();
+    p = put(p, 'lockfile', lockfileId, {
       lockfileId,
       projectHash,
       entries: sortedEntries,
@@ -87,143 +95,146 @@ export const lockfileHandler: ConceptHandler = {
       lockfileHash,
     });
 
-    return { variant: 'ok', lockfile: lockfileId };
+    return complete(p, 'ok', { lockfile: lockfileId }) as StorageProgram<Result>;
   },
 
-  async read(input, storage) {
+  read(input: Record<string, unknown>) {
     const lockfileId = input.lockfile as string;
 
-    const lockfile = await storage.get('lockfile', lockfileId);
-    if (!lockfile) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'lockfile', lockfileId, 'lockfile');
 
-    const entries = lockfile.entries as LockfileEntry[];
-    const metadata = lockfile.metadata as LockfileMetadata;
-    const projectHash = lockfile.projectHash as string;
+    return branch(p,
+      (bindings) => !bindings.lockfile,
+      (bp) => complete(bp, 'notfound', {}),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const lf = bindings.lockfile as Record<string, unknown>;
+        const entries = lf.entries as LockfileEntry[];
+        const metadata = lf.metadata as LockfileMetadata;
+        const projectHash = lf.projectHash as string;
 
-    // Verify structure integrity
-    if (!entries || !Array.isArray(entries)) {
-      return { variant: 'corrupt', message: 'Lockfile entries are missing or malformed' };
-    }
-
-    if (!metadata) {
-      return { variant: 'corrupt', message: 'Lockfile metadata is missing' };
-    }
-
-    return {
-      variant: 'ok',
-      project_hash: projectHash,
-      entries,
-      metadata,
-    };
-  },
-
-  async verify(input, storage) {
-    const lockfileId = input.lockfile as string;
-
-    const lockfile = await storage.get('lockfile', lockfileId);
-    if (!lockfile) {
-      return { variant: 'stale', reason: 'Lockfile not found' };
-    }
-
-    const entries = lockfile.entries as LockfileEntry[];
-    const storedHash = lockfile.lockfileHash as string;
-
-    // Recompute the integrity hash and compare
-    const computedHash = computeIntegrityHash(entries);
-    if (computedHash !== storedHash) {
-      const tamperedModules: string[] = [];
-      // Identify which entries might be tampered
-      for (const entry of entries) {
-        if (!entry.content_hash || !entry.integrity) {
-          tamperedModules.push(entry.module_id);
+        if (!entries || !Array.isArray(entries)) {
+          return { variant: 'corrupt', message: 'Lockfile entries are missing or malformed' };
         }
-      }
-      if (tamperedModules.length > 0) {
-        return { variant: 'tampered', entries: tamperedModules };
-      }
-      return { variant: 'tampered', entries: ['(lockfile hash mismatch)'] };
-    }
+        if (!metadata) {
+          return { variant: 'corrupt', message: 'Lockfile metadata is missing' };
+        }
 
-    // Verify each entry has valid integrity data
-    const tamperedEntries: string[] = [];
-    for (const entry of entries) {
-      if (!entry.integrity || !entry.integrity.includes(':')) {
-        tamperedEntries.push(entry.module_id);
-      }
-    }
-
-    if (tamperedEntries.length > 0) {
-      return { variant: 'tampered', entries: tamperedEntries };
-    }
-
-    // Check if project_hash is still current (if a current manifest hash is provided)
-    const currentManifestHash = input.current_manifest_hash as string | undefined;
-    if (currentManifestHash && lockfile.projectHash !== currentManifestHash) {
-      return {
-        variant: 'stale',
-        reason: `Manifest has changed: lockfile has project_hash "${lockfile.projectHash}" but current manifest hash is "${currentManifestHash}"`,
-      };
-    }
-
-    return { variant: 'ok' };
+        return { project_hash: projectHash, entries, metadata };
+      }),
+    ) as StorageProgram<Result>;
   },
 
-  async diff(input, storage) {
+  verify(input: Record<string, unknown>) {
+    const lockfileId = input.lockfile as string;
+    const currentManifestHash = input.current_manifest_hash as string | undefined;
+
+    let p = createProgram();
+    p = get(p, 'lockfile', lockfileId, 'lockfile');
+
+    return branch(p,
+      (bindings) => !bindings.lockfile,
+      (bp) => complete(bp, 'stale', { reason: 'Lockfile not found' }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const lf = bindings.lockfile as Record<string, unknown>;
+        const entries = lf.entries as LockfileEntry[];
+        const storedHash = lf.lockfileHash as string;
+
+        const computedHash = computeIntegrityHash(entries);
+        if (computedHash !== storedHash) {
+          const tamperedModules: string[] = [];
+          for (const entry of entries) {
+            if (!entry.content_hash || !entry.integrity) {
+              tamperedModules.push(entry.module_id);
+            }
+          }
+          if (tamperedModules.length > 0) {
+            return { variant: 'tampered', entries: tamperedModules };
+          }
+          return { variant: 'tampered', entries: ['(lockfile hash mismatch)'] };
+        }
+
+        const tamperedEntries: string[] = [];
+        for (const entry of entries) {
+          if (!entry.integrity || !entry.integrity.includes(':')) {
+            tamperedEntries.push(entry.module_id);
+          }
+        }
+
+        if (tamperedEntries.length > 0) {
+          return { variant: 'tampered', entries: tamperedEntries };
+        }
+
+        if (currentManifestHash && lf.projectHash !== currentManifestHash) {
+          return {
+            variant: 'stale',
+            reason: `Manifest has changed: lockfile has project_hash "${lf.projectHash}" but current manifest hash is "${currentManifestHash}"`,
+          };
+        }
+
+        return {};
+      }),
+    ) as StorageProgram<Result>;
+  },
+
+  diff(input: Record<string, unknown>) {
     const oldLockfileId = input.old_lockfile as string;
     const newLockfileId = input.new_lockfile as string;
 
-    const oldLockfile = await storage.get('lockfile', oldLockfileId);
-    const newLockfile = await storage.get('lockfile', newLockfileId);
+    let p = createProgram();
+    p = get(p, 'lockfile', oldLockfileId, 'oldLockfile');
+    p = get(p, 'lockfile', newLockfileId, 'newLockfile');
 
-    if (!oldLockfile) {
-      return { variant: 'error', message: `Old lockfile "${oldLockfileId}" not found` };
-    }
-    if (!newLockfile) {
-      return { variant: 'error', message: `New lockfile "${newLockfileId}" not found` };
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const oldLockfile = bindings.oldLockfile as Record<string, unknown> | null;
+      const newLockfile = bindings.newLockfile as Record<string, unknown> | null;
 
-    const oldEntries = oldLockfile.entries as LockfileEntry[];
-    const newEntries = newLockfile.entries as LockfileEntry[];
-
-    // Build lookup maps by module_id
-    const oldMap = new Map<string, LockfileEntry>();
-    for (const entry of oldEntries) {
-      oldMap.set(entry.module_id, entry);
-    }
-
-    const newMap = new Map<string, LockfileEntry>();
-    for (const entry of newEntries) {
-      newMap.set(entry.module_id, entry);
-    }
-
-    // Compute diff
-    const added: string[] = [];
-    const removed: string[] = [];
-    const updated: Array<{ module_id: string; old_version: string; new_version: string }> = [];
-
-    // Find added and updated
-    for (const [moduleId, newEntry] of newMap) {
-      const oldEntry = oldMap.get(moduleId);
-      if (!oldEntry) {
-        added.push(moduleId);
-      } else if (oldEntry.version !== newEntry.version) {
-        updated.push({
-          module_id: moduleId,
-          old_version: oldEntry.version,
-          new_version: newEntry.version,
-        });
+      if (!oldLockfile) {
+        return { variant: 'error', message: `Old lockfile "${oldLockfileId}" not found` };
       }
-    }
-
-    // Find removed
-    for (const moduleId of oldMap.keys()) {
-      if (!newMap.has(moduleId)) {
-        removed.push(moduleId);
+      if (!newLockfile) {
+        return { variant: 'error', message: `New lockfile "${newLockfileId}" not found` };
       }
-    }
 
-    return { variant: 'ok', added, removed, updated };
+      const oldEntries = oldLockfile.entries as LockfileEntry[];
+      const newEntries = newLockfile.entries as LockfileEntry[];
+
+      const oldMap = new Map<string, LockfileEntry>();
+      for (const entry of oldEntries) {
+        oldMap.set(entry.module_id, entry);
+      }
+
+      const newMap = new Map<string, LockfileEntry>();
+      for (const entry of newEntries) {
+        newMap.set(entry.module_id, entry);
+      }
+
+      const added: string[] = [];
+      const removed: string[] = [];
+      const updated: Array<{ module_id: string; old_version: string; new_version: string }> = [];
+
+      for (const [moduleId, newEntry] of newMap) {
+        const oldEntry = oldMap.get(moduleId);
+        if (!oldEntry) {
+          added.push(moduleId);
+        } else if (oldEntry.version !== newEntry.version) {
+          updated.push({
+            module_id: moduleId,
+            old_version: oldEntry.version,
+            new_version: newEntry.version,
+          });
+        }
+      }
+
+      for (const moduleId of oldMap.keys()) {
+        if (!newMap.has(moduleId)) {
+          removed.push(moduleId);
+        }
+      }
+
+      return { added, removed, updated };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const lockfileHandler = autoInterpret(_handler);

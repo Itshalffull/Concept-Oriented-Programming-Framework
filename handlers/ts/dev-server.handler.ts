@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DevServer Handler
 //
@@ -8,78 +9,101 @@
 // is written through Emitter (content-addressed writes).
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `dev-server-${++idCounter}`;
 }
 
-export const devServerHandler: ConceptHandler = {
-  async start(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  start(input: Record<string, unknown>) {
     const port = input.port as number;
     const watchDirs = input.watchDirs as string[];
 
-    // Check if port is already in use by an existing session
-    const existing = await storage.find('dev-server', { port });
-    const runningOnPort = existing.filter(r => r.status === 'running');
-    if (runningOnPort.length > 0) {
-      return { variant: 'portInUse', port };
-    }
+    let p = createProgram();
+    p = find(p, 'dev-server', { port }, 'existing');
 
-    const id = nextId();
-    const now = new Date().toISOString();
-    const url = `http://localhost:${port}`;
+    return branch(p,
+      (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>[];
+        return existing.filter(r => r.status === 'running').length > 0;
+      },
+      (thenP) => complete(thenP, 'portInUse', { port }),
+      (elseP) => {
+        const id = nextId();
+        const now = new Date().toISOString();
+        const url = `http://localhost:${port}`;
 
-    await storage.put('dev-server', id, {
-      id,
-      port,
-      status: 'running',
-      watchDirs: JSON.stringify(watchDirs),
-      startedAt: now,
-      lastRecompile: now,
-    });
+        elseP = put(elseP, 'dev-server', id, {
+          id,
+          port,
+          status: 'running',
+          watchDirs: JSON.stringify(watchDirs),
+          startedAt: now,
+          lastRecompile: now,
+        });
 
-    return { variant: 'ok', session: id, port, url };
+        return complete(elseP, 'ok', { session: id, port, url });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async stop(input: Record<string, unknown>, storage: ConceptStorage) {
+  stop(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('dev-server', session);
-    if (!record) {
-      return { variant: 'ok', session };
-    }
+    let p = createProgram();
+    p = get(p, 'dev-server', session, 'record');
 
-    await storage.put('dev-server', session, {
-      ...record,
-      status: 'stopped',
-    });
-
-    return { variant: 'ok', session };
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'dev-server', session, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, status: 'stopped' };
+        });
+        return complete(thenP, 'ok', { session });
+      },
+      (elseP) => complete(elseP, 'ok', { session }),
+    ) as StorageProgram<Result>;
   },
 
-  async status(input: Record<string, unknown>, storage: ConceptStorage) {
+  status(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('dev-server', session);
-    if (!record || record.status !== 'running') {
-      return { variant: 'stopped' };
-    }
+    let p = createProgram();
+    p = get(p, 'dev-server', session, 'record');
 
-    const startedAt = new Date(record.startedAt as string);
-    const now = new Date();
-    const uptimeMs = now.getTime() - startedAt.getTime();
-    const uptimeSeconds = Math.floor(uptimeMs / 1000);
+    return branch(p,
+      (bindings) => {
+        const record = bindings.record as Record<string, unknown> | null;
+        return !record || record.status !== 'running';
+      },
+      (thenP) => complete(thenP, 'stopped', {}),
+      (elseP) => completeFrom(elseP, 'running', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const startedAt = new Date(record.startedAt as string);
+        const now = new Date();
+        const uptimeMs = now.getTime() - startedAt.getTime();
+        const uptimeSeconds = Math.floor(uptimeMs / 1000);
 
-    return {
-      variant: 'running',
-      port: record.port as number,
-      uptime: uptimeSeconds,
-      lastRecompile: record.lastRecompile as string,
-    };
+        return {
+          port: record.port as number,
+          uptime: uptimeSeconds,
+          lastRecompile: record.lastRecompile as string,
+        };
+      }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const devServerHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDevServerCounter(): void {

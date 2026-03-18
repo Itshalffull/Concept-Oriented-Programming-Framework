@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SyncScopeProvider Handler
 //
@@ -6,7 +7,14 @@
 // visible in where and then clauses.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -40,10 +48,6 @@ interface Declaration {
 
 /**
  * Build scope graph from sync spec source text.
- * Scope hierarchy: file (global) -> sync -> when/where/then clauses
- * Variable bindings in when clauses are visible in where and then clauses.
- * The sync itself acts as a scope container, with when-clause bindings
- * propagating downward to where and then scopes.
  */
 function buildSyncScopes(source: string, file: string): {
   scopes: ScopeNode[];
@@ -54,7 +58,6 @@ function buildSyncScopes(source: string, file: string): {
   const declarations: Declaration[] = [];
   const references: Array<{ name: string; scopeId: string; resolved: string | null }> = [];
 
-  // Global file scope
   const globalScope: ScopeNode = {
     id: nextScopeId(),
     kind: 'global',
@@ -71,7 +74,6 @@ function buildSyncScopes(source: string, file: string): {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Match sync declaration: sync SyncName {
     const syncMatch = line.match(/^\s*sync\s+(\w+)\s*\{/);
     if (syncMatch) {
       syncName = syncMatch[1];
@@ -95,7 +97,6 @@ function buildSyncScopes(source: string, file: string): {
 
     if (!syncScope) continue;
 
-    // Match when clause: when ConceptName.action(...) -> variant(...)
     const whenMatch = line.match(/^\s+when\b/);
     if (whenMatch) {
       currentClauseScope = {
@@ -107,10 +108,8 @@ function buildSyncScopes(source: string, file: string): {
       scopes.push(currentClauseScope);
     }
 
-    // Match where clause: where ...
     const whereMatch = line.match(/^\s+where\b/);
     if (whereMatch) {
-      // where scope is a child of the sync scope so when-bindings are visible
       currentClauseScope = {
         id: nextScopeId(),
         kind: 'block',
@@ -120,10 +119,8 @@ function buildSyncScopes(source: string, file: string): {
       scopes.push(currentClauseScope);
     }
 
-    // Match then clause: then ConceptName.action(...)
     const thenMatch = line.match(/^\s+then\b/);
     if (thenMatch) {
-      // then scope is a child of the sync scope so when-bindings are visible
       currentClauseScope = {
         id: nextScopeId(),
         kind: 'block',
@@ -133,7 +130,6 @@ function buildSyncScopes(source: string, file: string): {
       scopes.push(currentClauseScope);
     }
 
-    // Extract concept references: ConceptName.actionName(...)
     const conceptRefRegex = /\b([A-Z]\w+)\.(\w+)\s*\(/g;
     let conceptRefMatch;
     while ((conceptRefMatch = conceptRefRegex.exec(line)) !== null) {
@@ -153,9 +149,6 @@ function buildSyncScopes(source: string, file: string): {
       });
     }
 
-    // Extract variable bindings: paramName: varName
-    // Variables bound in when clauses are added to the sync scope
-    // so they are visible in where and then clauses.
     const bindingRegex = /(\w+)\s*:\s*([a-z]\w*)\b/g;
     let bindingMatch;
     while ((bindingMatch = bindingRegex.exec(line)) !== null) {
@@ -163,8 +156,6 @@ function buildSyncScopes(source: string, file: string): {
       if (['string', 'int', 'bool', 'true', 'false', 'null', 'undefined',
         'when', 'where', 'then', 'sync'].includes(varName)) continue;
 
-      // Bind variables to the sync scope level so they are accessible
-      // from when, where, and then clauses
       declarations.push({
         name: varName,
         symbolString: `clef/sync/${syncName}/var/${varName}`,
@@ -173,7 +164,6 @@ function buildSyncScopes(source: string, file: string): {
       });
     }
 
-    // Extract variant references: -> variantName(...)
     const variantMatch = line.match(/->\s+(\w+)\s*\(/);
     if (variantMatch) {
       const variantName = variantMatch[1];
@@ -214,58 +204,57 @@ function resolveInChain(
   return null;
 }
 
-export const syncScopeProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('sync-scope-provider', id, {
-        id,
-        providerRef: 'sync-scope-provider',
-        handledLanguages: 'sync-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'sync-scope-provider', id, {
+      id,
+      providerRef: 'sync-scope-provider',
+      handledLanguages: 'sync-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async buildScopes(input: Record<string, unknown>, storage: ConceptStorage) {
+  buildScopes(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const result = buildSyncScopes(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       scopes: JSON.stringify(result.scopes),
       declarations: JSON.stringify(result.declarations),
       references: JSON.stringify(result.references),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const scopeId = input.scopeId as string;
     const scopes = JSON.parse(input.scopes as string) as ScopeNode[];
     const declarations = JSON.parse(input.declarations as string) as Declaration[];
 
     const resolved = resolveInChain(name, scopeId, scopes, declarations);
+    const p = createProgram();
     if (resolved) {
-      return { variant: 'ok', symbolString: resolved };
+      return complete(p, 'ok', { symbolString: resolved }) as StorageProgram<Result>;
     }
-
-    return { variant: 'unresolved', name };
+    return complete(p, 'unresolved', { name }) as StorageProgram<Result>;
   },
 
-  async getSupportedLanguages(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedLanguages(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       languages: JSON.stringify(['sync-spec']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const syncScopeProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSyncScopeProviderCounter(): void {

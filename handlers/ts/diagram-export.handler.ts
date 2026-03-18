@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DiagramExport Handler
 //
@@ -6,101 +7,19 @@
 // providers via PluginRegistry.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `export-${++idCounter}`;
 }
-
-export const diagramExportHandler: ConceptHandler = {
-  async export(input: Record<string, unknown>, storage: ConceptStorage) {
-    const canvasId = input.canvas_id as string;
-    const format = input.format as string;
-    const options = (input.options as Record<string, unknown>) ?? {};
-
-    const id = nextId();
-
-    // Check if provider is registered
-    const provider = await storage.get('export-provider', format);
-    if (!provider) {
-      await storage.put('diagram-export', id, {
-        id, canvas_id: canvasId, format, status: 'error', output: null, metadata: null,
-      });
-      return { variant: 'error', message: `No export provider registered for format '${format}'` };
-    }
-
-    // Store export record with pending status; actual rendering happens
-    // via sync dispatch to the registered provider
-    await storage.put('diagram-export', id, {
-      id,
-      export: id,
-      canvas_id: canvasId,
-      format,
-      status: 'pending',
-      output: null,
-      metadata: {
-        width: (options.width as number) ?? null,
-        height: (options.height as number) ?? null,
-        embedded_data: (options.embed_data as boolean) ?? false,
-      },
-      options,
-    });
-
-    return { variant: 'ok', export: id, data: null, mime_type: getMimeType(format) };
-  },
-
-  async importDiagram(input: Record<string, unknown>, storage: ConceptStorage) {
-    const data = input.data;
-    const format = input.format as string;
-    const targetCanvas = (input.target_canvas as string | undefined) ?? null;
-
-    // Check if provider is registered
-    const provider = await storage.get('export-provider', format);
-    if (!provider) {
-      return { variant: 'error', message: `No import provider registered for format '${format}'` };
-    }
-
-    // Actual import parsing delegated to provider via sync
-    return {
-      variant: 'ok',
-      canvas_id: targetCanvas ?? `canvas-import-${nextId()}`,
-      items_created: 0,
-      connectors_created: 0,
-    };
-  },
-
-  async detectFormat(input: Record<string, unknown>, _storage: ConceptStorage) {
-    const data = input.data;
-
-    if (!data) {
-      return { variant: 'unknown', message: 'No data provided' };
-    }
-
-    const str = typeof data === 'string' ? data : '';
-
-    // Simple heuristic detection
-    if (str.startsWith('{') || str.startsWith('[')) {
-      return { variant: 'ok', format: 'json', confidence: 0.9 };
-    }
-    if (str.startsWith('<?xml') || str.startsWith('<mxfile')) {
-      if (str.includes('bpmn:')) return { variant: 'ok', format: 'bpmn-xml', confidence: 0.9 };
-      if (str.includes('mxfile') || str.includes('mxGraphModel')) return { variant: 'ok', format: 'drawio-xml', confidence: 0.9 };
-      return { variant: 'ok', format: 'svg', confidence: 0.7 };
-    }
-    if (str.startsWith('<svg')) {
-      return { variant: 'ok', format: 'svg', confidence: 0.95 };
-    }
-    if (str.includes('graph ') || str.includes('digraph ')) {
-      return { variant: 'ok', format: 'dot', confidence: 0.8 };
-    }
-    if (str.includes('flowchart') || str.includes('graph TD') || str.includes('graph LR')) {
-      return { variant: 'ok', format: 'mermaid', confidence: 0.85 };
-    }
-
-    return { variant: 'unknown', message: 'Cannot determine format from data' };
-  },
-};
 
 function getMimeType(format: string): string {
   const mimeTypes: Record<string, string> = {
@@ -116,6 +35,96 @@ function getMimeType(format: string): string {
   };
   return mimeTypes[format] ?? 'application/octet-stream';
 }
+
+const _handler: FunctionalConceptHandler = {
+  export(input: Record<string, unknown>) {
+    const canvasId = input.canvas_id as string;
+    const format = input.format as string;
+    const options = (input.options as Record<string, unknown>) ?? {};
+
+    const id = nextId();
+
+    let p = createProgram();
+    p = get(p, 'export-provider', format, 'provider');
+
+    return branch(p, 'provider',
+      (thenP) => {
+        thenP = put(thenP, 'diagram-export', id, {
+          id,
+          export: id,
+          canvas_id: canvasId,
+          format,
+          status: 'pending',
+          output: null,
+          metadata: {
+            width: (options.width as number) ?? null,
+            height: (options.height as number) ?? null,
+            embedded_data: (options.embed_data as boolean) ?? false,
+          },
+          options,
+        });
+        return complete(thenP, 'ok', { export: id, data: null, mime_type: getMimeType(format) });
+      },
+      (elseP) => {
+        elseP = put(elseP, 'diagram-export', id, {
+          id, canvas_id: canvasId, format, status: 'error', output: null, metadata: null,
+        });
+        return complete(elseP, 'error', { message: `No export provider registered for format '${format}'` });
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  importDiagram(input: Record<string, unknown>) {
+    const format = input.format as string;
+    const targetCanvas = (input.target_canvas as string | undefined) ?? null;
+
+    let p = createProgram();
+    p = get(p, 'export-provider', format, 'provider');
+
+    return branch(p, 'provider',
+      (thenP) => complete(thenP, 'ok', {
+        canvas_id: targetCanvas ?? `canvas-import-${nextId()}`,
+        items_created: 0,
+        connectors_created: 0,
+      }),
+      (elseP) => complete(elseP, 'error', { message: `No import provider registered for format '${format}'` }),
+    ) as StorageProgram<Result>;
+  },
+
+  detectFormat(input: Record<string, unknown>) {
+    const data = input.data;
+
+    if (!data) {
+      const p = createProgram();
+      return complete(p, 'unknown', { message: 'No data provided' }) as StorageProgram<Result>;
+    }
+
+    const str = typeof data === 'string' ? data : '';
+    const p = createProgram();
+
+    if (str.startsWith('{') || str.startsWith('[')) {
+      return complete(p, 'ok', { format: 'json', confidence: 0.9 }) as StorageProgram<Result>;
+    }
+    if (str.startsWith('<?xml') || str.startsWith('<mxfile')) {
+      if (str.includes('bpmn:')) return complete(p, 'ok', { format: 'bpmn-xml', confidence: 0.9 }) as StorageProgram<Result>;
+      if (str.includes('mxfile') || str.includes('mxGraphModel')) return complete(p, 'ok', { format: 'drawio-xml', confidence: 0.9 }) as StorageProgram<Result>;
+      return complete(p, 'ok', { format: 'svg', confidence: 0.7 }) as StorageProgram<Result>;
+    }
+    if (str.startsWith('<svg')) {
+      return complete(p, 'ok', { format: 'svg', confidence: 0.95 }) as StorageProgram<Result>;
+    }
+    if (str.includes('graph ') || str.includes('digraph ')) {
+      return complete(p, 'ok', { format: 'dot', confidence: 0.8 }) as StorageProgram<Result>;
+    }
+    if (str.includes('flowchart') || str.includes('graph TD') || str.includes('graph LR')) {
+      return complete(p, 'ok', { format: 'mermaid', confidence: 0.85 }) as StorageProgram<Result>;
+    }
+
+    return complete(p, 'unknown', { message: 'Cannot determine format from data' }) as StorageProgram<Result>;
+  },
+};
+
+export const diagramExportHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDiagramExportCounter(): void {
