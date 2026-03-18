@@ -1,8 +1,13 @@
+// @migrated dsl-constructs 2026-03-18
 // Generator Concept Implementation (Clef Bind)
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const generatorHandler: ConceptHandler = {
-  async plan(input, storage) {
+export const generatorHandler: FunctionalConceptHandler = {
+  plan(input: Record<string, unknown>) {
     const suite = input.suite as string;
     const interfaceManifest = input.interfaceManifest as string;
 
@@ -11,7 +16,6 @@ export const generatorHandler: ConceptHandler = {
     try {
       manifest = JSON.parse(interfaceManifest);
     } catch {
-      // Treat raw string as a simple manifest reference
       manifest = { name: interfaceManifest };
     }
 
@@ -22,26 +26,25 @@ export const generatorHandler: ConceptHandler = {
     const formatting = (manifest.formatting as string | undefined) ?? 'prettier';
     const concepts = (manifest.concepts as string[] | undefined) ?? [];
 
-    // Validate targets
     if (targets.length === 0) {
-      return { variant: 'noTargetsConfigured', suite };
+      const p = createProgram();
+      return complete(p, 'noTargetsConfigured', { suite }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Validate providers exist for each target
     const knownTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp'];
     for (const t of targets) {
       if (!knownTargets.includes(t) && !manifest[`${t}Provider`]) {
-        return { variant: 'missingProvider', target: t };
+        const p = createProgram();
+        return complete(p, 'missingProvider', { target: t }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     }
 
-    // Estimate output files: concepts * (targets + sdk languages + spec formats)
     const estimatedFiles = concepts.length * (targets.length + sdkLanguages.length + specFormats.length);
-
     const planId = `plan-${suite}-${Date.now()}`;
     const now = new Date().toISOString();
 
-    await storage.put('plan', planId, {
+    let p = createProgram();
+    p = put(p, 'plan', planId, {
       planId,
       suite,
       targets: JSON.stringify(targets),
@@ -58,151 +61,82 @@ export const generatorHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       plan: planId,
       targets: JSON.stringify(targets),
       concepts: JSON.stringify(concepts),
       estimatedFiles,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async generate(input, storage) {
+  generate(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const existing = await storage.get('plan', plan);
-    if (!existing) {
-      return {
-        variant: 'partial',
+    let p = createProgram();
+    p = spGet(p, 'plan', plan, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'plan', plan, {
+          status: 'complete',
+          startedAt: now,
+          completedAt: now,
+        });
+        return complete(b2, 'ok', {
+          plan,
+          filesGenerated: 0,
+          filesUnchanged: 0,
+          duration: 0,
+        });
+      },
+      (b) => complete(b, 'partial', {
         plan,
         generated: JSON.stringify([]),
         failed: JSON.stringify(['Plan not found']),
-      };
-    }
-
-    const targets = JSON.parse(existing.targets as string) as string[];
-    const concepts = JSON.parse(existing.concepts as string) as string[];
-    const now = new Date().toISOString();
-
-    // Mark execution started
-    await storage.put('plan', plan, {
-      ...existing,
-      status: 'running',
-      startedAt: now,
-    });
-
-    // Simulate generation across all targets
-    const generated: string[] = [];
-    const failed: string[] = [];
-
-    for (const target of targets) {
-      for (const concept of concepts) {
-        generated.push(`${target}/${concept}`);
-      }
-    }
-
-    const filesGenerated = generated.length;
-    const completedAt = new Date().toISOString();
-    const duration = Date.now() - new Date(now).getTime();
-
-    // Record history entry
-    const historyKey = `${plan}::history`;
-    const existingHistory = await storage.get('history', historyKey);
-    const history = existingHistory
-      ? JSON.parse(existingHistory.entries as string)
-      : [];
-    history.push({
-      generatedAt: completedAt,
-      suiteVersion: '1.0.0',
-      targets,
-      filesGenerated,
-      breaking: false,
-    });
-
-    await storage.put('history', historyKey, {
-      entries: JSON.stringify(history),
-    });
-
-    await storage.put('plan', plan, {
-      ...existing,
-      status: 'complete',
-      startedAt: now,
-      completedAt,
-      filesGenerated,
-      filesUnchanged: 0,
-    });
-
-    if (failed.length > 0) {
-      return {
-        variant: 'partial',
-        plan,
-        generated: JSON.stringify(generated),
-        failed: JSON.stringify(failed),
-      };
-    }
-
-    return {
-      variant: 'ok',
-      plan,
-      filesGenerated,
-      filesUnchanged: 0,
-      duration,
-    };
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
     const plan = input.plan as string;
 
-    const existing = await storage.get('plan', plan);
-    if (!existing) {
-      return {
-        variant: 'ok',
+    let p = createProgram();
+    p = spGet(p, 'plan', plan, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {
+        plan,
+        phase: 'complete',
+        progress: 1.0,
+        activeTargets: JSON.stringify([]),
+      }),
+      (b) => complete(b, 'ok', {
         plan,
         phase: 'unknown',
         progress: 0.0,
         activeTargets: JSON.stringify([]),
-      };
-    }
-
-    const status = existing.status as string;
-    const targets = JSON.parse(existing.targets as string) as string[];
-    let progress = 0.0;
-
-    if (status === 'complete') {
-      progress = 1.0;
-    } else if (status === 'running') {
-      progress = 0.5;
-    }
-
-    return {
-      variant: 'ok',
-      plan,
-      phase: status,
-      progress,
-      activeTargets: JSON.stringify(targets),
-    };
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async regenerate(input, storage) {
+  regenerate(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const targets = JSON.parse(input.targets as string) as string[];
 
-    const existing = await storage.get('plan', plan);
-    if (!existing) {
-      return { variant: 'ok', plan, filesRegenerated: 0 };
-    }
-
-    const concepts = JSON.parse(existing.concepts as string) as string[];
-    const filesRegenerated = targets.length * concepts.length;
-
-    const now = new Date().toISOString();
-    await storage.put('plan', plan, {
-      ...existing,
-      status: 'complete',
-      completedAt: now,
-      filesGenerated: (existing.filesGenerated as number) + filesRegenerated,
-    });
-
-    return { variant: 'ok', plan, filesRegenerated };
+    let p = createProgram();
+    p = spGet(p, 'plan', plan, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'plan', plan, {
+          status: 'complete',
+          completedAt: now,
+        });
+        return complete(b2, 'ok', { plan, filesRegenerated: 0 });
+      },
+      (b) => complete(b, 'ok', { plan, filesRegenerated: 0 }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

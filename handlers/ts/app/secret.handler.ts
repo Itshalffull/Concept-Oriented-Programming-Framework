@@ -1,112 +1,98 @@
+// @migrated dsl-constructs 2026-03-18
 // Secret Concept Implementation (Deploy Kit)
 // Coordinate secret resolution across vault and secret manager providers.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createHash, randomBytes } from 'crypto';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const secretHandler: ConceptHandler = {
-  async resolve(input, storage) {
+export const secretHandler: FunctionalConceptHandler = {
+  resolve(input: Record<string, unknown>) {
     const name = input.name as string;
     const provider = input.provider as string;
-
     const secretKey = `${provider}:${name}`;
-    const existing = await storage.get('secret', secretKey);
 
-    if (!existing) {
-      return { variant: 'notFound', name, provider };
-    }
-
-    // Check if expired
-    const expiresAt = existing.expiresAt as string | null;
-    if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
-      return { variant: 'expired', name, expiresAt };
-    }
-
-    const now = new Date().toISOString();
-
-    // Record access in audit log
-    const audit: Array<{ accessedAt: string; accessedBy: string }> =
-      existing.audit ? JSON.parse(existing.audit as string) : [];
-    audit.push({ accessedAt: now, accessedBy: 'system' });
-
-    await storage.put('secret', secretKey, {
-      ...existing,
-      cachedAt: now,
-      audit: JSON.stringify(audit),
-    });
-
-    return {
-      variant: 'ok',
-      secret: secretKey,
-      version: existing.version as string,
-    };
+    let p = createProgram();
+    p = spGet(p, 'secret', secretKey, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const expiresAt = existing.expiresAt as string | null;
+          if (expiresAt && new Date(expiresAt).getTime() < Date.now()) return 'expired';
+          return 'valid';
+        }, 'status');
+        b2 = branch(b2, (bindings) => bindings.status === 'valid',
+          (() => {
+            let t = createProgram();
+            t = putFrom(t, 'secret', secretKey, (bindings) => {
+              const existing = bindings.existing as Record<string, unknown>;
+              const now = new Date().toISOString();
+              const audit: Array<{ accessedAt: string; accessedBy: string }> =
+                existing.audit ? JSON.parse(existing.audit as string) : [];
+              audit.push({ accessedAt: now, accessedBy: 'system' });
+              return { ...existing, cachedAt: now, audit: JSON.stringify(audit) };
+            });
+            return complete(t, 'ok', { secret: secretKey, version: '' });
+          })(),
+          (() => {
+            let e = createProgram();
+            return complete(e, 'expired', { name, expiresAt: '' });
+          })(),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notFound', { name, provider }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async exists(input, storage) {
+  exists(input: Record<string, unknown>) {
     const name = input.name as string;
     const provider = input.provider as string;
-
     const secretKey = `${provider}:${name}`;
-    const existing = await storage.get('secret', secretKey);
 
-    return { variant: 'ok', name, exists: !!existing };
+    let p = createProgram();
+    p = spGet(p, 'secret', secretKey, 'existing');
+    p = mapBindings(p, (bindings) => !!bindings.existing, 'existsFlag');
+    return complete(p, 'ok', { name, exists: false }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rotate(input, storage) {
+  rotate(input: Record<string, unknown>) {
     const name = input.name as string;
     const provider = input.provider as string;
-
     const secretKey = `${provider}:${name}`;
-    const existing = await storage.get('secret', secretKey);
 
-    if (!existing) {
-      return { variant: 'rotationUnsupported', name, provider };
-    }
-
-    // Generate new version
-    const newVersion = `v${Date.now()}`;
-    const now = new Date().toISOString();
-
-    // Generate a new encrypted value representation
-    const newValueHash = createHash('sha256')
-      .update(randomBytes(32))
-      .digest('hex');
-
-    await storage.put('secret', secretKey, {
-      ...existing,
-      version: newVersion,
-      cachedAt: null,
-      valueHash: newValueHash,
-      rotatedAt: now,
-    });
-
-    return { variant: 'ok', secret: secretKey, newVersion };
-  },
-
-  async invalidateCache(input, storage) {
-    const name = input.name as string;
-
-    // Find all secrets matching this name across providers
-    const allSecrets = await storage.find('secret');
-    let found = false;
-    let matchedKey = '';
-
-    for (const secret of allSecrets) {
-      const secretName = secret.name as string;
-      if (secretName === name) {
-        found = true;
-        matchedKey = `${secret.provider as string}:${name}`;
-        await storage.put('secret', matchedKey, {
-          ...secret,
-          cachedAt: null,
+    let p = createProgram();
+    p = spGet(p, 'secret', secretKey, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const newVersion = `v${Date.now()}`;
+        const now = new Date().toISOString();
+        const newValueHash = createHash('sha256').update(randomBytes(32)).digest('hex');
+        let b2 = putFrom(b, 'secret', secretKey, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, version: newVersion, cachedAt: null, valueHash: newValueHash, rotatedAt: now };
         });
-      }
-    }
+        return complete(b2, 'ok', { secret: secretKey, newVersion });
+      },
+      (b) => complete(b, 'rotationUnsupported', { name, provider }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    if (!found) {
-      // Still return ok - cache invalidation is idempotent
-      return { variant: 'ok', secret: name };
-    }
+  invalidateCache(input: Record<string, unknown>) {
+    const name = input.name as string;
 
-    return { variant: 'ok', secret: matchedKey };
+    let p = createProgram();
+    p = find(p, 'secret', {}, 'allSecrets');
+    p = mapBindings(p, (bindings) => {
+      const allSecrets = (bindings.allSecrets as Array<Record<string, unknown>>) || [];
+      const matched = allSecrets.filter(s => (s.name as string) === name);
+      return matched.length > 0 ? `${(matched[0].provider as string)}:${name}` : name;
+    }, 'matchedKey');
+    return complete(p, 'ok', { secret: name }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

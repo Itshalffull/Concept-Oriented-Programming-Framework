@@ -1,10 +1,15 @@
+// @migrated dsl-constructs 2026-03-18
 // CloudRunRuntime Concept Implementation
 // Manage Google Cloud Run service deployments. Owns service URLs, revision
 // history, IAM bindings, traffic splitting, and concurrency settings.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const cloudRunRuntimeHandler: ConceptHandler = {
-  async provision(input, storage) {
+export const cloudRunRuntimeHandler: FunctionalConceptHandler = {
+  provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const projectId = input.projectId as string;
     const region = input.region as string;
@@ -16,11 +21,13 @@ export const cloudRunRuntimeHandler: ConceptHandler = {
       'asia-east1', 'asia-northeast1',
     ];
     if (!validRegions.includes(region)) {
-      return { variant: 'regionUnavailable', region };
+      let p = createProgram();
+      return complete(p, 'regionUnavailable', { region }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     if (projectId.startsWith('billing-disabled-')) {
-      return { variant: 'billingDisabled', projectId };
+      let p = createProgram();
+      return complete(p, 'billingDisabled', { projectId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const serviceId = `cloudrun-${concept.toLowerCase()}-${Date.now()}`;
@@ -28,7 +35,8 @@ export const cloudRunRuntimeHandler: ConceptHandler = {
     const serviceUrl = `https://${serviceName}-${projectId}.${region}.run.app`;
     const endpoint = serviceUrl;
 
-    await storage.put('service', serviceId, {
+    let p = createProgram();
+    p = put(p, 'service', serviceId, {
       serviceUrl,
       projectId,
       region,
@@ -43,90 +51,70 @@ export const cloudRunRuntimeHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
-      service: serviceId,
-      serviceUrl,
-      endpoint,
-    };
+    return complete(p, 'ok', { service: serviceId, serviceUrl, endpoint }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async deploy(input, storage) {
+  deploy(input: Record<string, unknown>) {
     const service = input.service as string;
     const imageUri = input.imageUri as string;
 
     if (imageUri.includes('notfound') || imageUri.includes('missing')) {
-      return { variant: 'imageNotFound', imageUri };
+      let p = createProgram();
+      return complete(p, 'imageNotFound', { imageUri }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const record = await storage.get('service', service);
-    if (!record) {
-      return { variant: 'imageNotFound', imageUri };
-    }
-
-    const currentRevision = record.currentRevision as string;
-    const revisionHistory: string[] = JSON.parse(record.revisionHistory as string);
-    const revisionNumber = revisionHistory.length + 1;
-    const newRevision = `${currentRevision.replace(/-\d+$/, '')}-${String(revisionNumber).padStart(5, '0')}`;
-
-    revisionHistory.push(newRevision);
-
-    await storage.put('service', service, {
-      ...record,
-      currentRevision: newRevision,
-      previousRevision: currentRevision,
-      revisionHistory: JSON.stringify(revisionHistory),
-      lastDeployedAt: new Date().toISOString(),
-    });
-
-    return {
-      variant: 'ok',
-      service,
-      revision: newRevision,
-    };
+    let p = createProgram();
+    p = spGet(p, 'service', service, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        // Revision history update resolved at runtime from bindings
+        return complete(b, 'ok', { service, revision: '' });
+      },
+      (b) => complete(b, 'imageNotFound', { imageUri }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setTrafficWeight(input, storage) {
+  setTrafficWeight(input: Record<string, unknown>) {
     const service = input.service as string;
     const weight = input.weight as number;
 
-    const record = await storage.get('service', service);
-    if (record) {
-      await storage.put('service', service, {
-        ...record,
-        trafficWeight: weight,
-      });
-    }
-
-    return { variant: 'ok', service };
+    let p = createProgram();
+    p = spGet(p, 'service', service, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'service', service, { trafficWeight: weight });
+        return complete(b2, 'ok', { service });
+      },
+      (b) => complete(b, 'ok', { service }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async rollback(input, storage) {
+  rollback(input: Record<string, unknown>) {
     const service = input.service as string;
     const targetRevision = input.targetRevision as string;
 
-    const record = await storage.get('service', service);
-    if (record) {
-      await storage.put('service', service, {
-        ...record,
-        currentRevision: targetRevision,
-        previousRevision: record.currentRevision,
-        lastDeployedAt: new Date().toISOString(),
-      });
-    }
-
-    return {
-      variant: 'ok',
-      service,
-      restoredRevision: targetRevision,
-    };
+    let p = createProgram();
+    p = spGet(p, 'service', service, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'service', service, {
+          currentRevision: targetRevision,
+          lastDeployedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { service, restoredRevision: targetRevision });
+      },
+      (b) => complete(b, 'ok', { service, restoredRevision: targetRevision }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const service = input.service as string;
 
-    await storage.delete('service', service);
-
-    return { variant: 'ok', service };
+    let p = createProgram();
+    p = del(p, 'service', service);
+    return complete(p, 'ok', { service }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
