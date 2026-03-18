@@ -81,7 +81,24 @@ concept ActionEntity [A] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(concept: "Article", name: "create", params: "[]", variantRefs: "[]") -> ok(action: a)
     then get(action: a) -> ok(action: a, concept: "Article", name: "create", params: "[]", variantCount: 0)
+  }
+
+  always "every actionsSet entry has name": {
+    forall a in actionsSet:
+      a.name != none
+  }
+
+  never "empty name in actionsSet": {
+    exists a in actionsSet:
+      a.name = ""
+  }
+
+  action register {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
   }
 }

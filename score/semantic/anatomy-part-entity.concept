@@ -66,7 +66,24 @@ concept AnatomyPartEntity [A] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", name: "root", role: "container", required: "true") -> ok(part: a)
     then get(part: a) -> ok(part: a, widget: "dialog", name: "root", semanticRole: "container", required: "true")
+  }
+
+  always "every parts entry has name": {
+    forall a in parts:
+      a.name != none
+  }
+
+  never "empty name in parts": {
+    exists a in parts:
+      a.name = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

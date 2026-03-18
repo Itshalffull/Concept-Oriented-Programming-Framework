@@ -78,7 +78,24 @@ concept PerformanceProfile [P] {
   }
 
   invariant {
+  example "aggregated profile is retrievable": {
     after aggregate(symbol: "clef/action/Article/create", window: "{}") -> ok(profile: p)
     then get(profile: p) -> ok(profile: p, entitySymbol: "clef/action/Article/create", entityKind: _, invocationCount: _, errorRate: _)
+  }
+
+  always "every profiles entry has entitySymbol": {
+    forall p in profiles:
+      p.entitySymbol != none
+  }
+
+  never "empty entitySymbol in profiles": {
+    exists p in profiles:
+      p.entitySymbol = ""
+  }
+
+  action aggregate {
+    requires: symbol != ""
+    ensures ok: symbol != none
+  }
   }
 }

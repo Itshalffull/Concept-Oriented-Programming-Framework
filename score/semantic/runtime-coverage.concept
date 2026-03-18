@@ -109,7 +109,24 @@ concept RuntimeCoverage [C] {
   }
 
   invariant {
+  example "recorded coverage is queryable": {
     after record(symbol: "clef/action/Article/create", kind: "action", flowId: "f-123") -> ok(entry: c)
     then coverageReport(kind: "action", since: "") -> ok(report: _)
+  }
+
+  always "every entries entry has entitySymbol": {
+    forall c in entries:
+      c.entitySymbol != none
+  }
+
+  never "empty entitySymbol in entries": {
+    exists c in entries:
+      c.entitySymbol = ""
+  }
+
+  action record {
+    requires: symbol != ""
+    ensures ok: symbol != none
+  }
   }
 }

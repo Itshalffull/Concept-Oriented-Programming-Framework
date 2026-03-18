@@ -74,7 +74,24 @@ concept WidgetStateEntity [S] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", name: "closed", initial: "true") -> ok(widgetState: s)
     then get(widgetState: s) -> ok(widgetState: s, widget: "dialog", name: "closed", initial: "true", transitionCount: _)
+  }
+
+  always "every statesSet entry has name": {
+    forall s in statesSet:
+      s.name != none
+  }
+
+  never "empty name in statesSet": {
+    exists s in statesSet:
+      s.name = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

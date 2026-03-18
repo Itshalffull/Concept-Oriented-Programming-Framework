@@ -237,17 +237,34 @@ concept HandlerEntity [H] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
     then get(concept: "Article", language: "typescript") -> ok(handler: h)
   }
 
-  invariant {
+  example "registered entity is retrievable by file": {
     after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
     then getByFile(sourceFile: "handlers/ts/article.handler.ts") -> ok(handler: h)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
     then register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> alreadyRegistered(existing: h)
+  }
+
+  always "every handlers entry has concept": {
+    forall h in handlers:
+      h.concept != none
+  }
+
+  never "empty concept in handlers": {
+    exists h in handlers:
+      h.concept = ""
+  }
+
+  action register {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
   }
 }

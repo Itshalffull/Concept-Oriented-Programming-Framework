@@ -130,7 +130,24 @@ concept DeploymentHealth [H] {
   }
 
   invariant {
+  example "recorded health is queryable": {
     after record(deployment: "conduit-prod", snapshot: "{}") -> ok(check: h)
     then runtimeHealth(deployment: "conduit-prod") -> ok(runtimes: r)
+  }
+
+  always "every checks entry has deployment": {
+    forall h in checks:
+      h.deployment != none
+  }
+
+  never "empty deployment in checks": {
+    exists h in checks:
+      h.deployment = ""
+  }
+
+  action record {
+    requires: deployment != ""
+    ensures ok: deployment != none
+  }
   }
 }

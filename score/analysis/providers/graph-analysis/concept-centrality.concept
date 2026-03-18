@@ -45,9 +45,12 @@ concept ConceptCentralityProvider [C] {
   }
 
   invariant {
+  example "successful analysis implies secondary analysis succeeds": {
     after analyze(graph: "app-deps", algorithm: "concept-pagerank", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
     then analyze(graph: "app-deps", algorithm: "concept-degree", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
+  }
+
   }
 }

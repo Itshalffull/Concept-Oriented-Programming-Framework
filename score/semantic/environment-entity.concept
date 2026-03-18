@@ -98,7 +98,24 @@ concept EnvironmentEntity [E] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "DATABASE_URL", environment: "production", kind: "secret", value: "***", source: "vault") -> ok(entry: e)
     then get(name: "DATABASE_URL", environment: "production") -> ok(entry: e)
+  }
+
+  always "every entries entry has name": {
+    forall e in entries:
+      e.name != none
+  }
+
+  never "empty name in entries": {
+    exists e in entries:
+      e.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

@@ -59,7 +59,24 @@ concept VariantEntity [V] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(action: "Article/create", tag: "ok", fields: "[]") -> ok(variant: v)
     then get(variant: v) -> ok(variant: v, action: "Article/create", tag: "ok", fields: "[]")
+  }
+
+  always "every variants entry has tag": {
+    forall v in variants:
+      v.tag != none
+  }
+
+  never "empty tag in variants": {
+    exists v in variants:
+      v.tag = ""
+  }
+
+  action register {
+    requires: action != ""
+    ensures ok: action != none
+  }
   }
 }

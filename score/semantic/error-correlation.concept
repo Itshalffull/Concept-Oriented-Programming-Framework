@@ -99,7 +99,24 @@ concept ErrorCorrelation [E] {
   }
 
   invariant {
+  example "recorded entry is retrievable": {
     after record(flowId: "f-123", errorKind: "action-error", message: "Token signing key not configured", rawEvent: "{}") -> ok(error: e)
     then get(error: e) -> ok(error: e, flowId: "f-123", errorKind: "action-error", errorMessage: "Token signing key not configured", stackTrace: _, conceptEntity: _, actionEntity: _, sourceLocation: _, timestamp: _)
+  }
+
+  always "every errors entry has flowId": {
+    forall e in errors:
+      e.flowId != none
+  }
+
+  never "empty flowId in errors": {
+    exists e in errors:
+      e.flowId = ""
+  }
+
+  action record {
+    requires: flowId != ""
+    ensures ok: flowId != none
+  }
   }
 }

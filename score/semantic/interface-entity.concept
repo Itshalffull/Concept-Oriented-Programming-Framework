@@ -139,7 +139,24 @@ concept InterfaceEntity [I] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{}") -> ok(interface: i)
     then get(name: "conduit-api") -> ok(interface: i)
+  }
+
+  always "every interfaces entry has name": {
+    forall i in interfaces:
+      i.name != none
+  }
+
+  never "empty name in interfaces": {
+    exists i in interfaces:
+      i.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

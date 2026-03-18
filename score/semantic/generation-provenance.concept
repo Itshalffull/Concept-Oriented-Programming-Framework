@@ -105,7 +105,24 @@ concept GenerationProvenance [G] {
   }
 
   invariant {
+  example "recorded entry is retrievable": {
     after record(outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}") -> ok(provenance: g)
     then getByFile(outputFile: "handlers/ts/article.handler.ts") -> ok(provenance: g)
+  }
+
+  always "every records entry has outputFile": {
+    forall g in records:
+      g.outputFile != none
+  }
+
+  never "empty outputFile in records": {
+    exists g in records:
+      g.outputFile = ""
+  }
+
+  action record {
+    requires: outputFile != ""
+    ensures ok: outputFile != none
+  }
   }
 }

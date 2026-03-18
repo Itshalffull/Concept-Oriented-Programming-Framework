@@ -104,12 +104,29 @@ concept WidgetEntity [W] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
     then get(name: "dialog") -> ok(entity: w)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
     then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> alreadyRegistered(existing: w)
+  }
+
+  always "every widgets entry has name": {
+    forall w in widgets:
+      w.name != none
+  }
+
+  never "empty name in widgets": {
+    exists w in widgets:
+      w.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

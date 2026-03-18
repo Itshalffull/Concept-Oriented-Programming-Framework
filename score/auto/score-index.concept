@@ -194,7 +194,24 @@ concept ScoreIndex [X] {
   }
 
   invariant {
+  example "operational principle 1": {
     after upsertConcept(name: "Test", purpose: "A test concept", actions: a, stateFields: f, file: "/test.concept") -> ok(index: x)
     then stats() -> ok(conceptCount: c, syncCount: s, symbolCount: y, fileCount: f2, lastUpdated: t)
+  }
+
+  always "every indexes entry has conceptName": {
+    forall x in indexes:
+      x.conceptName != none
+  }
+
+  never "empty conceptName in indexes": {
+    exists x in indexes:
+      x.conceptName = ""
+  }
+
+  action upsertConcept {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

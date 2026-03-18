@@ -127,7 +127,24 @@ concept SuiteManifestEntity [S] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{}") -> ok(suite: s)
     then get(name: "identity") -> ok(suite: s)
+  }
+
+  always "every suites entry has name": {
+    forall s in suites:
+      s.name != none
+  }
+
+  never "empty name in suites": {
+    exists s in suites:
+      s.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

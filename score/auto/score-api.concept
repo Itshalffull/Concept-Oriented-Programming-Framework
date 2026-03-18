@@ -453,10 +453,27 @@ concept ScoreApi [Q] {
   }
 
   invariant {
+  example "reindex populates query indexes": {
     after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, duration: d)
     then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, lastIndexed: t)
     and listConcepts() -> ok(concepts: concepts)
     and listSyncs() -> ok(syncs: syncs)
     and listHandlers() -> ok(handlers: handlers)
+  }
+
+  always "every queries entry has kind": {
+    forall q in queries:
+      q.kind != none
+  }
+
+  never "empty kind in queries": {
+    exists q in queries:
+      q.kind = ""
+  }
+
+  action listFiles {
+    requires: pattern != ""
+    ensures ok: pattern != none
+  }
   }
 }

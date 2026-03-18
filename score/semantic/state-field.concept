@@ -66,7 +66,24 @@ concept StateField [L] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(concept: "Article", name: "title", typeExpr: "T -> String") -> ok(field: l)
     then get(field: l) -> ok(field: l, concept: "Article", name: "title", typeExpr: "T -> String", cardinality: "mapping")
+  }
+
+  always "every fields entry has name": {
+    forall l in fields:
+      l.name != none
+  }
+
+  never "empty name in fields": {
+    exists l in fields:
+      l.name = ""
+  }
+
+  action register {
+    requires: concept != ""
+    ensures ok: concept != none
+  }
   }
 }

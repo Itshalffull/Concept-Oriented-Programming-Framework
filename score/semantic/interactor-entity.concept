@@ -73,7 +73,24 @@ concept InteractorEntity [I] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "single-choice", category: "selection", properties: "{}") -> ok(entity: i)
     then get(interactor: i) -> ok(interactor: i, name: "single-choice", category: "selection", properties: "{}")
+  }
+
+  always "every interactors entry has name": {
+    forall i in interactors:
+      i.name != none
+  }
+
+  never "empty name in interactors": {
+    exists i in interactors:
+      i.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

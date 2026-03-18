@@ -97,12 +97,29 @@ concept ThemeImplementationEntity [I] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> ok(impl: i)
     then get(theme: "ocean", platform: "css") -> ok(impl: i)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> ok(impl: i)
     then register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> alreadyRegistered(existing: i)
+  }
+
+  always "every implementations entry has theme": {
+    forall i in implementations:
+      i.theme != none
+  }
+
+  never "empty theme in implementations": {
+    exists i in implementations:
+      i.theme = ""
+  }
+
+  action register {
+    requires: theme != ""
+    ensures ok: theme != none
+  }
   }
 }

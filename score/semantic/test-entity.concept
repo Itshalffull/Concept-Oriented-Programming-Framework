@@ -123,7 +123,24 @@ concept TestEntity [T] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User") -> ok(test: t)
     then get(name: "User/create conformance") -> ok(test: t)
+  }
+
+  always "every tests entry has name": {
+    forall t in tests:
+      t.name != none
+  }
+
+  never "empty name in tests": {
+    exists t in tests:
+      t.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

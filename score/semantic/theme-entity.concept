@@ -98,12 +98,29 @@ concept ThemeEntity [T] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
     then get(name: "light") -> ok(entity: t)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
     then register(name: "light", source: "themes/light.theme", ast: "{}") -> alreadyRegistered(existing: t)
+  }
+
+  always "every themes entry has name": {
+    forall t in themes:
+      t.name != none
+  }
+
+  never "empty name in themes": {
+    exists t in themes:
+      t.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

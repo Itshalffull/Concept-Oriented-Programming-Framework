@@ -103,7 +103,24 @@ concept RuntimeFlow [F] {
   }
 
   invariant {
+  example "correlated flow is retrievable": {
     after correlate(flowId: "f-123") -> ok(flow: f)
     then get(flow: f) -> ok(flow: f, flowId: "f-123", status: _, stepCount: _, deviationCount: _)
+  }
+
+  always "every flows entry has flowId": {
+    forall f in flows:
+      f.flowId != none
+  }
+
+  never "empty flowId in flows": {
+    exists f in flows:
+      f.flowId = ""
+  }
+
+  action correlate {
+    requires: flowId != ""
+    ensures ok: flowId != none
+  }
   }
 }

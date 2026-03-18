@@ -90,12 +90,29 @@ concept ConceptEntity [E] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
     then get(name: "Article") -> ok(entity: e)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "Article", source: "specs/article.concept", ast: "{}") -> ok(entity: e)
     then register(name: "Article", source: "specs/article.concept", ast: "{}") -> alreadyRegistered(existing: e)
+  }
+
+  always "every entities entry has name": {
+    forall e in entities:
+      e.name != none
+  }
+
+  never "empty name in entities": {
+    exists e in entities:
+      e.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

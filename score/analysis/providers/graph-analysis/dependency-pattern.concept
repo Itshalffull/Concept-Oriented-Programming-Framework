@@ -54,9 +54,12 @@ concept DependencyPatternProvider [C] {
   }
 
   invariant {
+  example "successful analysis implies secondary analysis succeeds": {
     after analyze(graph: "app-deps", algorithm: "circular-deps", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
     then analyze(graph: "app-deps", algorithm: "bridge-concepts", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
+  }
+
   }
 }

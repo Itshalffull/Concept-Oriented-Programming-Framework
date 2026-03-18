@@ -57,7 +57,24 @@ concept WidgetPropEntity [P] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true") -> ok(prop: p)
     then get(prop: p) -> ok(prop: p, widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true")
+  }
+
+  always "every props entry has name": {
+    forall p in props:
+      p.name != none
+  }
+
+  never "empty name in props": {
+    exists p in props:
+      p.name = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

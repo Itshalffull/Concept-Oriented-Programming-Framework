@@ -89,12 +89,29 @@ concept SyncEntity [Y] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
     then get(sync: y) -> ok(sync: y, name: "ArticlePublishSync", annotations: _, tier: _, whenPatternCount: _, thenActionCount: _)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> ok(sync: y)
     then register(name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{}") -> alreadyRegistered(existing: y)
+  }
+
+  always "every syncs entry has name": {
+    forall y in syncs:
+      y.name != none
+  }
+
+  never "empty name in syncs": {
+    exists y in syncs:
+      y.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

@@ -129,12 +129,29 @@ concept WidgetImplementationEntity [I] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
     then get(widget: "dialog", framework: "react") -> ok(impl: i)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
     then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> alreadyRegistered(existing: i)
+  }
+
+  always "every implementations entry has widget": {
+    forall i in implementations:
+      i.widget != none
+  }
+
+  never "empty widget in implementations": {
+    exists i in implementations:
+      i.widget = ""
+  }
+
+  action register {
+    requires: widget != ""
+    ensures ok: widget != none
+  }
   }
 }

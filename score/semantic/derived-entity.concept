@@ -85,12 +85,29 @@ concept DerivedEntity [D] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
     then get(name: "Trash") -> ok(entity: e)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
     then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> alreadyRegistered(existing: e)
+  }
+
+  always "every entities entry has name": {
+    forall d in entities:
+      d.name != none
+  }
+
+  never "empty name in entities": {
+    exists d in entities:
+      d.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }

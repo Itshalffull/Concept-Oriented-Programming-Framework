@@ -51,9 +51,12 @@ concept SyncCommunityProvider [C] {
   }
 
   invariant {
+  example "successful analysis implies secondary analysis succeeds": {
     after analyze(graph: "app-deps", algorithm: "sync-community", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
     then analyze(graph: "app-deps", algorithm: "suite-boundary-check", config: {})
-      -> ok(payload: _)
+    -> ok(payload: _)
+  }
+
   }
 }

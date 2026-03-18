@@ -75,12 +75,29 @@ concept ScoreKernel [K] {
   }
 
   invariant {
+  example "booted kernel reports status": {
     after boot(projectRoot: "/tmp/test-project") -> ok(kernel: k, conceptCount: _, syncCount: _)
     then status(kernel: k) -> ok(status: _, layers: _, coverage: _)
   }
 
-  invariant {
+  example "duplicate registration returns existing": {
     after boot(projectRoot: "/tmp/test-project") -> ok(kernel: k, conceptCount: _, syncCount: _)
     then boot(projectRoot: "/tmp/test-project") -> alreadyBooted(kernel: k)
+  }
+
+  always "every kernels entry has projectRoot": {
+    forall k in kernels:
+      k.projectRoot != none
+  }
+
+  never "empty projectRoot in kernels": {
+    exists k in kernels:
+      k.projectRoot = ""
+  }
+
+  action boot {
+    requires: projectRoot != ""
+    ensures ok: projectRoot != none
+  }
   }
 }

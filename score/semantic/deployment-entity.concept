@@ -135,7 +135,24 @@ concept DeploymentEntity [D] {
   }
 
   invariant {
+  example "registered entity is retrievable": {
     after register(name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{}") -> ok(deployment: d)
     then get(name: "conduit-prod") -> ok(deployment: d)
+  }
+
+  always "every deployments entry has name": {
+    forall d in deployments:
+      d.name != none
+  }
+
+  never "empty name in deployments": {
+    exists d in deployments:
+      d.name = ""
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != none
+  }
   }
 }
