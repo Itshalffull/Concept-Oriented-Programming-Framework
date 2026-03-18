@@ -2,7 +2,7 @@
 // User Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, complete, mapBindings, branch,
+  createProgram, find, put, complete, completeFrom, mapBindings, branch,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 

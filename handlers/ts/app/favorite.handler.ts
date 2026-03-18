@@ -2,7 +2,7 @@
 // Favorite Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, mapBindings,
+  createProgram, get as spGet, find, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -13,30 +13,17 @@ export const favoriteHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'favorite', user, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        const bm = mapBindings(b, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const favorites: string[] = existing
-            ? (existing.favorites as string[])
-            : [];
-          if (!favorites.includes(article)) {
-            favorites.push(article);
-          }
-          return { user, favorites };
-        }, 'favData');
-        return bm;
-      },
-      (b) => {
-        return mapBindings(b, () => {
-          return { user, favorites: [article] };
-        }, 'favData');
-      },
-    );
     p = mapBindings(p, (bindings) => {
-      return bindings.favData as Record<string, unknown>;
-    }, 'putPayload');
-    p = put(p, 'favorite', user, { user, favorites: [] });
+      const existing = bindings.existing as Record<string, unknown> | null;
+      const favorites: string[] = existing
+        ? [...(existing.favorites as string[])]
+        : [];
+      if (!favorites.includes(article)) {
+        favorites.push(article);
+      }
+      return { user, favorites };
+    }, 'favData');
+    p = putFrom(p, 'favorite', user, (bindings) => bindings.favData as Record<string, unknown>);
     return complete(p, 'ok', { user, article }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -52,8 +39,8 @@ export const favoriteHandler: FunctionalConceptHandler = {
           const existing = bindings.existing as Record<string, unknown>;
           const favorites = (existing.favorites as string[]).filter(a => a !== article);
           return { user, favorites };
-        }, 'favData');
-        let b2 = put(bm, 'favorite', user, { user, favorites: [] });
+        }, 'unfavData');
+        const b2 = putFrom(bm, 'favorite', user, (bindings) => bindings.unfavData as Record<string, unknown>);
         return complete(b2, 'ok', { user, article });
       },
       (b) => complete(b, 'ok', { user, article }),
@@ -68,20 +55,16 @@ export const favoriteHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'favorite', user, 'existing');
     p = branch(p, 'existing',
-      (b) => {
-        return mapBindings(b, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const favorites: string[] = existing
-            ? (existing.favorites as string[])
-            : [];
-          return favorites.includes(article);
-        }, 'favorited');
-      },
-      (b) => {
-        return mapBindings(b, () => false, 'favorited');
-      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        const favorites: string[] = existing
+          ? (existing.favorites as string[])
+          : [];
+        return { favorited: favorites.includes(article) };
+      }),
+      (b) => complete(b, 'ok', { favorited: false }),
     );
-    return complete(p, 'ok', { favorited: false }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   count(input: Record<string, unknown>) {
@@ -89,7 +72,7 @@ export const favoriteHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'favorite', {}, 'allUsers');
-    p = mapBindings(p, (bindings) => {
+    p = completeFrom(p, 'ok', (bindings) => {
       const allUsers = (bindings.allUsers as Array<Record<string, unknown>>) || [];
       let count = 0;
       for (const record of allUsers) {
@@ -98,8 +81,8 @@ export const favoriteHandler: FunctionalConceptHandler = {
           count++;
         }
       }
-      return count;
-    }, 'count');
-    return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { count };
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

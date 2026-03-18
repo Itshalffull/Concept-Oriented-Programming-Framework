@@ -3,7 +3,7 @@
 import { createHash, randomBytes } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -37,19 +37,13 @@ export const passwordHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'password', user, 'record');
     p = branch(p, 'record',
-      (b) => {
-        // NOTE: In a pure functional style, crypto operations inside branch
-        // closures are computed during interpretation when bindings are available.
-        // The branch closure receives bindings at interpretation time.
-        // We reference the password variable from the outer closure scope.
-        const _ = password; // ensure closure captures password
-        // The actual hash comparison will happen at interpretation time
-        // through the mapBindings pattern, but since we need the record's
-        // salt/hash values which are only available as bindings, we use
-        // a simplified approach: complete with the binding data and let
-        // the interpreter handle it.
-        return complete(b, 'ok', { valid: true });
-      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const salt = Buffer.from(record.salt as string, 'base64');
+        const hash = createHash('sha256').update(password).update(salt).digest();
+        const storedHash = Buffer.from(record.hash as string, 'base64');
+        return { valid: hash.equals(storedHash) };
+      }),
       (b) => complete(b, 'notfound', { message: 'No credentials for user' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

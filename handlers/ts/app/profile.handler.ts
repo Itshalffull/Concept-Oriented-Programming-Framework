@@ -2,7 +2,7 @@
 // Profile Concept Implementation — Functional (StorageProgram) style
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 
@@ -23,7 +23,10 @@ export const profileHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'profile', user, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', { user, bio: '', image: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return { user, bio: record.bio as string, image: record.image as string };
+      }),
       (b) => complete(b, 'notfound', { message: 'No profile found for user' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
