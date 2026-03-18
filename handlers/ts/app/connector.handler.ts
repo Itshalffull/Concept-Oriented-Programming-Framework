@@ -1,8 +1,13 @@
+// @migrated dsl-constructs 2026-03-18
 // Connector Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const connectorHandler: ConceptHandler = {
-  async configure(input, storage) {
+export const connectorHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
     const sourceId = input.sourceId as string;
     const protocolId = input.protocolId as string;
     const config = input.config as string;
@@ -11,95 +16,92 @@ export const connectorHandler: ConceptHandler = {
     try {
       parsedConfig = JSON.parse(config);
     } catch {
-      return { variant: 'error', message: 'Invalid JSON configuration' };
+      let p = createProgram();
+      return complete(p, 'error', { message: 'Invalid JSON configuration' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const connectorId = `conn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await storage.put('connector', connectorId, {
+
+    let p = createProgram();
+    p = put(p, 'connector', connectorId, {
       connectorId,
       sourceId,
       protocolId,
       config: parsedConfig,
       status: 'idle',
     });
-
-    return { variant: 'ok', connectorId };
+    return complete(p, 'ok', { connectorId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async read(input, storage) {
+  read(input: Record<string, unknown>) {
     const connectorId = input.connectorId as string;
     const query = input.query as string;
 
-    const connector = await storage.get('connector', connectorId);
-    if (!connector) {
-      return { variant: 'notfound', message: `Connector "${connectorId}" not found` };
-    }
-
-    await storage.put('connector', connectorId, { ...connector, status: 'reading' });
-
-    // Plugin-dispatched: actual read delegates to connector_protocol provider
-    // Here we record the read request for the provider to handle
-    const readId = `read-${Date.now()}`;
-    await storage.put('connectorRead', readId, {
-      connectorId,
-      query,
-      options: input.options || '{}',
-      protocolId: connector.protocolId,
-      config: connector.config,
-      timestamp: new Date().toISOString(),
-    });
-
-    await storage.put('connector', connectorId, { ...connector, status: 'idle' });
-
-    return { variant: 'ok', data: '[]' };
+    let p = createProgram();
+    p = spGet(p, 'connector', connectorId, 'connector');
+    p = branch(p, 'connector',
+      (b) => {
+        let b2 = put(b, 'connector', connectorId, { status: 'reading' });
+        const readId = `read-${Date.now()}`;
+        b2 = put(b2, 'connectorRead', readId, {
+          connectorId,
+          query,
+          options: input.options || '{}',
+          timestamp: new Date().toISOString(),
+        });
+        b2 = put(b2, 'connector', connectorId, { status: 'idle' });
+        return complete(b2, 'ok', { data: '[]' });
+      },
+      (b) => complete(b, 'notfound', { message: `Connector "${connectorId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async write(input, storage) {
+  write(input: Record<string, unknown>) {
     const connectorId = input.connectorId as string;
     const data = input.data as string;
 
-    const connector = await storage.get('connector', connectorId);
-    if (!connector) {
-      return { variant: 'notfound', message: `Connector "${connectorId}" not found` };
-    }
-
-    await storage.put('connector', connectorId, { ...connector, status: 'writing' });
-
-    // Plugin-dispatched: actual write delegates to connector_protocol provider
-    const writeId = `write-${Date.now()}`;
-    await storage.put('connectorWrite', writeId, {
-      connectorId,
-      data,
-      options: input.options || '{}',
-      protocolId: connector.protocolId,
-      config: connector.config,
-      timestamp: new Date().toISOString(),
-    });
-
-    await storage.put('connector', connectorId, { ...connector, status: 'idle' });
-
-    return { variant: 'ok', created: 0, updated: 0, skipped: 0, errors: 0 };
+    let p = createProgram();
+    p = spGet(p, 'connector', connectorId, 'connector');
+    p = branch(p, 'connector',
+      (b) => {
+        let b2 = put(b, 'connector', connectorId, { status: 'writing' });
+        const writeId = `write-${Date.now()}`;
+        b2 = put(b2, 'connectorWrite', writeId, {
+          connectorId,
+          data,
+          options: input.options || '{}',
+          timestamp: new Date().toISOString(),
+        });
+        b2 = put(b2, 'connector', connectorId, { status: 'idle' });
+        return complete(b2, 'ok', { created: 0, updated: 0, skipped: 0, errors: 0 });
+      },
+      (b) => complete(b, 'notfound', { message: `Connector "${connectorId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async test(input, storage) {
+  test(input: Record<string, unknown>) {
     const connectorId = input.connectorId as string;
-    const connector = await storage.get('connector', connectorId);
-    if (!connector) {
-      return { variant: 'notfound', message: `Connector "${connectorId}" not found` };
-    }
 
-    // Plugin-dispatched: test delegates to connector_protocol provider
-    return { variant: 'ok', message: 'connected' };
+    let p = createProgram();
+    p = spGet(p, 'connector', connectorId, 'connector');
+    p = branch(p, 'connector',
+      (b) => complete(b, 'ok', { message: 'connected' }),
+      (b) => complete(b, 'notfound', { message: `Connector "${connectorId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async discover(input, storage) {
+  discover(input: Record<string, unknown>) {
     const connectorId = input.connectorId as string;
-    const connector = await storage.get('connector', connectorId);
-    if (!connector) {
-      return { variant: 'notfound', message: `Connector "${connectorId}" not found` };
-    }
 
-    // Plugin-dispatched: discover delegates to connector_protocol provider
-    return { variant: 'ok', streams: '[]' };
+    let p = createProgram();
+    p = spGet(p, 'connector', connectorId, 'connector');
+    p = branch(p, 'connector',
+      (b) => complete(b, 'ok', { streams: '[]' }),
+      (b) => complete(b, 'notfound', { message: `Connector "${connectorId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
