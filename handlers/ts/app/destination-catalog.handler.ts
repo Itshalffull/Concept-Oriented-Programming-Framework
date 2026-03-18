@@ -4,8 +4,9 @@ import {
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const destinationCatalogHandler: FunctionalConceptHandler = {
+const destinationCatalogHandlerFunctional: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const destination = String(input.destination ?? '');
     const name = String(input.name ?? '');
@@ -52,3 +53,8 @@ export const destinationCatalogHandler: FunctionalConceptHandler = {
 };
 
 export default destinationCatalogHandler;
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const destinationCatalogHandler = wrapFunctional(destinationCatalogHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { destinationCatalogHandlerFunctional };

@@ -11,6 +11,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const MOBILE_EVENT_MAP: Record<string, string> = {
   onclick: 'onPress',
@@ -31,7 +32,7 @@ const MOBILE_EVENT_MAP: Record<string, string> = {
   onlayout: 'onLayout',
 };
 
-export const mobileAdapterHandler: FunctionalConceptHandler = {
+const mobileAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -101,3 +102,8 @@ export const mobileAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const mobileAdapterHandler = wrapFunctional(mobileAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { mobileAdapterHandlerFunctional };

@@ -7,6 +7,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const JWT_SECRET = randomBytes(32);
 
@@ -37,7 +38,7 @@ function verifyToken(token: string): Record<string, unknown> | null {
   }
 }
 
-export const jwtHandler: FunctionalConceptHandler = {
+const jwtHandlerFunctional: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const user = input.user as string;
     const token = signToken({ user, iat: Date.now() });
@@ -59,3 +60,8 @@ export const jwtHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { user: payload.user as string }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const jwtHandler = wrapFunctional(jwtHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { jwtHandlerFunctional };

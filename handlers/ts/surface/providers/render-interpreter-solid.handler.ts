@@ -1,6 +1,7 @@
 // RenderInterpreterSolid — self-registering provider for "solid" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -13,7 +14,7 @@ const PROVIDER_REF = 'render-interpreter-provider:solid';
 let idCounter = 0;
 function nextId(): string { return `ri-solid-${++idCounter}`; }
 
-export const renderInterpreterSolidHandler: FunctionalConceptHandler = {
+const renderInterpreterSolidHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'solid' }, 'existing');
@@ -73,5 +74,8 @@ export const renderInterpreterSolidHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterSolidHandler = wrapFunctional(renderInterpreterSolidHandlerFunctional);
+export { renderInterpreterSolidHandlerFunctional };
 
 export function resetRenderInterpreterSolidCounter(): void { idCounter = 0; }

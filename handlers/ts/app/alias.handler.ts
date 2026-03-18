@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const aliasHandler: FunctionalConceptHandler = {
+const aliasHandlerFunctional: FunctionalConceptHandler = {
   addAlias(input: Record<string, unknown>) {
     const entity = input.entity as string;
     const name = input.name as string;
@@ -64,3 +65,8 @@ export const aliasHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { entity: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const aliasHandler = wrapFunctional(aliasHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { aliasHandlerFunctional };

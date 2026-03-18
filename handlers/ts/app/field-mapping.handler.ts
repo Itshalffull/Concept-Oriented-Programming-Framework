@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const fieldMappingHandler: FunctionalConceptHandler = {
+const fieldMappingHandlerFunctional: FunctionalConceptHandler = {
   map(input: Record<string, unknown>) {
     const mappingId = input.mappingId as string;
     const sourceField = input.sourceField as string;
@@ -119,3 +120,8 @@ export const fieldMappingHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const fieldMappingHandler = wrapFunctional(fieldMappingHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { fieldMappingHandlerFunctional };

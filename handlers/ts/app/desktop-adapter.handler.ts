@@ -11,6 +11,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const DESKTOP_IPC_MAP: Record<string, string> = {
   onclick: 'click',
@@ -30,7 +31,7 @@ const DESKTOP_IPC_MAP: Record<string, string> = {
   ondrop: 'drop',
 };
 
-export const desktopAdapterHandler: FunctionalConceptHandler = {
+const desktopAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -81,3 +82,8 @@ export const desktopAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const desktopAdapterHandler = wrapFunctional(desktopAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { desktopAdapterHandlerFunctional };

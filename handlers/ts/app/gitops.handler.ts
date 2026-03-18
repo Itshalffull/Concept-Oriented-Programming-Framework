@@ -6,8 +6,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const gitopsHandler: FunctionalConceptHandler = {
+const gitopsHandlerFunctional: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const controller = input.controller as string;
@@ -65,3 +66,8 @@ export const gitopsHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const gitopsHandler = wrapFunctional(gitopsHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { gitopsHandlerFunctional };

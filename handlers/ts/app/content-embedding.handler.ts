@@ -4,6 +4,7 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let idCounter = 0;
 
@@ -62,7 +63,7 @@ function buildExcerpt(text: string): string {
   return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
 }
 
-export const contentEmbeddingHandler: FunctionalConceptHandler = {
+const contentEmbeddingHandlerFunctional: FunctionalConceptHandler = {
   index(input: Record<string, unknown>) {
     const entityId = input.entity_id as string;
     const sourceType = input.source_type as string;
@@ -132,3 +133,8 @@ export const contentEmbeddingHandler: FunctionalConceptHandler = {
 export function resetContentEmbeddingCounter(): void {
   idCounter = 0;
 }
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const contentEmbeddingHandler = wrapFunctional(contentEmbeddingHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { contentEmbeddingHandlerFunctional };

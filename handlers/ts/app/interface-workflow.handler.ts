@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const interfaceWorkflowHandler: FunctionalConceptHandler = {
+const interfaceWorkflowHandlerFunctional: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const steps = JSON.parse(input.steps as string) as string[];
@@ -81,3 +82,8 @@ export const interfaceWorkflowHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const interfaceWorkflowHandler = wrapFunctional(interfaceWorkflowHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { interfaceWorkflowHandlerFunctional };

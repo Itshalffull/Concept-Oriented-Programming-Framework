@@ -6,6 +6,7 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -14,7 +15,7 @@ const VALID_TYPES = ['color', 'dimension', 'fontFamily', 'fontWeight', 'duration
 const VALID_TIERS = ['primitive', 'semantic', 'component'];
 const VALID_EXPORT_FORMATS = ['css', 'dtcg', 'scss', 'json', 'tailwind'];
 
-export const designTokenHandler: FunctionalConceptHandler = {
+const designTokenHandlerFunctional: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
     const token = input.token as string;
     const name = input.name as string;
@@ -130,3 +131,8 @@ export const designTokenHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { output, format }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const designTokenHandler = wrapFunctional(designTokenHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { designTokenHandlerFunctional };

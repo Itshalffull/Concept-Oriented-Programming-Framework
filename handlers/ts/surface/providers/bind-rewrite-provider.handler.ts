@@ -1,4 +1,5 @@
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, complete, relation, at,
   type StorageProgram,
@@ -36,7 +37,7 @@ export function applyBindRewrite(
  * sequences. Registered with RenderTransform as kind "bind-rewrite"
  * through sync wiring.
  */
-export const bindRewriteProviderHandler: FunctionalConceptHandler = {
+const bindRewriteProviderHandlerFunctional: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = complete(createProgram(), 'ok', {
       name: 'BindRewriteProvider',
@@ -88,3 +89,6 @@ export const bindRewriteProviderHandler: FunctionalConceptHandler = {
     }
   },
 };
+
+export const bindRewriteProviderHandler = wrapFunctional(bindRewriteProviderHandlerFunctional);
+export { bindRewriteProviderHandlerFunctional };

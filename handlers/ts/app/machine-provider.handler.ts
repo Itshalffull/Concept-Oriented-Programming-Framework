@@ -6,6 +6,7 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -28,7 +29,7 @@ function resolveTransition(current: string, event: string): string | null {
   return transitions[current]?.[event] ?? null;
 }
 
-export const machineProviderHandler: FunctionalConceptHandler = {
+const machineProviderHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -176,3 +177,8 @@ export const machineProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const machineProviderHandler = wrapFunctional(machineProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { machineProviderHandlerFunctional };

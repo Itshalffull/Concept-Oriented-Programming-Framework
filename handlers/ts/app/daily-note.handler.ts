@@ -5,8 +5,9 @@ import {
   createProgram, find, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const dailyNoteHandler: FunctionalConceptHandler = {
+const dailyNoteHandlerFunctional: FunctionalConceptHandler = {
   getOrCreateToday(input: Record<string, unknown>) {
     const note = input.note as string;
     const today = new Date().toISOString().slice(0, 10);
@@ -42,3 +43,8 @@ export const dailyNoteHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { notes: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const dailyNoteHandler = wrapFunctional(dailyNoteHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { dailyNoteHandlerFunctional };

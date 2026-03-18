@@ -1,6 +1,7 @@
 // RenderInterpreterVanilla — self-registering provider for "vanilla" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -13,7 +14,7 @@ const PROVIDER_REF = 'render-interpreter-provider:vanilla';
 let idCounter = 0;
 function nextId(): string { return `ri-vanilla-${++idCounter}`; }
 
-export const renderInterpreterVanillaHandler: FunctionalConceptHandler = {
+const renderInterpreterVanillaHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'vanilla' }, 'existing');
@@ -73,5 +74,8 @@ export const renderInterpreterVanillaHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterVanillaHandler = wrapFunctional(renderInterpreterVanillaHandlerFunctional);
+export { renderInterpreterVanillaHandlerFunctional };
 
 export function resetRenderInterpreterVanillaCounter(): void { idCounter = 0; }

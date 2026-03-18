@@ -7,6 +7,7 @@
 // this provider at runtime without importing it.
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -19,7 +20,7 @@ const PROVIDER_REF = 'render-interpreter-provider:react';
 let idCounter = 0;
 function nextId(): string { return `ri-react-${++idCounter}`; }
 
-export const renderInterpreterReactHandler: FunctionalConceptHandler = {
+const renderInterpreterReactHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react' }, 'existing');
@@ -79,5 +80,8 @@ export const renderInterpreterReactHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterReactHandler = wrapFunctional(renderInterpreterReactHandlerFunctional);
+export { renderInterpreterReactHandlerFunctional };
 
 export function resetRenderInterpreterReactCounter(): void { idCounter = 0; }

@@ -6,10 +6,11 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let machineCounter = 0;
 
-export const machineHandler: FunctionalConceptHandler = {
+const machineHandlerFunctional: FunctionalConceptHandler = {
   spawn(input: Record<string, unknown>) {
     const machine = input.machine as string;
     const widget = input.widget as string;
@@ -120,3 +121,8 @@ export const machineHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const machineHandler = wrapFunctional(machineHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { machineHandlerFunctional };

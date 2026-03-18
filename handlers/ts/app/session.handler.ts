@@ -8,6 +8,7 @@ import {
   createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let idCounter = 1;
@@ -16,7 +17,7 @@ function nextGeneratedId(): string {
   return `u-test-invariant-${String(next).padStart(3, '0')}`;
 }
 
-export const sessionHandler: FunctionalConceptHandler = {
+const sessionHandlerFunctional: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const session = (input.session as string) || randomUUID();
     const userId = input.userId as string;
@@ -125,3 +126,8 @@ export const sessionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const sessionHandler = wrapFunctional(sessionHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { sessionHandlerFunctional };

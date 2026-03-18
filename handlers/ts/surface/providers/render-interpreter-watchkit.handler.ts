@@ -1,6 +1,7 @@
 // RenderInterpreterWatchkit — self-registering provider for "watchkit" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -13,7 +14,7 @@ const PROVIDER_REF = 'render-interpreter-provider:watchkit';
 let idCounter = 0;
 function nextId(): string { return `ri-watchkit-${++idCounter}`; }
 
-export const renderInterpreterWatchkitHandler: FunctionalConceptHandler = {
+const renderInterpreterWatchkitHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'watchkit' }, 'existing');
@@ -73,5 +74,8 @@ export const renderInterpreterWatchkitHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterWatchkitHandler = wrapFunctional(renderInterpreterWatchkitHandlerFunctional);
+export { renderInterpreterWatchkitHandlerFunctional };
 
 export function resetRenderInterpreterWatchkitCounter(): void { idCounter = 0; }

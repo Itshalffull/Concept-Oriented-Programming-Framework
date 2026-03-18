@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const vaultProviderHandler: FunctionalConceptHandler = {
+const vaultProviderHandlerFunctional: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const path = input.path as string;
     let p = createProgram();
@@ -70,3 +71,8 @@ export const vaultProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const vaultProviderHandler = wrapFunctional(vaultProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { vaultProviderHandlerFunctional };

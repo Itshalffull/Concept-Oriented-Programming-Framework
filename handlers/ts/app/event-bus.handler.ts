@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const eventBusHandler: FunctionalConceptHandler = {
+const eventBusHandlerFunctional: FunctionalConceptHandler = {
   registerEventType(input: Record<string, unknown>) {
     const name = input.name as string;
     const schema = input.schema as string;
@@ -104,3 +105,8 @@ export const eventBusHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { entries: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const eventBusHandler = wrapFunctional(eventBusHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { eventBusHandlerFunctional };

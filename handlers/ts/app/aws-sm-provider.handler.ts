@@ -7,8 +7,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const awsSmProviderHandler: FunctionalConceptHandler = {
+const awsSmProviderHandlerFunctional: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const secretId = input.secretId as string;
     const versionStage = input.versionStage as string;
@@ -70,3 +71,8 @@ export const awsSmProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const awsSmProviderHandler = wrapFunctional(awsSmProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { awsSmProviderHandlerFunctional };

@@ -1,6 +1,7 @@
 // RenderInterpreterInk — self-registering provider for "ink" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -13,7 +14,7 @@ const PROVIDER_REF = 'render-interpreter-provider:ink';
 let idCounter = 0;
 function nextId(): string { return `ri-ink-${++idCounter}`; }
 
-export const renderInterpreterInkHandler: FunctionalConceptHandler = {
+const renderInterpreterInkHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'ink' }, 'existing');
@@ -73,5 +74,8 @@ export const renderInterpreterInkHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterInkHandler = wrapFunctional(renderInterpreterInkHandlerFunctional);
+export { renderInterpreterInkHandlerFunctional };
 
 export function resetRenderInterpreterInkCounter(): void { idCounter = 0; }

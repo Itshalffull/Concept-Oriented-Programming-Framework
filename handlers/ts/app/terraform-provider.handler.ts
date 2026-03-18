@@ -6,8 +6,9 @@ import {
   createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const terraformProviderHandler: FunctionalConceptHandler = {
+const terraformProviderHandlerFunctional: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     let p = createProgram();
     return complete(p, 'ok', {
@@ -79,3 +80,8 @@ export const terraformProviderHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { workspace, destroyed }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const terraformProviderHandler = wrapFunctional(terraformProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { terraformProviderHandlerFunctional };

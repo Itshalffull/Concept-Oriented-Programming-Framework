@@ -8,8 +8,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const dotenvProviderHandler: FunctionalConceptHandler = {
+const dotenvProviderHandlerFunctional: FunctionalConceptHandler = {
   fetch(input: Record<string, unknown>) {
     const name = input.name as string;
     const filePath = input.filePath as string;
@@ -59,3 +60,8 @@ export const dotenvProviderHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const dotenvProviderHandler = wrapFunctional(dotenvProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { dotenvProviderHandlerFunctional };

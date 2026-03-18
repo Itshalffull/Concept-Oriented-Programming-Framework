@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const captureHandler: FunctionalConceptHandler = {
+const captureHandlerFunctional: FunctionalConceptHandler = {
   clip(input: Record<string, unknown>) {
     const url = input.url as string;
     const mode = input.mode as string;
@@ -104,3 +105,8 @@ export const captureHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const captureHandler = wrapFunctional(captureHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { captureHandlerFunctional };

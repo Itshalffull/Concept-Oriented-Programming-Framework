@@ -8,6 +8,7 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function parseStructuredValue(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'string' || value.trim() === '') return null;
@@ -21,7 +22,7 @@ function parseStructuredValue(value: unknown): Record<string, unknown> | null {
   }
 }
 
-export const contentNodeHandler: FunctionalConceptHandler = {
+const contentNodeHandlerFunctional: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const node = input.node as string;
     const type = (input.type as string | undefined) ?? '';
@@ -123,3 +124,8 @@ export const contentNodeHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const contentNodeHandler = wrapFunctional(contentNodeHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { contentNodeHandlerFunctional };

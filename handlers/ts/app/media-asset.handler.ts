@@ -6,8 +6,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const mediaAssetHandler: FunctionalConceptHandler = {
+const mediaAssetHandlerFunctional: FunctionalConceptHandler = {
   createMedia(input: Record<string, unknown>) {
     const asset = input.asset as string;
     const source = input.source as string;
@@ -92,3 +93,8 @@ export const mediaAssetHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const mediaAssetHandler = wrapFunctional(mediaAssetHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { mediaAssetHandlerFunctional };

@@ -2,8 +2,9 @@
 // VanillaAdapter Handler — Transforms framework-neutral props into vanilla DOM APIs.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const vanillaAdapterHandler: FunctionalConceptHandler = {
+const vanillaAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string; const props = input.props as string;
     if (!props || props.trim() === '') { let p = createProgram(); return complete(p, 'error', { message: 'Props cannot be empty' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -30,3 +31,8 @@ export const vanillaAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const vanillaAdapterHandler = wrapFunctional(vanillaAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { vanillaAdapterHandlerFunctional };

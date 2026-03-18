@@ -11,6 +11,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function toReactEventName(key: string): string {
   if (!key.startsWith('on')) return key;
@@ -18,7 +19,7 @@ function toReactEventName(key: string): string {
   return 'on' + eventPart.charAt(0).toUpperCase() + eventPart.slice(1);
 }
 
-export const reactAdapterHandler: FunctionalConceptHandler = {
+const reactAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -95,3 +96,8 @@ export const reactAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const reactAdapterHandler = wrapFunctional(reactAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { reactAdapterHandlerFunctional };

@@ -5,11 +5,12 @@ import {
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /** Known specification formats and their validators. */
 const KNOWN_FORMATS = ['openapi', 'asyncapi', 'jsonschema', 'graphql-schema', 'protobuf'];
 
-export const specHandler: FunctionalConceptHandler = {
+const specHandlerFunctional: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
     const projections = JSON.parse(input.projections as string) as string[];
     const format = input.format as string;
@@ -116,3 +117,8 @@ export const specHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const specHandler = wrapFunctional(specHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { specHandlerFunctional };

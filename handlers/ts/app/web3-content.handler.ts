@@ -6,13 +6,14 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function generateCid(data: Buffer | Uint8Array | string): string {
   const bytes = typeof data === 'string' ? Buffer.from(data, 'utf-8') : Buffer.from(data);
   return 'Qm' + createHash('sha256').update(bytes).digest('hex').slice(0, 44);
 }
 
-export const web3ContentHandler: FunctionalConceptHandler = {
+const web3ContentHandlerFunctional: FunctionalConceptHandler = {
   store(input: Record<string, unknown>) {
     const data = input.data as string | Uint8Array; const name = input.name as string; const contentType = input.contentType as string;
     if (!data || !name || !contentType) { let p = createProgram(); return complete(p, 'error', { message: 'Missing required fields: data, name, contentType' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
@@ -51,3 +52,8 @@ export const web3ContentHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const web3ContentHandler = wrapFunctional(web3ContentHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { web3ContentHandlerFunctional };

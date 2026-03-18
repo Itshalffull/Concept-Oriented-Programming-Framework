@@ -6,6 +6,7 @@ import {
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const TOKEN_PATTERN = /\[([a-zA-Z_][a-zA-Z_0-9]*(?::[a-zA-Z_][a-zA-Z_0-9]*)*)\]/g;
 function scanTokens(text: string): string[] {
@@ -20,7 +21,7 @@ function resolveBuiltinToken(tokenPath: string): string | null {
   return builtins[tokenPath] ?? null;
 }
 
-export const tokenHandler: FunctionalConceptHandler = {
+const tokenHandlerFunctional: FunctionalConceptHandler = {
   replace(input: Record<string, unknown>) {
     const text = input.text as string;
     // Token replacement with provider lookups is complex with sequential storage access.
@@ -73,3 +74,8 @@ export const tokenHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const tokenHandler = wrapFunctional(tokenHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { tokenHandlerFunctional };

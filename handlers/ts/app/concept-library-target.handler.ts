@@ -23,6 +23,7 @@ import { parseDerivedFile } from '../framework/derived-parser.js';
 import { parseSyncFile } from '../framework/sync-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { join, basename, relative, dirname } from 'path';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 // ---------------------------------------------------------------------------
 // File discovery — scans entire project, skips build/vendor dirs
@@ -353,7 +354,7 @@ function renderFeatureHierarchy(
 // Handler
 // ---------------------------------------------------------------------------
 
-export const conceptLibraryTargetHandler: FunctionalConceptHandler = {
+const conceptLibraryTargetHandlerFunctional: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const config = JSON.parse((input.config as string) || '{}');
     const outputPath = (config.outputPath as string) || 'docs/reference/concept-library.md';
@@ -619,3 +620,8 @@ export const conceptLibraryTargetHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const conceptLibraryTargetHandler = wrapFunctional(conceptLibraryTargetHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { conceptLibraryTargetHandlerFunctional };

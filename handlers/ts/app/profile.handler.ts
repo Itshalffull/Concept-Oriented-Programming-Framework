@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const profileHandler: FunctionalConceptHandler = {
+const profileHandlerFunctional: FunctionalConceptHandler = {
   update(input: Record<string, unknown>) {
     const user = input.user as string;
     const bio = input.bio as string;
@@ -32,3 +33,8 @@ export const profileHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const profileHandler = wrapFunctional(profileHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { profileHandlerFunctional };

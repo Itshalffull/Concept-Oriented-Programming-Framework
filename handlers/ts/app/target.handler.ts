@@ -5,6 +5,7 @@ import {
   createProgram, get as spGet, find, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function computeHash(content: string): string {
   let hash = 0;
@@ -12,7 +13,7 @@ function computeHash(content: string): string {
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-export const targetHandler: FunctionalConceptHandler = {
+const targetHandlerFunctional: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const targetType = input.targetType as string;
@@ -82,3 +83,8 @@ export const targetHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const targetHandler = wrapFunctional(targetHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { targetHandlerFunctional };

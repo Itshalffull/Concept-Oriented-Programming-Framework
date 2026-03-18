@@ -6,13 +6,14 @@ import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const PLUGIN_REF = 'surface-provider:slot';
 
-export const slotProviderHandler: FunctionalConceptHandler = {
+const slotProviderHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     const config = input.config as string;
 
@@ -117,3 +118,8 @@ export const slotProviderHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { slots: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const slotProviderHandler = wrapFunctional(slotProviderHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { slotProviderHandlerFunctional };

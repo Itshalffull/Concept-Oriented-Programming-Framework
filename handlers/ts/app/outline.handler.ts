@@ -4,8 +4,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const outlineHandler: FunctionalConceptHandler = {
+const outlineHandlerFunctional: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const node = input.node as string;
     const parent = (input.parent as string) || '';
@@ -155,3 +156,8 @@ export const outlineHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const outlineHandler = wrapFunctional(outlineHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { outlineHandlerFunctional };

@@ -5,11 +5,12 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const uiSchemaHandler: FunctionalConceptHandler = {
+const uiSchemaHandlerFunctional: FunctionalConceptHandler = {
   inspect(input: Record<string, unknown>) {
     const schema = input.schema as string; const conceptSpec = input.conceptSpec as string;
     let parsed: Record<string, unknown>;
@@ -83,3 +84,8 @@ export const uiSchemaHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const uiSchemaHandler = wrapFunctional(uiSchemaHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { uiSchemaHandlerFunctional };

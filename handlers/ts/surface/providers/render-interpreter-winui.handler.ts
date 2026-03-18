@@ -1,6 +1,7 @@
 // RenderInterpreterWinui — self-registering provider for "winui" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, find, put, branch, complete,
   type StorageProgram,
@@ -13,7 +14,7 @@ const PROVIDER_REF = 'render-interpreter-provider:winui';
 let idCounter = 0;
 function nextId(): string { return `ri-winui-${++idCounter}`; }
 
-export const renderInterpreterWinuiHandler: FunctionalConceptHandler = {
+const renderInterpreterWinuiHandlerFunctional: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'winui' }, 'existing');
@@ -73,5 +74,8 @@ export const renderInterpreterWinuiHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderInterpreterWinuiHandler = wrapFunctional(renderInterpreterWinuiHandlerFunctional);
+export { renderInterpreterWinuiHandlerFunctional };
 
 export function resetRenderInterpreterWinuiCounter(): void { idCounter = 0; }

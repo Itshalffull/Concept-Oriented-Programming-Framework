@@ -12,6 +12,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 // Widget-to-AppKit mapping structure
 export interface WidgetMapping {
@@ -928,7 +929,7 @@ export const APPKIT_WIDGET_MAP: Record<string, WidgetMapping> = {
 // Handler actions
 // ============================================================
 
-export const appKitAdapterHandler: FunctionalConceptHandler = {
+const appKitAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -1104,3 +1105,8 @@ export const appKitAdapterHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const appKitAdapterHandler = wrapFunctional(appKitAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { appKitAdapterHandlerFunctional };

@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const interfaceSurfaceHandler: FunctionalConceptHandler = {
+const interfaceSurfaceHandlerFunctional: FunctionalConceptHandler = {
   compose(input: Record<string, unknown>) {
     const kit = input.kit as string;
     const target = input.target as string;
@@ -60,3 +61,8 @@ export const interfaceSurfaceHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const interfaceSurfaceHandler = wrapFunctional(interfaceSurfaceHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { interfaceSurfaceHandlerFunctional };

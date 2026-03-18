@@ -7,8 +7,9 @@ import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const lambdaRuntimeHandler: FunctionalConceptHandler = {
+const lambdaRuntimeHandlerFunctional: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const memory = input.memory as number;
@@ -168,3 +169,8 @@ export const lambdaRuntimeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const lambdaRuntimeHandler = wrapFunctional(lambdaRuntimeHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { lambdaRuntimeHandlerFunctional };

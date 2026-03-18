@@ -8,8 +8,9 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const svelteAdapterHandler: FunctionalConceptHandler = {
+const svelteAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -143,3 +144,8 @@ export const svelteAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const svelteAdapterHandler = wrapFunctional(svelteAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { svelteAdapterHandlerFunctional };

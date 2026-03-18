@@ -6,12 +6,13 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const VALID_CATEGORIES = ['serif', 'sans-serif', 'monospace', 'display', 'handwriting'];
 
-export const typographyHandler: FunctionalConceptHandler = {
+const typographyHandlerFunctional: FunctionalConceptHandler = {
   defineScale(input: Record<string, unknown>) {
     const typography = input.typography as string;
     const baseSize = input.baseSize as number;
@@ -70,3 +71,8 @@ export const typographyHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { typography: id }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const typographyHandler = wrapFunctional(typographyHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { typographyHandlerFunctional };

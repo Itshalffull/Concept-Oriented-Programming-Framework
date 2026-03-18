@@ -13,6 +13,7 @@ import {
   createProgram, get as spGet, find, put, branch, complete, perform,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 // Lazy-load parsers only when needed (avoids circular deps at import time)
 async function loadParsers() {
@@ -357,7 +358,7 @@ function collectSyncPaths(
 
 // --- Handler ---
 
-export const fileCatalogHandler: FunctionalConceptHandler = {
+const fileCatalogHandlerFunctional: FunctionalConceptHandler = {
   registerProvider(input: Record<string, unknown>) {
     const providerName = input.provider_name as string;
     const kind = input.kind as string;
@@ -451,3 +452,8 @@ function inferSuite(
   }
   return null;
 }
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const fileCatalogHandler = wrapFunctional(fileCatalogHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { fileCatalogHandlerFunctional };

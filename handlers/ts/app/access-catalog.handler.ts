@@ -4,8 +4,9 @@ import {
   createProgram, put, find, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const accessCatalogHandler: FunctionalConceptHandler = {
+const accessCatalogHandlerFunctional: FunctionalConceptHandler = {
   registerPermission(input: Record<string, unknown>) {
     const entry = String(input.entry ?? '');
     let p = createProgram();
@@ -81,3 +82,8 @@ export const accessCatalogHandler: FunctionalConceptHandler = {
 };
 
 export default accessCatalogHandler;
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const accessCatalogHandler = wrapFunctional(accessCatalogHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { accessCatalogHandlerFunctional };

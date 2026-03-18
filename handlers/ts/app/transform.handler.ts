@@ -5,6 +5,7 @@ import {
   createProgram, get as spGet, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function applyTransform(pluginId: string, value: string): string {
   switch (pluginId) {
@@ -17,7 +18,7 @@ function applyTransform(pluginId: string, value: string): string {
   }
 }
 
-export const transformHandler: FunctionalConceptHandler = {
+const transformHandlerFunctional: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
@@ -62,3 +63,8 @@ export const transformHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const transformHandler = wrapFunctional(transformHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { transformHandlerFunctional };

@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, find, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const backlinkHandler: FunctionalConceptHandler = {
+const backlinkHandlerFunctional: FunctionalConceptHandler = {
   getBacklinks(input: Record<string, unknown>) {
     const entity = input.entity as string;
 
@@ -38,3 +39,8 @@ export const backlinkHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const backlinkHandler = wrapFunctional(backlinkHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { backlinkHandlerFunctional };

@@ -16,6 +16,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../../runtime/functional-compat.ts';
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
@@ -55,7 +56,7 @@ function simpleHash(str: string): string {
 
 type Result = { variant: string; [key: string]: unknown };
 
-export const testGenHandler: FunctionalConceptHandler = {
+const testGenHandlerFunctional: FunctionalConceptHandler = {
 
   generate(input: Record<string, unknown>) {
     const concept_ref = input.concept_ref as string;
@@ -226,3 +227,6 @@ export const testGenHandler: FunctionalConceptHandler = {
     return p as StorageProgram<Result>;
   },
 };
+
+export const testGenHandler = wrapFunctional(testGenHandlerFunctional);
+export { testGenHandlerFunctional };

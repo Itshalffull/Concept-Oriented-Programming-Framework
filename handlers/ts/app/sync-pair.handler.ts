@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const syncPairHandler: FunctionalConceptHandler = {
+const syncPairHandlerFunctional: FunctionalConceptHandler = {
   link(input: Record<string, unknown>) {
     const pairId = input.pairId as string;
     const idA = input.idA as string;
@@ -137,3 +138,8 @@ export const syncPairHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const syncPairHandler = wrapFunctional(syncPairHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { syncPairHandlerFunctional };

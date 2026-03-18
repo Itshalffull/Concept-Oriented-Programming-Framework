@@ -5,11 +5,12 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const PACKAGE_MANIFESTS: Record<string, string> = { typescript: 'package.json', javascript: 'package.json', python: 'pyproject.toml', go: 'go.mod', rust: 'Cargo.toml', java: 'pom.xml', swift: 'Package.swift' };
 const FILE_EXTENSIONS: Record<string, string> = { typescript: '.ts', javascript: '.js', python: '.py', go: '.go', rust: '.rs', java: '.java', swift: '.swift' };
 
-export const sdkHandler: FunctionalConceptHandler = {
+const sdkHandlerFunctional: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const language = input.language as string;
@@ -75,3 +76,8 @@ export const sdkHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const sdkHandler = wrapFunctional(sdkHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { sdkHandlerFunctional };

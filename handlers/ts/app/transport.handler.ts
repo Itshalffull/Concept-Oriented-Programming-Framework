@@ -6,12 +6,13 @@ import {
   createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 const VALID_KINDS = ['rest', 'graphql', 'websocket'];
 
-export const transportHandler: FunctionalConceptHandler = {
+const transportHandlerFunctional: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const transport = input.transport as string;
     const kind = input.kind as string;
@@ -98,3 +99,8 @@ export const transportHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const transportHandler = wrapFunctional(transportHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { transportHandlerFunctional };

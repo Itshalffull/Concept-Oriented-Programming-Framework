@@ -6,8 +6,9 @@ import {
   createProgram, find, put, del, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const iacHandler: FunctionalConceptHandler = {
+const iacHandlerFunctional: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
     const plan = input.plan as string;
     const provider = input.provider as string;
@@ -97,3 +98,8 @@ export const iacHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { destroyed: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const iacHandler = wrapFunctional(iacHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { iacHandlerFunctional };

@@ -6,13 +6,14 @@ import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
 const VALID_KINDS = ['state', 'computed', 'effect'];
 
-export const signalHandler: FunctionalConceptHandler = {
+const signalHandlerFunctional: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const signal = input.signal as string;
     const kind = input.kind as string;
@@ -139,3 +140,8 @@ export const signalHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const signalHandler = wrapFunctional(signalHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { signalHandlerFunctional };

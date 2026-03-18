@@ -5,8 +5,9 @@ import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const workflowHandler: FunctionalConceptHandler = {
+const workflowHandlerFunctional: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram(); p = find(p, 'workflow', {}, 'items');
     p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
@@ -108,3 +109,8 @@ export const workflowHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const workflowHandler = wrapFunctional(workflowHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { workflowHandlerFunctional };

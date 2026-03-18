@@ -6,6 +6,7 @@ import {
   createProgram, get as spGet, put, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string): string { return prefix + '-' + (++counter); }
@@ -69,7 +70,7 @@ function extractContrastPairs(tokens: Record<string, string>): Array<[string, st
   return pairs;
 }
 
-export const themeParserHandler: FunctionalConceptHandler = {
+const themeParserHandlerFunctional: FunctionalConceptHandler = {
   parse(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const source = input.source as string;
@@ -131,3 +132,8 @@ export const themeParserHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const themeParserHandler = wrapFunctional(themeParserHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { themeParserHandlerFunctional };

@@ -7,6 +7,7 @@ import {
   createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 /**
  * Extract variable names from a formula expression.
@@ -59,7 +60,7 @@ function evaluateExpression(
   }
 }
 
-export const formulaHandler: FunctionalConceptHandler = {
+const formulaHandlerFunctional: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const formula = input.formula as string;
     const expression = input.expression as string;
@@ -155,3 +156,8 @@ export const formulaHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const formulaHandler = wrapFunctional(formulaHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { formulaHandlerFunctional };

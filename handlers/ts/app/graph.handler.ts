@@ -7,8 +7,9 @@ import {
   createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const graphHandler: FunctionalConceptHandler = {
+const graphHandlerFunctional: FunctionalConceptHandler = {
   addNode(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const node = input.node as string;
@@ -177,3 +178,8 @@ export const graphHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const graphHandler = wrapFunctional(graphHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { graphHandlerFunctional };

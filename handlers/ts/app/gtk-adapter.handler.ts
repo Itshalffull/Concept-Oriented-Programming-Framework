@@ -11,6 +11,7 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const GTK_SIGNAL_MAP: Record<string, string> = {
   onclick: 'clicked',
@@ -29,7 +30,7 @@ const GTK_SIGNAL_MAP: Record<string, string> = {
   onresize: 'size-allocate',
 };
 
-export const gtkAdapterHandler: FunctionalConceptHandler = {
+const gtkAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -158,3 +159,8 @@ export const gtkAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const gtkAdapterHandler = wrapFunctional(gtkAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { gtkAdapterHandlerFunctional };

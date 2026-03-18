@@ -6,6 +6,7 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 function isTypeCompatible(expected: string, actual: string): boolean {
   if (expected === actual) return true;
@@ -16,7 +17,7 @@ function isTypeCompatible(expected: string, actual: string): boolean {
   return false;
 }
 
-export const contractCheckerHandler: FunctionalConceptHandler = {
+const contractCheckerHandlerFunctional: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const checker = input.checker as string;
     const widgetName = input.widget as string;
@@ -87,3 +88,8 @@ export const contractCheckerHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { checker, suggestions: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const contractCheckerHandler = wrapFunctional(contractCheckerHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { contractCheckerHandlerFunctional };

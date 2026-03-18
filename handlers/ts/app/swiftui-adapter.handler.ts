@@ -8,6 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
 const SWIFTUI_EVENT_MAP: Record<string, string> = {
   onclick: 'onTapGesture', ondoubleclick: 'onTapGesture(count: 2)', onlongpress: 'onLongPressGesture',
@@ -15,7 +16,7 @@ const SWIFTUI_EVENT_MAP: Record<string, string> = {
   onchange: 'onChange', onsubmit: 'onSubmit',
 };
 
-export const swiftUIAdapterHandler: FunctionalConceptHandler = {
+const swiftUIAdapterHandlerFunctional: FunctionalConceptHandler = {
   normalize(input: Record<string, unknown>) {
     const adapter = input.adapter as string;
     const props = input.props as string;
@@ -85,3 +86,8 @@ export const swiftUIAdapterHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { adapter, normalized: JSON.stringify(normalized) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const swiftUIAdapterHandler = wrapFunctional(swiftUIAdapterHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { swiftUIAdapterHandlerFunctional };

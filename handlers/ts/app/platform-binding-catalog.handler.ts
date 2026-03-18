@@ -4,8 +4,9 @@ import {
   createProgram, get as spGet, find, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const platformBindingCatalogHandler: FunctionalConceptHandler = {
+const platformBindingCatalogHandlerFunctional: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const binding = String(input.binding ?? '');
 
@@ -46,3 +47,8 @@ export const platformBindingCatalogHandler: FunctionalConceptHandler = {
 };
 
 export default platformBindingCatalogHandler;
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const platformBindingCatalogHandler = wrapFunctional(platformBindingCatalogHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { platformBindingCatalogHandlerFunctional };

@@ -5,8 +5,9 @@ import {
   createProgram, put, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 
-export const echoHandler: FunctionalConceptHandler = {
+const echoHandlerFunctional: FunctionalConceptHandler = {
   send(input: Record<string, unknown>) {
     const id = input.id as string;
     const text = input.text as string;
@@ -16,3 +17,8 @@ export const echoHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { id, echo: text }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+/** Backward-compatible imperative wrapper — delegates to interpret(). */
+export const echoHandler = wrapFunctional(echoHandlerFunctional);
+/** The raw functional handler returning StorageProgram. */
+export { echoHandlerFunctional };
