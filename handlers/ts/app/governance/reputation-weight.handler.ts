@@ -1,6 +1,14 @@
+// @migrated dsl-constructs 2026-03-18
 // ReputationWeight Source Provider
 // Applies scaling functions (linear, log, sigmoid) to raw reputation scores for weighted governance.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, branch, complete, completeFrom,
+  type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 function applyScaling(score: number, fn: string, cap: number | null): number {
   let scaled: number;
@@ -20,31 +28,37 @@ function applyScaling(score: number, fn: string, cap: number | null): number {
   return scaled;
 }
 
-export const reputationWeightHandler: ConceptHandler = {
-  async configure(input, storage) {
+const _reputationWeightHandler: FunctionalConceptHandler = {
+  configure(input: Record<string, unknown>) {
     const id = `rw-cfg-${Date.now()}`;
-    await storage.put('rw_cfg', id, {
+    let p = createProgram();
+    p = put(p, 'rw_cfg', id, {
       id,
       scalingFunction: input.scalingFunction ?? 'linear',
       cap: input.cap ?? null,
     });
-
-    await storage.put('plugin-registry', `weight-source:${id}`, {
+    p = put(p, 'plugin-registry', `weight-source:${id}`, {
       id: `weight-source:${id}`,
       pluginKind: 'weight-source',
       provider: 'ReputationWeight',
       instanceId: id,
     });
-
-    return { variant: 'configured', config: id };
+    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
   },
 
-  async compute(input, storage) {
+  compute(input: Record<string, unknown>) {
     const { config, participant, reputationScore } = input;
-    const cfg = await storage.get('rw_cfg', config as string);
-    const scalingFn = cfg ? (cfg.scalingFunction as string) : 'linear';
-    const cap = cfg ? (cfg.cap as number | null) : null;
-    const weight = applyScaling(reputationScore as number, scalingFn, cap);
-    return { variant: 'weight', participant, weight, rawScore: reputationScore };
+    let p = createProgram();
+    p = get(p, 'rw_cfg', config as string, 'cfg');
+
+    return completeFrom(p, 'weight', (bindings) => {
+      const cfg = bindings.cfg as Record<string, unknown> | null;
+      const scalingFn = cfg ? (cfg.scalingFunction as string) : 'linear';
+      const cap = cfg ? (cfg.cap as number | null) : null;
+      const weight = applyScaling(reputationScore as number, scalingFn, cap);
+      return { participant, weight, rawScore: reputationScore };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const reputationWeightHandler = autoInterpret(_reputationWeightHandler);
