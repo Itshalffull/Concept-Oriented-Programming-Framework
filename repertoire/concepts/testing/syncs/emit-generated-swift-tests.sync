@@ -1,0 +1,16 @@
+# Route generated Swift test files through Emitter
+
+sync EmitGeneratedSwiftTests [eager]
+  purpose: "Route rendered Swift test code from TestGenSwift through Emitter for content-addressed file writes with provenance tracking"
+when {
+  TestGenSwift/render: [ test_plan: ?plan; output_path: ?path ]
+    => ok(result: ?result; rendered_code: ?code; file_path: ?filePath; test_count: ?count)
+}
+then {
+  Emitter/write: [
+    path: ?filePath;
+    content: ?code;
+    sources: ?plan;
+    generator: "TestGenSwift"
+  ]
+}
