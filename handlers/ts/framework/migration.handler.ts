@@ -59,11 +59,11 @@ export async function checkMigrationNeeded(
   // If the spec has no @version annotation, no migration tracking
   if (specVersion === undefined) return null;
 
-  const storedVersion = await getStoredVersion(storage);
+  const storedVersion = await getStoredVersion(storage /* TODO: convert helper to DSL */);
 
   // Fresh storage: set the version and allow normal operation
   if (storedVersion === undefined) {
-    await setStoredVersion(storage, specVersion);
+    await setStoredVersion(storage /* TODO: convert helper to DSL */, specVersion);
     return null;
   }
 
@@ -118,7 +118,7 @@ export function createMigrationGatedTransport(
       // If migration succeeded, update the stored version and lift the gate
       if (invocation.action === 'migrate' && result.variant === 'ok') {
         current = requiredVersion;
-        await setStoredVersion(storage, requiredVersion);
+        await setStoredVersion(storage /* TODO: convert helper to DSL */, requiredVersion);
         migrationRequired = false;
       }
 
@@ -174,7 +174,7 @@ const _handler: FunctionalConceptHandler = {
       { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
-    await setStoredVersion(storage, version);
+    await setStoredVersion(storage /* TODO: convert helper to DSL */, version);
     { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
   },
 };

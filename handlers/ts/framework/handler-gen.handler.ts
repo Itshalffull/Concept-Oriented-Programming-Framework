@@ -172,7 +172,7 @@ function generateRegistrationBody(action: ActionSchema, relation: string): strin
 
   if (dupVariant && keyParam) {
     lines.push(`    // Check for duplicates`);
-    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
+    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
     lines.push(`    if (existing.length > 0) {`);
     lines.push(`      return ${buildVariantReturn(dupVariant, 'existing[0]')};`);
     lines.push(`    }`);
@@ -183,7 +183,7 @@ function generateRegistrationBody(action: ActionSchema, relation: string): strin
 
   // Build storage record from all input params
   const fields = action.params.map(p => p.name);
-  lines.push(`    await storage.put('${relation}', id, {`);
+  lines.push(`    p = put(p, '${relation}', id, {`);
   lines.push(`      id,`);
   for (const f of fields) {
     lines.push(`      ${f},`);
@@ -207,7 +207,7 @@ function generateLookupBody(action: ActionSchema, relation: string): string[] {
 
   const keyParam = action.params[0];
   if (keyParam) {
-    lines.push(`    const results = await storage.find('${relation}', { ${keyParam.name} });`);
+    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'results');`);
     lines.push(`    if (results.length === 0) {`);
     if (notFoundVariant) {
       lines.push(`      return ${buildVariantReturn(notFoundVariant)};`);
@@ -242,7 +242,7 @@ function generateQueryBody(action: ActionSchema, relation: string): string[] {
     }
     lines.push(`    const results = await storage.find('${relation}', Object.keys(criteria).length > 0 ? criteria : undefined);`);
   } else {
-    lines.push(`    const results = await storage.find('${relation}');`);
+    lines.push(`    p = find(p, '${relation}', {}, 'results');`);
   }
   lines.push(``);
 
@@ -266,7 +266,7 @@ function generateRemoveBody(action: ActionSchema, relation: string): string[] {
   const keyParam = action.params[0];
 
   if (keyParam) {
-    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
+    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
     lines.push(`    if (existing.length === 0) {`);
     const notFoundV = action.variants.find(v => v.tag === 'notfound' || v.tag === 'notFound');
     if (notFoundV) {
@@ -276,7 +276,7 @@ function generateRemoveBody(action: ActionSchema, relation: string): string[] {
     }
     lines.push(`    }`);
     lines.push(``);
-    lines.push(`    await storage.del('${relation}', existing[0].id as string);`);
+    lines.push(`    p = del(p, '${relation}', existing[0].id as string);`);
   }
 
   const okVariant = action.variants.find(v => v.tag === 'ok' || v.tag === 'removed' || v.tag === 'done');
@@ -294,7 +294,7 @@ function generateUpdateBody(action: ActionSchema, relation: string): string[] {
   const keyParam = action.params[0];
 
   if (keyParam) {
-    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
+    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
     lines.push(`    if (existing.length === 0) {`);
     const notFoundV = action.variants.find(v => v.tag === 'notfound' || v.tag === 'notFound');
     if (notFoundV) {
@@ -309,7 +309,7 @@ function generateUpdateBody(action: ActionSchema, relation: string): string[] {
     // Update with all params beyond the key
     const updateParams = action.params.slice(1);
     if (updateParams.length > 0) {
-      lines.push(`    await storage.put('${relation}', record.id as string, {`);
+      lines.push(`    p = put(p, '${relation}', record.id as string, {`);
       lines.push(`      ...record,`);
       for (const p of updateParams) {
         lines.push(`      ...(${p.name} !== undefined ? { ${p.name} } : {}),`);

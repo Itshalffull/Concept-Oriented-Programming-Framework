@@ -194,12 +194,12 @@ const _handler: FunctionalConceptHandler = {
     }
 
     try {
-      const result = await writeFileInternal(storage, path, content, sources, target, concept);
+      const result = await writeFileInternal(storage /* TODO: convert helper to DSL */, path, content, sources, target, concept);
 
       // Update manifest totals
       if (result.written) {
         const existing = result.isNew ? null : { sizeBytes: result.sizeBytes };
-        await updateManifestOnWrite(storage, path, result.sizeBytes, existing);
+        await updateManifestOnWrite(storage /* TODO: convert helper to DSL */, path, result.sizeBytes, existing);
       }
 
       p = complete(p, 'ok', { written: result.written,
@@ -250,7 +250,7 @@ const _handler: FunctionalConceptHandler = {
 
         if (result.written) {
           const existing = result.isNew ? null : { sizeBytes: result.sizeBytes };
-          await updateManifestOnWrite(storage, file.path, result.sizeBytes, existing);
+          await updateManifestOnWrite(storage /* TODO: convert helper to DSL */, file.path, result.sizeBytes, existing);
         }
 
         results.push({

@@ -231,7 +231,7 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Delegate to generate action
-    return this.generate({ schemas: parseResult.schemas }, storage);
+    return this.generate({ schemas: parseResult.schemas });
   },
 
   /**
