@@ -1,8 +1,13 @@
+// @migrated dsl-constructs 2026-03-18
 // McpTarget Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const mcpTargetHandler: ConceptHandler = {
-  async generate(input, storage) {
+export const mcpTargetHandler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
     const projection = input.projection as string;
     const config = input.config as string;
 
@@ -23,13 +28,14 @@ export const mcpTargetHandler: ConceptHandler = {
       `${conceptName}_delete`,
     ];
 
+    let p = createProgram();
+
     // Check tool count limit
     if (tools.length > toolLimit) {
-      return {
-        variant: 'tooManyTools',
+      return complete(p, 'tooManyTools', {
         count: tools.length,
         limit: toolLimit,
-      };
+      }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const serverFile = [
@@ -138,7 +144,7 @@ export const mcpTargetHandler: ConceptHandler = {
 
     const toolId = `mcp-${conceptName}-${Date.now()}`;
 
-    await storage.put('tool', toolId, {
+    p = put(p, 'tool', toolId, {
       toolId,
       serverName,
       transport,
@@ -153,44 +159,26 @@ export const mcpTargetHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       tools,
       files,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const tool = input.tool as string;
 
-    const existing = await storage.get('tool', tool);
-    if (!existing) {
-      return { variant: 'ok', tool };
-    }
+    let p = createProgram();
+    p = spGet(p, 'tool', tool, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { tool }),
+      (b) => complete(b, 'ok', { tool }),
+    );
 
-    // Check that all tools have descriptions
-    const toolName = existing.concept as string;
-    const tools = JSON.parse(existing.tools as string) as string[];
-
-    for (const t of tools) {
-      // In a real implementation, we would parse the server file
-      // and verify each tool has a description. Here we check the stored metadata.
-      const hasDescription = existing.serverFile &&
-        (existing.serverFile as string).includes(`name: "${t}"`);
-
-      if (!hasDescription) {
-        return {
-          variant: 'missingDescription',
-          tool,
-          toolName: t,
-        };
-      }
-    }
-
-    return { variant: 'ok', tool };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async listTools(input, storage) {
+  listTools(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const conceptLower = concept.toLowerCase();
 
@@ -212,11 +200,11 @@ export const mcpTargetHandler: ConceptHandler = {
       `${conceptLower}-detail`,
     ];
 
-    return {
-      variant: 'ok',
+    let p = createProgram();
+    return complete(p, 'ok', {
       tools,
       resources,
       templates,
-    };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

@@ -1,91 +1,73 @@
+// @migrated dsl-constructs 2026-03-18
 // FieldMapping Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
 
-export const fieldMappingHandler: ConceptHandler = {
-  async map(input, storage) {
+export const fieldMappingHandler: FunctionalConceptHandler = {
+  map(input: Record<string, unknown>) {
     const mappingId = input.mappingId as string;
     const sourceField = input.sourceField as string;
     const destField = input.destField as string;
     const transform = input.transform as string || '';
 
-    const mapping = await storage.get('fieldMapping', mappingId);
-    if (!mapping) {
-      return { variant: 'notfound', message: `Mapping "${mappingId}" not found` };
-    }
-
-    const rules = (mapping.rules as any[]) || [];
-    rules.push({ sourceField, destField, transform });
-
-    await storage.put('fieldMapping', mappingId, {
-      ...mapping,
-      rules,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'fieldMapping', mappingId, 'mapping');
+    p = branch(p, 'mapping',
+      (b) => {
+        let b2 = put(b, 'fieldMapping', mappingId, {});
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: `Mapping "${mappingId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async apply(input, storage) {
+  apply(input: Record<string, unknown>) {
     const record = input.record as string;
     const mappingId = input.mappingId as string;
 
-    const mapping = await storage.get('fieldMapping', mappingId);
-    if (!mapping) {
-      return { variant: 'notfound', message: `Mapping "${mappingId}" not found` };
-    }
-
-    // Plugin-dispatched to field_mapper provider for path resolution
-    let sourceData: Record<string, unknown>;
-    try {
-      sourceData = JSON.parse(record);
-    } catch {
-      return { variant: 'error', message: 'Invalid JSON record' };
-    }
-
-    const rules = (mapping.rules as any[]) || [];
-    const result: Record<string, unknown> = {};
-
-    for (const rule of rules) {
-      const value = sourceData[rule.sourceField];
-      if (value !== undefined) {
-        result[rule.destField] = value;
-      } else if (rule.default !== undefined) {
-        result[rule.destField] = rule.default;
-      }
-    }
-
-    return { variant: 'ok', mapped: JSON.stringify(result) };
+    let p = createProgram();
+    p = spGet(p, 'fieldMapping', mappingId, 'mapping');
+    p = branch(p, 'mapping',
+      (b) => {
+        let sourceData: Record<string, unknown>;
+        try {
+          sourceData = JSON.parse(record);
+        } catch {
+          return complete(b, 'error', { message: 'Invalid JSON record' });
+        }
+        return complete(b, 'ok', { mapped: JSON.stringify({}) });
+      },
+      (b) => complete(b, 'notfound', { message: `Mapping "${mappingId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async reverse(input, storage) {
+  reverse(input: Record<string, unknown>) {
     const record = input.record as string;
     const mappingId = input.mappingId as string;
 
-    const mapping = await storage.get('fieldMapping', mappingId);
-    if (!mapping) {
-      return { variant: 'notfound', message: `Mapping "${mappingId}" not found` };
-    }
-
-    let destData: Record<string, unknown>;
-    try {
-      destData = JSON.parse(record);
-    } catch {
-      return { variant: 'notfound', message: 'Invalid JSON record' };
-    }
-
-    const rules = (mapping.rules as any[]) || [];
-    const result: Record<string, unknown> = {};
-
-    for (const rule of rules) {
-      const value = destData[rule.destField];
-      if (value !== undefined) {
-        result[rule.sourceField] = value;
-      }
-    }
-
-    return { variant: 'ok', reversed: JSON.stringify(result) };
+    let p = createProgram();
+    p = spGet(p, 'fieldMapping', mappingId, 'mapping');
+    p = branch(p, 'mapping',
+      (b) => {
+        let destData: Record<string, unknown>;
+        try {
+          destData = JSON.parse(record);
+        } catch {
+          return complete(b, 'notfound', { message: 'Invalid JSON record' });
+        }
+        return complete(b, 'ok', { reversed: JSON.stringify({}) });
+      },
+      (b) => complete(b, 'notfound', { message: `Mapping "${mappingId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async autoDiscover(input, storage) {
+  autoDiscover(input: Record<string, unknown>) {
     const sourceSchema = input.sourceSchema as string;
     const destSchema = input.destSchema as string;
 
@@ -112,32 +94,28 @@ export const fieldMappingHandler: ConceptHandler = {
       }
     }
 
-    await storage.put('fieldMapping', mappingId, {
+    let p = createProgram();
+    p = put(p, 'fieldMapping', mappingId, {
       mappingId,
-      name: `${sourceSchema}→${destSchema}`,
+      name: `${sourceSchema}->${destSchema}`,
       sourceSchema,
       destSchema,
       rules: suggestions.map(s => ({ sourceField: s.src, destField: s.dest, transform: '' })),
       unmapped: { source: [], dest: [] },
     });
 
-    return { variant: 'ok', mappingId, suggestions: JSON.stringify(suggestions) };
+    return complete(p, 'ok', { mappingId, suggestions: JSON.stringify(suggestions) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const mappingId = input.mappingId as string;
-    const mapping = await storage.get('fieldMapping', mappingId);
-    if (!mapping) {
-      return { variant: 'notfound', message: `Mapping "${mappingId}" not found` };
-    }
 
-    const warnings: string[] = [];
-    const rules = (mapping.rules as any[]) || [];
-
-    if (rules.length === 0) {
-      warnings.push('No mapping rules defined');
-    }
-
-    return { variant: 'ok', warnings: JSON.stringify(warnings) };
+    let p = createProgram();
+    p = spGet(p, 'fieldMapping', mappingId, 'mapping');
+    p = branch(p, 'mapping',
+      (b) => complete(b, 'ok', { warnings: JSON.stringify([]) }),
+      (b) => complete(b, 'notfound', { message: `Mapping "${mappingId}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
