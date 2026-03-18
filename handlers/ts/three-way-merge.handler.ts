@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ThreeWayMerge Handler
 //
@@ -6,7 +7,14 @@
 // merge, and most version control systems.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -22,9 +30,6 @@ interface ConflictRegion {
 
 /**
  * Classic three-way merge algorithm.
- * Compares ours and theirs against a common base.
- * Non-conflicting changes are merged automatically.
- * Conflicting changes (both sides modified the same region) produce conflict markers.
  */
 function threeWayMerge(
   baseStr: string,
@@ -35,7 +40,6 @@ function threeWayMerge(
   const ourLines = oursStr.split('\n');
   const theirLines = theirsStr.split('\n');
 
-  // Build LCS between base and ours
   const oursChanges = computeChanges(baseLines, ourLines);
   const theirsChanges = computeChanges(baseLines, theirLines);
 
@@ -50,7 +54,6 @@ function threeWayMerge(
 
   while (baseIdx < maxBase || oursIdx < ourLines.length || theirsIdx < theirLines.length) {
     if (baseIdx >= maxBase) {
-      // Past end of base; collect remaining lines
       const oursRemaining = ourLines.slice(oursIdx);
       const theirsRemaining = theirLines.slice(theirsIdx);
 
@@ -80,25 +83,21 @@ function threeWayMerge(
     const theirLine = theirsIdx < theirLines.length ? theirLines[theirsIdx] : undefined;
 
     if (ourLine === theirLine) {
-      // Both agree
       if (ourLine !== undefined) resultLines.push(ourLine);
       baseIdx++;
       oursIdx++;
       theirsIdx++;
     } else if (ourLine === baseLine && theirLine !== baseLine) {
-      // Only theirs changed
       if (theirLine !== undefined) resultLines.push(theirLine);
       baseIdx++;
       oursIdx++;
       theirsIdx++;
     } else if (theirLine === baseLine && ourLine !== baseLine) {
-      // Only ours changed
       if (ourLine !== undefined) resultLines.push(ourLine);
       baseIdx++;
       oursIdx++;
       theirsIdx++;
     } else {
-      // Both changed differently -- conflict
       hasConflicts = true;
       const marker = [
         '<<<<<<< ours',
@@ -146,45 +145,51 @@ function computeChanges(
   return changes;
 }
 
-export const threeWayMergeHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'three-way',
       category: 'merge',
       contentTypes: ['text/plain', 'text/*'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+  execute(input: Record<string, unknown>) {
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
 
     if (typeof base !== 'string' || typeof ours !== 'string' || typeof theirs !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be text strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
     }
 
-    // Trivial cases
     if (ours === theirs) {
-      return { variant: 'clean', result: ours };
+      const p = createProgram();
+      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
     }
     if (ours === base) {
-      return { variant: 'clean', result: theirs };
+      const p = createProgram();
+      return complete(p, 'clean', { result: theirs }) as StorageProgram<Result>;
     }
     if (theirs === base) {
-      return { variant: 'clean', result: ours };
+      const p = createProgram();
+      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
     }
 
     const { result, conflicts } = threeWayMerge(base, ours, theirs);
 
+    const p = createProgram();
     if (result !== null) {
-      return { variant: 'clean', result };
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
-    return { variant: 'conflicts', regions: conflicts };
+    return complete(p, 'conflicts', { regions: conflicts }) as StorageProgram<Result>;
   },
 };
+
+export const threeWayMergeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetThreeWayMergeCounter(): void {

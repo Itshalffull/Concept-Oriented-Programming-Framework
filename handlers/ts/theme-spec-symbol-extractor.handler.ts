@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ThemeSpecSymbolExtractor Handler
 //
@@ -6,7 +7,14 @@
 // as symbols in the surface/* namespace.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,8 +23,6 @@ function nextId(): string {
 
 /**
  * Extract symbols from theme spec source text using regex patterns.
- * Theme spec files define design tokens, scales, semantic aliases,
- * and mode variants.
  */
 function extractFromThemeSpec(source: string, file: string): Array<{
   symbolString: string;
@@ -43,7 +49,6 @@ function extractFromThemeSpec(source: string, file: string): Array<{
     const line = lines[i];
     const lineNum = i + 1;
 
-    // Match theme declaration: theme ThemeName { or name: ThemeName
     const themeMatch = line.match(/^\s*(?:theme\s+(\w[\w-]*)|name\s*:\s*['"]?([\w-]+)['"]?)\s*/);
     if (themeMatch) {
       themeName = themeMatch[1] || themeMatch[2];
@@ -60,18 +65,15 @@ function extractFromThemeSpec(source: string, file: string): Array<{
       continue;
     }
 
-    // Track sections: tokens, scales, semantic, modes
     const sectionMatch = line.match(/^\s*(tokens|scales?|semantic|modes?|colors?|spacing|typography)\s*[:{]/);
     if (sectionMatch) {
       currentSection = sectionMatch[1];
       continue;
     }
 
-    // Match token definitions: tokenName: value or --token-name: value
     const tokenMatch = line.match(/^\s+([\w-]+)\s*:\s*(.+)/);
     if (tokenMatch && currentSection) {
       const tokenName = tokenMatch[1];
-      // Skip common YAML/JSON structure keywords
       if (['true', 'false', 'null', 'description', 'type', 'value', 'default'].includes(tokenName)) continue;
 
       const prefix = themeName ? `surface/theme/${themeName}` : 'surface/theme';
@@ -115,7 +117,6 @@ function extractFromThemeSpec(source: string, file: string): Array<{
       }
     }
 
-    // Match token references: {tokens.colorName} or {scale.size}
     const tokenRefRegex = /\{([\w./-]+)\}/g;
     let tokenRefMatch;
     while ((tokenRefMatch = tokenRefRegex.exec(line)) !== null) {
@@ -134,43 +135,42 @@ function extractFromThemeSpec(source: string, file: string): Array<{
   return symbols;
 }
 
-export const themeSpecSymbolExtractorHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  initialize(_input: Record<string, unknown>) {
     const id = nextId();
 
-    try {
-      await storage.put('theme-spec-symbol-extractor', id, {
-        id,
-        extractorRef: 'theme-spec-symbol-extractor',
-        handledExtensions: '.theme,.theme.yaml,.theme.json',
-        language: 'theme-spec',
-      });
+    let p = createProgram();
+    p = put(p, 'theme-spec-symbol-extractor', id, {
+      id,
+      extractorRef: 'theme-spec-symbol-extractor',
+      handledExtensions: '.theme,.theme.yaml,.theme.json',
+      language: 'theme-spec',
+    });
 
-      return { variant: 'ok', instance: id };
-    } catch (e) {
-      return { variant: 'loadError', message: String(e) };
-    }
+    return complete(p, 'ok', { instance: id }) as StorageProgram<Result>;
   },
 
-  async extract(input: Record<string, unknown>, storage: ConceptStorage) {
+  extract(input: Record<string, unknown>) {
     const source = input.source as string;
     const file = input.file as string;
 
     const symbols = extractFromThemeSpec(source, file);
 
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       symbols: JSON.stringify(symbols),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getSupportedExtensions(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+  getSupportedExtensions(_input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       extensions: JSON.stringify(['.theme', '.theme.yaml', '.theme.json']),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const themeSpecSymbolExtractorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetThemeSpecSymbolExtractorCounter(): void {
