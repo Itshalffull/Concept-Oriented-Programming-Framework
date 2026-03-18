@@ -1,34 +1,45 @@
+// @migrated dsl-constructs 2026-03-18
 // ReactViewResolver Provider Handler
 //
 // Client-side View data resolver for React environments. Like
-// KernelViewResolver, does not need kernel access — syncs handle
+// KernelViewResolver, does not need kernel access -- syncs handle
 // cross-concept invocation. This provider is selected when the
 // context specifies resolver_type: "react".
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let registered = false;
 
-export const reactViewResolverHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('react-view-resolver', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'react-view-resolver', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'react' };
+    return complete(p, 'ok', { provider_name: 'react' }) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, _storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const view = input.view as string;
     const dataSource = input.data_source as string;
     const filters = input.filters as string;
     const context = input.context as string;
 
     if (!dataSource) {
-      return { variant: 'invalid_source', message: 'data_source is required' };
+      const p = createProgram();
+      return complete(p, 'invalid_source', { message: 'data_source is required' }) as StorageProgram<Result>;
     }
 
     // Validate dataSource JSON
@@ -36,27 +47,30 @@ export const reactViewResolverHandler: ConceptHandler = {
     try {
       parsed = JSON.parse(dataSource);
     } catch {
-      return { variant: 'invalid_source', message: `Invalid data_source JSON: ${dataSource}` };
+      const p = createProgram();
+      return complete(p, 'invalid_source', { message: `Invalid data_source JSON: ${dataSource}` }) as StorageProgram<Result>;
     }
 
     if (!parsed.concept || !parsed.action) {
-      return {
-        variant: 'invalid_source',
+      const p = createProgram();
+      return complete(p, 'invalid_source', {
         message: 'data_source must contain concept and action fields',
-      };
+      }) as StorageProgram<Result>;
     }
 
-    // Return ok — the sync chain dispatches to the concept/action.
+    // Return ok -- the sync chain dispatches to the concept/action.
     // For React, the API layer bridges the result back to the component.
-    return {
-      variant: 'ok',
+    const p = createProgram();
+    return complete(p, 'ok', {
       data_source: dataSource,
       view,
       filters: filters || '[]',
       context: context || '{}',
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const reactViewResolverHandler = autoInterpret(_handler);
 
 /** Reset internal state for testing. */
 export function resetReactViewResolver(): void {

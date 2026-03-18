@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // LLMAutomationProvider Handler
 //
@@ -6,7 +7,13 @@
 // results. See Architecture doc Sections 16.11, 16.12.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, put, complete, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -15,51 +22,54 @@ function nextId(): string {
 
 let registered = false;
 
-export const llmAutomationProviderHandler: ConceptHandler = {
-  async register(_input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(_input: Record<string, unknown>) {
     if (registered) {
-      return { variant: 'already_registered' };
+      const p = createProgram();
+      return complete(p, 'already_registered', {}) as StorageProgram<Result>;
     }
 
     registered = true;
-    await storage.put('llm-automation-provider', '__registered', { value: true });
+    let p = createProgram();
+    p = put(p, 'llm-automation-provider', '__registered', { value: true });
 
-    return { variant: 'ok', provider_name: 'llm' };
+    return complete(p, 'ok', { provider_name: 'llm' }) as StorageProgram<Result>;
   },
 
-  async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+  execute(input: Record<string, unknown>) {
     const actionPayload = input.action_payload as string;
     const modelConfig = input.model_config as string;
 
-    // Validate inputs
     if (!actionPayload) {
-      return { variant: 'error', message: 'action_payload is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'action_payload is required' }) as StorageProgram<Result>;
     }
     if (!modelConfig) {
-      return { variant: 'error', message: 'model_config is required' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'model_config is required' }) as StorageProgram<Result>;
     }
 
-    // Parse and validate model config
     let config: Record<string, unknown>;
     try {
       config = JSON.parse(modelConfig);
     } catch {
-      return { variant: 'error', message: 'Invalid model_config JSON' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid model_config JSON' }) as StorageProgram<Result>;
     }
 
     if (!config.model) {
-      return { variant: 'error', message: 'model_config must include a model field' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'model_config must include a model field' }) as StorageProgram<Result>;
     }
 
-    // Parse action payload
     let payload: Record<string, unknown>;
     try {
       payload = JSON.parse(actionPayload);
     } catch {
-      return { variant: 'error', message: 'Invalid action_payload JSON' };
+      const p = createProgram();
+      return complete(p, 'error', { message: 'Invalid action_payload JSON' }) as StorageProgram<Result>;
     }
 
-    // Simulate LLM execution — in production this would call the actual LLM API
     const id = nextId();
     const now = new Date().toISOString();
     const result = JSON.stringify({
@@ -69,7 +79,8 @@ export const llmAutomationProviderHandler: ConceptHandler = {
       timestamp: now,
     });
 
-    await storage.put('llm-automation-provider', id, {
+    let p = createProgram();
+    p = put(p, 'llm-automation-provider', id, {
       id,
       action_payload: actionPayload,
       model_config: modelConfig,
@@ -79,9 +90,11 @@ export const llmAutomationProviderHandler: ConceptHandler = {
       createdAt: now,
     });
 
-    return { variant: 'ok', result };
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
+
+export const llmAutomationProviderHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
 export function resetLLMAutomationProvider(): void {

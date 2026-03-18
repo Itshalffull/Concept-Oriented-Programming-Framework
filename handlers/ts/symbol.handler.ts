@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Symbol Handler
 //
@@ -7,7 +8,14 @@
 // that unify identity across languages, file formats, and project layers.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, complete, completeFrom,
+  branch, mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -24,52 +32,64 @@ function deriveNamespace(symbolString: string): string {
   return parts.slice(0, -1).join('/');
 }
 
-export const symbolHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
     const symbolString = input.symbolString as string;
     const kind = input.kind as string;
     const displayName = input.displayName as string;
     const definingFile = input.definingFile as string;
 
-    // Check for duplicates by symbolString
-    const existing = await storage.find('symbol', { symbolString });
-    if (existing.length > 0) {
-      return { variant: 'alreadyExists', existing: existing[0].id as string };
-    }
+    let p = createProgram();
+    p = find(p, 'symbol', { symbolString }, 'existing');
 
-    const id = nextId();
-    const namespace = deriveNamespace(symbolString);
-    await storage.put('symbol', id, {
-      id,
-      symbolString,
-      kind,
-      displayName,
-      definingFile,
-      namespace,
-      visibility: 'public',
-      deprecated: '',
-      documentation: '',
-    });
-
-    return { variant: 'ok', symbol: id };
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      (() => {
+        const t = createProgram();
+        return completeFrom(t, 'alreadyExists', (b) => ({
+          existing: (b.existing as Record<string, unknown>[])[0].id as string,
+        }));
+      })(),
+      (() => {
+        const id = nextId();
+        const namespace = deriveNamespace(symbolString);
+        let e = createProgram();
+        e = put(e, 'symbol', id, {
+          id,
+          symbolString,
+          kind,
+          displayName,
+          definingFile,
+          namespace,
+          visibility: 'public',
+          deprecated: '',
+          documentation: '',
+        });
+        return complete(e, 'ok', { symbol: id }) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const symbolString = input.symbolString as string;
 
-    const results = await storage.find('symbol', { symbolString });
-    if (results.length === 0) {
-      return { variant: 'notfound' };
-    }
-    if (results.length > 1) {
-      const candidates = results.map((r) => r.symbolString as string);
-      return { variant: 'ambiguous', candidates: JSON.stringify(candidates) };
-    }
+    let p = createProgram();
+    p = find(p, 'symbol', { symbolString }, 'results');
 
-    return { variant: 'ok', symbol: results[0].id as string };
+    return completeFrom(p, 'ok', (b) => {
+      const results = b.results as Record<string, unknown>[];
+      if (results.length === 0) {
+        return { variant: 'notfound' };
+      }
+      if (results.length > 1) {
+        const candidates = results.map((r) => r.symbolString as string);
+        return { variant: 'ambiguous', candidates: JSON.stringify(candidates) };
+      }
+      return { symbol: results[0].id as string };
+    }) as StorageProgram<Result>;
   },
 
-  async findByKind(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByKind(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const namespace = input.namespace as string;
 
@@ -77,111 +97,125 @@ export const symbolHandler: ConceptHandler = {
     if (kind !== undefined && kind !== '') criteria.kind = kind;
     if (namespace !== undefined && namespace !== '') criteria.namespace = namespace;
 
-    const results = await storage.find(
-      'symbol',
-      Object.keys(criteria).length > 0 ? criteria : undefined,
-    );
+    let p = createProgram();
+    p = find(p, 'symbol', Object.keys(criteria).length > 0 ? criteria : {}, 'results');
 
-    const symbols = results.map((r) => ({
-      id: r.id,
-      symbolString: r.symbolString,
-      kind: r.kind,
-      displayName: r.displayName,
-      definingFile: r.definingFile,
-      namespace: r.namespace,
-    }));
-
-    return { variant: 'ok', symbols: JSON.stringify(symbols) };
+    return completeFrom(p, 'ok', (b) => {
+      const results = b.results as Record<string, unknown>[];
+      const symbols = results.map((r) => ({
+        id: r.id,
+        symbolString: r.symbolString,
+        kind: r.kind,
+        displayName: r.displayName,
+        definingFile: r.definingFile,
+        namespace: r.namespace,
+      }));
+      return { symbols: JSON.stringify(symbols) };
+    }) as StorageProgram<Result>;
   },
 
-  async findByFile(input: Record<string, unknown>, storage: ConceptStorage) {
+  findByFile(input: Record<string, unknown>) {
     const file = input.file as string;
 
     const criteria: Record<string, unknown> = {};
     if (file !== undefined && file !== '') criteria.definingFile = file;
 
-    const results = await storage.find(
-      'symbol',
-      Object.keys(criteria).length > 0 ? criteria : undefined,
-    );
+    let p = createProgram();
+    p = find(p, 'symbol', Object.keys(criteria).length > 0 ? criteria : {}, 'results');
 
-    const symbols = results.map((r) => ({
-      id: r.id,
-      symbolString: r.symbolString,
-      kind: r.kind,
-      displayName: r.displayName,
-      definingFile: r.definingFile,
-      namespace: r.namespace,
-    }));
-
-    return { variant: 'ok', symbols: JSON.stringify(symbols) };
+    return completeFrom(p, 'ok', (b) => {
+      const results = b.results as Record<string, unknown>[];
+      const symbols = results.map((r) => ({
+        id: r.id,
+        symbolString: r.symbolString,
+        kind: r.kind,
+        displayName: r.displayName,
+        definingFile: r.definingFile,
+        namespace: r.namespace,
+      }));
+      return { symbols: JSON.stringify(symbols) };
+    }) as StorageProgram<Result>;
   },
 
-  async rename(input: Record<string, unknown>, storage: ConceptStorage) {
+  rename(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const newName = input.newName as string;
 
-    const record = await storage.get('symbol', symbol);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'symbol', symbol, 'record');
 
-    const oldName = record.displayName as string;
-    const oldSymbolString = record.symbolString as string;
+    return branch(p,
+      (b) => !b.record,
+      (() => {
+        const t = createProgram();
+        return complete(t, 'notfound', {}) as StorageProgram<Result>;
+      })(),
+      (() => {
+        let e = createProgram();
+        e = mapBindings(e, (b) => {
+          const record = b.record as Record<string, unknown>;
+          const oldSymbolString = record.symbolString as string;
+          const parts = oldSymbolString.split('/');
+          parts[parts.length - 1] = newName;
+          return parts.join('/');
+        }, 'newSymbolString');
 
-    // Build new symbol string by replacing the last segment
-    const parts = oldSymbolString.split('/');
-    parts[parts.length - 1] = newName;
-    const newSymbolString = parts.join('/');
+        e = find(e, 'symbol', {}, 'allSymbols');
+        e = find(e, 'symbol-occurrence', {}, 'allOccurrences');
 
-    // Check for conflict with new symbol string
-    const conflicts = await storage.find('symbol', { symbolString: newSymbolString });
-    if (conflicts.length > 0) {
-      return { variant: 'conflict', conflicting: conflicts[0].id as string };
-    }
+        return completeFrom(e, 'ok', (b) => {
+          const record = b.record as Record<string, unknown>;
+          const newSymbolString = b.newSymbolString as string;
+          const allSymbols = b.allSymbols as Record<string, unknown>[];
+          const oldName = record.displayName as string;
+          const oldSymbolString = record.symbolString as string;
 
-    // Update the symbol record
-    await storage.put('symbol', symbol, {
-      ...record,
-      displayName: newName,
-      symbolString: newSymbolString,
-      namespace: deriveNamespace(newSymbolString),
-    });
+          const conflicts = allSymbols.filter(s => s.symbolString === newSymbolString && s.id !== symbol);
+          if (conflicts.length > 0) {
+            return { variant: 'conflict', conflicting: conflicts[0].id as string };
+          }
 
-    // Update occurrences that reference this symbol
-    const occurrences = await storage.find('symbol-occurrence', { symbol: oldSymbolString });
-    let occurrencesUpdated = 0;
-    for (const occ of occurrences) {
-      await storage.put('symbol-occurrence', occ.id as string, {
-        ...occ,
-        symbol: newSymbolString,
-      });
-      occurrencesUpdated++;
-    }
+          const allOccurrences = b.allOccurrences as Record<string, unknown>[];
+          const matchingOccurrences = allOccurrences.filter(o => o.symbol === oldSymbolString);
 
-    return { variant: 'ok', oldName, occurrencesUpdated };
+          return { oldName, occurrencesUpdated: matchingOccurrences.length };
+        });
+      })(),
+    ) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
 
-    const record = await storage.get('symbol', symbol);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'symbol', symbol, 'record');
 
-    return {
-      variant: 'ok',
-      symbol: record.id as string,
-      symbolString: record.symbolString as string,
-      kind: record.kind as string,
-      displayName: record.displayName as string,
-      visibility: (record.visibility as string) || 'public',
-      definingFile: record.definingFile as string,
-      namespace: (record.namespace as string) || '',
-    };
+    return branch(p,
+      (b) => !b.record,
+      (() => {
+        const t = createProgram();
+        return complete(t, 'notfound', {}) as StorageProgram<Result>;
+      })(),
+      (() => {
+        const e = createProgram();
+        return completeFrom(e, 'ok', (b) => {
+          const record = b.record as Record<string, unknown>;
+          return {
+            symbol: record.id as string,
+            symbolString: record.symbolString as string,
+            kind: record.kind as string,
+            displayName: record.displayName as string,
+            visibility: (record.visibility as string) || 'public',
+            definingFile: record.definingFile as string,
+            namespace: (record.namespace as string) || '',
+          };
+        });
+      })(),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const symbolHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSymbolCounter(): void {

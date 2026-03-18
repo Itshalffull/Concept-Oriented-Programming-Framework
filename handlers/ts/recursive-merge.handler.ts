@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RecursiveMerge Handler
 //
@@ -7,7 +8,14 @@
 // branch histories.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, complete,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -121,45 +129,52 @@ function mergeCharacters(base: string, ours: string, theirs: string): string | n
   return null;
 }
 
-export const recursiveMergeHandler: ConceptHandler = {
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
-    return {
-      variant: 'ok',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    const p = createProgram();
+    return complete(p, 'ok', {
       name: 'recursive',
       category: 'merge',
       contentTypes: ['text/plain', 'text/*'],
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async execute(input: Record<string, unknown>, storage: ConceptStorage) {
+  execute(input: Record<string, unknown>) {
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
 
     if (typeof base !== 'string' || typeof ours !== 'string' || typeof theirs !== 'string') {
-      return { variant: 'unsupportedContent', message: 'Content must be text strings' };
+      const p = createProgram();
+      return complete(p, 'unsupportedContent', { message: 'Content must be text strings' }) as StorageProgram<Result>;
     }
 
     // Trivial cases
     if (ours === theirs) {
-      return { variant: 'clean', result: ours };
+      const p = createProgram();
+      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
     }
     if (ours === base) {
-      return { variant: 'clean', result: theirs };
+      const p = createProgram();
+      return complete(p, 'clean', { result: theirs }) as StorageProgram<Result>;
     }
     if (theirs === base) {
-      return { variant: 'clean', result: ours };
+      const p = createProgram();
+      return complete(p, 'clean', { result: ours }) as StorageProgram<Result>;
     }
 
     const { result, conflicts } = recursiveMerge(base, ours, theirs);
 
+    const p = createProgram();
     if (result !== null) {
-      return { variant: 'clean', result };
+      return complete(p, 'clean', { result }) as StorageProgram<Result>;
     }
 
-    return { variant: 'conflicts', regions: conflicts };
+    return complete(p, 'conflicts', { regions: conflicts }) as StorageProgram<Result>;
   },
 };
+
+export const recursiveMergeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRecursiveMergeCounter(): void {

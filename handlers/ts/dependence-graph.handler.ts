@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DependenceGraph Handler
 //
@@ -7,7 +8,14 @@
 // project scope.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -24,13 +32,13 @@ interface Edge {
 }
 
 /**
- * Build an adjacency list from stored edges for a given graph ID.
+ * Build adjacency lists from edge records.
  */
-async function loadAdjacency(
-  graphId: string,
-  storage: ConceptStorage,
-): Promise<{ nodes: Set<string>; adj: Map<string, Edge[]>; reverseAdj: Map<string, Edge[]> }> {
-  const edges = await storage.find('dependence-graph-edge', { graphId });
+function buildAdjacency(edges: Record<string, unknown>[]): {
+  nodes: Set<string>;
+  adj: Map<string, Edge[]>;
+  reverseAdj: Map<string, Edge[]>;
+} {
   const nodes = new Set<string>();
   const adj = new Map<string, Edge[]>();
   const reverseAdj = new Map<string, Edge[]>();
@@ -135,15 +143,15 @@ function inferScope(scopeRef: string): string {
   return 'project';
 }
 
-export const dependenceGraphHandler: ConceptHandler = {
-  async compute(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  compute(input: Record<string, unknown>) {
     const scopeRef = input.scopeRef as string;
 
     const scope = inferScope(scopeRef);
     const id = nextId();
 
-    // Initialize graph metadata with empty nodes/edges
-    await storage.put('dependence-graph', id, {
+    let p = createProgram();
+    p = put(p, 'dependence-graph', id, {
       id,
       scope,
       scopeRef,
@@ -153,125 +161,140 @@ export const dependenceGraphHandler: ConceptHandler = {
       edgeCount: 0,
     });
 
-    return { variant: 'ok', graph: id };
+    return complete(p, 'ok', { graph: id }) as StorageProgram<Result>;
   },
 
-  async queryDependents(input: Record<string, unknown>, storage: ConceptStorage) {
+  queryDependents(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const edgeKinds = input.edgeKinds as string;
 
     const edgeFilter = parseEdgeKinds(edgeKinds);
 
-    // Find all graphs and collect dependents across them
-    const graphs = await storage.find('dependence-graph', {});
-    const allDependents: { symbol: string; edgeKind: string; graphId: string }[] = [];
+    let p = createProgram();
+    p = find(p, 'dependence-graph', {}, 'graphs');
+    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
 
-    for (const graph of graphs) {
-      const graphId = graph.id as string;
-      const { reverseAdj } = await loadAdjacency(graphId, storage);
+    return completeFrom(p, 'ok', (bindings) => {
+      const graphs = bindings.graphs as Record<string, unknown>[];
+      const allEdges = bindings.allEdges as Record<string, unknown>[];
+      const allDependents: { symbol: string; edgeKind: string; graphId: string }[] = [];
 
-      // Edge A -> B means "A depends on B". queryDependents(symbol) finds
-      // all nodes that depend on symbol, i.e., edges where edge.to === symbol.
-      // reverseAdj.get(symbol) yields those edges; each edge.from is a dependent.
-      const incoming = reverseAdj.get(symbol) ?? [];
-      for (const edge of incoming) {
-        if (edgeFilter && !edgeFilter.has(edge.kind)) continue;
-        allDependents.push({
-          symbol: edge.from,
-          edgeKind: edge.kind,
-          graphId,
-        });
+      for (const graph of graphs) {
+        const graphId = graph.id as string;
+        const graphEdges = allEdges.filter(e => e.graphId === graphId);
+        const { reverseAdj } = buildAdjacency(graphEdges);
+
+        const incoming = reverseAdj.get(symbol) ?? [];
+        for (const edge of incoming) {
+          if (edgeFilter && !edgeFilter.has(edge.kind)) continue;
+          allDependents.push({
+            symbol: edge.from,
+            edgeKind: edge.kind,
+            graphId,
+          });
+        }
       }
-    }
 
-    return { variant: 'ok', dependents: JSON.stringify(allDependents) };
+      return { dependents: JSON.stringify(allDependents) };
+    }) as StorageProgram<Result>;
   },
 
-  async queryDependencies(input: Record<string, unknown>, storage: ConceptStorage) {
+  queryDependencies(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const edgeKinds = input.edgeKinds as string;
 
     const edgeFilter = parseEdgeKinds(edgeKinds);
 
-    // queryDependencies(symbol) = "all symbols that symbol depends on"
-    // = all nodes B where there's an edge symbol -> B
-    // = adj.get(symbol), each edge.to is a dependency
-    const graphs = await storage.find('dependence-graph', {});
-    const allDependencies: { symbol: string; edgeKind: string; graphId: string }[] = [];
+    let p = createProgram();
+    p = find(p, 'dependence-graph', {}, 'graphs');
+    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
 
-    for (const graph of graphs) {
-      const graphId = graph.id as string;
-      const { adj } = await loadAdjacency(graphId, storage);
+    return completeFrom(p, 'ok', (bindings) => {
+      const graphs = bindings.graphs as Record<string, unknown>[];
+      const allEdges = bindings.allEdges as Record<string, unknown>[];
+      const allDependencies: { symbol: string; edgeKind: string; graphId: string }[] = [];
 
-      const outgoing = adj.get(symbol) ?? [];
-      for (const edge of outgoing) {
-        if (edgeFilter && !edgeFilter.has(edge.kind)) continue;
-        allDependencies.push({
-          symbol: edge.to,
-          edgeKind: edge.kind,
-          graphId,
-        });
+      for (const graph of graphs) {
+        const graphId = graph.id as string;
+        const graphEdges = allEdges.filter(e => e.graphId === graphId);
+        const { adj } = buildAdjacency(graphEdges);
+
+        const outgoing = adj.get(symbol) ?? [];
+        for (const edge of outgoing) {
+          if (edgeFilter && !edgeFilter.has(edge.kind)) continue;
+          allDependencies.push({
+            symbol: edge.to,
+            edgeKind: edge.kind,
+            graphId,
+          });
+        }
       }
-    }
 
-    return { variant: 'ok', dependencies: JSON.stringify(allDependencies) };
+      return { dependencies: JSON.stringify(allDependencies) };
+    }) as StorageProgram<Result>;
   },
 
-  async sliceForward(input: Record<string, unknown>, storage: ConceptStorage) {
+  sliceForward(input: Record<string, unknown>) {
     const criterion = input.criterion as string;
 
-    // Forward slice: all symbols affected by changes to the criterion.
-    // Edge A -> B means "A depends on B". Forward slice of criterion =
-    // all nodes that transitively depend on criterion. We walk reverseAdj
-    // from criterion: reverseAdj[N] gives nodes depending on N.
-    const graphs = await storage.find('dependence-graph', {});
-    const sliceNodes = new Set<string>();
-    const sliceEdges: Edge[] = [];
+    let p = createProgram();
+    p = find(p, 'dependence-graph', {}, 'graphs');
+    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
 
-    for (const graph of graphs) {
-      const graphId = graph.id as string;
-      const { reverseAdj } = await loadAdjacency(graphId, storage);
-      const { reachable, traversedEdges } = transitiveBackward([criterion], reverseAdj);
-      for (const n of reachable) sliceNodes.add(n);
-      sliceEdges.push(...traversedEdges);
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const graphs = bindings.graphs as Record<string, unknown>[];
+      const allEdges = bindings.allEdges as Record<string, unknown>[];
+      const sliceNodes = new Set<string>();
+      const sliceEdges: Edge[] = [];
 
-    return {
-      variant: 'ok',
-      slice: JSON.stringify([...sliceNodes]),
-      edges: JSON.stringify(sliceEdges),
-    };
+      for (const graph of graphs) {
+        const graphId = graph.id as string;
+        const graphEdges = allEdges.filter(e => e.graphId === graphId);
+        const { reverseAdj } = buildAdjacency(graphEdges);
+        const { reachable, traversedEdges } = transitiveBackward([criterion], reverseAdj);
+        for (const n of reachable) sliceNodes.add(n);
+        sliceEdges.push(...traversedEdges);
+      }
+
+      return {
+        slice: JSON.stringify([...sliceNodes]),
+        edges: JSON.stringify(sliceEdges),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async sliceBackward(input: Record<string, unknown>, storage: ConceptStorage) {
+  sliceBackward(input: Record<string, unknown>) {
     const criterion = input.criterion as string;
 
-    // Backward slice: all symbols that contribute to the criterion.
-    // = all things criterion transitively depends on
-    // = walk forward from criterion in adj (adj[criterion] = what criterion depends on)
-    const graphs = await storage.find('dependence-graph', {});
-    const sliceNodes = new Set<string>();
-    const sliceEdges: Edge[] = [];
+    let p = createProgram();
+    p = find(p, 'dependence-graph', {}, 'graphs');
+    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
 
-    for (const graph of graphs) {
-      const graphId = graph.id as string;
-      const { adj } = await loadAdjacency(graphId, storage);
-      const { reachable, traversedEdges } = transitiveForward([criterion], adj);
-      for (const n of reachable) sliceNodes.add(n);
-      sliceEdges.push(...traversedEdges);
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const graphs = bindings.graphs as Record<string, unknown>[];
+      const allEdges = bindings.allEdges as Record<string, unknown>[];
+      const sliceNodes = new Set<string>();
+      const sliceEdges: Edge[] = [];
 
-    return {
-      variant: 'ok',
-      slice: JSON.stringify([...sliceNodes]),
-      edges: JSON.stringify(sliceEdges),
-    };
+      for (const graph of graphs) {
+        const graphId = graph.id as string;
+        const graphEdges = allEdges.filter(e => e.graphId === graphId);
+        const { adj } = buildAdjacency(graphEdges);
+        const { reachable, traversedEdges } = transitiveForward([criterion], adj);
+        for (const n of reachable) sliceNodes.add(n);
+        sliceEdges.push(...traversedEdges);
+      }
+
+      return {
+        slice: JSON.stringify([...sliceNodes]),
+        edges: JSON.stringify(sliceEdges),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async impactAnalysis(input: Record<string, unknown>, storage: ConceptStorage) {
+  impactAnalysis(input: Record<string, unknown>) {
     const changed = input.changed as string;
 
-    // Parse changed symbols (JSON array or comma-separated)
     let changedSymbols: string[];
     try {
       changedSymbols = JSON.parse(changed) as string[];
@@ -279,58 +302,68 @@ export const dependenceGraphHandler: ConceptHandler = {
       changedSymbols = changed.split(',').map((s) => s.trim());
     }
 
-    // Compute forward slice from all changed symbols
-    const graphs = await storage.find('dependence-graph', {});
-    const affectedNodes = new Set<string>();
-    const allPaths: { from: string; to: string; kind: string }[] = [];
+    let p = createProgram();
+    p = find(p, 'dependence-graph', {}, 'graphs');
+    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
 
-    for (const graph of graphs) {
-      const graphId = graph.id as string;
-      const { reverseAdj } = await loadAdjacency(graphId, storage);
-      const { reachable, traversedEdges } = transitiveBackward(changedSymbols, reverseAdj);
-      for (const n of reachable) affectedNodes.add(n);
-      for (const edge of traversedEdges) {
-        allPaths.push({ from: edge.from, to: edge.to, kind: edge.kind });
+    return completeFrom(p, 'ok', (bindings) => {
+      const graphs = bindings.graphs as Record<string, unknown>[];
+      const allEdges = bindings.allEdges as Record<string, unknown>[];
+      const affectedNodes = new Set<string>();
+      const allPaths: { from: string; to: string; kind: string }[] = [];
+
+      for (const graph of graphs) {
+        const graphId = graph.id as string;
+        const graphEdges = allEdges.filter(e => e.graphId === graphId);
+        const { reverseAdj } = buildAdjacency(graphEdges);
+        const { reachable, traversedEdges } = transitiveBackward(changedSymbols, reverseAdj);
+        for (const n of reachable) affectedNodes.add(n);
+        for (const edge of traversedEdges) {
+          allPaths.push({ from: edge.from, to: edge.to, kind: edge.kind });
+        }
       }
-    }
 
-    // Remove the changed symbols themselves from the affected set
-    for (const s of changedSymbols) {
-      affectedNodes.delete(s);
-    }
+      for (const s of changedSymbols) {
+        affectedNodes.delete(s);
+      }
 
-    return {
-      variant: 'ok',
-      affected: JSON.stringify([...affectedNodes]),
-      paths: JSON.stringify(allPaths),
-    };
+      return {
+        affected: JSON.stringify([...affectedNodes]),
+        paths: JSON.stringify(allPaths),
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async get(input: Record<string, unknown>, storage: ConceptStorage) {
+  get(input: Record<string, unknown>) {
     const graph = input.graph as string;
 
-    const record = await storage.get('dependence-graph', graph);
-    if (!record) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'dependence-graph', graph, 'record');
+    p = find(p, 'dependence-graph-edge', { graphId: graph }, 'edges');
 
-    // Count actual edges for this graph
-    const edges = await storage.find('dependence-graph-edge', { graphId: graph });
-    const nodes = new Set<string>();
-    for (const edge of edges) {
-      nodes.add(edge.from as string);
-      nodes.add(edge.to as string);
-    }
+    return branch(p, 'record',
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const edges = bindings.edges as Record<string, unknown>[];
+        const nodes = new Set<string>();
+        for (const edge of edges) {
+          nodes.add(edge.from as string);
+          nodes.add(edge.to as string);
+        }
 
-    return {
-      variant: 'ok',
-      graph: record.id as string,
-      scope: record.scope as string,
-      nodeCount: nodes.size,
-      edgeCount: edges.length,
-    };
+        return {
+          graph: record.id as string,
+          scope: record.scope as string,
+          nodeCount: nodes.size,
+          edgeCount: edges.length,
+        };
+      }),
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const dependenceGraphHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDependenceGraphCounter(): void {

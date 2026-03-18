@@ -5,7 +5,7 @@
 // overrides, patches, and target platform constraints.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -35,6 +35,28 @@ function isValidModuleId(moduleId: string): boolean {
   return moduleId.length > 0 && !/\s/.test(moduleId);
 }
 
+/** Build a default empty project manifest. */
+function defaultProject(projectId: string): Record<string, unknown> {
+  return {
+    projectId,
+    name: projectId,
+    version: '0.0.0',
+    dependencies: [],
+    overrides: [],
+    patches: [],
+    disabled: [],
+    resolutionPolicy: {
+      unification_strategy: 'highest',
+      feature_unification: 'union',
+      prefer_locked: true,
+      allowed_updates: 'minor',
+    },
+    registries: [],
+    targetLanguages: [],
+    targetPlatforms: [],
+  };
+}
+
 type Result = { variant: string; [key: string]: unknown };
 
 const _manifestHandler: FunctionalConceptHandler = {
@@ -60,186 +82,32 @@ const _manifestHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'manifest', projectId, 'project');
 
+    // Resolve to existing or default project
     p = mapBindings(p, (bindings) => {
-      const project = bindings.project as Record<string, unknown> | null;
-      return project || {
-        projectId,
-        name: projectId,
-        version: '0.0.0',
-        dependencies: [],
-        overrides: [],
-        patches: [],
-        disabled: [],
-        resolutionPolicy: {
-          unification_strategy: 'highest',
-          feature_unification: 'union',
-          prefer_locked: true,
-          allowed_updates: 'minor',
-        },
-        registries: [],
-        targetLanguages: [],
-        targetPlatforms: [],
-      };
+      return (bindings.project as Record<string, unknown> | null) || defaultProject(projectId);
     }, 'resolvedProject');
 
     // Check for existing dependency
     p = mapBindings(p, (bindings) => {
       const proj = bindings.resolvedProject as Record<string, unknown>;
-      const deps = proj.dependencies as Array<{ module_id: string }>;
-      return deps.findIndex((d) => d.module_id === moduleId);
-    }, 'existingIdx');
-
-    p = branch(p,
-      (bindings) => (bindings.existingIdx as number) >= 0,
-      (b) => complete(b, 'exists', {}),
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const proj = bindings.resolvedProject as Record<string, unknown>;
-          const deps = [...(proj.dependencies as Array<Record<string, unknown>>)];
-          deps.push({ module_id: moduleId, version_range: versionRange, edge_type: edgeType, environment, features, optional });
-          return { ...proj, dependencies: deps };
-        }, 'updatedProject');
-        b2 = branch(b2,
-          () => true,
-          (b3) => {
-            let b4 = mapBindings(b3, (bindings) => bindings.updatedProject, 'projectToPut');
-            return completeFrom(b4, 'ok', (bindings) => {
-              const proj = bindings.projectToPut as Record<string, unknown>;
-              return { _putRelation: 'manifest', _putKey: projectId, _putValue: proj };
-            });
-          },
-          (b3) => complete(b3, 'ok', {}),
-        );
-        return b2 as StorageProgram<Result>;
-      },
-    );
-
-    // We need to actually put. Let me restructure to use putFrom pattern instead.
-    // Re-approach: use completeFrom with a preceding put derived from bindings.
-    // Actually the above is getting convoluted. Let me use a simpler approach.
-    // Since we can't easily do conditional put + complete, let me restructure.
-
-    // Start over with a cleaner approach
-    let q = createProgram();
-    q = get(q, 'manifest', projectId, 'project');
-
-    q = branch(q,
-      // Branch on whether we have an existing dep
-      (bindings) => {
-        const project = (bindings.project as Record<string, unknown> | null) || {
-          projectId,
-          name: projectId,
-          version: '0.0.0',
-          dependencies: [],
-          overrides: [],
-          patches: [],
-          disabled: [],
-          resolutionPolicy: {
-            unification_strategy: 'highest',
-            feature_unification: 'union',
-            prefer_locked: true,
-            allowed_updates: 'minor',
-          },
-          registries: [],
-          targetLanguages: [],
-          targetPlatforms: [],
-        };
-        const deps = (project.dependencies || []) as Array<{ module_id: string }>;
-        return deps.some((d) => d.module_id === moduleId);
-      },
-      (b) => complete(b, 'exists', {}),
-      (b) => {
-        // Add dep and put
-        let b2 = mapBindings(b, (bindings) => {
-          const project = (bindings.project as Record<string, unknown> | null) || {
-            projectId,
-            name: projectId,
-            version: '0.0.0',
-            dependencies: [],
-            overrides: [],
-            patches: [],
-            disabled: [],
-            resolutionPolicy: {
-              unification_strategy: 'highest',
-              feature_unification: 'union',
-              prefer_locked: true,
-              allowed_updates: 'minor',
-            },
-            registries: [],
-            targetLanguages: [],
-            targetPlatforms: [],
-          };
-          const deps = [...(project.dependencies as Array<Record<string, unknown>> || [])];
-          deps.push({ module_id: moduleId, version_range: versionRange, edge_type: edgeType, environment, features, optional });
-          return { ...project, dependencies: deps };
-        }, 'updatedProject');
-        return completeFrom(b2, 'ok', () => ({}));
-      },
-    );
-
-    // We need the put to happen. Use a different approach: mapBindings to compute the updated project,
-    // then use putFrom. But putFrom is not available through branch in a clean way.
-    // The cleanest pattern: do the put inside the branch using put with dynamic values via mapBindings.
-
-    // Let me redo this properly:
-    let r = createProgram();
-    r = get(r, 'manifest', projectId, 'project');
-    r = mapBindings(r, (bindings) => {
-      const project = (bindings.project as Record<string, unknown> | null) || {
-        projectId,
-        name: projectId,
-        version: '0.0.0',
-        dependencies: [],
-        overrides: [],
-        patches: [],
-        disabled: [],
-        resolutionPolicy: {
-          unification_strategy: 'highest',
-          feature_unification: 'union',
-          prefer_locked: true,
-          allowed_updates: 'minor',
-        },
-        registries: [],
-        targetLanguages: [],
-        targetPlatforms: [],
-      };
-      const deps = (project.dependencies || []) as Array<{ module_id: string }>;
-      const existingIdx = deps.findIndex((d) => d.module_id === moduleId);
-      return existingIdx >= 0;
+      const deps = (proj.dependencies || []) as Array<{ module_id: string }>;
+      return deps.some((d) => d.module_id === moduleId);
     }, 'depExists');
 
-    r = branch(r, 'depExists',
+    p = branch(p, 'depExists',
       (b) => complete(b, 'exists', {}),
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const project = (bindings.project as Record<string, unknown> | null) || {
-            projectId,
-            name: projectId,
-            version: '0.0.0',
-            dependencies: [],
-            overrides: [],
-            patches: [],
-            disabled: [],
-            resolutionPolicy: {
-              unification_strategy: 'highest',
-              feature_unification: 'union',
-              prefer_locked: true,
-              allowed_updates: 'minor',
-            },
-            registries: [],
-            targetLanguages: [],
-            targetPlatforms: [],
-          };
-          const deps = [...(project.dependencies as Array<Record<string, unknown>> || [])];
+        let b2 = putFrom(b, 'manifest', projectId, (bindings) => {
+          const proj = bindings.resolvedProject as Record<string, unknown>;
+          const deps = [...((proj.dependencies || []) as Array<Record<string, unknown>>)];
           deps.push({ module_id: moduleId, version_range: versionRange, edge_type: edgeType, environment, features, optional });
-          return { ...project, dependencies: deps };
-        }, 'updatedProject');
-        b2 = put(b2, 'manifest', projectId, {}); // placeholder, overwritten by mergeFrom pattern
+          return { ...proj, dependencies: deps };
+        });
         return complete(b2, 'ok', {});
       },
     );
 
-    return r as StorageProgram<Result>;
+    return p as StorageProgram<Result>;
   },
 
   remove(input: Record<string, unknown>) {
@@ -253,7 +121,7 @@ const _manifestHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const project = bindings.project as Record<string, unknown>;
-          const deps = project.dependencies as Array<{ module_id: string }>;
+          const deps = (project.dependencies || []) as Array<{ module_id: string }>;
           return deps.findIndex((d) => d.module_id === moduleId);
         }, 'idx');
 
@@ -261,13 +129,12 @@ const _manifestHandler: FunctionalConceptHandler = {
           (bindings) => (bindings.idx as number) < 0,
           (b3) => complete(b3, 'notfound', {}),
           (b3) => {
-            let b4 = mapBindings(b3, (bindings) => {
+            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
               const project = bindings.project as Record<string, unknown>;
-              const deps = [...(project.dependencies as Array<{ module_id: string }>)];
+              const deps = [...((project.dependencies || []) as Array<{ module_id: string }>)];
               deps.splice(bindings.idx as number, 1);
               return { ...project, dependencies: deps };
-            }, 'updatedProject');
-            b4 = put(b4, 'manifest', projectId, {});
+            });
             return complete(b4, 'ok', {});
           },
         );
@@ -296,7 +163,7 @@ const _manifestHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'manifest', projectId, 'project');
 
-    p = mapBindings(p, (bindings) => {
+    p = putFrom(p, 'manifest', projectId, (bindings) => {
       const project = (bindings.project as Record<string, unknown> | null) || {
         projectId,
         name: projectId,
@@ -333,9 +200,8 @@ const _manifestHandler: FunctionalConceptHandler = {
       }
 
       return { ...project, overrides };
-    }, 'updatedProject');
+    });
 
-    p = put(p, 'manifest', projectId, {});
     return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
@@ -350,21 +216,20 @@ const _manifestHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const project = bindings.project as Record<string, unknown>;
-          const deps = project.dependencies as Array<{ module_id: string }>;
+          const deps = (project.dependencies || []) as Array<{ module_id: string }>;
           return deps.some((d) => d.module_id === moduleId);
         }, 'found');
 
         b2 = branch(b2, 'found',
           (b3) => {
-            let b4 = mapBindings(b3, (bindings) => {
+            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
               const project = bindings.project as Record<string, unknown>;
               const disabled = [...((project.disabled as string[]) || [])];
               if (!disabled.includes(moduleId)) {
                 disabled.push(moduleId);
               }
               return { ...project, disabled };
-            }, 'updatedProject');
-            b4 = put(b4, 'manifest', projectId, {});
+            });
             return complete(b4, 'ok', {});
           },
           (b3) => complete(b3, 'notfound', {}),
@@ -396,13 +261,12 @@ const _manifestHandler: FunctionalConceptHandler = {
           (bindings) => (bindings.idx as number) < 0,
           (b3) => complete(b3, 'notfound', {}),
           (b3) => {
-            let b4 = mapBindings(b3, (bindings) => {
+            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
               const project = bindings.project as Record<string, unknown>;
               const disabled = [...((project.disabled as string[]) || [])];
               disabled.splice(bindings.idx as number, 1);
               return { ...project, disabled };
-            }, 'updatedProject');
-            b4 = put(b4, 'manifest', projectId, {});
+            });
             return complete(b4, 'ok', {});
           },
         );
@@ -426,7 +290,7 @@ const _manifestHandler: FunctionalConceptHandler = {
       (bindings) => !bindings.base || !bindings.overlay,
       (b) => complete(b, 'conflict', { message: 'One or both manifests not found' }),
       (b) => {
-        // Compute the merged manifest
+        // Compute the merged manifest, detecting conflicts
         let b2 = mapBindings(b, (bindings) => {
           const base = bindings.base as Record<string, unknown>;
           const overlay = bindings.overlay as Record<string, unknown>;
@@ -441,7 +305,6 @@ const _manifestHandler: FunctionalConceptHandler = {
           }>;
           const overlayDeps = (overlay.dependencies || []) as typeof baseDeps;
 
-          // Overlay dependencies take precedence
           const mergedDeps = [...baseDeps];
           for (const dep of overlayDeps) {
             const idx = mergedDeps.findIndex((d) => d.module_id === dep.module_id);
@@ -452,7 +315,6 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Overrides: overlay takes precedence, check for contradictions
           const baseOverrides = (base.overrides || []) as Array<{
             module_id: string;
             replacement_id?: string;
@@ -482,7 +344,6 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Patches: overlay takes precedence
           const basePatches = (base.patches || []) as Array<{ target_module: string; patch_path: string }>;
           const overlayPatches = (overlay.patches || []) as typeof basePatches;
           const mergedPatches = [...basePatches];
@@ -495,7 +356,6 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Registries: union with overlay first
           const baseRegistries = (base.registries || []) as Array<{ name: string; url: string; scope?: string }>;
           const overlayRegistries = (overlay.registries || []) as typeof baseRegistries;
           const mergedRegistries = [...overlayRegistries];
@@ -505,12 +365,10 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Disabled: union
           const baseDisabled = (base.disabled || []) as string[];
           const overlayDisabled = (overlay.disabled || []) as string[];
           const mergedDisabled = [...new Set([...baseDisabled, ...overlayDisabled])];
 
-          // Target languages/platforms: intersection
           const baseLangs = (base.targetLanguages || []) as string[];
           const overlayLangs = (overlay.targetLanguages || []) as string[];
           const mergedLangs = baseLangs.length > 0 && overlayLangs.length > 0
@@ -538,7 +396,6 @@ const _manifestHandler: FunctionalConceptHandler = {
           };
         }, 'mergeResult');
 
-        // Check for conflict in mergeResult
         b2 = branch(b2,
           (bindings) => !!(bindings.mergeResult as Record<string, unknown>)._conflict,
           (b3) => completeFrom(b3, 'conflict', (bindings) => {
@@ -547,7 +404,7 @@ const _manifestHandler: FunctionalConceptHandler = {
           }),
           (b3) => {
             const mergedId = `merged-${nextId++}`;
-            let b4 = mapBindings(b3, (bindings) => {
+            let b4 = putFrom(b3, 'manifest', mergedId, (bindings) => {
               const mr = bindings.mergeResult as Record<string, unknown>;
               return {
                 projectId: mergedId,
@@ -562,8 +419,7 @@ const _manifestHandler: FunctionalConceptHandler = {
                 targetLanguages: mr.targetLanguages,
                 targetPlatforms: mr.targetPlatforms,
               };
-            }, 'mergedManifest');
-            b4 = put(b4, 'manifest', mergedId, {});
+            });
             return complete(b4, 'ok', { merged: mergedId });
           },
         );
@@ -582,12 +438,10 @@ const _manifestHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'project',
       (b) => {
-        // Validate the project manifest
         let b2 = mapBindings(b, (bindings) => {
           const project = bindings.project as Record<string, unknown>;
           const errors: string[] = [];
 
-          // Validate dependencies
           const deps = (project.dependencies || []) as Array<{
             module_id: string;
             version_range: string;
@@ -606,7 +460,6 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Validate overrides reference known modules
           const overrides = (project.overrides || []) as Array<{
             module_id: string;
             replacement_id?: string;
@@ -623,7 +476,6 @@ const _manifestHandler: FunctionalConceptHandler = {
             }
           }
 
-          // Validate registries have URLs
           const registries = (project.registries || []) as Array<{ name: string; url: string }>;
           for (const reg of registries) {
             if (!reg.url || reg.url.length === 0) {
