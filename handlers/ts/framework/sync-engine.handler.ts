@@ -19,8 +19,6 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
-  ConceptHandler,
-  ConceptStorage,
   CompiledSync,
   ActionCompletion,
   ActionInvocation,
@@ -206,14 +204,13 @@ export class DistributedSyncEngine {
 type Result = { variant: string; [key: string]: unknown };
 
 export function createSyncEngineHandler(registry: ConceptRegistry): {
-  handler: ConceptHandler;
+  handler: ReturnType<typeof autoInterpret>;
   engine: SyncEngine;
   log: ActionLog;
 } {
   const log = new ActionLog();
   const engine = new SyncEngine(log, registry);
 
-  // Create functional handler internally, wrap with autoInterpret
   const _functionalHandler: FunctionalConceptHandler = {
     registerSync(input: Record<string, unknown>) {
       const sync = input.sync as CompiledSync;
@@ -227,10 +224,11 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
     },
 
     onCompletion(input: Record<string, unknown>) {
-      // Note: onCompletion requires async engine evaluation which cannot
+      // Note: onCompletion requires engine evaluation which cannot
       // be expressed as pure StorageProgram instructions. We return a
       // program that completes with an empty invocations list. The actual
-      // engine evaluation happens in the imperative compat layer.
+      // engine evaluation happens via the DistributedSyncEngine class
+      // or the SyncEngine class directly.
       const p = createProgram();
       return complete(p, 'ok', { invocations: [] }) as StorageProgram<Result>;
     },
@@ -247,37 +245,7 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
     },
   };
 
-  // The handler needs imperative compat for async engine operations
-  const handler: ConceptHandler = {
-    async registerSync(input, _storage) {
-      const sync = input.sync as CompiledSync;
-      if (!sync || !sync.name) return { variant: 'error', message: 'Invalid sync: missing name' };
-      engine.registerSync(sync);
-      return { variant: 'ok' };
-    },
-
-    async onCompletion(input, _storage) {
-      const completion = input.completion as ActionCompletion;
-      const parentId = input.parentId as string | undefined;
-      if (!completion || !completion.id) return { variant: 'ok', invocations: [] };
-      const invocations = await engine.onCompletion(completion, parentId);
-      return { variant: 'ok', invocations };
-    },
-
-    async evaluateWhere(input, _storage) {
-      const bindings = input.bindings as Binding;
-      const queries = input.queries as CompiledSync['where'];
-      if (!bindings || !queries) return { variant: 'error', message: 'Missing bindings or queries' };
-      try {
-        const results = await evaluateWhere(queries, bindings, registry);
-        return { variant: 'ok', results };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        return { variant: 'error', message };
-      }
-    },
-  };
-
+  const handler = autoInterpret(_functionalHandler);
   return { handler, engine, log };
 }
 
