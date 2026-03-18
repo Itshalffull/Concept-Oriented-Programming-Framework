@@ -1,54 +1,97 @@
+// @migrated dsl-constructs 2026-03-18
 // Circle Concept Handler
 // Nested governance groups with holacratic jurisdiction management.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
-export const circleHandler: ConceptHandler = {
-  async create(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _circleHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const id = `circle-${Date.now()}`;
-    await storage.put('circle', id, {
+    let p = createProgram();
+    p = put(p, 'circle', id, {
       id, name: input.name, domain: input.domain, purpose: input.purpose,
       parent: input.parent ?? null, members: [], createdAt: new Date().toISOString(),
     });
-    return { variant: 'created', circle: id };
+    return complete(p, 'created', { circle: id }) as StorageProgram<Result>;
   },
 
-  async assignMember(input, storage) {
+  assignMember(input: Record<string, unknown>) {
     const { circle, member, role } = input;
-    const record = await storage.get('circle', circle as string);
-    if (!record) return { variant: 'not_found', circle };
-    const members = (record.members as string[]);
-    if (!members.includes(member as string)) members.push(member as string);
-    await storage.put('circle', circle as string, { ...record, members });
-    return { variant: 'member_assigned', circle, member };
+    let p = createProgram();
+    p = get(p, 'circle', circle as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'circle', circle as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const members = (record.members as string[]);
+          if (!members.includes(member as string)) members.push(member as string);
+          return { ...record, members };
+        });
+        return complete(thenP, 'member_assigned', { circle, member });
+      },
+      (elseP) => complete(elseP, 'not_found', { circle }),
+    ) as StorageProgram<Result>;
   },
 
-  async removeMember(input, storage) {
+  removeMember(input: Record<string, unknown>) {
     const { circle, member } = input;
-    const record = await storage.get('circle', circle as string);
-    if (!record) return { variant: 'not_found', circle };
-    const members = (record.members as string[]).filter(m => m !== member);
-    await storage.put('circle', circle as string, { ...record, members });
-    return { variant: 'member_removed', circle, member };
+    let p = createProgram();
+    p = get(p, 'circle', circle as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'circle', circle as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const members = (record.members as string[]).filter(m => m !== member);
+          return { ...record, members };
+        });
+        return complete(thenP, 'member_removed', { circle, member });
+      },
+      (elseP) => complete(elseP, 'not_found', { circle }),
+    ) as StorageProgram<Result>;
   },
 
-  async setLinks(input, storage) {
+  setLinks(input: Record<string, unknown>) {
     const { circle, leadLink, repLink } = input;
-    const record = await storage.get('circle', circle as string);
-    if (!record) return { variant: 'not_found', circle };
-    await storage.put('circle', circle as string, { ...record, leadLink, repLink });
-    return { variant: 'links_set', circle };
+    let p = createProgram();
+    p = get(p, 'circle', circle as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        thenP = putFrom(thenP, 'circle', circle as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, leadLink, repLink };
+        });
+        return complete(thenP, 'links_set', { circle });
+      },
+      (elseP) => complete(elseP, 'not_found', { circle }),
+    ) as StorageProgram<Result>;
   },
 
-  async dissolve(input, storage) {
+  dissolve(input: Record<string, unknown>) {
     const { circle } = input;
-    await storage.del('circle', circle as string);
-    return { variant: 'dissolved', circle };
+    let p = createProgram();
+    p = del(p, 'circle', circle as string);
+    return complete(p, 'dissolved', { circle }) as StorageProgram<Result>;
   },
 
-  async checkJurisdiction(input, storage) {
+  checkJurisdiction(input: Record<string, unknown>) {
     const { circle, action } = input;
-    const record = await storage.get('circle', circle as string);
-    if (!record) return { variant: 'not_found', circle };
-    return { variant: 'within_jurisdiction', circle, action };
+    let p = createProgram();
+    p = get(p, 'circle', circle as string, 'record');
+
+    return branch(p, 'record',
+      (thenP) => complete(thenP, 'within_jurisdiction', { circle, action }),
+      (elseP) => complete(elseP, 'not_found', { circle }),
+    ) as StorageProgram<Result>;
   },
 };
+
+export const circleHandler = autoInterpret(_circleHandler);
