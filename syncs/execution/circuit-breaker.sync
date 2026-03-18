@@ -1,0 +1,62 @@
+# CircuitBreaker wiring — check before dispatch, record outcomes after.
+# Prevents cascading failures by halting requests to failing endpoints.
+
+sync CheckCircuitBeforeExternalCall [eager]
+  purpose: "Check the circuit breaker state before dispatching an external call. If open, the call is rejected without reaching the endpoint."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep; payload: ?payload ]
+    => []
+}
+then {
+  CircuitBreaker/check: [ endpoint: ?ep ]
+}
+
+sync CheckCircuitBeforeLocalProcess [eager]
+  purpose: "Check the circuit breaker state before dispatching a local process."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod; input: ?input ]
+    => []
+}
+then {
+  CircuitBreaker/check: [ endpoint: ?mod ]
+}
+
+sync RecordExternalCallSuccessToCircuit [eager]
+  purpose: "Record a successful external call to the circuit breaker, potentially closing a half-open circuit."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => ok(call: ?call; result: ?result)
+}
+then {
+  CircuitBreaker/recordSuccess: [ endpoint: ?ep ]
+}
+
+sync RecordExternalCallFailureToCircuit [eager]
+  purpose: "Record a failed external call to the circuit breaker, potentially tripping the circuit open."
+when {
+  ExternalCall/dispatch: [ protocol: ?protocol; endpoint: ?ep ]
+    => error(call: ?call; message: ?msg)
+}
+then {
+  CircuitBreaker/recordFailure: [ endpoint: ?ep ]
+}
+
+sync RecordLocalProcessSuccessToCircuit [eager]
+  purpose: "Record a successful local process to the circuit breaker."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => ok(process: ?proc; result: ?result)
+}
+then {
+  CircuitBreaker/recordSuccess: [ endpoint: ?mod ]
+}
+
+sync RecordLocalProcessFailureToCircuit [eager]
+  purpose: "Record a failed local process to the circuit breaker."
+when {
+  LocalProcess/dispatch: [ runtime: ?runtime; moduleRef: ?mod ]
+    => error(process: ?proc; message: ?msg)
+}
+then {
+  CircuitBreaker/recordFailure: [ endpoint: ?mod ]
+}
