@@ -7,6 +7,7 @@
 // Uses perform() for filesystem and YAML parsing transport effects.
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 import {
   createProgram, get, find, put, del, perform, branch, pure, complete,
   getLens, putLens, modifyLens, mapBindings,
@@ -101,7 +102,7 @@ function resolveEnvVar(value: string, env: Record<string, string | undefined>): 
 
 // --- Handler ---
 
-export const runtimeDiscoveryHandler: FunctionalConceptHandler = {
+const runtimeDiscoveryHandlerFunctional: FunctionalConceptHandler = {
 
   scan(input: Record<string, unknown>) {
     const directory = input.directory as string;
@@ -443,3 +444,6 @@ export const runtimeDiscoveryHandler: FunctionalConceptHandler = {
     }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const runtimeDiscoveryHandler = wrapFunctional(runtimeDiscoveryHandlerFunctional);
+export { runtimeDiscoveryHandlerFunctional };

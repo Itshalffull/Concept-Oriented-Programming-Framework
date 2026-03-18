@@ -7,6 +7,7 @@
 // the concrete transport (HTTP, WebSocket) at execution time.
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 import {
   createProgram, get, find, put, del, perform, branch, pure, complete,
   getLens, putLens, modifyLens, mapBindings,
@@ -27,7 +28,7 @@ function bridgeId(endpoint: string): string {
 
 // --- Handler ---
 
-export const scoreBridgeHandler: FunctionalConceptHandler = {
+const scoreBridgeHandlerFunctional: FunctionalConceptHandler = {
 
   connect(input: Record<string, unknown>) {
     const endpoint = input.endpoint as string;
@@ -389,3 +390,6 @@ export const scoreBridgeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const scoreBridgeHandler = wrapFunctional(scoreBridgeHandlerFunctional);
+export { scoreBridgeHandlerFunctional };

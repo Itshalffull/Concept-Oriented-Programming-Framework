@@ -1,4 +1,5 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { wrapFunctional } from '../../../runtime/functional-compat.ts';
 import {
   createProgram, putLens, getLens, find, complete, relation, at,
   type StorageProgram,
@@ -20,7 +21,7 @@ const kindsRel = relation('registeredKinds');
  * - Identity: apply(p, kind, emptySpec) = p (delegated to provider)
  * - Composition: apply(p, compose([f, g])) = apply(apply(p, f), g)
  */
-export const renderTransformHandler: FunctionalConceptHandler = {
+const renderTransformHandlerFunctional: FunctionalConceptHandler = {
   registerKind(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const kindId = `kind-${kind}`;
@@ -146,3 +147,6 @@ export const renderTransformHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const renderTransformHandler = wrapFunctional(renderTransformHandlerFunctional);
+export { renderTransformHandlerFunctional };
