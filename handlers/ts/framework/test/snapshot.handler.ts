@@ -51,50 +51,68 @@ const _handler: FunctionalConceptHandler = {
 
     p = get(p, BASELINES, outputPath, 'baseline');
 
-    if (!baseline) {
-      // New path — no baseline exists
-      p = put(p, COMPARISONS, outputPath, {
-        path: outputPath,
-        currentHash,
-        status: 'new',
-        diffSummary: null,
-        comparedAt: new Date().toISOString(),
-      });
-      return complete(p, 'new', { path: outputPath, contentHash: currentHash }) as StorageProgram<Result>;
-    }
+    p = branch(p,
+      (bindings) => !bindings.baseline,
+      (b) => {
+        // New path — no baseline exists
+        let b2 = put(b, COMPARISONS, outputPath, {
+          path: outputPath,
+          currentHash,
+          status: 'new',
+          diffSummary: null,
+          comparedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'new', { path: outputPath, contentHash: currentHash });
+      },
+      (b) => {
+        // Baseline exists — check if changed
+        return branch(b,
+          (bindings) => {
+            const baseline = bindings.baseline as Record<string, unknown>;
+            return (baseline.contentHash as string) === currentHash;
+          },
+          (b2) => {
+            // Unchanged
+            let b3 = put(b2, COMPARISONS, outputPath, {
+              path: outputPath,
+              currentHash,
+              status: 'current',
+              diffSummary: null,
+              comparedAt: new Date().toISOString(),
+            });
+            return completeFrom(b3, 'unchanged', (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              return { snapshot: baseline.id as string };
+            });
+          },
+          (b2) => {
+            // Content changed
+            let b3 = putFrom(b2, COMPARISONS, outputPath, (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              const baselineHash = baseline.contentHash as string;
+              const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+              return {
+                path: outputPath,
+                currentHash,
+                status: 'changed',
+                diffSummary: diff,
+                linesAdded,
+                linesRemoved,
+                comparedAt: new Date().toISOString(),
+              };
+            });
+            return completeFrom(b3, 'changed', (bindings) => {
+              const baseline = bindings.baseline as Record<string, unknown>;
+              const baselineHash = baseline.contentHash as string;
+              const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+              return { snapshot: baseline.id as string, diff, linesAdded, linesRemoved };
+            });
+          },
+        );
+      },
+    );
 
-    const baselineHash = baseline.contentHash as string;
-
-    if (baselineHash === currentHash) {
-      p = put(p, COMPARISONS, outputPath, {
-        path: outputPath,
-        currentHash,
-        status: 'current',
-        diffSummary: null,
-        comparedAt: new Date().toISOString(),
-      });
-      return complete(p, 'unchanged', { snapshot: baseline.id as string }) as StorageProgram<Result>;
-    }
-
-    // Content changed
-    const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
-
-    p = put(p, COMPARISONS, outputPath, {
-      path: outputPath,
-      currentHash,
-      status: 'changed',
-      diffSummary: diff,
-      linesAdded,
-      linesRemoved,
-      comparedAt: new Date().toISOString(),
-    });
-
-    return complete(p, 'changed', {
-      snapshot: baseline.id as string,
-      diff,
-      linesAdded,
-      linesRemoved,
-    }) as StorageProgram<Result>;
+    return p as StorageProgram<Result>;
   },
 
   approve(input: Record<string, unknown>) {
@@ -103,32 +121,48 @@ const _handler: FunctionalConceptHandler = {
     const approver = input.approver as string | undefined;
 
     p = get(p, COMPARISONS, path, 'comparison');
-    if (!comparison || comparison.status === 'current') {
-      p = get(p, BASELINES, path, 'baseline');
-      return complete(p, 'noChange', {
-        snapshot: baseline ? (baseline.id as string) : path,
-      }) as StorageProgram<Result>;
-    }
 
-    const currentHash = comparison.currentHash as string;
-    const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const now = new Date().toISOString();
+    p = branch(p,
+      (bindings) => {
+        const comparison = bindings.comparison as Record<string, unknown> | undefined;
+        return !comparison || (comparison.status as string) === 'current';
+      },
+      (b) => {
+        let b2 = get(b, BASELINES, path, 'baseline');
+        return completeFrom(b2, 'noChange', (bindings) => {
+          const baseline = bindings.baseline as Record<string, unknown> | undefined;
+          return { snapshot: baseline ? (baseline.id as string) : path };
+        });
+      },
+      (b) => {
+        const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const now = new Date().toISOString();
 
-    p = put(p, BASELINES, path, {
-      id: snapshotId,
-      path,
-      contentHash: currentHash,
-      approvedAt: now,
-      approvedBy: approver || null,
-    });
+        let b2 = putFrom(b, BASELINES, path, (bindings) => {
+          const comparison = bindings.comparison as Record<string, unknown>;
+          return {
+            id: snapshotId,
+            path,
+            contentHash: comparison.currentHash as string,
+            approvedAt: now,
+            approvedBy: approver || null,
+          };
+        });
 
-    p = put(p, COMPARISONS, path, {
-      ...comparison,
-      status: 'current',
-      diffSummary: null,
-    });
+        b2 = putFrom(b2, COMPARISONS, path, (bindings) => {
+          const comparison = bindings.comparison as Record<string, unknown>;
+          return {
+            ...comparison,
+            status: 'current',
+            diffSummary: null,
+          };
+        });
 
-    return complete(p, 'ok', { snapshot: snapshotId }) as StorageProgram<Result>;
+        return complete(b2, 'ok', { snapshot: snapshotId });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   approveAll(input: Record<string, unknown>) {
