@@ -140,21 +140,25 @@ const _handler: FunctionalConceptHandler = {
       dimension,
     }, 'matches');
 
-    if (matches.length === 0) {
-      return complete(p, 'notFound', { target_symbol: targetSymbol, dimension }) as StorageProgram<Result>;
-    }
+    p = branch(p,
+      (bindings) => {
+        const matches = (bindings.matches || []) as Array<Record<string, unknown>>;
+        return matches.length === 0;
+      },
+      (b) => complete(b, 'notFound', { target_symbol: targetSymbol, dimension }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const matches = bindings.matches as Array<Record<string, unknown>>;
+        let latest = matches[0];
+        for (let i = 1; i < matches.length; i++) {
+          if ((matches[i].observed_at as string) > (latest.observed_at as string)) {
+            latest = matches[i];
+          }
+        }
+        return { signal: latest };
+      }),
+    );
 
-    // Find the most recent by observed_at
-    let latest = matches[0];
-    for (let i = 1; i < matches.length; i++) {
-      if ((matches[i].observed_at as string) > (latest.observed_at as string)) {
-        latest = matches[i];
-      }
-    }
-
-    return complete(p, 'ok', {
-      signal: latest,
-    }) as StorageProgram<Result>;
+    return p as StorageProgram<Result>;
   },
 
   rollup(input: Record<string, unknown>) {
@@ -179,85 +183,89 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    let blocking = false;
-    const perTarget: Array<{
-      target_symbol: string;
-      worst_status: string;
-      dimensions: Array<{
-        dimension: string;
-        status: string;
-        severity: string;
-        observed_at: string;
-      }>;
-    }> = [];
+    // Collect all signals for all targets in one query, then compute rollup in completeFrom
+    p = find(p, SIGNALS, {}, 'allSignalsGlobal');
 
-    for (const target of targetSymbols) {
-      p = find(p, SIGNALS, { target_symbol: target }, 'allSignals');
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSignalsGlobal = (bindings.allSignalsGlobal || []) as Array<Record<string, unknown>>;
 
-      // Group by dimension, keeping only the latest per dimension
-      const latestByDimension = new Map<string, Record<string, unknown>>();
-      for (const signal of allSignals) {
-        const dim = signal.dimension as string;
-
-        // Filter by requested dimensions if provided
-        if (dimensions && !dimensions.includes(dim)) continue;
-
-        const existing = latestByDimension.get(dim);
-        if (!existing || (signal.observed_at as string) > (existing.observed_at as string)) {
-          latestByDimension.set(dim, signal);
-        }
-      }
-
-      // Compute worst-of status and check for blocking
-      let worstRank = STATUS_RANK.skipped; // start at best (skipped)
-      const dimEntries: Array<{
-        dimension: string;
-        status: string;
-        severity: string;
-        observed_at: string;
+      let blocking = false;
+      const perTarget: Array<{
+        target_symbol: string;
+        worst_status: string;
+        dimensions: Array<{
+          dimension: string;
+          status: string;
+          severity: string;
+          observed_at: string;
+        }>;
       }> = [];
 
-      for (const [dim, signal] of latestByDimension) {
-        const st = signal.status as Status;
-        const sev = signal.severity as Severity;
-        const rank = STATUS_RANK[st];
+      for (const target of targetSymbols) {
+        const targetSignals = allSignalsGlobal.filter(s => s.target_symbol === target);
 
-        if (rank < worstRank) {
-          worstRank = rank;
+        // Group by dimension, keeping only the latest per dimension
+        const latestByDimension = new Map<string, Record<string, unknown>>();
+        for (const signal of targetSignals) {
+          const dim = signal.dimension as string;
+
+          // Filter by requested dimensions if provided
+          if (dimensions && !dimensions.includes(dim)) continue;
+
+          const existing = latestByDimension.get(dim);
+          if (!existing || (signal.observed_at as string) > (existing.observed_at as string)) {
+            latestByDimension.set(dim, signal);
+          }
         }
 
-        // Gate-severity signals with fail or unknown are blocking
-        if (sev === 'gate' && (st === 'fail' || st === 'unknown')) {
-          blocking = true;
+        // Compute worst-of status and check for blocking
+        let worstRank = STATUS_RANK.skipped; // start at best (skipped)
+        const dimEntries: Array<{
+          dimension: string;
+          status: string;
+          severity: string;
+          observed_at: string;
+        }> = [];
+
+        for (const [dim, signal] of latestByDimension) {
+          const st = signal.status as Status;
+          const sev = signal.severity as Severity;
+          const rank = STATUS_RANK[st];
+
+          if (rank < worstRank) {
+            worstRank = rank;
+          }
+
+          // Gate-severity signals with fail or unknown are blocking
+          if (sev === 'gate' && (st === 'fail' || st === 'unknown')) {
+            blocking = true;
+          }
+
+          dimEntries.push({
+            dimension: dim,
+            status: st,
+            severity: sev,
+            observed_at: signal.observed_at as string,
+          });
         }
 
-        dimEntries.push({
-          dimension: dim,
-          status: st,
-          severity: sev,
-          observed_at: signal.observed_at as string,
+        // Map rank back to status name
+        let worstStatus = 'skipped';
+        for (const [status, rank] of Object.entries(STATUS_RANK)) {
+          if (rank === worstRank) {
+            worstStatus = status;
+            break;
+          }
+        }
+
+        perTarget.push({
+          target_symbol: target,
+          worst_status: worstStatus,
+          dimensions: dimEntries,
         });
       }
 
-      // Map rank back to status name
-      let worstStatus = 'skipped';
-      for (const [status, rank] of Object.entries(STATUS_RANK)) {
-        if (rank === worstRank) {
-          worstStatus = status;
-          break;
-        }
-      }
-
-      perTarget.push({
-        target_symbol: target,
-        worst_status: worstStatus,
-        dimensions: dimEntries,
-      });
-    }
-
-    return complete(p, 'ok', {
-      blocking,
-      targets: perTarget,
+      return { blocking, targets: perTarget };
     }) as StorageProgram<Result>;
   },
 
@@ -285,20 +293,24 @@ const _handler: FunctionalConceptHandler = {
 
     p = find(p, SIGNALS, { target_symbol: targetSymbol }, 'allSignals');
 
-    // Filter by dimensions if provided
-    let filtered = allSignals;
-    if (dimensions && dimensions.length > 0) {
-      filtered = allSignals.filter(s => dimensions.includes(s.dimension as string));
-    }
+    return completeFrom(p, 'ok', (bindings) => {
+      const allSignals = (bindings.allSignals || []) as Array<Record<string, unknown>>;
 
-    // Sort by observed_at descending (most recent first)
-    filtered.sort((a, b) =>
-      (b.observed_at as string).localeCompare(a.observed_at as string),
-    );
+      // Filter by dimensions if provided
+      let filtered = allSignals;
+      if (dimensions && dimensions.length > 0) {
+        filtered = allSignals.filter(s => dimensions.includes(s.dimension as string));
+      }
 
-    return complete(p, 'ok', {
-      target_symbol: targetSymbol,
-      signals: filtered,
+      // Sort by observed_at descending (most recent first)
+      filtered.sort((a, b) =>
+        (b.observed_at as string).localeCompare(a.observed_at as string),
+      );
+
+      return {
+        target_symbol: targetSymbol,
+        signals: filtered,
+      };
     }) as StorageProgram<Result>;
   },
 };
