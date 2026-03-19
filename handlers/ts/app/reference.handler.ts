@@ -2,7 +2,7 @@
 // Reference Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -49,7 +49,11 @@ const _referenceHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'reference', source, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { targets: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const refs = JSON.parse((existing.refs as string) || '[]') as string[];
+          return { targets: refs.join(',') };
+        }),
       (b) => complete(b, 'notfound', { source }),
     );
 

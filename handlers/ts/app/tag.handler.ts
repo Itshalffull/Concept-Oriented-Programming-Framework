@@ -93,7 +93,7 @@ const _tagHandler: FunctionalConceptHandler = {
       const entities: string[] = existing && existing.tagIndex ? JSON.parse(existing.tagIndex as string) : [];
       return entities.length === 1 ? entities[0] : entities.join(',');
     }, 'entitiesValue');
-    return complete(p, 'ok', { entities: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ entities: bindings.entitiesValue as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getChildren(input: Record<string, unknown>) {
@@ -107,7 +107,7 @@ const _tagHandler: FunctionalConceptHandler = {
           const allTags = (bindings.allTags as Array<Record<string, unknown>>) || [];
           return JSON.stringify(allTags.filter(r => r.parent === tag).map(r => r.tag as string));
         }, 'childrenJson');
-        return complete(b2, 'ok', { children: '' });
+        return completeFrom(b2, 'ok', (bindings) => ({ children: bindings.childrenJson as string }));
       },
       (b) => complete(b, 'notfound', { message: 'Tag does not exist' }),
     );

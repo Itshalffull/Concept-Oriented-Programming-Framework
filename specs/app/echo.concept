@@ -17,6 +17,12 @@ concept Echo [M] {
     }
   }
 
+  invariant {
+    "echo returns sent text":
+      after send(id: m, text: "hello")
+      then send.ok(id: m, echo: "hello")
+  }
+
   always "stored messages have text": {
     forall m in messages:
     m.text != none

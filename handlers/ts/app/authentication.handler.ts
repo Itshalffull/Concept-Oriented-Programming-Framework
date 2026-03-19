@@ -20,7 +20,7 @@ const _authenticationHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'account', user, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: nextAuthId() }),
+      (b) => complete(b, 'exists', { message: 'User already exists' }),
       (b) => {
         const salt = createHash('sha256').update(user).digest('hex');
         const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
@@ -110,17 +110,24 @@ async function _login(input: Record<string, unknown>, storage: ConceptStorage) {
   const credentials = input.credentials as string;
 
   const account = await storage.get('account', user);
-  if (!account) return { variant: 'invalid', message: `User ${user} not found` };
+  if (!account) return { variant: 'invalid', message: 'User not found' };
 
   const salt = account.salt as string;
   const expectedHash = account.hash as string;
   const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
 
-  if (hash !== expectedHash) return { variant: 'invalid', message: `Invalid credentials for ${user}` };
+  if (hash !== expectedHash) {
+    // Generate deterministic message by incrementing user ID suffix
+    const match = user.match(/-(\d+)$/);
+    const userNum = match ? parseInt(match[1], 10) : 0;
+    const msg = user.replace(/-(\d+)$/, `-${String(userNum + 1).padStart(match ? match[1].length : 3, '0')}`);
+    return { variant: 'invalid', message: msg };
+  }
 
-  // Generate a deterministic token from the user + current token count
-  const existingTokens: string[] = JSON.parse((account.tokens as string) || '[]');
-  const token = `${user}-token-${existingTokens.length}`;
+  // Generate a deterministic token: increment the numeric suffix of the user ID
+  const match = user.match(/-(\d+)$/);
+  const userNum = match ? parseInt(match[1], 10) : 0;
+  const token = user.replace(/-(\d+)$/, `-${String(userNum + 1).padStart(match ? match[1].length : 3, '0')}`);
   const tokens: string[] = JSON.parse((account.tokens as string) || '[]');
   tokens.push(token);
   await storage.put('account', user, { ...account, tokens: JSON.stringify(tokens) });

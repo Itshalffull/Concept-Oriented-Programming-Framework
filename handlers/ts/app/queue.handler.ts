@@ -4,7 +4,7 @@
 // and pluggable backends.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -52,7 +52,12 @@ const _queueHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'queue', queue, 'queueRecord');
     p = branch(p, 'queueRecord',
-      (b) => complete(b, 'ok', { item: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const queueRecord = bindings.queueRecord as Record<string, unknown>;
+          const items = JSON.parse((queueRecord.items as string) || '[]') as Array<Record<string, unknown>>;
+          const pending = items.find(i => i.status === 'pending');
+          return { item: pending ? (pending.item as string) : '' };
+        }),
       (b) => complete(b, 'empty', { message: 'No items are available in the queue' }),
     );
 

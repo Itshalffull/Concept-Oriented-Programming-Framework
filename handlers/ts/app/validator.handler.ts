@@ -2,7 +2,7 @@
 // Validator Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -74,7 +74,10 @@ const _validatorHandler: FunctionalConceptHandler = {
       }
       return { valid: errors.length === 0, errorsValue: errors.length === 0 ? '' : errors.join(', ') };
     }, 'result');
-    return complete(p, 'ok', { valid: true, errors: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const result = bindings.result as { valid: boolean; errorsValue: string };
+      return { valid: result.valid, errors: result.errorsValue };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   validateField(input: Record<string, unknown>) {
@@ -97,7 +100,10 @@ const _validatorHandler: FunctionalConceptHandler = {
       }
       return { valid: errors.length === 0, errors: JSON.stringify(errors) };
     }, 'result');
-    return complete(p, 'ok', { valid: true, errors: '[]' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const result = bindings.result as { valid: boolean; errors: string };
+      return { valid: result.valid, errors: result.errors };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   coerce(input: Record<string, unknown>) {
@@ -122,7 +128,7 @@ const _validatorHandler: FunctionalConceptHandler = {
       }
       return JSON.stringify(coerced);
     }, 'coerced');
-    return complete(p, 'ok', { coerced: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ coerced: bindings.coerced as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   addCustomValidator(input: Record<string, unknown>) {

@@ -9,10 +9,11 @@ import {
   createProgram, get, put, find, del, pure, perform,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const RELATION = 'vercel';
 
-export const vercelRuntimeHandler: FunctionalConceptHandler = {
+const _vercelRuntimeHandler: FunctionalConceptHandler = {
   provision(input: Record<string, unknown>) {
     const concept = input.concept as string;
     const teamId = (input.teamId as string) || '';
@@ -178,3 +179,5 @@ export const vercelRuntimeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const vercelRuntimeHandler = autoInterpret(_vercelRuntimeHandler);

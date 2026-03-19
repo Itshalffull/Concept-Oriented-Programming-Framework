@@ -195,7 +195,17 @@ function generateAdapterFile(manifest: ConceptManifest): string {
 
 // --- Conformance Test File (Section 7.4) ---
 
-function generateConformanceTestFile(manifest: ConceptManifest): string | null {
+/**
+ * Generate a conformance test file for a concept.
+ *
+ * @param testStyle - 'functional' (default): uses interpret() on the raw StorageProgram,
+ *   accesses results via result.output.field. 'imperative': passes storage as second arg
+ *   to the handler (works via autoInterpret), accesses results via (result as any).field.
+ */
+function generateConformanceTestFile(
+  manifest: ConceptManifest,
+  testStyle: 'functional' | 'imperative' = 'functional',
+): string | null {
   if (manifest.invariants.length === 0) {
     return null;
   }
@@ -208,12 +218,16 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `// generated: ${lowerName}.conformance.stub.test.ts`,
     `import { describe, it, expect } from "vitest";`,
     `import { createInMemoryStorage } from "@clef/runtime";`,
-    `import { interpret } from "../../../runtime/interpreter.ts";`,
+  ];
+  if (testStyle === 'functional') {
+    lines.push(`import { interpret } from "../../../runtime/interpreter.ts";`);
+  }
+  lines.push(
     `import { ${handlerVar} } from "./${lowerName}.impl";`,
     '',
     `describe("${conceptName} conformance", () => {`,
     '',
-  ];
+  );
 
   for (const inv of manifest.invariants) {
     lines.push(`  it("${inv.description}", async () => {`);
@@ -232,7 +246,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     let stepNum = 1;
     lines.push(`    // --- AFTER clause ---`);
     for (const step of inv.setup) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum, boundVars));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, boundVars, testStyle));
       stepNum++;
     }
     lines.push('');
@@ -240,7 +254,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     // Then clause (Section 7.4 Rule 3)
     lines.push(`    // --- THEN clause ---`);
     for (const step of inv.assertions) {
-      lines.push(...generateStepCode(handlerVar, step, stepNum, null));
+      lines.push(...generateStepCode(handlerVar, step, stepNum, null, testStyle));
       stepNum++;
     }
 
@@ -274,6 +288,7 @@ function generateStepCode(
   step: InvariantStep,
   stepNum: number,
   boundVars: Set<string> | null,
+  testStyle: 'functional' | 'imperative' = 'functional',
 ): string[] {
   const lines: string[] = [];
   const varName = `step${stepNum}`;
@@ -284,27 +299,43 @@ function generateStepCode(
 
   const inputFields = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
 
-  lines.push(`    const ${varName}Program = ${handlerVar}.${step.action}(`);
-  lines.push(`      { ${inputFields} },`);
-  lines.push(`    );`);
-  lines.push(`    const ${varName} = await interpret(${varName}Program, storage);`);
+  if (testStyle === 'functional') {
+    // Functional: call handler to get StorageProgram, then interpret
+    lines.push(`    const ${varName}Program = ${handlerVar}.${step.action}(`);
+    lines.push(`      { ${inputFields} },`);
+    lines.push(`    );`);
+    lines.push(`    const ${varName} = await interpret(${varName}Program, storage);`);
+  } else {
+    // Imperative: pass storage as second arg (autoInterpret compat)
+    lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
+    lines.push(`      { ${inputFields} },`);
+    lines.push(`      storage,`);
+    lines.push(`    );`);
+  }
 
   lines.push(`    expect(${varName}.variant).toBe("${step.expectedVariant}");`);
 
+  // Output field access differs between styles:
+  // - functional: result.output.field (interpret returns { variant, output })
+  // - imperative: (result as any).field (autoInterpret flattens { variant, ...output })
+  const fieldAccess = testStyle === 'functional'
+    ? (field: string) => `${varName}.output.${field}`
+    : (field: string) => `(${varName} as any).${field}`;
+
   for (const out of step.expectedOutputs) {
     if (out.value.kind === 'literal') {
-      lines.push(`    expect(${varName}.output.${out.name}).toBe(${JSON.stringify(out.value.value)});`);
+      lines.push(`    expect(${fieldAccess(out.name)}).toBe(${JSON.stringify(out.value.value)});`);
     } else if (out.value.kind === 'variable') {
       if (out.value.name === '_') {
-        lines.push(`    expect(${varName}.output.${out.name}).toBeDefined();`);
+        lines.push(`    expect(${fieldAccess(out.name)}).toBeDefined();`);
       } else if (boundVars && !boundVars.has(out.value.name)) {
         boundVars.add(out.value.name);
-        lines.push(`    ${out.value.name} = ${varName}.output.${out.name} as string;`);
+        lines.push(`    ${out.value.name} = ${fieldAccess(out.name)} as string;`);
       } else {
-        lines.push(`    expect(${varName}.output.${out.name}).toBe(${out.value.name});`);
+        lines.push(`    expect(${fieldAccess(out.name)}).toBe(${out.value.name});`);
       }
     } else {
-      lines.push(`    expect(${varName}.output.${out.name}).toEqual(${invariantValueToTS(out.value)});`);
+      lines.push(`    expect(${fieldAccess(out.name)}).toEqual(${invariantValueToTS(out.value)});`);
     }
   }
 
@@ -532,6 +563,7 @@ const _handler: FunctionalConceptHandler = {
 
   generate(input: Record<string, unknown>) {
     const manifest = input.manifest as ConceptManifest;
+    const testStyle = (input.testStyle as 'functional' | 'imperative') || 'functional';
     if (!manifest || !manifest.name) {
       const p = createProgram();
       return complete(p, 'error', { message: 'Invalid manifest: missing concept name' }) as StorageProgram<Result>;
@@ -544,7 +576,7 @@ const _handler: FunctionalConceptHandler = {
         { path: `${lowerName}.adapter.stub.ts`, content: generateAdapterFile(manifest) },
         { path: `storage-program.dsl.stub.ts`, content: generateDslRuntimeFile() },
       ];
-      const conformanceTest = generateConformanceTestFile(manifest);
+      const conformanceTest = generateConformanceTestFile(manifest, testStyle);
       if (conformanceTest) {
         files.push({ path: `${lowerName}.conformance.stub.test.ts`, content: conformanceTest });
       }

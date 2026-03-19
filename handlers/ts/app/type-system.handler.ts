@@ -1,7 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete, mapBindings,
+  createProgram, get as spGet, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -30,7 +30,7 @@ const _typeSystemHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return record.schema as string;
         }, 'schema');
-        return complete(b2, 'ok', { type, schema: '' });
+        return completeFrom(b2, 'ok', (bindings) => ({ type, schema: bindings.schema as string }));
       },
       (b) => complete(b, 'notfound', { message: 'Type not found' }),
     );
@@ -51,7 +51,7 @@ const _typeSystemHandler: FunctionalConceptHandler = {
           if (schema.type) { const actualType = typeof JSON.parse(value); if (actualType !== schema.type) valid = false; }
           return valid;
         }, 'valid');
-        return complete(b2, 'ok', { valid: true });
+        return completeFrom(b2, 'ok', (bindings) => ({ valid: bindings.valid as boolean }));
       },
       (b) => complete(b, 'notfound', { message: 'Type not found' }),
     );
@@ -77,7 +77,7 @@ const _typeSystemHandler: FunctionalConceptHandler = {
           return JSON.stringify(current);
         }, 'resultSchema');
         b2 = branch(b2, 'resultSchema',
-          (b3) => complete(b3, 'ok', { type, schema: '' }),
+          (b3) => completeFrom(b3, 'ok', (bindings) => ({ type, schema: bindings.resultSchema as string })),
           (b3) => complete(b3, 'notfound', { message: `Path segment not found` }),
         );
         return b2;

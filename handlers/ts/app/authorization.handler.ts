@@ -4,7 +4,7 @@
 // Roles group permissions into reusable bundles; users inherit permissions through role assignment.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, find,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -16,11 +16,11 @@ const _authorizationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'role', role, 'roleRecord');
-    // Whether found or not, we put the role with the permission added
-    // The runtime resolves existing permissions from bindings and appends
-    p = put(p, 'role', role, {
-      role,
-      permissions: JSON.stringify([permission]),
+    p = putFrom(p, 'role', role, (bindings) => {
+      const existing = (bindings.roleRecord as Record<string, unknown>) || { role, permissions: '[]' };
+      const permissions: string[] = JSON.parse((existing.permissions as string) || '[]');
+      if (!permissions.includes(permission)) permissions.push(permission);
+      return { ...existing, role, permissions: JSON.stringify(permissions) };
     });
     return complete(p, 'ok', { role, permission }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -33,10 +33,10 @@ const _authorizationHandler: FunctionalConceptHandler = {
     p = spGet(p, 'role', role, 'roleRecord');
     p = branch(p, 'roleRecord',
       (b) => {
-        // Remove permission from existing list — resolved at runtime
-        let b2 = put(b, 'role', role, {
-          role,
-          permissions: '', // resolved at runtime: filter out permission
+        let b2 = putFrom(b, 'role', role, (bindings) => {
+          const existing = bindings.roleRecord as Record<string, unknown>;
+          const permissions: string[] = JSON.parse((existing.permissions as string) || '[]');
+          return { ...existing, permissions: JSON.stringify(permissions.filter(p => p !== permission)) };
         });
         return complete(b2, 'ok', { role, permission });
       },
@@ -55,10 +55,11 @@ const _authorizationHandler: FunctionalConceptHandler = {
       (b) => {
         // Role exists — assign to user
         let b2 = spGet(b, 'userRole', user, 'userRecord');
-        // Put user role with the new role appended
-        b2 = put(b2, 'userRole', user, {
-          user,
-          roles: JSON.stringify([role]),
+        b2 = putFrom(b2, 'userRole', user, (bindings) => {
+          const existing = (bindings.userRecord as Record<string, unknown>) || { user, roles: '[]' };
+          const roles: string[] = JSON.parse((existing.roles as string) || '[]');
+          if (!roles.includes(role)) roles.push(role);
+          return { ...existing, user, roles: JSON.stringify(roles) };
         });
         return complete(b2, 'ok', { user, role });
       },
@@ -73,10 +74,22 @@ const _authorizationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'userRole', user, 'userRecord');
+    p = find(p, 'role', {}, 'allRoles');
     p = branch(p, 'userRecord',
       (b) => {
-        // User found — check roles for permission at runtime
-        return complete(b, 'ok', { granted: false });
+        return completeFrom(b, 'ok', (bindings) => {
+          const userRecord = bindings.userRecord as Record<string, unknown>;
+          const userRoles: string[] = JSON.parse((userRecord.roles as string) || '[]');
+          const allRoles = (bindings.allRoles as Array<Record<string, unknown>>) || [];
+          for (const roleName of userRoles) {
+            const roleRecord = allRoles.find(r => r.role === roleName);
+            if (roleRecord) {
+              const permissions: string[] = JSON.parse((roleRecord.permissions as string) || '[]');
+              if (permissions.includes(permission)) return { granted: true };
+            }
+          }
+          return { granted: false };
+        });
       },
       (b) => complete(b, 'ok', { granted: false }),
     );

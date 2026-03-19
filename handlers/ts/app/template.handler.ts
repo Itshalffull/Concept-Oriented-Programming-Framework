@@ -2,7 +2,7 @@
 // Template Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -45,7 +45,7 @@ const _templateHandler: FunctionalConceptHandler = {
           }
           return content;
         }, 'content');
-        return complete(b2, 'ok', { content: '' });
+        return completeFrom(b2, 'ok', (bindings) => ({ content: bindings.content as string }));
       },
       (b) => complete(b, 'notfound', { message: 'Template not found' }),
     );

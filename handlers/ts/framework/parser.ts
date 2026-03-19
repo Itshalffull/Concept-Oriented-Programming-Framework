@@ -896,6 +896,17 @@ class Parser {
   }
 
   private parseBareInvariantBodyStructured(): InvariantDecl {
+    // Parse optional name: "string" followed by colon
+    this.skipSeps();
+    let name: string | undefined;
+    if (this.peek().type === 'STRING_LIT') {
+      const next = this.tokens[this.pos + 1];
+      if (next && next.type === 'COLON') {
+        name = this.advance().value;
+        this.advance(); // consume colon
+      }
+    }
+
     // Parse optional "when" guard clause (before after)
     this.skipSeps();
     let whenClause: InvariantWhenClause | undefined;
@@ -957,7 +968,7 @@ class Parser {
 
     this.skipSeps();
     this.expect('RBRACE');
-    return { kind: 'example', afterPatterns, thenPatterns: thenSteps, whenClause };
+    return { kind: 'example', name, afterPatterns, thenPatterns: thenSteps, whenClause };
   }
 
   /**
@@ -1427,11 +1438,27 @@ class Parser {
     const tok = this.peek();
     const next = this.tokens[this.pos + 1];
 
-    // Dot-access assertion: var.field op value
+    // Dot-access: check if it's action.variant(args) pattern or assertion
     if (
       (tok.type === 'IDENT' || tok.type === 'KEYWORD') &&
       next?.type === 'DOT'
     ) {
+      // Look further: ident.ident( means action.variant(args) pattern
+      const afterDot = this.tokens[this.pos + 2];
+      const afterAfterDot = this.tokens[this.pos + 3];
+      if (
+        afterDot && (afterDot.type === 'IDENT' || afterDot.type === 'KEYWORD') &&
+        afterAfterDot && afterAfterDot.type === 'LPAREN'
+      ) {
+        // Parse as action.variant(args) — an action result pattern
+        const actionName = this.advance().value; // action name
+        this.advance(); // consume DOT
+        const variantName = this.advance().value; // variant name
+        this.advance(); // consume LPAREN
+        const outputArgs = this.parseArgPatterns();
+        this.expect('RPAREN');
+        return { kind: 'action', actionName, inputArgs: [], variantName, outputArgs };
+      }
       return { kind: 'assertion', ...this.parseAssertion() };
     }
 
@@ -1583,14 +1610,18 @@ class Parser {
       this.expect('RPAREN');
     }
     this.skipSeps(); // Skip newlines before -> in multi-line invariant steps
-    this.expect('ARROW');
-    const variantName = this.expectIdent().value;
-    // Variant params are optional: `-> ok()` or `-> ok` or `-> ok(field: val)`
+    // Arrow and variant are optional: `action(args)` without result is valid
+    let variantName = '';
     let outputArgs: ArgPattern[] = [];
-    if (this.peek().type === 'LPAREN') {
+    if (this.peek().type === 'ARROW') {
       this.advance();
-      outputArgs = this.parseArgPatterns();
-      this.expect('RPAREN');
+      variantName = this.expectIdent().value;
+      // Variant params are optional: `-> ok()` or `-> ok` or `-> ok(field: val)`
+      if (this.peek().type === 'LPAREN') {
+        this.advance();
+        outputArgs = this.parseArgPatterns();
+        this.expect('RPAREN');
+      }
     }
     return { actionName, inputArgs, variantName, outputArgs };
   }

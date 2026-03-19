@@ -3,7 +3,7 @@
 // Coordination concept routing to pluggable weight source providers.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -25,7 +25,10 @@ const _weightHandler: FunctionalConceptHandler = {
       return { sources, total };
     }, 'computed');
 
-    p = put(p, 'weight', id, { id, participant, sources: {}, total: 0, updatedAt: new Date().toISOString() });
+    p = putFrom(p, 'weight', id, (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      return { id, participant, sources: computed.sources, total: computed.total, updatedAt: new Date().toISOString() };
+    });
 
     return completeFrom(p, 'updated', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;

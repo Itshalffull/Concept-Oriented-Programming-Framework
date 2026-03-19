@@ -1,7 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -64,7 +64,14 @@ const _fileManagementHandler: FunctionalConceptHandler = {
   garbageCollect(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'file', {}, 'allFiles');
-    return complete(p, 'ok', { removed: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const allFiles = (bindings.allFiles as Array<Record<string, unknown>>) || [];
+      const unused = allFiles.filter(f => {
+        const usages = JSON.parse((f.usages as string) || '[]') as string[];
+        return usages.length === 0;
+      });
+      return { removed: unused.length };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getFile(input: Record<string, unknown>) {
@@ -73,7 +80,10 @@ const _fileManagementHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'file', file, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', { data: '', mimeType: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { data: (record.data as string) || '', mimeType: (record.mimeType as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'File not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

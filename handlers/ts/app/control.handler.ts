@@ -4,7 +4,7 @@
 // enabling direct manipulation in content.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -38,8 +38,10 @@ const _controlHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => {
         let b2 = put(b, 'control', control, { value: interactionInput });
-        // Result composed at runtime from type and binding bindings
-        return complete(b2, 'ok', { result: '' });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: `${existing.type}:${existing.binding}:${interactionInput}` };
+        });
       },
       (b) => complete(b, 'notfound', { message: 'The control was not found' }),
     );
@@ -52,7 +54,10 @@ const _controlHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'control', control, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { value: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { value: (existing.value as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'The control was not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -81,8 +86,10 @@ const _controlHandler: FunctionalConceptHandler = {
     p = spGet(p, 'control', control, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Result composed at runtime from type, binding, action, value bindings
-        return complete(b, 'ok', { result: '' });
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: `${existing.type}:${existing.binding}:${existing.action}:${existing.value}` };
+        });
       },
       (b) => complete(b, 'notfound', { message: 'The control was not found' }),
     );

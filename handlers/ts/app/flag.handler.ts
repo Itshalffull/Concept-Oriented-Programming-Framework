@@ -3,7 +3,7 @@
 // Generalized user-entity toggle interactions (bookmarks, likes, follows, spam reports) with counts.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -53,7 +53,11 @@ const _flagHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'flag', {}, 'allFlags');
-    return complete(p, 'ok', { flagged: false }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const allFlags = (bindings.allFlags as Array<Record<string, unknown>>) || [];
+      const found = allFlags.some(f => f.flagType === flagType && f.entity === entity && f.user === user);
+      return { flagged: found };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getCount(input: Record<string, unknown>) {
@@ -64,7 +68,10 @@ const _flagHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'flagCount', countKey, 'countRecord');
     p = branch(p, 'countRecord',
-      (b) => complete(b, 'ok', { count: 0 }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.countRecord as Record<string, unknown>;
+          return { count: (record.count as number) || 0 };
+        }),
       (b) => complete(b, 'ok', { count: 0 }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

@@ -2,7 +2,7 @@
 // Workflow Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -11,7 +11,7 @@ const _workflowHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram(); p = find(p, 'workflow', {}, 'items');
     p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ items: bindings.itemsJson as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   defineState(input: Record<string, unknown>) {
@@ -80,7 +80,10 @@ const _workflowHandler: FunctionalConceptHandler = {
               entities[entity] = result.newState;
               return { ...wfRecord, entities: JSON.stringify(entities) };
             });
-            return complete(t, 'ok', { newState: '' });
+            return completeFrom(t, 'ok', (bindings) => {
+              const result = bindings.transitionResult as { newState: string };
+              return { newState: result.newState };
+            });
           })());
         return b2;
       },
@@ -101,7 +104,7 @@ const _workflowHandler: FunctionalConceptHandler = {
           if (!currentState) { const initial = states.find((s) => s.flags.includes('initial')); if (!initial) return null; currentState = initial.name; }
           return currentState;
         }, 'state');
-        b2 = branch(b2, 'state', (b3) => complete(b3, 'ok', { state: '' }),
+        b2 = branch(b2, 'state', (b3) => completeFrom(b3, 'ok', (bindings) => ({ state: bindings.state as string })),
           (b3) => complete(b3, 'notfound', { message: 'Entity not found and no initial state defined' }));
         return b2;
       },

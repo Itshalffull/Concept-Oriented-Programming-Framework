@@ -4,7 +4,7 @@
 // and depth-limited neighborhood exploration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -151,7 +151,17 @@ const _graphHandler: FunctionalConceptHandler = {
         b2 = branch(b2, 'existingNode',
           (c) => {
             let c2 = find(c, 'edge', { graph }, 'allEdges');
-            return complete(c2, 'ok', { neighbors: '' });
+            return completeFrom(c2, 'ok', (bindings) => {
+              const allEdges = (bindings.allEdges as Array<Record<string, unknown>>) || [];
+              const neighbors = allEdges
+                .filter(e => e.source === node)
+                .map(e => e.target as string);
+              const reverseNeighbors = allEdges
+                .filter(e => e.target === node)
+                .map(e => e.source as string);
+              const all = [...new Set([...neighbors, ...reverseNeighbors])];
+              return { neighbors: all.join(',') };
+            });
           },
           (c) => complete(c, 'notfound', {}),
         );

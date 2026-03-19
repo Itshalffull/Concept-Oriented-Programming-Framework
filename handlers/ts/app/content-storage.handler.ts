@@ -1,7 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -22,7 +22,10 @@ const _contentStorageHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'record', record, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { record, data: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { record, data: (existing.data as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -48,7 +51,7 @@ const _contentStorageHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'record', filter as unknown as Record<string, unknown>, 'results');
-    return complete(p, 'ok', { results: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ results: JSON.stringify((bindings.results as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   generateSchema(input: Record<string, unknown>) {
@@ -57,7 +60,10 @@ const _contentStorageHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'record', record, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { schema: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { schema: (existing.data as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

@@ -2,7 +2,7 @@
 // Version Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -25,7 +25,7 @@ const _versionHandler: FunctionalConceptHandler = {
       const versionLabels = results.map((_, i) => `v${i + 1}`);
       return versionLabels.length === 1 ? versionLabels[0] : versionLabels.join(',');
     }, 'versions');
-    return complete(p, 'ok', { versions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ versions: bindings.versions as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   rollback(input: Record<string, unknown>) {
@@ -33,7 +33,10 @@ const _versionHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'version', version, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { data: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { data: (existing.snapshot as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'Version not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -53,7 +56,7 @@ const _versionHandler: FunctionalConceptHandler = {
           const b = bindings.b as Record<string, unknown>;
           return JSON.stringify({ versionA: { version: versionA, snapshot: a.snapshot }, versionB: { version: versionB, snapshot: b.snapshot }, equal: a.snapshot === b.snapshot });
         }, 'changes');
-        return complete(t, 'ok', { changes: '' });
+        return completeFrom(t, 'ok', (bindings) => ({ changes: bindings.changes as string }));
       })(),
       (() => { let e = createProgram(); return complete(e, 'notfound', { message: 'One or both versions do not exist' }); })(),
     );

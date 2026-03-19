@@ -2,7 +2,7 @@
 // ConfigSync Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -15,11 +15,12 @@ const _configSyncHandler: FunctionalConceptHandler = {
     p = spGet(p, 'config', config, 'entry');
     p = branch(p, 'entry',
       (b) => {
-        // Return stored data value resolved at runtime from bindings
-        return complete(b, 'ok', { data: '' });
+        return completeFrom(b, 'ok', (bindings) => {
+          const entry = bindings.entry as Record<string, unknown>;
+          return { data: (entry.data as string) || '' };
+        });
       },
       (b) => {
-        // Auto-create an empty config entry so export always succeeds
         let b2 = put(b, 'config', config, { config, data: '', overrides: '{}' });
         return complete(b2, 'ok', { data: '' });
       },
@@ -59,11 +60,11 @@ const _configSyncHandler: FunctionalConceptHandler = {
       }
     }
 
-    // Put with override layer — merge resolved at runtime
-    p = put(p, 'config', config, {
-      config,
-      data: '', // resolved at runtime: preserve existing data
-      overrides: '', // resolved at runtime: merge layer overrides
+    p = putFrom(p, 'config', config, (bindings) => {
+      const entry = (bindings.entry as Record<string, unknown>) || { config, data: config, overrides: '{}' };
+      const overrides = JSON.parse((entry.overrides as string) || '{}') as Record<string, unknown>;
+      overrides[layer] = layerValues;
+      return { ...entry, config, overrides: JSON.stringify(overrides) };
     });
     return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -75,8 +76,11 @@ const _configSyncHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'config', configA, 'entryA');
     p = spGet(p, 'config', configB, 'entryB');
-    // Diff comparison resolved at runtime from bindings
-    return complete(p, 'ok', { changes: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const a = bindings.entryA as Record<string, unknown> | null;
+      const b = bindings.entryB as Record<string, unknown> | null;
+      return { changes: JSON.stringify({ a: a?.data ?? null, b: b?.data ?? null }) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

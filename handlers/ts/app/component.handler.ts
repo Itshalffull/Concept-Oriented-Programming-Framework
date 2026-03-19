@@ -3,7 +3,7 @@
 // Discoverable, configurable UI units with conditional placement rules for composing page layouts.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -38,8 +38,12 @@ const _componentHandler: FunctionalConceptHandler = {
     p = spGet(p, 'component', component, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Config, placements, visibility resolved at runtime from bindings
-        return complete(b, 'ok', { output: '' });
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const config = existing.config as string;
+          const placements = JSON.parse((existing.placements as string) || '[]') as string[];
+          return { output: [config, ...placements, context].join(':') };
+        });
       },
       (b) => complete(b, 'notfound', { message: 'The component was not found' }),
     );
@@ -54,9 +58,11 @@ const _componentHandler: FunctionalConceptHandler = {
     p = spGet(p, 'component', component, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Append region to placements — resolved at runtime
-        let b2 = put(b, 'component', component, {
-          placements: '', // resolved at runtime
+        let b2 = putFrom(b, 'component', component, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const placements = JSON.parse((existing.placements as string) || '[]') as string[];
+          if (!placements.includes(region)) placements.push(region);
+          return { ...existing, placements: JSON.stringify(placements) };
         });
         return complete(b2, 'ok', {});
       },
@@ -104,7 +110,10 @@ const _componentHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'component', layout, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { layout, config: '', context }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { layout, config: existing.config as string, context };
+        }),
       (b) => complete(b, 'notfound', { message: 'Layout not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

@@ -3,7 +3,7 @@
 // Isolated content spaces with group-level role-based access control for multi-tenant collaboration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -39,8 +39,11 @@ const _groupHandler: FunctionalConceptHandler = {
     p = spGet(p, 'group', group, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'group', group, {
-          members: JSON.stringify([{ user, role }]),
+        let b2 = putFrom(b, 'group', group, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const members = JSON.parse((existing.members as string) || '[]') as Array<{ user: string; role: string }>;
+          if (!members.some(m => m.user === user)) members.push({ user, role });
+          return { ...existing, members: JSON.stringify(members) };
         });
         return complete(b2, 'ok', {});
       },
@@ -90,7 +93,12 @@ const _groupHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'group', group, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { granted: false }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const members = JSON.parse((existing.members as string) || '[]') as Array<{ user: string; role: string }>;
+          const isMember = members.some(m => m.user === user);
+          return { granted: isMember };
+        }),
       (b) => complete(b, 'notfound', { message: 'Group does not exist' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

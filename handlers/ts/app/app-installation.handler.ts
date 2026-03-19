@@ -1,7 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, find, complete,
+  createProgram, put, find, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -11,7 +11,7 @@ const _appInstallationHandler: FunctionalConceptHandler = {
     const installation = String(input.installation ?? '');
     let p = createProgram();
     p = put(p, 'installation', installation, {
-      id: installation,
+      installation,
       name: String(input.name ?? ''),
       version: String(input.version ?? ''),
       status: String(input.status ?? ''),
@@ -31,7 +31,7 @@ const _appInstallationHandler: FunctionalConceptHandler = {
     } else {
       p = find(p, 'installation', {}, 'installations');
     }
-    return complete(p, 'ok', { installations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ installations: bindings.installations ?? [] }));
   },
 };
 

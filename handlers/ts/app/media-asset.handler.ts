@@ -3,7 +3,7 @@
 // Source-abstracted asset facade with metadata extraction and thumbnail generation.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -86,7 +86,10 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'mediaAsset', asset, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { asset, metadata: '', thumbnail: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { asset, metadata: (existing.metadata as string) || '', thumbnail: (existing.thumbnail as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'Asset does not exist' }),
     );
 

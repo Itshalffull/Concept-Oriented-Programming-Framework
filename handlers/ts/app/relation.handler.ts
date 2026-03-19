@@ -2,7 +2,7 @@
 // Relation Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -77,7 +77,18 @@ const _relationHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'relation', relation, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { related: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const links = JSON.parse((existing.links as string) || '[]') as Array<{ source: string; target: string }>;
+          const related = links
+            .filter(l => l.source === entity)
+            .map(l => l.target);
+          const reverseRelated = links
+            .filter(l => l.target === entity)
+            .map(l => l.source);
+          const all = [...new Set([...related, ...reverseRelated])];
+          return { related: all.join(',') };
+        }),
       (b) => complete(b, 'notfound', { relation, entity }),
     );
 

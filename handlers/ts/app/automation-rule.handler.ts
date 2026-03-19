@@ -3,7 +3,7 @@
 // User-configurable event-condition-action rules that fire automatically when conditions are met.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -12,7 +12,7 @@ const _automationRuleHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'automationRule', {}, 'items');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   define(input: Record<string, unknown>) {
@@ -77,8 +77,12 @@ const _automationRuleHandler: FunctionalConceptHandler = {
     p = spGet(p, 'automationRule', rule, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Trigger matching and condition evaluation resolved at runtime from bindings
-        return complete(b, 'ok', { matched: false });
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const trigger = existing.trigger as string;
+          const enabled = existing.enabled as boolean;
+          return { matched: enabled && trigger === event };
+        });
       },
       (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
     );
@@ -93,8 +97,10 @@ const _automationRuleHandler: FunctionalConceptHandler = {
     p = spGet(p, 'automationRule', rule, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Action execution resolved at runtime
-        return complete(b, 'ok', { result: '' });
+        return completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: existing.actions as string };
+        });
       },
       (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
     );

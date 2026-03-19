@@ -4,7 +4,7 @@
 // functions, operators, and autocompletion.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -254,7 +254,10 @@ const _expressionLanguageHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'expression', expression, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { result: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { result: (existing.result as string) || '' };
+        }),
       (b) => complete(b, 'notfound', {}),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

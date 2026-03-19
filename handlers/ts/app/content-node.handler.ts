@@ -5,7 +5,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -87,7 +87,10 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'node', node, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { node: record.node as string, type: record.type as string, content: record.content as string, metadata: (record.metadata as string) || '' };
+        }),
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -115,13 +118,13 @@ const _contentNodeHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'node', {}, 'items');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'node', {}, 'items');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
