@@ -3,7 +3,7 @@
 // KPI tracking with threshold detection.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, merge, mergeFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -30,30 +30,36 @@ const _metricHandler: FunctionalConceptHandler = {
       (b) => {
         b = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const history = record.history as unknown[];
+          const history = (record.history as unknown[]) || [];
           const previousValue = record.value;
-          history.push({ value, source, recordedAt: new Date().toISOString() });
+          const updatedHistory = [...history, { value, source, recordedAt: new Date().toISOString() }];
           // Check threshold
           if (record.threshold !== undefined) {
             const threshold = record.threshold as number;
             if ((previousValue as number) <= threshold && (value as number) > threshold) {
-              return { record, previousValue, thresholdCrossed: true, threshold };
+              return { updatedHistory, previousValue, thresholdCrossed: true, threshold };
             }
           }
-          return { record, previousValue, thresholdCrossed: false };
+          return { updatedHistory, previousValue, thresholdCrossed: false };
         }, 'computed');
 
         b = branch(b,
           (bindings) => !!(bindings.computed as Record<string, unknown>).thresholdCrossed,
           (b2) => {
-            let b3 = put(b2, 'metric', metric as string, { value, history: [], updatedAt: new Date().toISOString() });
+            let b3 = mergeFrom(b2, 'metric', metric as string, (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { value, history: computed.updatedHistory, updatedAt: new Date().toISOString() };
+            });
             return completeFrom(b3, 'threshold_crossed', (bindings) => {
               const computed = bindings.computed as Record<string, unknown>;
               return { metric, threshold: computed.threshold, direction: 'breached' };
             });
           },
           (b2) => {
-            let b3 = put(b2, 'metric', metric as string, { value, history: [], updatedAt: new Date().toISOString() });
+            let b3 = mergeFrom(b2, 'metric', metric as string, (bindings) => {
+              const computed = bindings.computed as Record<string, unknown>;
+              return { value, history: computed.updatedHistory, updatedAt: new Date().toISOString() };
+            });
             return completeFrom(b3, 'updated', (bindings) => {
               const computed = bindings.computed as Record<string, unknown>;
               return { metric, previousValue: computed.previousValue };
@@ -76,7 +82,7 @@ const _metricHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'metric', metric as string, { threshold, alertOnBreach });
+        let b2 = merge(b, 'metric', metric as string, { threshold, alertOnBreach });
         return complete(b2, 'threshold_set', { metric });
       },
       (b) => complete(b, 'not_found', { metric }),
@@ -92,14 +98,20 @@ const _metricHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'within_threshold', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const withinThreshold = record.threshold == null || (record.value as number) <= (record.threshold as number);
-          if (withinThreshold) {
-            return { variant: 'within_threshold', metric, value: record.value };
-          }
-          return { variant: 'threshold_crossed', metric, threshold: record.threshold, direction: 'breached' };
-        });
+        return branch(b,
+          (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return record.threshold == null || (record.value as number) <= (record.threshold as number);
+          },
+          completeFrom(createProgram(), 'within_threshold', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { metric, value: record.value };
+          }),
+          completeFrom(createProgram(), 'threshold_crossed', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return { metric, threshold: record.threshold, direction: 'breached' };
+          }),
+        );
       },
       (b) => complete(b, 'not_found', { metric }),
     );

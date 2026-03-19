@@ -27,31 +27,33 @@ const _handler: FunctionalConceptHandler = {
 
     const key = `widget-impl:${widget}:${framework}`;
     p = get(p, 'widget-implementations', key, 'existing');
-    if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
-    }
 
     const id = crypto.randomUUID();
     const parsedAst = ast ? JSON.parse(ast) : {};
 
-    p = put(p, 'widget-implementations', key, {
-      id,
-      widget,
-      framework,
-      sourceFile,
-      ast,
-      symbol: parsedAst.componentName || `${widget}Component`,
-      componentName: parsedAst.componentName || widget,
-      renderedParts: JSON.stringify(parsedAst.renderedParts || []),
-      propsInterface: JSON.stringify(parsedAst.propsInterface || {}),
-      stateBindings: JSON.stringify(parsedAst.stateBindings || []),
-      slotImplementations: JSON.stringify(parsedAst.slotImplementations || []),
-      accessibilityAttrs: JSON.stringify(parsedAst.accessibilityAttrs || []),
-      generatedFrom: parsedAst.generatedFrom || '',
-      lastModified: new Date().toISOString(),
-    });
-
-    return complete(p, 'ok', { impl: id }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.existing != null,
+      (tp) => completeFrom(tp, 'alreadyRegistered', (b) => ({ existing: (b.existing as any).id })),
+      (ep) => {
+        let q = put(ep, 'widget-implementations', key, {
+          id,
+          widget,
+          framework,
+          sourceFile,
+          ast,
+          symbol: parsedAst.componentName || `${widget}Component`,
+          componentName: parsedAst.componentName || widget,
+          renderedParts: JSON.stringify(parsedAst.renderedParts || []),
+          propsInterface: JSON.stringify(parsedAst.propsInterface || {}),
+          stateBindings: JSON.stringify(parsedAst.stateBindings || []),
+          slotImplementations: JSON.stringify(parsedAst.slotImplementations || []),
+          accessibilityAttrs: JSON.stringify(parsedAst.accessibilityAttrs || []),
+          generatedFrom: parsedAst.generatedFrom || '',
+          lastModified: new Date().toISOString(),
+        });
+        return complete(q, 'ok', { impl: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -60,24 +62,26 @@ const _handler: FunctionalConceptHandler = {
     const framework = input.framework as string;
 
     p = get(p, 'widget-implementations', `widget-impl:${widget}:${framework}`, 'entry');
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'notfound', {}),
+      (ep) => completeFrom(ep, 'ok', (b) => ({ impl: (b.entry as any).id })),
+    ) as StorageProgram<Result>;
   },
 
   getByFile(input: Record<string, unknown>) {
     let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
-    p = find(p, 'widget-implementations', 'all');
-    const entry = all.find(i => i.sourceFile === sourceFile);
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
+    p = find(p, 'widget-implementations', {}, 'all');
+    p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.sourceFile === sourceFile) || null, 'entry');
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'notfound', {}),
+      (ep) => completeFrom(ep, 'ok', (b) => ({ impl: (b.entry as any).id })),
+    ) as StorageProgram<Result>;
   },
 
   findByWidget(input: Record<string, unknown>) {
@@ -85,7 +89,7 @@ const _handler: FunctionalConceptHandler = {
     const widget = input.widget as string;
     p = find(p, 'widget-implementations', { widget }, 'all');
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (b) => ({ implementations: JSON.stringify(b.all) })) as StorageProgram<Result>;
   },
 
   findByFramework(input: Record<string, unknown>) {
@@ -93,42 +97,49 @@ const _handler: FunctionalConceptHandler = {
     const framework = input.framework as string;
     p = find(p, 'widget-implementations', { framework }, 'all');
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (b) => ({ implementations: JSON.stringify(b.all) })) as StorageProgram<Result>;
   },
 
   anatomyMapping(input: Record<string, unknown>) {
     let p = createProgram();
     const implId = input.impl as string;
 
-    p = find(p, 'widget-implementations', 'all');
-    const entry = all.find(i => i.id === implId);
-    if (!entry) {
-      return complete(p, 'ok', { mapping: '[]' }) as StorageProgram<Result>;
-    }
+    p = find(p, 'widget-implementations', {}, 'all');
+    p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.id === implId) || null, 'entry');
 
-    // TODO: Map anatomy parts from widget spec to rendered DOM elements
-    const parts = JSON.parse(entry.renderedParts as string || '[]');
-    const mapping = parts.map((part: { name: string; element?: string }) => ({
-      part: part.name || part,
-      element: part.element || 'div',
-      selector: `[data-part="${part.name || part}"]`,
-    }));
-
-    return complete(p, 'ok', { mapping: JSON.stringify(mapping) }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'ok', { mapping: '[]' }),
+      (ep) => {
+        // Map anatomy parts from widget spec to rendered DOM elements
+        let q = mapBindings(ep, (b) => {
+          const entry = b.entry as any;
+          const parts = JSON.parse(entry.renderedParts as string || '[]');
+          const mapping = parts.map((part: { name: string; element?: string }) => ({
+            part: part.name || part,
+            element: part.element || 'div',
+            selector: `[data-part="${part.name || part}"]`,
+          }));
+          return JSON.stringify(mapping);
+        }, 'mapping');
+        return completeFrom(q, 'ok', (b) => ({ mapping: b.mapping as string }));
+      },
+    ) as StorageProgram<Result>;
   },
 
   diffFromSpec(input: Record<string, unknown>) {
     let p = createProgram();
     const implId = input.impl as string;
 
-    p = find(p, 'widget-implementations', 'all');
-    const entry = all.find(i => i.id === implId);
-    if (!entry) {
-      return complete(p, 'inSync', {}) as StorageProgram<Result>;
-    }
+    p = find(p, 'widget-implementations', {}, 'all');
+    p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.id === implId) || null, 'entry');
 
-    // TODO: Compare generated implementation against widget spec
-    return complete(p, 'inSync', {}) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'inSync', {}),
+      // TODO: Compare generated implementation against widget spec
+      (ep) => complete(ep, 'inSync', {}),
+    ) as StorageProgram<Result>;
   },
 
   resolveRenderFrame(input: Record<string, unknown>) {
@@ -137,30 +148,33 @@ const _handler: FunctionalConceptHandler = {
     const line = input.line as number;
     const col = input.col as number;
 
-    p = find(p, 'widget-implementations', 'all');
-    const entry = all.find(i => i.sourceFile === file);
-    if (!entry) {
-      return complete(p, 'notInWidgetImpl', {}) as StorageProgram<Result>;
-    }
+    p = find(p, 'widget-implementations', {}, 'all');
+    p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.sourceFile === file) || null, 'entry');
 
-    // TODO: Walk AST to find exact node and anatomy part at line:col
-    const astNode = JSON.stringify({
-      kind: 'Unknown',
-      text: '',
-      startLine: line,
-      startCol: col,
-      endLine: line,
-      endCol: col,
-    });
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'notInWidgetImpl', {}),
+      (ep) => {
+        // TODO: Walk AST to find exact node and anatomy part at line:col
+        const astNode = JSON.stringify({
+          kind: 'Unknown',
+          text: '',
+          startLine: line,
+          startCol: col,
+          endLine: line,
+          endCol: col,
+        });
 
-    return complete(p, 'ok', {
-      impl: entry.id as string,
-      widget: entry.widget as string,
-      part: '',
-      astNode,
-      astAncestors: '[]',
-      sourceSpan: `${file}:${line}:${col}`,
-    }) as StorageProgram<Result>;
+        return completeFrom(ep, 'ok', (b) => ({
+          impl: (b.entry as any).id as string,
+          widget: (b.entry as any).widget as string,
+          part: '',
+          astNode,
+          astAncestors: '[]',
+          sourceSpan: `${file}:${line}:${col}`,
+        }));
+      },
+    ) as StorageProgram<Result>;
   },
 
   resolveToAstNode(input: Record<string, unknown>) {
@@ -169,27 +183,30 @@ const _handler: FunctionalConceptHandler = {
     const line = input.line as number;
     const col = input.col as number;
 
-    p = find(p, 'widget-implementations', 'all');
-    const entry = all.find(i => i.id === implId);
-    if (!entry) {
-      return complete(p, 'outOfRange', { line, maxLine: 0 }) as StorageProgram<Result>;
-    }
+    p = find(p, 'widget-implementations', {}, 'all');
+    p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.id === implId) || null, 'entry');
 
-    // TODO: Walk AST to find innermost node at line:col
-    const node = JSON.stringify({
-      kind: 'Unknown',
-      startLine: line,
-      startCol: col,
-      endLine: line,
-      endCol: col,
-      text: '',
-    });
+    return branch(p,
+      (b) => b.entry == null,
+      (tp) => complete(tp, 'outOfRange', { line, maxLine: 0 }),
+      (ep) => {
+        // TODO: Walk AST to find innermost node at line:col
+        const node = JSON.stringify({
+          kind: 'Unknown',
+          startLine: line,
+          startCol: col,
+          endLine: line,
+          endCol: col,
+          text: '',
+        });
 
-    return complete(p, 'ok', {
-      node,
-      ancestors: '[]',
-      part: '',
-    }) as StorageProgram<Result>;
+        return complete(ep, 'ok', {
+          node,
+          ancestors: '[]',
+          part: '',
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 };
 

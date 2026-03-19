@@ -28,27 +28,31 @@ const _handler: FunctionalConceptHandler = {
 
     const key = `theme-impl:${theme}:${platform}`;
     p = get(p, 'theme-implementations', key, 'existing');
-    if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
-    }
 
     const id = crypto.randomUUID();
     const parsedAst = ast ? JSON.parse(ast) : {};
 
-    p = put(p, 'theme-implementations', key, {
-      id,
-      theme,
-      platform,
-      sourceFile,
-      ast,
-      symbol: `${theme}-${platform}`,
-      tokenCount: parsedAst.tokenCount || 0,
-      tokenPaths: JSON.stringify(parsedAst.tokenPaths || []),
-      generatedFrom: parsedAst.generatedFrom || '',
-      lastModified: new Date().toISOString(),
-    });
-
-    return complete(p, 'ok', { impl: id }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => bindings.existing != null,
+      (bp) => completeFrom(bp, 'alreadyRegistered', (bindings) => ({
+        existing: (bindings.existing as Record<string, unknown>).id,
+      })),
+      (bp) => {
+        let bp2 = put(bp, 'theme-implementations', key, {
+          id,
+          theme,
+          platform,
+          sourceFile,
+          ast,
+          symbol: `${theme}-${platform}`,
+          tokenCount: parsedAst.tokenCount || 0,
+          tokenPaths: JSON.stringify(parsedAst.tokenPaths || []),
+          generatedFrom: parsedAst.generatedFrom || '',
+          lastModified: new Date().toISOString(),
+        });
+        return complete(bp2, 'ok', { impl: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -57,11 +61,14 @@ const _handler: FunctionalConceptHandler = {
     const platform = input.platform as string;
 
     p = get(p, 'theme-implementations', `theme-impl:${theme}:${platform}`, 'entry');
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => bindings.entry == null,
+      (bp) => complete(bp, 'notfound', {}),
+      (bp) => completeFrom(bp, 'ok', (bindings) => ({
+        impl: (bindings.entry as Record<string, unknown>).id,
+      })),
+    ) as StorageProgram<Result>;
   },
 
   getByFile(input: Record<string, unknown>) {
@@ -69,12 +76,19 @@ const _handler: FunctionalConceptHandler = {
     const sourceFile = input.sourceFile as string;
 
     p = find(p, 'theme-implementations', 'all');
-    const entry = all.find(i => i.sourceFile === sourceFile);
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as Record<string, unknown>[];
+      const found = items.find(i => i.sourceFile === sourceFile);
+      return found || null;
+    }, 'entry');
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => bindings.entry == null,
+      (bp) => complete(bp, 'notfound', {}),
+      (bp) => completeFrom(bp, 'ok', (bindings) => ({
+        impl: (bindings.entry as Record<string, unknown>).id,
+      })),
+    ) as StorageProgram<Result>;
   },
 
   findByTheme(input: Record<string, unknown>) {
@@ -82,7 +96,9 @@ const _handler: FunctionalConceptHandler = {
     const theme = input.theme as string;
     p = find(p, 'theme-implementations', { theme }, 'all');
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      implementations: JSON.stringify(bindings.all),
+    })) as StorageProgram<Result>;
   },
 
   findByPlatform(input: Record<string, unknown>) {
@@ -90,7 +106,9 @@ const _handler: FunctionalConceptHandler = {
     const platform = input.platform as string;
     p = find(p, 'theme-implementations', { platform }, 'all');
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      implementations: JSON.stringify(bindings.all),
+    })) as StorageProgram<Result>;
   },
 
   resolveToken(input: Record<string, unknown>) {
@@ -99,22 +117,37 @@ const _handler: FunctionalConceptHandler = {
     const tokenPath = input.tokenPath as string;
 
     p = find(p, 'theme-implementations', 'all');
-    const entry = all.find(i => i.id === implId);
-    if (!entry) {
-      return complete(p, 'notfound', { tokenPath }) as StorageProgram<Result>;
-    }
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as Record<string, unknown>[];
+      const found = items.find(i => i.id === implId);
+      return found || null;
+    }, 'entry');
 
-    const tokenPaths = JSON.parse(entry.tokenPaths as string || '[]');
-    const token = tokenPaths.find((t: { path: string }) => t.path === tokenPath);
-    if (!token) {
-      return complete(p, 'notfound', { tokenPath }) as StorageProgram<Result>;
-    }
+    return branch(p,
+      (bindings) => bindings.entry == null,
+      (bp) => complete(bp, 'notfound', { tokenPath }),
+      (bp) => {
+        const bp2 = mapBindings(bp, (bindings) => {
+          const entry = bindings.entry as Record<string, unknown>;
+          const tokenPaths = JSON.parse(entry.tokenPaths as string || '[]');
+          const token = tokenPaths.find((t: { path: string }) => t.path === tokenPath);
+          return token || null;
+        }, 'token');
 
-    return complete(p, 'ok', {
-      resolvedValue: token.resolvedValue || '',
-      specTokenPath: token.specPath || tokenPath,
-      platformSyntax: token.platformSyntax || '',
-    }) as StorageProgram<Result>;
+        return branch(bp2,
+          (bindings) => bindings.token == null,
+          (bp3) => complete(bp3, 'notfound', { tokenPath }),
+          (bp3) => completeFrom(bp3, 'ok', (bindings) => {
+            const token = bindings.token as Record<string, unknown>;
+            return {
+              resolvedValue: token.resolvedValue || '',
+              specTokenPath: token.specPath || tokenPath,
+              platformSyntax: token.platformSyntax || '',
+            };
+          }),
+        );
+      },
+    ) as StorageProgram<Result>;
   },
 
   diffFromSpec(input: Record<string, unknown>) {
@@ -122,12 +155,14 @@ const _handler: FunctionalConceptHandler = {
     const implId = input.impl as string;
 
     p = find(p, 'theme-implementations', 'all');
-    const entry = all.find(i => i.id === implId);
-    if (!entry) {
-      return complete(p, 'inSync', {}) as StorageProgram<Result>;
-    }
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as Record<string, unknown>[];
+      const found = items.find(i => i.id === implId);
+      return found || null;
+    }, 'entry');
 
     // TODO: Compare generated implementation against theme spec
+    // Currently always returns inSync regardless of whether entry is found
     return complete(p, 'inSync', {}) as StorageProgram<Result>;
   },
 };

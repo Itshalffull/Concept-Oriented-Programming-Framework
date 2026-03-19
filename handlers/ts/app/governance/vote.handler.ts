@@ -3,7 +3,7 @@
 // Session-based voting with weighted ballot collection and tallying.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -28,13 +28,32 @@ const _voteHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'cast', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'Open') return { variant: 'closed', session };
-          const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
-          if (ballots.some(bl => bl.voter === voter)) return { variant: 'already_voted', voter };
-          return { variant: 'cast', ballot: `${session}:${voter}` };
-        });
+        // Check if session is open
+        return branch(b,
+          (bindings) => (bindings.record as Record<string, unknown>).status === 'Open',
+          (() => {
+            // Check if voter already voted
+            let open = createProgram();
+            return branch(open,
+              (bindings) => {
+                const ballots = (bindings.record as Record<string, unknown>).ballots as Array<{ voter: unknown }>;
+                return !ballots.some(bl => bl.voter === voter);
+              },
+              (() => {
+                // Valid vote: add ballot and persist
+                let valid = createProgram();
+                valid = putFrom(valid, 'session', session as string, (bindings) => {
+                  const record = bindings.record as Record<string, unknown>;
+                  const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
+                  return { ...record, ballots: [...ballots, { voter, choice, weight }] };
+                });
+                return complete(valid, 'cast', { ballot: `${session}:${voter}` });
+              })(),
+              complete(createProgram(), 'already_voted', { voter }),
+            );
+          })(),
+          complete(createProgram(), 'closed', { session }),
+        );
       },
       (b) => complete(b, 'session_not_found', { session }),
     );
@@ -49,7 +68,9 @@ const _voteHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'session', session as string, { status: 'Closed' });
+        let b2 = putFrom(b, 'session', session as string, (bindings) => ({
+          ...bindings.record as Record<string, unknown>, status: 'Closed',
+        }));
         return complete(b2, 'closed', { session });
       },
       (b) => complete(b, 'not_found', { session }),
@@ -77,7 +98,11 @@ const _voteHandler: FunctionalConceptHandler = {
           return { outcome, totals: JSON.stringify(totals) };
         }, 'tallyResult');
 
-        let b2 = put(b, 'session', session as string, { status: 'Tallied' });
+        let b2 = putFrom(b, 'session', session as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const result = bindings.tallyResult as Record<string, unknown>;
+          return { ...record, status: 'Tallied', outcome: result.outcome, totals: result.totals };
+        });
 
         return completeFrom(b2, 'result', (bindings) => {
           const result = bindings.tallyResult as Record<string, unknown>;

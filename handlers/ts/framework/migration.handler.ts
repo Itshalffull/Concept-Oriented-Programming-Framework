@@ -188,3 +188,52 @@ const _handler: FunctionalConceptHandler = {
 };
 
 export const migrationHandler = autoInterpret(_handler);
+
+// --- Imperative helper wrappers (used by tests and kernel-factory) ---
+
+import { interpret } from '../../../runtime/interpreter.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
+
+/**
+ * Read the stored schema version from storage.
+ * Returns the version number or undefined if not set.
+ */
+export async function getStoredVersion(storage: ConceptStorage): Promise<number | undefined> {
+  const program = getStoredVersionProgram();
+  const result = await interpret(program, storage);
+  return result.output.version as number | undefined;
+}
+
+/**
+ * Write the schema version to storage.
+ */
+export async function setStoredVersion(storage: ConceptStorage, version: number): Promise<void> {
+  const program = setStoredVersionProgram(version);
+  await interpret(program, storage);
+}
+
+/**
+ * Check if migration is needed for a given spec version.
+ * Returns null if no migration needed, or { from, to } if migration is required.
+ */
+export async function checkMigrationNeeded(
+  specVersion: number | undefined,
+  storage: ConceptStorage,
+): Promise<{ from: number; to: number } | null> {
+  if (specVersion === undefined || specVersion === null) {
+    return null;
+  }
+
+  const program = _handler.check({ specVersion });
+  const result = await interpret(program, storage);
+
+  if (result.variant === 'ok') {
+    const output = result.output as Record<string, unknown>;
+    if (output.variant === 'needsMigration') {
+      return { from: output.from as number, to: output.to as number };
+    }
+    return null;
+  }
+
+  return null;
+}

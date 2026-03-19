@@ -136,3 +136,20 @@ const _entityReflectorHandler: FunctionalConceptHandler = {
 };
 
 export const entityReflectorHandler = autoInterpret(_entityReflectorHandler);
+
+// --- Kernel reference for cross-concept dispatch ---
+
+let _kernel: unknown = null;
+
+/**
+ * Wire the kernel reference so EntityReflector can dispatch
+ * cross-concept actions (RuntimeRegistry, ContentNode, etc.)
+ * via the perform() transport effect pipeline.
+ */
+export function setEntityReflectorKernel(kernel: unknown): void {
+  _kernel = kernel;
+}
+
+export function getEntityReflectorKernel(): unknown {
+  return _kernel;
+}

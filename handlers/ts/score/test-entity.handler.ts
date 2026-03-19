@@ -9,7 +9,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
+  mapBindings, putFrom, mergeFrom, pure, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -26,13 +26,16 @@ const _handler: FunctionalConceptHandler = {
 
     const key = `test:${name}`;
     p = get(p, 'tests', key, 'existing');
-    if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
-    }
 
     const id = crypto.randomUUID();
 
-    p = put(p, 'tests', key, {
+    let thenProg = createProgram();
+    thenProg = completeFrom(thenProg, 'alreadyRegistered', (bindings) => ({
+      existing: (bindings.existing as any).id,
+    }));
+
+    let elseProg = createProgram();
+    elseProg = put(elseProg, 'tests', key, {
       id,
       name,
       sourceFile,
@@ -47,8 +50,9 @@ const _handler: FunctionalConceptHandler = {
       lastResult: '',
       lastDuration: 0,
     });
+    elseProg = complete(elseProg, 'ok', { test: id });
 
-    return complete(p, 'ok', { test: id }) as StorageProgram<Result>;
+    return branch(p, (b) => b.existing != null, thenProg, elseProg) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -56,11 +60,16 @@ const _handler: FunctionalConceptHandler = {
     const name = input.name as string;
 
     p = get(p, 'tests', `test:${name}`, 'entry');
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
 
-    return complete(p, 'ok', { test: entry.id }) as StorageProgram<Result>;
+    let thenProg = createProgram();
+    thenProg = completeFrom(thenProg, 'ok', (bindings) => ({
+      test: (bindings.entry as any).id,
+    }));
+
+    let elseProg = createProgram();
+    elseProg = complete(elseProg, 'notfound', {});
+
+    return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
   },
 
   findByEntity(input: Record<string, unknown>) {
@@ -68,14 +77,19 @@ const _handler: FunctionalConceptHandler = {
     const entity = input.entity as string;
     p = find(p, 'tests', { targetEntity: entity }, 'all');
 
-    const tests = all.map(t => ({
-      name: t.name,
-      kind: t.kind,
-      sourceFile: t.sourceFile,
-      lastResult: t.lastResult || '',
-    }));
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.map(t => ({
+        name: t.name,
+        kind: t.kind,
+        sourceFile: t.sourceFile,
+        lastResult: t.lastResult || '',
+      }));
+    }, 'tests');
 
-    return complete(p, 'ok', { tests: JSON.stringify(tests) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.tests),
+    })) as StorageProgram<Result>;
   },
 
   findByAction(input: Record<string, unknown>) {
@@ -84,11 +98,16 @@ const _handler: FunctionalConceptHandler = {
     const action = input.action as string;
     p = find(p, 'tests', { targetEntity: concept }, 'all');
 
-    const filtered = all.filter(t =>
-      (t.targetAction as string) === action || (t.name as string).includes(action)
-    );
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.filter(t =>
+        (t.targetAction as string) === action || (t.name as string).includes(action)
+      );
+    }, 'filtered');
 
-    return complete(p, 'ok', { tests: JSON.stringify(filtered) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.filtered),
+    })) as StorageProgram<Result>;
   },
 
   findByKind(input: Record<string, unknown>) {
@@ -96,49 +115,67 @@ const _handler: FunctionalConceptHandler = {
     const kind = input.kind as string;
     p = find(p, 'tests', { kind }, 'all');
 
-    return complete(p, 'ok', { tests: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.all),
+    })) as StorageProgram<Result>;
   },
 
   findFailing(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'tests', 'all');
-    const failing = all.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
 
-    if (failing.length === 0) {
-      return complete(p, 'allPassing', {}) as StorageProgram<Result>;
-    }
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.filter(t => t.lastResult === 'fail' || t.lastResult === 'error');
+    }, 'failing');
 
-    const tests = failing.map(t => ({
-      name: t.name,
-      kind: t.kind,
-      targetEntity: t.targetEntity,
-      sourceFile: t.sourceFile,
-      errorMessage: '',
+    let thenProg = createProgram();
+    thenProg = complete(thenProg, 'allPassing', {});
+
+    let elseProg = createProgram();
+    elseProg = mapBindings(elseProg, (bindings) => {
+      const failing = bindings.failing as any[];
+      return failing.map(t => ({
+        name: t.name,
+        kind: t.kind,
+        targetEntity: t.targetEntity,
+        sourceFile: t.sourceFile,
+        errorMessage: '',
+      }));
+    }, 'tests');
+    elseProg = completeFrom(elseProg, 'ok', (bindings) => ({
+      tests: JSON.stringify(bindings.tests),
     }));
 
-    return complete(p, 'ok', { tests: JSON.stringify(tests) }) as StorageProgram<Result>;
+    return branch(p, (b) => (b.failing as any[]).length === 0, thenProg, elseProg) as StorageProgram<Result>;
   },
 
   coverageReport(input: Record<string, unknown>) {
+    let p = createProgram();
     const entity = input.entity as string;
     p = find(p, 'tests', { targetEntity: entity }, 'tests');
 
     // TODO: Cross-reference with ConceptEntity to get total actions/variants/invariants
-    const testedActions = new Set(
-      tests.map(t => t.targetAction as string).filter(Boolean)
-    );
+    p = mapBindings(p, (bindings) => {
+      const tests = bindings.tests as any[];
+      const testedActions = new Set(
+        tests.map(t => t.targetAction as string).filter(Boolean)
+      );
 
-    const report = {
-      totalActions: 0,
-      testedActions: testedActions.size,
-      totalVariants: 0,
-      testedVariants: 0,
-      totalInvariants: 0,
-      testedInvariants: tests.filter(t => t.kind === 'invariant').length,
-      coveragePct: 0,
-    };
+      return {
+        totalActions: 0,
+        testedActions: testedActions.size,
+        totalVariants: 0,
+        testedVariants: 0,
+        totalInvariants: 0,
+        testedInvariants: tests.filter(t => t.kind === 'invariant').length,
+        coveragePct: 0,
+      };
+    }, 'report');
 
-    return complete(p, 'ok', { report: JSON.stringify(report) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      report: JSON.stringify(bindings.report),
+    })) as StorageProgram<Result>;
   },
 
   untestedActions(_input: Record<string, unknown>) {
@@ -149,28 +186,39 @@ const _handler: FunctionalConceptHandler = {
   },
 
   untestedInvariants(_input: Record<string, unknown>) {
+    let p = createProgram();
     // TODO: Cross-reference all concept invariants with TestEntity coverage
     return complete(p, 'fullCoverage', {}) as StorageProgram<Result>;
   },
 
   recordResult(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.test as string;
     const result = input.result as string;
     const duration = input.duration as number;
 
     p = find(p, 'tests', 'all');
-    const entry = all.find(t => t.id === testId);
 
-    if (entry) {
-      const key = `test:${entry.name}`;
-      p = put(p, 'tests', key, {
-        ...entry,
-        lastResult: result,
-        lastDuration: duration,
-      });
-    }
+    p = mapBindings(p, (bindings) => {
+      const items = bindings.all as any[];
+      return items.find(t => t.id === testId) || null;
+    }, 'entry');
 
-    return complete(p, 'ok', { test: testId }) as StorageProgram<Result>;
+    let thenProg = createProgram();
+    thenProg = mapBindings(thenProg, (bindings) => {
+      return `test:${(bindings.entry as any).name}`;
+    }, 'entryKey');
+    thenProg = putFrom(thenProg, 'tests', (bindings) => bindings.entryKey as string, (bindings) => ({
+      ...(bindings.entry as any),
+      lastResult: result,
+      lastDuration: duration,
+    }));
+    thenProg = complete(thenProg, 'ok', { test: testId });
+
+    let elseProg = createProgram();
+    elseProg = complete(elseProg, 'ok', { test: testId });
+
+    return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
   },
 };
 

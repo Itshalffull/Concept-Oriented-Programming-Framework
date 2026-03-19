@@ -31,74 +31,87 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Look up all coverage mappings
-    p = find(p, MAPPINGS, 'allMappings');
-
-    if (allMappings.length === 0) {
-      return complete(p, 'noMappings', {
-        message: 'No coverage mappings available — run tests with coverage first',
-      }) as StorageProgram<Result>;
-    }
+    p = find(p, MAPPINGS, {}, 'allMappings');
 
     const testType = input.testType as string | undefined;
 
-    // Find tests whose covered sources overlap with changed sources
-    const affectedTests: Array<{
-      testId: string;
-      language: string;
-      testType: string;
-      relevance: number;
-      reason: string;
-    }> = [];
+    // Branch on whether mappings exist
+    return branch(p,
+      (bindings) => (bindings.allMappings as any[]).length === 0,
+      // Then: no mappings available
+      complete(createProgram(), 'noMappings', {
+        message: 'No coverage mappings available — run tests with coverage first',
+      }),
+      // Else: process mappings to find affected tests
+      (() => {
+        let q = createProgram();
+        // Derive affected tests from allMappings binding
+        q = mapBindings(q, (bindings) => {
+          const allMappings = bindings.allMappings as Array<Record<string, unknown>>;
+          const changedSet = new Set(changedSources);
 
-    const changedSet = new Set(changedSources);
+          const affectedTests: Array<{
+            testId: string;
+            language: string;
+            testType: string;
+            relevance: number;
+            reason: string;
+          }> = [];
 
-    for (const mapping of allMappings) {
-      const coveredSources = JSON.parse(mapping.coveredSources as string) as string[];
-      const testId = mapping.testId as string;
-      const language = mapping.language as string;
-      const mappingTestType = (mapping.testType as string) || 'unit';
+          for (const mapping of allMappings) {
+            const coveredSources = JSON.parse(mapping.coveredSources as string) as string[];
+            const testId = mapping.testId as string;
+            const language = mapping.language as string;
+            const mappingTestType = (mapping.testType as string) || 'unit';
 
-      // Filter by testType if specified
-      if (testType && mappingTestType !== testType) continue;
+            // Filter by testType if specified
+            if (testType && mappingTestType !== testType) continue;
 
-      // Check direct coverage
-      const directHit = coveredSources.some(s => changedSet.has(s));
-      if (directHit) {
-        affectedTests.push({
-          testId,
-          language,
-          testType: mappingTestType,
-          relevance: 1.0,
-          reason: 'direct-coverage',
-        });
-        continue;
-      }
+            // Check direct coverage
+            const directHit = coveredSources.some(s => changedSet.has(s));
+            if (directHit) {
+              affectedTests.push({
+                testId,
+                language,
+                testType: mappingTestType,
+                relevance: 1.0,
+                reason: 'direct-coverage',
+              });
+              continue;
+            }
 
-      // Check transitive dependency (simplified: partial path overlap)
-      const transitiveHit = coveredSources.some(s =>
-        changedSources.some(changed => s.includes(changed.split('/').pop()!) || changed.includes(s.split('/').pop()!)),
-      );
-      if (transitiveHit) {
-        affectedTests.push({
-          testId,
-          language,
-          testType: mappingTestType,
-          relevance: 0.7,
-          reason: 'transitive-dep',
-        });
-      }
-    }
+            // Check transitive dependency (simplified: partial path overlap)
+            const transitiveHit = coveredSources.some(s =>
+              changedSources.some(changed => s.includes(changed.split('/').pop()!) || changed.includes(s.split('/').pop()!)),
+            );
+            if (transitiveHit) {
+              affectedTests.push({
+                testId,
+                language,
+                testType: mappingTestType,
+                relevance: 0.7,
+                reason: 'transitive-dep',
+              });
+            }
+          }
 
-    // Deduplicate by testId+language
-    const seen = new Set<string>();
-    const deduplicated = affectedTests.filter(t => {
-      const key = `${t.testId}:${t.language}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+          // Deduplicate by testId+language
+          const seen = new Set<string>();
+          const deduplicated = affectedTests.filter(t => {
+            const key = `${t.testId}:${t.language}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
 
-    return complete(p, 'ok', { affectedTests: deduplicated }) as StorageProgram<Result>;
+          return deduplicated;
+        }, 'deduplicated');
+
+        return completeFrom(q, 'ok', (bindings) => ({
+          affectedTests: bindings.deduplicated,
+        }));
+      })(),
+    ) as StorageProgram<Result>;
   },
 
   select(input: Record<string, unknown>) {
@@ -118,64 +131,118 @@ const _handler: FunctionalConceptHandler = {
     // Sort by relevance descending (highest relevance first)
     const sorted = [...affectedTests].sort((a, b) => b.relevance - a.relevance);
 
-    // Look up historical durations
-    let totalEstimatedDuration = 0;
-    const selected: Array<{ testId: string; language: string; testType: string; priority: number }> = [];
-
+    // Look up historical durations for each test
     for (let i = 0; i < sorted.length; i++) {
       const test = sorted[i];
-      p = get(p, MAPPINGS, `${test.testId}:${test.language}`, 'mapping');
-      const avgDuration = mapping ? (mapping.avgDuration as number) : 100;
-
-      // Check budget constraints
-      if (budget) {
-        if (budget.maxTests && selected.length >= budget.maxTests) break;
-        if (budget.maxDuration && totalEstimatedDuration + avgDuration > budget.maxDuration) {
-          // Budget exceeded — return what we have with reduced confidence
-          const missedTests = sorted.length - selected.length;
-          const confidence = selected.length / sorted.length;
-
-          const selectionId = `sel-${Date.now()}`;
-          p = put(p, SELECTIONS, selectionId, {
-            id: selectionId,
-            selectedCount: selected.length,
-            totalAffected: sorted.length,
-            confidence,
-            estimatedDuration: totalEstimatedDuration,
-            createdAt: new Date().toISOString(),
-          });
-
-          return complete(p, 'budgetInsufficient', {
-            selected: selected.map(s => ({ testId: s.testId })),
-            missedTests,
-            confidence,
-          }) as StorageProgram<Result>;
-        }
-      }
-
-      selected.push({
-        testId: test.testId,
-        language: test.language,
-        testType: test.testType || 'unit',
-        priority: i + 1,
-      });
-      totalEstimatedDuration += avgDuration;
+      p = get(p, MAPPINGS, `${test.testId}:${test.language}`, `mapping_${i}`);
     }
 
-    // Confidence based on how many affected tests we're running
-    const confidence = 1.0;
+    // Process all mappings in a single mapBindings to compute selection
+    p = mapBindings(p, (bindings) => {
+      let totalEstimatedDuration = 0;
+      const selected: Array<{ testId: string; language: string; testType: string; priority: number }> = [];
+
+      for (let i = 0; i < sorted.length; i++) {
+        const test = sorted[i];
+        const mapping = bindings[`mapping_${i}`] as Record<string, unknown> | null;
+        const avgDuration = mapping ? (mapping.avgDuration as number) : 100;
+
+        // Check budget constraints
+        if (budget) {
+          if (budget.maxTests && selected.length >= budget.maxTests) break;
+          if (budget.maxDuration && totalEstimatedDuration + avgDuration > budget.maxDuration) {
+            // Budget exceeded — return what we have with reduced confidence
+            const missedTests = sorted.length - selected.length;
+            const confidence = selected.length / sorted.length;
+            return {
+              budgetExceeded: true,
+              selected: selected.map(s => ({ testId: s.testId })),
+              missedTests,
+              confidence,
+              estimatedDuration: totalEstimatedDuration,
+              selectedCount: selected.length,
+              totalAffected: sorted.length,
+            };
+          }
+        }
+
+        selected.push({
+          testId: test.testId,
+          language: test.language,
+          testType: test.testType || 'unit',
+          priority: i + 1,
+        });
+        totalEstimatedDuration += avgDuration;
+      }
+
+      return {
+        budgetExceeded: false,
+        selected,
+        estimatedDuration: totalEstimatedDuration,
+        selectedCount: selected.length,
+        totalAffected: sorted.length,
+        confidence: 1.0,
+      };
+    }, 'selectionResult');
 
     const selectionId = `sel-${Date.now()}`;
-    p = put(p, SELECTIONS, selectionId, {
-      id: selectionId,
-      selectedCount: selected.length,
-      totalAffected: sorted.length,
-      confidence,
-      estimatedDuration: totalEstimatedDuration,
-      createdAt: new Date().toISOString(),
-    });
 
-    return complete(p, 'ok', { selected, estimatedDuration: totalEstimatedDuration, confidence }) as StorageProgram<Result>;
+    // Branch on whether budget was exceeded
+    p = branch(p,
+      (bindings) => (bindings.selectionResult as any).budgetExceeded === true,
+      // Then: budget exceeded
+      (() => {
+        let q = createProgram();
+
+        q = putFrom(q, SELECTIONS, selectionId, (bindings) => {
+          const result = bindings.selectionResult as any;
+          return {
+            id: selectionId,
+            selectedCount: result.selectedCount,
+            totalAffected: result.totalAffected,
+            confidence: result.confidence,
+            estimatedDuration: result.estimatedDuration,
+            createdAt: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(q, 'budgetInsufficient', (bindings) => {
+          const result = bindings.selectionResult as any;
+          return {
+            selected: result.selected,
+            missedTests: result.missedTests,
+            confidence: result.confidence,
+          };
+        });
+      })(),
+      // Else: all tests selected
+      (() => {
+        let q = createProgram();
+
+        q = putFrom(q, SELECTIONS, selectionId, (bindings) => {
+          const result = bindings.selectionResult as any;
+          return {
+            id: selectionId,
+            selectedCount: result.selectedCount,
+            totalAffected: result.totalAffected,
+            confidence: result.confidence,
+            estimatedDuration: result.estimatedDuration,
+            createdAt: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(q, 'ok', (bindings) => {
+          const result = bindings.selectionResult as any;
+          return {
+            selected: result.selected,
+            estimatedDuration: result.estimatedDuration,
+            confidence: result.confidence,
+          };
+        });
+      })(),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   record(input: Record<string, unknown>) {
@@ -190,78 +257,107 @@ const _handler: FunctionalConceptHandler = {
     const mappingKey = `${testId}:${language}`;
     p = get(p, MAPPINGS, mappingKey, 'existing');
 
-    let avgDuration = duration;
-    let failureRate = passed ? 0 : 1;
-    let runCount = 1;
+    // Compute updated stats from existing binding, then put the mapping
+    p = mapBindings(p, (bindings) => {
+      const existing = bindings.existing as Record<string, unknown> | null;
 
-    if (existing) {
-      const prevAvg = existing.avgDuration as number;
-      const prevRate = existing.failureRate as number;
-      const prevRuns = (existing.runCount as number) || 1;
-      runCount = prevRuns + 1;
-      avgDuration = Math.round((prevAvg * prevRuns + duration) / runCount);
-      failureRate = (prevRate * prevRuns + (passed ? 0 : 1)) / runCount;
-    }
+      let avgDuration = duration;
+      let failureRate = passed ? 0 : 1;
+      let runCount = 1;
 
-    const mappingId = existing ? (existing.id as string) : `map-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      if (existing) {
+        const prevAvg = existing.avgDuration as number;
+        const prevRate = existing.failureRate as number;
+        const prevRuns = (existing.runCount as number) || 1;
+        runCount = prevRuns + 1;
+        avgDuration = Math.round((prevAvg * prevRuns + duration) / runCount);
+        failureRate = (prevRate * prevRuns + (passed ? 0 : 1)) / runCount;
+      }
 
-    p = put(p, MAPPINGS, mappingKey, {
-      id: mappingId,
-      testId,
-      language,
-      testType,
-      coveredSources: JSON.stringify(coveredSources),
-      avgDuration,
-      failureRate,
-      runCount,
-      lastExecuted: new Date().toISOString(),
+      const mappingId = existing ? (existing.id as string) : `map-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      return {
+        mappingId,
+        avgDuration,
+        failureRate,
+        runCount,
+      };
+    }, 'computed');
+
+    p = putFrom(p, MAPPINGS, mappingKey, (bindings) => {
+      const computed = bindings.computed as {
+        mappingId: string;
+        avgDuration: number;
+        failureRate: number;
+        runCount: number;
+      };
+      return {
+        id: computed.mappingId,
+        testId,
+        language,
+        testType,
+        coveredSources: JSON.stringify(coveredSources),
+        avgDuration: computed.avgDuration,
+        failureRate: computed.failureRate,
+        runCount: computed.runCount,
+        lastExecuted: new Date().toISOString(),
+      };
     });
 
-    return complete(p, 'ok', { mapping: mappingId }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const computed = bindings.computed as { mappingId: string };
+      return { mapping: computed.mappingId };
+    }) as StorageProgram<Result>;
   },
 
   statistics(input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, MAPPINGS, 'allMappings');
-    p = find(p, SELECTIONS, 'allSelections');
+    p = find(p, MAPPINGS, {}, 'allMappings');
+    p = find(p, SELECTIONS, {}, 'allSelections');
 
-    const totalMappings = allMappings.length;
+    // Derive all statistics from bindings
+    return completeFrom(p, 'ok', (bindings) => {
+      const allMappings = bindings.allMappings as Array<Record<string, unknown>>;
+      const allSelections = bindings.allSelections as Array<Record<string, unknown>>;
 
-    let avgSelectionRatio = 0;
-    let avgConfidence = 0;
-    let lastUpdated = '';
+      const totalMappings = allMappings.length;
 
-    if (allSelections.length > 0) {
-      let totalRatio = 0;
-      let totalConf = 0;
+      let avgSelectionRatio = 0;
+      let avgConfidence = 0;
+      let lastUpdated = '';
 
-      for (const sel of allSelections) {
-        const selected = sel.selectedCount as number;
-        const total = sel.totalAffected as number;
-        totalRatio += total > 0 ? selected / total : 1;
-        totalConf += sel.confidence as number;
-        const created = sel.createdAt as string;
-        if (created > lastUpdated) lastUpdated = created;
+      if (allSelections.length > 0) {
+        let totalRatio = 0;
+        let totalConf = 0;
+
+        for (const sel of allSelections) {
+          const selected = sel.selectedCount as number;
+          const total = sel.totalAffected as number;
+          totalRatio += total > 0 ? selected / total : 1;
+          totalConf += sel.confidence as number;
+          const created = sel.createdAt as string;
+          if (created > lastUpdated) lastUpdated = created;
+        }
+
+        avgSelectionRatio = totalRatio / allSelections.length;
+        avgConfidence = totalConf / allSelections.length;
       }
 
-      avgSelectionRatio = totalRatio / allSelections.length;
-      avgConfidence = totalConf / allSelections.length;
-    }
-
-    if (!lastUpdated && allMappings.length > 0) {
-      for (const m of allMappings) {
-        const executed = m.lastExecuted as string;
-        if (executed > lastUpdated) lastUpdated = executed;
+      if (!lastUpdated && allMappings.length > 0) {
+        for (const m of allMappings) {
+          const executed = m.lastExecuted as string;
+          if (executed > lastUpdated) lastUpdated = executed;
+        }
       }
-    }
 
-    return complete(p, 'ok', {
-      stats: {
-        totalMappings,
-        avgSelectionRatio: Math.round(avgSelectionRatio * 1000) / 1000,
-        avgConfidence: Math.round(avgConfidence * 1000) / 1000,
-        lastUpdated: lastUpdated || new Date().toISOString(),
-      },
+      return {
+        stats: {
+          totalMappings,
+          avgSelectionRatio: Math.round(avgSelectionRatio * 1000) / 1000,
+          avgConfidence: Math.round(avgConfidence * 1000) / 1000,
+          lastUpdated: lastUpdated || new Date().toISOString(),
+        },
+      };
     }) as StorageProgram<Result>;
   },
 };

@@ -8,7 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, complete, type StorageProgram,
+  createProgram, complete, completeFrom, get, find, put, del, branch, mapBindings, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -127,75 +127,89 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'ok', { removed: 0 }) as StorageProgram<Result>;
     }
 
-    let removed = 0;
-
-    // Remove file entry
     const fileId = `file:${path}`;
+
+    // Fetch file entry and related records
     p = get(p, 'files', fileId, 'existing');
-    if (existing) {
-      p = del(p, 'files', fileId);
-      removed++;
-    }
+    p = find(p, 'symbols', { file: path }, 'foundSymbols');
+    p = find(p, 'concepts', { file: path }, 'foundConcepts');
+    p = find(p, 'syncs', { file: path }, 'foundSyncs');
 
-    // Remove symbols from this file
-    p = find(p, 'symbols', { file: path }, 'symbols');
-    for (const sym of symbols) {
-      const symId = `symbol:${sym.symbolName}:${sym.file}:${sym.line}`;
-      p = del(p, 'symbols', symId);
-      removed++;
-    }
+    // Remove file entry if it exists
+    return branch(p, 'existing',
+      (thenP) => {
+        thenP = del(thenP, 'files', fileId);
 
-    // Remove concepts from this file
-    p = find(p, 'concepts', { file: path }, 'concepts');
-    for (const c of concepts) {
-      const cId = `concept:${c.conceptName}`;
-      p = del(p, 'concepts', cId);
-      removed++;
-    }
+        // Compute keys to delete and total removed count from bindings
+        thenP = mapBindings(thenP, (bindings) => {
+          const syms = (bindings.foundSymbols as Record<string, unknown>[]) || [];
+          const concepts = (bindings.foundConcepts as Record<string, unknown>[]) || [];
+          const syncs = (bindings.foundSyncs as Record<string, unknown>[]) || [];
+          return {
+            symbolKeys: syms.map((s) => `symbol:${s.symbolName}:${s.file}:${s.line}`),
+            conceptKeys: concepts.map((c) => `concept:${c.conceptName}`),
+            syncKeys: syncs.map((s) => `sync:${s.syncName}`),
+            total: 1 + syms.length + concepts.length + syncs.length,
+          };
+        }, 'deleteInfo');
 
-    // Remove syncs from this file
-    p = find(p, 'syncs', { file: path }, 'syncs');
-    for (const s of syncs) {
-      const sId = `sync:${s.syncName}`;
-      p = del(p, 'syncs', sId);
-      removed++;
-    }
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const info = bindings.deleteInfo as { total: number };
+          return { removed: info.total };
+        });
+      },
+      (elseP) => {
+        // No file entry — still check for orphaned symbols/concepts/syncs
+        elseP = mapBindings(elseP, (bindings) => {
+          const syms = (bindings.foundSymbols as Record<string, unknown>[]) || [];
+          const concepts = (bindings.foundConcepts as Record<string, unknown>[]) || [];
+          const syncs = (bindings.foundSyncs as Record<string, unknown>[]) || [];
+          return syms.length + concepts.length + syncs.length;
+        }, 'orphanCount');
 
-    return complete(p, 'ok', { removed }) as StorageProgram<Result>;
+        return completeFrom(elseP, 'ok', (bindings) => ({
+          removed: bindings.orphanCount as number,
+        }));
+      },
+    ) as StorageProgram<Result>;
   },
 
   clear(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', 'concepts');
-    p = find(p, 'syncs', 'syncs');
-    p = find(p, 'symbols', 'symbols');
-    p = find(p, 'files', 'files');
+    p = find(p, 'concepts', {}, 'allConcepts');
+    p = find(p, 'syncs', {}, 'allSyncs');
+    p = find(p, 'symbols', {}, 'allSymbols');
+    p = find(p, 'files', {}, 'allFiles');
 
-    const total = concepts.length + syncs.length + symbols.length + files.length;
+    // Compute total count from bindings
+    p = mapBindings(p, (bindings) => {
+      const concepts = (bindings.allConcepts as unknown[]) || [];
+      const syncs = (bindings.allSyncs as unknown[]) || [];
+      const symbols = (bindings.allSymbols as unknown[]) || [];
+      const files = (bindings.allFiles as unknown[]) || [];
+      return concepts.length + syncs.length + symbols.length + files.length;
+    }, 'total');
 
-    for (const c of concepts) p = del(p, 'concepts', `concept:${c.conceptName}`);
-    for (const s of syncs) p = del(p, 'syncs', `sync:${s.syncName}`);
-    for (const sym of symbols) p = del(p, 'symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
-    for (const f of files) p = del(p, 'files', `file:${f.filePath}`);
-
-    return complete(p, 'ok', { cleared: total }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      cleared: bindings.total as number,
+    })) as StorageProgram<Result>;
   },
 
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', 'concepts');
-    p = find(p, 'syncs', 'syncs');
-    p = find(p, 'symbols', 'symbols');
-    p = find(p, 'files', 'files');
-    p = get(p, 'meta', 'concepts', 'meta');
+    p = find(p, 'concepts', {}, 'allConcepts');
+    p = find(p, 'syncs', {}, 'allSyncs');
+    p = find(p, 'symbols', {}, 'allSymbols');
+    p = find(p, 'files', {}, 'allFiles');
+    p = get(p, 'meta', 'concepts', 'metaRecord');
 
-    return complete(p, 'ok', {
-      conceptCount: concepts.length,
-      syncCount: syncs.length,
-      symbolCount: symbols.length,
-      fileCount: files.length,
-      lastUpdated: meta?.lastUpdated || new Date().toISOString(),
-    }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      conceptCount: ((bindings.allConcepts as unknown[]) || []).length,
+      syncCount: ((bindings.allSyncs as unknown[]) || []).length,
+      symbolCount: ((bindings.allSymbols as unknown[]) || []).length,
+      fileCount: ((bindings.allFiles as unknown[]) || []).length,
+      lastUpdated: (bindings.metaRecord as Record<string, unknown>)?.lastUpdated || new Date().toISOString(),
+    })) as StorageProgram<Result>;
   },
 };
 
