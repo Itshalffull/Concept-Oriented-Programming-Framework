@@ -496,12 +496,90 @@ export const myHandler: FunctionalConceptHandler = {
 |-----------|-------------|--------|
 | Read one | `get(p, relation, key, bindAs)` | reads += relation |
 | Query | `find(p, relation, criteria, bindAs)` | reads += relation |
-| Write | `put(p, relation, key, value)` | writes += relation |
-| Partial update | `merge(p, relation, key, fields)` | reads+writes += relation |
+| Write (static) | `put(p, relation, key, value)` | writes += relation |
+| Write (from bindings) | `putFrom(p, relation, key, (bindings) => value)` | writes += relation |
+| Partial update (static) | `merge(p, relation, key, fields)` | reads+writes += relation |
+| Partial update (from bindings) | `mergeFrom(p, relation, key, (bindings) => fields)` | reads+writes += relation |
 | Delete | `del(p, relation, key)` | writes += relation |
 | Conditional | `branch(p, condition, thenProg, elseProg)` | union of both arms |
-| Terminate | `complete(p, variant, output)` | completionVariants += variant |
+| Terminate (static) | `complete(p, variant, output)` | completionVariants += variant |
+| Terminate (from bindings) | `completeFrom(p, variant, (bindings) => output)` | completionVariants += variant |
+| Derive value | `mapBindings(p, (bindings) => value, bindAs)` | (no effect) |
 | Monadic bind | `compose(first, bindAs, second)` | union of both programs |
+
+### CRITICAL: Binding Semantics — `bindAs` Names Are NOT JavaScript Variables
+
+The `bindAs` parameter in `get()`, `find()`, `mapBindings()`, and `perform()` declares a **runtime binding name** — a key that the interpreter will populate in a `bindings: Record<string, unknown>` object when the program is executed. **These names do NOT become JavaScript variables in the handler function scope.**
+
+You can ONLY access bound values through:
+1. **`branch()` conditions**: `(bindings) => bindings.myVar != null`
+2. **`putFrom()` / `mergeFrom()` value functions**: `(bindings) => ({ ...bindings.existing as Record<string, unknown>, name: newName })`
+3. **`completeFrom()` output functions**: `(bindings) => ({ items: bindings.all as unknown[] })`
+4. **`mapBindings()` derivation functions**: `(bindings) => (bindings.items as any[]).length`
+
+#### WRONG — referencing `bindAs` name as a JS variable:
+
+```typescript
+// BAD — this will throw ReferenceError at runtime!
+actionName(input) {
+  let p = createProgram();
+  p = get(p, 'items', id, 'existing');       // binds result as 'existing'
+  if (existing) {                              // ← ReferenceError! 'existing' is not a JS variable
+    p = put(p, 'items', id, { ...existing, name: newName });
+  }
+  return complete(p, 'ok', {});
+}
+```
+
+#### CORRECT — accessing bound values through bindings lambdas:
+
+```typescript
+// GOOD — access bound values through branch/putFrom/completeFrom lambdas
+actionName(input) {
+  const id = input.id as string;
+  const newName = input.name as string;
+  let p = createProgram();
+  p = get(p, 'items', id, 'existing');        // binds result as 'existing'
+  return branch(p,
+    (bindings) => !bindings.existing,           // ← access via bindings object
+    complete(createProgram(), 'notFound', { message: 'Item not found' }),
+    (() => {
+      let b = createProgram();
+      b = putFrom(b, 'items', id, (bindings) => {   // ← access via bindings
+        const existing = bindings.existing as Record<string, unknown>;
+        return { ...existing, name: newName };
+      });
+      return complete(b, 'ok', { item: id });
+    })(),
+  );
+}
+```
+
+#### CORRECT — using mapBindings to derive values:
+
+```typescript
+actionName(input) {
+  let p = createProgram();
+  p = find(p, 'items', {}, 'allItems');       // binds result as 'allItems'
+  p = mapBindings(p, (bindings) => {           // ← derive a count from bindings
+    return (bindings.allItems as any[]).length;
+  }, 'itemCount');
+  return completeFrom(p, 'ok', (bindings) => ({
+    count: bindings.itemCount as number,
+    items: bindings.allItems as unknown[],
+  }));
+}
+```
+
+#### Common Patterns Requiring Bindings Access
+
+| Pattern | Wrong (ReferenceError) | Correct |
+|---------|----------------------|---------|
+| Check existence after get | `if (existing) { ... }` | `branch(p, (b) => b.existing != null, ...)` |
+| Use fetched data in put | `put(p, rel, key, { ...existing })` | `putFrom(p, rel, key, (b) => ({ ...b.existing as any }))` |
+| Return fetched data | `complete(p, 'ok', { items: all })` | `completeFrom(p, 'ok', (b) => ({ items: b.all }))` |
+| Compute from fetched data | `const count = items.length` | `mapBindings(p, (b) => (b.items as any[]).length, 'count')` |
+| Filter fetched results | `const filtered = items.filter(...)` | `mapBindings(p, (b) => (b.items as any[]).filter(...), 'filtered')` |
 
 ### Lens-Based State Access
 

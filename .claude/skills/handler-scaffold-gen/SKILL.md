@@ -59,6 +59,9 @@ Generate a handler implementation with typed action methods ,
 - [ ] Each action extracts input parameters with correct types?
 - [ ] Each action returns all declared variants?
 - [ ] Storage operations use correct relation names?
+- [ ] No bindAs names referenced as JavaScript variables (must use bindings lambdas)?
+- [ ] All storage-dependent values use *From variants (putFrom, mergeFrom, completeFrom)?
+- [ ] All conditionals on storage data use branch() with bindings lambda (not if/else)?
 - [ ] Error handling catches and wraps exceptions?
 - [ ] Conformance test covers register() and each action?
 - [ ] All files written through Emitter (not directly to disk)?
@@ -77,7 +80,57 @@ clef scaffold handler --concept Article
 
 ### Step 4: Edit the Handler Implementation
 
-Refine the generated handler. Default style is FUNCTIONAL (StorageProgram): 1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure(). 2. CRITICAL — put() vs putFrom(): Use put(p, rel, key, value) ONLY when value is fully known at construction time (static data, input parameters). Use putFrom(p, rel, key, (bindings) => value) when value depends on data read from storage via get()/find(). Same applies to merge() vs mergeFrom(), and complete() vs completeFrom(). The bindings parameter is a Record<string,unknown> containing all values bound by prior get()/find()/mapBindings() calls. Never reference a bindAs name as a direct variable — always access it through the bindings object. 3. Use mapBindings(p, (bindings) => derivedValue, 'bindAs') to derive new values from accumulated bindings (e.g. computing a count, filtering, sorting). 4. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API. 5. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model. 6. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring. 7. Use branch() for conditionals (not if/else), complete() for terminal values. 8. Lens-based access with getLens(), putLens(), modifyLens() where possible. Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
+Refine the generated handler. Default style is FUNCTIONAL (StorageProgram):
+
+1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure().
+
+2. **CRITICAL — put() vs putFrom():** Use put(p, rel, key, value) ONLY when value is fully known at construction time (static data, input parameters). Use putFrom(p, rel, key, (bindings) => value) when value depends on data read from storage via get()/find(). Same applies to merge() vs mergeFrom(), and complete() vs completeFrom(). The bindings parameter is a Record<string,unknown> containing all values bound by prior get()/find()/mapBindings() calls.
+
+3. **CRITICAL — bindAs names are NOT JavaScript variables.** When you call `get(p, rel, key, 'existing')` or `find(p, rel, {}, 'allItems')`, the string `'existing'` or `'allItems'` is a **runtime binding name** stored in the interpreter's `bindings: Record<string, unknown>` object during execution. It does NOT create a JavaScript variable in the handler function scope. You can ONLY access bound values through lambda/callback parameters that receive the bindings object:
+
+   - **branch conditions:** `branch(p, (bindings) => bindings.existing != null, thenProg, elseProg)`
+   - **putFrom value functions:** `putFrom(p, rel, key, (bindings) => ({ ...bindings.existing as any, name }))`
+   - **mergeFrom field functions:** `mergeFrom(p, rel, key, (bindings) => ({ count: (bindings.existing as any).count + 1 }))`
+   - **completeFrom output functions:** `completeFrom(p, variant, (bindings) => ({ items: bindings.allItems }))`
+   - **mapBindings derivations:** `mapBindings(p, (bindings) => (bindings.items as any[]).length, 'count')`
+
+   **WRONG (causes ReferenceError at runtime):**
+   ```typescript
+   p = get(p, 'items', id, 'existing');
+   if (existing) { ... }          // ← ReferenceError! 'existing' is NOT a JS variable
+   p = put(p, 'items', id, { ...existing, name });  // ← ReferenceError!
+   return complete(p, 'ok', { data: existing });     // ← ReferenceError!
+   ```
+
+   **CORRECT:**
+   ```typescript
+   p = get(p, 'items', id, 'existing');
+   return branch(p,
+     (bindings) => bindings.existing != null,      // access via bindings lambda
+     (() => {
+       let b = createProgram();
+       b = putFrom(b, 'items', id, (bindings) => ({  // access via bindings lambda
+         ...bindings.existing as Record<string, unknown>, name
+       }));
+       return completeFrom(b, 'ok', (bindings) => ({  // access via bindings lambda
+         data: bindings.existing
+       }));
+     })(),
+     complete(createProgram(), 'notFound', {}),
+   );
+   ```
+
+4. Use mapBindings(p, (bindings) => derivedValue, 'bindAs') to derive new values from accumulated bindings (e.g. computing a count, filtering, sorting).
+
+5. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API.
+
+6. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model.
+
+7. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring.
+
+8. Use branch() for conditionals (not if/else), complete() for terminal values.
+
+9. Lens-based access with getLens(), putLens(), modifyLens() where possible. Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
 
 
 ## References
