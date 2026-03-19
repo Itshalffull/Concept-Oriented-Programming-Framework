@@ -211,64 +211,79 @@ const _handler: FunctionalConceptHandler = {
 
     // Find all verifications for this concept involving this language
     p = find(p, VERIFICATIONS, { concept }, 'allVerifications');
-
-    const verifiedAgainst: string[] = [];
-    const missingPairs: Array<{ counterpart: string; lastVerified: string | null }> = [];
-
-    // Check verifications where this language is producer or consumer
     p = find(p, CONTRACTS, { concept }, 'allContracts');
-    if (allContracts.length === 0) {
-      // No contracts defined — safe to deploy
-      return complete(p, 'ok', { safe: true, verifiedAgainst: [] }) as StorageProgram<Result>;
-    }
 
-    // Find all languages that have verifications for this concept
-    const languagesInvolved = new Set<string>();
-    for (const v of allVerifications) {
-      languagesInvolved.add(v.producerLanguage as string);
-      languagesInvolved.add(v.consumerLanguage as string);
-    }
+    // Use mapBindings to compute the result, then branch on variant
+    p = mapBindings(p, (bindings) => {
+      const allVerifications = (bindings.allVerifications || []) as Array<Record<string, unknown>>;
+      const allContracts = (bindings.allContracts || []) as Array<Record<string, unknown>>;
 
-    // Check if all pairs involving our language are verified
-    for (const v of allVerifications) {
-      const producer = v.producerLanguage as string;
-      const consumer = v.consumerLanguage as string;
-      const status = v.status as string;
-
-      if (producer === language && status === 'pass') {
-        verifiedAgainst.push(consumer);
-      } else if (consumer === language && status === 'pass') {
-        verifiedAgainst.push(producer);
+      if (allContracts.length === 0) {
+        return { variant: 'ok', safe: true, verifiedAgainst: [] as string[], missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
       }
-    }
 
-    if (verifiedAgainst.length > 0 || allVerifications.length === 0) {
-      return complete(p, 'ok', {
-        safe: verifiedAgainst.length > 0 || allVerifications.length === 0,
-        verifiedAgainst,
-      }) as StorageProgram<Result>;
-    }
+      const verifiedAgainst: string[] = [];
 
-    // Check for unverified pairs
-    for (const other of languagesInvolved) {
-      if (other === language) continue;
-      if (!verifiedAgainst.includes(other)) {
-        const existing = allVerifications.find(
-          v => (v.producerLanguage === language && v.consumerLanguage === other) ||
-               (v.producerLanguage === other && v.consumerLanguage === language),
-        );
-        missingPairs.push({
-          counterpart: other,
-          lastVerified: existing ? (existing.verifiedAt as string) : null,
-        });
+      const languagesInvolved = new Set<string>();
+      for (const v of allVerifications) {
+        languagesInvolved.add(v.producerLanguage as string);
+        languagesInvolved.add(v.consumerLanguage as string);
       }
-    }
 
-    if (missingPairs.length > 0) {
-      return complete(p, 'unverified', { missingPairs }) as StorageProgram<Result>;
-    }
+      for (const v of allVerifications) {
+        const producer = v.producerLanguage as string;
+        const consumer = v.consumerLanguage as string;
+        const status = v.status as string;
 
-    return complete(p, 'ok', { safe: true, verifiedAgainst }) as StorageProgram<Result>;
+        if (producer === language && status === 'pass') {
+          verifiedAgainst.push(consumer);
+        } else if (consumer === language && status === 'pass') {
+          verifiedAgainst.push(producer);
+        }
+      }
+
+      if (verifiedAgainst.length > 0 || allVerifications.length === 0) {
+        return { variant: 'ok', safe: true, verifiedAgainst, missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
+      }
+
+      const missingPairs: Array<{ counterpart: string; lastVerified: string | null }> = [];
+      for (const other of languagesInvolved) {
+        if (other === language) continue;
+        if (!verifiedAgainst.includes(other)) {
+          const existing = allVerifications.find(
+            v => (v.producerLanguage === language && v.consumerLanguage === other) ||
+                 (v.producerLanguage === other && v.consumerLanguage === language),
+          );
+          missingPairs.push({
+            counterpart: other,
+            lastVerified: existing ? (existing.verifiedAt as string) : null,
+          });
+        }
+      }
+
+      if (missingPairs.length > 0) {
+        return { variant: 'unverified', safe: false, verifiedAgainst, missingPairs };
+      }
+
+      return { variant: 'ok', safe: true, verifiedAgainst, missingPairs: [] as Array<{ counterpart: string; lastVerified: string | null }> };
+    }, 'deployResult');
+
+    p = branch(p,
+      (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return result.variant === 'unverified';
+      },
+      (b) => completeFrom(b, 'unverified', (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return { missingPairs: result.missingPairs };
+      }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const result = bindings.deployResult as Record<string, unknown>;
+        return { safe: result.safe, verifiedAgainst: result.verifiedAgainst };
+      }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
 
