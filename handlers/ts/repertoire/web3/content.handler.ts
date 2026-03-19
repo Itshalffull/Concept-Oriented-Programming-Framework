@@ -2,24 +2,26 @@
 // ============================================================
 // Content Concept Implementation
 //
-// Manage IPFS content storage with CID tracking, pinning,
-// and retrieval. Stores content metadata in concept storage;
-// actual bytes go to IPFS via perform() transport effects
-// routed to the configured IPFS adapter.
-//
-// IPFS operations are modeled as perform() transport effects
-// on the 'ipfs' protocol. The interpreter routes these to
-// the IPFS transport adapter at runtime.
+// Manage content storage with CID tracking, pinning,
+// and retrieval. Stores content metadata and data in concept
+// storage, keyed by a deterministic content-addressed ID (CID)
+// derived from a SHA-256 hash of the data.
 // ============================================================
 
+import { createHash } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, putFrom, branch, complete, completeFrom, perform,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
+
+/** Compute a deterministic content-addressed ID from data. */
+function computeCid(data: string): string {
+  return createHash('sha256').update(data, 'utf8').digest('hex');
+}
 
 const _contentHandler: FunctionalConceptHandler = {
   store(input: Record<string, unknown>) {
@@ -27,33 +29,28 @@ const _contentHandler: FunctionalConceptHandler = {
     const name = input.name as string;
     const contentType = input.contentType as string;
 
+    const cid = computeCid(data);
+    const size = data.length;
+
     let p = createProgram();
-    // IPFS add + metadata storage via transport effect.
-    // The ipfs transport adapter adds bytes, returns { cid, size },
-    // and the interpreter persists metadata to the 'items' relation
-    // using the CID as key (keyed by the result's cid field).
-    p = perform(p, 'ipfs', 'add', {
+    // Store content metadata and data to the 'items' relation,
+    // keyed by the deterministic CID.
+    p = put(p, 'items', cid, {
+      cid,
       data,
       name,
       contentType,
+      size,
       pinned: false,
       createdAt: new Date().toISOString(),
-    }, 'ipfsResult');
-    return completeFrom(p, 'ok', (bindings) => {
-      const result = bindings.ipfsResult as Record<string, unknown>;
-      return {
-        cid: result.cid as string,
-        size: result.size as number,
-      };
-    }) as StorageProgram<Result>;
+    });
+    return complete(p, 'ok', { cid, size }) as StorageProgram<Result>;
   },
 
   pin(input: Record<string, unknown>) {
     const cid = input.cid as string;
 
     let p = createProgram();
-    // Pin via IPFS transport effect
-    p = perform(p, 'ipfs', 'pin', { cid }, 'pinResult');
     p = get(p, 'items', cid, 'existing');
     p = branch(p, 'existing',
       (b) => {
@@ -73,8 +70,6 @@ const _contentHandler: FunctionalConceptHandler = {
     const cid = input.cid as string;
 
     let p = createProgram();
-    // Unpin via IPFS transport effect
-    p = perform(p, 'ipfs', 'unpin', { cid }, 'unpinResult');
     p = get(p, 'items', cid, 'existing');
     p = branch(p, 'existing',
       (b) => {
@@ -97,13 +92,10 @@ const _contentHandler: FunctionalConceptHandler = {
     p = get(p, 'items', cid, 'meta');
     p = branch(p, 'meta',
       (b) => {
-        // Fetch bytes via IPFS transport effect
-        let b2 = perform(b, 'ipfs', 'get', { cid }, 'ipfsData');
-        return completeFrom(b2, 'ok', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const meta = bindings.meta as Record<string, unknown>;
-          const data = bindings.ipfsData as unknown;
           return {
-            data,
+            data: meta.data,
             contentType: meta.contentType as string,
             size: meta.size as number,
           };
