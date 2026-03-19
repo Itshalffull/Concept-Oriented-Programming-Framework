@@ -3,7 +3,7 @@
 // Structured rule evaluation with data lookups and path-based resolution (OPA-inspired).
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -140,7 +140,11 @@ const _regoEvaluatorHandler: FunctionalConceptHandler = {
           return JSON.stringify({ ...existingData, ...update });
         }, 'mergedData');
 
-        let b2 = put(b, 'rego', bundle as string, { data: '' });
+        let b2 = putFrom(b, 'rego', bundle as string, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const mergedData = bindings.mergedData as string;
+          return { ...record, data: mergedData };
+        });
         return complete(b2, 'updated', { bundle });
       },
       (b) => complete(b, 'not_found', { bundle }),

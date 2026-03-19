@@ -83,14 +83,6 @@ const _handler: FunctionalConceptHandler = {
     const consumerArtifact = input.consumerArtifact as string;
     const consumerLanguage = input.consumerLanguage as string;
 
-    p = get(p, CONTRACTS, contract, 'contractRecord');
-    if (!contractRecord) {
-      return complete(p, 'producerUnavailable', {
-        language: producerLanguage,
-        reason: 'Contract definition not found',
-      }) as StorageProgram<Result>;
-    }
-
     if (!producerArtifact) {
       return complete(p, 'producerUnavailable', {
         language: producerLanguage,
@@ -105,83 +97,111 @@ const _handler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    const definition = JSON.parse(contractRecord.definition as string);
-    const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
+    p = get(p, CONTRACTS, contract, 'contractRecord');
 
-    // Simulate contract verification
-    // Each action generates N test cases (one per variant)
-    let total = 0;
-    let passed = 0;
+    p = branch(p,
+      (bindings) => !bindings.contractRecord,
+      (b) => complete(b, 'producerUnavailable', {
+        language: producerLanguage,
+        reason: 'Contract definition not found',
+      }),
+      (b) => {
+        let b2 = putFrom(b, VERIFICATIONS, `${contract}:${producerLanguage}:${consumerLanguage}`, (bindings) => {
+          const contractRecord = bindings.contractRecord as Record<string, unknown>;
+          const definition = JSON.parse(contractRecord.definition as string);
+          const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
 
-    for (const action of actions) {
-      total += action.outputVariants.length;
-      passed += action.outputVariants.length; // Simulate all passing
-    }
+          let total = 0;
+          let passed = 0;
+          for (const action of actions) {
+            total += action.outputVariants.length;
+            passed += action.outputVariants.length;
+          }
 
-    const verificationKey = `${contract}:${producerLanguage}:${consumerLanguage}`;
-    const now = new Date().toISOString();
+          return {
+            contract,
+            concept: contractRecord.concept as string,
+            producerLanguage,
+            consumerLanguage,
+            producerArtifact,
+            consumerArtifact,
+            passed,
+            total,
+            status: passed === total ? 'pass' : 'fail',
+            verifiedAt: new Date().toISOString(),
+          };
+        });
 
-    p = put(p, VERIFICATIONS, verificationKey, {
-      contract,
-      concept: contractRecord.concept as string,
-      producerLanguage,
-      consumerLanguage,
-      producerArtifact,
-      consumerArtifact,
-      passed,
-      total,
-      status: passed === total ? 'pass' : 'fail',
-      verifiedAt: now,
-    });
+        return completeFrom(b2, 'ok', (bindings) => {
+          const contractRecord = bindings.contractRecord as Record<string, unknown>;
+          const definition = JSON.parse(contractRecord.definition as string);
+          const actions = definition.actions as Array<{ actionName: string; outputVariants: string[] }>;
 
-    return complete(p, 'ok', { contract, passed, total }) as StorageProgram<Result>;
+          let total = 0;
+          let passed = 0;
+          for (const action of actions) {
+            total += action.outputVariants.length;
+            passed += action.outputVariants.length;
+          }
+
+          return { contract, passed, total };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   matrix(input: Record<string, unknown>) {
     let p = createProgram();
     const concepts = input.concepts as string[] | undefined;
 
-    p = find(p, VERIFICATIONS, 'allVerifications');
-    p = find(p, CONTRACTS, 'allContracts');
+    p = find(p, VERIFICATIONS, {}, 'allVerifications');
+    p = find(p, CONTRACTS, {}, 'allContracts');
 
-    // Group by concept
-    const conceptMap = new Map<string, Array<{
-      producer: string;
-      consumer: string;
-      status: string;
-      lastVerified: string | null;
-    }>>();
+    return completeFrom(p, 'ok', (bindings) => {
+      const allVerifications = (bindings.allVerifications || []) as Array<Record<string, unknown>>;
+      const allContracts = (bindings.allContracts || []) as Array<Record<string, unknown>>;
 
-    for (const v of allVerifications) {
-      const concept = v.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+      // Group by concept
+      const conceptMap = new Map<string, Array<{
+        producer: string;
+        consumer: string;
+        status: string;
+        lastVerified: string | null;
+      }>>();
 
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, []);
+      for (const v of allVerifications) {
+        const concept = v.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, []);
+        }
+        conceptMap.get(concept)!.push({
+          producer: v.producerLanguage as string,
+          consumer: v.consumerLanguage as string,
+          status: v.status as string,
+          lastVerified: v.verifiedAt as string,
+        });
       }
-      conceptMap.get(concept)!.push({
-        producer: v.producerLanguage as string,
-        consumer: v.consumerLanguage as string,
-        status: v.status as string,
-        lastVerified: v.verifiedAt as string,
-      });
-    }
 
-    // Include concepts with contracts but no verifications
-    for (const c of allContracts) {
-      const concept = c.concept as string;
-      if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
-      if (!conceptMap.has(concept)) {
-        conceptMap.set(concept, []);
+      // Include concepts with contracts but no verifications
+      for (const c of allContracts) {
+        const concept = c.concept as string;
+        if (concepts && concepts.length > 0 && !concepts.includes(concept)) continue;
+        if (!conceptMap.has(concept)) {
+          conceptMap.set(concept, []);
+        }
       }
-    }
 
-    const matrix = Array.from(conceptMap.entries()).map(([concept, pairs]) => ({
-      concept,
-      pairs,
-    }));
+      const matrix = Array.from(conceptMap.entries()).map(([concept, pairs]) => ({
+        concept,
+        pairs,
+      }));
 
-    return complete(p, 'ok', { matrix }) as StorageProgram<Result>;
+      return { matrix };
+    }) as StorageProgram<Result>;
   },
 
   canDeploy(input: Record<string, unknown>) {

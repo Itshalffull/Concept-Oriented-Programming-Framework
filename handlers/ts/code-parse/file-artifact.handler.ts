@@ -33,25 +33,37 @@ const _handler: FunctionalConceptHandler = {
 
     // Check for duplicate registration by file path
     p = find(p, 'artifact', { node }, 'existing');
-    if (existing.length > 0) {
-      return complete(p, 'alreadyRegistered', { existing: existing[0].id }) as StorageProgram<Result>;
-    }
+    p = branch(p,
+      (bindings) => {
+        const existing = bindings.existing as unknown[];
+        return existing.length > 0;
+      },
+      (b) => {
+        return completeFrom(b, 'alreadyRegistered', (bindings) => {
+          const existing = bindings.existing as Array<Record<string, unknown>>;
+          return { existing: existing[0].id };
+        });
+      },
+      (b) => {
+        const id = nextArtifactId();
+        let b2 = put(b, 'artifact', id, {
+          id,
+          node,
+          role,
+          language,
+          encoding,
+          generationSource: '',
+          schemaRef: '',
+        });
 
-    const id = nextArtifactId();
-    p = put(p, 'artifact', id, {
-      id,
-      node,
-      role,
-      language,
-      encoding,
-      generationSource: '',
-      schemaRef: '',
-    });
+        // Index by node path for fast lookup
+        b2 = put(b2, 'artifact_by_node', node, { artifactId: id });
 
-    // Index by node path for fast lookup
-    p = put(p, 'artifact_by_node', node, { artifactId: id });
+        return complete(b2, 'ok', { artifact: id });
+      },
+    );
 
-    return complete(p, 'ok', { artifact: id }) as StorageProgram<Result>;
+    return p as StorageProgram<Result>;
   },
 
   setProvenance(input: Record<string, unknown>) {
@@ -61,64 +73,92 @@ const _handler: FunctionalConceptHandler = {
     const generator = input.generator as string;
 
     p = get(p, 'artifact', artifactId, 'data');
-    if (!data) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
+    p = branch(p, 'data',
+      (b) => {
+        let b2 = putFrom(b, 'artifact', artifactId, (bindings) => {
+          const data = bindings.data as Record<string, unknown>;
+          return {
+            ...data,
+            generationSource: JSON.stringify({ spec, generator }),
+          };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
 
-    p = put(p, 'artifact', artifactId, {
-      ...data,
-      generationSource: JSON.stringify({ spec, generator }),
-    });
-
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    return p as StorageProgram<Result>;
   },
 
   findByRole(input: Record<string, unknown>) {
     let p = createProgram();
     const role = input.role as string;
     p = find(p, 'artifact', { role }, 'matches');
-    return complete(p, 'ok', {
-      artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role, language: m.language }))),
+    return completeFrom(p, 'ok', (bindings) => {
+      const matches = bindings.matches as Array<Record<string, unknown>>;
+      return {
+        artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role, language: m.language }))),
+      };
     }) as StorageProgram<Result>;
   },
 
   findGeneratedFrom(input: Record<string, unknown>) {
     let p = createProgram();
     const spec = input.spec as string;
-    p = find(p, 'artifact', 'all');
-    const matches = all.filter((a) => {
-      if (!a.generationSource) return false;
-      try {
-        const gs = JSON.parse(a.generationSource as string);
-        return gs.spec === spec;
-      } catch {
-        return false;
-      }
-    });
+    p = find(p, 'artifact', {} as Record<string, unknown>, 'all');
 
-    if (matches.length === 0) {
-      return complete(p, 'noGeneratedFiles', {}) as StorageProgram<Result>;
-    }
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Array<Record<string, unknown>>;
+      return all.filter((a) => {
+        if (!a.generationSource) return false;
+        try {
+          const gs = JSON.parse(a.generationSource as string);
+          return gs.spec === spec;
+        } catch {
+          return false;
+        }
+      });
+    }, 'filtered');
 
-    return complete(p, 'ok', {
-      artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
-    }) as StorageProgram<Result>;
+    p = branch(p,
+      (bindings) => {
+        const filtered = bindings.filtered as unknown[];
+        return filtered.length === 0;
+      },
+      (b) => complete(b, 'noGeneratedFiles', {}),
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const filtered = bindings.filtered as Array<Record<string, unknown>>;
+          return {
+            artifacts: JSON.stringify(filtered.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
+          };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
     let p = createProgram();
     const artifactId = input.artifact as string;
     p = get(p, 'artifact', artifactId, 'data');
-    if (!data) {
-      return complete(p, 'notfound', { message: `Artifact ${artifactId} not found` }) as StorageProgram<Result>;
-    }
-    return complete(p, 'ok', {
-      artifact: artifactId,
-      node: data.node as string,
-      role: data.role as string,
-      language: data.language as string,
-      encoding: data.encoding as string,
-    }) as StorageProgram<Result>;
+    p = branch(p, 'data',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const data = bindings.data as Record<string, unknown>;
+          return {
+            artifact: artifactId,
+            node: data.node as string,
+            role: data.role as string,
+            language: data.language as string,
+            encoding: data.encoding as string,
+          };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: `Artifact ${artifactId} not found` }),
+    );
+    return p as StorageProgram<Result>;
   },
 };
 
