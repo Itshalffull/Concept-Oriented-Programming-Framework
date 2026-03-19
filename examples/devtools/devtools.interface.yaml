@@ -3485,6 +3485,48 @@ workflows:
               return { variant: 'error', message: String(err) };
             }
           }
+      - title: "_variant convention (DOES NOT WORK)"
+        description: "Returning { _variant: 'notfound' } from a completeFrom callback does NOT change the variant. The variant is always the second argument to completeFrom. The _variant field is just ignored data in the output."
+        bad: |
+          return completeFrom(p, 'ok', (bindings) => {
+            const entry = all.find(...);
+            if (!entry) return { _variant: 'notfound' };  // BROKEN: variant is still 'ok'
+            return { handler: entry.id };
+          });
+        good: |
+          p = mapBindings(p, (b) => (b.all as any[]).find(...) || null, '_found');
+          return branch(p,
+            (b) => !!b._found,
+            (b) => completeFrom(b, 'ok', (b) => ({ handler: (b._found as any).id })),
+            (b) => complete(b, 'notfound', {}),
+          );
+      - title: "_puts convention (DOES NOT WORK)"
+        description: "Returning { _puts: [{ rel, key, value }] } from a completeFrom callback does NOT write to storage. The interpreter treats completeFrom results as terminal pure values — it never inspects _puts."
+        bad: |
+          return completeFrom(p, 'ok', (bindings) => ({
+            variant: 'ok',
+            _puts: [{ rel: 'items', key: 'abc', value: record }],
+            item: id,
+          }));
+        good: |
+          let p2 = putFrom(p, 'items', 'abc', (b) => record);
+          return completeFrom(p2, 'ok', (b) => ({ item: id }));
+      - title: "Dynamic storage keys in functional style"
+        description: "putFrom(p, rel, key, fn) requires key to be a static string known at build time. If the key is computed at runtime (e.g., a generated UUID), you MUST use imperative style for that action. Mix functional and imperative via autoInterpret + override."
+        bad: |
+          // Cannot use a dynamic key with putFrom
+          p = putFrom(p, 'items', generatedId, (b) => record);
+        good: |
+          const baseHandler = autoInterpret(_handler);
+          const handler = { ...baseHandler,
+            async myAction(input, storage) {
+              const id = generateId();
+              await storage.put('items', id, record);
+              return { variant: 'ok', item: id };
+            },
+          };
+      - title: "Actions requiring stateful engine calls"
+        description: "If an action needs to call methods on a stateful class instance (e.g. SyncEngine, Parser), it cannot be expressed as a pure StorageProgram. Use imperative style for those specific actions while keeping other actions functional."
 
   # ─── StorageAdapterScaffoldGen: create-storage-adapter ─
   create-storage-adapter:
