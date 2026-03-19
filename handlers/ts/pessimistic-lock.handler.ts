@@ -13,7 +13,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, del, delFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -27,7 +27,6 @@ function nextId(): string {
 
 /**
  * Check whether a lock has expired based on its expires timestamp.
- * Returns true if the lock is past its expiry time.
  */
 function isExpired(expiresIso: string | null | undefined): boolean {
   if (!expiresIso) return false;
@@ -43,31 +42,84 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'pessimistic-lock', { resource }, 'existing');
+    p = find(p, 'pessimistic-lock-queue', { resource }, 'queueRecords');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    // Compute the action to take
+    p = mapBindings(p, (bindings) => {
       const existing = bindings.existing as Record<string, unknown>[];
+      const queueRecords = bindings.queueRecords as Record<string, unknown>[];
       const activeLock = existing.find((lock) => !isExpired(lock.expires as string | null));
 
       if (activeLock) {
         if (activeLock.holder === holder) {
-          return { lockId: activeLock.id as string };
+          return { action: 'existingLock', lockId: activeLock.id as string };
         }
-
+        const alreadyQueued = queueRecords.find((q) => q.requester === holder);
+        if (!alreadyQueued) {
+          return { action: 'enqueue', position: queueRecords.length + 1 };
+        }
         return {
-          variant: 'alreadyLocked',
+          action: 'alreadyLocked',
           holder: activeLock.holder as string,
           expires: (activeLock.expires as string | null) ?? undefined,
         };
       }
 
-      const lockId = nextId();
-      const acquired = new Date().toISOString();
-      const expires = duration
-        ? new Date(Date.now() + duration * 1000).toISOString()
-        : null;
+      return { action: 'grant' };
+    }, 'decision');
 
-      return { lockId };
-    }) as StorageProgram<Result>;
+    // Enqueue if needed
+    p = branch(p,
+      (bindings) => (bindings.decision as Record<string, unknown>).action === 'enqueue',
+      (bp) => {
+        const queueId = `queue-${nextId()}`;
+        const bp2 = put(bp, 'pessimistic-lock-queue', queueId, {
+          id: queueId, resource, requester: holder,
+          requested: new Date().toISOString(),
+        });
+        return completeFrom(bp2, 'queued', (bindings) => ({
+          position: (bindings.decision as Record<string, unknown>).position as number,
+        }));
+      },
+      (bp) => branch(bp,
+        (bindings) => (bindings.decision as Record<string, unknown>).action === 'existingLock',
+        (bp2) => completeFrom(bp2, 'ok', (bindings) => ({
+          lockId: (bindings.decision as Record<string, unknown>).lockId as string,
+        })),
+        (bp2) => branch(bp2,
+          (bindings) => (bindings.decision as Record<string, unknown>).action === 'alreadyLocked',
+          (bp3) => completeFrom(bp3, 'alreadyLocked', (bindings) => {
+            const d = bindings.decision as Record<string, unknown>;
+            return { holder: d.holder as string, expires: d.expires };
+          }),
+          (bp3) => {
+            // Grant the lock
+            const lockId = nextId();
+            const acquired = new Date().toISOString();
+            const expires = duration
+              ? new Date(Date.now() + duration * 1000).toISOString()
+              : null;
+
+            let bp4 = put(bp3, 'pessimistic-lock', lockId, {
+              id: lockId, resource, holder, acquired, expires,
+              reason: reason ?? null,
+            });
+
+            // Remove holder from queue if they were queued
+            bp4 = find(bp4, 'pessimistic-lock-queue', { resource, requester: holder }, 'holderQueueRecords');
+            bp4 = delFrom(bp4, 'pessimistic-lock-queue', (bindings) => {
+              const qrs = bindings.holderQueueRecords as Record<string, unknown>[];
+              if (qrs.length > 0) return qrs[0].id as string;
+              return '__nonexistent__';
+            });
+
+            return complete(bp4, 'ok', { lockId });
+          },
+        ),
+      ),
+    ) as StorageProgram<Result>;
+
+    return p as StorageProgram<Result>;
   },
 
   checkIn(input: Record<string, unknown>) {
@@ -114,15 +166,26 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.lock,
       (bp) => complete(bp, 'notFound', { message: `Lock "${lockId}" not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const lock = bindings.lock as Record<string, unknown>;
-        const currentExpires = lock.expires
-          ? new Date(lock.expires as string).getTime()
-          : Date.now();
-        const base = Math.max(currentExpires, Date.now());
-        const newExpires = new Date(base + additionalDuration * 1000).toISOString();
-        return { newExpires };
-      }),
+      (bp) => {
+        const bp2 = putFrom(bp, 'pessimistic-lock', lockId, (bindings) => {
+          const lock = bindings.lock as Record<string, unknown>;
+          const currentExpires = lock.expires
+            ? new Date(lock.expires as string).getTime()
+            : Date.now();
+          const base = Math.max(currentExpires, Date.now());
+          const newExpires = new Date(base + additionalDuration * 1000).toISOString();
+          return { ...lock, expires: newExpires };
+        });
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const lock = bindings.lock as Record<string, unknown>;
+          const currentExpires = lock.expires
+            ? new Date(lock.expires as string).getTime()
+            : Date.now();
+          const base = Math.max(currentExpires, Date.now());
+          const newExpires = new Date(base + additionalDuration * 1000).toISOString();
+          return { newExpires };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 

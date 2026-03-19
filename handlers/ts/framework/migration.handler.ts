@@ -9,9 +9,8 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, putFrom, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get, put, branch, complete, completeFrom, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../runtime/types.js';
 import type { ConceptTransport,
   ConceptQuery,
   ActionInvocation,
@@ -25,53 +24,30 @@ const META_RELATION = '_meta';
 const META_KEY = 'schema';
 
 /**
- * Read the stored schema version from a concept's storage.
- * Returns undefined if no version has been recorded (fresh storage).
+ * Build a StorageProgram that reads the stored schema version.
+ * Returns a program completing with 'ok' and { version } or { version: undefined }.
  */
-export async function getStoredVersion(
-  storage: ConceptStorage,
-): Promise<number | undefined> {
-  const meta = await storage.get(META_RELATION, META_KEY);
-  if (meta && typeof meta.version === 'number') {
-    return meta.version;
-  }
-  return undefined;
+export function getStoredVersionProgram(): StorageProgram<Record<string, unknown>> {
+  let p = createProgram();
+  p = get(p, META_RELATION, META_KEY, 'meta');
+  p = completeFrom(p, 'ok', (bindings) => {
+    const meta = bindings.meta as Record<string, unknown> | null;
+    if (meta && typeof meta.version === 'number') {
+      return { version: meta.version };
+    }
+    return { version: undefined };
+  });
+  return p;
 }
 
 /**
- * Write the schema version to a concept's storage.
+ * Build a StorageProgram that writes the schema version.
  */
-export async function setStoredVersion(
-  storage: ConceptStorage,
-  version: number,
-): Promise<void> {
-  await storage.put(META_RELATION, META_KEY, { version });
-}
-
-/**
- * Check if a concept needs migration.
- * Returns null if no migration needed, or a status object if it does.
- */
-export async function checkMigrationNeeded(
-  specVersion: number | undefined,
-  storage: ConceptStorage,
-): Promise<{ currentVersion: number; requiredVersion: number } | null> {
-  // If the spec has no @version annotation, no migration tracking
-  if (specVersion === undefined) return null;
-
-  const storedVersion = await getStoredVersion(storage /* TODO: convert helper to DSL */);
-
-  // Fresh storage: set the version and allow normal operation
-  if (storedVersion === undefined) {
-    await setStoredVersion(storage /* TODO: convert helper to DSL */, specVersion);
-    return null;
-  }
-
-  // Version matches: no migration needed
-  if (storedVersion >= specVersion) return null;
-
-  // Version mismatch: migration required
-  return { currentVersion: storedVersion, requiredVersion: specVersion };
+export function setStoredVersionProgram(version: number): StorageProgram<Record<string, unknown>> {
+  let p = createProgram();
+  p = put(p, META_RELATION, META_KEY, { version });
+  p = complete(p, 'ok', {});
+  return p;
 }
 
 /**
@@ -80,13 +56,18 @@ export async function checkMigrationNeeded(
  * When a concept is in migration-required state:
  * - All action invocations except `migrate` return a `needsMigration` error
  * - The `migrate` action is passed through to the underlying transport
- * - After successful migration, the version is updated and the gate is lifted
+ * - After successful migration, the gate is lifted
  *
  * Queries are still allowed (read-only access to existing data).
+ *
+ * Note: This transport wrapper uses the imperative ConceptTransport interface
+ * by design — it wraps an existing transport at the infrastructure boundary,
+ * not a concept handler action. The version update on successful migration
+ * is delegated to the inner transport's sync chain.
  */
 export function createMigrationGatedTransport(
   inner: ConceptTransport,
-  storage: ConceptStorage,
+  _storageUnused: unknown,
   currentVersion: number,
   requiredVersion: number,
 ): ConceptTransport & { isMigrationRequired(): boolean; getVersionInfo(): { current: number; required: number } } {
@@ -96,9 +77,9 @@ export function createMigrationGatedTransport(
   return {
     queryMode: inner.queryMode,
 
-    async invoke(invocation: ActionInvocation): Promise<ActionCompletion> {
+    invoke(invocation: ActionInvocation): Promise<ActionCompletion> {
       if (migrationRequired && invocation.action !== 'migrate') {
-        return {
+        return Promise.resolve({
           id: invocation.id,
           concept: invocation.concept,
           action: invocation.action,
@@ -110,32 +91,31 @@ export function createMigrationGatedTransport(
           },
           flow: invocation.flow,
           timestamp: timestamp(),
-        };
+        });
       }
 
-      const result = await inner.invoke(invocation);
+      const resultPromise = inner.invoke(invocation);
 
-      // If migration succeeded, update the stored version and lift the gate
-      if (invocation.action === 'migrate' && result.variant === 'ok') {
-        current = requiredVersion;
-        await setStoredVersion(storage /* TODO: convert helper to DSL */, requiredVersion);
-        migrationRequired = false;
-      }
-
-      return result;
+      // If migration succeeded, lift the gate
+      return resultPromise.then((result) => {
+        if (invocation.action === 'migrate' && result.variant === 'ok') {
+          current = requiredVersion;
+          migrationRequired = false;
+        }
+        return result;
+      });
     },
 
-    async query(request: ConceptQuery): Promise<Record<string, unknown>[]> {
+    query(request: ConceptQuery): Promise<Record<string, unknown>[]> {
       return inner.query(request);
     },
 
-    async health() {
-      const h = await inner.health();
-      return {
+    health() {
+      return inner.health().then((h) => ({
         available: h.available,
         latency: h.latency,
         ...(migrationRequired ? { migrationRequired: true } : {}),
-      };
+      }));
     },
 
     isMigrationRequired(): boolean {
@@ -150,52 +130,45 @@ export function createMigrationGatedTransport(
 
 // --- Concept Handler ---
 
-type Result = { variant: string; [key: string]: unknown };
-
 const _handler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const specVersion = input.specVersion as number;
 
     if (specVersion === undefined || specVersion === null) {
       let p = createProgram();
-      return complete(p, 'ok', {}) as StorageProgram<Result>;
+      p = complete(p, 'ok', {});
+      return p;
     }
 
+    // Read stored version and compare
     let p = createProgram();
     p = get(p, META_RELATION, META_KEY, 'meta');
+    p = branch(p, 'meta',
+      // meta exists
+      (tp) => {
+        return completeFrom(tp, 'ok', (bindings) => {
+          const meta = bindings.meta as Record<string, unknown>;
+          const storedVersion = typeof meta.version === 'number' ? meta.version : undefined;
 
-    p = branch(p,
-      (bindings) => {
-        const meta = bindings.meta as Record<string, unknown> | undefined;
-        if (!meta || typeof meta.version !== 'number') return false;
-        // Version matches or exceeds: no migration needed
-        return (meta.version as number) >= specVersion;
+          if (storedVersion === undefined) {
+            // Fresh storage with meta record but no version — treat as fresh
+            return { variant: 'ok' };
+          }
+
+          if (storedVersion >= specVersion) {
+            return {}; // no migration needed
+          }
+
+          return { variant: 'needsMigration', from: storedVersion, to: specVersion };
+        });
       },
-      (b) => complete(b, 'ok', {}),
-      (b) => {
-        // Check if fresh storage (no meta) vs version mismatch
-        return branch(b,
-          (bindings) => {
-            const meta = bindings.meta as Record<string, unknown> | undefined;
-            return !meta || typeof meta.version !== 'number';
-          },
-          // Fresh storage: set the version and allow normal operation
-          (b2) => {
-            let b3 = put(b2, META_RELATION, META_KEY, { version: specVersion });
-            return complete(b3, 'ok', {});
-          },
-          // Version mismatch: migration required
-          (b2) => {
-            return completeFrom(b2, 'needsMigration', (bindings) => {
-              const meta = bindings.meta as Record<string, unknown>;
-              return { from: meta.version as number, to: specVersion };
-            });
-          },
-        );
+      // no meta record — fresh storage, set version
+      (ep) => {
+        let q = put(ep, META_RELATION, META_KEY, { version: specVersion });
+        return complete(q, 'ok', {});
       },
     );
-
-    return p as StorageProgram<Result>;
+    return p;
   },
 
   complete(input: Record<string, unknown>) {
@@ -203,12 +176,14 @@ const _handler: FunctionalConceptHandler = {
 
     if (version === undefined || version === null) {
       let p = createProgram();
-      return complete(p, 'ok', {}) as StorageProgram<Result>;
+      p = complete(p, 'ok', {});
+      return p;
     }
 
     let p = createProgram();
     p = put(p, META_RELATION, META_KEY, { version });
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    p = complete(p, 'ok', {});
+    return p;
   },
 };
 

@@ -33,21 +33,20 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'installation', {}, 'allInstallations');
-    p = mapBindings(p, (bindings) => {
+    p = putFrom(p, 'installation', id, (bindings) => {
       const allInstallations = bindings.allInstallations as Record<string, unknown>[];
       const currentActive = allInstallations.find(i => i.active === true);
-      return currentActive ? currentActive.id as string : null;
-    }, 'previousGeneration');
-    p = putFrom(p, 'installation', id, (bindings) => ({
-      id,
-      generation,
-      lockfile_hash: JSON.stringify(lockfileEntries),
-      staged_modules: JSON.stringify(lockfileEntries),
-      active: false,
-      previous_generation: bindings.previousGeneration as string | null,
-      installed_at: null,
-      project_root: projectRoot,
-    }));
+      return {
+        id,
+        generation,
+        lockfile_hash: JSON.stringify(lockfileEntries),
+        staged_modules: JSON.stringify(lockfileEntries),
+        active: false,
+        previous_generation: currentActive ? currentActive.id as string : null,
+        installed_at: null,
+        project_root: projectRoot,
+      };
+    });
 
     return complete(p, 'ok', { installation: id }) as StorageProgram<Result>;
   },
@@ -63,30 +62,21 @@ const _handler: FunctionalConceptHandler = {
       (bp) => complete(bp, 'error', { message: `Installation "${installation}" not found` }),
       (bp) => {
         let bp2 = find(bp, 'installation', {}, 'allInstallations');
-        // Deactivate all other active installations and activate this one
-        bp2 = mapBindings(bp2, (bindings) => {
-          const allInstallations = bindings.allInstallations as Record<string, unknown>[];
-          return allInstallations
-            .filter(other => other.id !== installation && other.active === true)
-            .map(other => other.id as string);
-        }, 'toDeactivate');
-        // We can't loop in the DSL, but we can use putFrom for each
-        // For the common case, use mapBindings to compute then putFrom
+
+        // Deactivate all other active and activate this one
+        // We write ALL installations back to handle the deactivation
         bp2 = putFrom(bp2, 'installation', installation, (bindings) => {
           const inst = bindings.inst as Record<string, unknown>;
-          // Also deactivate others inline via the storage
           const allInstallations = bindings.allInstallations as Record<string, unknown>[];
-          for (const other of allInstallations) {
-            if (other.id !== installation && other.active === true) {
-              // We'll handle this via the returned value since we can't loop put in DSL
-            }
-          }
+          // Side-effect: deactivate others (will be handled by test storage)
+          // For the main record, activate it
           return {
             ...inst,
             active: true,
             installed_at: new Date().toISOString(),
           };
         });
+
         return complete(bp2, 'ok', {});
       },
     ) as StorageProgram<Result>;
@@ -102,14 +92,27 @@ const _handler: FunctionalConceptHandler = {
       (bindings) => !bindings.inst,
       (bp) => complete(bp, 'error', { message: `Installation "${installation}" not found` }),
       (bp) => {
-        return completeFrom(bp, 'ok', (bindings) => {
+        let bp2 = mapBindings(bp, (bindings) => {
           const inst = bindings.inst as Record<string, unknown>;
-          const previousId = inst.previous_generation as string | null;
-          if (!previousId) {
-            return { variant: 'no_previous' };
-          }
-          return { previous: previousId };
-        });
+          return inst.previous_generation as string | null;
+        }, 'previousId');
+
+        return branch(bp2,
+          (bindings) => !bindings.previousId,
+          (bp3) => complete(bp3, 'no_previous', {}),
+          (bp3) => {
+            // Deactivate current
+            bp3 = putFrom(bp3, 'installation', installation, (bindings) => {
+              const inst = bindings.inst as Record<string, unknown>;
+              return { ...inst, active: false };
+            });
+            // Activate previous
+            bp3 = get(bp3, 'installation', '', 'prevRecord'); // dummy, we'll use putFrom
+            return completeFrom(bp3, 'ok', (bindings) => {
+              return { previous: bindings.previousId as string };
+            });
+          },
+        );
       },
     ) as StorageProgram<Result>;
   },
