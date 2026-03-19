@@ -24,7 +24,10 @@ const _renderInterpreterReactHandler: FunctionalConceptHandler = {
   initialize(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'plugin-registry', { pluginKind: 'render-interpreter-provider', target: 'react' }, 'existing');
-    p = branch(p, 'existing',
+    p = branch(p, (bindings) => {
+        const existing = bindings.existing as unknown[];
+        return Array.isArray(existing) && existing.length > 0;
+      },
       (b) => complete(b, 'ok', { provider: PROVIDER_REF }),
       (b) => {
         const id = nextId();

@@ -47,7 +47,29 @@ function buildMachineImpl(config: ComponentConfig): string {
   const name = toPascal(config.name);
   const states = config.states || ['idle', 'active'];
   const parts = config.parts.length > 0 ? config.parts : ['root', 'trigger', 'content'];
-  return [`// ${name} Machine — state machine implementation`, '', "import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';", '', `// TODO: Implement ${name} machine handler`, ''].join('\n');
+  const stateEnum = states.map(s => `'${s}'`).join(' | ');
+  const partsList = parts.map(p => `'${p}'`).join(', ');
+  return [
+    `// ${name} Machine — state machine implementation`, '',
+    "import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';", '',
+    `export class ${name}Machine {`,
+    `  private state: ${stateEnum} = '${states[0]}';`,
+    `  private parts: string[] = [${partsList}];`, '',
+    '  async register(): Promise<void> {',
+    `    // Register ${name} machine in the component registry`,
+    '  }', '',
+    '  async spawn(id: string): Promise<void> {',
+    `    // Create a new ${name} instance`,
+    `    this.state = '${states[0]}';`,
+    '  }', '',
+    '  async send(event: string): Promise<void> {',
+    `    // Process event and transition state`,
+    '  }', '',
+    '  async connect(part: string, element: unknown): Promise<void> {',
+    `    // Connect a DOM element to a part`,
+    '  }',
+    '}', '',
+  ].join('\n');
 }
 
 const _handler: FunctionalConceptHandler = {

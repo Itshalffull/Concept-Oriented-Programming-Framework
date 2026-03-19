@@ -2,7 +2,7 @@
 // WidgetRegistry Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -37,7 +37,7 @@ const _widgetRegistryHandler: FunctionalConceptHandler = {
       filtered.sort((a: any, b: any) => (b.specificity as number) - (a.specificity as number));
       return filtered.length === 0 ? null : JSON.stringify(filtered.map((e: any) => ({ entry: e.entry, widget: e.widget, interactor: e.interactor, concept: e.concept, suite: e.suite, specificity: e.specificity, contractVersion: e.contractVersion, contractSlots: e.contractSlots, contractActions: e.contractActions, secondaryRoles: e.secondaryRoles })));
     }, 'entriesJson');
-    p = branch(p, 'entriesJson', (b) => complete(b, 'ok', { entries: '' }),
+    p = branch(p, 'entriesJson', (b) => completeFrom(b, 'ok', (bindings) => ({ entries: bindings.entriesJson as string })),
       (b) => complete(b, 'none', { message: 'No matching entity affordances found' }));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

@@ -16,16 +16,16 @@ interface ThemeConfig { name: string; primaryColor?: string; secondaryColor?: st
 
 function buildExpressiveThemeSpec(config: ThemeConfig): string {
   const primaryHue = config.primaryColor || '220';
-  return `{\n  "name": "${toKebab(config.name)}",\n  "colorSpace": { "algorithm": "oklch" }\n}\n`;
+  return JSON.stringify({ name: toKebab(config.name), colorSpace: { algorithm: 'oklch' }, structuralMotif: { default: 'sidebar' }, density: { mode: 'comfortable' } }, null, 2) + '\n';
 }
 
 function buildThemeJson(config: ThemeConfig, mode: 'light' | 'dark'): string {
   return JSON.stringify({ name: `${config.name}-${mode}`, mode, tokens: { colors: { primary: config.primaryColor || '#3b82f6', background: mode === 'light' ? '#ffffff' : '#111827' } } }, null, 2) + '\n';
 }
 
-function buildPaletteConfig(config: ThemeConfig): string { return JSON.stringify({ palettes: { primary: { seed: config.primaryColor || '220' } } }, null, 2) + '\n'; }
-function buildTypographyConfig(config: ThemeConfig): string { return JSON.stringify({ fontFamilies: { sans: config.fontFamily || 'system-ui, sans-serif' }, scale: { ratio: config.scale || 1.25, base: `${config.baseSize || 16}px` } }, null, 2) + '\n'; }
-function buildMotionConfig(): string { return JSON.stringify({ durations: { fast: '100ms', normal: '200ms', slow: '300ms' } }, null, 2) + '\n'; }
+function buildPaletteConfig(config: ThemeConfig): string { return JSON.stringify({ palettes: { primary: { seed: config.primaryColor || '220' } }, contrast: { minimumRatio: 4.5 } }, null, 2) + '\n'; }
+function buildTypographyConfig(config: ThemeConfig): string { return JSON.stringify({ fontFamilies: { sans: config.fontFamily || 'system-ui, sans-serif' }, scale: { ratio: config.scale || 1.25, base: `${config.baseSize || 16}px` }, presets: { 'heading-1': { fontSize: '2rem', fontWeight: 700, lineHeight: 1.2 }, 'heading-2': { fontSize: '1.5rem', fontWeight: 600, lineHeight: 1.3 }, 'body': { fontSize: '1rem', fontWeight: 400, lineHeight: 1.5 } } }, null, 2) + '\n'; }
+function buildMotionConfig(): string { return JSON.stringify({ durations: { fast: '100ms', normal: '200ms', slow: '300ms' }, reducedMotion: { respectPreference: true } }, null, 2) + '\n'; }
 function buildElevationConfig(): string { return JSON.stringify({ scale: { 0: { shadow: 'none' }, 1: { shadow: '0 1px 2px 0 rgba(0,0,0,0.05)' } } }, null, 2) + '\n'; }
 function buildThemeSuiteYaml(config: ThemeConfig): string { const kebab = toKebab(config.name); return ['suite:', `  name: theme-${kebab}`, '  version: 0.1.0', '  description: >', `    ${config.name} design system theme.`, '', 'dependencies:', '  - surface-core: ">=0.1.0"', '  - surface-theme: ">=0.1.0"', ''].join('\n'); }
 

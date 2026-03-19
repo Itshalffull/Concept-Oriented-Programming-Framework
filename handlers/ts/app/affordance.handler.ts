@@ -4,7 +4,7 @@
 // Supports field-level and entity-level matching, including density and motif metadata.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -68,8 +68,35 @@ const _affordanceHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'affordance', interactor as unknown as Record<string, unknown>, 'results');
-    // Filtering by interactor, conditions matching, sorting by specificity handled at runtime
-    return complete(p, 'ok', { matches: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = mapBindings(p, (bindings) => {
+      const allAffordances = Array.isArray(bindings.results) ? bindings.results : [];
+      const parsedContext = JSON.parse(context || '{}');
+
+      const matched = allAffordances.filter((aff: any) => {
+        if (aff.__deleted) return false;
+        if (aff.interactor !== interactor) return false;
+        const conditions = JSON.parse((aff.conditions as string) || '{}');
+        if (parsedContext.concept && conditions.concept && conditions.concept !== parsedContext.concept) return false;
+        if (parsedContext.suite && conditions.suite && conditions.suite !== parsedContext.suite) return false;
+        if (parsedContext.platform && conditions.platform && conditions.platform !== parsedContext.platform) return false;
+        if (parsedContext.density && conditions.density && conditions.density !== parsedContext.density) return false;
+        return true;
+      });
+
+      matched.sort((a: any, b: any) => ((b.specificity as number) || 0) - ((a.specificity as number) || 0));
+
+      return JSON.stringify(matched.map((aff: any) => ({
+        affordance: aff.affordance,
+        widget: aff.widget,
+        interactor: aff.interactor,
+        specificity: aff.specificity,
+        conditions: aff.conditions,
+        bind: aff.bind,
+      })));
+    }, 'matchedJson');
+    return completeFrom(p, 'ok', (bindings) => ({
+      matches: bindings.matchedJson as string,
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   explain(input: Record<string, unknown>) {

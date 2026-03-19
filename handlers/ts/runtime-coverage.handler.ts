@@ -11,8 +11,9 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../runtime/types.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings, putFrom, mergeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -25,45 +26,31 @@ function nextId(): string {
 }
 
 const _handler: FunctionalConceptHandler = {
-  record(input: Record<string, unknown>) {
-    const symbol = input.symbol as string;
-    const kind = input.kind as string;
-    const flowId = input.flowId as string;
-
-    const now = new Date().toISOString();
-
-    let p = createProgram();
-    p = find(p, 'runtime-coverage', { symbol }, 'existing');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-
-      if (existing.length > 0) {
-        const entry = existing[0];
-        const id = entry.id as string;
-        return { variant: 'ok', entry: id };
-      }
-
-      const id = nextId();
-      return { variant: 'created', entry: id };
-    }) as StorageProgram<Result>;
-  },
-
   coverageReport(input: Record<string, unknown>) {
     const kind = input.kind as string;
     const since = input.since as string;
 
+    // Map kind to entity relation name
+    const entityRelation = kind === 'action' ? 'action-entity'
+      : kind === 'variant' ? 'variant-entity'
+      : kind === 'sync' ? 'sync-entity'
+      : kind === 'widget-state' ? 'widget-state-entity'
+      : kind === 'state-field' ? 'state-field'
+      : 'action-entity';
+
     let p = createProgram();
+    p = find(p, entityRelation, {}, 'allEntities');
     p = find(p, 'runtime-coverage', { entityKind: kind }, 'entries');
 
     return completeFrom(p, 'ok', (bindings) => {
+      const allEntities = bindings.allEntities as Record<string, unknown>[];
       const entries = bindings.entries as Record<string, unknown>[];
       const filtered = since && since !== ''
         ? entries.filter((e) => (e.lastExercised as string) >= since)
         : entries;
 
       const exercised = filtered.length;
-      const totalEntities = entries.length;
+      const totalEntities = allEntities.length;
       const unexercised = Math.max(0, totalEntities - exercised);
       const coveragePct = totalEntities > 0
         ? parseFloat(((exercised / totalEntities) * 100).toFixed(2))
@@ -350,7 +337,54 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const runtimeCoverageHandler = autoInterpret(_handler);
+const baseHandler = autoInterpret(_handler);
+
+// record needs imperative style because it requires dynamic storage keys
+const handler = {
+  ...baseHandler,
+
+  async record(input: Record<string, unknown>, storage: ConceptStorage) {
+    const symbol = input.symbol as string;
+    const kind = input.kind as string;
+    const flowId = input.flowId as string;
+    const now = new Date().toISOString();
+
+    const existing = await storage.find('runtime-coverage', { symbol });
+    if (existing && existing.length > 0) {
+      const entry = existing[0];
+      const id = entry.id as string;
+      const prevCount = (entry.executionCount as number) || 0;
+      const prevFlowIds = JSON.parse(entry.flowIds as string || '[]');
+      prevFlowIds.push(flowId);
+      const record = {
+        id,
+        symbol,
+        entitySymbol: symbol,
+        entityKind: kind,
+        executionCount: prevCount + 1,
+        flowIds: JSON.stringify(prevFlowIds),
+        lastExercised: now,
+      };
+      await storage.put('runtime-coverage', id, record);
+      return { variant: 'ok', entry: id };
+    }
+
+    const id = nextId();
+    const record = {
+      id,
+      symbol,
+      entitySymbol: symbol,
+      entityKind: kind,
+      executionCount: 1,
+      flowIds: JSON.stringify([flowId]),
+      lastExercised: now,
+    };
+    await storage.put('runtime-coverage', id, record);
+    return { variant: 'created', entry: id };
+  },
+} as any;
+
+export const runtimeCoverageHandler = handler;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRuntimeCoverageCounter(): void {

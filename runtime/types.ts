@@ -470,6 +470,8 @@ export interface DerivedAST {
   purpose?: string;
   /** Concepts and derived concepts that participate in this composition. */
   composes: ComposesEntry[];
+  /** Concepts/modules referenced but not composed (dependency imports). */
+  uses?: ComposesEntry[];
   /** Sync files claimed by this derived concept (defines the runtime boundary). */
   syncs: { required: string[]; recommended?: string[] };
   /** Surface declarations — actions and queries. */

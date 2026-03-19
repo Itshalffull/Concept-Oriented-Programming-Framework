@@ -3257,6 +3257,9 @@ workflows:
         - "Each action extracts input parameters with correct types?"
         - "Each action returns all declared variants?"
         - "Storage operations use correct relation names?"
+        - "No bindAs names referenced as JavaScript variables (must use bindings lambdas)?"
+        - "All storage-dependent values use *From variants (putFrom, mergeFrom, completeFrom)?"
+        - "All conditionals on storage data use branch() with bindings lambda (not if/else)?"
         - "Error handling catches and wraps exceptions?"
         - "Conformance test covers register() and each action?"
         - "All files written through Emitter (not directly to disk)?"
@@ -3420,6 +3423,7 @@ workflows:
           | list T | T[] |
           | set T | Map<string, T> |
           | option T | T \| undefined |
+    supplemental-steps:
       - action: test-gen
         title: "Generate Tests from Invariants"
         prose: >

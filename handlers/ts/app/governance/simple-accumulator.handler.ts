@@ -3,7 +3,7 @@
 // Add/subtract reputation with optional per-period decay and configurable cap.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -45,10 +45,10 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
       return newScore;
     }, 'newScore');
 
-    p = put(p, 'acc_score', key, {
-      config, participant, score: 0,
+    p = putFrom(p, 'acc_score', key, (bindings) => ({
+      config, participant, score: bindings.newScore as number,
       updatedAt: new Date().toISOString(),
-    });
+    }));
 
     return completeFrom(p, 'added', (bindings) => {
       return { participant, newScore: bindings.newScore };
@@ -77,10 +77,10 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
           return { newScore: currentScore * (1 - decayRate), previousScore: currentScore };
         }, 'decayResult');
 
-        let b2 = put(b, 'acc_score', key, {
-          config, participant, score: 0,
+        let b2 = putFrom(b, 'acc_score', key, (bindings) => ({
+          config, participant, score: (bindings.decayResult as Record<string, unknown>).newScore as number,
           updatedAt: new Date().toISOString(),
-        });
+        }));
 
         return completeFrom(b2, 'decayed', (bindings) => {
           const result = bindings.decayResult as Record<string, unknown>;

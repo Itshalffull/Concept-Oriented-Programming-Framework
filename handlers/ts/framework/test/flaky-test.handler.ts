@@ -65,11 +65,11 @@ const _handler: FunctionalConceptHandler = {
     const passed = input.passed as boolean;
     const duration = input.duration as number;
 
-    const testKey = `${testId}:${language}:${testType}`;
-    p = get(p, TESTS, testKey, 'existing');
+    p = get(p, TESTS, testId, 'existing');
     p = get(p, POLICY, 'current', 'storedPolicy');
 
-    return completeFrom(p, '_deferred_record', (bindings) => {
+    // Compute record data, flip counting, and flaky threshold check
+    p = mapBindings(p, (bindings) => {
       const existing = bindings.existing as Record<string, unknown> | null;
       const policy = resolvePolicy(bindings.storedPolicy as Record<string, unknown> | null);
       const now = new Date().toISOString();
@@ -145,22 +145,37 @@ const _handler: FunctionalConceptHandler = {
         record.reason = `Auto-quarantined: ${windowFlipCount} flips in ${policy.flipWindow}`;
       }
 
-      if (windowFlipCount >= policy.flipThreshold) {
-        return {
-          variant: 'flakyDetected',
-          _puts: [{ rel: TESTS, key: testKey, value: record }],
-          test: testRef,
-          flipCount: windowFlipCount,
-          recentResults: results.map(r => r.passed),
-        };
-      }
-
       return {
-        variant: 'ok',
-        _puts: [{ rel: TESTS, key: testKey, value: record }],
-        test: testRef,
+        record,
+        testRef,
+        windowFlipCount,
+        flakyThresholdExceeded: windowFlipCount >= policy.flipThreshold,
+        recentResults: results.map(r => r.passed),
       };
-    }) as StorageProgram<Result>;
+    }, 'computed');
+
+    // Write the record to storage
+    p = putFrom(p, TESTS, testId, (bindings) => {
+      const computed = bindings.computed as { record: Record<string, unknown> };
+      return computed.record;
+    });
+
+    // Branch on whether flaky threshold exceeded
+    return branch(
+      p,
+      (bindings) => {
+        const computed = bindings.computed as { flakyThresholdExceeded: boolean };
+        return computed.flakyThresholdExceeded;
+      },
+      (tp) => completeFrom(tp, 'flakyDetected', (bindings) => {
+        const computed = bindings.computed as { testRef: string; windowFlipCount: number; recentResults: boolean[] };
+        return { test: computed.testRef, flipCount: computed.windowFlipCount, recentResults: computed.recentResults };
+      }),
+      (ep) => completeFrom(ep, 'ok', (bindings) => {
+        const computed = bindings.computed as { testRef: string };
+        return { test: computed.testRef };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   quarantine(input: Record<string, unknown>) {
@@ -169,36 +184,67 @@ const _handler: FunctionalConceptHandler = {
     const reasonText = input.reason as string;
     const owner = input.owner as string | undefined;
 
-    // Find the test record across all languages
+    // Find the test record
     p = find(p, TESTS, { testId }, 'allTests');
 
-    return completeFrom(p, '_deferred_quarantine', (bindings) => {
+    // Compute: found test, already quarantined, and updated record
+    p = mapBindings(p, (bindings) => {
       const allTests = bindings.allTests as Array<Record<string, unknown>>;
       if (!allTests || allTests.length === 0) {
-        return { variant: 'notFound', testId };
+        return { found: false, alreadyQuarantined: false, testRef: null, updatedRecord: null };
       }
-
       const test = allTests[0];
-      if (test.quarantined as boolean) {
-        return { variant: 'alreadyQuarantined', test: test.id as string };
-      }
-
-      const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
+      const isQuarantined = test.quarantined as boolean;
       const now = new Date().toISOString();
-
       return {
-        variant: 'ok',
-        _puts: [{ rel: TESTS, key: testKey, value: {
+        found: true,
+        alreadyQuarantined: isQuarantined,
+        testRef: test.id as string,
+        updatedRecord: {
           ...test,
           quarantined: true,
           quarantinedAt: now,
           quarantinedBy: owner || 'manual',
           reason: reasonText,
           owner: owner || null,
-        }}],
-        test: test.id as string,
+        },
       };
-    }) as StorageProgram<Result>;
+    }, 'computed');
+
+    // Branch: not found -> 'notFound'
+    return branch(
+      p,
+      (bindings) => {
+        const computed = bindings.computed as { found: boolean };
+        return !computed.found;
+      },
+      // Not found
+      (tp) => complete(tp, 'notFound', { testId } as Record<string, unknown>),
+      // Found — check if already quarantined
+      (ep) => branch(
+        ep,
+        (bindings) => {
+          const computed = bindings.computed as { alreadyQuarantined: boolean };
+          return computed.alreadyQuarantined;
+        },
+        // Already quarantined
+        (tp2) => completeFrom(tp2, 'alreadyQuarantined', (bindings) => {
+          const computed = bindings.computed as { testRef: string };
+          return { test: computed.testRef };
+        }),
+        // Not quarantined — write updated record, then complete with 'ok'
+        (ep2) => {
+          let q = putFrom(ep2, TESTS, testId, (bindings) => {
+            const computed = bindings.computed as { updatedRecord: Record<string, unknown> };
+            return computed.updatedRecord;
+          });
+          return completeFrom(q, 'ok', (bindings) => {
+            const computed = bindings.computed as { testRef: string };
+            return { test: computed.testRef };
+          });
+        },
+      ),
+    ) as StorageProgram<Result>;
   },
 
   release(input: Record<string, unknown>) {
@@ -207,31 +253,61 @@ const _handler: FunctionalConceptHandler = {
 
     p = find(p, TESTS, { testId }, 'allTests');
 
-    return completeFrom(p, '_deferred_release', (bindings) => {
+    // Compute: found test, is quarantined
+    p = mapBindings(p, (bindings) => {
       const allTests = bindings.allTests as Array<Record<string, unknown>>;
       if (!allTests || allTests.length === 0) {
-        return { variant: 'notQuarantined', test: testId };
+        return { found: false, isQuarantined: false, testRef: null, releasedRecord: null };
       }
-
       const test = allTests[0];
-      if (!(test.quarantined as boolean)) {
-        return { variant: 'notQuarantined', test: test.id as string };
-      }
-
-      const testKey = `${testId}:${test.language as string}:${(test.testType as string) || 'unit'}`;
-
       return {
-        variant: 'ok',
-        _puts: [{ rel: TESTS, key: testKey, value: {
+        found: true,
+        isQuarantined: test.quarantined as boolean,
+        testRef: test.id as string,
+        releasedRecord: {
           ...test,
           quarantined: false,
           quarantinedAt: null,
           quarantinedBy: null,
           reason: null,
-        }}],
-        test: test.id as string,
+        },
       };
-    }) as StorageProgram<Result>;
+    }, 'computed');
+
+    // Branch: not found -> 'notQuarantined'
+    return branch(
+      p,
+      (bindings) => {
+        const computed = bindings.computed as { found: boolean };
+        return !computed.found;
+      },
+      // Not found
+      (tp) => complete(tp, 'notQuarantined', { test: testId } as Record<string, unknown>),
+      // Found — check if quarantined
+      (ep) => branch(
+        ep,
+        (bindings) => {
+          const computed = bindings.computed as { isQuarantined: boolean };
+          return !computed.isQuarantined;
+        },
+        // Not quarantined
+        (tp2) => completeFrom(tp2, 'notQuarantined', (bindings) => {
+          const computed = bindings.computed as { testRef: string };
+          return { test: computed.testRef };
+        }),
+        // Quarantined — clear quarantine, then complete with 'ok'
+        (ep2) => {
+          let q = putFrom(ep2, TESTS, testId, (bindings) => {
+            const computed = bindings.computed as { releasedRecord: Record<string, unknown> };
+            return computed.releasedRecord;
+          });
+          return completeFrom(q, 'ok', (bindings) => {
+            const computed = bindings.computed as { testRef: string };
+            return { test: computed.testRef };
+          });
+        },
+      ),
+    ) as StorageProgram<Result>;
   },
 
   isQuarantined(input: Record<string, unknown>) {
@@ -240,25 +316,51 @@ const _handler: FunctionalConceptHandler = {
 
     p = find(p, TESTS, { testId }, 'allTests');
 
-    return completeFrom(p, '_deferred_isQuarantined', (bindings) => {
+    // Compute: found, quarantine status
+    p = mapBindings(p, (bindings) => {
       const allTests = bindings.allTests as Array<Record<string, unknown>>;
       if (!allTests || allTests.length === 0) {
-        return { variant: 'unknown', testId };
+        return { found: false, quarantined: false, testRef: null, reason: null, owner: null, quarantinedAt: null };
       }
-
       const test = allTests[0];
-      if (test.quarantined as boolean) {
-        return {
-          variant: 'yes',
-          test: test.id as string,
-          reason: test.reason as string,
-          owner: test.owner as string | null,
-          quarantinedAt: test.quarantinedAt as string,
-        };
-      }
+      return {
+        found: true,
+        quarantined: test.quarantined as boolean,
+        testRef: test.id as string,
+        reason: test.reason as string,
+        owner: test.owner as string | null,
+        quarantinedAt: test.quarantinedAt as string,
+      };
+    }, 'computed');
 
-      return { variant: 'no', test: test.id as string };
-    }) as StorageProgram<Result>;
+    // Branch: not found -> 'unknown'
+    return branch(
+      p,
+      (bindings) => {
+        const computed = bindings.computed as { found: boolean };
+        return !computed.found;
+      },
+      // Not found
+      (tp) => complete(tp, 'unknown', { testId } as Record<string, unknown>),
+      // Found — check if quarantined
+      (ep) => branch(
+        ep,
+        (bindings) => {
+          const computed = bindings.computed as { quarantined: boolean };
+          return computed.quarantined;
+        },
+        // Quarantined
+        (tp2) => completeFrom(tp2, 'yes', (bindings) => {
+          const computed = bindings.computed as { testRef: string; reason: string; owner: string | null; quarantinedAt: string };
+          return { test: computed.testRef, reason: computed.reason, owner: computed.owner, quarantinedAt: computed.quarantinedAt };
+        }),
+        // Not quarantined
+        (ep2) => completeFrom(ep2, 'no', (bindings) => {
+          const computed = bindings.computed as { testRef: string };
+          return { test: computed.testRef };
+        }),
+      ),
+    ) as StorageProgram<Result>;
   },
 
   report(input: Record<string, unknown>) {
@@ -267,7 +369,7 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, TESTS, {}, 'allTests');
     p = get(p, POLICY, 'current', 'storedPolicy');
 
-    return completeFrom(p, '_deferred_report', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allTests = bindings.allTests as Array<Record<string, unknown>>;
       const policy = resolvePolicy(bindings.storedPolicy as Record<string, unknown> | null);
 
@@ -322,7 +424,6 @@ const _handler: FunctionalConceptHandler = {
       topFlaky.sort((a, b) => b.flipCount - a.flipCount);
 
       return {
-        variant: 'ok',
         summary: {
           totalTracked,
           currentlyFlaky,
@@ -338,21 +439,23 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, POLICY, 'current', 'storedPolicy');
 
-    return completeFrom(p, '_deferred_setPolicy', (bindings) => {
+    // Compute the new policy from existing + input overrides
+    p = mapBindings(p, (bindings) => {
       const existing = resolvePolicy(bindings.storedPolicy as Record<string, unknown> | null);
-
-      const newPolicy = {
+      return {
         flipThreshold: (input.flipThreshold as number) ?? existing.flipThreshold,
         flipWindow: (input.flipWindow as string) ?? existing.flipWindow,
         autoQuarantine: (input.autoQuarantine as boolean) ?? existing.autoQuarantine,
         retryCount: (input.retryCount as number) ?? existing.retryCount,
       };
+    }, 'newPolicy');
 
-      return {
-        variant: 'ok',
-        _puts: [{ rel: POLICY, key: 'current', value: newPolicy }],
-      };
-    }) as StorageProgram<Result>;
+    // Write the policy to storage
+    p = putFrom(p, POLICY, 'current', (bindings) => {
+      return bindings.newPolicy as Record<string, unknown>;
+    });
+
+    return complete(p, 'ok', {} as Record<string, unknown>) as StorageProgram<Result>;
   },
 };
 

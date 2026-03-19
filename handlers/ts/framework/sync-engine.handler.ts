@@ -14,6 +14,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import type { ConceptHandler } from '../../../runtime/types.js';
 import {
   createProgram, complete, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -211,6 +212,9 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
   const log = new ActionLog();
   const engine = new SyncEngine(log, registry);
 
+  // onCompletion and evaluateWhere require stateful engine calls that
+  // cannot be expressed as pure StorageProgram instructions. These use
+  // imperative style while registerSync uses functional style.
   const _functionalHandler: FunctionalConceptHandler = {
     registerSync(input: Record<string, unknown>) {
       const sync = input.sync as CompiledSync;
@@ -222,30 +226,35 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
       const p = createProgram();
       return complete(p, 'ok', {}) as StorageProgram<Result>;
     },
+  };
 
-    onCompletion(input: Record<string, unknown>) {
-      // Note: onCompletion requires engine evaluation which cannot
-      // be expressed as pure StorageProgram instructions. We return a
-      // program that completes with an empty invocations list. The actual
-      // engine evaluation happens via the DistributedSyncEngine class
-      // or the SyncEngine class directly.
-      const p = createProgram();
-      return complete(p, 'ok', { invocations: [] }) as StorageProgram<Result>;
+  const baseHandler = autoInterpret(_functionalHandler);
+
+  // Combine functional registerSync with imperative onCompletion/evaluateWhere
+  const handler: ConceptHandler & FunctionalConceptHandler & { [key: string]: unknown } = {
+    ...baseHandler,
+
+    async onCompletion(input: Record<string, unknown>, _storage?: unknown) {
+      const completion = input.completion as ActionCompletion;
+      const parentId = input.parentId as string | undefined;
+      if (!completion || !completion.id) {
+        return { variant: 'ok', invocations: [] };
+      }
+      const invocations = await engine.onCompletion(completion, parentId);
+      return { variant: 'ok', invocations };
     },
 
-    evaluateWhere(input: Record<string, unknown>) {
+    async evaluateWhere(input: Record<string, unknown>, _storage?: unknown) {
       const bindings = input.bindings as Binding;
       const queries = input.queries as CompiledSync['where'];
       if (!bindings || !queries) {
-        const p = createProgram();
-        return complete(p, 'error', { message: 'Missing bindings or queries' }) as StorageProgram<Result>;
+        return { variant: 'error', message: 'Missing bindings or queries' };
       }
-      const p = createProgram();
-      return complete(p, 'ok', { results: [] }) as StorageProgram<Result>;
+      const results = await evaluateWhere(queries, bindings, registry);
+      return { variant: 'ok', results };
     },
-  };
+  } as any;
 
-  const handler = autoInterpret(_functionalHandler);
   return { handler, engine, log };
 }
 

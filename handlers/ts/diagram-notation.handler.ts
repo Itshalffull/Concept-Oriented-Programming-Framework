@@ -9,7 +9,7 @@
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, putFrom, branch, complete, completeFrom,
-  type StorageProgram,
+  mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -79,24 +79,39 @@ const _handler: FunctionalConceptHandler = {
 
   addNodeType(input: Record<string, unknown>) {
     const notationId = input.notation as string;
+    const type_key = input.type_key as string;
+    const label = (input.label as string | undefined) ?? type_key;
+    const shape = (input.shape as string | undefined) ?? 'rectangle';
+    const default_fill = (input.default_fill as string | undefined) ?? null;
+    const default_stroke = (input.default_stroke as string | undefined) ?? null;
+    const icon = (input.icon as string | undefined) ?? null;
+    const schema_id = (input.schema_id as string | undefined) ?? null;
 
     let p = createProgram();
     p = get(p, 'diagram-notation', notationId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        const type_key = input.type_key as string;
-
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        // Compute whether the type_key is a duplicate and bind the result
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const nodeTypes = (record.node_types as NodeType[]) ?? [];
+          return nodeTypes.some(t => t.type_key === type_key);
+        }, 'isDuplicate');
 
-          if (nodeTypes.some(t => t.type_key === type_key)) {
-            return { variant: 'duplicate', message: `Node type '${type_key}' already exists` };
-          }
-
-          return { variant: 'ok', notation: notationId, type_key, _addNodeType: true, _record: record };
-        });
+        return branch(thenP,
+          (bindings) => bindings.isDuplicate as boolean,
+          (dupP) => complete(dupP, 'duplicate', { message: `Node type '${type_key}' already exists` }),
+          (okP) => {
+            const newNodeType: NodeType = { type_key, label, shape, default_fill, default_stroke, icon, schema_id };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const nodeTypes = (record.node_types as NodeType[]) ?? [];
+              return { ...record, node_types: [...nodeTypes, newNodeType] };
+            });
+            return complete(okP, 'ok', { notation: notationId, type_key });
+          },
+        );
       },
       (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
     ) as StorageProgram<Result>;
@@ -104,24 +119,37 @@ const _handler: FunctionalConceptHandler = {
 
   addEdgeType(input: Record<string, unknown>) {
     const notationId = input.notation as string;
+    const type_key = input.type_key as string;
+    const label = (input.label as string | undefined) ?? type_key;
+    const line_style = (input.line_style as string | undefined) ?? 'solid';
+    const arrow_type = (input.arrow_type as string | undefined) ?? 'triangle';
+    const default_color = (input.default_color as string | undefined) ?? null;
+    const requires_label = (input.requires_label as boolean | undefined) ?? false;
 
     let p = createProgram();
     p = get(p, 'diagram-notation', notationId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        const type_key = input.type_key as string;
-
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+          return edgeTypes.some(t => t.type_key === type_key);
+        }, 'isDuplicate');
 
-          if (edgeTypes.some(t => t.type_key === type_key)) {
-            return { variant: 'duplicate', message: `Edge type '${type_key}' already exists` };
-          }
-
-          return { variant: 'ok', notation: notationId, type_key };
-        });
+        return branch(thenP,
+          (bindings) => bindings.isDuplicate as boolean,
+          (dupP) => complete(dupP, 'duplicate', { message: `Edge type '${type_key}' already exists` }),
+          (okP) => {
+            const newEdgeType: EdgeType = { type_key, label, line_style, arrow_type, default_color, requires_label };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
+              return { ...record, edge_types: [...edgeTypes, newEdgeType] };
+            });
+            return complete(okP, 'ok', { notation: notationId, type_key });
+          },
+        );
       },
       (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
     ) as StorageProgram<Result>;
@@ -129,17 +157,21 @@ const _handler: FunctionalConceptHandler = {
 
   addConnectionRule(input: Record<string, unknown>) {
     const notationId = input.notation as string;
+    const source_type = input.source_type as string;
+    const target_type = input.target_type as string;
+    const allowed_edge_types = input.allowed_edge_types as string[];
+    const min_outgoing = (input.min_outgoing as number | undefined) ?? null;
+    const max_outgoing = (input.max_outgoing as number | undefined) ?? null;
+    const min_incoming = (input.min_incoming as number | undefined) ?? null;
+    const max_incoming = (input.max_incoming as number | undefined) ?? null;
 
     let p = createProgram();
     p = get(p, 'diagram-notation', notationId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        const source_type = input.source_type as string;
-        const target_type = input.target_type as string;
-        const allowed_edge_types = input.allowed_edge_types as string[];
-
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        // Validate that source_type, target_type, and allowed_edge_types all exist
+        thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const nodeTypes = (record.node_types as NodeType[]) ?? [];
           const edgeTypes = (record.edge_types as EdgeType[]) ?? [];
@@ -147,19 +179,37 @@ const _handler: FunctionalConceptHandler = {
           const edgeKeys = new Set(edgeTypes.map(t => t.type_key));
 
           if (!nodeKeys.has(source_type)) {
-            return { variant: 'invalid', message: `Source node type '${source_type}' does not exist` };
+            return `Source node type '${source_type}' does not exist`;
           }
           if (!nodeKeys.has(target_type)) {
-            return { variant: 'invalid', message: `Target node type '${target_type}' does not exist` };
+            return `Target node type '${target_type}' does not exist`;
           }
           for (const et of allowed_edge_types) {
             if (!edgeKeys.has(et)) {
-              return { variant: 'invalid', message: `Edge type '${et}' does not exist` };
+              return `Edge type '${et}' does not exist`;
             }
           }
+          return null; // valid
+        }, 'validationError');
 
-          return { variant: 'ok', notation: notationId };
-        });
+        return branch(thenP,
+          (bindings) => bindings.validationError !== null,
+          (invalidP) => completeFrom(invalidP, 'invalid', (bindings) => ({
+            message: bindings.validationError as string,
+          })),
+          (okP) => {
+            const newRule: ConnectionRule = {
+              source_type, target_type, allowed_edge_types,
+              min_outgoing, max_outgoing, min_incoming, max_incoming,
+            };
+            okP = putFrom(okP, 'diagram-notation', notationId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              const rules = (record.connection_rules as ConnectionRule[]) ?? [];
+              return { ...record, connection_rules: [...rules, newRule] };
+            });
+            return complete(okP, 'ok', { notation: notationId });
+          },
+        );
       },
       (elseP) => complete(elseP, 'error', { message: `Notation '${notationId}' not found` }),
     ) as StorageProgram<Result>;

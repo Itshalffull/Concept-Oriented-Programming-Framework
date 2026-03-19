@@ -32,16 +32,29 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
 
   allocate(input: Record<string, unknown>) {
     const { round, allocator, recipient, amount, note } = input;
+    const entryKey = `${round}:${allocator}:${recipient}`;
     let p = createProgram();
     p = get(p, 'peer_alloc', round as string, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'allocated', (bindings) => {
+        b = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'Open') return { variant: 'round_closed', round };
-          if (allocator === recipient) return { variant: 'self_allocation', allocator };
-          return { variant: 'allocated', round, totalAllocated: 0, budget: record.budget };
+          if (record.status !== 'Open') return { _allocError: 'round_closed' };
+          if (allocator === recipient) return { _allocError: 'self_allocation' };
+          return { _allocError: null };
+        }, 'allocCheck');
+
+        // Store the allocation entry for later finalization
+        b = put(b, 'peer_alloc_entry', entryKey, {
+          id: entryKey, round, allocator, recipient, amount, note: note ?? null,
+        });
+
+        return completeFrom(b, 'allocated', (bindings) => {
+          const check = bindings.allocCheck as Record<string, unknown>;
+          if (check._allocError === 'round_closed') return { variant: 'round_closed', round };
+          if (check._allocError === 'self_allocation') return { variant: 'self_allocation', allocator };
+          return { variant: 'allocated', round, totalAllocated: 0, budget: (bindings.record as Record<string, unknown>).budget };
         });
       },
       (b) => complete(b, 'not_found', { round }),

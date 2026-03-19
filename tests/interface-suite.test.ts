@@ -255,7 +255,7 @@ describe('Target Provider Concepts', () => {
     const ast = readProvider('mcp-target.concept');
     expect(ast.name).toBe('McpTarget');
     expect(ast.typeParams).toEqual(['M']);
-    expect(ast.version).toBe(2);
+    expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.invariants.length).toBeGreaterThanOrEqual(1);

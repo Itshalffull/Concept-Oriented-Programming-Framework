@@ -84,15 +84,20 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.sourceFile === sourceFile);
-      if (!entry) {
-        return { _variant: 'notfound' };
-      }
-      return { handler: entry.id as string };
-    }) as StorageProgram<Result>;
+      return entry || null;
+    }, '_found');
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings._found as Record<string, unknown>;
+        return { handler: entry.id as string };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   findByConcept(input: Record<string, unknown>) {
@@ -122,22 +127,23 @@ const _handler: FunctionalConceptHandler = {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { _variant: 'notfound' };
-      }
-
+      if (!entry) return null;
       const methods = JSON.parse(entry.actionMethods as string || '[]');
       const method = methods.find((m: { name: string }) => m.name === actionName);
-      if (!method) {
-        return { _variant: 'notfound' };
-      }
-
-      return { method: JSON.stringify(method) };
-    }) as StorageProgram<Result>;
+      return method || null;
+    }, '_found');
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const method = bindings._found as Record<string, unknown>;
+        return { method: JSON.stringify(method) };
+      }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   implementationGaps(input: Record<string, unknown>) {
@@ -145,24 +151,31 @@ const _handler: FunctionalConceptHandler = {
     const concept = input.concept as string;
 
     p = find(p, 'handlers', { concept }, 'handlers');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const handlers = (bindings.handlers || []) as Array<Record<string, unknown>>;
-      if (handlers.length === 0) {
-        return { _variant: 'noHandler' };
-      }
-
+      if (handlers.length === 0) return { _hasHandler: false, _actionCount: 0 };
       const handler = handlers[0];
       const methods = JSON.parse(handler.actionMethods as string || '[]');
-
-      return { _variant: 'fullyImplemented', actionCount: methods.length };
-    }) as StorageProgram<Result>;
+      return { _hasHandler: true, _actionCount: methods.length };
+    }, '_gapInfo');
+    return branch(p,
+      (bindings) => {
+        const info = bindings._gapInfo as Record<string, unknown>;
+        return !!info._hasHandler;
+      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const info = bindings._gapInfo as Record<string, unknown>;
+        return { actionCount: info._actionCount as number };
+      }),
+      (b) => complete(b, 'noHandler', {}),
+    ) as StorageProgram<Result>;
   },
 
   getDependencies(input: Record<string, unknown>) {
     let p = createProgram();
     const handlerId = input.handler as string;
 
-    p = find(p, 'handlers', 'all');
+    p = find(p, 'handlers', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
@@ -186,7 +199,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const handlerId = input.handler as string;
 
-    p = find(p, 'handlers', 'all');
+    p = find(p, 'handlers', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
@@ -204,33 +217,36 @@ const _handler: FunctionalConceptHandler = {
     const line = input.line as number;
     const col = input.col as number;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.sourceFile === file);
-      if (!entry) {
-        return { _variant: 'notInHandler' };
-      }
-
-      const astNode = JSON.stringify({
-        kind: 'Unknown',
-        startLine: line,
-        startCol: col,
-        endLine: line,
-        endCol: col,
-        text: '',
-        parent: null,
-        children: [],
-      });
-
-      return {
-        handler: entry.id as string,
-        concept: entry.concept as string,
-        actionMethod: '',
-        astNode,
-        sourceSpan: `${file}:${line}:${col}`,
-      };
-    }) as StorageProgram<Result>;
+      return entry || null;
+    }, '_found');
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings._found as Record<string, unknown>;
+        const astNode = JSON.stringify({
+          kind: 'Unknown',
+          startLine: line,
+          startCol: col,
+          endLine: line,
+          endCol: col,
+          text: '',
+          parent: null,
+          children: [],
+        });
+        return {
+          handler: entry.id as string,
+          concept: entry.concept as string,
+          actionMethod: '',
+          astNode,
+          sourceSpan: `${file}:${line}:${col}`,
+        };
+      }),
+      (b) => complete(b, 'notInHandler', {}),
+    ) as StorageProgram<Result>;
   },
 
   resolveToAstNode(input: Record<string, unknown>) {
@@ -239,34 +255,40 @@ const _handler: FunctionalConceptHandler = {
     const line = input.line as number;
     const col = input.col as number;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { _variant: 'outOfRange', line, maxLine: 0 };
-      }
-
+      if (!entry) return { _status: 'outOfRange', _maxLine: 0 };
       const maxLine = entry.lineCount as number || 0;
-      if (maxLine > 0 && line > maxLine) {
-        return { _variant: 'outOfRange', line, maxLine };
-      }
-
-      const node = JSON.stringify({
-        kind: 'Unknown',
-        startLine: line,
-        startCol: col,
-        endLine: line,
-        endCol: col,
-        text: '',
-      });
-
-      return {
-        node,
-        ancestors: '[]',
-        actionMethod: '',
-      };
-    }) as StorageProgram<Result>;
+      if (maxLine > 0 && line > maxLine) return { _status: 'outOfRange', _maxLine: maxLine };
+      return { _status: 'ok', _maxLine: maxLine };
+    }, '_astInfo');
+    return branch(p,
+      (bindings) => {
+        const info = bindings._astInfo as Record<string, unknown>;
+        return info._status === 'ok';
+      },
+      (b) => completeFrom(b, 'ok', (_bindings) => {
+        const node = JSON.stringify({
+          kind: 'Unknown',
+          startLine: line,
+          startCol: col,
+          endLine: line,
+          endCol: col,
+          text: '',
+        });
+        return {
+          node,
+          ancestors: '[]',
+          actionMethod: '',
+        };
+      }),
+      (b) => completeFrom(b, 'outOfRange', (bindings) => {
+        const info = bindings._astInfo as Record<string, unknown>;
+        return { line, maxLine: info._maxLine as number };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   resolveStackTrace(input: Record<string, unknown>) {
@@ -285,7 +307,7 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    p = find(p, 'handlers', 'allHandlers');
+    p = find(p, 'handlers', {}, 'allHandlers');
 
     return completeFrom(p, 'ok', (bindings) => {
       const allHandlers = (bindings.allHandlers || []) as Array<Record<string, unknown>>;
@@ -314,16 +336,17 @@ const _handler: FunctionalConceptHandler = {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { _variant: 'notfound' };
-      }
-
-      return { returns: '[]' };
-    }) as StorageProgram<Result>;
+      return entry || null;
+    }, '_found');
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => complete(b, 'ok', { returns: '[]' }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   traceToStorageCalls(input: Record<string, unknown>) {
@@ -331,16 +354,17 @@ const _handler: FunctionalConceptHandler = {
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    p = find(p, 'handlers', 'all');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = find(p, 'handlers', {}, 'all');
+    p = mapBindings(p, (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(h => h.id === handlerId);
-      if (!entry) {
-        return { _variant: 'notfound' };
-      }
-
-      return { calls: '[]' };
-    }) as StorageProgram<Result>;
+      return entry || null;
+    }, '_found');
+    return branch(p,
+      (bindings) => !!bindings._found,
+      (b) => complete(b, 'ok', { calls: '[]' }),
+      (b) => complete(b, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 
   findByError(input: Record<string, unknown>) {
@@ -348,7 +372,7 @@ const _handler: FunctionalConceptHandler = {
     const errorSymbol = input.errorSymbol as string;
     const since = input.since as string;
 
-    p = find(p, 'handlers', 'all');
+    p = find(p, 'handlers', {}, 'all');
 
     return complete(p, 'ok', { handlers: JSON.stringify([]) }) as StorageProgram<Result>;
   },
@@ -359,26 +383,40 @@ const _handler: FunctionalConceptHandler = {
     const actionName = input.actionName as string;
 
     p = find(p, 'handlers', { concept }, 'handlers');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const handlers = (bindings.handlers || []) as Array<Record<string, unknown>>;
-      if (handlers.length === 0) {
-        return { _variant: 'noHandler' };
-      }
-
+      if (handlers.length === 0) return { _status: 'noHandler', _method: null, _handler: null };
       const handler = handlers[0];
       const methods = JSON.parse(handler.actionMethods as string || '[]');
       const method = methods.find((m: { name: string }) => m.name === actionName);
-      if (!method) {
-        return { _variant: 'actionNotImplemented' };
-      }
-
-      return {
-        source: method.body || '',
-        file: handler.sourceFile as string,
-        startLine: method.startLine || 0,
-        endLine: method.endLine || 0,
-      };
-    }) as StorageProgram<Result>;
+      if (!method) return { _status: 'actionNotImplemented', _method: null, _handler: handler };
+      return { _status: 'ok', _method: method, _handler: handler };
+    }, '_srcInfo');
+    return branch(p,
+      (bindings) => {
+        const info = bindings._srcInfo as Record<string, unknown>;
+        return info._status === 'ok';
+      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const info = bindings._srcInfo as Record<string, unknown>;
+        const method = info._method as Record<string, unknown>;
+        const handler = info._handler as Record<string, unknown>;
+        return {
+          source: (method.body as string) || '',
+          file: handler.sourceFile as string,
+          startLine: (method.startLine as number) || 0,
+          endLine: (method.endLine as number) || 0,
+        };
+      }),
+      (b) => branch(b,
+        (bindings) => {
+          const info = bindings._srcInfo as Record<string, unknown>;
+          return info._status === 'noHandler';
+        },
+        (b2) => complete(b2, 'noHandler', {}),
+        (b2) => complete(b2, 'actionNotImplemented', {}),
+      ),
+    ) as StorageProgram<Result>;
   },
 };
 

@@ -9,7 +9,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptManifest, ResolvedType, InvariantValue } from '../../../runtime/types.js';
+import type { ConceptManifest, ResolvedType, InvariantValue, InvariantStep } from '../../../runtime/types.js';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -50,7 +50,328 @@ function generateAdapterFile(manifest: ConceptManifest): string {
   return `// generated: ${manifest.name}/Adapter.stub.swift\n\nimport Foundation\n\nclass ${manifest.name}Adapter: ConceptTransport {\n    // TODO: implement\n}\n`;
 }
 
-function generateDslRuntimeFile(): string { return `// generated: StorageProgramDSL.stub.swift\nimport Foundation\n// StorageProgram DSL for Swift\n`; }
+function generateConformanceTestFile(manifest: ConceptManifest): string | null {
+  if (manifest.invariants.length === 0) return null;
+  const conceptName = manifest.name;
+  const lines: string[] = [
+    `// generated: ${conceptName}/ConformanceTests.stub.swift`, '',
+    'import XCTest', '@testable import Clef', '',
+    `final class ${conceptName}ConformanceTests: XCTestCase {`, '',
+  ];
+
+  for (let invIdx = 0; invIdx < manifest.invariants.length; invIdx++) {
+    const inv = manifest.invariants[invIdx];
+    lines.push(`    /// ${inv.description}`);
+    lines.push(`    func testInvariant${invIdx + 1}() async throws {`);
+    lines.push(`        let storage = InMemoryStorage()`);
+    lines.push(`        let handler = create${conceptName}Handler()`);
+    lines.push('');
+
+    for (const fv of inv.freeVariables) {
+      lines.push(`        let ${camelCase(fv.name)} = "${fv.testValue}"`);
+    }
+    if (inv.freeVariables.length > 0) lines.push('');
+
+    let stepNum = 1;
+    lines.push(`        // --- AFTER clause ---`);
+    for (const step of inv.setup) {
+      lines.push(...generateSwiftStepCode(step, stepNum));
+      stepNum++;
+    }
+    lines.push('');
+
+    lines.push(`        // --- THEN clause ---`);
+    for (const step of inv.assertions) {
+      lines.push(...generateSwiftStepCode(step, stepNum));
+      stepNum++;
+    }
+
+    lines.push(`    }`);
+    lines.push('');
+  }
+
+  lines.push(`}`);
+  return lines.join('\n');
+}
+
+function invariantValueToSwiftExpr(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal': {
+      const val = v.value;
+      if (typeof val === 'string') return `"${val}"`;
+      if (typeof val === 'boolean') return val ? 'true' : 'false';
+      return String(val);
+    }
+    case 'variable':
+      return camelCase(v.name);
+    case 'record': {
+      const fields = v.fields.map(f => `${camelCase(f.name)}: ${invariantValueToSwiftExpr(f.value)}`);
+      return `/* struct(${fields.join(', ')}) */`;
+    }
+    case 'list': {
+      const items = v.items.map(item => invariantValueToSwiftExpr(item));
+      return `[${items.join(', ')}]`;
+    }
+  }
+}
+
+function invariantValueToComment(v: InvariantValue): string {
+  switch (v.kind) {
+    case 'literal': return JSON.stringify(v.value);
+    case 'variable': return v.name;
+    case 'record': return `{ ${v.fields.map(f => `${f.name}: ${invariantValueToComment(f.value)}`).join(', ')} }`;
+    case 'list': return `[${v.items.map(item => invariantValueToComment(item)).join(', ')}]`;
+  }
+}
+
+function generateSwiftStepCode(step: InvariantStep, stepNum: number): string[] {
+  const lines: string[] = [];
+  const varName = `step${stepNum}`;
+  const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToComment(a.value)}`).join(', ');
+  const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToComment(a.value)}`).join(', ');
+  lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
+
+  const inputFields = step.inputs.map(a => `${camelCase(a.name)}: ${invariantValueToSwiftExpr(a.value)}`).join(', ');
+  lines.push(`        let ${varName} = try await handler.${camelCase(step.action)}(`);
+  lines.push(`            input: ${capitalize(step.action)}Input(${inputFields}),`);
+  lines.push(`            storage: storage`);
+  lines.push(`        )`);
+
+  const variantCase = camelCase(step.expectedVariant);
+  if (step.expectedOutputs.length > 0) {
+    const bindings = step.expectedOutputs.map(o => `let ${camelCase(o.name)}`).join(', ');
+    lines.push(`        guard case .${variantCase}(${bindings}) = ${varName} else {`);
+    lines.push(`            XCTFail("Expected ${step.expectedVariant}, got \\(${varName})")`);
+    lines.push(`            return`);
+    lines.push(`        }`);
+    for (const out of step.expectedOutputs) {
+      const expected = invariantValueToSwiftExpr(out.value);
+      lines.push(`        XCTAssertEqual(${camelCase(out.name)}, ${expected})`);
+    }
+  } else {
+    lines.push(`        guard case .${variantCase} = ${varName} else {`);
+    lines.push(`            XCTFail("Expected ${step.expectedVariant}, got \\(${varName})")`);
+    lines.push(`            return`);
+    lines.push(`        }`);
+  }
+
+  return lines;
+}
+
+function generateDslRuntimeFile(): string {
+  return `// generated: StorageProgramDSL.stub.swift
+//
+// StorageProgram DSL — Free Monad for Concept Handlers (Swift)
+// Provides typed lenses/optics, effect tracking, algebraic effects,
+// transport effects, and functorial mapping for render programs.
+
+import Foundation
+
+// MARK: - Lens Types
+
+public enum LensSegment: Codable, Equatable {
+    case relation(name: String)
+    case key(value: String)
+    case field(name: String)
+}
+
+public struct StateLens: Codable, Equatable {
+    public var segments: [LensSegment]
+    public var sourceType: String
+    public var focusType: String
+
+    public static func relation(_ name: String) -> StateLens {
+        StateLens(
+            segments: [.relation(name: name)],
+            sourceType: "store",
+            focusType: "relation<\\(name)>"
+        )
+    }
+
+    public func at(_ key: String) -> StateLens {
+        var copy = self
+        copy.segments.append(.key(value: key))
+        copy.focusType = "record"
+        return copy
+    }
+
+    public func field(_ name: String) -> StateLens {
+        var copy = self
+        copy.segments.append(.field(name: name))
+        copy.focusType = name
+        return copy
+    }
+
+    public func compose(_ inner: StateLens) -> StateLens {
+        var copy = self
+        copy.segments.append(contentsOf: inner.segments)
+        copy.focusType = inner.focusType
+        return copy
+    }
+
+    public var relationName: String? {
+        guard let first = segments.first, case .relation(let name) = first else { return nil }
+        return name
+    }
+}
+
+// MARK: - Effect Set
+
+public struct EffectSet: Codable {
+    public var reads: Set<String>
+    public var writes: Set<String>
+    public var completionVariants: Set<String>
+    public var performs: Set<String>
+
+    public init() {
+        reads = []
+        writes = []
+        completionVariants = []
+        performs = []
+    }
+
+    public func merged(with other: EffectSet) -> EffectSet {
+        var result = EffectSet()
+        result.reads = reads.union(other.reads)
+        result.writes = writes.union(other.writes)
+        result.completionVariants = completionVariants.union(other.completionVariants)
+        result.performs = performs.union(other.performs)
+        return result
+    }
+
+    public var purity: Purity {
+        if !writes.isEmpty { return .readWrite }
+        if !reads.isEmpty { return .readOnly }
+        return .pure
+    }
+
+    public func validatePurity(declared: Purity) -> String? {
+        switch declared {
+        case .pure:
+            if !reads.isEmpty || !writes.isEmpty {
+                return "Declared pure but has storage effects"
+            }
+        case .readOnly:
+            if !writes.isEmpty {
+                return "Declared read-only but writes to: \\(writes.sorted().joined(separator: ", "))"
+            }
+        case .readWrite:
+            break
+        }
+        return nil
+    }
+}
+
+public enum Purity: String, Codable {
+    case pure
+    case readOnly
+    case readWrite
+}
+
+// MARK: - Instruction Types
+
+public enum Instruction: Codable {
+    case get(relation: String, key: String, bindAs: String)
+    case find(relation: String, criteria: [String: String], bindAs: String)
+    case put(relation: String, key: String, value: [String: String])
+    case merge(relation: String, key: String, fields: [String: String])
+    case del(relation: String, key: String)
+    case getLens(lens: StateLens, bindAs: String)
+    case putLens(lens: StateLens, value: [String: String])
+    case perform(protocol: String, operation: String, payload: [String: String], bindAs: String)
+    case pure(value: [String: String])
+}
+
+// MARK: - StorageProgram
+
+public struct StorageProgram: Codable {
+    public var instructions: [Instruction]
+    public var terminated: Bool
+    public var effects: EffectSet
+
+    public static func create() -> StorageProgram {
+        StorageProgram(instructions: [], terminated: false, effects: EffectSet())
+    }
+
+    public mutating func get(relation: String, key: String, bindAs: String) {
+        effects.reads.insert(relation)
+        instructions.append(.get(relation: relation, key: key, bindAs: bindAs))
+    }
+
+    public mutating func put(relation: String, key: String, value: [String: String]) {
+        effects.writes.insert(relation)
+        instructions.append(.put(relation: relation, key: key, value: value))
+    }
+
+    public mutating func getLens(lens: StateLens, bindAs: String) {
+        if let rel = lens.relationName { effects.reads.insert(rel) }
+        instructions.append(.getLens(lens: lens, bindAs: bindAs))
+    }
+
+    public mutating func putLens(lens: StateLens, value: [String: String]) {
+        if let rel = lens.relationName { effects.writes.insert(rel) }
+        instructions.append(.putLens(lens: lens, value: value))
+    }
+
+    public mutating func perform(protocol proto: String, operation: String, payload: [String: String], bindAs: String) {
+        effects.performs.insert("\\(proto):\\(operation)")
+        instructions.append(.perform(protocol: proto, operation: operation, payload: payload, bindAs: bindAs))
+    }
+
+    public mutating func complete(variant: String, output: [String: String]) {
+        effects.completionVariants.insert(variant)
+        var combined = output
+        combined["variant"] = variant
+        instructions.append(.pure(value: combined))
+        terminated = true
+    }
+
+    public func extractCompletionVariants() -> Set<String> {
+        var variants = Set<String>()
+        for instr in instructions {
+            if case .pure(let value) = instr, let v = value["variant"] {
+                variants.insert(v)
+            }
+        }
+        return variants
+    }
+
+    public func extractPerformSet() -> Set<String> {
+        var performs = Set<String>()
+        for instr in instructions {
+            if case .perform(let proto, let op, _, _) = instr {
+                performs.insert("\\(proto):\\(op)")
+            }
+        }
+        return performs
+    }
+}
+
+// MARK: - Render Program (Functorial Mapping)
+
+public enum RenderInstruction: Codable {
+    case token(path: String, value: String)
+    case aria(role: String?, label: String?, attributes: [String: String]?)
+    case bind(field: String, expr: String)
+    case element(name: String, attributes: [String: String]?)
+    case focus(strategy: String, target: String?)
+    case keyboard(key: String, action: String, modifiers: [String]?)
+    case renderPure(value: String)
+}
+
+public struct RenderProgram: Codable {
+    public var instructions: [RenderInstruction]
+    public var terminated: Bool
+
+    public func map(_ transform: (RenderInstruction) -> RenderInstruction) -> RenderProgram {
+        RenderProgram(
+            instructions: instructions.map(transform),
+            terminated: terminated
+        )
+    }
+}
+`;
+}
 
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
@@ -68,6 +389,10 @@ const _handler: FunctionalConceptHandler = {
         { path: `${manifest.name}/Adapter.stub.swift`, content: generateAdapterFile(manifest) },
         { path: `StorageProgramDSL.stub.swift`, content: generateDslRuntimeFile() },
       ];
+      const conformanceTest = generateConformanceTestFile(manifest);
+      if (conformanceTest) {
+        files.push({ path: `${manifest.name}/ConformanceTests.stub.swift`, content: conformanceTest });
+      }
       const p = createProgram();
       return complete(p, 'ok', { files }) as StorageProgram<Result>;
     } catch (err: unknown) { const message = err instanceof Error ? err.message : String(err); const p = createProgram(); return complete(p, 'error', { message }) as StorageProgram<Result>; }

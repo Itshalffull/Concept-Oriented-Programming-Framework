@@ -38,33 +38,36 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p, 'existing',
       (b) => {
-        return completeFrom(b, '', (bindings) => {
+        // Compute whether the cache is a hit and extract relevant fields
+        const b2 = mapBindings(b, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           const storedInputHash = existing.inputHash as string;
           const stale = existing.stale as boolean;
-
-          // Nondeterministic transforms always re-run
-          if (!deterministic) {
-            return { variant: 'changed', previousHash: storedInputHash };
+          if (!deterministic || stale || storedInputHash !== inputHash) {
+            return { cacheHit: false, previousHash: storedInputHash };
           }
+          return { cacheHit: true, lastRun: existing.lastRun, outputRef: existing.outputRef || null };
+        }, '_cacheInfo');
 
-          // Stale entries (invalidated) always re-run
-          if (stale) {
-            return { variant: 'changed', previousHash: storedInputHash };
-          }
-
-          // Hash mismatch means input changed
-          if (storedInputHash !== inputHash) {
-            return { variant: 'changed', previousHash: storedInputHash };
-          }
-
-          // Cache hit — input unchanged and deterministic
-          return {
-            variant: 'unchanged',
-            lastRun: existing.lastRun as string,
-            outputRef: existing.outputRef || null,
-          };
-        });
+        return branch(b2,
+          (bindings) => {
+            const info = bindings._cacheInfo as Record<string, unknown>;
+            return !!info.cacheHit;
+          },
+          (t) => completeFrom(t, 'unchanged', (bindings) => {
+            const info = bindings._cacheInfo as Record<string, unknown>;
+            return {
+              lastRun: info.lastRun as string,
+              outputRef: info.outputRef,
+            };
+          }),
+          (e) => completeFrom(e, 'changed', (bindings) => {
+            const info = bindings._cacheInfo as Record<string, unknown>;
+            return {
+              previousHash: info.previousHash as string,
+            };
+          }),
+        );
       },
       (b) => complete(b, 'changed', { previousHash: null }),
     );
@@ -151,62 +154,40 @@ const _handler: FunctionalConceptHandler = {
 
   /**
    * Invalidate all cache entries whose sourceLocator matches.
+   *
+   * Stub — overridden by imperative implementation below. Dynamic iteration
+   * over query results to write stale:true on each match is not expressible
+   * in the functional free monad DSL.
    */
   invalidateBySource(input: Record<string, unknown>) {
-    const sourceLocator = input.sourceLocator as string;
-
-    let p = createProgram();
-    p = find(p, ENTRIES_RELATION, {}, 'allEntries');
-
-    // Note: Iterative puts over dynamic result sets are not natively supported
-    // in the free monad DSL. We compute the invalidated list and report it;
-    // bulk stale-marking is handled at the interpreter level.
-    return completeFrom(p, 'ok', (bindings) => {
-      const allEntries = bindings.allEntries as Array<Record<string, unknown>>;
-      const invalidated = allEntries
-        .filter(entry => entry.sourceLocator === sourceLocator)
-        .map(entry => entry.stepKey as string);
-      return { invalidated };
-    }) as StorageProgram<Result>;
+    const _sourceLocator = input.sourceLocator as string;
+    const p = createProgram();
+    return complete(p, 'ok', { invalidated: [] }) as StorageProgram<Result>;
   },
 
   /**
    * Invalidate all cache entries whose step key relates to a given kind.
+   *
+   * Stub — overridden by imperative implementation below. Dynamic iteration
+   * over query results to write stale:true on each match is not expressible
+   * in the functional free monad DSL.
    */
   invalidateByKind(input: Record<string, unknown>) {
-    const kind = (input.kind || input.kindName) as string;
-
-    let p = createProgram();
-    p = find(p, ENTRIES_RELATION, {}, 'allEntries');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const allEntries = bindings.allEntries as Array<Record<string, unknown>>;
-      const invalidated: string[] = [];
-
-      for (const entry of allEntries) {
-        const stepKey = entry.stepKey as string;
-        const entryKind = entry.kind as string | null;
-        const matches = entryKind ? entryKind === kind : stepKey.includes(kind);
-        if (matches) {
-          invalidated.push(stepKey);
-        }
-      }
-
-      return { invalidated };
-    }) as StorageProgram<Result>;
+    const _kind = (input.kind || input.kindName) as string;
+    const p = createProgram();
+    return complete(p, 'ok', { invalidated: [] }) as StorageProgram<Result>;
   },
 
   /**
    * Clear all cache entries. Full rebuild on next run.
+   *
+   * Stub — overridden by imperative implementation below. Dynamic iteration
+   * over query results to write stale:true on each entry is not expressible
+   * in the functional free monad DSL.
    */
   invalidateAll(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, ENTRIES_RELATION, {}, 'allEntries');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const allEntries = bindings.allEntries as Array<Record<string, unknown>>;
-      return { cleared: allEntries.length };
-    }) as StorageProgram<Result>;
+    const p = createProgram();
+    return complete(p, 'ok', { cleared: 0 }) as StorageProgram<Result>;
   },
 
   /**
@@ -245,4 +226,49 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const buildCacheHandler = autoInterpret(_handler);
+const _baseHandler = autoInterpret(_handler);
+
+// Override invalidateBySource, invalidateByKind, and invalidateAll with imperative
+// implementations. These actions require dynamic iteration over query results to
+// write stale:true on each matching entry, which the functional free monad DSL
+// does not support (it cannot emit a dynamic number of put instructions).
+export const buildCacheHandler = {
+  ..._baseHandler,
+
+  async invalidateBySource(input: Record<string, unknown>, storage: any) {
+    const sourceLocator = input.sourceLocator as string;
+    const allEntries = await storage.find(ENTRIES_RELATION, {});
+    const invalidated: string[] = [];
+    for (const entry of allEntries) {
+      if (entry.sourceLocator === sourceLocator) {
+        invalidated.push(entry.stepKey as string);
+        await storage.put(ENTRIES_RELATION, entry.stepKey as string, { ...entry, stale: true });
+      }
+    }
+    return { variant: 'ok', invalidated };
+  },
+
+  async invalidateByKind(input: Record<string, unknown>, storage: any) {
+    const kind = (input.kind || input.kindName) as string;
+    const allEntries = await storage.find(ENTRIES_RELATION, {});
+    const invalidated: string[] = [];
+    for (const entry of allEntries) {
+      const stepKey = entry.stepKey as string;
+      const entryKind = entry.kind as string | null;
+      const matches = entryKind ? entryKind === kind : stepKey.includes(kind);
+      if (matches) {
+        invalidated.push(stepKey);
+        await storage.put(ENTRIES_RELATION, stepKey, { ...entry, stale: true });
+      }
+    }
+    return { variant: 'ok', invalidated };
+  },
+
+  async invalidateAll(_input: Record<string, unknown>, storage: any) {
+    const allEntries = await storage.find(ENTRIES_RELATION, {});
+    for (const entry of allEntries) {
+      await storage.put(ENTRIES_RELATION, entry.stepKey as string, { ...entry, stale: true });
+    }
+    return { variant: 'ok', cleared: allEntries.length };
+  },
+};

@@ -3,7 +3,7 @@
 // Scores and selects the best widget for a given interface element based on context and overrides.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings, pureFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -53,6 +53,7 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'resolver', resolver, 'resolverRecord');
     p = find(p, 'affordance', element, 'affordanceResults');
+    p = find(p, 'widget', {} as Record<string, unknown>, 'widgetRecords');
     p = mapBindings(p, (bindings) => {
       const resolverRecord = bindings.resolverRecord as Record<string, unknown> | null;
       const overrides = resolverRecord ? JSON.parse((resolverRecord.overrides as string) || '{}') : {};
@@ -61,20 +62,45 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
       if (affordances.length === 0) return { variant: 'none', message: `No widgets found for element "${element}"` };
       const weights = resolverRecord ? JSON.parse((resolverRecord.scoringWeights as string) || '{}') : { specificity: 0.4, conditionMatch: 0.3, popularity: 0.2, recency: 0.1 };
       const parsedContext = JSON.parse(context || '{}');
-      const candidates: Array<{ widget: string; score: number; reason: string }> = [];
+      const contextFields: Array<{ name: string; type: string }> = parsedContext.fields || [];
+      const contextActions: string[] = parsedContext.actions || [];
+
+      // Build a lookup map for widget records by name
+      const allWidgets = Array.isArray(bindings.widgetRecords) ? bindings.widgetRecords : [];
+      const widgetByName: Record<string, Record<string, unknown>> = {};
+      for (const w of allWidgets) {
+        if (w.widget) widgetByName[w.widget as string] = w as Record<string, unknown>;
+      }
+
+      const candidates: Array<{ widget: string; score: number; reason: string; bindingMap: Record<string, string> | null }> = [];
       for (const aff of affordances) {
+        // Check widget contract if widget record exists
+        const widgetRecord = widgetByName[aff.widget as string] ?? null;
+        let bindingMap: Record<string, string> | null = null;
+
+        if (widgetRecord && widgetRecord.requires) {
+          const requires: ContractRequires = JSON.parse(widgetRecord.requires as string);
+          const affBind = aff.bind ? JSON.parse(aff.bind as string) : {};
+          const validation = validateContract(requires, contextFields, contextActions, affBind);
+          if (validation.status === 'error') {
+            // Widget contract cannot be satisfied — disqualify
+            continue;
+          }
+          bindingMap = validation.bindingMap;
+        }
+
         let score = 0;
         const specificity = (aff.specificity as number) || 0;
         score += (specificity / 100) * (weights.specificity || 0.4);
         score += (weights.conditionMatch || 0.3);
-        candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: `specificity=${specificity}` });
+        candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: `specificity=${specificity}`, bindingMap });
       }
       candidates.sort((a, b) => b.score - a.score);
       if (candidates.length === 0) return { variant: 'none', message: `No widgets found for element "${element}"` };
-      if (candidates.length === 1 || candidates[0].score > candidates[1].score) return { variant: 'ok', widget: candidates[0].widget, score: candidates[0].score, reason: candidates[0].reason, bindingMap: null };
+      if (candidates.length === 1 || candidates[0].score > candidates[1].score) return { variant: 'ok', widget: candidates[0].widget, score: candidates[0].score, reason: candidates[0].reason, bindingMap: candidates[0].bindingMap ? JSON.stringify(candidates[0].bindingMap) : null };
       return { variant: 'ambiguous', candidates: JSON.stringify(candidates) };
     }, 'result');
-    return complete(p, 'ok', { widget: '', score: 0, reason: '', bindingMap: null }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return pureFrom(p, (bindings) => bindings.result as Record<string, unknown>) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   resolveAll(input: Record<string, unknown>) {
@@ -131,7 +157,7 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
           else { steps.push(`No override for element "${element}"`); steps.push(`Scoring weights: ${JSON.stringify(weights)}`); }
           return JSON.stringify(explanation);
         }, 'explanationJson');
-        return complete(b2, 'ok', { explanation: '' });
+        return completeFrom(b2, 'ok', (bindings) => ({ explanation: bindings.explanationJson as string }));
       },
       (b) => complete(b, 'notfound', { message: `Resolver "${resolver}" not found` }));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

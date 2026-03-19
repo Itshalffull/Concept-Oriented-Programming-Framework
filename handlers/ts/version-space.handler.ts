@@ -10,7 +10,7 @@
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
+  mapBindings, putFrom, merge, mergeFrom, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -133,38 +133,24 @@ const _handler: FunctionalConceptHandler = {
     const entity_id = input.entity_id as string;
     const fields = input.fields as string;
 
+    // Use a deterministic key so overwrites update the same record
+    const overrideKey = `${space}:${entity_id}`;
+    const now = new Date().toISOString();
+
     let p = createProgram();
     p = get(p, 'spaces', space, 'spaceRecord');
 
     return branch(p, 'spaceRecord',
       (thenP) => {
-        thenP = find(thenP, 'override_entries', {
+        thenP = put(thenP, 'override_entries', overrideKey, {
+          id: overrideKey,
           override_space: space,
           override_entity_id: entity_id,
-        }, 'existingOverrides');
-
-        return branch(thenP,
-          (bindings) => (bindings.existingOverrides as unknown[]).length > 0,
-          (updateP) => {
-            return completeFrom(updateP, 'ok', (bindings) => {
-              const existing = (bindings.existingOverrides as Record<string, unknown>[])[0];
-              return { override: existing.id as string };
-            });
-          },
-          (createP) => {
-            const overrideId = nextId('override');
-            const now = new Date().toISOString();
-            createP = put(createP, 'override_entries', overrideId, {
-              id: overrideId,
-              override_space: space,
-              override_entity_id: entity_id,
-              override_fields: fields,
-              override_operation: 'modify',
-              override_at: now,
-            });
-            return complete(createP, 'ok', { override: overrideId });
-          },
-        );
+          override_fields: fields,
+          override_operation: 'modify',
+          override_at: now,
+        });
+        return complete(thenP, 'ok', { override: overrideKey });
       },
       (elseP) => complete(elseP, 'read_only', { space, user: '' }),
     ) as StorageProgram<Result>;
@@ -196,31 +182,19 @@ const _handler: FunctionalConceptHandler = {
     const entity_id = input.entity_id as string;
     const now = new Date().toISOString();
 
+    // Use deterministic key matching write() so we overwrite any existing override
+    const overrideKey = `${space}:${entity_id}`;
+
     let p = createProgram();
-    p = find(p, 'override_entries', {
+    p = put(p, 'override_entries', overrideKey, {
+      id: overrideKey,
       override_space: space,
       override_entity_id: entity_id,
-    }, 'existingOverrides');
-
-    return branch(p,
-      (bindings) => (bindings.existingOverrides as unknown[]).length > 0,
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const existing = (bindings.existingOverrides as Record<string, unknown>[])[0];
-        return { override: existing.id as string };
-      }),
-      (elseP) => {
-        const overrideId = nextId('override');
-        elseP = put(elseP, 'override_entries', overrideId, {
-          id: overrideId,
-          override_space: space,
-          override_entity_id: entity_id,
-          override_fields: '',
-          override_operation: 'delete',
-          override_at: now,
-        });
-        return complete(elseP, 'ok', { override: overrideId });
-      },
-    ) as StorageProgram<Result>;
+      override_fields: '',
+      override_operation: 'delete',
+      override_at: now,
+    });
+    return complete(p, 'ok', { override: overrideKey }) as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
@@ -237,13 +211,19 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => (bindings.overrides as unknown[]).length > 0,
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const override = (bindings.overrides as Record<string, unknown>[])[0];
-        if (override.override_operation === 'delete') {
-          return { variant: 'not_found', entity_id };
-        }
-        return { fields: override.override_fields as string, source: space };
-      }),
+      (thenP) => {
+        return branch(thenP,
+          (bindings) => {
+            const override = (bindings.overrides as Record<string, unknown>[])[0];
+            return override.override_operation === 'delete';
+          },
+          (deletedP) => complete(deletedP, 'not_found', { entity_id }),
+          (foundP) => completeFrom(foundP, 'ok', (bindings) => {
+            const override = (bindings.overrides as Record<string, unknown>[])[0];
+            return { fields: override.override_fields as string, source: space };
+          }),
+        );
+      },
       (elseP) => complete(elseP, 'ok', { fields: '{}', source: 'base' }),
     ) as StorageProgram<Result>;
   },
@@ -259,7 +239,10 @@ const _handler: FunctionalConceptHandler = {
         return branch(thenP,
           (bindings) => (bindings.record as Record<string, unknown>).status === 'proposed',
           (alreadyP) => complete(alreadyP, 'already_proposed', { space }),
-          (proposeP) => complete(proposeP, 'ok', {}),
+          (proposeP) => {
+            proposeP = merge(proposeP, 'spaces', space, { status: 'proposed' });
+            return complete(proposeP, 'ok', {});
+          },
         );
       },
       (elseP) => complete(elseP, 'already_proposed', { space }),
@@ -336,18 +319,19 @@ const _handler: FunctionalConceptHandler = {
             incoming_override: (bindings.sourceOverrides as Record<string, unknown>[])[0].override_fields as string,
           })),
           (copyP) => {
-            const overrideId = nextId('override');
-            return completeFrom(
-              put(copyP, 'override_entries', overrideId, {
-                id: overrideId,
+            const overrideKey = `${target}:${entity_id}`;
+            copyP = putFrom(copyP, 'override_entries', overrideKey, (bindings) => {
+              const sourceOverride = (bindings.sourceOverrides as Record<string, unknown>[])[0];
+              return {
+                id: overrideKey,
                 override_space: target,
                 override_entity_id: entity_id,
-                override_fields: '',
-                override_operation: 'modify',
+                override_fields: sourceOverride.override_fields as string,
+                override_operation: sourceOverride.override_operation as string,
                 override_at: new Date().toISOString(),
-              }),
-              'ok', (_bindings) => ({}),
-            );
+              };
+            });
+            return complete(copyP, 'ok', {});
           },
         );
       },
@@ -362,10 +346,18 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (_bindings) => {
-          const snapshotId = nextId('snapshot');
-          return { old_base_snapshot: snapshotId };
-        });
+        thenP = find(thenP, 'spaces', { parent: space }, 'children');
+        return branch(thenP,
+          (bindings) => {
+            const children = bindings.children as Record<string, unknown>[];
+            return children.some((c) => c.status === 'active');
+          },
+          (hasChildrenP) => complete(hasChildrenP, 'has_children', { space }),
+          (noChildrenP) => {
+            const snapshotId = nextId('snapshot');
+            return complete(noChildrenP, 'ok', { old_base_snapshot: snapshotId });
+          },
+        );
       },
       (elseP) => complete(elseP, 'access_denied', {}),
     ) as StorageProgram<Result>;
@@ -404,9 +396,8 @@ const _handler: FunctionalConceptHandler = {
     const space = input.space as string;
 
     let p = createProgram();
-    p = get(p, 'spaces', space, 'record');
+    p = merge(p, 'spaces', space, { status: 'archived' });
 
-    // Archive is always ok
     return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 

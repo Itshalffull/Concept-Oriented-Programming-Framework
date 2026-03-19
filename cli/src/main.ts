@@ -50,8 +50,15 @@ async function boot(): Promise<void> {
       await program.parseAsync(process.argv);
       return;
     }
-  } catch {
-    // Generated entrypoint not available yet — fall through to legacy CLI
+  } catch (err: unknown) {
+    // Only fall through for import resolution failures (generated
+    // entrypoint not available yet). Re-throw anything else so real
+    // errors aren't silently swallowed.
+    if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ERR_MODULE_NOT_FOUND') {
+      // Generated entrypoint not available yet — fall through to legacy CLI
+    } else {
+      throw err;
+    }
   }
 
   // Fallback: hand-written CLI with basic commands

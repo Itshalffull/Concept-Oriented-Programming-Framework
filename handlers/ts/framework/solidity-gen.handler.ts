@@ -195,15 +195,257 @@ pragma solidity ^0.8.20;
 
 /// @title StorageProgramDSL
 /// @notice Free Monad DSL for Concept Handlers (Solidity)
+/// @dev Provides typed lenses/optics, effect tracking, algebraic effects,
+///      transport effects, and functorial mapping for render programs.
+
+// ── Lens Types ──────────────────────────────────────────────
 
 enum LensSegmentKind { Relation, Key, Field }
-struct LensSegment { LensSegmentKind kind; string value; }
-struct StateLens { LensSegment[] segments; string sourceType; string focusType; }
+
+struct LensSegment {
+    LensSegmentKind kind;
+    string value;
+}
+
+struct StateLens {
+    LensSegment[] segments;
+    string sourceType;
+    string focusType;
+}
+
+library LensLib {
+    function relation(string memory name) internal pure returns (StateLens memory) {
+        StateLens memory lens;
+        lens.sourceType = "store";
+        lens.focusType = string(abi.encodePacked("relation<", name, ">"));
+        LensSegment[] memory segs = new LensSegment[](1);
+        segs[0] = LensSegment(LensSegmentKind.Relation, name);
+        lens.segments = segs;
+        return lens;
+    }
+
+    function at(StateLens memory self, string memory key) internal pure returns (StateLens memory) {
+        uint256 len = self.segments.length;
+        LensSegment[] memory newSegs = new LensSegment[](len + 1);
+        for (uint256 i = 0; i < len; i++) { newSegs[i] = self.segments[i]; }
+        newSegs[len] = LensSegment(LensSegmentKind.Key, key);
+        self.segments = newSegs;
+        self.focusType = "record";
+        return self;
+    }
+
+    function field(StateLens memory self, string memory name) internal pure returns (StateLens memory) {
+        uint256 len = self.segments.length;
+        LensSegment[] memory newSegs = new LensSegment[](len + 1);
+        for (uint256 i = 0; i < len; i++) { newSegs[i] = self.segments[i]; }
+        newSegs[len] = LensSegment(LensSegmentKind.Field, name);
+        self.segments = newSegs;
+        self.focusType = name;
+        return self;
+    }
+
+    function compose(StateLens memory outer, StateLens memory inner) internal pure returns (StateLens memory) {
+        uint256 outerLen = outer.segments.length;
+        uint256 innerLen = inner.segments.length;
+        LensSegment[] memory newSegs = new LensSegment[](outerLen + innerLen);
+        for (uint256 i = 0; i < outerLen; i++) { newSegs[i] = outer.segments[i]; }
+        for (uint256 i = 0; i < innerLen; i++) { newSegs[outerLen + i] = inner.segments[i]; }
+        outer.segments = newSegs;
+        outer.focusType = inner.focusType;
+        return outer;
+    }
+}
+
+// ── Effect Set ──────────────────────────────────────────────
+
 enum PurityLevel { Pure, ReadOnly, ReadWrite }
-struct EffectSet { string[] reads; string[] writes; string[] completionVariants; string[] performs; }
-enum InstructionTag { Get, Put, Del, GetLens, PutLens, Perform, Pure }
-struct Instruction { InstructionTag tag; string relation; string key; bytes value; string protocol; string operation; string bindAs; }
-struct StorageProgram { Instruction[] instructions; bool terminated; EffectSet effects; }
+
+struct EffectSet {
+    string[] reads;
+    string[] writes;
+    string[] completionVariants;
+    string[] performs;
+}
+
+library EffectLib {
+    function purityOf(EffectSet memory effects) internal pure returns (PurityLevel) {
+        if (effects.writes.length > 0) return PurityLevel.ReadWrite;
+        if (effects.reads.length > 0) return PurityLevel.ReadOnly;
+        return PurityLevel.Pure;
+    }
+
+    function validatePurity(EffectSet memory effects, PurityLevel declared) internal pure returns (bool valid, string memory reason) {
+        if (declared == PurityLevel.Pure && (effects.reads.length > 0 || effects.writes.length > 0)) {
+            return (false, "Declared pure but has storage effects");
+        }
+        if (declared == PurityLevel.ReadOnly && effects.writes.length > 0) {
+            return (false, "Declared read-only but has write effects");
+        }
+        return (true, "");
+    }
+
+    function merge(EffectSet memory a, EffectSet memory b) internal pure returns (EffectSet memory) {
+        EffectSet memory result;
+        result.reads = _concatStringArrays(a.reads, b.reads);
+        result.writes = _concatStringArrays(a.writes, b.writes);
+        result.completionVariants = _concatStringArrays(a.completionVariants, b.completionVariants);
+        result.performs = _concatStringArrays(a.performs, b.performs);
+        return result;
+    }
+
+    function _concatStringArrays(string[] memory a, string[] memory b) private pure returns (string[] memory) {
+        string[] memory result = new string[](a.length + b.length);
+        for (uint256 i = 0; i < a.length; i++) { result[i] = a[i]; }
+        for (uint256 i = 0; i < b.length; i++) { result[a.length + i] = b[i]; }
+        return result;
+    }
+}
+
+// ── Instruction Types ───────────────────────────────────────
+
+enum InstructionTag { Get, Find, Put, Merge, Del, GetLens, PutLens, Perform, Pure }
+
+struct Instruction {
+    InstructionTag tag;
+    string relation;
+    string key;
+    bytes value;
+    string protocol;
+    string operation;
+    string bindAs;
+    StateLens lens;
+}
+
+// ── StorageProgram ──────────────────────────────────────────
+
+struct StorageProgram {
+    Instruction[] instructions;
+    bool terminated;
+    EffectSet effects;
+}
+
+library StorageProgramLib {
+    function addRead(EffectSet memory effects, string memory rel) internal pure returns (EffectSet memory) {
+        string[] memory newReads = new string[](effects.reads.length + 1);
+        for (uint256 i = 0; i < effects.reads.length; i++) { newReads[i] = effects.reads[i]; }
+        newReads[effects.reads.length] = rel;
+        effects.reads = newReads;
+        return effects;
+    }
+
+    function addWrite(EffectSet memory effects, string memory rel) internal pure returns (EffectSet memory) {
+        string[] memory newWrites = new string[](effects.writes.length + 1);
+        for (uint256 i = 0; i < effects.writes.length; i++) { newWrites[i] = effects.writes[i]; }
+        newWrites[effects.writes.length] = rel;
+        effects.writes = newWrites;
+        return effects;
+    }
+
+    function get(StorageProgram storage self, string memory relation, string memory key, string memory bindAs) internal {
+        self.effects = addRead(self.effects, relation);
+        Instruction memory instr;
+        instr.tag = InstructionTag.Get;
+        instr.relation = relation;
+        instr.key = key;
+        instr.bindAs = bindAs;
+        self.instructions.push(instr);
+    }
+
+    function put(StorageProgram storage self, string memory relation, string memory key, bytes memory value) internal {
+        self.effects = addWrite(self.effects, relation);
+        Instruction memory instr;
+        instr.tag = InstructionTag.Put;
+        instr.relation = relation;
+        instr.key = key;
+        instr.value = value;
+        self.instructions.push(instr);
+    }
+
+    function getLens(StorageProgram storage self, StateLens memory lens, string memory bindAs) internal {
+        if (lens.segments.length > 0 && lens.segments[0].kind == LensSegmentKind.Relation) {
+            self.effects = addRead(self.effects, lens.segments[0].value);
+        }
+        Instruction memory instr;
+        instr.tag = InstructionTag.GetLens;
+        instr.lens = lens;
+        instr.bindAs = bindAs;
+        self.instructions.push(instr);
+    }
+
+    function putLens(StorageProgram storage self, StateLens memory lens, bytes memory value) internal {
+        if (lens.segments.length > 0 && lens.segments[0].kind == LensSegmentKind.Relation) {
+            self.effects = addWrite(self.effects, lens.segments[0].value);
+        }
+        Instruction memory instr;
+        instr.tag = InstructionTag.PutLens;
+        instr.lens = lens;
+        instr.value = value;
+        self.instructions.push(instr);
+    }
+
+    function perform(StorageProgram storage self, string memory protocol, string memory operation, bytes memory payload, string memory bindAs) internal {
+        string[] memory newPerforms = new string[](self.effects.performs.length + 1);
+        for (uint256 i = 0; i < self.effects.performs.length; i++) {
+            newPerforms[i] = self.effects.performs[i];
+        }
+        newPerforms[self.effects.performs.length] = string(abi.encodePacked(protocol, ":", operation));
+        self.effects.performs = newPerforms;
+        Instruction memory instr;
+        instr.tag = InstructionTag.Perform;
+        instr.protocol = protocol;
+        instr.operation = operation;
+        instr.value = payload;
+        instr.bindAs = bindAs;
+        self.instructions.push(instr);
+    }
+
+    function complete(StorageProgram storage self, string memory variant, bytes memory output) internal {
+        string[] memory newVariants = new string[](self.effects.completionVariants.length + 1);
+        for (uint256 i = 0; i < self.effects.completionVariants.length; i++) {
+            newVariants[i] = self.effects.completionVariants[i];
+        }
+        newVariants[self.effects.completionVariants.length] = variant;
+        self.effects.completionVariants = newVariants;
+        Instruction memory instr;
+        instr.tag = InstructionTag.Pure;
+        instr.value = abi.encode(variant, output);
+        self.instructions.push(instr);
+        self.terminated = true;
+    }
+
+    function extractCompletionVariants(StorageProgram storage self) internal view returns (string[] memory) {
+        return self.effects.completionVariants;
+    }
+
+    function extractPerformSet(StorageProgram storage self) internal view returns (string[] memory) {
+        return self.effects.performs;
+    }
+}
+
+// ── Render Program (Functorial Mapping) ─────────────────────
+
+enum RenderInstructionTag { Token, Aria, Bind, Element, Focus, Keyboard, RenderPure }
+
+struct RenderInstruction {
+    RenderInstructionTag tag;
+    string path;
+    bytes value;
+    string role;
+    string label;
+    string field;
+    string expr;
+    string name;
+    string strategy;
+    string target;
+    string key;
+    string action;
+    string[] modifiers;
+}
+
+struct RenderProgram {
+    RenderInstruction[] instructions;
+    bool terminated;
+}
 `;
 }
 

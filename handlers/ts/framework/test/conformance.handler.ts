@@ -131,13 +131,14 @@ const _handler: FunctionalConceptHandler = {
           return concept;
         }, 'conceptForFind');
 
-        b2 = find(b2, DEVIATIONS, { concept: '', language }, 'deviations');
+        b2 = find(b2, DEVIATIONS, { language }, 'allDeviations');
 
         b2 = putFrom(b2, RESULTS, `${suite}:${language}`, (bindings) => {
           const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
           const concept = suiteRecord.concept as string;
           const vectorCount = suiteRecord.vectorCount as number;
-          const deviations = (bindings.deviations || []) as Array<Record<string, unknown>>;
+          const allDeviations = (bindings.allDeviations || []) as Array<Record<string, unknown>>;
+          const deviations = allDeviations.filter((d: Record<string, unknown>) => d.concept === concept);
           const deviatedRequirements = new Set(deviations.map((d: Record<string, unknown>) => d.requirement as string));
 
           const requirements = JSON.parse(suiteRecord.requirements as string) as Array<{ id: string }>;
@@ -163,8 +164,10 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(b2, 'ok', (bindings) => {
           const suiteRecord = bindings.suiteRecord as Record<string, unknown>;
+          const concept = suiteRecord.concept as string;
           const vectorCount = suiteRecord.vectorCount as number;
-          const deviations = (bindings.deviations || []) as Array<Record<string, unknown>>;
+          const allDeviations = (bindings.allDeviations || []) as Array<Record<string, unknown>>;
+          const deviations = allDeviations.filter((d: Record<string, unknown>) => d.concept === concept);
           const deviatedRequirements = new Set(deviations.map((d: Record<string, unknown>) => d.requirement as string));
 
           const requirements = JSON.parse(suiteRecord.requirements as string) as Array<{ id: string }>;

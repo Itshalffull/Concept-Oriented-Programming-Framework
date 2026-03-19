@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -50,15 +50,30 @@ const _handler: FunctionalConceptHandler = {
     const orientation = (options.orientation as string) ?? 'landscape';
     const margin = (options.margin as number) ?? 20;
 
+    const id = nextId();
+
     let p = createProgram();
     p = find(p, 'canvas-item', { canvas: canvasId }, 'items');
     p = find(p, 'canvas-connector', { canvas: canvasId }, 'connectors');
 
+    // Store pending generation metadata for external retrieval
+    p = putFrom(p, 'pdf-export-metadata', id, (bindings) => {
+      const items = bindings.items as Record<string, unknown>[];
+      const connectors = bindings.connectors as Record<string, unknown>[];
+      return {
+        status: 'pending_generation',
+        page_size: pageSize,
+        orientation,
+        margin,
+        item_count: items.length,
+        connector_count: connectors.length,
+        note: 'PDF generation is environment-specific and must be handled externally',
+      };
+    });
+
     return completeFrom(p, 'ok', (bindings) => {
       const items = bindings.items as Record<string, unknown>[];
       const connectors = bindings.connectors as Record<string, unknown>[];
-
-      const id = nextId();
 
       return {
         export_id: id,

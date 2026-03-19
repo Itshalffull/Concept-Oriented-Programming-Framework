@@ -43,4 +43,14 @@ concept MobileAdapter [A] {
     requires: props != ""
     ensures ok: adapter != none
   }
+
+  invariant {
+    always "successful normalize produces valid platform output" {
+      normalize -> ok implies normalized contains "platform" and normalized contains "mobile"
+    }
+
+    never "empty props yield ok" {
+      normalize -> ok when props is empty or whitespace-only
+    }
+  }
 }

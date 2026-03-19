@@ -374,4 +374,50 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const snapshotHandler = autoInterpret(_handler);
+const _interpreted = autoInterpret(_handler);
+
+// approveAll requires dynamic N puts which the functional DSL cannot express
+// at construction time. Override with an imperative implementation.
+export const snapshotHandler: Record<string, (...args: unknown[]) => unknown> = {
+  ..._interpreted,
+  async approveAll(input: Record<string, unknown>, storage: unknown) {
+    if (!storage) return (_interpreted as Record<string, (...args: unknown[]) => unknown>).approveAll(input);
+
+    const st = storage as import('../../../../runtime/types.ts').ConceptStorage;
+    const paths = (input as Record<string, unknown>).paths as string[] | undefined;
+
+    const allComparisons = await st.find(COMPARISONS, {});
+    const toApprove: Array<Record<string, unknown>> = [];
+
+    for (const comp of allComparisons) {
+      const status = comp.status as string;
+      if (status !== 'changed' && status !== 'new') continue;
+      const compPath = comp.path as string;
+      if (paths && paths.length > 0) {
+        const matchesPath = paths.some((prefix: string) => compPath.startsWith(prefix));
+        if (!matchesPath) continue;
+      }
+      toApprove.push(comp);
+    }
+
+    const now = new Date().toISOString();
+    for (const comp of toApprove) {
+      const compPath = comp.path as string;
+      const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      await st.put(BASELINES, compPath, {
+        id: snapshotId,
+        path: compPath,
+        contentHash: comp.currentHash as string,
+        approvedAt: now,
+        approvedBy: null,
+      });
+      await st.put(COMPARISONS, compPath, {
+        ...comp,
+        status: 'current',
+        diffSummary: null,
+      });
+    }
+
+    return { variant: 'ok', approved: toApprove.length };
+  },
+};

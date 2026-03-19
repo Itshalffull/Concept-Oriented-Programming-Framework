@@ -455,7 +455,7 @@ class Parser {
           ast.actions = this.parseActions(typeParams);
           break;
         case 'invariant':
-          ast.invariants.push(this.parseInvariant());
+          ast.invariants.push(...this.parseInvariant());
           break;
         case 'example':
         case 'forall':
@@ -463,6 +463,10 @@ class Parser {
         case 'never':
         case 'eventually':
           ast.invariants.push(this.parseNamedInvariant(keyword.value as 'example' | 'forall' | 'always' | 'never' | 'eventually'));
+          break;
+        case 'action':
+          // Top-level action contract: `action X { requires: ... ensures: ... }`
+          ast.invariants.push(this.parseActionContract());
           break;
         case 'capabilities':
           ast.capabilities = this.parseCapabilities();
@@ -830,37 +834,48 @@ class Parser {
     return { name, type };
   }
 
-  private parseInvariant(): InvariantDecl {
+  private parseInvariant(): InvariantDecl[] {
     this.expect('KEYWORD', 'invariant');
     this.expect('LBRACE');
 
     // Check if this is an invariant block containing named sub-invariants
-    // (e.g. invariant { example "name": { ... } forall "name": { ... } })
+    // (e.g. invariant { example "name": { ... } always { ... } never { ... } action X { ... } })
     this.skipSeps();
     const tok = this.peek();
-    if (tok.type === 'KEYWORD' && (
+    const isNamedSubInvariant = tok.type === 'KEYWORD' && (
       tok.value === 'example' || tok.value === 'forall' ||
       tok.value === 'always' || tok.value === 'never' ||
-      tok.value === 'eventually'
-    )) {
-      // Parse the first named sub-invariant, return it, and let the
-      // outer loop pick up subsequent ones
-      const result = this.parseNamedInvariantBody(tok.value as 'example' | 'forall' | 'always' | 'never' | 'eventually');
-      this.skipSeps();
-      this.expect('RBRACE');
-      return result;
-    }
+      tok.value === 'eventually' || tok.value === 'action'
+    );
 
-    // Check for action requires/ensures block
-    if (tok.type === 'KEYWORD' && tok.value === 'action') {
-      const result = this.parseActionContract();
-      this.skipSeps();
+    if (isNamedSubInvariant) {
+      // Parse all named sub-invariants inside this invariant block
+      const results: InvariantDecl[] = [];
+      while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+        this.skipSeps();
+        if (this.peek().type === 'RBRACE') break;
+
+        const kw = this.peek();
+        if (kw.type === 'KEYWORD' && kw.value === 'action') {
+          results.push(this.parseActionContract());
+        } else if (kw.type === 'KEYWORD' && (
+          kw.value === 'example' || kw.value === 'forall' ||
+          kw.value === 'always' || kw.value === 'never' ||
+          kw.value === 'eventually'
+        )) {
+          results.push(this.parseNamedInvariantBody(kw.value as 'example' | 'forall' | 'always' | 'never' | 'eventually'));
+        } else {
+          // Skip unrecognized tokens inside invariant block
+          this.advance();
+        }
+        this.skipSeps();
+      }
       this.expect('RBRACE');
-      return result;
+      return results;
     }
 
     // Standard bare invariant — defaults to kind='example' with no name
-    return this.parseBareInvariantBody();
+    return [this.parseBareInvariantBody()];
   }
 
   /**

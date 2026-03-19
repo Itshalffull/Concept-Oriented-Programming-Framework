@@ -2,7 +2,7 @@
 // UISchema Concept Implementation [S, C]
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -64,7 +64,16 @@ const _uiSchemaHandler: FunctionalConceptHandler = {
   getElements(input: Record<string, unknown>) {
     const schema = input.schema as string;
     let p = createProgram(); p = spGet(p, 'uiSchema', schema, 'existing');
-    p = branch(p, 'existing', (b) => complete(b, 'ok', { elements: '' }),
+    p = branch(p, 'existing',
+      (b) => {
+        return branch(b, (bindings) => !!(bindings.existing as Record<string, unknown>)?.resolved,
+          (b2) => complete(b2, 'resolved', { schema }),
+          (b2) => completeFrom(b2, 'ok', (bindings) => {
+            const record = bindings.existing as Record<string, unknown>;
+            return { elements: (record.elements as string) || '' };
+          }),
+        );
+      },
       (b) => complete(b, 'notfound', { message: `UI schema "${schema}" not found` }));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

@@ -2,7 +2,8 @@
 // Canvas Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
+  mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -18,11 +19,19 @@ const _canvasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'canvas', canvas, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Append node and position to existing canvas — resolved at runtime
-        let b2 = put(b, 'canvas', canvas, {
-          nodes: '', // resolved at runtime: append node
-          positions: '', // resolved at runtime: add position
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const nodes = JSON.parse(rec.nodes as string || '[]');
+          const positions = JSON.parse(rec.positions as string || '{}');
+          nodes.push(node);
+          positions[node] = { x, y };
+          return { ...bindings, _nodes: JSON.stringify(nodes), _positions: JSON.stringify(positions) };
         });
+        b2 = putFrom(b2, 'canvas', canvas, (bindings) => ({
+          ...bindings.existing as Record<string, unknown>,
+          nodes: bindings._nodes as string,
+          positions: bindings._positions as string,
+        }));
         return complete(b2, 'ok', {});
       },
       (b) => {
@@ -49,11 +58,27 @@ const _canvasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'canvas', canvas, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Node existence check and position update resolved at runtime
-        let b2 = put(b, 'canvas', canvas, {
-          positions: '', // resolved at runtime: update node position
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const nodes = JSON.parse(rec.nodes as string || '[]');
+          const positions = JSON.parse(rec.positions as string || '{}');
+          if (!nodes.includes(node)) {
+            return { ...bindings, _nodeExists: false };
+          }
+          positions[node] = { x, y };
+          return { ...bindings, _nodeExists: true, _positions: JSON.stringify(positions) };
         });
-        return complete(b2, 'ok', {});
+        return branch(b2,
+          (bindings) => !!bindings._nodeExists,
+          (thenB) => {
+            let t = putFrom(thenB, 'canvas', canvas, (bindings) => ({
+              ...bindings.existing as Record<string, unknown>,
+              positions: bindings._positions as string,
+            }));
+            return complete(t, 'ok', {});
+          },
+          (elseB) => complete(elseB, 'notfound', { message: 'Node not found' }),
+        );
       },
       (b) => complete(b, 'notfound', { message: 'Canvas not found' }),
     );
@@ -69,10 +94,22 @@ const _canvasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'canvas', canvas, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Auto-add missing nodes and add edge — resolved at runtime
-        let b2 = put(b, 'canvas', canvas, {
-          edges: '', // resolved at runtime: append edge
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const nodes = JSON.parse(rec.nodes as string || '[]');
+          const positions = JSON.parse(rec.positions as string || '{}');
+          const edges = JSON.parse(rec.edges as string || '[]');
+          if (!nodes.includes(from)) { nodes.push(from); positions[from] = { x: 0, y: 0 }; }
+          if (!nodes.includes(to)) { nodes.push(to); positions[to] = { x: 0, y: 0 }; }
+          edges.push({ from, to });
+          return { ...bindings, _nodes: JSON.stringify(nodes), _positions: JSON.stringify(positions), _edges: JSON.stringify(edges) };
         });
+        b2 = putFrom(b2, 'canvas', canvas, (bindings) => ({
+          ...bindings.existing as Record<string, unknown>,
+          nodes: bindings._nodes as string,
+          positions: bindings._positions as string,
+          edges: bindings._edges as string,
+        }));
         return complete(b2, 'ok', {});
       },
       (b) => {
@@ -98,11 +135,29 @@ const _canvasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'canvas', canvas, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Node validation and group assignment resolved at runtime
-        let b2 = put(b, 'canvas', canvas, {
-          groups: '', // resolved at runtime
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const nodes = JSON.parse(rec.nodes as string || '[]');
+          const groups = JSON.parse(rec.groups as string || '{}');
+          const requestedNodes = JSON.parse(nodeList || '[]');
+          const missing = requestedNodes.filter((n: string) => !nodes.includes(n));
+          if (missing.length > 0) {
+            return { ...bindings, _allExist: false };
+          }
+          groups[group] = requestedNodes;
+          return { ...bindings, _allExist: true, _groups: JSON.stringify(groups) };
         });
-        return complete(b2, 'ok', {});
+        return branch(b2,
+          (bindings) => !!bindings._allExist,
+          (thenB) => {
+            let t = putFrom(thenB, 'canvas', canvas, (bindings) => ({
+              ...bindings.existing as Record<string, unknown>,
+              groups: bindings._groups as string,
+            }));
+            return complete(t, 'ok', {});
+          },
+          (elseB) => complete(elseB, 'notfound', { message: 'Node not found' }),
+        );
       },
       (b) => complete(b, 'notfound', { message: 'Canvas not found' }),
     );
@@ -118,11 +173,27 @@ const _canvasHandler: FunctionalConceptHandler = {
     p = spGet(p, 'canvas', canvas, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Node validation and embed assignment resolved at runtime
-        let b2 = put(b, 'canvas', canvas, {
-          embeds: '', // resolved at runtime
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const nodes = JSON.parse(rec.nodes as string || '[]');
+          const embeds = JSON.parse(rec.embeds as string || '{}');
+          if (!nodes.includes(node)) {
+            return { ...bindings, _nodeExists: false };
+          }
+          embeds[node] = file;
+          return { ...bindings, _nodeExists: true, _embeds: JSON.stringify(embeds) };
         });
-        return complete(b2, 'ok', {});
+        return branch(b2,
+          (bindings) => !!bindings._nodeExists,
+          (thenB) => {
+            let t = putFrom(thenB, 'canvas', canvas, (bindings) => ({
+              ...bindings.existing as Record<string, unknown>,
+              embeds: bindings._embeds as string,
+            }));
+            return complete(t, 'ok', {});
+          },
+          (elseB) => complete(elseB, 'notfound', { message: 'Node not found' }),
+        );
       },
       (b) => complete(b, 'notfound', { message: 'Canvas not found' }),
     );

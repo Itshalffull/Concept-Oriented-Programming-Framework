@@ -230,7 +230,7 @@ describe('HandlerEntity Handler', () => {
   // ----------------------------------------------------------
 
   describe('implementationGaps', () => {
-    it('reports fullyImplemented with action count', async () => {
+    it('reports ok with action count', async () => {
       const ast = JSON.stringify({
         actionMethods: [{ name: 'create' }, { name: 'delete' }],
       });
@@ -239,7 +239,7 @@ describe('HandlerEntity Handler', () => {
         storage,
       );
       const result = await handlerEntityHandler.implementationGaps({ concept: 'Todo' }, storage);
-      expect(result.variant).toBe('fullyImplemented');
+      expect(result.variant).toBe('ok');
       expect(result.actionCount).toBe(2);
     });
 

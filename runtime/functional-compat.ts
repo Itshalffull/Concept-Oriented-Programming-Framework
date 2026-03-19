@@ -12,6 +12,7 @@
 import type { ConceptHandler, ConceptStorage } from './types.ts';
 import type { FunctionalConceptHandler } from './functional-handler.ts';
 import { interpret } from './interpreter.ts';
+import { createInMemoryStorage } from './adapters/storage.ts';
 
 /**
  * Wrap a FunctionalConceptHandler as a ConceptHandler.
@@ -50,12 +51,23 @@ export function autoInterpret(handler: FunctionalConceptHandler): FunctionalConc
       if (typeof action !== 'function') return action;
 
       // Return a function that checks argument count at call time
-      return function (input: Record<string, unknown>, storage?: ConceptStorage) {
+      return function (...args: unknown[]) {
+        const input = (args[0] ?? {}) as Record<string, unknown>;
+        const storage = args[1] as ConceptStorage | undefined;
         const program = action.call(target, input);
 
         // If storage was passed, auto-interpret (imperative compat mode)
-        if (storage) {
+        if (storage !== undefined) {
           return interpret(program, storage).then(result => ({
+            variant: result.variant,
+            ...result.output,
+          }));
+        }
+
+        // If called with zero args and program is already terminated
+        // (e.g. register()), auto-interpret with a no-op storage
+        if (args.length === 0 && program && program.terminated) {
+          return interpret(program, createInMemoryStorage()).then(result => ({
             variant: result.variant,
             ...result.output,
           }));

@@ -3,7 +3,7 @@
 // PageRank: iterative computation of reputation scores from a directed contribution graph.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -98,6 +98,12 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
       return { scores: JSON.stringify(result), scoreEntries };
     }, 'computed');
 
+    // Store all scores in a single document keyed by config
+    p = putFrom(p, 'pr_scores', config as string, (bindings) => {
+      const computed = bindings.computed as Record<string, unknown>;
+      return { config, scores: computed.scores };
+    });
+
     return completeFrom(p, 'computed', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
       return { config, scores: computed.scores };
@@ -106,13 +112,14 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
 
   getScore(input: Record<string, unknown>) {
     const { config, participant } = input;
-    const key = `${config}:${participant}`;
     let p = createProgram();
-    p = get(p, 'pr_score', key, 'record');
+    p = get(p, 'pr_scores', config as string, 'record');
 
     return completeFrom(p, 'score', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
-      const pageRank = record ? (record.pageRank as number) : 0;
+      if (!record) return { participant, pageRank: 0 };
+      const scores = JSON.parse(record.scores as string) as Record<string, number>;
+      const pageRank = scores[participant as string] ?? 0;
       return { participant, pageRank };
     }) as StorageProgram<Result>;
   },

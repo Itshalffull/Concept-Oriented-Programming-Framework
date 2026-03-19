@@ -110,8 +110,8 @@ const _handler: FunctionalConceptHandler = {
             // is delegated to the caller (sync/derived concept) or a post-hoc
             // validation pass via the graph action.
 
-            // Store edge
-            b3 = putFrom(b3, EDGES_RELATION, '', (bindings) => {
+            // Store edge with unique key based on from:to names
+            b3 = putFrom(b3, EDGES_RELATION, edgeKey(from, to), (bindings) => {
               const names = bindings.names as { fromName: string; toName: string };
               return {
                 fromName: names.fromName,

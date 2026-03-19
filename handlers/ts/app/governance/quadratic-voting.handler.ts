@@ -31,18 +31,18 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
 
   castVotes(input: Record<string, unknown>) {
     const { session, voter, allocations } = input;
+    const allocs = (typeof allocations === 'string' ? JSON.parse(allocations as string) : allocations) as
+      Record<string, number>;
     let p = createProgram();
     p = get(p, 'qv_session', session as string, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'cast', (bindings) => {
+        b = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'open') return { variant: 'session_closed', session };
+          if (record.status !== 'open') return { _castError: 'session_closed' };
 
           const budget = record.creditBudget as number;
-          const allocs = (typeof allocations === 'string' ? JSON.parse(allocations as string) : allocations) as
-            Record<string, number>;
 
           let totalCost = 0;
           for (const votes of Object.values(allocs)) {
@@ -50,10 +50,25 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
           }
 
           if (totalCost > budget) {
-            return { variant: 'budget_exceeded', totalCost, budget };
+            return { _castError: 'budget_exceeded', totalCost, budget };
           }
 
-          return { variant: 'cast', session, totalCost, remainingCredits: budget - totalCost };
+          return { _castError: null, totalCost, remainingCredits: budget - totalCost };
+        }, 'castCheck');
+
+        // Store the vote record for later tallying
+        const voteId = `${session}:${voter}`;
+        b = put(b, 'qv_vote', voteId, { id: voteId, session, voter, allocations: allocs });
+
+        return completeFrom(b, 'cast', (bindings) => {
+          const check = bindings.castCheck as Record<string, unknown>;
+          if (check._castError === 'session_closed') {
+            return { variant: 'session_closed', session };
+          }
+          if (check._castError === 'budget_exceeded') {
+            return { variant: 'budget_exceeded', totalCost: check.totalCost, budget: check.budget };
+          }
+          return { variant: 'cast', session, voter, totalCost: check.totalCost, remainingCredits: check.remainingCredits };
         });
       },
       (b) => complete(b, 'not_found', { session }),

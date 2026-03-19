@@ -136,7 +136,7 @@ Refine the generated handler. Default style is FUNCTIONAL (StorageProgram):
 ## References
 
 - [Handler implementation patterns](references/handler-implementation-guide.md)
-- [undefined](undefined)
+
 ## Supporting Materials
 
 - [Handler implementation scaffolding walkthrough](examples/scaffold-handler.md)

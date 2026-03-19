@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -51,15 +51,31 @@ const _handler: FunctionalConceptHandler = {
     const scale = (options.scale as number) ?? 2;
     const background = (options.background as string) ?? 'white';
 
+    const id = nextId();
+
     let p = createProgram();
     p = find(p, 'canvas-item', { canvas: canvasId }, 'items');
     p = find(p, 'canvas-connector', { canvas: canvasId }, 'connectors');
 
+    // Store pending rasterization metadata for client-side retrieval
+    p = putFrom(p, 'png-export-metadata', id, (bindings) => {
+      const items = bindings.items as Record<string, unknown>[];
+      const connectors = bindings.connectors as Record<string, unknown>[];
+      return {
+        status: 'pending_rasterization',
+        width,
+        height,
+        scale,
+        background,
+        item_count: items.length,
+        connector_count: connectors.length,
+        note: 'Rasterization must be performed client-side',
+      };
+    });
+
     return completeFrom(p, 'ok', (bindings) => {
       const items = bindings.items as Record<string, unknown>[];
       const connectors = bindings.connectors as Record<string, unknown>[];
-
-      const id = nextId();
 
       return {
         export_id: id,

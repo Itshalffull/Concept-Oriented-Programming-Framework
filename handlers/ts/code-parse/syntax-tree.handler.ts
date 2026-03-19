@@ -80,77 +80,94 @@ function collectErrorRanges(node: Parser.SyntaxNode): Array<{ startByte: number;
 
 type Result = { variant: string; [key: string]: unknown };
 
+/**
+ * Imperative parse action — requires async FFI (tree-sitter WASM loading
+ * and parsing), so it cannot be expressed as a pure StorageProgram.
+ * When the grammar exists in storage but the parser isn't cached, it
+ * attempts to initialize the parser from the WASM path. Tree metadata
+ * is stored in the 'tree' relation for later retrieval via get().
+ */
+async function imperativeParse(
+  input: Record<string, unknown>,
+  storage: import('../../../runtime/types.ts').ConceptStorage,
+): Promise<Result> {
+  const file = input.file as string;
+  const grammarId = input.grammar as string;
+
+  // Look up grammar metadata in storage
+  const grammarData = await storage.get('grammar', grammarId);
+  if (!grammarData) {
+    return { variant: 'noGrammar', message: `Cannot load parser for grammar ${grammarId}` };
+  }
+
+  // Determine file content — check storage first, then filesystem
+  let content: string;
+  const storedContent = await storage.get('file_content', file) as Record<string, unknown> | null;
+  if (storedContent?.content) {
+    content = storedContent.content as string;
+  } else {
+    try {
+      content = readFileSync(file, 'utf-8');
+    } catch {
+      return { variant: 'parseError', errorCount: 0, message: `Cannot read file: ${file}` };
+    }
+  }
+
+  // Get parser from cache, or try to initialize from WASM path
+  let parser = parserCache.get(grammarId);
+  if (!parser) {
+    const wasmPath = grammarData.parserWasmPath as string;
+    try {
+      parser = await createParser();
+      const language = await loadLanguage(wasmPath);
+      parser.setLanguage(language);
+      parserCache.set(grammarId, parser);
+    } catch {
+      return { variant: 'parseError', errorCount: 0, message: `Parser not loaded for grammar ${grammarId}` };
+    }
+  }
+
+  // Parse the file content
+  let tree: Parser.Tree;
+  try {
+    tree = parser.parse(content);
+  } catch (err) {
+    return { variant: 'parseError', errorCount: 1, message: `Parser failed: ${err}` };
+  }
+
+  const id = nextTreeId();
+  const rootSexp = tree.rootNode.toString();
+  const byteLength = tree.rootNode.endIndex;
+  const errorRanges = collectErrorRanges(tree.rootNode);
+  const errorCount = errorRanges.length;
+
+  // Cache the live Tree for queries
+  liveTreeCache.set(id, tree);
+
+  // Store tree metadata in storage for later retrieval via get()
+  const treeData = {
+    id,
+    source: file,
+    grammar: grammarId,
+    rootSexp,
+    byteLength,
+    editVersion: 1,
+    errorRanges: JSON.stringify(errorRanges),
+  };
+  await storage.put('tree', id, treeData);
+
+  if (errorCount > 0) {
+    return { variant: 'parseError', tree: id, errorCount };
+  }
+  return { variant: 'ok', tree: id };
+}
+
 const _syntaxTreeHandler: FunctionalConceptHandler = {
-  parse(input: Record<string, unknown>) {
-    const file = input.file as string;
-    const grammarId = input.grammar as string;
-
-    // Tree-sitter parsing requires FFI — must be done eagerly.
-    // We build the StorageProgram around the storage operations only.
-    let p = createProgram();
-
-    // Look up the grammar to get its WASM path
-    p = get(p, 'grammar', grammarId, 'grammarData');
-
-    // Branch on whether grammar was found
-    p = branch(p, 'grammarData',
-      (b) => {
-        // Grammar found — now look for file content in storage
-        let b2 = get(b, 'file_content', file, 'storedContent');
-        // We use completeFrom to defer the tree-sitter parsing
-        // to interpretation time via the bindings
-        b2 = completeFrom(b2, '_deferred_parse', (bindings) => {
-          const grammarData = bindings.grammarData as Record<string, unknown>;
-          const storedContent = bindings.storedContent as Record<string, unknown> | null;
-
-          // Determine content source
-          let content: string;
-          if (storedContent?.content) {
-            content = storedContent.content as string;
-          } else {
-            try {
-              content = readFileSync(file, 'utf-8');
-            } catch {
-              return { variant: 'noGrammar', message: `Cannot read file: ${file}` };
-            }
-          }
-
-          // Get or create parser (sync from cache, or we need async init)
-          const wasmPath = grammarData.parserWasmPath as string;
-          const cachedParser = parserCache.get(grammarId);
-          if (!cachedParser) {
-            // Parser not cached — return deferred info for async resolution
-            return { variant: 'noGrammar', message: `Cannot load parser for grammar ${grammarId}` };
-          }
-
-          let tree: Parser.Tree;
-          try {
-            tree = cachedParser.parse(content);
-          } catch (err) {
-            return { variant: 'parseError', errorCount: 1, message: `Parser failed: ${err}` };
-          }
-
-          const id = nextTreeId();
-          const rootSexp = tree.rootNode.toString();
-          const byteLength = tree.rootNode.endIndex;
-          const errorRanges = collectErrorRanges(tree.rootNode);
-          const errorCount = errorRanges.length;
-
-          // Cache the live Tree for queries
-          liveTreeCache.set(id, tree);
-
-          // Return data for storage — the interpreter will handle the put
-          if (errorCount > 0) {
-            return { variant: 'parseError', tree: id, errorCount, _treeData: { id, source: file, grammar: grammarId, rootSexp, byteLength, editVersion: 1, errorRanges: JSON.stringify(errorRanges) } };
-          }
-          return { variant: 'ok', tree: id, _treeData: { id, source: file, grammar: grammarId, rootSexp, byteLength, editVersion: 1, errorRanges: JSON.stringify(errorRanges) } };
-        });
-        return b2;
-      },
-      (b) => complete(b, 'noGrammar', { message: `Cannot load parser for grammar ${grammarId}` }),
-    );
-
-    return p as StorageProgram<Result>;
+  // parse is handled imperatively — see imperativeParse above.
+  // This stub is never called directly; it exists so autoInterpret
+  // creates a property for 'parse' that we override below.
+  parse(_input: Record<string, unknown>) {
+    return createProgram() as StorageProgram<Result>;
   },
 
   reparse(input: Record<string, unknown>) {
@@ -344,7 +361,13 @@ const _syntaxTreeHandler: FunctionalConceptHandler = {
   },
 };
 
-export const syntaxTreeHandler = autoInterpret(_syntaxTreeHandler);
+const _autoInterpreted = autoInterpret(_syntaxTreeHandler);
+
+// Override parse with the imperative async implementation that supports
+// async parser initialization from WASM and persists tree metadata.
+export const syntaxTreeHandler: typeof _autoInterpreted = Object.create(_autoInterpreted, {
+  parse: { value: imperativeParse, writable: true, configurable: true, enumerable: true },
+});
 
 /** Get a live tree from the cache by ID. Used by DefinitionUnit handler. */
 export function getLiveTree(treeId: string): Parser.Tree | undefined {
