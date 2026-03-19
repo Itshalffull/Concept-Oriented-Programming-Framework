@@ -1,14 +1,8 @@
-// @migrated dsl-constructs 2026-03-18
 // Manifest Concept Implementation
 // Declarative project configuration file describing identity, dependency
 // requirements, version ranges, feature selections, registry sources,
 // overrides, patches, and target platform constraints.
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
 let nextId = 1;
 
@@ -35,32 +29,8 @@ function isValidModuleId(moduleId: string): boolean {
   return moduleId.length > 0 && !/\s/.test(moduleId);
 }
 
-/** Build a default empty project manifest. */
-function defaultProject(projectId: string): Record<string, unknown> {
-  return {
-    projectId,
-    name: projectId,
-    version: '0.0.0',
-    dependencies: [],
-    overrides: [],
-    patches: [],
-    disabled: [],
-    resolutionPolicy: {
-      unification_strategy: 'highest',
-      feature_unification: 'union',
-      prefer_locked: true,
-      allowed_updates: 'minor',
-    },
-    registries: [],
-    targetLanguages: [],
-    targetPlatforms: [],
-  };
-}
-
-type Result = { variant: string; [key: string]: unknown };
-
-const _manifestHandler: FunctionalConceptHandler = {
-  add(input: Record<string, unknown>) {
+export const manifestHandler: ConceptHandler = {
+  async add(input, storage) {
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
     const versionRange = input.version_range as string;
@@ -71,82 +41,80 @@ const _manifestHandler: FunctionalConceptHandler = {
 
     // Validate module_id
     if (!isValidModuleId(moduleId)) {
-      return complete(createProgram(), 'invalid', { message: 'module_id must be non-empty and contain no whitespace' }) as StorageProgram<Result>;
+      return { variant: 'invalid', message: 'module_id must be non-empty and contain no whitespace' };
     }
 
     // Validate version_range
     if (!isValidVersionRange(versionRange)) {
-      return complete(createProgram(), 'invalid', { message: `Invalid version range: "${versionRange}"` }) as StorageProgram<Result>;
+      return { variant: 'invalid', message: `Invalid version range: "${versionRange}"` };
     }
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
+    // Ensure project exists
+    let project = await storage.get('manifest', projectId);
+    if (!project) {
+      project = {
+        projectId,
+        name: projectId,
+        version: '0.0.0',
+        dependencies: [],
+        overrides: [],
+        patches: [],
+        disabled: [],
+        resolutionPolicy: {
+          unification_strategy: 'highest',
+          feature_unification: 'union',
+          prefer_locked: true,
+          allowed_updates: 'minor',
+        },
+        registries: [],
+        targetLanguages: [],
+        targetPlatforms: [],
+      };
+    }
 
-    // Resolve to existing or default project
-    p = mapBindings(p, (bindings) => {
-      return (bindings.project as Record<string, unknown> | null) || defaultProject(projectId);
-    }, 'resolvedProject');
+    const deps = project.dependencies as Array<{
+      module_id: string;
+      version_range: string;
+      edge_type: string;
+      environment: string;
+      features: string[];
+      optional: boolean;
+    }>;
 
     // Check for existing dependency
-    p = mapBindings(p, (bindings) => {
-      const proj = bindings.resolvedProject as Record<string, unknown>;
-      const deps = (proj.dependencies || []) as Array<{ module_id: string }>;
-      return deps.some((d) => d.module_id === moduleId);
-    }, 'depExists');
+    const existingIdx = deps.findIndex((d) => d.module_id === moduleId);
+    if (existingIdx >= 0) {
+      return { variant: 'exists' };
+    }
 
-    p = branch(p, 'depExists',
-      (b) => complete(b, 'exists', {}),
-      (b) => {
-        let b2 = putFrom(b, 'manifest', projectId, (bindings) => {
-          const proj = bindings.resolvedProject as Record<string, unknown>;
-          const deps = [...((proj.dependencies || []) as Array<Record<string, unknown>>)];
-          deps.push({ module_id: moduleId, version_range: versionRange, edge_type: edgeType, environment, features, optional });
-          return { ...proj, dependencies: deps };
-        });
-        return complete(b2, 'ok', {});
-      },
-    );
+    deps.push({ module_id: moduleId, version_range: versionRange, edge_type: edgeType, environment, features, optional });
+    await storage.put('manifest', projectId, { ...project, dependencies: deps });
 
-    return p as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  remove(input: Record<string, unknown>) {
+  async remove(input, storage) {
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
+    const project = await storage.get('manifest', projectId);
+    if (!project) {
+      return { variant: 'notfound' };
+    }
 
-    p = branch(p, 'project',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const project = bindings.project as Record<string, unknown>;
-          const deps = (project.dependencies || []) as Array<{ module_id: string }>;
-          return deps.findIndex((d) => d.module_id === moduleId);
-        }, 'idx');
+    const deps = project.dependencies as Array<{ module_id: string }>;
+    const idx = deps.findIndex((d) => d.module_id === moduleId);
+    if (idx < 0) {
+      return { variant: 'notfound' };
+    }
 
-        b2 = branch(b2,
-          (bindings) => (bindings.idx as number) < 0,
-          (b3) => complete(b3, 'notfound', {}),
-          (b3) => {
-            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
-              const project = bindings.project as Record<string, unknown>;
-              const deps = [...((project.dependencies || []) as Array<{ module_id: string }>)];
-              deps.splice(bindings.idx as number, 1);
-              return { ...project, dependencies: deps };
-            });
-            return complete(b4, 'ok', {});
-          },
-        );
-        return b2 as StorageProgram<Result>;
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
+    deps.splice(idx, 1);
+    await storage.put('manifest', projectId, { ...project, dependencies: deps });
 
-    return p as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  override(input: Record<string, unknown>) {
+  async override(input, storage) {
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
     const replacementId = input.replacement_id as string | undefined;
@@ -155,16 +123,15 @@ const _manifestHandler: FunctionalConceptHandler = {
 
     // At least one override field must be provided
     if (!replacementId && !replacementSource && !versionPin) {
-      return complete(createProgram(), 'invalid', {
+      return {
+        variant: 'invalid',
         message: 'At least one of replacement_id, replacement_source, or version_pin must be provided',
-      }) as StorageProgram<Result>;
+      };
     }
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
-
-    p = putFrom(p, 'manifest', projectId, (bindings) => {
-      const project = (bindings.project as Record<string, unknown> | null) || {
+    let project = await storage.get('manifest', projectId);
+    if (!project) {
+      project = {
         projectId,
         name: projectId,
         version: '0.0.0',
@@ -177,327 +144,264 @@ const _manifestHandler: FunctionalConceptHandler = {
         targetLanguages: [],
         targetPlatforms: [],
       };
+    }
 
-      const overrides = [...((project.overrides || []) as Array<{
-        module_id: string;
-        replacement_id?: string;
-        replacement_source?: string;
-        version_pin?: string;
-      }>)];
+    const overrides = project.overrides as Array<{
+      module_id: string;
+      replacement_id?: string;
+      replacement_source?: string;
+      version_pin?: string;
+    }>;
 
-      const entry = {
-        module_id: moduleId,
-        replacement_id: replacementId || undefined,
-        replacement_source: replacementSource || undefined,
-        version_pin: versionPin || undefined,
-      };
+    // Update or add the override
+    const existingIdx = overrides.findIndex((o) => o.module_id === moduleId);
+    const entry = {
+      module_id: moduleId,
+      replacement_id: replacementId || undefined,
+      replacement_source: replacementSource || undefined,
+      version_pin: versionPin || undefined,
+    };
 
-      const existingIdx = overrides.findIndex((o) => o.module_id === moduleId);
-      if (existingIdx >= 0) {
-        overrides[existingIdx] = entry;
-      } else {
-        overrides.push(entry);
-      }
+    if (existingIdx >= 0) {
+      overrides[existingIdx] = entry;
+    } else {
+      overrides.push(entry);
+    }
 
-      return { ...project, overrides };
-    });
+    await storage.put('manifest', projectId, { ...project, overrides });
 
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  disable(input: Record<string, unknown>) {
+  async disable(input, storage) {
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
+    const project = await storage.get('manifest', projectId);
+    if (!project) {
+      return { variant: 'notfound' };
+    }
 
-    p = branch(p, 'project',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const project = bindings.project as Record<string, unknown>;
-          const deps = (project.dependencies || []) as Array<{ module_id: string }>;
-          return deps.some((d) => d.module_id === moduleId);
-        }, 'found');
+    // Check the module appears somewhere in the dependency graph
+    const deps = project.dependencies as Array<{ module_id: string }>;
+    const found = deps.some((d) => d.module_id === moduleId);
+    if (!found) {
+      return { variant: 'notfound' };
+    }
 
-        b2 = branch(b2, 'found',
-          (b3) => {
-            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
-              const project = bindings.project as Record<string, unknown>;
-              const disabled = [...((project.disabled as string[]) || [])];
-              if (!disabled.includes(moduleId)) {
-                disabled.push(moduleId);
-              }
-              return { ...project, disabled };
-            });
-            return complete(b4, 'ok', {});
-          },
-          (b3) => complete(b3, 'notfound', {}),
-        );
-        return b2 as StorageProgram<Result>;
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
+    const disabled = (project.disabled as string[]) || [];
+    if (!disabled.includes(moduleId)) {
+      disabled.push(moduleId);
+    }
 
-    return p as StorageProgram<Result>;
+    await storage.put('manifest', projectId, { ...project, disabled });
+
+    return { variant: 'ok' };
   },
 
-  enable(input: Record<string, unknown>) {
+  async enable(input, storage) {
     const projectId = input.project as string;
     const moduleId = input.module_id as string;
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
+    const project = await storage.get('manifest', projectId);
+    if (!project) {
+      return { variant: 'notfound' };
+    }
 
-    p = branch(p, 'project',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const project = bindings.project as Record<string, unknown>;
-          const disabled = (project.disabled as string[]) || [];
-          return disabled.indexOf(moduleId);
-        }, 'idx');
+    const disabled = (project.disabled as string[]) || [];
+    const idx = disabled.indexOf(moduleId);
+    if (idx < 0) {
+      return { variant: 'notfound' };
+    }
 
-        b2 = branch(b2,
-          (bindings) => (bindings.idx as number) < 0,
-          (b3) => complete(b3, 'notfound', {}),
-          (b3) => {
-            let b4 = putFrom(b3, 'manifest', projectId, (bindings) => {
-              const project = bindings.project as Record<string, unknown>;
-              const disabled = [...((project.disabled as string[]) || [])];
-              disabled.splice(bindings.idx as number, 1);
-              return { ...project, disabled };
-            });
-            return complete(b4, 'ok', {});
-          },
-        );
-        return b2 as StorageProgram<Result>;
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
+    disabled.splice(idx, 1);
+    await storage.put('manifest', projectId, { ...project, disabled });
 
-    return p as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  merge(input: Record<string, unknown>) {
+  async merge(input, storage) {
     const baseId = input.base as string;
     const overlayId = input.overlay as string;
 
-    let p = createProgram();
-    p = get(p, 'manifest', baseId, 'base');
-    p = get(p, 'manifest', overlayId, 'overlay');
+    const base = await storage.get('manifest', baseId);
+    const overlay = await storage.get('manifest', overlayId);
 
-    p = branch(p,
-      (bindings) => !bindings.base || !bindings.overlay,
-      (b) => complete(b, 'conflict', { message: 'One or both manifests not found' }),
-      (b) => {
-        // Compute the merged manifest, detecting conflicts
-        let b2 = mapBindings(b, (bindings) => {
-          const base = bindings.base as Record<string, unknown>;
-          const overlay = bindings.overlay as Record<string, unknown>;
+    if (!base || !overlay) {
+      return { variant: 'conflict', message: 'One or both manifests not found' };
+    }
 
-          const baseDeps = (base.dependencies || []) as Array<{
-            module_id: string;
-            version_range: string;
-            edge_type: string;
-            environment: string;
-            features: string[];
-            optional: boolean;
-          }>;
-          const overlayDeps = (overlay.dependencies || []) as typeof baseDeps;
+    const baseDeps = (base.dependencies || []) as Array<{
+      module_id: string;
+      version_range: string;
+      edge_type: string;
+      environment: string;
+      features: string[];
+      optional: boolean;
+    }>;
+    const overlayDeps = (overlay.dependencies || []) as typeof baseDeps;
 
-          const mergedDeps = [...baseDeps];
-          for (const dep of overlayDeps) {
-            const idx = mergedDeps.findIndex((d) => d.module_id === dep.module_id);
-            if (idx >= 0) {
-              mergedDeps[idx] = dep;
-            } else {
-              mergedDeps.push(dep);
-            }
-          }
+    // Overlay dependencies take precedence
+    const mergedDeps = [...baseDeps];
+    for (const dep of overlayDeps) {
+      const idx = mergedDeps.findIndex((d) => d.module_id === dep.module_id);
+      if (idx >= 0) {
+        mergedDeps[idx] = dep;
+      } else {
+        mergedDeps.push(dep);
+      }
+    }
 
-          const baseOverrides = (base.overrides || []) as Array<{
-            module_id: string;
-            replacement_id?: string;
-            replacement_source?: string;
-            version_pin?: string;
-          }>;
-          const overlayOverrides = (overlay.overrides || []) as typeof baseOverrides;
+    // Overrides: overlay takes precedence, check for contradictions
+    const baseOverrides = (base.overrides || []) as Array<{
+      module_id: string;
+      replacement_id?: string;
+      replacement_source?: string;
+      version_pin?: string;
+    }>;
+    const overlayOverrides = (overlay.overrides || []) as typeof baseOverrides;
 
-          const mergedOverrides = [...baseOverrides];
-          for (const override of overlayOverrides) {
-            const idx = mergedOverrides.findIndex((o) => o.module_id === override.module_id);
-            if (idx >= 0) {
-              const existing = mergedOverrides[idx];
-              if (
-                existing.replacement_id && override.replacement_id &&
-                existing.replacement_id !== override.replacement_id
-              ) {
-                return {
-                  _conflict: true,
-                  message: `Contradictory overrides for "${override.module_id}": ` +
-                    `"${existing.replacement_id}" vs "${override.replacement_id}"`,
-                };
-              }
-              mergedOverrides[idx] = override;
-            } else {
-              mergedOverrides.push(override);
-            }
-          }
-
-          const basePatches = (base.patches || []) as Array<{ target_module: string; patch_path: string }>;
-          const overlayPatches = (overlay.patches || []) as typeof basePatches;
-          const mergedPatches = [...basePatches];
-          for (const patch of overlayPatches) {
-            const idx = mergedPatches.findIndex((p) => p.target_module === patch.target_module);
-            if (idx >= 0) {
-              mergedPatches[idx] = patch;
-            } else {
-              mergedPatches.push(patch);
-            }
-          }
-
-          const baseRegistries = (base.registries || []) as Array<{ name: string; url: string; scope?: string }>;
-          const overlayRegistries = (overlay.registries || []) as typeof baseRegistries;
-          const mergedRegistries = [...overlayRegistries];
-          for (const reg of baseRegistries) {
-            if (!mergedRegistries.some((r) => r.name === reg.name)) {
-              mergedRegistries.push(reg);
-            }
-          }
-
-          const baseDisabled = (base.disabled || []) as string[];
-          const overlayDisabled = (overlay.disabled || []) as string[];
-          const mergedDisabled = [...new Set([...baseDisabled, ...overlayDisabled])];
-
-          const baseLangs = (base.targetLanguages || []) as string[];
-          const overlayLangs = (overlay.targetLanguages || []) as string[];
-          const mergedLangs = baseLangs.length > 0 && overlayLangs.length > 0
-            ? baseLangs.filter((l) => overlayLangs.includes(l))
-            : [...baseLangs, ...overlayLangs];
-
-          const basePlatforms = (base.targetPlatforms || []) as string[];
-          const overlayPlatforms = (overlay.targetPlatforms || []) as string[];
-          const mergedPlatforms = basePlatforms.length > 0 && overlayPlatforms.length > 0
-            ? basePlatforms.filter((p) => overlayPlatforms.includes(p))
-            : [...basePlatforms, ...overlayPlatforms];
-
+    const mergedOverrides = [...baseOverrides];
+    for (const override of overlayOverrides) {
+      const idx = mergedOverrides.findIndex((o) => o.module_id === override.module_id);
+      if (idx >= 0) {
+        // Check for irreconcilable conflict
+        const existing = mergedOverrides[idx];
+        if (
+          existing.replacement_id && override.replacement_id &&
+          existing.replacement_id !== override.replacement_id
+        ) {
           return {
-            _conflict: false,
-            name: (overlay.name || base.name) as string,
-            version: (overlay.version || base.version) as string,
-            dependencies: mergedDeps,
-            overrides: mergedOverrides,
-            patches: mergedPatches,
-            disabled: mergedDisabled,
-            resolutionPolicy: overlay.resolutionPolicy || base.resolutionPolicy,
-            registries: mergedRegistries,
-            targetLanguages: mergedLangs,
-            targetPlatforms: mergedPlatforms,
+            variant: 'conflict',
+            message: `Contradictory overrides for "${override.module_id}": ` +
+              `"${existing.replacement_id}" vs "${override.replacement_id}"`,
           };
-        }, 'mergeResult');
+        }
+        mergedOverrides[idx] = override;
+      } else {
+        mergedOverrides.push(override);
+      }
+    }
 
-        b2 = branch(b2,
-          (bindings) => !!(bindings.mergeResult as Record<string, unknown>)._conflict,
-          (b3) => completeFrom(b3, 'conflict', (bindings) => {
-            const mr = bindings.mergeResult as Record<string, unknown>;
-            return { message: mr.message as string };
-          }),
-          (b3) => {
-            const mergedId = `merged-${nextId++}`;
-            let b4 = putFrom(b3, 'manifest', mergedId, (bindings) => {
-              const mr = bindings.mergeResult as Record<string, unknown>;
-              return {
-                projectId: mergedId,
-                name: mr.name,
-                version: mr.version,
-                dependencies: mr.dependencies,
-                overrides: mr.overrides,
-                patches: mr.patches,
-                disabled: mr.disabled,
-                resolutionPolicy: mr.resolutionPolicy,
-                registries: mr.registries,
-                targetLanguages: mr.targetLanguages,
-                targetPlatforms: mr.targetPlatforms,
-              };
-            });
-            return complete(b4, 'ok', { merged: mergedId });
-          },
-        );
-        return b2 as StorageProgram<Result>;
-      },
-    );
+    // Patches: overlay takes precedence
+    const basePatches = (base.patches || []) as Array<{ target_module: string; patch_path: string }>;
+    const overlayPatches = (overlay.patches || []) as typeof basePatches;
+    const mergedPatches = [...basePatches];
+    for (const patch of overlayPatches) {
+      const idx = mergedPatches.findIndex((p) => p.target_module === patch.target_module);
+      if (idx >= 0) {
+        mergedPatches[idx] = patch;
+      } else {
+        mergedPatches.push(patch);
+      }
+    }
 
-    return p as StorageProgram<Result>;
+    // Registries: union with overlay first
+    const baseRegistries = (base.registries || []) as Array<{ name: string; url: string; scope?: string }>;
+    const overlayRegistries = (overlay.registries || []) as typeof baseRegistries;
+    const mergedRegistries = [...overlayRegistries];
+    for (const reg of baseRegistries) {
+      if (!mergedRegistries.some((r) => r.name === reg.name)) {
+        mergedRegistries.push(reg);
+      }
+    }
+
+    // Disabled: union
+    const baseDisabled = (base.disabled || []) as string[];
+    const overlayDisabled = (overlay.disabled || []) as string[];
+    const mergedDisabled = [...new Set([...baseDisabled, ...overlayDisabled])];
+
+    // Target languages/platforms: intersection
+    const baseLangs = (base.targetLanguages || []) as string[];
+    const overlayLangs = (overlay.targetLanguages || []) as string[];
+    const mergedLangs = baseLangs.length > 0 && overlayLangs.length > 0
+      ? baseLangs.filter((l) => overlayLangs.includes(l))
+      : [...baseLangs, ...overlayLangs];
+
+    const basePlatforms = (base.targetPlatforms || []) as string[];
+    const overlayPlatforms = (overlay.targetPlatforms || []) as string[];
+    const mergedPlatforms = basePlatforms.length > 0 && overlayPlatforms.length > 0
+      ? basePlatforms.filter((p) => overlayPlatforms.includes(p))
+      : [...basePlatforms, ...overlayPlatforms];
+
+    const mergedId = `merged-${nextId++}`;
+    const merged = {
+      projectId: mergedId,
+      name: (overlay.name || base.name) as string,
+      version: (overlay.version || base.version) as string,
+      dependencies: mergedDeps,
+      overrides: mergedOverrides,
+      patches: mergedPatches,
+      disabled: mergedDisabled,
+      resolutionPolicy: overlay.resolutionPolicy || base.resolutionPolicy,
+      registries: mergedRegistries,
+      targetLanguages: mergedLangs,
+      targetPlatforms: mergedPlatforms,
+    };
+
+    await storage.put('manifest', mergedId, merged);
+
+    return { variant: 'ok', merged: mergedId };
   },
 
-  validate(input: Record<string, unknown>) {
+  async validate(input, storage) {
     const projectId = input.project as string;
 
-    let p = createProgram();
-    p = get(p, 'manifest', projectId, 'project');
+    const project = await storage.get('manifest', projectId);
+    if (!project) {
+      return { variant: 'invalid', errors: ['Project manifest not found'] };
+    }
 
-    p = branch(p, 'project',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const project = bindings.project as Record<string, unknown>;
-          const errors: string[] = [];
+    const errors: string[] = [];
 
-          const deps = (project.dependencies || []) as Array<{
-            module_id: string;
-            version_range: string;
-            edge_type: string;
-          }>;
+    // Validate dependencies
+    const deps = (project.dependencies || []) as Array<{
+      module_id: string;
+      version_range: string;
+      edge_type: string;
+    }>;
 
-          for (const dep of deps) {
-            if (!isValidModuleId(dep.module_id)) {
-              errors.push(`Invalid module_id: "${dep.module_id}"`);
-            }
-            if (!isValidVersionRange(dep.version_range)) {
-              errors.push(`Invalid version range "${dep.version_range}" for module "${dep.module_id}"`);
-            }
-            if (!dep.edge_type) {
-              errors.push(`Missing edge_type for module "${dep.module_id}"`);
-            }
-          }
+    for (const dep of deps) {
+      if (!isValidModuleId(dep.module_id)) {
+        errors.push(`Invalid module_id: "${dep.module_id}"`);
+      }
+      if (!isValidVersionRange(dep.version_range)) {
+        errors.push(`Invalid version range "${dep.version_range}" for module "${dep.module_id}"`);
+      }
+      if (!dep.edge_type) {
+        errors.push(`Missing edge_type for module "${dep.module_id}"`);
+      }
+    }
 
-          const overrides = (project.overrides || []) as Array<{
-            module_id: string;
-            replacement_id?: string;
-            replacement_source?: string;
-            version_pin?: string;
-          }>;
+    // Validate overrides reference known modules
+    const overrides = (project.overrides || []) as Array<{
+      module_id: string;
+      replacement_id?: string;
+      replacement_source?: string;
+      version_pin?: string;
+    }>;
 
-          for (const override of overrides) {
-            if (!override.replacement_id && !override.replacement_source && !override.version_pin) {
-              errors.push(`Override for "${override.module_id}" has no replacement_id, replacement_source, or version_pin`);
-            }
-            if (override.version_pin && !isValidVersionRange(override.version_pin)) {
-              errors.push(`Invalid version_pin "${override.version_pin}" in override for "${override.module_id}"`);
-            }
-          }
+    for (const override of overrides) {
+      if (!override.replacement_id && !override.replacement_source && !override.version_pin) {
+        errors.push(`Override for "${override.module_id}" has no replacement_id, replacement_source, or version_pin`);
+      }
+      if (override.version_pin && !isValidVersionRange(override.version_pin)) {
+        errors.push(`Invalid version_pin "${override.version_pin}" in override for "${override.module_id}"`);
+      }
+    }
 
-          const registries = (project.registries || []) as Array<{ name: string; url: string }>;
-          for (const reg of registries) {
-            if (!reg.url || reg.url.length === 0) {
-              errors.push(`Registry "${reg.name}" has no URL`);
-            }
-          }
+    // Validate registries have URLs
+    const registries = (project.registries || []) as Array<{ name: string; url: string }>;
+    for (const reg of registries) {
+      if (!reg.url || reg.url.length === 0) {
+        errors.push(`Registry "${reg.name}" has no URL`);
+      }
+    }
 
-          return errors;
-        }, 'errors');
+    if (errors.length > 0) {
+      return { variant: 'invalid', errors };
+    }
 
-        b2 = branch(b2,
-          (bindings) => ((bindings.errors as string[]).length > 0),
-          (b3) => completeFrom(b3, 'invalid', (bindings) => ({ errors: bindings.errors })),
-          (b3) => complete(b3, 'ok', {}),
-        );
-        return b2 as StorageProgram<Result>;
-      },
-      (b) => complete(b, 'invalid', { errors: ['Project manifest not found'] }),
-    );
-
-    return p as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 };
-
-export const manifestHandler = autoInterpret(_manifestHandler);

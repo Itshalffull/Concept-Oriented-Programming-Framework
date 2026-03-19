@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ThemeImplementationEntity Concept Implementation
 //
 // Queryable representation of generated theme implementation files.
@@ -8,34 +7,26 @@
 // token resolution tracing from component styling to theme spec
 // declarations.
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
+export const themeImplementationEntityHandler: ConceptHandler = {
 
-const _handler: FunctionalConceptHandler = {
-
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+  async register(input, storage) {
     const theme = input.theme as string;
     const platform = input.platform as string;
     const sourceFile = input.sourceFile as string;
     const ast = input.ast as string;
 
     const key = `theme-impl:${theme}:${platform}`;
-    p = get(p, 'theme-implementations', key, 'existing');
+    const existing = await storage.get('theme-implementations', key);
     if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing.id };
     }
 
     const id = crypto.randomUUID();
     const parsedAst = ast ? JSON.parse(ast) : {};
 
-    p = put(p, 'theme-implementations', key, {
+    await storage.put('theme-implementations', key, {
       id,
       theme,
       platform,
@@ -48,88 +39,81 @@ const _handler: FunctionalConceptHandler = {
       lastModified: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { impl: id }) as StorageProgram<Result>;
+    return { variant: 'ok', impl: id };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input, storage) {
     const theme = input.theme as string;
     const platform = input.platform as string;
 
-    p = get(p, 'theme-implementations', `theme-impl:${theme}:${platform}`, 'entry');
+    const entry = await storage.get('theme-implementations', `theme-impl:${theme}:${platform}`);
     if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return { variant: 'ok', impl: entry.id };
   },
 
-  getByFile(input: Record<string, unknown>) {
-    let p = createProgram();
+  async getByFile(input, storage) {
     const sourceFile = input.sourceFile as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    const all = await storage.find('theme-implementations');
     const entry = all.find(i => i.sourceFile === sourceFile);
     if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
+    return { variant: 'ok', impl: entry.id };
   },
 
-  findByTheme(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByTheme(input, storage) {
     const theme = input.theme as string;
-    p = find(p, 'theme-implementations', { theme }, 'all');
+    const all = await storage.find('theme-implementations', { theme });
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  findByPlatform(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByPlatform(input, storage) {
     const platform = input.platform as string;
-    p = find(p, 'theme-implementations', { platform }, 'all');
+    const all = await storage.find('theme-implementations', { platform });
 
-    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
+    return { variant: 'ok', implementations: JSON.stringify(all) };
   },
 
-  resolveToken(input: Record<string, unknown>) {
-    let p = createProgram();
+  async resolveToken(input, storage) {
     const implId = input.impl as string;
     const tokenPath = input.tokenPath as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    const all = await storage.find('theme-implementations');
     const entry = all.find(i => i.id === implId);
     if (!entry) {
-      return complete(p, 'notfound', { tokenPath }) as StorageProgram<Result>;
+      return { variant: 'notfound', tokenPath };
     }
 
     const tokenPaths = JSON.parse(entry.tokenPaths as string || '[]');
     const token = tokenPaths.find((t: { path: string }) => t.path === tokenPath);
     if (!token) {
-      return complete(p, 'notfound', { tokenPath }) as StorageProgram<Result>;
+      return { variant: 'notfound', tokenPath };
     }
 
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       resolvedValue: token.resolvedValue || '',
       specTokenPath: token.specPath || tokenPath,
       platformSyntax: token.platformSyntax || '',
-    }) as StorageProgram<Result>;
+    };
   },
 
-  diffFromSpec(input: Record<string, unknown>) {
-    let p = createProgram();
+  async diffFromSpec(input, storage) {
     const implId = input.impl as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    const all = await storage.find('theme-implementations');
     const entry = all.find(i => i.id === implId);
     if (!entry) {
-      return complete(p, 'inSync', {}) as StorageProgram<Result>;
+      return { variant: 'inSync' };
     }
 
     // TODO: Compare generated implementation against theme spec
-    return complete(p, 'inSync', {}) as StorageProgram<Result>;
+    return { variant: 'inSync' };
   },
 };
-
-export const themeImplementationEntityHandler = autoInterpret(_handler);

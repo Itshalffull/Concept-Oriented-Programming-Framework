@@ -1,24 +1,16 @@
-// @migrated dsl-constructs 2026-03-18
 // FormBuilder Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _formBuilderHandler: FunctionalConceptHandler = {
-  buildForm(input: Record<string, unknown>) {
+export const formBuilderHandler: ConceptHandler = {
+  async buildForm(input, storage) {
     const form = input.form as string;
     const schema = input.schema as string;
 
     if (!schema) {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'Schema is required to build a form' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { variant: 'error', message: 'Schema is required to build a form' };
     }
 
-    let p = createProgram();
-    p = put(p, 'formDefinition', form, {
+    await storage.put('formDefinition', form, {
       form,
       schema,
       widgetRegistry: '{}',
@@ -31,33 +23,45 @@ const _formBuilderHandler: FunctionalConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { definition }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', definition };
   },
 
-  validate(input: Record<string, unknown>) {
+  async validate(input, storage) {
     const form = input.form as string;
     const data = input.data as string;
 
-    let p = createProgram();
-    p = spGet(p, 'formDefinition', form, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'formDefinition', form, {
-          validationState: JSON.stringify({ lastValidated: data, valid: true, errors: [] }),
-        });
-        return complete(b2, 'ok', { valid: true, errors: '' });
-      },
-      (b) => complete(b, 'ok', { valid: true, errors: '' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('formDefinition', form);
+    const validationState = existing
+      ? JSON.parse((existing.validationState as string) || '{}')
+      : {};
+
+    const errors: string[] = [];
+    const valid = errors.length === 0;
+
+    if (existing) {
+      await storage.put('formDefinition', form, {
+        ...existing,
+        validationState: JSON.stringify({ lastValidated: data, valid, errors }),
+      });
+    }
+
+    // Return errors as plain string: single error directly, empty string when none
+    const errorsValue = errors.length === 0 ? '' : errors.join(', ');
+    return { variant: 'ok', valid, errors: errorsValue };
   },
 
-  processSubmission(input: Record<string, unknown>) {
+  async processSubmission(input, storage) {
     const form = input.form as string;
     const data = input.data as string;
 
-    let p = createProgram();
-    p = spGet(p, 'formDefinition', form, 'existing');
+    const existing = await storage.get('formDefinition', form);
+    const validationState = existing
+      ? JSON.parse((existing.validationState as string) || '{}')
+      : {};
+
+    if (validationState.valid === false) {
+      return { variant: 'invalid', message: 'Submitted data fails validation' };
+    }
 
     const result = JSON.stringify({
       form,
@@ -65,49 +69,54 @@ const _formBuilderHandler: FunctionalConceptHandler = {
       processedAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { result }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', result };
   },
 
-  registerWidget(input: Record<string, unknown>) {
+  async registerWidget(input, storage) {
     const form = input.form as string;
     const type = input.type as string;
     const widget = input.widget as string;
 
-    let p = createProgram();
-    p = spGet(p, 'formDefinition', form, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'formDefinition', form, {
-          widgetRegistry: JSON.stringify({ [type]: widget }),
-        });
-        return complete(b2, 'ok', { form });
-      },
-      (b) => {
-        let b2 = put(b, 'formDefinition', form, {
-          form,
-          schema: '',
-          widgetRegistry: JSON.stringify({ [type]: widget }),
-          validationState: '{}',
-        });
-        return complete(b2, 'ok', { form });
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('formDefinition', form);
+    if (!existing) {
+      await storage.put('formDefinition', form, {
+        form,
+        schema: '',
+        widgetRegistry: JSON.stringify({ [type]: widget }),
+        validationState: '{}',
+      });
+      return { variant: 'ok', form };
+    }
+
+    const registry = JSON.parse((existing.widgetRegistry as string) || '{}');
+    if (registry[type]) {
+      return { variant: 'exists', message: `A widget for type "${type}" is already registered` };
+    }
+
+    registry[type] = widget;
+
+    await storage.put('formDefinition', form, {
+      ...existing,
+      widgetRegistry: JSON.stringify(registry),
+    });
+
+    return { variant: 'ok', form };
   },
 
-  getWidget(input: Record<string, unknown>) {
+  async getWidget(input, storage) {
     const form = input.form as string;
     const type = input.type as string;
 
-    let p = createProgram();
-    p = spGet(p, 'formDefinition', form, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { widget: '' }),
-      (b) => complete(b, 'notfound', { message: 'Form not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('formDefinition', form);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Form not found' };
+    }
+
+    const registry = JSON.parse((existing.widgetRegistry as string) || '{}');
+    if (!registry[type]) {
+      return { variant: 'notfound', message: `No widget registered for type "${type}"` };
+    }
+
+    return { variant: 'ok', widget: registry[type] as string };
   },
 };
-
-export const formBuilderHandler = autoInterpret(_formBuilderHandler);
-

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // HandlerGen — Generate storage-backed .handler.ts handlers
 //
@@ -10,12 +9,13 @@
 // Output: single <concept>.handler.ts file per concept.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptManifest,
+import type {
+  ConceptHandler,
+  ConceptStorage,
+  ConceptManifest,
   ActionSchema,
-  VariantSchema } from '../../../runtime/types.js';
+  VariantSchema,
+} from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -172,7 +172,7 @@ function generateRegistrationBody(action: ActionSchema, relation: string): strin
 
   if (dupVariant && keyParam) {
     lines.push(`    // Check for duplicates`);
-    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
+    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
     lines.push(`    if (existing.length > 0) {`);
     lines.push(`      return ${buildVariantReturn(dupVariant, 'existing[0]')};`);
     lines.push(`    }`);
@@ -183,7 +183,7 @@ function generateRegistrationBody(action: ActionSchema, relation: string): strin
 
   // Build storage record from all input params
   const fields = action.params.map(p => p.name);
-  lines.push(`    p = put(p, '${relation}', id, {`);
+  lines.push(`    await storage.put('${relation}', id, {`);
   lines.push(`      id,`);
   for (const f of fields) {
     lines.push(`      ${f},`);
@@ -207,7 +207,7 @@ function generateLookupBody(action: ActionSchema, relation: string): string[] {
 
   const keyParam = action.params[0];
   if (keyParam) {
-    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'results');`);
+    lines.push(`    const results = await storage.find('${relation}', { ${keyParam.name} });`);
     lines.push(`    if (results.length === 0) {`);
     if (notFoundVariant) {
       lines.push(`      return ${buildVariantReturn(notFoundVariant)};`);
@@ -242,7 +242,7 @@ function generateQueryBody(action: ActionSchema, relation: string): string[] {
     }
     lines.push(`    const results = await storage.find('${relation}', Object.keys(criteria).length > 0 ? criteria : undefined);`);
   } else {
-    lines.push(`    p = find(p, '${relation}', {}, 'results');`);
+    lines.push(`    const results = await storage.find('${relation}');`);
   }
   lines.push(``);
 
@@ -266,7 +266,7 @@ function generateRemoveBody(action: ActionSchema, relation: string): string[] {
   const keyParam = action.params[0];
 
   if (keyParam) {
-    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
+    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
     lines.push(`    if (existing.length === 0) {`);
     const notFoundV = action.variants.find(v => v.tag === 'notfound' || v.tag === 'notFound');
     if (notFoundV) {
@@ -276,7 +276,7 @@ function generateRemoveBody(action: ActionSchema, relation: string): string[] {
     }
     lines.push(`    }`);
     lines.push(``);
-    lines.push(`    p = del(p, '${relation}', existing[0].id as string);`);
+    lines.push(`    await storage.del('${relation}', existing[0].id as string);`);
   }
 
   const okVariant = action.variants.find(v => v.tag === 'ok' || v.tag === 'removed' || v.tag === 'done');
@@ -294,7 +294,7 @@ function generateUpdateBody(action: ActionSchema, relation: string): string[] {
   const keyParam = action.params[0];
 
   if (keyParam) {
-    lines.push(`    p = find(p, '${relation}', { ${keyParam.name} }, 'existing');`);
+    lines.push(`    const existing = await storage.find('${relation}', { ${keyParam.name} });`);
     lines.push(`    if (existing.length === 0) {`);
     const notFoundV = action.variants.find(v => v.tag === 'notfound' || v.tag === 'notFound');
     if (notFoundV) {
@@ -309,7 +309,7 @@ function generateUpdateBody(action: ActionSchema, relation: string): string[] {
     // Update with all params beyond the key
     const updateParams = action.params.slice(1);
     if (updateParams.length > 0) {
-      lines.push(`    p = put(p, '${relation}', record.id as string, {`);
+      lines.push(`    await storage.put('${relation}', record.id as string, {`);
       lines.push(`      ...record,`);
       for (const p of updateParams) {
         lines.push(`      ...(${p.name} !== undefined ? { ${p.name} } : {}),`);
@@ -442,22 +442,26 @@ function determineRelativeKernelPath(outputPath: string): string {
 
 // --- ConceptHandler interface ---
 
-const _handler: FunctionalConceptHandler = {
-  generate(input: Record<string, unknown>) {
+export const handlerGenHandler: ConceptHandler = {
+  async generate(
+    input: Record<string, unknown>,
+    _storage: ConceptStorage,
+  ) {
     const specPath = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
 
     if (!manifest || !manifest.name) {
-      { let p = createProgram(); p = complete(p, 'error', { message: 'Missing manifest' }); return p; }
+      return { variant: 'error', message: 'Missing manifest' };
     }
 
     const outputPath = determineOutputPath(manifest, specPath);
     const relKernel = determineRelativeKernelPath(outputPath);
     const content = generateHandlerImpl(manifest, relKernel);
 
-    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: outputPath, content }],
-      message: `Generated handler for ${manifest.name}` }); return p; }
+    return {
+      variant: 'ok',
+      files: [{ path: outputPath, content }],
+      message: `Generated handler for ${manifest.name}`,
+    };
   },
 };
-
-export const handlerGenHandler = autoInterpret(_handler);

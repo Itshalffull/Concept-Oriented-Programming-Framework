@@ -1,14 +1,8 @@
-// @migrated dsl-constructs 2026-03-18
 // Cache Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, del, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _cacheHandler: FunctionalConceptHandler = {
-  set(input: Record<string, unknown>) {
+export const cacheHandler: ConceptHandler = {
+  async set(input, storage) {
     const bin = input.bin as string;
     const key = input.key as string;
     const data = input.data as string;
@@ -19,8 +13,7 @@ const _cacheHandler: FunctionalConceptHandler = {
     const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
     const createdAt = Date.now();
 
-    let p = createProgram();
-    p = put(p, 'cacheEntry', compositeKey, {
+    await storage.put('cacheEntry', compositeKey, {
       bin,
       key,
       data,
@@ -28,52 +21,67 @@ const _cacheHandler: FunctionalConceptHandler = {
       maxAge,
       createdAt,
     });
-    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return { variant: 'ok' };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input, storage) {
     const bin = input.bin as string;
     const key = input.key as string;
-    const compositeKey = `${bin}:${key}`;
 
-    let p = createProgram();
-    p = spGet(p, 'cacheEntry', compositeKey, 'entry');
-    p = branch(p, 'entry',
-      (b) => {
-        // TTL check and data return resolved at runtime from bindings
-        return complete(b, 'ok', { data: '' });
-      },
-      (b) => complete(b, 'miss', {}),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const compositeKey = `${bin}:${key}`;
+    const entry = await storage.get('cacheEntry', compositeKey);
+
+    if (!entry) {
+      return { variant: 'miss' };
+    }
+
+    const createdAt = entry.createdAt as number;
+    const maxAge = entry.maxAge as number;
+    const now = Date.now();
+
+    if (maxAge > 0 && now - createdAt > maxAge * 1000) {
+      await storage.del('cacheEntry', compositeKey);
+      return { variant: 'miss' };
+    }
+
+    return { variant: 'ok', data: entry.data as string };
   },
 
-  invalidate(input: Record<string, unknown>) {
+  async invalidate(input, storage) {
     const bin = input.bin as string;
     const key = input.key as string;
-    const compositeKey = `${bin}:${key}`;
 
-    let p = createProgram();
-    p = spGet(p, 'cacheEntry', compositeKey, 'entry');
-    p = branch(p, 'entry',
-      (b) => {
-        let b2 = del(b, 'cacheEntry', compositeKey);
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const compositeKey = `${bin}:${key}`;
+    const entry = await storage.get('cacheEntry', compositeKey);
+
+    if (!entry) {
+      return { variant: 'notfound' };
+    }
+
+    await storage.delete('cacheEntry', compositeKey);
+
+    return { variant: 'ok' };
   },
 
-  invalidateByTags(input: Record<string, unknown>) {
+  async invalidateByTags(input, storage) {
     const tags = input.tags as string;
+    const targetTags = tags.split(',').map(t => t.trim()).filter(Boolean);
 
-    let p = createProgram();
-    p = find(p, 'cacheEntry', {}, 'allEntries');
-    // Tag matching and deletion resolved at runtime
-    return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const allEntries = await storage.find('cacheEntry');
+    let count = 0;
+
+    for (const entry of allEntries) {
+      const entryTags = entry.tags as string[];
+      const hasMatch = targetTags.some(t => entryTags.includes(t));
+
+      if (hasMatch) {
+        const compositeKey = `${entry.bin as string}:${entry.key as string}`;
+        await storage.del('cacheEntry', compositeKey);
+        count++;
+      }
+    }
+
+    return { variant: 'ok', count };
   },
 };
-
-export const cacheHandler = autoInterpret(_cacheHandler);
-

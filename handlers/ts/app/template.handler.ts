@@ -1,97 +1,90 @@
-// @migrated dsl-constructs 2026-03-18
 // Template Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, putFrom, branch, complete, mapBindings,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _templateHandler: FunctionalConceptHandler = {
-  define(input: Record<string, unknown>) {
+export const templateHandler: ConceptHandler = {
+  async define(input, storage) {
     const template = input.template as string;
     const body = input.body as string;
     const variables = input.variables as string;
-    let p = createProgram();
-    p = spGet(p, 'template', template, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'A template with this identity already exists' }),
-      (b) => {
-        let b2 = put(b, 'template', template, { template, body, variables, triggers: '[]' });
-        return complete(b2, 'ok', {});
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const existing = await storage.get('template', template);
+    if (existing) {
+      return { variant: 'exists', message: 'A template with this identity already exists' };
+    }
+
+    await storage.put('template', template, {
+      template,
+      body,
+      variables,
+      triggers: '[]',
+    });
+
+    return { variant: 'ok' };
   },
 
-  instantiate(input: Record<string, unknown>) {
+  async instantiate(input, storage) {
     const template = input.template as string;
     const values = input.values as string;
-    let p = createProgram();
-    p = spGet(p, 'template', template, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const body = existing.body as string;
-          const pairs = values.split('&').reduce<Record<string, string>>((acc, pair) => {
-            const [key, val] = pair.split('=');
-            if (key) acc[key] = val ?? '';
-            return acc;
-          }, {});
-          let content = body;
-          for (const [key, val] of Object.entries(pairs)) {
-            content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val);
-          }
-          return content;
-        }, 'content');
-        return complete(b2, 'ok', { content: '' });
-      },
-      (b) => complete(b, 'notfound', { message: 'Template not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const existing = await storage.get('template', template);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Template not found' };
+    }
+
+    const body = existing.body as string;
+    const pairs = values.split('&').reduce<Record<string, string>>((acc, pair) => {
+      const [key, val] = pair.split('=');
+      if (key) acc[key] = val ?? '';
+      return acc;
+    }, {});
+
+    let content = body;
+    for (const [key, val] of Object.entries(pairs)) {
+      content = content.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val);
+    }
+
+    return { variant: 'ok', content };
   },
 
-  registerTrigger(input: Record<string, unknown>) {
+  async registerTrigger(input, storage) {
     const template = input.template as string;
     const trigger = input.trigger as string;
-    let p = createProgram();
-    p = spGet(p, 'template', template, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = putFrom(b, 'template', template, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const triggers = JSON.parse((existing.triggers as string) || '[]') as string[];
-          triggers.push(trigger);
-          return { ...existing, triggers: JSON.stringify(triggers) };
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Template not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const existing = await storage.get('template', template);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Template not found' };
+    }
+
+    const triggers = JSON.parse((existing.triggers as string) || '[]') as string[];
+    triggers.push(trigger);
+
+    await storage.put('template', template, {
+      ...existing,
+      triggers: JSON.stringify(triggers),
+    });
+
+    return { variant: 'ok' };
   },
 
-  mergeProperties(input: Record<string, unknown>) {
+  async mergeProperties(input, storage) {
     const template = input.template as string;
     const properties = input.properties as string;
-    let p = createProgram();
-    p = spGet(p, 'template', template, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = putFrom(b, 'template', template, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const currentVariables = existing.variables as string;
-          const merged = currentVariables ? `${currentVariables},${properties}` : properties;
-          return { ...existing, variables: merged };
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Template not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const existing = await storage.get('template', template);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Template not found' };
+    }
+
+    const currentVariables = existing.variables as string;
+    const merged = currentVariables
+      ? `${currentVariables},${properties}`
+      : properties;
+
+    await storage.put('template', template, {
+      ...existing,
+      variables: merged,
+    });
+
+    return { variant: 'ok' };
   },
 };
-
-export const templateHandler = autoInterpret(_templateHandler);
-

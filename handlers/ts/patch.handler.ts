@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -201,6 +201,7 @@ const _handler: FunctionalConceptHandler = {
 
   invert(input: Record<string, unknown>) {
     const patchId = input.patchId as string;
+    const inverseId = nextId();
 
     let p = createProgram();
     p = get(p, 'patch', patchId, 'record');
@@ -208,51 +209,85 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => !bindings.record,
       (bp) => complete(bp, 'notFound', { message: `Patch '${patchId}' not found` }),
-      (bp) => completeFrom(bp, 'ok', (bindings) => {
-        const record = bindings.record as Record<string, unknown>;
-        const invertedEffect = invertEffect(record.effect as string);
-        if (invertedEffect === null) {
-          return { variant: 'notFound', message: 'Failed to invert patch effect' };
-        }
+      (bp) => {
+        let bp2 = mapBindings(bp, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const inv = invertEffect(record.effect as string);
+          if (inv === null) return { error: true };
+          return { error: false, invertedEffect: inv };
+        }, 'invertResult');
 
-        const inverseId = nextId();
-        return { inversePatchId: inverseId };
-      }),
+        bp2 = putFrom(bp2, 'patch', inverseId, (bindings) => {
+          const res = bindings.invertResult as Record<string, unknown>;
+          if (res.error) return {};
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            id: inverseId,
+            base: record.target,
+            target: record.base,
+            effect: res.invertedEffect,
+            dependencies: [patchId],
+            created: new Date().toISOString(),
+          };
+        });
+
+        return completeFrom(bp2, 'ok', (bindings) => {
+          const res = bindings.invertResult as Record<string, unknown>;
+          if (res.error) {
+            return { variant: 'notFound', message: 'Failed to invert patch effect' };
+          }
+          return { inversePatchId: inverseId };
+        });
+      },
     ) as StorageProgram<Result>;
   },
 
   compose(input: Record<string, unknown>) {
     const first = input.first as string;
     const second = input.second as string;
+    const composedId = nextId();
 
     let p = createProgram();
     p = get(p, 'patch', first, 'firstRecord');
     p = get(p, 'patch', second, 'secondRecord');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const firstRecord = bindings.firstRecord as Record<string, unknown> | null;
       const secondRecord = bindings.secondRecord as Record<string, unknown> | null;
 
-      if (!firstRecord) {
-        return { variant: 'notFound', message: `Patch '${first}' not found` };
-      }
-      if (!secondRecord) {
-        return { variant: 'notFound', message: `Patch '${second}' not found` };
-      }
+      if (!firstRecord) return { error: 'notFound', message: `Patch '${first}' not found` };
+      if (!secondRecord) return { error: 'notFound', message: `Patch '${second}' not found` };
 
       if (firstRecord.target !== secondRecord.base) {
         return {
-          variant: 'nonSequential',
+          error: 'nonSequential',
           message: `first.target ('${firstRecord.target}') does not equal second.base ('${secondRecord.base}'). Cannot compose non-sequential patches.`,
         };
       }
 
-      const composedEffect = composeEffects(firstRecord.effect as string, secondRecord.effect as string);
-      if (composedEffect === null) {
-        return { variant: 'nonSequential', message: 'Failed to compose effects' };
-      }
+      const composed = composeEffects(firstRecord.effect as string, secondRecord.effect as string);
+      if (composed === null) return { error: 'nonSequential', message: 'Failed to compose effects' };
 
-      const composedId = nextId();
+      return { error: null, composedEffect: composed, base: firstRecord.base, target: secondRecord.target };
+    }, 'composeResult');
+
+    p = putFrom(p, 'patch', composedId, (bindings) => {
+      const res = bindings.composeResult as Record<string, unknown>;
+      if (res.error) return {};
+      return {
+        id: composedId,
+        base: res.base,
+        target: res.target,
+        effect: res.composedEffect,
+        dependencies: [first, second],
+        created: new Date().toISOString(),
+      };
+    });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const res = bindings.composeResult as Record<string, unknown>;
+      if (res.error === 'notFound') return { variant: 'notFound', message: res.message as string };
+      if (res.error === 'nonSequential') return { variant: 'nonSequential', message: res.message as string };
       return { composedId };
     }) as StorageProgram<Result>;
   },

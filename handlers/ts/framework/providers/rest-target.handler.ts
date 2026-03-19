@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // REST Target Provider — Clef Bind
 //
@@ -8,13 +7,9 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
+  ConceptHandler,
+  ConceptStorage,
   ConceptManifest,
   ActionSchema,
 } from '../../../../runtime/types.js';
@@ -280,21 +275,17 @@ function generateRestHelpMd(
 
 // --- Concept Handler ---
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    const p = createProgram();
-
-    return complete(p, 'ok', {
+export const restTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'RestTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'RestRoutes',
       capabilities: JSON.stringify(['hono-routes', 'api-docs', 'hierarchical']),
       targetKey: 'rest',
       providerType: 'target',
-
-    }) as StorageProgram<Result>;
+    };
   },
 
   /**
@@ -307,45 +298,40 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns variant 'ok' with generated files and route summaries.
    */
-  generate(input: Record<string, unknown>) {
+  async generate(
+    input: Record<string, unknown>,
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     // --- Parse inputs ---
 
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      const p = createProgram();
-
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         reason: 'projection is required and must be a JSON string',
-
-      }) as StorageProgram<Result>;
+      };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'projection is not valid JSON' };
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      const p = createProgram();
-
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         reason: 'projection.conceptManifest is required and must be a JSON string',
-
-      }) as StorageProgram<Result>;
+      };
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
     }
 
     // Parse optional config and overrides
@@ -385,13 +371,11 @@ const _handler: FunctionalConceptHandler = {
     // --- Validate manifest has actions ---
 
     if (!manifest.actions || manifest.actions.length === 0) {
-      const p = createProgram();
-
-      return complete(p, 'ok', {
+      return {
+        variant: 'ok',
         files: [],
         routes: [],
-
-      }) as StorageProgram<Result>;
+      };
     }
 
     // --- Generate route file ---
@@ -414,16 +398,10 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    const p = createProgram();
-
-
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       files,
       routes,
-
-
-    }) as StorageProgram<Result>;
+    };
   },
 };
-
-export const restTargetHandler = autoInterpret(_handler);

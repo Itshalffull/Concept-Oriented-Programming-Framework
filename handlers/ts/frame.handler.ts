@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Frame Handler
 //
@@ -7,140 +6,122 @@
 // background customization.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
   return `frame-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  create(input: Record<string, unknown>) {
-    const canvas = (input.canvas as string) ?? 'canvas';
+export const frameHandler: ConceptHandler = {
+  async create(input: Record<string, unknown>, storage: ConceptStorage) {
     const x = (input.x as number) ?? 0;
     const y = (input.y as number) ?? 0;
     const width = input.width as number;
     const height = input.height as number;
-    const name = ((input.name as string) ?? (input.label as string)) ?? '';
+    const label = (input.label as string) ?? '';
 
     const id = nextId();
-    let p = createProgram();
-    p = put(p, 'frame', id, {
+    await storage.put('frame', id, {
       id,
-      frame: id,
-      frame_canvas: canvas,
-      frame_name: name,
       x,
       y,
       width,
       height,
-      label: name,
-      name,
+      label,
       background: null,
     });
-    p = put(p, 'frame_items', id, { id, items: [] });
 
-    return complete(p, 'ok', { frame: id }) as StorageProgram<Result>;
+    // Initialize empty items list
+    await storage.put('frame_items', id, { id, items: [] });
+
+    return { variant: 'ok', frame: id };
   },
 
-  resize(input: Record<string, unknown>) {
+  async resize(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
     const width = input.width as number;
     const height = input.height as number;
 
-    let p = createProgram();
-    p = get(p, 'frame', frame, 'record');
+    const record = await storage.get('frame', frame);
+    if (!record) {
+      return { variant: 'notFound', message: `Frame '${frame}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        thenP = putFrom(thenP, 'frame', frame, (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return { ...record, width, height };
-        });
-        return complete(thenP, 'ok', {});
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.put('frame', frame, {
+      ...record,
+      width,
+      height,
+    });
+
+    return { variant: 'ok' };
   },
 
-  addItem(input: Record<string, unknown>) {
+  async addItem(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
-    const item = ((input.item_id as string) ?? (input.item as string));
+    const item = input.item as string;
 
-    let p = createProgram();
-    p = get(p, 'frame', frame, 'record');
-    p = get(p, 'frame_items', frame, 'itemsRecord');
+    const record = await storage.get('frame', frame);
+    if (!record) {
+      return { variant: 'notFound', message: `Frame '${frame}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
-          const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
-          const items = (itemsRecord?.items as string[]) ?? [];
+    const itemsRecord = await storage.get('frame_items', frame);
+    const items = (itemsRecord?.items as string[]) ?? [];
 
-          if (items.includes(item)) {
-            return { variant: 'already_present', message: `Item '${item}' is already in frame '${frame}'` };
-          }
+    if (items.includes(item)) {
+      return { variant: 'already_present', message: `Item '${item}' is already in frame '${frame}'` };
+    }
 
-          return { variant: 'ok', _needsPut: true };
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.put('frame_items', frame, {
+      id: frame,
+      items: [...items, item],
+    });
+
+    return { variant: 'ok' };
   },
 
-  removeItem(input: Record<string, unknown>) {
+  async removeItem(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
-    const item = ((input.item_id as string) ?? (input.item as string));
+    const item = input.item as string;
 
-    let p = createProgram();
-    p = get(p, 'frame', frame, 'record');
-    p = get(p, 'frame_items', frame, 'itemsRecord');
+    const record = await storage.get('frame', frame);
+    if (!record) {
+      return { variant: 'notFound', message: `Frame '${frame}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
-          const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
-          const items = (itemsRecord?.items as string[]) ?? [];
+    const itemsRecord = await storage.get('frame_items', frame);
+    const items = (itemsRecord?.items as string[]) ?? [];
 
-          if (!items.includes(item)) {
-            return { variant: 'not_present', message: `Item '${item}' is not in frame '${frame}'` };
-          }
+    if (!items.includes(item)) {
+      return { variant: 'not_present', message: `Item '${item}' is not in frame '${frame}'` };
+    }
 
-          return { variant: 'ok' };
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.put('frame_items', frame, {
+      id: frame,
+      items: items.filter((i: string) => i !== item),
+    });
+
+    return { variant: 'ok' };
   },
 
-  setBackground(input: Record<string, unknown>) {
+  async setBackground(input: Record<string, unknown>, storage: ConceptStorage) {
     const frame = input.frame as string;
     const color = input.color as string;
 
-    let p = createProgram();
-    p = get(p, 'frame', frame, 'record');
+    const record = await storage.get('frame', frame);
+    if (!record) {
+      return { variant: 'notFound', message: `Frame '${frame}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        thenP = putFrom(thenP, 'frame', frame, (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return { ...record, background: color };
-        });
-        return complete(thenP, 'ok', {});
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.put('frame', frame, {
+      ...record,
+      background: color,
+    });
+
+    return { variant: 'ok' };
   },
 };
-
-export const frameHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetFrameCounter(): void {

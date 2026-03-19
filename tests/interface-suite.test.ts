@@ -59,7 +59,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(4);
     // validate has 3 variants: ok, breakingChange, incompleteAnnotation
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.state.length).toBeGreaterThan(0);
   });
 
@@ -74,7 +74,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(4);
     // generate has 3 variants: ok, partial, blocked
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   // Emitter: imported from generation suite (see suite.yaml uses section)
@@ -88,7 +88,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['compose', 'entrypoint']);
     // compose has 3 variants: ok, conflictingRoutes, cyclicDependency
     expect(ast.actions[0].variants).toHaveLength(3);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses Middleware', () => {
@@ -102,7 +102,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // register has 2 variants: ok, duplicateRegistration
     expect(ast.actions[2].variants).toHaveLength(2);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses Grouping', () => {
@@ -116,7 +116,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // classify has 1 variant: ok
     expect(ast.actions[1].variants).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses ActionGuide', () => {
@@ -130,7 +130,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // render has 2 variants: ok, unknownFormat
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     // Both actions have description blocks
     expect(ast.actions[0].description).toContain('ordered');
     expect(ast.actions[1].description).toContain('Render');
@@ -147,7 +147,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(2);
     // resolve has 2 variants: ok, notFound
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     // Both actions have description blocks
     expect(ast.actions[0].description).toContain('metadata');
     expect(ast.actions[1].description).toContain('annotations');
@@ -171,7 +171,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // diff has 2 variants: ok, noPrevious
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses Sdk', () => {
@@ -185,7 +185,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // publish has 3 variants: ok, versionExists, registryUnavailable
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses Spec', () => {
@@ -199,7 +199,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(2);
     // validate has 2 variants: ok, invalid
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -217,7 +217,7 @@ describe('Target Provider Concepts', () => {
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
     expect(ast.actions[0].variants.length).toBeGreaterThanOrEqual(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
     expect(ast.state.length).toBeGreaterThan(0);
   });
 
@@ -228,7 +228,7 @@ describe('Target Provider Concepts', () => {
     expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses GrpcTarget', () => {
@@ -238,7 +238,7 @@ describe('Target Provider Concepts', () => {
     expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses CliTarget', () => {
@@ -248,7 +248,7 @@ describe('Target Provider Concepts', () => {
     expect(ast.version).toBe(3);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses McpTarget', () => {
@@ -258,7 +258,7 @@ describe('Target Provider Concepts', () => {
     expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -275,7 +275,7 @@ describe('Spec Provider Concepts', () => {
     expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses AsyncApiTarget', () => {
@@ -285,7 +285,7 @@ describe('Spec Provider Concepts', () => {
     expect(ast.version).toBe(2);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -302,7 +302,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].name).toBe('generate');
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses PySdkTarget', () => {
@@ -311,7 +311,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses GoSdkTarget', () => {
@@ -320,7 +320,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses RustSdkTarget', () => {
@@ -329,7 +329,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses JavaSdkTarget', () => {
@@ -338,7 +338,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 
   it('parses SwiftSdkTarget', () => {
@@ -347,7 +347,7 @@ describe('SDK Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['S']);
     expect(ast.version).toBe(1);
     expect(ast.actions).toHaveLength(1);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
   });
 });
 

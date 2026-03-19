@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // LanguageGrammar Handler
 //
@@ -9,12 +8,7 @@
 // See design doc Section 4.1 (LanguageGrammar).
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 let grammarCounter = 0;
 
@@ -22,11 +16,8 @@ function nextGrammarId(): string {
   return `grammar-${++grammarCounter}`;
 }
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+export const languageGrammarHandler: ConceptHandler = {
+  async register(input: Record<string, unknown>, storage: ConceptStorage) {
     const name = input.name as string;
     const extensions = input.extensions as string;
     const parserWasmPath = input.parserWasmPath as string;
@@ -34,13 +25,13 @@ const _handler: FunctionalConceptHandler = {
     const mimeTypes = (input.mimeTypes as string) ?? '[]';
 
     // Check for duplicate name
-    p = find(p, 'grammar', { name }, 'existing');
+    const existing = await storage.find('grammar', { name });
     if (existing.length > 0) {
-      return complete(p, 'alreadyRegistered', { existing: existing[0].id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing[0].id };
     }
 
     const id = nextGrammarId();
-    p = put(p, 'grammar', id, {
+    await storage.put('grammar', id, {
       id,
       name,
       extensions,
@@ -52,64 +43,59 @@ const _handler: FunctionalConceptHandler = {
     // Register extension → grammar mappings for fast resolution
     const extList: string[] = JSON.parse(extensions);
     for (const ext of extList) {
-      p = put(p, 'ext_map', ext, { grammarId: id });
+      await storage.put('ext_map', ext, { grammarId: id });
     }
 
     // Register MIME type → grammar mappings
     const mimeList: string[] = JSON.parse(mimeTypes);
     for (const mime of mimeList) {
-      p = put(p, 'mime_map', mime, { grammarId: id });
+      await storage.put('mime_map', mime, { grammarId: id });
     }
 
-    return complete(p, 'ok', { grammar: id }) as StorageProgram<Result>;
+    return { variant: 'ok', grammar: id };
   },
 
-  resolve(input: Record<string, unknown>) {
-    let p = createProgram();
+  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
     const fileExtension = input.fileExtension as string;
-    p = get(p, 'ext_map', fileExtension, 'mapping');
+    const mapping = await storage.get('ext_map', fileExtension);
     if (!mapping) {
-      return complete(p, 'noGrammar', { extension: fileExtension }) as StorageProgram<Result>;
+      return { variant: 'noGrammar', extension: fileExtension };
     }
-    return complete(p, 'ok', { grammar: mapping.grammarId as string }) as StorageProgram<Result>;
+    return { variant: 'ok', grammar: mapping.grammarId as string };
   },
 
-  resolveByMime(input: Record<string, unknown>) {
-    let p = createProgram();
+  async resolveByMime(input: Record<string, unknown>, storage: ConceptStorage) {
     const mimeType = input.mimeType as string;
-    p = get(p, 'mime_map', mimeType, 'mapping');
+    const mapping = await storage.get('mime_map', mimeType);
     if (!mapping) {
-      return complete(p, 'noGrammar', { mimeType }) as StorageProgram<Result>;
+      return { variant: 'noGrammar', mimeType };
     }
-    return complete(p, 'ok', { grammar: mapping.grammarId as string }) as StorageProgram<Result>;
+    return { variant: 'ok', grammar: mapping.grammarId as string };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input: Record<string, unknown>, storage: ConceptStorage) {
     const grammarId = input.grammar as string;
-    p = get(p, 'grammar', grammarId, 'data');
+    const data = await storage.get('grammar', grammarId);
     if (!data) {
-      return complete(p, 'notfound', { message: `Grammar ${grammarId} not found` }) as StorageProgram<Result>;
+      return { variant: 'notfound', message: `Grammar ${grammarId} not found` };
     }
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       grammar: grammarId,
       name: data.name as string,
       extensions: data.extensions as string,
       parserWasmPath: data.parserWasmPath as string,
-    }) as StorageProgram<Result>;
+    };
   },
 
-  list(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'grammar', 'all');
+  async list(_input: Record<string, unknown>, storage: ConceptStorage) {
+    const all = await storage.find('grammar');
     const grammars = all.map((g) => ({
       id: g.id,
       name: g.name,
       extensions: g.extensions,
       parserWasmPath: g.parserWasmPath,
     }));
-    return complete(p, 'ok', { grammars: JSON.stringify(grammars) }) as StorageProgram<Result>;
+    return { variant: 'ok', grammars: JSON.stringify(grammars) };
   },
 };
-
-export const languageGrammarHandler = autoInterpret(_handler);

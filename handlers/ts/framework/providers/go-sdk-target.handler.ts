@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Go SDK Target Provider — Clef Bind
 //
@@ -9,13 +8,14 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptManifest,
+import type {
+  ConceptHandler,
+  ConceptStorage,
+  ConceptManifest,
   ActionSchema,
   ActionParamSchema,
-  VariantSchema } from '../../../../runtime/types.js';
+  VariantSchema,
+} from '../../../../runtime/types.js';
 
 import {
   typeToGo,
@@ -262,14 +262,17 @@ function generateGoMainClient(projections: ProjectionEntry[], goPackage: string)
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'GoSdkTarget',
+export const goSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'GoSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GoSdk',
       capabilities: JSON.stringify(['client', 'types', 'go-mod']),
       targetKey: 'go',
-      providerType: 'sdk' }); return p; }
+      providerType: 'sdk',
+    };
   },
 
   /**
@@ -282,32 +285,33 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  generate(
+  async generate(
     input: Record<string, unknown>,
-  ) {
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
+      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is not valid JSON' }); return p; }
+      return { variant: 'error', reason: 'projection is not valid JSON' };
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
+      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
+      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -327,7 +331,7 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [], package: packageName }); return p; }
+      return { variant: 'ok', files: [], package: packageName };
     }
 
     // --- Generate concept client file ---
@@ -368,8 +372,6 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files, package: packageName }); return p; }
+    return { variant: 'ok', files, package: packageName };
   },
 };
-
-export const goSdkTargetHandler = autoInterpret(_handler);

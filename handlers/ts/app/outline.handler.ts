@@ -1,161 +1,199 @@
-// @migrated dsl-constructs 2026-03-18
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _outlineHandler: FunctionalConceptHandler = {
-  create(input: Record<string, unknown>) {
+export const outlineHandler: ConceptHandler = {
+  async create(input, storage) {
     const node = input.node as string;
     const parent = (input.parent as string) || '';
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'already exists' }),
-      (b) => {
-        const now = new Date().toISOString();
-        let b2 = put(b, 'outline', node, {
-          node,
-          parent,
-          children: JSON.stringify([]),
-          isCollapsed: false,
-          order: 0,
-          createdAt: now,
+    const existing = await storage.get('outline', node);
+    if (existing) return { variant: 'exists', message: 'already exists' };
+    const now = new Date().toISOString();
+    await storage.put('outline', node, {
+      node,
+      parent,
+      children: JSON.stringify([]),
+      isCollapsed: false,
+      order: 0,
+      createdAt: now,
+    });
+    if (parent) {
+      const parentRecord = await storage.get('outline', parent);
+      if (parentRecord) {
+        const children: string[] = JSON.parse(parentRecord.children as string);
+        children.push(node);
+        await storage.put('outline', parent, {
+          ...parentRecord,
+          children: JSON.stringify(children),
         });
-        if (parent) {
-          b2 = spGet(b2, 'outline', parent, 'parentRecord');
-        }
-        return complete(b2, 'ok', { node });
-      },
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+    }
+    return { variant: 'ok', node };
   },
 
-  indent(input: Record<string, unknown>) {
+  async indent(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { node }),
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    const parentId = existing.parent as string;
+    if (!parentId) return { variant: 'invalid', message: 'No previous sibling to indent under' };
+    const parentRecord = await storage.get('outline', parentId);
+    if (!parentRecord) return { variant: 'invalid', message: 'No previous sibling to indent under' };
+    const siblings: string[] = JSON.parse(parentRecord.children as string);
+    const idx = siblings.indexOf(node);
+    if (idx <= 0) return { variant: 'invalid', message: 'No previous sibling to indent under' };
+    const newParentId = siblings[idx - 1];
+    const newParentRecord = await storage.get('outline', newParentId);
+    if (!newParentRecord) return { variant: 'invalid', message: 'No previous sibling to indent under' };
+    siblings.splice(idx, 1);
+    await storage.put('outline', parentId, {
+      ...parentRecord,
+      children: JSON.stringify(siblings),
+    });
+    const newChildren: string[] = JSON.parse(newParentRecord.children as string);
+    newChildren.push(node);
+    await storage.put('outline', newParentId, {
+      ...newParentRecord,
+      children: JSON.stringify(newChildren),
+    });
+    await storage.put('outline', node, {
+      ...existing,
+      parent: newParentId,
+    });
+    return { variant: 'ok', node };
   },
 
-  outdent(input: Record<string, unknown>) {
+  async outdent(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { node }),
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    const parentId = existing.parent as string;
+    if (!parentId) return { variant: 'invalid', message: 'Node is already at root level' };
+    const parentRecord = await storage.get('outline', parentId);
+    if (!parentRecord) return { variant: 'invalid', message: 'Node is already at root level' };
+    const grandparentId = parentRecord.parent as string;
+    if (!grandparentId) return { variant: 'invalid', message: 'Node is already at root level' };
+    const parentChildren: string[] = JSON.parse(parentRecord.children as string);
+    const idx = parentChildren.indexOf(node);
+    parentChildren.splice(idx, 1);
+    await storage.put('outline', parentId, {
+      ...parentRecord,
+      children: JSON.stringify(parentChildren),
+    });
+    const grandparentRecord = await storage.get('outline', grandparentId);
+    if (grandparentRecord) {
+      const gpChildren: string[] = JSON.parse(grandparentRecord.children as string);
+      const parentIdx = gpChildren.indexOf(parentId);
+      gpChildren.splice(parentIdx + 1, 0, node);
+      await storage.put('outline', grandparentId, {
+        ...grandparentRecord,
+        children: JSON.stringify(gpChildren),
+      });
+    }
+    await storage.put('outline', node, {
+      ...existing,
+      parent: grandparentId,
+    });
+    return { variant: 'ok', node };
   },
 
-  moveUp(input: Record<string, unknown>) {
+  async moveUp(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { node }),
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    const parentId = existing.parent as string;
+    if (!parentId) return { variant: 'ok', node };
+    const parentRecord = await storage.get('outline', parentId);
+    if (!parentRecord) return { variant: 'ok', node };
+    const siblings: string[] = JSON.parse(parentRecord.children as string);
+    const idx = siblings.indexOf(node);
+    if (idx > 0) {
+      [siblings[idx - 1], siblings[idx]] = [siblings[idx], siblings[idx - 1]];
+      await storage.put('outline', parentId, {
+        ...parentRecord,
+        children: JSON.stringify(siblings),
+      });
+    }
+    return { variant: 'ok', node };
   },
 
-  moveDown(input: Record<string, unknown>) {
+  async moveDown(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { node }),
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    const parentId = existing.parent as string;
+    if (!parentId) return { variant: 'ok', node };
+    const parentRecord = await storage.get('outline', parentId);
+    if (!parentRecord) return { variant: 'ok', node };
+    const siblings: string[] = JSON.parse(parentRecord.children as string);
+    const idx = siblings.indexOf(node);
+    if (idx < siblings.length - 1) {
+      [siblings[idx], siblings[idx + 1]] = [siblings[idx + 1], siblings[idx]];
+      await storage.put('outline', parentId, {
+        ...parentRecord,
+        children: JSON.stringify(siblings),
+      });
+    }
+    return { variant: 'ok', node };
   },
 
-  collapse(input: Record<string, unknown>) {
+  async collapse(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'outline', node, { isCollapsed: true });
-        return complete(b2, 'ok', { node });
-      },
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    await storage.put('outline', node, {
+      ...existing,
+      isCollapsed: true,
+    });
+    return { variant: 'ok', node };
   },
 
-  expand(input: Record<string, unknown>) {
+  async expand(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'outline', node, { isCollapsed: false });
-        return complete(b2, 'ok', { node });
-      },
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    await storage.put('outline', node, {
+      ...existing,
+      isCollapsed: false,
+    });
+    return { variant: 'ok', node };
   },
 
-  reparent(input: Record<string, unknown>) {
+  async reparent(input, storage) {
     const node = input.node as string;
     const newParent = input.newParent as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = spGet(b, 'outline', newParent, 'newParentRecord');
-        b2 = branch(b2, 'newParentRecord',
-          (c) => {
-            let c2 = put(c, 'outline', node, { parent: newParent });
-            return complete(c2, 'ok', { node });
-          },
-          (c) => complete(c, 'notfound', { message: 'Parent not found' }),
-        );
-        return b2;
-      },
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    const newParentRecord = await storage.get('outline', newParent);
+    if (!newParentRecord) return { variant: 'notfound', message: 'Parent not found' };
+    const oldParentId = existing.parent as string;
+    if (oldParentId) {
+      const oldParentRecord = await storage.get('outline', oldParentId);
+      if (oldParentRecord) {
+        const oldChildren: string[] = JSON.parse(oldParentRecord.children as string);
+        const idx = oldChildren.indexOf(node);
+        if (idx >= 0) oldChildren.splice(idx, 1);
+        await storage.put('outline', oldParentId, {
+          ...oldParentRecord,
+          children: JSON.stringify(oldChildren),
+        });
+      }
+    }
+    const newChildren: string[] = JSON.parse(newParentRecord.children as string);
+    newChildren.push(node);
+    await storage.put('outline', newParent, {
+      ...newParentRecord,
+      children: JSON.stringify(newChildren),
+    });
+    await storage.put('outline', node, {
+      ...existing,
+      parent: newParent,
+    });
+    return { variant: 'ok', node };
   },
 
-  getChildren(input: Record<string, unknown>) {
+  async getChildren(input, storage) {
     const node = input.node as string;
-
-    let p = createProgram();
-    p = spGet(p, 'outline', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { children: JSON.stringify([]) }),
-      (b) => complete(b, 'notfound', { message: 'Node not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('outline', node);
+    if (!existing) return { variant: 'notfound', message: 'Node not found' };
+    return { variant: 'ok', children: existing.children as string };
   },
 };
-
-export const outlineHandler = autoInterpret(_outlineHandler);
-

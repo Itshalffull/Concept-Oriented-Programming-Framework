@@ -1,17 +1,9 @@
-// @migrated dsl-constructs 2026-03-18
 // Auditor Concept Implementation (Package Distribution Suite)
 // Vulnerability scanning and policy enforcement for package dependencies.
 // Checks resolved lockfile entries against advisory databases and
 // organizational policies for license compliance and namespace restrictions.
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 import { createHash } from 'crypto';
-
-type Result = { variant: string; [key: string]: unknown };
 
 let nextId = 1;
 export function resetAuditorIds() { nextId = 1; }
@@ -25,8 +17,8 @@ const SEVERITY_ORDER: Record<string, number> = {
   info: 4,
 };
 
-const _handler: FunctionalConceptHandler = {
-  audit(input: Record<string, unknown>) {
+export const auditorHandler: ConceptHandler = {
+  async audit(input, storage) {
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string;
       version: string;
@@ -37,67 +29,61 @@ const _handler: FunctionalConceptHandler = {
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
 
-    // We need to find advisories for each entry. Since the DSL doesn't support
-    // dynamic loops over storage, we'll find all advisories and filter in mapBindings.
-    let p = createProgram();
-    p = find(p, 'advisory', {}, 'allAdvisories');
+    // Scan each entry against known advisories in storage
+    const advisories: Array<{
+      module_id: string;
+      version: string;
+      severity: string;
+      cve: string | null;
+      description: string;
+      fix_version: string | null;
+    }> = [];
 
-    p = mapBindings(p, (bindings) => {
-      const allAdvisories = bindings.allAdvisories as Record<string, unknown>[];
-      const advisories: Array<{
-        module_id: string;
-        version: string;
-        severity: string;
-        cve: string | null;
-        description: string;
-        fix_version: string | null;
-      }> = [];
-
-      for (const entry of lockfileEntries) {
-        const matching = allAdvisories.filter(a => a.module_id === entry.module_id);
-        for (const advisory of matching) {
-          const affectedVersions = advisory.affected_versions as string[] | undefined;
-          if (affectedVersions && !affectedVersions.includes(entry.version)) {
-            continue;
-          }
-          advisories.push({
-            module_id: entry.module_id,
-            version: entry.version,
-            severity: advisory.severity as string,
-            cve: (advisory.cve as string) || null,
-            description: advisory.description as string,
-            fix_version: (advisory.fix_version as string) || null,
-          });
-        }
-      }
-
-      advisories.sort((a, b) => {
-        const aOrder = SEVERITY_ORDER[a.severity] ?? 99;
-        const bOrder = SEVERITY_ORDER[b.severity] ?? 99;
-        return aOrder - bOrder;
+    for (const entry of lockfileEntries) {
+      // Look up advisories matching this module
+      const knownAdvisories = await storage.find('advisory', {
+        module_id: entry.module_id,
       });
 
-      return advisories;
-    }, 'advisories');
+      for (const advisory of knownAdvisories) {
+        // Check if the entry's version is affected
+        const affectedVersions = advisory.affected_versions as string[] | undefined;
+        if (affectedVersions && !affectedVersions.includes(entry.version)) {
+          continue;
+        }
+
+        advisories.push({
+          module_id: entry.module_id,
+          version: entry.version,
+          severity: advisory.severity as string,
+          cve: (advisory.cve as string) || null,
+          description: advisory.description as string,
+          fix_version: (advisory.fix_version as string) || null,
+        });
+      }
+    }
+
+    // Sort advisories by severity (critical first)
+    advisories.sort((a, b) => {
+      const aOrder = SEVERITY_ORDER[a.severity] ?? 99;
+      const bOrder = SEVERITY_ORDER[b.severity] ?? 99;
+      return aOrder - bOrder;
+    });
 
     const auditAt = new Date().toISOString();
-    p = put(p, 'audit', id, {
+
+    await storage.put('audit', id, {
       id,
       lockfile_hash: lockfileHash,
-      advisories: '[]',
+      advisories: JSON.stringify(advisories),
       policy_violations: JSON.stringify([]),
       audit_at: auditAt,
     });
 
-    // We need to store the computed advisories, so use putFrom to update
-    p = mapBindings(p, (bindings) => {
-      return JSON.stringify(bindings.advisories);
-    }, 'advisoriesJson');
-
-    return complete(p, 'ok', { audit: id }) as StorageProgram<Result>;
+    return { variant: 'ok', audit: id };
   },
 
-  checkPolicy(input: Record<string, unknown>) {
+  async checkPolicy(input, storage) {
     const lockfileEntries = input.lockfile_entries as Array<{
       module_id: string;
       version: string;
@@ -113,143 +99,135 @@ const _handler: FunctionalConceptHandler = {
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
 
-    let p = createProgram();
-    p = find(p, 'module_license', {}, 'allLicenses');
-    p = find(p, 'advisory', {}, 'allAdvisories');
+    const violations: Array<{
+      module_id: string;
+      rule: string;
+      message: string;
+    }> = [];
 
-    p = mapBindings(p, (bindings) => {
-      const allLicenses = bindings.allLicenses as Record<string, unknown>[];
-      const allAdvisories = bindings.allAdvisories as Record<string, unknown>[];
-      const maxSeverityOrder = SEVERITY_ORDER[policy.max_severity] ?? 99;
+    const maxSeverityOrder = SEVERITY_ORDER[policy.max_severity] ?? 99;
 
-      const violations: Array<{
-        module_id: string;
-        rule: string;
-        message: string;
-      }> = [];
-
-      for (const entry of lockfileEntries) {
-        for (const ns of policy.denied_namespaces) {
-          if (entry.module_id.startsWith(ns)) {
-            violations.push({
-              module_id: entry.module_id,
-              rule: 'denied_namespace',
-              message: `Module "${entry.module_id}" is in denied namespace "${ns}"`,
-            });
-          }
-        }
-
-        const moduleInfo = allLicenses.filter(m => m.module_id === entry.module_id);
-        if (moduleInfo.length > 0) {
-          const license = moduleInfo[0].license as string;
-          if (!policy.allowed_licenses.includes(license)) {
-            violations.push({
-              module_id: entry.module_id,
-              rule: 'license',
-              message: `License "${license}" is not in allowed list: ${policy.allowed_licenses.join(', ')}`,
-            });
-          }
-        }
-
-        const knownAdvisories = allAdvisories.filter(a => a.module_id === entry.module_id);
-        for (const advisory of knownAdvisories) {
-          const severity = advisory.severity as string;
-          const severityOrder = SEVERITY_ORDER[severity] ?? 99;
-          if (severityOrder < maxSeverityOrder) {
-            violations.push({
-              module_id: entry.module_id,
-              rule: 'max_severity',
-              message: `Advisory with severity "${severity}" exceeds threshold "${policy.max_severity}"`,
-            });
-          }
+    for (const entry of lockfileEntries) {
+      // Check denied namespaces
+      for (const ns of policy.denied_namespaces) {
+        if (entry.module_id.startsWith(ns)) {
+          violations.push({
+            module_id: entry.module_id,
+            rule: 'denied_namespace',
+            message: `Module "${entry.module_id}" is in denied namespace "${ns}"`,
+          });
         }
       }
 
-      return violations;
-    }, 'violations');
+      // Check license compliance
+      const moduleInfo = await storage.find('module_license', {
+        module_id: entry.module_id,
+      });
+      if (moduleInfo.length > 0) {
+        const license = moduleInfo[0].license as string;
+        if (!policy.allowed_licenses.includes(license)) {
+          violations.push({
+            module_id: entry.module_id,
+            rule: 'license',
+            message: `License "${license}" is not in allowed list: ${policy.allowed_licenses.join(', ')}`,
+          });
+        }
+      }
+
+      // Check severity threshold from advisories
+      const knownAdvisories = await storage.find('advisory', {
+        module_id: entry.module_id,
+      });
+      for (const advisory of knownAdvisories) {
+        const severity = advisory.severity as string;
+        const severityOrder = SEVERITY_ORDER[severity] ?? 99;
+        if (severityOrder < maxSeverityOrder) {
+          violations.push({
+            module_id: entry.module_id,
+            rule: 'max_severity',
+            message: `Advisory with severity "${severity}" exceeds threshold "${policy.max_severity}"`,
+          });
+        }
+      }
+    }
 
     const auditAt = new Date().toISOString();
-    p = put(p, 'audit', id, {
+
+    await storage.put('audit', id, {
       id,
       lockfile_hash: lockfileHash,
       advisories: JSON.stringify([]),
-      policy_violations: JSON.stringify([]),
+      policy_violations: JSON.stringify(violations),
       audit_at: auditAt,
     });
 
-    return branch(p,
-      (bindings) => (bindings.violations as unknown[]).length > 0,
-      (thenP) => complete(thenP, 'violations', { audit: id }),
-      (elseP) => complete(elseP, 'ok', { audit: id }),
-    ) as StorageProgram<Result>;
+    if (violations.length > 0) {
+      return { variant: 'violations', audit: id };
+    }
+
+    return { variant: 'ok', audit: id };
   },
 
-  diff(input: Record<string, unknown>) {
+  async diff(input, storage) {
     const oldAuditId = input.old_audit as string;
     const newAuditId = input.new_audit as string;
 
-    let p = createProgram();
-    p = get(p, 'audit', oldAuditId, 'oldAudit');
-    p = get(p, 'audit', newAuditId, 'newAudit');
+    const oldAudit = await storage.get('audit', oldAuditId);
+    const newAudit = await storage.get('audit', newAuditId);
 
-    return branch(p,
-      (bindings) => !bindings.oldAudit || !bindings.newAudit,
-      (thenP) => complete(thenP, 'ok', { new_advisories: '[]', resolved_advisories: '[]' }),
-      (elseP) => {
-        return completeFrom(elseP, 'ok', (bindings) => {
-          const oldAudit = bindings.oldAudit as Record<string, unknown>;
-          const newAudit = bindings.newAudit as Record<string, unknown>;
+    if (!oldAudit || !newAudit) {
+      return { variant: 'ok', new_advisories: '[]', resolved_advisories: '[]' };
+    }
 
-          const oldAdvisories: Array<{
-            module_id: string;
-            version: string;
-            severity: string;
-            cve: string | null;
-            description: string;
-          }> = JSON.parse(oldAudit.advisories as string);
+    const oldAdvisories: Array<{
+      module_id: string;
+      version: string;
+      severity: string;
+      cve: string | null;
+      description: string;
+    }> = JSON.parse(oldAudit.advisories as string);
 
-          const newAdvisories: Array<{
-            module_id: string;
-            version: string;
-            severity: string;
-            cve: string | null;
-            description: string;
-          }> = JSON.parse(newAudit.advisories as string);
+    const newAdvisories: Array<{
+      module_id: string;
+      version: string;
+      severity: string;
+      cve: string | null;
+      description: string;
+    }> = JSON.parse(newAudit.advisories as string);
 
-          const makeKey = (a: { module_id: string; version: string; cve: string | null }) =>
-            `${a.module_id}@${a.version}:${a.cve || 'no-cve'}`;
+    // Build key function for comparison
+    const makeKey = (a: { module_id: string; version: string; cve: string | null }) =>
+      `${a.module_id}@${a.version}:${a.cve || 'no-cve'}`;
 
-          const oldKeys = new Set(oldAdvisories.map(makeKey));
-          const newKeys = new Set(newAdvisories.map(makeKey));
+    const oldKeys = new Set(oldAdvisories.map(makeKey));
+    const newKeys = new Set(newAdvisories.map(makeKey));
 
-          const addedAdvisories = newAdvisories
-            .filter(a => !oldKeys.has(makeKey(a)))
-            .map(a => ({
-              module_id: a.module_id,
-              version: a.version,
-              severity: a.severity,
-              cve: a.cve,
-              description: a.description,
-            }));
+    // New advisories: in new but not in old
+    const addedAdvisories = newAdvisories
+      .filter(a => !oldKeys.has(makeKey(a)))
+      .map(a => ({
+        module_id: a.module_id,
+        version: a.version,
+        severity: a.severity,
+        cve: a.cve,
+        description: a.description,
+      }));
 
-          const resolvedAdvisories = oldAdvisories
-            .filter(a => !newKeys.has(makeKey(a)))
-            .map(a => ({
-              module_id: a.module_id,
-              version: a.version,
-              severity: a.severity,
-              cve: a.cve,
-              description: a.description,
-            }));
+    // Resolved advisories: in old but not in new
+    const resolvedAdvisories = oldAdvisories
+      .filter(a => !newKeys.has(makeKey(a)))
+      .map(a => ({
+        module_id: a.module_id,
+        version: a.version,
+        severity: a.severity,
+        cve: a.cve,
+        description: a.description,
+      }));
 
-          return {
-            new_advisories: JSON.stringify(addedAdvisories),
-            resolved_advisories: JSON.stringify(resolvedAdvisories),
-          };
-        });
-      },
-    ) as StorageProgram<Result>;
+    return {
+      variant: 'ok',
+      new_advisories: JSON.stringify(addedAdvisories),
+      resolved_advisories: JSON.stringify(resolvedAdvisories),
+    };
   },
 };
-
-export const auditorHandler = autoInterpret(_handler);

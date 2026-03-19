@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CLI Target Provider Handler
 //
@@ -9,10 +8,7 @@
 // Architecture doc: Clef Bind, Section 2.4
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toCamelCase, generateFileHeader, generateMarkdownFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -361,14 +357,17 @@ function generateCliHelpMd(
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'CliTarget',
+export const cliTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'CliTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'CliCommands',
       capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
       targetKey: 'cli',
-      providerType: 'target' }); return p; }
+      providerType: 'target',
+    };
   },
 
   /**
@@ -379,21 +378,22 @@ const _handler: FunctionalConceptHandler = {
    * flag customisation, and optionally manifestYaml for CLI-specific
    * config (command tree, examples, see-also, flag choices).
    */
-  generate(
+  async generate(
     input: Record<string, unknown>,
-  ) {
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const projectionRaw = input.projection as string;
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -404,7 +404,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+        return { variant: 'ok', files: [] };
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -450,8 +450,6 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    return { variant: 'ok', files };
   },
 };
-
-export const cliTargetHandler = autoInterpret(_handler);

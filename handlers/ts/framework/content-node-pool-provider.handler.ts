@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SharedContentNodePoolProvider — Storage backend for Clef Base
 //
@@ -10,9 +9,7 @@
 // See Architecture doc Sections 3.1.1, 13.1
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import type { SchemaDef, SchemaFieldDef } from './schema-yaml-parser.handler.js';
 
 export interface FieldMapping {
@@ -176,23 +173,22 @@ export function resolveSetQuery(
 let counter = 0;
 export function resetContentNodePoolProviderCounter(): void { counter = 0; }
 
-const _handler: FunctionalConceptHandler = {
+export const contentNodePoolProviderHandler: ConceptHandler = {
   /**
    * Configure the pool provider for a concept by loading its schema.yaml mappings.
    * Input: { schemas: SchemaDef[], concept_state_fields?: string[] }
    */
-  configure(input: Record<string, unknown>) {
-    let p = createProgram();
+  async configure(input: Record<string, unknown>, storage: ConceptStorage) {
     const schemas = input.schemas as SchemaDef[] | undefined;
     if (!schemas || !Array.isArray(schemas)) {
-      p = complete(p, 'error', { message: 'schemas must be an array of SchemaDef objects' }); return p;
+      return { variant: 'error', message: 'schemas must be an array of SchemaDef objects' };
     }
 
     const conceptStateFields = input.concept_state_fields as string[] | undefined;
     const mappings = buildSchemaMappings(schemas, conceptStateFields);
 
     if (mappings.length === 0) {
-      p = complete(p, 'error', { message: 'No concept-mapped schemas found in the provided schema definitions' }); return p;
+      return { variant: 'error', message: 'No concept-mapped schemas found in the provided schema definitions' };
     }
 
     const id = `pool-config-${++counter}`;
@@ -201,12 +197,12 @@ const _handler: FunctionalConceptHandler = {
       conceptName: mappings[0].concept,
     };
 
-    p = put(p, 'pool_configs', id, {
+    await storage.put('pool_configs', id, {
       id,
       config,
     });
 
-    p = complete(p, 'ok', { id, config }); return p;
+    return { variant: 'ok', id, config };
   },
 
   /**
@@ -214,86 +210,85 @@ const _handler: FunctionalConceptHandler = {
    * and concept-local storage.
    * Input: { entity_id: string, data: Record<string, unknown>, schema_name: string, config: PoolProviderConfig }
    */
-  routeSave(input: Record<string, unknown>) {
-    let p = createProgram();
+  async routeSave(input: Record<string, unknown>, _storage: ConceptStorage) {
     const entityId = input.entity_id as string | undefined;
     const data = input.data as Record<string, unknown> | undefined;
     const schemaName = input.schema_name as string | undefined;
     const config = input.config as PoolProviderConfig | undefined;
 
-    if (!entityId) p = complete(p, 'error', { message: 'entity_id is required' }); return p;
-    if (!data || typeof data !== 'object') p = complete(p, 'error', { message: 'data must be an object' }); return p;
-    if (!schemaName) p = complete(p, 'error', { message: 'schema_name is required' }); return p;
-    if (!config) p = complete(p, 'error', { message: 'config is required (from configure action)' }); return p;
+    if (!entityId) return { variant: 'error', message: 'entity_id is required' };
+    if (!data || typeof data !== 'object') return { variant: 'error', message: 'data must be an object' };
+    if (!schemaName) return { variant: 'error', message: 'schema_name is required' };
+    if (!config) return { variant: 'error', message: 'config is required (from configure action)' };
 
     const mapping = config.schemaMappings.find(m => m.schemaName === schemaName);
     if (!mapping) {
-      p = complete(p, 'error', { message: `No mapping found for schema "${schemaName}"` }); return p;
+      return { variant: 'error', message: `No mapping found for schema "${schemaName}"` };
     }
 
     const routed = routeSave(entityId, data, mapping);
 
-    p = complete(p, 'ok', { entity_id: entityId,
+    return {
+      variant: 'ok',
+      entity_id: entityId,
       content_node_properties: routed.contentNodeProperties,
       concept_local_data: routed.conceptLocalData,
-      schema_to_apply: routed.schemaToApply }); return p;
+      schema_to_apply: routed.schemaToApply,
+    };
   },
 
   /**
    * Route a load operation: merge ContentNode Properties with concept-local data.
    * Input: { content_node_properties: Record, concept_local_data: Record, schema_name: string, config: PoolProviderConfig }
    */
-  routeLoad(input: Record<string, unknown>) {
-    let p = createProgram();
+  async routeLoad(input: Record<string, unknown>, _storage: ConceptStorage) {
     const contentNodeProps = input.content_node_properties as Record<string, unknown> | undefined;
     const conceptLocalData = input.concept_local_data as Record<string, unknown> | undefined;
     const schemaName = input.schema_name as string | undefined;
     const config = input.config as PoolProviderConfig | undefined;
 
     if (!contentNodeProps || typeof contentNodeProps !== 'object') {
-      p = complete(p, 'error', { message: 'content_node_properties must be an object' }); return p;
+      return { variant: 'error', message: 'content_node_properties must be an object' };
     }
-    if (!schemaName) p = complete(p, 'error', { message: 'schema_name is required' }); return p;
-    if (!config) p = complete(p, 'error', { message: 'config is required' }); return p;
+    if (!schemaName) return { variant: 'error', message: 'schema_name is required' };
+    if (!config) return { variant: 'error', message: 'config is required' };
 
     const mapping = config.schemaMappings.find(m => m.schemaName === schemaName);
     if (!mapping) {
-      p = complete(p, 'error', { message: `No mapping found for schema "${schemaName}"` }); return p;
+      return { variant: 'error', message: `No mapping found for schema "${schemaName}"` };
     }
 
     const merged = routeLoad(contentNodeProps, conceptLocalData || {}, mapping);
 
-    p = complete(p, 'ok', { data: merged }); return p;
+    return { variant: 'ok', data: merged };
   },
 
   /**
    * Resolve a concept set query to a Schema membership query.
    * Input: { set_name: string, config: PoolProviderConfig }
    */
-  resolveSet(input: Record<string, unknown>) {
-    let p = createProgram();
+  async resolveSet(input: Record<string, unknown>, _storage: ConceptStorage) {
     const setName = input.set_name as string | undefined;
     const config = input.config as PoolProviderConfig | undefined;
 
-    if (!setName) p = complete(p, 'error', { message: 'set_name is required' }); return p;
-    if (!config) p = complete(p, 'error', { message: 'config is required' }); return p;
+    if (!setName) return { variant: 'error', message: 'set_name is required' };
+    if (!config) return { variant: 'error', message: 'config is required' };
 
     const resolved = resolveSetQuery(setName, config.schemaMappings);
     if (!resolved) {
-      p = complete(p, 'notfound', { message: `No schema mapping for set "${setName}"` }); return p;
+      return { variant: 'notfound', message: `No schema mapping for set "${setName}"` };
     }
 
-    p = complete(p, 'ok', { schema_name: resolved.schemaName, concept: resolved.concept }); return p;
+    return { variant: 'ok', schema_name: resolved.schemaName, concept: resolved.concept };
   },
 
   /**
    * Get the field routing summary for a configured concept.
    * Input: { config: PoolProviderConfig }
    */
-  describe(input: Record<string, unknown>) {
-    let p = createProgram();
+  async describe(input: Record<string, unknown>, _storage: ConceptStorage) {
     const config = input.config as PoolProviderConfig | undefined;
-    if (!config) p = complete(p, 'error', { message: 'config is required' }); return p;
+    if (!config) return { variant: 'error', message: 'config is required' };
 
     const summary = config.schemaMappings.map(m => ({
       schema: m.schemaName,
@@ -310,8 +305,6 @@ const _handler: FunctionalConceptHandler = {
       unmappedFields: m.unmappedFields,
     }));
 
-    p = complete(p, 'ok', { concept: config.conceptName, schemas: summary }); return p;
+    return { variant: 'ok', concept: config.conceptName, schemas: summary };
   },
 };
-
-export const contentNodePoolProviderHandler = autoInterpret(_handler);

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Projection Concept Implementation
 //
@@ -8,11 +7,12 @@
 // ============================================================
 
 import { createHash, randomUUID } from 'crypto';
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, putFrom, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptManifest,
-  ActionSchema } from '../../../runtime/types.js';
+import type {
+  ConceptHandler,
+  ConceptStorage,
+  ConceptManifest,
+  ActionSchema,
+} from '../../../runtime/types.js';
 
 // --- Internal Types ---
 
@@ -296,14 +296,13 @@ const HISTORY_RELATION = 'projection_history';
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
+export const projectionHandler: ConceptHandler = {
 
   /**
    * Parse manifest and annotations. Merge into a projection.
    * Compute resource mappings, count shapes/actions/traits, and persist.
    */
-  project(input: Record<string, unknown>) {
-    let p = createProgram();
+  async project(input: Record<string, unknown>, storage: ConceptStorage) {
     const manifestJson = input.manifest as string;
     const annotationsJson = input.annotations as string;
 
@@ -312,8 +311,11 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = JSON.parse(manifestJson) as ConceptManifest;
     } catch {
-      p = complete(p, 'annotationError', { concept: 'unknown',
-        errors: ['Invalid JSON in manifest input'] }); return p;
+      return {
+        variant: 'annotationError',
+        concept: 'unknown',
+        errors: ['Invalid JSON in manifest input'],
+      };
     }
 
     const conceptName = manifest.name;
@@ -321,16 +323,22 @@ const _handler: FunctionalConceptHandler = {
     // Parse and validate annotations
     const annotationResult = parseAnnotations(annotationsJson, conceptName);
     if (!annotationResult.ok) {
-      p = complete(p, 'annotationError', { concept: conceptName,
-        errors: annotationResult.errors }); return p;
+      return {
+        variant: 'annotationError',
+        concept: conceptName,
+        errors: annotationResult.errors,
+      };
     }
     const annotations = annotationResult.annotations;
 
     // Check for unresolved references in annotations
     const unresolvedRefs = findUnresolvedReferences(annotations, manifest);
     if (unresolvedRefs.length > 0) {
-      p = complete(p, 'unresolvedReference', { concept: conceptName,
-        missing: unresolvedRefs }); return p;
+      return {
+        variant: 'unresolvedReference',
+        concept: conceptName,
+        missing: unresolvedRefs,
+      };
     }
 
     // Build trait bindings
@@ -343,10 +351,13 @@ const _handler: FunctionalConceptHandler = {
     // Check for trait conflicts
     const conflict = findTraitConflict(traits);
     if (conflict) {
-      p = complete(p, 'traitConflict', { concept: conceptName,
+      return {
+        variant: 'traitConflict',
+        concept: conceptName,
         trait1: conflict.trait1,
         trait2: conflict.trait2,
-        reason: conflict.reason }); return p;
+        reason: conflict.reason,
+      };
     }
 
     // Extract shapes from the manifest type graph
@@ -387,324 +398,356 @@ const _handler: FunctionalConceptHandler = {
     };
 
     // Persist projection
-    p = put(p, PROJECTION_RELATION, projectionId, projection as unknown as Record<string, unknown>);
+    await storage.put(PROJECTION_RELATION, projectionId, projection as unknown as Record<string, unknown>);
 
-    p = complete(p, 'ok', { projection: projectionId,
+    return {
+      variant: 'ok',
+      projection: projectionId,
       shapes: shapes.length,
       actions: manifest.actions.length,
-      traits: traits.length }); return p;
+      traits: traits.length,
+    };
   },
 
   /**
    * Load projection from storage, check for breaking changes against
    * previous versions, and verify annotation completeness.
    */
-  validate(input: Record<string, unknown>) {
-    let p = createProgram();
+  async validate(input: Record<string, unknown>, storage: ConceptStorage) {
     const projectionId = input.projection as string;
 
     // Load the projection
-    p = get(p, PROJECTION_RELATION, projectionId, 'projectionData');
+    const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
+    if (!projectionData) {
+      return {
+        variant: 'incompleteAnnotation',
+        projection: projectionId,
+        missing: ['Projection not found in storage'],
+      };
+    }
 
-    return branch(p, 'projectionData',
-      // Projection found
-      (pFound) => {
-        // Load history records for breaking-change detection
-        let p2 = find(pFound, HISTORY_RELATION, { conceptName: projectionId }, 'historyRecords');
+    const projection = projectionData as unknown as ProjectionRecord;
+    const warnings: string[] = [];
 
-        // Compute validation result into a binding
-        p2 = mapBindings(p2, (bindings) => {
-          const projectionData = bindings.projectionData as Record<string, unknown>;
-          const projection = projectionData as unknown as ProjectionRecord;
-          const historyRecords = (bindings.historyRecords || []) as Array<Record<string, unknown>>;
-          const warnings: string[] = [];
+    // Parse the embedded manifest for validation checks
+    let manifest: ConceptManifest;
+    try {
+      manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
+    } catch {
+      return {
+        variant: 'incompleteAnnotation',
+        projection: projectionId,
+        missing: ['Stored projection contains invalid manifest JSON'],
+      };
+    }
 
-          // Parse the embedded manifest for validation checks
-          let manifest: ConceptManifest;
-          try {
-            manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
-          } catch {
-            return { variant: 'incompleteAnnotation', projection: projectionId,
-              missing: ['Stored projection contains invalid manifest JSON'] };
-          }
+    // Check for missing resource mapping when actions exist
+    if (!projection.resourceMapping && manifest.actions.length > 0) {
+      warnings.push('No resource mapping defined; REST targets will use convention-based defaults');
+    }
 
-          // Check for missing resource mapping when actions exist
-          if (!projection.resourceMapping && manifest.actions.length > 0) {
-            warnings.push('No resource mapping defined; REST targets will use convention-based defaults');
-          }
+    // Check for actions without trait coverage
+    const traitScopes = new Set<string>();
+    for (const trait of projection.traits) {
+      if (trait.scope === '*') {
+        // Wildcard covers all actions
+        for (const action of manifest.actions) {
+          traitScopes.add(action.name);
+        }
+      } else {
+        for (const s of trait.scope.split(',')) {
+          traitScopes.add(s.trim());
+        }
+      }
+    }
 
-          // Check for actions without trait coverage
-          const traitScopes = new Set<string>();
-          for (const trait of projection.traits) {
-            if (trait.scope === '*') {
-              for (const action of manifest.actions) {
-                traitScopes.add(action.name);
-              }
-            } else {
-              for (const s of trait.scope.split(',')) {
-                traitScopes.add(s.trim());
-              }
-            }
-          }
+    for (const action of manifest.actions) {
+      if (!traitScopes.has(action.name) && projection.traits.length > 0) {
+        warnings.push(`Action "${action.name}" has no trait bindings`);
+      }
+    }
 
-          for (const action of manifest.actions) {
-            if (!traitScopes.has(action.name) && projection.traits.length > 0) {
-              warnings.push(`Action "${action.name}" has no trait bindings`);
-            }
-          }
+    // Check for breaking changes against previous version in history
+    const historyRecords = await storage.find(HISTORY_RELATION, { conceptName: projection.conceptName });
+    if (historyRecords.length > 0) {
+      // Compare the most recent historical projection
+      const previous = historyRecords[historyRecords.length - 1] as unknown as ProjectionRecord;
+      const breakingChanges = detectBreakingChanges(projection, previous);
+      if (breakingChanges.length > 0) {
+        return {
+          variant: 'breakingChange',
+          projection: projectionId,
+          changes: breakingChanges,
+        };
+      }
+    }
 
-          // Check for breaking changes against previous version in history
-          if (historyRecords.length > 0) {
-            const previous = historyRecords[historyRecords.length - 1] as unknown as ProjectionRecord;
-            const breakingChanges = detectBreakingChanges(projection, previous);
-            if (breakingChanges.length > 0) {
-              return { variant: 'breakingChange', projection: projectionId,
-                changes: breakingChanges };
-            }
-          }
-
-          // Check for incomplete annotations for configured targets
-          const missingAnnotations: string[] = [];
-          for (const override of projection.targetOverrides) {
-            if (override.target.includes('rest') && !projection.resourceMapping) {
-              missingAnnotations.push(
-                `REST target "${override.target}" configured but no resource mapping defined`,
-              );
-            }
-          }
-
-          if (missingAnnotations.length > 0) {
-            return { variant: 'incompleteAnnotation', projection: projectionId,
-              missing: missingAnnotations };
-          }
-
-          return { variant: 'ok', projection: projectionId, warnings };
-        }, 'validationResult');
-
-        // On success, store in history for future breaking-change detection
-        return branch(p2,
-          (bindings) => {
-            const result = bindings.validationResult as Record<string, unknown>;
-            return result.variant === 'ok';
-          },
-          // Validation passed — persist to history then complete
-          (pOk) => {
-            let p3 = putFrom(pOk, HISTORY_RELATION, '', (bindings) => {
-              const projectionData = bindings.projectionData as Record<string, unknown>;
-              const projection = projectionData as unknown as ProjectionRecord;
-              return {
-                id: `${projection.conceptName}:${projection.id}`,
-                ...projectionData,
-              };
-            });
-            return completeFrom(p3, 'ok', (bindings) => {
-              const result = bindings.validationResult as Record<string, unknown>;
-              return { projection: projectionId, warnings: result.warnings };
-            });
-          },
-          // Validation failed — complete with the computed variant
-          (pFail) => {
-            return completeFrom(pFail, '_deferred', (bindings) => {
-              const result = bindings.validationResult as Record<string, unknown>;
-              return result as Record<string, unknown>;
-            });
-          },
+    // Check for incomplete annotations for configured targets
+    const missingAnnotations: string[] = [];
+    for (const override of projection.targetOverrides) {
+      if (override.target.includes('rest') && !projection.resourceMapping) {
+        missingAnnotations.push(
+          `REST target "${override.target}" configured but no resource mapping defined`,
         );
-      },
-      // Projection not found
-      (pMissing) => {
-        return complete(pMissing, 'incompleteAnnotation', { projection: projectionId,
-          missing: ['Projection not found in storage'] });
-      },
+      }
+    }
+
+    if (missingAnnotations.length > 0) {
+      return {
+        variant: 'incompleteAnnotation',
+        projection: projectionId,
+        missing: missingAnnotations,
+      };
+    }
+
+    // Store in history for future breaking-change detection
+    await storage.put(
+      HISTORY_RELATION,
+      `${projection.conceptName}:${projection.id}`,
+      projection as unknown as Record<string, unknown>,
     );
+
+    return {
+      variant: 'ok',
+      projection: projectionId,
+      warnings,
+    };
   },
 
   /**
    * Compare two projections and return added/removed/changed fields.
    */
-  diff(input: Record<string, unknown>) {
-    let p = createProgram();
+  async diff(input: Record<string, unknown>, storage: ConceptStorage) {
     const projectionId = input.projection as string;
     const previousId = input.previous as string;
 
     // Load both projections
-    p = get(p, PROJECTION_RELATION, projectionId, 'currentData');
-    p = get(p, PROJECTION_RELATION, previousId, 'previousData');
+    const currentData = await storage.get(PROJECTION_RELATION, projectionId);
+    const previousData = await storage.get(PROJECTION_RELATION, previousId);
 
-    // Branch on whether both projections exist
-    return branch(p,
-      (bindings) => !!(bindings.currentData && bindings.previousData),
-      // Both found
-      (pFound) => {
-        return completeFrom(pFound, '_deferred', (bindings) => {
-          const current = bindings.currentData as unknown as ProjectionRecord;
-          const previous = bindings.previousData as unknown as ProjectionRecord;
+    if (!currentData || !previousData) {
+      return {
+        variant: 'incompatible',
+        reason: 'One or both projections not found in storage',
+      };
+    }
 
-          // Verify both projections are for the same concept
-          if (current.conceptName !== previous.conceptName) {
-            return { variant: 'incompatible', reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"` };
-          }
+    const current = currentData as unknown as ProjectionRecord;
+    const previous = previousData as unknown as ProjectionRecord;
 
-          // Compare shapes
-          const currentShapeNames = new Set(current.shapes.map(s => s.name));
-          const previousShapeNames = new Set(previous.shapes.map(s => s.name));
+    // Verify both projections are for the same concept
+    if (current.conceptName !== previous.conceptName) {
+      return {
+        variant: 'incompatible',
+        reason: `Cannot compare projections for different concepts: "${current.conceptName}" vs "${previous.conceptName}"`,
+      };
+    }
 
-          const added: string[] = [];
-          const removed: string[] = [];
-          const changed: string[] = [];
+    // Compare shapes
+    const currentShapeNames = new Set(current.shapes.map(s => s.name));
+    const previousShapeNames = new Set(previous.shapes.map(s => s.name));
 
-          for (const name of currentShapeNames) {
-            if (!previousShapeNames.has(name)) {
-              added.push(`shape: ${name}`);
-            }
-          }
+    const added: string[] = [];
+    const removed: string[] = [];
+    const changed: string[] = [];
 
-          for (const name of previousShapeNames) {
-            if (!currentShapeNames.has(name)) {
-              removed.push(`shape: ${name}`);
-            }
-          }
+    // Added shapes
+    for (const name of currentShapeNames) {
+      if (!previousShapeNames.has(name)) {
+        added.push(`shape: ${name}`);
+      }
+    }
 
-          for (const currentShape of current.shapes) {
-            const previousShape = previous.shapes.find(s => s.name === currentShape.name);
-            if (previousShape && previousShape.resolved !== currentShape.resolved) {
-              changed.push(`shape: ${currentShape.name} (type changed)`);
-            }
-          }
+    // Removed shapes
+    for (const name of previousShapeNames) {
+      if (!currentShapeNames.has(name)) {
+        removed.push(`shape: ${name}`);
+      }
+    }
 
-          // Compare traits
-          const currentTraitNames = new Set(current.traits.map(t => `${t.name}:${t.scope}`));
-          const previousTraitNames = new Set(previous.traits.map(t => `${t.name}:${t.scope}`));
+    // Changed shapes (same name, different resolved type)
+    for (const currentShape of current.shapes) {
+      const previousShape = previous.shapes.find(s => s.name === currentShape.name);
+      if (previousShape && previousShape.resolved !== currentShape.resolved) {
+        changed.push(`shape: ${currentShape.name} (type changed)`);
+      }
+    }
 
-          for (const key of currentTraitNames) {
-            if (!previousTraitNames.has(key)) {
-              added.push(`trait: ${key}`);
-            }
-          }
-          for (const key of previousTraitNames) {
-            if (!currentTraitNames.has(key)) {
-              removed.push(`trait: ${key}`);
-            }
-          }
+    // Compare traits
+    const currentTraitNames = new Set(current.traits.map(t => `${t.name}:${t.scope}`));
+    const previousTraitNames = new Set(previous.traits.map(t => `${t.name}:${t.scope}`));
 
-          // Compare resource mapping
-          const currentRM = current.resourceMapping;
-          const previousRM = previous.resourceMapping;
+    for (const key of currentTraitNames) {
+      if (!previousTraitNames.has(key)) {
+        added.push(`trait: ${key}`);
+      }
+    }
+    for (const key of previousTraitNames) {
+      if (!currentTraitNames.has(key)) {
+        removed.push(`trait: ${key}`);
+      }
+    }
 
-          if (currentRM && !previousRM) {
-            added.push('resourceMapping');
-          } else if (!currentRM && previousRM) {
-            removed.push('resourceMapping');
-          } else if (currentRM && previousRM) {
-            if (currentRM.path !== previousRM.path) {
-              changed.push(`resourceMapping.path: "${previousRM.path}" -> "${currentRM.path}"`);
-            }
-            if (currentRM.idField !== previousRM.idField) {
-              changed.push(`resourceMapping.idField: "${previousRM.idField}" -> "${currentRM.idField}"`);
-            }
-          }
+    // Compare resource mapping
+    const currentRM = current.resourceMapping;
+    const previousRM = previous.resourceMapping;
 
-          // Compare target overrides
-          const currentTargets = new Set(current.targetOverrides.map(o => o.target));
-          const previousTargets = new Set(previous.targetOverrides.map(o => o.target));
+    if (currentRM && !previousRM) {
+      added.push('resourceMapping');
+    } else if (!currentRM && previousRM) {
+      removed.push('resourceMapping');
+    } else if (currentRM && previousRM) {
+      if (currentRM.path !== previousRM.path) {
+        changed.push(`resourceMapping.path: "${previousRM.path}" -> "${currentRM.path}"`);
+      }
+      if (currentRM.idField !== previousRM.idField) {
+        changed.push(`resourceMapping.idField: "${previousRM.idField}" -> "${currentRM.idField}"`);
+      }
+    }
 
-          for (const target of currentTargets) {
-            if (!previousTargets.has(target)) {
-              added.push(`targetOverride: ${target}`);
-            }
-          }
-          for (const target of previousTargets) {
-            if (!currentTargets.has(target)) {
-              removed.push(`targetOverride: ${target}`);
-            }
-          }
+    // Compare target overrides
+    const currentTargets = new Set(current.targetOverrides.map(o => o.target));
+    const previousTargets = new Set(previous.targetOverrides.map(o => o.target));
 
-          return { variant: 'ok', added, removed, changed };
-        });
-      },
-      // One or both not found
-      (pMissing) => {
-        return complete(pMissing, 'incompatible', { reason: 'One or both projections not found in storage' });
-      },
-    );
+    for (const target of currentTargets) {
+      if (!previousTargets.has(target)) {
+        added.push(`targetOverride: ${target}`);
+      }
+    }
+    for (const target of previousTargets) {
+      if (!currentTargets.has(target)) {
+        removed.push(`targetOverride: ${target}`);
+      }
+    }
+
+    return {
+      variant: 'ok',
+      added,
+      removed,
+      changed,
+    };
   },
 
   /**
    * Auto-derive REST resource mappings from action names using
    * convention-based HTTP method and path inference.
    */
-  inferResources(input: Record<string, unknown>) {
-    let p = createProgram();
+  async inferResources(input: Record<string, unknown>, storage: ConceptStorage) {
     const projectionId = input.projection as string;
 
     // Load the projection
-    p = get(p, PROJECTION_RELATION, projectionId, 'projectionData');
+    const projectionData = await storage.get(PROJECTION_RELATION, projectionId);
+    if (!projectionData) {
+      return {
+        variant: 'ok',
+        projection: projectionId,
+        resources: [],
+      };
+    }
 
-    return branch(p, 'projectionData',
-      // Projection found
-      (pFound) => {
-        // Compute the inferred resources and updated projection
-        let p2 = mapBindings(pFound, (bindings) => {
-          const projectionData = bindings.projectionData as Record<string, unknown>;
-          const projection = projectionData as unknown as ProjectionRecord;
+    const projection = projectionData as unknown as ProjectionRecord;
 
-          // Parse the manifest to get action schemas
-          let manifest: ConceptManifest;
-          try {
-            manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
-          } catch {
-            return { resources: [] as string[], updatedProjection: null };
-          }
+    // Parse the manifest to get action schemas
+    let manifest: ConceptManifest;
+    try {
+      manifest = JSON.parse(projection.conceptManifest) as ConceptManifest;
+    } catch {
+      return {
+        variant: 'ok',
+        projection: projectionId,
+        resources: [],
+      };
+    }
 
-          // Derive the resource base path and ID field
-          const resourcePath = projection.resourceMapping?.path
-            || `/${manifest.name.toLowerCase()}s`;
-          const idField = projection.resourceMapping?.idField
-            || (manifest.typeParams[0]?.name.toLowerCase() || 'id');
+    // Derive the resource base path and ID field
+    const resourcePath = projection.resourceMapping?.path
+      || `/${manifest.name.toLowerCase()}s`;
+    const idField = projection.resourceMapping?.idField
+      || (manifest.typeParams[0]?.name.toLowerCase() || 'id');
 
-          // Infer routes from action names
-          const routes = inferResourceRoutes(manifest.actions, resourcePath, idField);
+    // Infer routes from action names
+    const routes = inferResourceRoutes(manifest.actions, resourcePath, idField);
 
-          // Format as human-readable resource descriptions
-          const resources: string[] = [];
-          for (const [actionName, route] of routes) {
-            resources.push(`${route.method} ${route.path} -> ${actionName}`);
-          }
+    // Format as human-readable resource descriptions
+    const resources: string[] = [];
+    for (const [actionName, route] of routes) {
+      resources.push(`${route.method} ${route.path} -> ${actionName}`);
+    }
 
-          // Update the projection with the inferred resource mapping
-          if (!projection.resourceMapping) {
-            projection.resourceMapping = {
-              path: resourcePath,
-              idField,
-              actions: manifest.actions.map(a => a.name),
-            };
-          }
+    // Update the projection with the inferred resource mapping
+    if (!projection.resourceMapping) {
+      projection.resourceMapping = {
+        path: resourcePath,
+        idField,
+        actions: manifest.actions.map(a => a.name),
+      };
+    }
 
-          return { resources, updatedProjection: projection as unknown as Record<string, unknown> };
-        }, 'inferResult');
-
-        // Persist updated projection
-        p2 = putFrom(p2, PROJECTION_RELATION, projectionId, (bindings) => {
-          const inferResult = bindings.inferResult as Record<string, unknown>;
-          const updatedProjection = inferResult.updatedProjection as Record<string, unknown> | null;
-          if (updatedProjection) return updatedProjection;
-          // Fallback: return the original projection data unchanged
-          return bindings.projectionData as Record<string, unknown>;
-        });
-
-        return completeFrom(p2, 'ok', (bindings) => {
-          const inferResult = bindings.inferResult as Record<string, unknown>;
-          return { projection: projectionId,
-            resources: inferResult.resources };
-        });
-      },
-      // Projection not found
-      (pMissing) => {
-        return complete(pMissing, 'ok', { projection: projectionId,
-          resources: [] });
-      },
+    // Persist updated projection
+    await storage.put(
+      PROJECTION_RELATION,
+      projectionId,
+      projection as unknown as Record<string, unknown>,
     );
+
+    return {
+      variant: 'ok',
+      projection: projectionId,
+      resources,
+    };
   },
 };
 
-export const projectionHandler = autoInterpret(_handler);
+// --- Breaking Change Detection ---
+
+/**
+ * Detect breaking changes between a current and previous projection.
+ *
+ * Breaking changes include:
+ * - Removed shapes (types that consumers depend on)
+ * - Changed shape kinds (e.g. primitive -> list)
+ * - Removed resource mapping paths
+ * - Changed ID field names
+ */
+function detectBreakingChanges(
+  current: ProjectionRecord,
+  previous: ProjectionRecord,
+): string[] {
+  const changes: string[] = [];
+
+  // Check for removed shapes
+  const currentShapeNames = new Set(current.shapes.map(s => s.name));
+  for (const prevShape of previous.shapes) {
+    if (!currentShapeNames.has(prevShape.name)) {
+      changes.push(`Removed shape: ${prevShape.name}`);
+    }
+  }
+
+  // Check for changed shape kinds
+  for (const currentShape of current.shapes) {
+    const prevShape = previous.shapes.find(s => s.name === currentShape.name);
+    if (prevShape && prevShape.kind !== currentShape.kind) {
+      changes.push(
+        `Shape "${currentShape.name}" kind changed from "${prevShape.kind}" to "${currentShape.kind}"`,
+      );
+    }
+  }
+
+  // Check resource mapping changes
+  if (previous.resourceMapping && current.resourceMapping) {
+    if (previous.resourceMapping.path !== current.resourceMapping.path) {
+      changes.push(
+        `Resource path changed from "${previous.resourceMapping.path}" to "${current.resourceMapping.path}"`,
+      );
+    }
+    if (previous.resourceMapping.idField !== current.resourceMapping.idField) {
+      changes.push(
+        `Resource ID field changed from "${previous.resourceMapping.idField}" to "${current.resourceMapping.idField}"`,
+      );
+    }
+  } else if (previous.resourceMapping && !current.resourceMapping) {
+    changes.push('Resource mapping removed');
+  }
+
+  return changes;
+}

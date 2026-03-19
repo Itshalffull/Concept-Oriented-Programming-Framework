@@ -1,110 +1,136 @@
-// @migrated dsl-constructs 2026-03-18
 // EventBus Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, del, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _eventBusHandler: FunctionalConceptHandler = {
-  registerEventType(input: Record<string, unknown>) {
+export const eventBusHandler: ConceptHandler = {
+  async registerEventType(input, storage) {
     const name = input.name as string;
     const schema = input.schema as string;
 
-    let p = createProgram();
-    p = spGet(p, 'eventType', name, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', {}),
-      (b) => {
-        let b2 = put(b, 'eventType', name, { name, schema });
-        return complete(b2, 'ok', {});
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('eventType', name);
+    if (existing) {
+      return { variant: 'exists' };
+    }
+
+    await storage.put('eventType', name, { name, schema });
+
+    return { variant: 'ok' };
   },
 
-  subscribe(input: Record<string, unknown>) {
+  async subscribe(input, storage) {
     const event = input.event as string;
     const handler = input.handler as string;
     const priority = input.priority as number;
 
     const subscriptionId = `${event}:${handler}:${Date.now()}`;
 
-    let p = createProgram();
-    p = put(p, 'subscription', subscriptionId, {
+    await storage.put('subscription', subscriptionId, {
       subscriptionId,
       event,
       handler,
       priority,
     });
 
-    return complete(p, 'ok', { subscriptionId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', subscriptionId };
   },
 
-  unsubscribe(input: Record<string, unknown>) {
+  async unsubscribe(input, storage) {
     const subscriptionId = input.subscriptionId as string;
 
-    let p = createProgram();
-    p = spGet(p, 'subscription', subscriptionId, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = del(b, 'subscription', subscriptionId);
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('subscription', subscriptionId);
+    if (!existing) {
+      return { variant: 'notfound' };
+    }
+
+    await storage.delete('subscription', subscriptionId);
+
+    return { variant: 'ok' };
   },
 
-  dispatch(input: Record<string, unknown>) {
+  async dispatch(input, storage) {
     const event = input.event as string;
     const data = input.data as string;
 
-    let p = createProgram();
-    p = find(p, 'subscription', { event }, 'allSubscriptions');
+    const allSubscriptions = await storage.find('subscription', { event });
+
+    // Sort subscribers by priority (lower number = higher priority)
+    const sorted = allSubscriptions.sort(
+      (a, b) => (a.priority as number) - (b.priority as number),
+    );
+
+    const results: Array<{ handler: string; status: string }> = [];
+
+    for (const sub of sorted) {
+      const handler = sub.handler as string;
+      try {
+        results.push({ handler, status: 'delivered' });
+      } catch {
+        // Send to dead-letter queue on failure
+        const dlqId = `${event}:${Date.now()}`;
+        await storage.put('deadLetter', dlqId, {
+          event,
+          data,
+          handler,
+          error: 'delivery failed',
+          timestamp: Date.now(),
+        });
+        return { variant: 'error', message: `Delivery failed for handler: ${handler}` };
+      }
+    }
 
     // Record dispatch in history
     const historyId = `${event}:${Date.now()}`;
-    p = put(p, 'eventHistory', historyId, {
+    await storage.put('eventHistory', historyId, {
       event,
       data,
-      results: JSON.stringify([]),
+      results: JSON.stringify(results),
       timestamp: Date.now(),
     });
 
-    return complete(p, 'ok', { results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', results: JSON.stringify(results) };
   },
 
-  dispatchAsync(input: Record<string, unknown>) {
+  async dispatchAsync(input, storage) {
     const event = input.event as string;
     const data = input.data as string;
 
+    const allSubscriptions = await storage.find('subscription', { event });
+
+    if (allSubscriptions.length === 0) {
+      return { variant: 'error', message: `No subscribers for event: ${event}` };
+    }
+
     const jobId = `job:${event}:${Date.now()}`;
 
-    let p = createProgram();
-    p = find(p, 'subscription', { event }, 'allSubscriptions');
-    p = put(p, 'asyncJob', jobId, {
+    await storage.put('asyncJob', jobId, {
       jobId,
       event,
       data,
       status: 'queued',
-      subscriberCount: 0,
+      subscriberCount: allSubscriptions.length,
       createdAt: Date.now(),
     });
 
-    return complete(p, 'ok', { jobId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', jobId };
   },
 
-  getHistory(input: Record<string, unknown>) {
+  async getHistory(input, storage) {
     const event = input.event as string;
     const limit = input.limit as number;
 
-    let p = createProgram();
-    p = find(p, 'eventHistory', { event }, 'allHistory');
-    return complete(p, 'ok', { entries: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const allHistory = await storage.find('eventHistory', { event });
+
+    // Sort by timestamp descending and limit
+    const sorted = allHistory
+      .sort((a, b) => (b.timestamp as number) - (a.timestamp as number))
+      .slice(0, limit);
+
+    const entries = sorted.map(entry => ({
+      event: entry.event,
+      data: entry.data,
+      results: entry.results,
+      timestamp: entry.timestamp,
+    }));
+
+    return { variant: 'ok', entries: JSON.stringify(entries) };
   },
 };
-
-export const eventBusHandler = autoInterpret(_eventBusHandler);
-

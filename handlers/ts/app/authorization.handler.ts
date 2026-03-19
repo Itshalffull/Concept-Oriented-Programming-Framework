@@ -1,88 +1,111 @@
-// @migrated dsl-constructs 2026-03-18
 // Authorization Concept Implementation
 // Manage roles, permissions, and permission-checking for users.
 // Roles group permissions into reusable bundles; users inherit permissions through role assignment.
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _authorizationHandler: FunctionalConceptHandler = {
-  grantPermission(input: Record<string, unknown>) {
+export const authorizationHandler: ConceptHandler = {
+  async grantPermission(input, storage) {
     const role = input.role as string;
     const permission = input.permission as string;
 
-    let p = createProgram();
-    p = spGet(p, 'role', role, 'roleRecord');
-    // Whether found or not, we put the role with the permission added
-    // The runtime resolves existing permissions from bindings and appends
-    p = put(p, 'role', role, {
+    // Ensure the role exists; create it if this is the first grant
+    let roleRecord = await storage.get('role', role);
+    if (!roleRecord) {
+      // Auto-create the role on first permission grant
+      roleRecord = { role, permissions: JSON.stringify([]) };
+    }
+
+    const permissions: string[] = JSON.parse(roleRecord.permissions as string);
+
+    // Idempotent: if permission is already granted, still return ok
+    if (!permissions.includes(permission)) {
+      permissions.push(permission);
+    }
+
+    await storage.put('role', role, {
       role,
-      permissions: JSON.stringify([permission]),
+      permissions: JSON.stringify(permissions),
     });
-    return complete(p, 'ok', { role, permission }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return { variant: 'ok', role, permission };
   },
 
-  revokePermission(input: Record<string, unknown>) {
+  async revokePermission(input, storage) {
     const role = input.role as string;
     const permission = input.permission as string;
 
-    let p = createProgram();
-    p = spGet(p, 'role', role, 'roleRecord');
-    p = branch(p, 'roleRecord',
-      (b) => {
-        // Remove permission from existing list — resolved at runtime
-        let b2 = put(b, 'role', role, {
-          role,
-          permissions: '', // resolved at runtime: filter out permission
-        });
-        return complete(b2, 'ok', { role, permission });
-      },
-      (b) => complete(b, 'notfound', { message: 'The specified role does not exist' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const roleRecord = await storage.get('role', role);
+    if (!roleRecord) {
+      return { variant: 'notfound', message: 'The specified role does not exist' };
+    }
+
+    const permissions: string[] = JSON.parse(roleRecord.permissions as string);
+    const index = permissions.indexOf(permission);
+    if (index === -1) {
+      return { variant: 'notfound', message: 'The specified permission does not exist on this role' };
+    }
+
+    permissions.splice(index, 1);
+
+    await storage.put('role', role, {
+      role,
+      permissions: JSON.stringify(permissions),
+    });
+
+    return { variant: 'ok', role, permission };
   },
 
-  assignRole(input: Record<string, unknown>) {
+  async assignRole(input, storage) {
     const user = input.user as string;
     const role = input.role as string;
 
-    let p = createProgram();
-    p = spGet(p, 'role', role, 'roleRecord');
-    p = branch(p, 'roleRecord',
-      (b) => {
-        // Role exists — assign to user
-        let b2 = spGet(b, 'userRole', user, 'userRecord');
-        // Put user role with the new role appended
-        b2 = put(b2, 'userRole', user, {
-          user,
-          roles: JSON.stringify([role]),
-        });
-        return complete(b2, 'ok', { user, role });
-      },
-      (b) => complete(b, 'notfound', { message: 'The specified role does not exist' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Verify the role exists
+    const roleRecord = await storage.get('role', role);
+    if (!roleRecord) {
+      return { variant: 'notfound', message: 'The specified role does not exist' };
+    }
+
+    // Get or create the user's role set
+    let userRecord = await storage.get('userRole', user);
+    const roles: string[] = userRecord
+      ? JSON.parse(userRecord.roles as string)
+      : [];
+
+    if (!roles.includes(role)) {
+      roles.push(role);
+    }
+
+    await storage.put('userRole', user, {
+      user,
+      roles: JSON.stringify(roles),
+    });
+
+    return { variant: 'ok', user, role };
   },
 
-  checkPermission(input: Record<string, unknown>) {
+  async checkPermission(input, storage) {
     const user = input.user as string;
     const permission = input.permission as string;
 
-    let p = createProgram();
-    p = spGet(p, 'userRole', user, 'userRecord');
-    p = branch(p, 'userRecord',
-      (b) => {
-        // User found — check roles for permission at runtime
-        return complete(b, 'ok', { granted: false });
-      },
-      (b) => complete(b, 'ok', { granted: false }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Get the user's assigned roles
+    const userRecord = await storage.get('userRole', user);
+    if (!userRecord) {
+      return { variant: 'ok', granted: false };
+    }
+
+    const roles: string[] = JSON.parse(userRecord.roles as string);
+
+    // Check each role for the requested permission
+    for (const roleName of roles) {
+      const roleRecord = await storage.get('role', roleName);
+      if (roleRecord) {
+        const permissions: string[] = JSON.parse(roleRecord.permissions as string);
+        if (permissions.includes(permission)) {
+          return { variant: 'ok', granted: true };
+        }
+      }
+    }
+
+    return { variant: 'ok', granted: false };
   },
 };
-
-export const authorizationHandler = autoInterpret(_authorizationHandler);
-

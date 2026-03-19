@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScript SDK Target Provider — Clef Bind
 //
@@ -9,13 +8,9 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type {
+  ConceptHandler,
+  ConceptStorage,
   ConceptManifest,
   ActionSchema,
   ActionParamSchema,
@@ -229,21 +224,17 @@ function generateIndexTs(projections: ProjectionEntry[]): string {
 
 // --- Concept Handler ---
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    const p = createProgram();
-
-    return complete(p, 'ok', {
+export const tsSdkTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'TsSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'TypeScriptSdk',
       capabilities: JSON.stringify(['client', 'types', 'tests']),
       targetKey: 'typescript',
       providerType: 'sdk',
-
-    }) as StorageProgram<Result>;
+    };
   },
 
   /**
@@ -256,38 +247,33 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  generate(input: Record<string, unknown>) {
+  async generate(
+    input: Record<string, unknown>,
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'projection is required and must be a JSON string' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'projection is not valid JSON' };
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -306,9 +292,7 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      const p = createProgram();
-
-      return complete(p, 'ok', { files: [], package: packageName }) as StorageProgram<Result>;
+      return { variant: 'ok', files: [], package: packageName };
     }
 
     // --- Generate concept client file ---
@@ -351,9 +335,6 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    const p = createProgram();
-    return complete(p, 'ok', { files, package: packageName }) as StorageProgram<Result>;
+    return { variant: 'ok', files, package: packageName };
   },
 };
-
-export const tsSdkTargetHandler = autoInterpret(_handler);

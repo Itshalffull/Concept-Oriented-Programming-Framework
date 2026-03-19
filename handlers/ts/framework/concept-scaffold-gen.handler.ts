@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ConceptScaffoldGen — Concept spec (.concept) scaffold generator
 //
@@ -11,9 +10,7 @@
 //   - Section 2.2: Action signatures and variants
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -180,23 +177,26 @@ function buildConceptSpec(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'ConceptScaffoldGen',
+export const conceptScaffoldGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'ConceptScaffoldGen',
       inputKind: 'ConceptConfig',
       outputKind: 'ConceptSpec',
       capabilities: JSON.stringify([
         'concept-spec', 'state-fields', 'state-groups', 'actions', 'invariants',
         'version-annotation', 'gate-annotation', 'capabilities-block',
         'enum-types', 'record-types', 'list-option-wrappers', 'all-primitives',
-      ]) }); return p; }
+      ]),
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
     const name = (input.name as string) || 'MyConcept';
 
     if (!name || typeof name !== 'string') {
-      { let p = createProgram(); p = complete(p, 'error', { message: 'Concept name is required' }); return p; }
+      return { variant: 'error', message: 'Concept name is required' };
     }
 
     try {
@@ -207,19 +207,23 @@ const _handler: FunctionalConceptHandler = {
         { path: `concepts/${kebab}.stub.concept`, content: conceptSpec },
       ];
 
-      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
+      return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 
-  preview(input: Record<string, unknown>) {
-    // Preview delegates to generate — same logic, just returns what would be written
-    const program = _handler.generate(input);
-    return program;
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await conceptScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
   },
 };
-
-export const conceptScaffoldGenHandler = autoInterpret(_handler);

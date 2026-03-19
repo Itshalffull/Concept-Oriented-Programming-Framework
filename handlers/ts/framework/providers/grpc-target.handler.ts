@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // gRPC Target Provider Handler
 //
@@ -8,10 +7,7 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toPascalCase, typeToProtobuf, generateFileHeader, getHierarchicalTrait } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 
@@ -140,14 +136,17 @@ function generateProtoFile(
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'GrpcTarget',
+export const grpcTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'GrpcTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GrpcProto',
       capabilities: JSON.stringify(['proto3', 'service', 'hierarchical']),
       targetKey: 'grpc',
-      providerType: 'target' }); return p; }
+      providerType: 'target',
+    };
   },
 
   /**
@@ -157,21 +156,22 @@ const _handler: FunctionalConceptHandler = {
    * concept name, and target-specific config with an optional
    * `package` field.
    */
-  generate(
+  async generate(
     input: Record<string, unknown>,
-  ) {
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -182,7 +182,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+        return { variant: 'ok', files: [] };
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -219,8 +219,6 @@ const _handler: FunctionalConceptHandler = {
       },
     ];
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    return { variant: 'ok', files };
   },
 };
-
-export const grpcTargetHandler = autoInterpret(_handler);

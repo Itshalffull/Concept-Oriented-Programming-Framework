@@ -1,70 +1,84 @@
-// @migrated dsl-constructs 2026-03-18
 // Reference Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _referenceHandler: FunctionalConceptHandler = {
-  addRef(input: Record<string, unknown>) {
+export const referenceHandler: ConceptHandler = {
+  async addRef(input, storage) {
     const source = input.source as string;
     const target = input.target as string;
 
-    let p = createProgram();
-    p = spGet(p, 'reference', source, 'existing');
+    const existing = await storage.get('reference', source);
+    const refs: string[] = existing
+      ? JSON.parse(existing.refs as string)
+      : [];
 
-    p = put(p, 'reference', source, {
+    if (refs.includes(target)) {
+      return { variant: 'exists', source, target };
+    }
+
+    refs.push(target);
+
+    await storage.put('reference', source, {
       source,
-      refs: JSON.stringify([target]),
+      refs: JSON.stringify(refs),
     });
 
-    return complete(p, 'ok', { source, target }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', source, target };
   },
 
-  removeRef(input: Record<string, unknown>) {
+  async removeRef(input, storage) {
     const source = input.source as string;
     const target = input.target as string;
 
-    let p = createProgram();
-    p = spGet(p, 'reference', source, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'reference', source, {
-          source,
-          refs: JSON.stringify([]),
-        });
-        return complete(b2, 'ok', { source, target });
-      },
-      (b) => complete(b, 'notfound', { source, target }),
-    );
+    const existing = await storage.get('reference', source);
+    if (!existing) {
+      return { variant: 'notfound', source, target };
+    }
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const refs: string[] = JSON.parse(existing.refs as string);
+
+    if (!refs.includes(target)) {
+      return { variant: 'notfound', source, target };
+    }
+
+    const updated = refs.filter(r => r !== target);
+
+    await storage.put('reference', source, {
+      source,
+      refs: JSON.stringify(updated),
+    });
+
+    return { variant: 'ok', source, target };
   },
 
-  getRefs(input: Record<string, unknown>) {
+  async getRefs(input, storage) {
     const source = input.source as string;
 
-    let p = createProgram();
-    p = spGet(p, 'reference', source, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { targets: '' }),
-      (b) => complete(b, 'notfound', { source }),
-    );
+    const existing = await storage.get('reference', source);
+    if (!existing) {
+      return { variant: 'notfound', source };
+    }
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const refs: string[] = JSON.parse(existing.refs as string);
+
+    // Return single ref as plain string, multiple as comma-separated
+    const targets = refs.length === 1 ? refs[0] : refs.join(',');
+    return { variant: 'ok', targets };
   },
 
-  resolveTarget(input: Record<string, unknown>) {
+  async resolveTarget(input, storage) {
     const target = input.target as string;
 
-    let p = createProgram();
-    p = find(p, 'reference', {}, 'allRefs');
+    const allRefs = await storage.find('reference');
+    let exists = false;
 
-    return complete(p, 'ok', { exists: false }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    for (const record of allRefs) {
+      const refs: string[] = JSON.parse(record.refs as string);
+      if (refs.includes(target)) {
+        exists = true;
+        break;
+      }
+    }
+
+    return { variant: 'ok', exists };
   },
 };
-
-export const referenceHandler = autoInterpret(_referenceHandler);
-

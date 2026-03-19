@@ -1,70 +1,67 @@
-// @migrated dsl-constructs 2026-03-18
 // Alias Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _aliasHandler: FunctionalConceptHandler = {
-  addAlias(input: Record<string, unknown>) {
+export const aliasHandler: ConceptHandler = {
+  async addAlias(input, storage) {
     const entity = input.entity as string;
     const name = input.name as string;
 
-    let p = createProgram();
-    p = spGet(p, 'alias', entity, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        // existing found — aliases parsed at runtime; check for duplicate handled by runtime
-        // In functional style, we put unconditionally and let runtime handle idempotency
-        let b2 = put(b, 'alias', entity, {
-          entity,
-          aliases: '', // resolved at runtime: append name to existing aliases
-        });
-        return complete(b2, 'ok', { entity, name });
-      },
-      (b) => {
-        // No existing aliases — create new
-        let b2 = put(b, 'alias', entity, {
-          entity,
-          aliases: JSON.stringify([name]),
-        });
-        return complete(b2, 'ok', { entity, name });
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('alias', entity);
+    const aliases: string[] = existing
+      ? JSON.parse(existing.aliases as string)
+      : [];
+
+    if (aliases.includes(name)) {
+      return { variant: 'exists', entity, name };
+    }
+
+    aliases.push(name);
+
+    await storage.put('alias', entity, {
+      entity,
+      aliases: JSON.stringify(aliases),
+    });
+
+    return { variant: 'ok', entity, name };
   },
 
-  removeAlias(input: Record<string, unknown>) {
+  async removeAlias(input, storage) {
     const entity = input.entity as string;
     const name = input.name as string;
 
-    let p = createProgram();
-    p = spGet(p, 'alias', entity, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        // existing found — update aliases (remove name, resolved at runtime)
-        let b2 = put(b, 'alias', entity, {
-          entity,
-          aliases: '', // resolved at runtime: filter out name from existing aliases
-        });
-        return complete(b2, 'ok', { entity, name });
-      },
-      (b) => complete(b, 'notfound', { entity, name }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('alias', entity);
+    if (!existing) {
+      return { variant: 'notfound', entity, name };
+    }
+
+    const aliases: string[] = JSON.parse(existing.aliases as string);
+
+    if (!aliases.includes(name)) {
+      return { variant: 'notfound', entity, name };
+    }
+
+    const updated = aliases.filter(a => a !== name);
+
+    await storage.put('alias', entity, {
+      entity,
+      aliases: JSON.stringify(updated),
+    });
+
+    return { variant: 'ok', entity, name };
   },
 
-  resolve(input: Record<string, unknown>) {
+  async resolve(input, storage) {
     const name = input.name as string;
 
-    let p = createProgram();
-    p = find(p, 'alias', {}, 'allAliases');
-    // Scanning all aliases for a match is handled at runtime
-    return complete(p, 'ok', { entity: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const allAliases = await storage.find('alias');
+
+    for (const record of allAliases) {
+      const aliases: string[] = JSON.parse(record.aliases as string);
+      if (aliases.includes(name)) {
+        return { variant: 'ok', entity: record.entity as string };
+      }
+    }
+
+    return { variant: 'notfound', name };
   },
 };
-
-export const aliasHandler = autoInterpret(_aliasHandler);
-

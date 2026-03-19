@@ -1,43 +1,34 @@
-// @migrated dsl-constructs 2026-03-18
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _commentHandler: FunctionalConceptHandler = {
-  create(input: Record<string, unknown>) {
+export const commentHandler: ConceptHandler = {
+  async create(input, storage) {
     const comment = input.comment as string;
     const body = input.body as string;
     const target = input.target as string;
     const author = input.author as string;
 
-    let p = createProgram();
-    p = put(p, 'comment', comment, { comment, body, target, author });
-    return complete(p, 'ok', { comment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('comment', comment, {
+      comment,
+      body,
+      target,
+      author,
+    });
+
+    return { variant: 'ok', comment };
   },
 
-  list(input: Record<string, unknown>) {
+  async list(input, storage) {
     const target = input.target as string | undefined;
 
-    let p = createProgram();
-    if (target) {
-      p = find(p, 'comment', { target }, 'allComments');
-    } else {
-      p = find(p, 'comment', {}, 'allComments');
-    }
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allComments = (bindings.allComments as Array<Record<string, unknown>>) || [];
-      return { comments: JSON.stringify(allComments.map(r => ({
-        comment: r.comment, body: r.body, target: r.target, author: r.author,
-      }))) };
-    });
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const allComments = target
+      ? await storage.find('comment', { target })
+      : await storage.find('comment');
+
+    return { variant: 'ok', comments: JSON.stringify(allComments) };
   },
 
-  addComment(input: Record<string, unknown>) {
+  async addComment(input, storage) {
     const comment = input.comment as string;
     const entity = input.entity as string;
     const content = input.content as string;
@@ -45,79 +36,87 @@ const _commentHandler: FunctionalConceptHandler = {
 
     const threadPath = `/${comment}`;
 
-    let p = createProgram();
-    p = put(p, 'comment', comment, {
-      comment, entity, content, author,
+    await storage.put('comment', comment, {
+      comment,
+      entity,
+      content,
+      author,
       parent: '',
       threadPath,
       published: false,
     });
-    return complete(p, 'ok', { comment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return { variant: 'ok', comment };
   },
 
-  reply(input: Record<string, unknown>) {
+  async reply(input, storage) {
     const comment = input.comment as string;
     const parent = input.parent as string;
     const content = input.content as string;
     const author = input.author as string;
 
-    let p = createProgram();
-    p = spGet(p, 'comment', parent, 'parentRecord');
-    // threadPath constructed at runtime from parent binding
-    p = put(p, 'comment', comment, {
-      comment, entity: '', content, author,
+    const parentRecord = await storage.get('comment', parent);
+    const parentThreadPath = parentRecord
+      ? (parentRecord.threadPath as string)
+      : `/${parent}`;
+
+    const threadPath = `${parentThreadPath}/${comment}`;
+
+    await storage.put('comment', comment, {
+      comment,
+      entity: parentRecord?.entity ?? '',
+      content,
+      author,
       parent,
-      threadPath: `/${parent}/${comment}`,
+      threadPath,
       published: false,
     });
-    return complete(p, 'ok', { comment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return { variant: 'ok', comment };
   },
 
-  publish(input: Record<string, unknown>) {
+  async publish(input, storage) {
     const comment = input.comment as string;
 
-    let p = createProgram();
-    p = spGet(p, 'comment', comment, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'comment', comment, { published: true });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Comment not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('comment', comment);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Comment not found' };
+    }
+
+    await storage.put('comment', comment, {
+      ...existing,
+      published: true,
+    });
+
+    return { variant: 'ok' };
   },
 
-  unpublish(input: Record<string, unknown>) {
+  async unpublish(input, storage) {
     const comment = input.comment as string;
 
-    let p = createProgram();
-    p = spGet(p, 'comment', comment, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'comment', comment, { published: false });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Comment not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('comment', comment);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Comment not found' };
+    }
+
+    await storage.put('comment', comment, {
+      ...existing,
+      published: false,
+    });
+
+    return { variant: 'ok' };
   },
 
-  delete(input: Record<string, unknown>) {
+  async delete(input, storage) {
     const comment = input.comment as string;
 
-    let p = createProgram();
-    p = spGet(p, 'comment', comment, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = del(b, 'comment', comment);
-        return complete(b2, 'ok', { comment });
-      },
-      (b) => complete(b, 'notfound', { message: 'Comment not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('comment', comment);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Comment not found' };
+    }
+
+    await storage.del('comment', comment);
+
+    return { variant: 'ok', comment };
   },
 };
-
-export const commentHandler = autoInterpret(_commentHandler);
-

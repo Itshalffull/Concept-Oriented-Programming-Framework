@@ -1,70 +1,37 @@
-// @migrated dsl-constructs 2026-03-18
 // Weight Concept Handler
 // Coordination concept routing to pluggable weight source providers.
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _weightHandler: FunctionalConceptHandler = {
-  updateWeight(input: Record<string, unknown>) {
+export const weightHandler: ConceptHandler = {
+  async updateWeight(input, storage) {
     const { participant, source, value } = input;
     const id = `weight-${participant}`;
-    let p = createProgram();
-    p = get(p, 'weight', id, 'record');
-
-    p = mapBindings(p, (bindings) => {
-      const record = (bindings.record as Record<string, unknown>) ?? {};
-      const sources = ((record.sources as Record<string, number>) ?? {});
-      sources[source as string] = value as number;
-      const total = Object.values(sources).reduce((a, b) => a + b, 0);
-      return { sources, total };
-    }, 'computed');
-
-    p = put(p, 'weight', id, { id, participant, sources: {}, total: 0, updatedAt: new Date().toISOString() });
-
-    return completeFrom(p, 'updated', (bindings) => {
-      const computed = bindings.computed as Record<string, unknown>;
-      return { weight: id, newTotal: computed.total };
-    }) as StorageProgram<Result>;
+    const record = await storage.get('weight', id) ?? {};
+    const sources = (record.sources as Record<string, number>) ?? {};
+    sources[source as string] = value as number;
+    const total = Object.values(sources).reduce((a, b) => a + b, 0);
+    await storage.put('weight', id, { id, participant, sources, total, updatedAt: new Date().toISOString() });
+    return { variant: 'updated', weight: id, newTotal: total };
   },
 
-  snapshot(input: Record<string, unknown>) {
+  async snapshot(input, storage) {
     const { snapshotRef, participants } = input;
     const id = `snapshot-${snapshotRef ?? Date.now()}`;
-    let p = createProgram();
-    p = put(p, 'snapshot', id, { id, participants, takenAt: new Date().toISOString() });
-    return complete(p, 'snapped', { snapshot: id }) as StorageProgram<Result>;
+    await storage.put('snapshot', id, { id, participants, takenAt: new Date().toISOString() });
+    return { variant: 'snapped', snapshot: id };
   },
 
-  getWeight(input: Record<string, unknown>) {
+  async getWeight(input, storage) {
     const { participant } = input;
-    let p = createProgram();
-    p = get(p, 'weight', `weight-${participant}`, 'record');
-
-    return completeFrom(p, 'weight', (bindings) => {
-      const record = bindings.record as Record<string, unknown> | null;
-      if (!record) return { participant, total: 0.0 };
-      return { participant, total: record.total };
-    }) as StorageProgram<Result>;
+    const record = await storage.get('weight', `weight-${participant}`);
+    if (!record) return { variant: 'weight', participant, total: 0.0 };
+    return { variant: 'weight', participant, total: record.total };
   },
 
-  getWeightFromSnapshot(input: Record<string, unknown>) {
+  async getWeightFromSnapshot(input, storage) {
     const { snapshot, participant } = input;
-    let p = createProgram();
-    p = get(p, 'snapshot', snapshot as string, 'record');
-
-    p = branch(p, 'record',
-      (b) => complete(b, 'weight', { participant, total: 0.0, snapshot }),
-      (b) => complete(b, 'not_found', { snapshot }),
-    );
-
-    return p as StorageProgram<Result>;
+    const record = await storage.get('snapshot', snapshot as string);
+    if (!record) return { variant: 'not_found', snapshot };
+    return { variant: 'weight', participant, total: 0.0, snapshot };
   },
 };
-
-export const weightHandler = autoInterpret(_weightHandler);

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RustGen Concept Implementation
 //
@@ -21,20 +20,17 @@
 //   - conformance.rs   (conformance tests from invariants)
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, complete, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
+  ConceptHandler,
+  ConceptStorage,
   ConceptManifest,
   ResolvedType,
+  ActionSchema,
+  VariantSchema,
   InvariantSchema,
   InvariantStep,
   InvariantValue,
 } from '../../../runtime/types.js';
-
-type Result = { variant: string; [key: string]: unknown };
 
 // --- ResolvedType → Rust mapping (Section 10.1) ---
 
@@ -53,6 +49,7 @@ function resolvedTypeToRust(t: ResolvedType): string {
     case 'map':
       return `HashMap<${resolvedTypeToRust(t.keyType)}, ${resolvedTypeToRust(t.inner)}>`;
     case 'record': {
+      // Inline records become structs elsewhere; for inline use, map to a tuple-like comment
       const fields = t.fields.map(f => `${snakeCase(f.name)}: ${resolvedTypeToRust(f.type)}`);
       return `{ ${fields.join(', ')} }`;
     }
@@ -155,6 +152,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
   ];
 
   for (const action of manifest.actions) {
+    // Input struct
     const inputStructName = `${conceptName}${capitalize(action.name)}Input`;
     const inputHasHashSet = action.params.some(p => typeUsesHashSet(p.type));
     lines.push(`#[derive(${derivesForStruct(inputHasHashSet)})]`);
@@ -165,6 +163,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
     lines.push(`}`);
     lines.push('');
 
+    // Output enum (tagged union of variants)
     const outputEnumName = `${conceptName}${capitalize(action.name)}Output`;
     const enumHasHashSet = action.variants.some(v =>
       v.fields.some(f => typeUsesHashSet(f.type))
@@ -330,11 +329,13 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push(`        let handler = create_test_handler(); // provided by implementor`);
     lines.push('');
 
+    // Declare free variable bindings
     for (const fv of inv.freeVariables) {
       lines.push(`        let ${snakeCase(fv.name)} = "${fv.testValue}".to_string();`);
     }
     if (inv.freeVariables.length > 0) lines.push('');
 
+    // After clause (setup)
     let stepNum = 1;
     lines.push(`        // --- AFTER clause ---`);
     for (const step of inv.setup) {
@@ -343,6 +344,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     }
     lines.push('');
 
+    // Then clause (assertions)
     lines.push(`        // --- THEN clause ---`);
     for (const step of inv.assertions) {
       lines.push(...generateRustStepCode(step, stepNum));
@@ -356,6 +358,14 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
   lines.push(`}`);
   return lines.join('\n');
 }
+
+// --- InvariantValue → Rust expression ---
+//
+// Recursively converts an InvariantValue to a Rust expression string.
+// For `record` and `list` kinds the generated code emits `todo!()`
+// with a descriptive comment, because the Rust conformance tests from
+// codegen are not the primary test path — real testing happens through
+// the TypeScript CLI test runner (test.ts).
 
 function invariantValueToRust(v: InvariantValue): string {
   switch (v.kind) {
@@ -382,6 +392,7 @@ function invariantValueToRust(v: InvariantValue): string {
   }
 }
 
+// Helper: produce a human-readable summary of an InvariantValue for comments.
 function invariantValueToComment(v: InvariantValue): string {
   switch (v.kind) {
     case 'literal':
@@ -406,6 +417,7 @@ function generateRustStepCode(
   const lines: string[] = [];
   const varName = `step${stepNum}`;
 
+  // Comment
   const inputStr = step.inputs.map(a =>
     `${a.name}: ${invariantValueToComment(a.value)}`
   ).join(', ');
@@ -414,15 +426,19 @@ function generateRustStepCode(
   ).join(', ');
   lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
+  // Build input struct fields
   const inputFields = step.inputs.map(a =>
     `${snakeCase(a.name)}: ${invariantValueToRust(a.value)}`
   ).join(', ');
 
+  // Build the struct name: ConceptNameActionInput
+  // We don't have concept name here, so we'll use a placeholder
   lines.push(`        let ${varName} = handler.${snakeCase(step.action)}(`);
   lines.push(`            ${capitalize(step.action)}Input { ${inputFields} },`);
   lines.push(`            &storage,`);
   lines.push(`        ).await.unwrap();`);
 
+  // Assert variant via pattern match
   const variantName = capitalize(step.expectedVariant);
   if (step.expectedOutputs.length > 0) {
     const bindings = step.expectedOutputs.map(o => snakeCase(o.name)).join(', ');
@@ -713,24 +729,23 @@ impl RenderProgram {
 
 // --- Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    const p = createProgram();
-    return complete(p, 'ok', {
+export const rustGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'RustGen',
       inputKind: 'ConceptManifest',
       outputKind: 'RustSource',
       capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
-    }) as StorageProgram<Result>;
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input, storage) {
     const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
 
     if (!manifest || !manifest.name) {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'Invalid manifest: missing concept name' }) as StorageProgram<Result>;
+      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
     }
 
     try {
@@ -742,20 +757,17 @@ const _handler: FunctionalConceptHandler = {
         { path: `storage_program_dsl.stub.rs`, content: generateDslRuntimeFile() },
       ];
 
+      // Add conformance tests if the manifest has invariants
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
         files.push({ path: `${modName}/conformance.stub.rs`, content: conformanceTest });
       }
 
-      const p = createProgram();
-      return complete(p, 'ok', { files }) as StorageProgram<Result>;
+      return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      const p = createProgram();
-      return complete(p, 'error', { message, ...(stack ? { stack } : {}) }) as StorageProgram<Result>;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };
-
-export const rustGenHandler = autoInterpret(_handler);

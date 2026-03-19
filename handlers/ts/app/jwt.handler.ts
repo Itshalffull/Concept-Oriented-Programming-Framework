@@ -1,13 +1,7 @@
-// @migrated dsl-constructs 2026-03-18
-// JWT Concept Implementation — Functional (StorageProgram) style
+// JWT Concept Implementation
 // Simplified JWT — uses base64 encoding with HMAC signature
 import { createHmac, randomBytes } from 'crypto';
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, put, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
 const JWT_SECRET = randomBytes(32);
 
@@ -38,28 +32,24 @@ function verifyToken(token: string): Record<string, unknown> | null {
   }
 }
 
-const _jwtHandler: FunctionalConceptHandler = {
-  generate(input: Record<string, unknown>) {
+export const jwtHandler: ConceptHandler = {
+  async generate(input, storage) {
     const user = input.user as string;
     const token = signToken({ user, iat: Date.now() });
 
-    let p = createProgram();
-    p = put(p, 'tokens', user, { user, token });
-    return complete(p, 'ok', { token }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('tokens', user, { user, token });
+
+    return { variant: 'ok', token };
   },
 
-  verify(input: Record<string, unknown>) {
+  async verify(input, _storage) {
     const token = input.token as string;
     const payload = verifyToken(token);
 
-    let p = createProgram();
     if (!payload || !payload.user) {
-      return complete(p, 'error', { message: 'Invalid or expired token' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { variant: 'error', message: 'Invalid or expired token' };
     }
 
-    return complete(p, 'ok', { user: payload.user as string }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', user: payload.user as string };
   },
 };
-
-export const jwtHandler = autoInterpret(_jwtHandler);
-

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RetentionPolicy Handler
 //
@@ -8,14 +7,7 @@
 // disposed regardless of retention period expiration.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(prefix: string): string {
@@ -38,33 +30,41 @@ function periodToMs(period: number, unit: string): number {
 
 /** Check if a record identifier matches a hold scope pattern */
 function matchesScope(record: string, scope: string): boolean {
+  // Support simple glob-like matching: "matter:123/*" matches "matter:123/doc-1"
   const escaped = scope.replace(/[.+^${}()|[\]\\]/g, '\\$&');
   const pattern = escaped.replace(/\*/g, '.*');
   const regex = new RegExp(`^${pattern}$`);
   return regex.test(record);
 }
 
-const _handler: FunctionalConceptHandler = {
-  setRetention(input: Record<string, unknown>) {
+export const retentionPolicyHandler: ConceptHandler = {
+  async setRetention(input: Record<string, unknown>, storage: ConceptStorage) {
     const recordType = input.recordType as string;
     const period = input.period as number;
     const unit = input.unit as string;
     const dispositionAction = input.dispositionAction as string;
 
-    let p = createProgram();
-    p = find(p, 'retention-policy', { recordType }, 'existing');
+    // Check if a policy already exists for this record type
+    const existing = await storage.find('retention-policy', { recordType });
+    if (existing.length > 0) {
+      return { variant: 'alreadyExists', message: `A policy already exists for record type '${recordType}'` };
+    }
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      if (existing.length > 0) {
-        return { variant: 'alreadyExists', message: `A policy already exists for record type '${recordType}'` };
-      }
-      const policyId = nextId('retention-policy');
-      return { policyId };
-    }) as StorageProgram<Result>;
+    const policyId = nextId('retention-policy');
+    const now = new Date().toISOString();
+    await storage.put('retention-policy', policyId, {
+      id: policyId,
+      recordType,
+      retentionPeriod: period,
+      unit,
+      dispositionAction,
+      created: now,
+    });
+
+    return { variant: 'ok', policyId };
   },
 
-  applyHold(input: Record<string, unknown>) {
+  async applyHold(input: Record<string, unknown>, storage: ConceptStorage) {
     const name = input.name as string;
     const scope = input.scope as string;
     const reason = input.reason as string;
@@ -73,8 +73,7 @@ const _handler: FunctionalConceptHandler = {
     const holdId = nextId('hold');
     const now = new Date().toISOString();
 
-    let p = createProgram();
-    p = put(p, 'retention-hold', holdId, {
+    await storage.put('retention-hold', holdId, {
       id: holdId,
       name,
       scope,
@@ -84,68 +83,121 @@ const _handler: FunctionalConceptHandler = {
       released: null,
     });
 
-    return complete(p, 'ok', { holdId }) as StorageProgram<Result>;
+    return { variant: 'ok', holdId };
   },
 
-  releaseHold(input: Record<string, unknown>) {
+  async releaseHold(input: Record<string, unknown>, storage: ConceptStorage) {
     const holdId = input.holdId as string;
     const releasedBy = input.releasedBy as string;
     const reason = input.reason as string;
 
-    let p = createProgram();
-    p = get(p, 'retention-hold', holdId, 'hold');
+    const hold = await storage.get('retention-hold', holdId);
+    if (!hold) {
+      return { variant: 'notFound', message: `Hold '${holdId}' not found` };
+    }
 
-    return branch(p, 'hold',
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const hold = bindings.hold as Record<string, unknown>;
-          if (hold.released !== null && hold.released !== undefined) {
-            return { variant: 'alreadyReleased', message: `Hold '${holdId}' was already released` };
-          }
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Hold '${holdId}' not found` }),
-    ) as StorageProgram<Result>;
+    if (hold.released !== null && hold.released !== undefined) {
+      return { variant: 'alreadyReleased', message: `Hold '${holdId}' was already released` };
+    }
+
+    const now = new Date().toISOString();
+    await storage.put('retention-hold', holdId, {
+      ...hold,
+      released: now,
+      releasedBy,
+      releaseReason: reason,
+    });
+
+    return { variant: 'ok' };
   },
 
-  checkDisposition(input: Record<string, unknown>) {
+  async checkDisposition(input: Record<string, unknown>, storage: ConceptStorage) {
     const record = input.record as string;
 
-    let p = createProgram();
-    p = find(p, 'retention-hold', {}, 'allHolds');
-    p = find(p, 'retention-policy', {}, 'allPolicies');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const allHolds = bindings.allHolds as Record<string, unknown>[];
-      const activeHoldNames: string[] = [];
-      for (const hold of allHolds) {
-        if (hold.released === null || hold.released === undefined) {
-          if (matchesScope(record, hold.scope as string)) {
-            activeHoldNames.push(hold.name as string);
-          }
+    // Check for active holds
+    const allHolds = await storage.find('retention-hold', {});
+    const activeHoldNames: string[] = [];
+    for (const hold of allHolds) {
+      if (hold.released === null || hold.released === undefined) {
+        if (matchesScope(record, hold.scope as string)) {
+          activeHoldNames.push(hold.name as string);
         }
       }
+    }
 
-      if (activeHoldNames.length > 0) {
-        return { variant: 'held', holdNames: activeHoldNames };
+    if (activeHoldNames.length > 0) {
+      return { variant: 'held', holdNames: activeHoldNames };
+    }
+
+    // Find matching policy by record type prefix
+    const allPolicies = await storage.find('retention-policy', {});
+    let matchingPolicy: Record<string, unknown> | null = null;
+
+    for (const policy of allPolicies) {
+      const recordType = policy.recordType as string;
+      if (record.startsWith(recordType)) {
+        matchingPolicy = policy;
+        break;
       }
+    }
 
-      const allPolicies = bindings.allPolicies as Record<string, unknown>[];
-      let matchingPolicy: Record<string, unknown> | null = null;
+    if (!matchingPolicy) {
+      // No policy means disposable by default
+      return { variant: 'disposable', policyId: '' };
+    }
 
-      for (const policy of allPolicies) {
-        const recordType = policy.recordType as string;
-        if (record.startsWith(recordType)) {
-          matchingPolicy = policy;
-          break;
+    // Check retention period
+    const periodMs = periodToMs(
+      matchingPolicy.retentionPeriod as number,
+      matchingPolicy.unit as string,
+    );
+    const created = new Date(matchingPolicy.created as string).getTime();
+    const now = Date.now();
+
+    if (now - created < periodMs) {
+      const until = new Date(created + periodMs).toISOString();
+      return {
+        variant: 'retained',
+        reason: `Within retention period for '${matchingPolicy.recordType}'`,
+        until,
+      };
+    }
+
+    return { variant: 'disposable', policyId: matchingPolicy.id as string };
+  },
+
+  async dispose(input: Record<string, unknown>, storage: ConceptStorage) {
+    const record = input.record as string;
+    const disposedBy = input.disposedBy as string;
+
+    // Check for active holds first
+    const allHolds = await storage.find('retention-hold', {});
+    const activeHoldNames: string[] = [];
+    for (const hold of allHolds) {
+      if (hold.released === null || hold.released === undefined) {
+        if (matchesScope(record, hold.scope as string)) {
+          activeHoldNames.push(hold.name as string);
         }
       }
+    }
 
-      if (!matchingPolicy) {
-        return { variant: 'disposable', policyId: '' };
+    if (activeHoldNames.length > 0) {
+      return { variant: 'held', holdNames: activeHoldNames };
+    }
+
+    // Check retention period
+    const allPolicies = await storage.find('retention-policy', {});
+    let matchingPolicy: Record<string, unknown> | null = null;
+
+    for (const policy of allPolicies) {
+      const recordType = policy.recordType as string;
+      if (record.startsWith(recordType)) {
+        matchingPolicy = policy;
+        break;
       }
+    }
 
+    if (matchingPolicy) {
       const periodMs = periodToMs(
         matchingPolicy.retentionPeriod as number,
         matchingPolicy.unit as string,
@@ -154,97 +206,48 @@ const _handler: FunctionalConceptHandler = {
       const now = Date.now();
 
       if (now - created < periodMs) {
-        const until = new Date(created + periodMs).toISOString();
         return {
           variant: 'retained',
-          reason: `Within retention period for '${matchingPolicy.recordType}'`,
-          until,
+          reason: `Retention period not yet elapsed for '${matchingPolicy.recordType}'`,
         };
       }
-
-      return { variant: 'disposable', policyId: matchingPolicy.id as string };
-    }) as StorageProgram<Result>;
-  },
-
-  dispose(input: Record<string, unknown>) {
-    const record = input.record as string;
-    const disposedBy = input.disposedBy as string;
-
-    let p = createProgram();
-    p = find(p, 'retention-hold', {}, 'allHolds');
-    p = find(p, 'retention-policy', {}, 'allPolicies');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const allHolds = bindings.allHolds as Record<string, unknown>[];
-      const activeHoldNames: string[] = [];
-      for (const hold of allHolds) {
-        if (hold.released === null || hold.released === undefined) {
-          if (matchesScope(record, hold.scope as string)) {
-            activeHoldNames.push(hold.name as string);
-          }
-        }
-      }
-
-      if (activeHoldNames.length > 0) {
-        return { variant: 'held', holdNames: activeHoldNames };
-      }
-
-      const allPolicies = bindings.allPolicies as Record<string, unknown>[];
-      let matchingPolicy: Record<string, unknown> | null = null;
-
-      for (const policy of allPolicies) {
-        const recordType = policy.recordType as string;
-        if (record.startsWith(recordType)) {
-          matchingPolicy = policy;
-          break;
-        }
-      }
-
-      if (matchingPolicy) {
-        const periodMs = periodToMs(
-          matchingPolicy.retentionPeriod as number,
-          matchingPolicy.unit as string,
-        );
-        const created = new Date(matchingPolicy.created as string).getTime();
-        const now = Date.now();
-
-        if (now - created < periodMs) {
-          return {
-            variant: 'retained',
-            reason: `Retention period not yet elapsed for '${matchingPolicy.recordType}'`,
-          };
-        }
-      }
-
-      return {};
-    }) as StorageProgram<Result>;
-  },
-
-  auditLog(input: Record<string, unknown>) {
-    const record = input.record as string | null | undefined;
-
-    let p = createProgram();
-    if (record) {
-      p = find(p, 'retention-disposition-log', { record }, 'entries');
-    } else {
-      p = find(p, 'retention-disposition-log', {}, 'entries');
     }
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const entries = bindings.entries as Record<string, unknown>[];
-      const formatted = entries.map(e => ({
-        record: e.record as string,
-        policy: e.policy as string,
-        disposedAt: e.disposedAt as string,
-        disposedBy: e.disposedBy as string,
-      }));
+    // Log disposition
+    const now = new Date().toISOString();
+    const logId = nextId('disposition-log');
+    await storage.put('retention-disposition-log', logId, {
+      id: logId,
+      record,
+      policy: matchingPolicy ? (matchingPolicy.id as string) : '',
+      disposedAt: now,
+      disposedBy,
+    });
 
-      return { entries: formatted };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok' };
+  },
+
+  async auditLog(input: Record<string, unknown>, storage: ConceptStorage) {
+    const record = input.record as string | null | undefined;
+
+    let entries: Record<string, unknown>[];
+
+    if (record) {
+      entries = await storage.find('retention-disposition-log', { record });
+    } else {
+      entries = await storage.find('retention-disposition-log', {});
+    }
+
+    const formatted = entries.map(e => ({
+      record: e.record as string,
+      policy: e.policy as string,
+      disposedAt: e.disposedAt as string,
+      disposedBy: e.disposedBy as string,
+    }));
+
+    return { variant: 'ok', entries: formatted };
   },
 };
-
-export const retentionPolicyHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRetentionPolicyCounter(): void {

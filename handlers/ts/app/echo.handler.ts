@@ -1,22 +1,11 @@
-// @migrated dsl-constructs 2026-03-18
-// Echo Concept Implementation — Functional (StorageProgram) style
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, put, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+// Echo Concept Implementation
+import type { ConceptHandler } from '@clef/runtime';
 
-const _echoHandler: FunctionalConceptHandler = {
-  send(input: Record<string, unknown>) {
+export const echoHandler: ConceptHandler = {
+  async send(input, storage) {
     const id = input.id as string;
     const text = input.text as string;
-
-    let p = createProgram();
-    p = put(p, 'echo', id, { text });
-    return complete(p, 'ok', { id, echo: text }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('echo', id, { text });
+    return { variant: 'ok', id, echo: text };
   },
 };
-
-export const echoHandler = autoInterpret(_echoHandler);
-

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // SuiteManifestEntity Concept Implementation
 //
 // Queryable representation of parsed suite manifests (suite.yaml).
@@ -6,33 +5,25 @@
 // dependencies, and versioning. Enables cross-suite dependency
 // analysis and composition queries.
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
+export const suiteManifestEntityHandler: ConceptHandler = {
 
-const _handler: FunctionalConceptHandler = {
-
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+  async register(input, storage) {
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
 
     const key = `suite:${name}`;
-    p = get(p, 'suite-manifests', key, 'existing');
+    const existing = await storage.get('suite-manifests', key);
     if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing.id };
     }
 
     const id = crypto.randomUUID();
     const parsed = manifest ? JSON.parse(manifest) : {};
 
-    p = put(p, 'suite-manifests', key, {
+    await storage.put('suite-manifests', key, {
       id,
       name,
       sourceFile: source,
@@ -47,24 +38,22 @@ const _handler: FunctionalConceptHandler = {
       infrastructure: JSON.stringify(parsed.infrastructure || {}),
     });
 
-    return complete(p, 'ok', { suite: id }) as StorageProgram<Result>;
+    return { variant: 'ok', suite: id };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input, storage) {
     const name = input.name as string;
 
-    p = get(p, 'suite-manifests', `suite:${name}`, 'entry');
+    const entry = await storage.get('suite-manifests', `suite:${name}`);
     if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    return complete(p, 'ok', { suite: entry.id }) as StorageProgram<Result>;
+    return { variant: 'ok', suite: entry.id };
   },
 
-  listAll(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'suite-manifests', 'all');
+  async listAll(_input, storage) {
+    const all = await storage.find('suite-manifests');
 
     const suites = all.map(s => ({
       name: s.name,
@@ -73,12 +62,12 @@ const _handler: FunctionalConceptHandler = {
       syncCount: JSON.parse(s.syncs as string || '[]').length,
     }));
 
-    return complete(p, 'ok', { suites: JSON.stringify(suites) }) as StorageProgram<Result>;
+    return { variant: 'ok', suites: JSON.stringify(suites) };
   },
 
-  findByConcept(input: Record<string, unknown>) {
+  async findByConcept(input, storage) {
     const concept = input.concept as string;
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
 
     const matched = all.filter(s => {
       const concepts = JSON.parse(s.concepts as string || '[]');
@@ -87,13 +76,12 @@ const _handler: FunctionalConceptHandler = {
       );
     });
 
-    return complete(p, 'ok', { suites: JSON.stringify(matched) }) as StorageProgram<Result>;
+    return { variant: 'ok', suites: JSON.stringify(matched) };
   },
 
-  findBySync(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findBySync(input, storage) {
     const sync = input.sync as string;
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
 
     const matched = all.filter(s => {
       const syncs = JSON.parse(s.syncs as string || '[]');
@@ -102,38 +90,35 @@ const _handler: FunctionalConceptHandler = {
       );
     });
 
-    return complete(p, 'ok', { suites: JSON.stringify(matched) }) as StorageProgram<Result>;
+    return { variant: 'ok', suites: JSON.stringify(matched) };
   },
 
-  concepts(input: Record<string, unknown>) {
-    let p = createProgram();
+  async concepts(input, storage) {
     const suiteId = input.suite as string;
 
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
     const entry = all.find(s => s.id === suiteId);
     if (!entry) {
-      return complete(p, 'ok', { concepts: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', concepts: '[]' };
     }
 
-    return complete(p, 'ok', { concepts: entry.concepts as string || '[]' }) as StorageProgram<Result>;
+    return { variant: 'ok', concepts: entry.concepts as string || '[]' };
   },
 
-  syncs(input: Record<string, unknown>) {
-    let p = createProgram();
+  async syncs(input, storage) {
     const suiteId = input.suite as string;
 
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
     const entry = all.find(s => s.id === suiteId);
     if (!entry) {
-      return complete(p, 'ok', { syncs: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', syncs: '[]' };
     }
 
-    return complete(p, 'ok', { syncs: entry.syncs as string || '[]' }) as StorageProgram<Result>;
+    return { variant: 'ok', syncs: entry.syncs as string || '[]' };
   },
 
-  dependencyGraph(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'suite-manifests', 'all');
+  async dependencyGraph(_input, storage) {
+    const all = await storage.find('suite-manifests');
 
     const nodes = all.map(s => ({
       name: s.name,
@@ -154,16 +139,16 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', { graph: JSON.stringify({ nodes, edges }) }) as StorageProgram<Result>;
+    return { variant: 'ok', graph: JSON.stringify({ nodes, edges }) };
   },
 
-  transitiveDependencies(input: Record<string, unknown>) {
+  async transitiveDependencies(input, storage) {
     const suiteId = input.suite as string;
 
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
     const entry = all.find(s => s.id === suiteId);
     if (!entry) {
-      return complete(p, 'ok', { dependencies: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', dependencies: '[]' };
     }
 
     const result: Array<{ name: string; version: string; depth: number; via: string }> = [];
@@ -200,17 +185,16 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', { dependencies: JSON.stringify(result) }) as StorageProgram<Result>;
+    return { variant: 'ok', dependencies: JSON.stringify(result) };
   },
 
-  validateDependencies(input: Record<string, unknown>) {
-    let p = createProgram();
+  async validateDependencies(input, storage) {
     const suiteId = input.suite as string;
 
-    p = find(p, 'suite-manifests', 'all');
+    const all = await storage.find('suite-manifests');
     const entry = all.find(s => s.id === suiteId);
     if (!entry) {
-      return complete(p, 'ok', { valid: JSON.stringify({ valid: true }) }) as StorageProgram<Result>;
+      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
     }
 
     const deps = JSON.parse(entry.dependencies as string || '[]');
@@ -232,15 +216,14 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (errors.length > 0) {
-      return complete(p, 'invalid', { errors: JSON.stringify(errors) }) as StorageProgram<Result>;
+      return { variant: 'invalid', errors: JSON.stringify(errors) };
     }
 
-    return complete(p, 'ok', { valid: JSON.stringify({ valid: true }) }) as StorageProgram<Result>;
+    return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
   },
 
-  crossSuiteConflicts(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'suite-manifests', 'all');
+  async crossSuiteConflicts(_input, storage) {
+    const all = await storage.find('suite-manifests');
 
     const conceptSuiteMap = new Map<string, string[]>();
     for (const suite of all) {
@@ -272,11 +255,9 @@ const _handler: FunctionalConceptHandler = {
     }
 
     if (issues.length > 0) {
-      return complete(p, 'conflicts', { issues: JSON.stringify(issues) }) as StorageProgram<Result>;
+      return { variant: 'conflicts', issues: JSON.stringify(issues) };
     }
 
-    return complete(p, 'ok', { noConflicts: JSON.stringify({ checked: all.length }) }) as StorageProgram<Result>;
+    return { variant: 'ok', noConflicts: JSON.stringify({ checked: all.length }) };
   },
 };
-
-export const suiteManifestEntityHandler = autoInterpret(_handler);

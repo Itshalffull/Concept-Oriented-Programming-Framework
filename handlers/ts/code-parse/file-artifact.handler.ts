@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // FileArtifact Handler
 //
@@ -8,12 +7,7 @@
 // See design doc Section 4.1 (FileArtifact).
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { inferLanguage, inferRole } from './file-role-inference.js';
 
 let artifactCounter = 0;
@@ -21,24 +15,21 @@ function nextArtifactId(): string {
   return `artifact-${++artifactCounter}`;
 }
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+export const fileArtifactHandler: ConceptHandler = {
+  async register(input: Record<string, unknown>, storage: ConceptStorage) {
     const node = input.node as string;
     const role = (input.role as string) || inferRole(node);
     const language = (input.language as string) || inferLanguage(node) || '';
     const encoding = (input.encoding as string) || 'utf-8';
 
     // Check for duplicate registration by file path
-    p = find(p, 'artifact', { node }, 'existing');
+    const existing = await storage.find('artifact', { node });
     if (existing.length > 0) {
-      return complete(p, 'alreadyRegistered', { existing: existing[0].id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing[0].id };
     }
 
     const id = nextArtifactId();
-    p = put(p, 'artifact', id, {
+    await storage.put('artifact', id, {
       id,
       node,
       role,
@@ -49,43 +40,41 @@ const _handler: FunctionalConceptHandler = {
     });
 
     // Index by node path for fast lookup
-    p = put(p, 'artifact_by_node', node, { artifactId: id });
+    await storage.put('artifact_by_node', node, { artifactId: id });
 
-    return complete(p, 'ok', { artifact: id }) as StorageProgram<Result>;
+    return { variant: 'ok', artifact: id };
   },
 
-  setProvenance(input: Record<string, unknown>) {
-    let p = createProgram();
+  async setProvenance(input: Record<string, unknown>, storage: ConceptStorage) {
     const artifactId = input.artifact as string;
     const spec = input.spec as string;
     const generator = input.generator as string;
 
-    p = get(p, 'artifact', artifactId, 'data');
+    const data = await storage.get('artifact', artifactId);
     if (!data) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    p = put(p, 'artifact', artifactId, {
+    await storage.put('artifact', artifactId, {
       ...data,
       generationSource: JSON.stringify({ spec, generator }),
     });
 
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  findByRole(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByRole(input: Record<string, unknown>, storage: ConceptStorage) {
     const role = input.role as string;
-    p = find(p, 'artifact', { role }, 'matches');
-    return complete(p, 'ok', {
+    const matches = await storage.find('artifact', { role });
+    return {
+      variant: 'ok',
       artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role, language: m.language }))),
-    }) as StorageProgram<Result>;
+    };
   },
 
-  findGeneratedFrom(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findGeneratedFrom(input: Record<string, unknown>, storage: ConceptStorage) {
     const spec = input.spec as string;
-    p = find(p, 'artifact', 'all');
+    const all = await storage.find('artifact');
     const matches = all.filter((a) => {
       if (!a.generationSource) return false;
       try {
@@ -97,32 +86,31 @@ const _handler: FunctionalConceptHandler = {
     });
 
     if (matches.length === 0) {
-      return complete(p, 'noGeneratedFiles', {}) as StorageProgram<Result>;
+      return { variant: 'noGeneratedFiles' };
     }
 
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       artifacts: JSON.stringify(matches.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
-    }) as StorageProgram<Result>;
+    };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input: Record<string, unknown>, storage: ConceptStorage) {
     const artifactId = input.artifact as string;
-    p = get(p, 'artifact', artifactId, 'data');
+    const data = await storage.get('artifact', artifactId);
     if (!data) {
-      return complete(p, 'notfound', { message: `Artifact ${artifactId} not found` }) as StorageProgram<Result>;
+      return { variant: 'notfound', message: `Artifact ${artifactId} not found` };
     }
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       artifact: artifactId,
       node: data.node as string,
       role: data.role as string,
       language: data.language as string,
       encoding: data.encoding as string,
-    }) as StorageProgram<Result>;
+    };
   },
 };
-
-export const fileArtifactHandler = autoInterpret(_handler);
 
 /** Reset the artifact counter. Useful for testing. */
 export function resetArtifactCounter(): void {

@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // OpenAPI Target Provider — Clef Bind
 //
@@ -9,13 +8,9 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, complete, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-
 import type {
+  ConceptHandler,
+  ConceptStorage,
   ConceptManifest,
   ActionSchema,
   VariantSchema,
@@ -38,6 +33,9 @@ import type { HttpRoute, HierarchicalConfig } from './codegen-utils.js';
 
 // --- YAML String Helpers ---
 
+/**
+ * Indent every line in a multi-line string by the given number of spaces.
+ */
 function indent(text: string, spaces: number): string {
   const pad = ' '.repeat(spaces);
   return text
@@ -46,6 +44,11 @@ function indent(text: string, spaces: number): string {
     .join('\n');
 }
 
+/**
+ * Serialize a JSON-schema-like object to inline YAML. Handles primitives,
+ * arrays, and nested objects with correct indentation. This avoids needing
+ * a YAML library dependency.
+ */
 function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
   const pad = ' '.repeat(indentLevel);
 
@@ -54,6 +57,7 @@ function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
   }
 
   if (typeof obj === 'string') {
+    // Quote strings that contain special YAML characters or are empty
     if (
       obj === '' ||
       obj.includes(':') ||
@@ -90,6 +94,8 @@ function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
 
   if (Array.isArray(obj)) {
     if (obj.length === 0) return '[]';
+
+    // Check if all items are simple scalars
     const allScalar = obj.every(
       (item) => typeof item !== 'object' || item === null,
     );
@@ -97,6 +103,7 @@ function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
       const items = obj.map((item) => jsonToYaml(item, 0)).join(', ');
       return `[${items}]`;
     }
+
     const lines: string[] = [];
     for (const item of obj) {
       if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
@@ -125,6 +132,7 @@ function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
   if (typeof obj === 'object') {
     const entries = Object.entries(obj as Record<string, unknown>);
     if (entries.length === 0) return '{}';
+
     const lines: string[] = [];
     for (const [key, value] of entries) {
       if (
@@ -150,13 +158,18 @@ function jsonToYaml(obj: unknown, indentLevel: number = 0): string {
 
 // --- Schema Building ---
 
+/**
+ * Build a JSON Schema object for an action's input parameters.
+ */
 function buildInputSchema(action: ActionSchema, conceptName: string): Record<string, unknown> {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
+
   for (const param of action.params) {
     properties[param.name] = typeToJsonSchema(param.type);
     required.push(param.name);
   }
+
   return {
     type: 'object',
     properties,
@@ -164,21 +177,34 @@ function buildInputSchema(action: ActionSchema, conceptName: string): Record<str
   };
 }
 
+/**
+ * Build a JSON Schema object for a specific action variant's output.
+ */
 function buildVariantSchema(variant: VariantSchema, conceptName: string, actionName: string): Record<string, unknown> {
   const properties: Record<string, unknown> = {
     variant: { type: 'string', enum: [variant.tag] },
   };
   const required: string[] = ['variant'];
+
   for (const field of variant.fields) {
     properties[field.name] = typeToJsonSchema(field.type);
     required.push(field.name);
   }
-  return { type: 'object', properties, required };
+
+  return {
+    type: 'object',
+    properties,
+    required,
+  };
 }
 
+/**
+ * Build a schema for all state fields of a concept (for component schemas).
+ */
 function buildStateSchema(manifest: ConceptManifest): Record<string, unknown> {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
+
   for (const relation of manifest.relations) {
     for (const field of relation.fields) {
       properties[field.name] = typeToJsonSchema(field.type);
@@ -187,6 +213,7 @@ function buildStateSchema(manifest: ConceptManifest): Record<string, unknown> {
       }
     }
   }
+
   return {
     type: 'object',
     properties,
@@ -207,6 +234,9 @@ interface PathOperation {
   responses: Record<string, unknown>;
 }
 
+/**
+ * Build OpenAPI path operations for a concept's actions.
+ */
 function buildPathOperations(
   manifest: ConceptManifest,
   apiBasePath: string,
@@ -217,11 +247,13 @@ function buildPathOperations(
   const defaultBasePath = `${apiBasePath}/${kebabName}s`;
   const basePath = getRestBasePath(manifestYaml, conceptName, defaultBasePath);
   const overrides = getActionOverrides(manifestYaml, conceptName, 'rest');
+
   const operations: PathOperation[] = [];
 
   for (const action of manifest.actions) {
     const actionOverride = overrides[action.name] || {};
     let route: HttpRoute;
+
     if (actionOverride.method && actionOverride.path) {
       route = {
         method: (actionOverride.method as string).toUpperCase(),
@@ -245,6 +277,7 @@ function buildPathOperations(
       responses: {},
     };
 
+    // Request body for POST/PUT
     if (route.method === 'POST' || route.method === 'PUT') {
       const inputSchemaName = `${pascal}${actionPascal}Input`;
       op.requestBody = {
@@ -257,6 +290,7 @@ function buildPathOperations(
       };
     }
 
+    // Path parameters for {id}
     if (route.path.includes('{id}')) {
       op.parameters = [
         {
@@ -269,6 +303,7 @@ function buildPathOperations(
       ];
     }
 
+    // Responses
     const okVariant = action.variants.find((v) => v.tag === 'ok');
     const okSchemaName = okVariant
       ? `${pascal}${actionPascal}OkResponse`
@@ -335,6 +370,7 @@ function buildPathOperations(
   if (hierConfig) {
     const pascal = toPascalCase(conceptName);
 
+    // GET /{resource}/{id}/children
     operations.push({
       method: 'get',
       path: `${basePath}/{id}/children`,
@@ -342,14 +378,30 @@ function buildPathOperations(
       summary: `Get Children of ${pascal}`,
       tags: [pascal],
       parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: `${pascal} identifier` },
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
       ],
       responses: {
-        '200': { description: 'List of child resources', content: { 'application/json': { schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } } } } },
-        '404': { description: 'Resource not found' },
+        '200': {
+          description: 'List of child resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
       },
     });
 
+    // POST /{resource}/{id}/children
     operations.push({
       method: 'post',
       path: `${basePath}/{id}/children`,
@@ -357,15 +409,38 @@ function buildPathOperations(
       summary: `Create Child of ${pascal}`,
       tags: [pascal],
       parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: `Parent ${pascal} identifier` },
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `Parent ${pascal} identifier`,
+        },
       ],
-      requestBody: { required: true, content: { 'application/json': { schema: { $ref: `#/components/schemas/${pascal}` } } } },
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: `#/components/schemas/${pascal}` },
+          },
+        },
+      },
       responses: {
-        '201': { description: 'Child resource created', content: { 'application/json': { schema: { $ref: `#/components/schemas/${pascal}` } } } },
-        '404': { description: 'Parent resource not found' },
+        '201': {
+          description: 'Child resource created',
+          content: {
+            'application/json': {
+              schema: { $ref: `#/components/schemas/${pascal}` },
+            },
+          },
+        },
+        '404': {
+          description: 'Parent resource not found',
+        },
       },
     });
 
+    // GET /{resource}/{id}/ancestors
     operations.push({
       method: 'get',
       path: `${basePath}/{id}/ancestors`,
@@ -373,14 +448,30 @@ function buildPathOperations(
       summary: `Get Ancestors of ${pascal}`,
       tags: [pascal],
       parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: `${pascal} identifier` },
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
       ],
       responses: {
-        '200': { description: 'List of ancestor resources', content: { 'application/json': { schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } } } } },
-        '404': { description: 'Resource not found' },
+        '200': {
+          description: 'List of ancestor resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
       },
     });
 
+    // GET /{resource}/{id}/descendants with depth query parameter
     operations.push({
       method: 'get',
       path: `${basePath}/{id}/descendants`,
@@ -388,12 +479,33 @@ function buildPathOperations(
       summary: `Get Descendants of ${pascal}`,
       tags: [pascal],
       parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: `${pascal} identifier` },
-        { name: 'depth', in: 'query', required: false, schema: { type: 'integer' }, description: 'Maximum depth of descendants to return' },
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: `${pascal} identifier`,
+        },
+        {
+          name: 'depth',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer' },
+          description: 'Maximum depth of descendants to return',
+        },
       ],
       responses: {
-        '200': { description: 'List of descendant resources', content: { 'application/json': { schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } } } } },
-        '404': { description: 'Resource not found' },
+        '200': {
+          description: 'List of descendant resources',
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: `#/components/schemas/${pascal}` } },
+            },
+          },
+        },
+        '404': {
+          description: 'Resource not found',
+        },
       },
     });
   }
@@ -403,6 +515,9 @@ function buildPathOperations(
 
 // --- Document Assembly ---
 
+/**
+ * Assemble the full OpenAPI 3.1 YAML document string.
+ */
 function assembleOpenApiDocument(
   manifests: ConceptManifest[],
   manifestYaml: Record<string, unknown>,
@@ -411,8 +526,10 @@ function assembleOpenApiDocument(
   const projectName = (manifestYaml as Record<string, unknown>).name as string || 'Clef API';
   const projectVersion = (manifestYaml as Record<string, unknown>).version as string || '1.0.0';
   const apiBasePath = getApiBasePath(manifestYaml);
+
   const lines: string[] = [];
 
+  // --- Header ---
   lines.push('# Auto-generated by Clef Clef Bind — OpenAPI target');
   lines.push('# Do not edit manually; regenerate with: clef interface generate');
   lines.push('');
@@ -423,11 +540,13 @@ function assembleOpenApiDocument(
   lines.push(`  description: OpenAPI specification generated from Clef concept definitions`);
   lines.push('');
 
+  // --- Servers ---
   const serverUrl = (config.serverUrl as string) || `http://localhost:3000${apiBasePath}`;
   lines.push('servers:');
   lines.push(`  - url: ${serverUrl}`);
   lines.push('');
 
+  // --- Tags ---
   lines.push('tags:');
   for (const manifest of manifests) {
     const pascal = toPascalCase(manifest.name);
@@ -438,7 +557,10 @@ function assembleOpenApiDocument(
   }
   lines.push('');
 
+  // --- Paths ---
+  // Group operations by path
   const pathMap = new Map<string, PathOperation[]>();
+
   for (const manifest of manifests) {
     const ops = buildPathOperations(manifest, apiBasePath, manifestYaml);
     for (const op of ops) {
@@ -462,6 +584,7 @@ function assembleOpenApiDocument(
       lines.push(`      security:`);
       lines.push(`        - bearerAuth: []`);
 
+      // Parameters
       if (op.parameters && op.parameters.length > 0) {
         lines.push(`      parameters:`);
         for (const param of op.parameters) {
@@ -477,6 +600,7 @@ function assembleOpenApiDocument(
         }
       }
 
+      // Request body
       if (op.requestBody) {
         lines.push(`      requestBody:`);
         lines.push(`        required: true`);
@@ -489,6 +613,7 @@ function assembleOpenApiDocument(
         lines.push(`              $ref: '${schema.$ref}'`);
       }
 
+      // Responses
       lines.push(`      responses:`);
       for (const [statusCode, response] of Object.entries(op.responses)) {
         const resp = response as Record<string, unknown>;
@@ -513,20 +638,32 @@ function assembleOpenApiDocument(
   }
   lines.push('');
 
+  // --- Components ---
   lines.push('components:');
+
+  // Schemas
   lines.push('  schemas:');
+
   for (const manifest of manifests) {
     const pascal = toPascalCase(manifest.name);
+
+    // State schema
     const stateSchema = buildStateSchema(manifest);
     lines.push(`    ${pascal}:`);
     lines.push(indent(jsonToYaml(stateSchema, 0), 6));
+
+    // Action input and output schemas
     for (const action of manifest.actions) {
       const actionPascal = toPascalCase(action.name);
+
+      // Input schema
       if (action.params.length > 0) {
         const inputSchema = buildInputSchema(action, manifest.name);
         lines.push(`    ${pascal}${actionPascal}Input:`);
         lines.push(indent(jsonToYaml(inputSchema, 0), 6));
       }
+
+      // Variant output schemas
       for (const variant of action.variants) {
         const variantPascal = toPascalCase(variant.tag);
         const variantSchema = buildVariantSchema(variant, manifest.name, action.name);
@@ -536,6 +673,7 @@ function assembleOpenApiDocument(
     }
   }
 
+  // Security schemes
   lines.push('');
   lines.push('  securitySchemes:');
   lines.push('    bearerAuth:');
@@ -543,6 +681,8 @@ function assembleOpenApiDocument(
   lines.push('      scheme: bearer');
   lines.push('      bearerFormat: JWT');
   lines.push('');
+
+  // Global security
   lines.push('security:');
   lines.push('  - bearerAuth: []');
   lines.push('');
@@ -552,80 +692,115 @@ function assembleOpenApiDocument(
 
 // --- Concept Handler ---
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    const p = createProgram();
-    return complete(p, 'ok', {
+export const openapiTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'OpenapiTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'OpenApiSpec',
       capabilities: JSON.stringify(['openapi-3.1', 'yaml']),
       targetKey: 'openapi',
       providerType: 'spec',
-    }) as StorageProgram<Result>;
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  /**
+   * Generate an OpenAPI 3.1 YAML document from all concept projections.
+   *
+   * Input fields:
+   *   - allProjections: JSON string array of projection records
+   *                     (each has conceptManifest as JSON string, conceptName, etc.)
+   *   - config:         JSON string of REST config (basePath, serverUrl, etc.)
+   *   - manifestYaml:   JSON string of the full parsed manifest YAML
+   *
+   * Returns variant 'ok' with a single openapi.yaml file and the document string.
+   */
+  async generate(
+    input: Record<string, unknown>,
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
+    // --- Parse allProjections ---
+
     const projectionsRaw = input.allProjections as string;
     if (!projectionsRaw || typeof projectionsRaw !== 'string') {
-      const p = createProgram();
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         reason: 'allProjections is required and must be a JSON string',
-      }) as StorageProgram<Result>;
+      };
     }
 
     let projections: Record<string, unknown>[];
     try {
       projections = JSON.parse(projectionsRaw) as Record<string, unknown>[];
     } catch {
-      const p = createProgram();
-      return complete(p, 'error', { reason: 'allProjections is not valid JSON' }) as StorageProgram<Result>;
+      return { variant: 'error', reason: 'allProjections is not valid JSON' };
     }
 
     if (!Array.isArray(projections) || projections.length === 0) {
-      const p = createProgram();
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         reason: 'allProjections must be a non-empty array',
-      }) as StorageProgram<Result>;
+      };
     }
+
+    // --- Parse config ---
 
     let config: Record<string, unknown> = {};
     if (input.config && typeof input.config === 'string') {
-      try { config = JSON.parse(input.config) as Record<string, unknown>; } catch { /* */ }
+      try {
+        config = JSON.parse(input.config) as Record<string, unknown>;
+      } catch {
+        // Non-fatal: proceed with defaults
+      }
     }
+
+    // --- Parse manifestYaml ---
 
     let manifestYaml: Record<string, unknown> = {};
     if (input.manifestYaml && typeof input.manifestYaml === 'string') {
-      try { manifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>; } catch { /* */ }
+      try {
+        manifestYaml = JSON.parse(input.manifestYaml) as Record<string, unknown>;
+      } catch {
+        // Non-fatal: proceed with defaults
+      }
     }
 
+    // --- Extract ConceptManifests from projections ---
+
     const manifests: ConceptManifest[] = [];
+
     for (const proj of projections) {
       const manifestStr = proj.conceptManifest as string;
-      if (!manifestStr || typeof manifestStr !== 'string') continue;
+      if (!manifestStr || typeof manifestStr !== 'string') {
+        continue;
+      }
       try {
         const manifest = JSON.parse(manifestStr) as ConceptManifest;
-        if (manifest.name && manifest.actions) manifests.push(manifest);
-      } catch { continue; }
+        if (manifest.name && manifest.actions) {
+          manifests.push(manifest);
+        }
+      } catch {
+        // Skip projections with invalid manifest JSON
+        continue;
+      }
     }
 
     if (manifests.length === 0) {
-      const p = createProgram();
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         reason: 'No valid concept manifests found in projections',
-      }) as StorageProgram<Result>;
+      };
     }
+
+    // --- Generate OpenAPI document ---
 
     const document = assembleOpenApiDocument(manifests, manifestYaml, config);
 
-    const p = createProgram();
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       files: [{ path: 'openapi.yaml', content: document }],
       document,
-    }) as StorageProgram<Result>;
+    };
   },
 };
-
-export const openapiTargetHandler = autoInterpret(_handler);

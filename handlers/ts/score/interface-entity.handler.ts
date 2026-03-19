@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // InterfaceEntity Concept Implementation
 //
 // Queryable representation of parsed interface manifests (interface.yaml)
@@ -6,33 +5,25 @@
 // generated from them. Bridges concept specs and their external-facing
 // interfaces for provenance tracing and exposure analysis.
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
+export const interfaceEntityHandler: ConceptHandler = {
 
-const _handler: FunctionalConceptHandler = {
-
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+  async register(input, storage) {
     const name = input.name as string;
     const source = input.source as string;
     const manifest = input.manifest as string;
 
     const key = `interface:${name}`;
-    p = get(p, 'interfaces', key, 'existing');
+    const existing = await storage.get('interfaces', key);
     if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing.id };
     }
 
     const id = crypto.randomUUID();
     const parsed = manifest ? JSON.parse(manifest) : {};
 
-    p = put(p, 'interfaces', key, {
+    await storage.put('interfaces', key, {
       id,
       name,
       sourceFile: source,
@@ -46,30 +37,28 @@ const _handler: FunctionalConceptHandler = {
       generatedSchemas: JSON.stringify(parsed.generatedSchemas || []),
     });
 
-    return complete(p, 'ok', { interface: id }) as StorageProgram<Result>;
+    return { variant: 'ok', interface: id };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input, storage) {
     const name = input.name as string;
 
-    p = get(p, 'interfaces', `interface:${name}`, 'entry');
+    const entry = await storage.get('interfaces', `interface:${name}`);
     if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    return complete(p, 'ok', { interface: entry.id }) as StorageProgram<Result>;
+    return { variant: 'ok', interface: entry.id };
   },
 
-  listEndpoints(input: Record<string, unknown>) {
-    let p = createProgram();
+  async listEndpoints(input, storage) {
     const interfaceId = input.interface as string;
     const target = input.target as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { endpoints: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', endpoints: '[]' };
     }
 
     const endpoints = JSON.parse(entry.generatedEndpoints as string || '[]');
@@ -77,56 +66,52 @@ const _handler: FunctionalConceptHandler = {
       ? endpoints.filter((e: { target: string }) => e.target === target)
       : endpoints;
 
-    return complete(p, 'ok', { endpoints: JSON.stringify(filtered) }) as StorageProgram<Result>;
+    return { variant: 'ok', endpoints: JSON.stringify(filtered) };
   },
 
-  listCommands(input: Record<string, unknown>) {
-    let p = createProgram();
+  async listCommands(input, storage) {
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { commands: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', commands: '[]' };
     }
 
-    return complete(p, 'ok', { commands: entry.generatedCommands as string || '[]' }) as StorageProgram<Result>;
+    return { variant: 'ok', commands: entry.generatedCommands as string || '[]' };
   },
 
-  listTools(input: Record<string, unknown>) {
-    let p = createProgram();
+  async listTools(input, storage) {
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { tools: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', tools: '[]' };
     }
 
-    return complete(p, 'ok', { tools: entry.generatedTools as string || '[]' }) as StorageProgram<Result>;
+    return { variant: 'ok', tools: entry.generatedTools as string || '[]' };
   },
 
-  listSkills(input: Record<string, unknown>) {
-    let p = createProgram();
+  async listSkills(input, storage) {
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { skills: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', skills: '[]' };
     }
 
     // Skills are a subset of tools targeting AI coding assistants
     const tools = JSON.parse(entry.generatedTools as string || '[]');
     const skills = tools.filter((t: { kind?: string }) => t.kind === 'skill');
 
-    return complete(p, 'ok', { skills: JSON.stringify(skills) }) as StorageProgram<Result>;
+    return { variant: 'ok', skills: JSON.stringify(skills) };
   },
 
-  findByConcept(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByConcept(input, storage) {
     const concept = input.concept as string;
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
 
     const exposures: Array<Record<string, string>> = [];
     for (const iface of all) {
@@ -169,14 +154,13 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', { exposures: JSON.stringify(exposures) }) as StorageProgram<Result>;
+    return { variant: 'ok', exposures: JSON.stringify(exposures) };
   },
 
-  findByAction(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByAction(input, storage) {
     const concept = input.concept as string;
     const action = input.action as string;
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
 
     const exposures: Array<Record<string, string>> = [];
     for (const iface of all) {
@@ -219,16 +203,15 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', { exposures: JSON.stringify(exposures) }) as StorageProgram<Result>;
+    return { variant: 'ok', exposures: JSON.stringify(exposures) };
   },
 
-  traceEndpointToAction(input: Record<string, unknown>) {
-    let p = createProgram();
+  async traceEndpointToAction(input, storage) {
     const target = input.target as string;
     const path = input.path as string;
     const method = input.method as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
 
     for (const iface of all) {
       const endpoints = JSON.parse(iface.generatedEndpoints as string || '[]');
@@ -237,66 +220,63 @@ const _handler: FunctionalConceptHandler = {
           (ep.target || 'rest') === target && ep.path === path && ep.method === method
       );
       if (match) {
-        return complete(p, 'ok', {
+        return {
+          variant: 'ok',
           concept: match.concept || '',
           action: match.action || '',
           handler: match.handler || '',
           sourceFile: match.sourceFile || '',
-        }) as StorageProgram<Result>;
+        };
       }
     }
 
-    return complete(p, 'notfound', {}) as StorageProgram<Result>;
+    return { variant: 'notfound' };
   },
 
-  traceToolToAction(input: Record<string, unknown>) {
-    let p = createProgram();
+  async traceToolToAction(input, storage) {
     const toolName = input.toolName as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
 
     for (const iface of all) {
       const tools = JSON.parse(iface.generatedTools as string || '[]');
       const match = tools.find((t: { name: string }) => t.name === toolName);
       if (match) {
-        return complete(p, 'ok', {
+        return {
+          variant: 'ok',
           concept: match.concept || '',
           action: match.action || '',
           handler: match.handler || '',
           sourceFile: match.sourceFile || '',
-        }) as StorageProgram<Result>;
+        };
       }
     }
 
-    return complete(p, 'notfound', {}) as StorageProgram<Result>;
+    return { variant: 'notfound' };
   },
 
-  generatedSchemas(input: Record<string, unknown>) {
-    let p = createProgram();
+  async generatedSchemas(input, storage) {
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { schemas: '[]' }) as StorageProgram<Result>;
+      return { variant: 'ok', schemas: '[]' };
     }
 
-    return complete(p, 'ok', { schemas: entry.generatedSchemas as string || '[]' }) as StorageProgram<Result>;
+    return { variant: 'ok', schemas: entry.generatedSchemas as string || '[]' };
   },
 
-  validateAgainstSpecs(input: Record<string, unknown>) {
-    let p = createProgram();
+  async validateAgainstSpecs(input, storage) {
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    const all = await storage.find('interfaces');
     const entry = all.find(i => i.id === interfaceId);
     if (!entry) {
-      return complete(p, 'ok', { valid: JSON.stringify({ valid: true }) }) as StorageProgram<Result>;
+      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
     }
 
     // TODO: Cross-reference ConceptEntities to validate all referenced concepts exist
-    return complete(p, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }) as StorageProgram<Result>;
+    return { variant: 'ok', valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) };
   },
 };
-
-export const interfaceEntityHandler = autoInterpret(_handler);

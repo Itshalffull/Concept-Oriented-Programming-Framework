@@ -1,15 +1,7 @@
-// @migrated dsl-constructs 2026-03-18
 // Registry Concept Implementation
 // Index of available module metadata with versioned artifacts, dependency edges,
 // capability declarations, and compile-time feature definitions.
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler } from '@clef/runtime';
 
 let nextId = 1;
 
@@ -59,8 +51,8 @@ function matchesSemverRange(version: string, range: string): boolean {
   return version === range;
 }
 
-const _handler: FunctionalConceptHandler = {
-  publish(input: Record<string, unknown>) {
+export const registryHandler: ConceptHandler = {
+  async publish(input, storage) {
     const name = input.name as string;
     const namespace = input.namespace as string;
     const version = input.version as string;
@@ -82,166 +74,155 @@ const _handler: FunctionalConceptHandler = {
 
     // Validate artifact hash format
     if (!artifactHash || !artifactHash.includes(':')) {
-      const p = createProgram();
-      return complete(p, 'invalid', { message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' }) as StorageProgram<Result>;
+      return { variant: 'invalid', message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' };
     }
 
     // Validate required metadata fields
     if (!metadata || !metadata.description || !metadata.license) {
-      const p = createProgram();
-      return complete(p, 'invalid', { message: 'Metadata must include description and license fields' }) as StorageProgram<Result>;
+      return { variant: 'invalid', message: 'Metadata must include description and license fields' };
     }
 
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'existing');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      for (const mod of existing) {
-        if (mod.name === name && mod.namespace === namespace && mod.version === version) {
-          return { variant: 'duplicate' };
-        }
+    // Check uniqueness: name + namespace + version
+    const existing = await storage.find('registryModule');
+    for (const mod of existing) {
+      if (mod.name === name && mod.namespace === namespace && mod.version === version) {
+        return { variant: 'duplicate' };
       }
-      const moduleId = `mod-${nextId++}`;
-      return { module: moduleId };
-    }) as StorageProgram<Result>;
+    }
+
+    const moduleId = `mod-${nextId++}`;
+    await storage.put('registryModule', moduleId, {
+      moduleId,
+      name,
+      namespace,
+      version,
+      kind,
+      artifactHash,
+      dependencies: dependencies || [],
+      capabilitiesProvided: (input.capabilities_provided as string[]) || [],
+      capabilitiesRequired: (input.capabilities_required as string[]) || [],
+      features: (input.features as unknown[]) || [],
+      metadata,
+      publishedAt: new Date().toISOString(),
+      yanked: false,
+    });
+
+    return { variant: 'ok', module: moduleId };
   },
 
-  yank(input: Record<string, unknown>) {
+  async yank(input, storage) {
     const moduleId = input.module as string;
 
-    let p = createProgram();
-    p = get(p, 'registryModule', moduleId, 'mod');
+    const mod = await storage.get('registryModule', moduleId);
+    if (!mod) {
+      return { variant: 'notfound' };
+    }
 
-    return branch(p, 'mod',
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => complete(elseP, 'notfound', {}),
-    ) as StorageProgram<Result>;
+    await storage.put('registryModule', moduleId, { ...mod, yanked: true });
+    return { variant: 'ok' };
   },
 
-  lookup(input: Record<string, unknown>) {
+  async lookup(input, storage) {
     const name = input.name as string;
     const namespace = input.namespace as string;
     const versionRange = input.version_range as string;
 
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'allModules');
+    const allModules = await storage.find('registryModule');
+    const candidates = allModules.filter(
+      (m) => m.name === name && m.namespace === namespace && !m.yanked,
+    );
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allModules = bindings.allModules as Record<string, unknown>[];
-      const candidates = allModules.filter(
-        (m) => m.name === name && m.namespace === namespace && !m.yanked,
-      );
+    if (candidates.length === 0) {
+      return { variant: 'notfound' };
+    }
 
-      if (candidates.length === 0) {
-        return { variant: 'notfound' };
+    const matched = candidates.filter((m) =>
+      matchesSemverRange(m.version as string, versionRange),
+    );
+
+    if (matched.length === 0) {
+      return { variant: 'notfound' };
+    }
+
+    // Sort by version descending
+    matched.sort((a, b) => {
+      const pa = (a.version as string).split('.').map(Number);
+      const pb = (b.version as string).split('.').map(Number);
+      for (let i = 0; i < 3; i++) {
+        if ((pb[i] ?? 0) !== (pa[i] ?? 0)) return (pb[i] ?? 0) - (pa[i] ?? 0);
       }
+      return 0;
+    });
 
-      const matched = candidates.filter((m) =>
-        matchesSemverRange(m.version as string, versionRange),
-      );
-
-      if (matched.length === 0) {
-        return { variant: 'notfound' };
-      }
-
-      // Sort by version descending
-      matched.sort((a, b) => {
-        const pa = (a.version as string).split('.').map(Number);
-        const pb = (b.version as string).split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-          if ((pb[i] ?? 0) !== (pa[i] ?? 0)) return (pb[i] ?? 0) - (pa[i] ?? 0);
-        }
-        return 0;
-      });
-
-      return { modules: matched.map((m) => m.moduleId as string) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', modules: matched.map((m) => m.moduleId as string) };
   },
 
-  search(input: Record<string, unknown>) {
+  async search(input, storage) {
     const query = (input.query as string).toLowerCase();
     const kind = input.kind as string | undefined;
     const namespace = input.namespace as string | undefined;
 
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'allModules');
+    const allModules = await storage.find('registryModule');
+    const results = allModules.filter((m) => {
+      if (m.yanked) return false;
+      if (kind && m.kind !== kind) return false;
+      if (namespace && m.namespace !== namespace) return false;
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allModules = bindings.allModules as Record<string, unknown>[];
-      const results = allModules.filter((m) => {
-        if (m.yanked) return false;
-        if (kind && m.kind !== kind) return false;
-        if (namespace && m.namespace !== namespace) return false;
+      const name = (m.name as string).toLowerCase();
+      const meta = m.metadata as { description: string; keywords: string[] };
+      const description = (meta?.description || '').toLowerCase();
+      const keywords = (meta?.keywords || []).map((k: string) => k.toLowerCase());
 
-        const name = (m.name as string).toLowerCase();
-        const meta = m.metadata as { description: string; keywords: string[] };
-        const description = (meta?.description || '').toLowerCase();
-        const keywords = (meta?.keywords || []).map((k: string) => k.toLowerCase());
+      return (
+        name.includes(query) ||
+        description.includes(query) ||
+        keywords.some((k: string) => k.includes(query))
+      );
+    });
 
-        return (
-          name.includes(query) ||
-          description.includes(query) ||
-          keywords.some((k: string) => k.includes(query))
-        );
-      });
-
-      return { modules: results.map((m) => m.moduleId as string) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', modules: results.map((m) => m.moduleId as string) };
   },
 
-  listVersions(input: Record<string, unknown>) {
+  async listVersions(input, storage) {
     const name = input.name as string;
     const namespace = input.namespace as string;
 
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'allModules');
+    const allModules = await storage.find('registryModule');
+    const matching = allModules.filter(
+      (m) => m.name === name && m.namespace === namespace,
+    );
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allModules = bindings.allModules as Record<string, unknown>[];
-      const matching = allModules.filter(
-        (m) => m.name === name && m.namespace === namespace,
-      );
+    if (matching.length === 0) {
+      return { variant: 'notfound' };
+    }
 
-      if (matching.length === 0) {
-        return { variant: 'notfound' };
+    // Sort by version descending
+    matching.sort((a, b) => {
+      const pa = (a.version as string).split('.').map(Number);
+      const pb = (b.version as string).split('.').map(Number);
+      for (let i = 0; i < 3; i++) {
+        if ((pb[i] ?? 0) !== (pa[i] ?? 0)) return (pb[i] ?? 0) - (pa[i] ?? 0);
       }
+      return 0;
+    });
 
-      // Sort by version descending
-      matching.sort((a, b) => {
-        const pa = (a.version as string).split('.').map(Number);
-        const pb = (b.version as string).split('.').map(Number);
-        for (let i = 0; i < 3; i++) {
-          if ((pb[i] ?? 0) !== (pa[i] ?? 0)) return (pb[i] ?? 0) - (pa[i] ?? 0);
-        }
-        return 0;
-      });
-
-      return { versions: matching.map((m) => m.version as string) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', versions: matching.map((m) => m.version as string) };
   },
 
-  resolveCapability(input: Record<string, unknown>) {
+  async resolveCapability(input, storage) {
     const capability = input.capability as string;
 
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'allModules');
+    const allModules = await storage.find('registryModule');
+    const providers = allModules.filter((m) => {
+      if (m.yanked) return false;
+      const caps = m.capabilitiesProvided as string[];
+      return caps && caps.includes(capability);
+    });
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allModules = bindings.allModules as Record<string, unknown>[];
-      const providers = allModules.filter((m) => {
-        if (m.yanked) return false;
-        const caps = m.capabilitiesProvided as string[];
-        return caps && caps.includes(capability);
-      });
+    if (providers.length === 0) {
+      return { variant: 'notfound' };
+    }
 
-      if (providers.length === 0) {
-        return { variant: 'notfound' };
-      }
-
-      return { providers: providers.map((m) => m.moduleId as string) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', providers: providers.map((m) => m.moduleId as string) };
   },
 };
-
-export const registryHandler = autoInterpret(_handler);

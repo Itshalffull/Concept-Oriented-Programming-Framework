@@ -1,89 +1,69 @@
-// @migrated dsl-constructs 2026-03-18
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _propertyHandler: FunctionalConceptHandler = {
-  set(input: Record<string, unknown>) {
+export const propertyHandler: ConceptHandler = {
+  async set(input, storage) {
     const entity = input.entity as string;
     const key = input.key as string;
     const value = input.value as string;
-
-    let p = createProgram();
-    p = spGet(p, 'propertyType', key, 'typeRecord');
-    p = spGet(p, 'property', entity, 'propsRecord');
-
-    p = put(p, 'property', entity, {
+    const typeRecord = await storage.get('propertyType', key);
+    if (typeRecord) {
+      const schema = JSON.parse(typeRecord.schema as string);
+      if (schema.type === 'number' && isNaN(Number(value))) {
+        return { variant: 'invalid', message: 'Value does not match the registered type' };
+      }
+    }
+    const propsRecord = await storage.get('property', entity);
+    const properties: Record<string, string> = propsRecord
+      ? JSON.parse(propsRecord.properties as string)
+      : {};
+    properties[key] = value;
+    await storage.put('property', entity, {
       entity,
-      properties: JSON.stringify({ [key]: value }),
+      properties: JSON.stringify(properties),
     });
-
-    return complete(p, 'ok', { entity }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', entity };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input, storage) {
     const entity = input.entity as string;
     const key = input.key as string;
-
-    let p = createProgram();
-    p = spGet(p, 'property', entity, 'propsRecord');
-    p = branch(p, 'propsRecord',
-      (b) => complete(b, 'ok', { value: '' }),
-      (b) => complete(b, 'notfound', { message: 'not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const propsRecord = await storage.get('property', entity);
+    if (!propsRecord) return { variant: 'notfound', message: 'not found' };
+    const properties: Record<string, string> = JSON.parse(propsRecord.properties as string);
+    if (!(key in properties)) return { variant: 'notfound', message: 'not found' };
+    return { variant: 'ok', value: properties[key] };
   },
 
-  delete(input: Record<string, unknown>) {
+  async delete(input, storage) {
     const entity = input.entity as string;
     const key = input.key as string;
-
-    let p = createProgram();
-    p = spGet(p, 'property', entity, 'propsRecord');
-    p = branch(p, 'propsRecord',
-      (b) => {
-        let b2 = put(b, 'property', entity, {
-          entity,
-          properties: JSON.stringify({}),
-        });
-        return complete(b2, 'ok', { entity });
-      },
-      (b) => complete(b, 'notfound', { message: 'not found' }),
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const propsRecord = await storage.get('property', entity);
+    if (!propsRecord) return { variant: 'notfound', message: 'not found' };
+    const properties: Record<string, string> = JSON.parse(propsRecord.properties as string);
+    if (!(key in properties)) return { variant: 'notfound', message: 'not found' };
+    delete properties[key];
+    await storage.put('property', entity, {
+      entity,
+      properties: JSON.stringify(properties),
+    });
+    return { variant: 'ok', entity };
   },
 
-  defineType(input: Record<string, unknown>) {
+  async defineType(input, storage) {
     const name = input.name as string;
     const schema = input.schema as string;
-
-    let p = createProgram();
-    p = spGet(p, 'propertyType', name, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'already exists' }),
-      (b) => {
-        let b2 = put(b, 'propertyType', name, { name, schema });
-        return complete(b2, 'ok', { name });
-      },
-    );
-
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('propertyType', name);
+    if (existing) return { variant: 'exists', message: 'already exists' };
+    await storage.put('propertyType', name, { name, schema });
+    return { variant: 'ok', name };
   },
 
-  listAll(input: Record<string, unknown>) {
+  async listAll(input, storage) {
     const entity = input.entity as string;
-
-    let p = createProgram();
-    p = spGet(p, 'property', entity, 'propsRecord');
-
-    return complete(p, 'ok', { properties: JSON.stringify({}) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const propsRecord = await storage.get('property', entity);
+    const properties = propsRecord
+      ? (propsRecord.properties as string)
+      : JSON.stringify({});
+    return { variant: 'ok', properties };
   },
 };
-
-export const propertyHandler = autoInterpret(_propertyHandler);
-

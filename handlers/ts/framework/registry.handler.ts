@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Registry Concept Implementation
 //
@@ -6,75 +5,69 @@
 // Stores concept registrations with URIs and transport configs.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { generateId } from '../../../runtime/types.js';
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
+export const registryHandler: ConceptHandler = {
+  async register(input, storage) {
     const uri = input.uri as string;
     const transport = input.transport as Record<string, unknown>;
 
-    let p = createProgram();
-    p = find(p, 'concepts', { uri }, 'existing');
+    // Check for duplicate URI
+    const existing = await storage.find('concepts', { uri });
+    if (existing.length > 0) {
+      return { variant: 'error', message: `Concept already registered: ${uri}` };
+    }
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => complete(thenP, 'error', { message: `Concept already registered: ${uri}` }),
-      (elseP) => {
-        const conceptId = generateId();
-        let p2 = put(elseP, 'concepts', conceptId, { conceptId, uri });
-        p2 = put(p2, 'uri', conceptId, { conceptId, uri });
-        p2 = put(p2, 'transport', conceptId, { conceptId, ...(transport || {}) });
-        p2 = put(p2, 'available', conceptId, { conceptId, available: true });
-        return complete(p2, 'ok', { concept: conceptId });
-      },
-    ) as StorageProgram<Result>;
+    const conceptId = generateId();
+
+    // Store in the "concepts" set
+    await storage.put('concepts', conceptId, { conceptId, uri });
+
+    // Store URI mapping
+    await storage.put('uri', conceptId, { conceptId, uri });
+
+    // Store transport config
+    await storage.put('transport', conceptId, {
+      conceptId,
+      ...(transport || {}),
+    });
+
+    // Mark as available
+    await storage.put('available', conceptId, { conceptId, available: true });
+
+    return { variant: 'ok', concept: conceptId };
   },
 
-  deregister(input: Record<string, unknown>) {
+  async deregister(input, storage) {
     const uri = input.uri as string;
 
-    let p = createProgram();
-    p = find(p, 'concepts', { uri }, 'matches');
+    // Find the concept by URI
+    const matches = await storage.find('concepts', { uri });
+    if (matches.length > 0) {
+      const conceptId = matches[0].conceptId as string;
+      await storage.del('concepts', conceptId);
+      await storage.del('uri', conceptId);
+      await storage.del('transport', conceptId);
+      await storage.del('available', conceptId);
+    }
 
-    return branch(p,
-      (bindings) => (bindings.matches as unknown[]).length > 0,
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          // Note: In the functional DSL, we cannot do conditional deletes
-          // based on runtime bindings with static keys. The deletes are
-          // handled by the branch confirming matches exist.
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'ok', {}),
-    ) as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  heartbeat(input: Record<string, unknown>) {
+  async heartbeat(input, storage) {
     const uri = input.uri as string;
 
-    let p = createProgram();
-    p = find(p, 'concepts', { uri }, 'matches');
+    // Find the concept by URI and check availability
+    const matches = await storage.find('concepts', { uri });
+    if (matches.length === 0) {
+      return { variant: 'ok', available: false };
+    }
 
-    return branch(p,
-      (bindings) => (bindings.matches as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'ok', { available: false }),
-      (elseP) => {
-        return completeFrom(elseP, 'ok', (bindings) => {
-          const matches = bindings.matches as Array<Record<string, unknown>>;
-          return { available: true };
-        });
-      },
-    ) as StorageProgram<Result>;
+    const conceptId = matches[0].conceptId as string;
+    const avail = await storage.get('available', conceptId);
+    const available = avail ? (avail.available as boolean) : false;
+
+    return { variant: 'ok', available };
   },
 };
-
-export const registryHandler = autoInterpret(_handler);

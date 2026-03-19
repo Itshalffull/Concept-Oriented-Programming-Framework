@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TestSelection Concept Implementation
 //
@@ -8,35 +7,28 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
 
 const MAPPINGS = 'test-selection-mappings';
 const SELECTIONS = 'test-selection-history';
 const STATS = 'test-selection-stats';
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  analyze(input: Record<string, unknown>) {
-    let p = createProgram();
+export const testSelectionHandler: ConceptHandler = {
+  async analyze(input, storage) {
     const changedSources = input.changedSources as string[];
 
     if (!changedSources || changedSources.length === 0) {
-      return complete(p, 'noMappings', { message: 'No changed sources provided' }) as StorageProgram<Result>;
+      return { variant: 'noMappings', message: 'No changed sources provided' };
     }
 
     // Look up all coverage mappings
-    p = find(p, MAPPINGS, 'allMappings');
+    const allMappings = await storage.find(MAPPINGS);
 
     if (allMappings.length === 0) {
-      return complete(p, 'noMappings', {
+      return {
+        variant: 'noMappings',
         message: 'No coverage mappings available — run tests with coverage first',
-      }) as StorageProgram<Result>;
+      };
     }
 
     const testType = input.testType as string | undefined;
@@ -98,11 +90,10 @@ const _handler: FunctionalConceptHandler = {
       return true;
     });
 
-    return complete(p, 'ok', { affectedTests: deduplicated }) as StorageProgram<Result>;
+    return { variant: 'ok', affectedTests: deduplicated };
   },
 
-  select(input: Record<string, unknown>) {
-    let p = createProgram();
+  async select(input, storage) {
     const affectedTests = input.affectedTests as Array<{
       testId: string;
       language: string;
@@ -112,7 +103,7 @@ const _handler: FunctionalConceptHandler = {
     const budget = input.budget as { maxDuration?: number; maxTests?: number } | null | undefined;
 
     if (!affectedTests || affectedTests.length === 0) {
-      return complete(p, 'ok', { selected: [], estimatedDuration: 0, confidence: 1.0 }) as StorageProgram<Result>;
+      return { variant: 'ok', selected: [], estimatedDuration: 0, confidence: 1.0 };
     }
 
     // Sort by relevance descending (highest relevance first)
@@ -124,7 +115,7 @@ const _handler: FunctionalConceptHandler = {
 
     for (let i = 0; i < sorted.length; i++) {
       const test = sorted[i];
-      p = get(p, MAPPINGS, `${test.testId}:${test.language}`, 'mapping');
+      const mapping = await storage.get(MAPPINGS, `${test.testId}:${test.language}`);
       const avgDuration = mapping ? (mapping.avgDuration as number) : 100;
 
       // Check budget constraints
@@ -136,7 +127,7 @@ const _handler: FunctionalConceptHandler = {
           const confidence = selected.length / sorted.length;
 
           const selectionId = `sel-${Date.now()}`;
-          p = put(p, SELECTIONS, selectionId, {
+          await storage.put(SELECTIONS, selectionId, {
             id: selectionId,
             selectedCount: selected.length,
             totalAffected: sorted.length,
@@ -145,11 +136,12 @@ const _handler: FunctionalConceptHandler = {
             createdAt: new Date().toISOString(),
           });
 
-          return complete(p, 'budgetInsufficient', {
+          return {
+            variant: 'budgetInsufficient',
             selected: selected.map(s => ({ testId: s.testId })),
             missedTests,
             confidence,
-          }) as StorageProgram<Result>;
+          };
         }
       }
 
@@ -166,7 +158,7 @@ const _handler: FunctionalConceptHandler = {
     const confidence = 1.0;
 
     const selectionId = `sel-${Date.now()}`;
-    p = put(p, SELECTIONS, selectionId, {
+    await storage.put(SELECTIONS, selectionId, {
       id: selectionId,
       selectedCount: selected.length,
       totalAffected: sorted.length,
@@ -175,11 +167,10 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { selected, estimatedDuration: totalEstimatedDuration, confidence }) as StorageProgram<Result>;
+    return { variant: 'ok', selected, estimatedDuration: totalEstimatedDuration, confidence };
   },
 
-  record(input: Record<string, unknown>) {
-    let p = createProgram();
+  async record(input, storage) {
     const testId = input.testId as string;
     const language = input.language as string;
     const testType = (input.testType as string) || 'unit';
@@ -188,7 +179,7 @@ const _handler: FunctionalConceptHandler = {
     const passed = input.passed as boolean;
 
     const mappingKey = `${testId}:${language}`;
-    p = get(p, MAPPINGS, mappingKey, 'existing');
+    const existing = await storage.get(MAPPINGS, mappingKey);
 
     let avgDuration = duration;
     let failureRate = passed ? 0 : 1;
@@ -205,7 +196,7 @@ const _handler: FunctionalConceptHandler = {
 
     const mappingId = existing ? (existing.id as string) : `map-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    p = put(p, MAPPINGS, mappingKey, {
+    await storage.put(MAPPINGS, mappingKey, {
       id: mappingId,
       testId,
       language,
@@ -217,13 +208,12 @@ const _handler: FunctionalConceptHandler = {
       lastExecuted: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { mapping: mappingId }) as StorageProgram<Result>;
+    return { variant: 'ok', mapping: mappingId };
   },
 
-  statistics(input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, MAPPINGS, 'allMappings');
-    p = find(p, SELECTIONS, 'allSelections');
+  async statistics(input, storage) {
+    const allMappings = await storage.find(MAPPINGS);
+    const allSelections = await storage.find(SELECTIONS);
 
     const totalMappings = allMappings.length;
 
@@ -255,15 +245,14 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', {
+    return {
+      variant: 'ok',
       stats: {
         totalMappings,
         avgSelectionRatio: Math.round(avgSelectionRatio * 1000) / 1000,
         avgConfidence: Math.round(avgConfidence * 1000) / 1000,
         lastUpdated: lastUpdated || new Date().toISOString(),
       },
-    }) as StorageProgram<Result>;
+    };
   },
 };
-
-export const testSelectionHandler = autoInterpret(_handler);

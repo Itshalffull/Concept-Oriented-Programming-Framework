@@ -1,101 +1,141 @@
-// @migrated dsl-constructs 2026-03-18
 // Group Concept Implementation
 // Isolated content spaces with group-level role-based access control for multi-tenant collaboration.
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _groupHandler: FunctionalConceptHandler = {
-  createGroup(input: Record<string, unknown>) {
+export const groupHandler: ConceptHandler = {
+  async createGroup(input, storage) {
     const group = input.group as string;
     const name = input.name as string;
 
-    let p = createProgram();
-    p = spGet(p, 'group', group, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'Group already exists' }),
-      (b) => {
-        let b2 = put(b, 'group', group, {
-          group,
-          name,
-          members: JSON.stringify([]),
-          content: JSON.stringify([]),
-        });
-        return complete(b2, 'ok', {});
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('group', group);
+    if (existing) {
+      return { variant: 'exists', message: 'Group already exists' };
+    }
+
+    await storage.put('group', group, {
+      group,
+      name,
+      members: JSON.stringify([]),
+      content: JSON.stringify([]),
+    });
+
+    return { variant: 'ok' };
   },
 
-  addMember(input: Record<string, unknown>) {
+  async addMember(input, storage) {
     const group = input.group as string;
     const user = input.user as string;
     const role = input.role as string;
 
-    let p = createProgram();
-    p = spGet(p, 'group', group, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'group', group, {
-          members: JSON.stringify([{ user, role }]),
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Group does not exist' }),
+    const existing = await storage.get('group', group);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Group does not exist' };
+    }
+
+    const members: Array<{ user: string; role: string }> = JSON.parse(
+      (existing.members as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    // Update role if member already exists, otherwise add new member
+    const memberIndex = members.findIndex((m) => m.user === user);
+    if (memberIndex >= 0) {
+      members[memberIndex].role = role;
+    } else {
+      members.push({ user, role });
+    }
+
+    await storage.put('group', group, {
+      ...existing,
+      members: JSON.stringify(members),
+    });
+
+    return { variant: 'ok' };
   },
 
-  assignGroupRole(input: Record<string, unknown>) {
+  async assignGroupRole(input, storage) {
     const group = input.group as string;
     const user = input.user as string;
     const role = input.role as string;
 
-    let p = createProgram();
-    p = spGet(p, 'group', group, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'group', group, {});
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Group does not exist' }),
+    const existing = await storage.get('group', group);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Group does not exist' };
+    }
+
+    const members: Array<{ user: string; role: string }> = JSON.parse(
+      (existing.members as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const memberIndex = members.findIndex((m) => m.user === user);
+    if (memberIndex < 0) {
+      return { variant: 'notfound', message: 'Member does not exist in this group' };
+    }
+
+    members[memberIndex].role = role;
+
+    await storage.put('group', group, {
+      ...existing,
+      members: JSON.stringify(members),
+    });
+
+    return { variant: 'ok' };
   },
 
-  addContent(input: Record<string, unknown>) {
+  async addContent(input, storage) {
     const group = input.group as string;
     const content = input.content as string;
 
-    let p = createProgram();
-    p = spGet(p, 'group', group, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'group', group, {});
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Group does not exist' }),
+    const existing = await storage.get('group', group);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Group does not exist' };
+    }
+
+    const contentList: string[] = JSON.parse(
+      (existing.content as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    if (!contentList.includes(content)) {
+      contentList.push(content);
+    }
+
+    await storage.put('group', group, {
+      ...existing,
+      content: JSON.stringify(contentList),
+    });
+
+    return { variant: 'ok' };
   },
 
-  checkGroupAccess(input: Record<string, unknown>) {
+  async checkGroupAccess(input, storage) {
     const group = input.group as string;
     const user = input.user as string;
     const permission = input.permission as string;
 
-    let p = createProgram();
-    p = spGet(p, 'group', group, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { granted: false }),
-      (b) => complete(b, 'notfound', { message: 'Group does not exist' }),
+    const existing = await storage.get('group', group);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Group does not exist' };
+    }
+
+    const members: Array<{ user: string; role: string }> = JSON.parse(
+      (existing.members as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const member = members.find((m) => m.user === user);
+    if (!member) {
+      return { variant: 'ok', granted: false };
+    }
+
+    // Role-based permission mapping
+    const rolePermissions: Record<string, string[]> = {
+      admin: ['read', 'write', 'delete', 'manage'],
+      moderator: ['read', 'write', 'delete'],
+      member: ['read', 'write'],
+      viewer: ['read'],
+    };
+
+    const allowed = rolePermissions[member.role] || [];
+    const granted = allowed.includes(permission);
+
+    return { variant: 'ok', granted };
   },
 };
-
-export const groupHandler = autoInterpret(_groupHandler);
-

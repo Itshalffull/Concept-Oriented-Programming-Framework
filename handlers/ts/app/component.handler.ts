@@ -1,124 +1,116 @@
-// @migrated dsl-constructs 2026-03-18
 // Component Concept Implementation
 // Discoverable, configurable UI units with conditional placement rules for composing page layouts.
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _componentHandler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
+export const componentHandler: ConceptHandler = {
+  async register(input, storage) {
     const component = input.component as string;
     const config = input.config as string;
 
-    let p = createProgram();
-    p = spGet(p, 'component', component, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'A component with this identity already exists' }),
-      (b) => {
-        let b2 = put(b, 'component', component, {
-          component, config,
-          placements: JSON.stringify([]),
-          conditions: '',
-          visible: true,
-        });
-        return complete(b2, 'ok', {});
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('component', component);
+    if (existing) {
+      return { variant: 'exists', message: 'A component with this identity already exists' };
+    }
+
+    await storage.put('component', component, {
+      component,
+      config,
+      placements: JSON.stringify([]),
+      conditions: '',
+      visible: true,
+    });
+
+    return { variant: 'ok' };
   },
 
-  render(input: Record<string, unknown>) {
+  async render(input, storage) {
     const component = input.component as string;
     const context = input.context as string;
 
-    let p = createProgram();
-    p = spGet(p, 'component', component, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        // Config, placements, visibility resolved at runtime from bindings
-        return complete(b, 'ok', { output: '' });
-      },
-      (b) => complete(b, 'notfound', { message: 'The component was not found' }),
+    const existing = await storage.get('component', component);
+    if (!existing) {
+      return { variant: 'notfound', message: 'The component was not found' };
+    }
+
+    const config = existing.config as string;
+    const placements: string[] = JSON.parse(
+      (existing.placements as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const visible = existing.visible as boolean;
+
+    if (!visible) {
+      return { variant: 'ok', output: '' };
+    }
+
+    // Compose output from config, placement, and context
+    const region = placements.length > 0 ? placements[0] : 'default';
+    const output = `${config}:${region}:${context}`;
+
+    return { variant: 'ok', output };
   },
 
-  place(input: Record<string, unknown>) {
+  async place(input, storage) {
     const component = input.component as string;
     const region = input.region as string;
 
-    let p = createProgram();
-    p = spGet(p, 'component', component, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        // Append region to placements — resolved at runtime
-        let b2 = put(b, 'component', component, {
-          placements: '', // resolved at runtime
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'The component was not found' }),
+    const existing = await storage.get('component', component);
+    if (!existing) {
+      return { variant: 'notfound', message: 'The component was not found' };
+    }
+
+    const placements: string[] = JSON.parse(
+      (existing.placements as string) || '[]',
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    if (!placements.includes(region)) {
+      placements.push(region);
+    }
+
+    await storage.put('component', component, {
+      ...existing,
+      placements: JSON.stringify(placements),
+    });
+
+    return { variant: 'ok' };
   },
 
-  setVisibility(input: Record<string, unknown>) {
+  async setVisibility(input, storage) {
     const component = input.component as string;
     const visible = input.visible as boolean;
 
-    let p = createProgram();
-    p = spGet(p, 'component', component, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'component', component, { visible });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'The component was not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('component', component);
+    if (!existing) {
+      return { variant: 'notfound', message: 'The component was not found' };
+    }
+
+    await storage.put('component', component, {
+      ...existing,
+      visible,
+    });
+
+    return { variant: 'ok' };
   },
 
-  evaluateVisibility(input: Record<string, unknown>) {
+  async evaluateVisibility(input, storage) {
     const component = input.component as string;
     const context = input.context as string;
 
-    let p = createProgram();
-    p = spGet(p, 'component', component, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        // Visibility evaluation against conditions resolved at runtime
-        return complete(b, 'ok', { visible: true });
-      },
-      (b) => complete(b, 'notfound', { message: 'The component was not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
-  },
+    const existing = await storage.get('component', component);
+    if (!existing) {
+      return { variant: 'notfound', message: 'The component was not found' };
+    }
 
-  renderLayout(input: Record<string, unknown>) {
-    const layout = input.layout as string;
-    const context = input.context as string;
+    const visible = existing.visible as boolean;
+    const conditions = existing.conditions as string;
 
-    let p = createProgram();
-    p = spGet(p, 'component', layout, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { layout, config: '', context }),
-      (b) => complete(b, 'notfound', { message: 'Layout not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
-  },
+    // Evaluate visibility: if no conditions are set, use the stored visible flag;
+    // otherwise, evaluate conditions against the context
+    let effectiveVisibility = visible;
+    if (conditions) {
+      // Simple condition evaluation: if the context contains the condition string, visible
+      effectiveVisibility = context.includes(conditions);
+    }
 
-  renderAreaItem(input: Record<string, unknown>) {
-    const itemType = input.item_type as string;
-    const itemRef = input.item_ref as string;
-    const context = input.context as string;
-
-    let p = createProgram();
-    return complete(p, 'ok', { item_type: itemType, item_ref: itemRef, context }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', visible: effectiveVisibility };
   },
 };
-
-export const componentHandler = autoInterpret(_componentHandler);
-

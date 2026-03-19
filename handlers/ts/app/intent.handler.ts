@@ -1,85 +1,78 @@
-// @migrated dsl-constructs 2026-03-18
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _intentHandler: FunctionalConceptHandler = {
-  define(input: Record<string, unknown>) {
+export const intentHandler: ConceptHandler = {
+  async define(input, storage) {
     const intent = input.intent as string;
     const target = input.target as string;
     const purpose = input.purpose as string;
     const operationalPrinciple = input.operationalPrinciple as string;
-
-    let p = createProgram();
-    p = spGet(p, 'intent', intent, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'already exists' }),
-      (b) => {
-        const now = new Date().toISOString();
-        let b2 = put(b, 'intent', intent, {
-          intent, target, purpose, operationalPrinciple,
-          assertions: JSON.stringify([]),
-          createdAt: now, updatedAt: now,
-        });
-        return complete(b2, 'ok', { intent });
-      },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('intent', intent);
+    if (existing) return { variant: 'exists', message: 'already exists' };
+    const now = new Date().toISOString();
+    await storage.put('intent', intent, {
+      intent,
+      target,
+      purpose,
+      operationalPrinciple,
+      assertions: JSON.stringify([]),
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { variant: 'ok', intent };
   },
 
-  update(input: Record<string, unknown>) {
+  async update(input, storage) {
     const intent = input.intent as string;
     const purpose = input.purpose as string;
     const operationalPrinciple = input.operationalPrinciple as string;
-
-    let p = createProgram();
-    p = spGet(p, 'intent', intent, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = put(b, 'intent', intent, { purpose, operationalPrinciple, updatedAt: new Date().toISOString() });
-        return complete(b2, 'ok', { intent });
-      },
-      (b) => complete(b, 'notfound', { message: 'Intent not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.get('intent', intent);
+    if (!existing) return { variant: 'notfound', message: 'Intent not found' };
+    await storage.put('intent', intent, {
+      ...existing,
+      purpose,
+      operationalPrinciple,
+      updatedAt: new Date().toISOString(),
+    });
+    return { variant: 'ok', intent };
   },
 
-  verify(input: Record<string, unknown>) {
+  async verify(input, storage) {
     const intent = input.intent as string;
-
-    let p = createProgram();
-    p = spGet(p, 'intent', intent, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { valid: true, failures: JSON.stringify([]) }),
-      (b) => complete(b, 'notfound', { message: 'Intent not found' }),
+    const existing = await storage.get('intent', intent);
+    if (!existing) return { variant: 'notfound', message: 'Intent not found' };
+    const assertions: Array<{ description: string; passed: boolean }> = JSON.parse(
+      existing.assertions as string
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const failures: string[] = [];
+    let valid = true;
+    for (const assertion of assertions) {
+      if (!assertion.passed) {
+        valid = false;
+        failures.push(assertion.description);
+      }
+    }
+    return { variant: 'ok', valid, failures: JSON.stringify(failures) };
   },
 
-  discover(input: Record<string, unknown>) {
+  async discover(input, storage) {
     const query = input.query as string;
-
-    let p = createProgram();
-    p = find(p, 'intent', query, 'results');
-    return complete(p, 'ok', { matches: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const results = await storage.find('intent', query);
+    const matches = Array.isArray(results) ? results : [];
+    return { variant: 'ok', matches: JSON.stringify(matches) };
   },
 
-  suggestFromDescription(input: Record<string, unknown>) {
+  async suggestFromDescription(input, storage) {
     const description = input.description as string;
     const words = description.split(/\s+/);
     const suggested = {
       name: words.slice(0, 3).join(''),
       purpose: description,
       actions: ['create', 'get', 'update', 'delete'],
-      state: words.filter((w) => w.length > 4).slice(0, 5).map((w) => w.toLowerCase()),
+      state: words
+        .filter((w) => w.length > 4)
+        .slice(0, 5)
+        .map((w) => w.toLowerCase()),
     };
-    const p = createProgram();
-    return complete(p, 'ok', { suggested: JSON.stringify(suggested) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', suggested: JSON.stringify(suggested) };
   },
 };
-
-export const intentHandler = autoInterpret(_intentHandler);
-

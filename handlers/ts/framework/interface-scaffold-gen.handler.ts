@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // InterfaceScaffoldGen — Interface manifest (interface.yaml) generator
 //
@@ -10,9 +9,7 @@
 //   - Section 8.1: Target configuration
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
   return name
@@ -168,19 +165,22 @@ function buildInterfaceYaml(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'InterfaceScaffoldGen',
+export const interfaceScaffoldGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'InterfaceScaffoldGen',
       inputKind: 'InterfaceConfig',
       outputKind: 'InterfaceManifest',
-      capabilities: JSON.stringify(['interface-yaml', 'target-config', 'sdk-config']) }); return p; }
+      capabilities: JSON.stringify(['interface-yaml', 'target-config', 'sdk-config']),
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
     const name = (input.name as string) || 'my-interface';
 
     if (!name || typeof name !== 'string') {
-      { let p = createProgram(); p = complete(p, 'error', { message: 'Interface name is required' }); return p; }
+      return { variant: 'error', message: 'Interface name is required' };
     }
 
     try {
@@ -190,17 +190,23 @@ const _handler: FunctionalConceptHandler = {
         { path: `interfaces/${toKebab(name)}.stub.interface.yaml`, content: interfaceYaml },
       ];
 
-      { let p = createProgram(); p = complete(p, 'ok', { files, filesGenerated: files.length }); return p; }
+      return { variant: 'ok', files, filesGenerated: files.length };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      { let p = createProgram(); p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p; }
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 
-  preview(input: Record<string, unknown>) {
-    return _handler.generate(input);
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await interfaceScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
   },
 };
-
-export const interfaceScaffoldGenHandler = autoInterpret(_handler);

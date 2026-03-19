@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Emitter Concept Implementation
 //
@@ -12,9 +11,7 @@
 // See clef-generation-suite.md Part 1.5
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { createHash, randomUUID } from 'crypto';
 
 // Storage relation names
@@ -23,7 +20,7 @@ const MANIFEST_RELATION = 'manifest';
 const SOURCE_MAP_RELATION = 'sourceMap';
 
 /**
- * Extension -> formatter mapping. In a real implementation these
+ * Extension → formatter mapping. In a real implementation these
  * would shell out to external binaries.
  */
 const EXTENSION_FORMATTERS: Record<string, string> = {
@@ -84,6 +81,15 @@ function getExtension(path: string): string {
   return path.slice(lastDot + 1).toLowerCase();
 }
 
+/**
+ * Derive output directory from the file path (first path segment).
+ */
+function deriveOutputDir(filePath: string): string {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const segments = normalizedPath.split('/');
+  return segments.length > 1 ? segments[0] : '.';
+}
+
 /** Source provenance entry for traceability. */
 interface SourceEntry {
   sourcePath: string;
@@ -92,7 +98,69 @@ interface SourceEntry {
   actionName?: string;
 }
 
-const _handler: FunctionalConceptHandler = {
+/**
+ * Write a single file to storage, returning write result.
+ * Shared logic for both write() and writeBatch().
+ */
+async function writeFileInternal(
+  storage: ConceptStorage,
+  path: string,
+  content: string,
+  sources?: SourceEntry[],
+  target?: string,
+  concept?: string,
+): Promise<{ written: boolean; path: string; contentHash: string; fileId: string; sizeBytes: number; isNew: boolean }> {
+  const hash = sha256(content);
+  const key = fileKey(path);
+
+  const existing = await storage.get(FILES_RELATION, key);
+
+  if (existing && existing.hash === hash) {
+    return {
+      written: false,
+      path,
+      contentHash: hash,
+      fileId: existing.id as string,
+      sizeBytes: (existing.sizeBytes as number) || 0,
+      isNew: false,
+    };
+  }
+
+  const fileId = existing ? (existing.id as string) : randomUUID();
+  const sizeBytes = Buffer.byteLength(content, 'utf8');
+  const now = new Date().toISOString();
+
+  await storage.put(FILES_RELATION, key, {
+    id: fileId,
+    path,
+    hash,
+    target: target || '',
+    concept: concept || '',
+    content,
+    sizeBytes,
+    generatedAt: now,
+    formatted: false,
+  });
+
+  // Store source provenance if provided
+  if (sources && sources.length > 0) {
+    await storage.put(SOURCE_MAP_RELATION, key, {
+      path,
+      sources,
+    });
+  }
+
+  return {
+    written: true,
+    path,
+    contentHash: hash,
+    fileId,
+    sizeBytes,
+    isNew: !existing,
+  };
+}
+
+export const emitterHandler: ConceptHandler = {
   /**
    * Content-addressed file writing.
    *
@@ -105,7 +173,10 @@ const _handler: FunctionalConceptHandler = {
    * formatHint, sources) and the legacy Clef Bind signature
    * (path, content, target, concept).
    */
-  write(input: Record<string, unknown>) {
+  async write(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const path = input.path as string;
     const content = input.content as string;
     const target = input.target as string | undefined;
@@ -113,152 +184,44 @@ const _handler: FunctionalConceptHandler = {
     const sources = input.sources as SourceEntry[] | undefined;
 
     if (!path) {
-      let p = createProgram();
-      p = complete(p, 'error', { message: 'path is required', path: path ?? '' });
-      return p;
+      return {
+        variant: 'error',
+        message: 'path is required',
+        path: path ?? '',
+      };
     }
 
-    const hash = sha256(content);
-    const key = fileKey(path);
+    try {
+      const result = await writeFileInternal(storage, path, content, sources, target, concept);
 
-    let p = createProgram();
-    p = get(p, FILES_RELATION, key, 'existing');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown> | null;
-
-      if (existing && existing.hash === hash) {
-        return {
-          written: false,
-          path,
-          contentHash: hash,
-          file: existing.id as string,
-          hash,
-        };
+      // Update manifest totals
+      if (result.written) {
+        const existing = result.isNew ? null : { sizeBytes: result.sizeBytes };
+        await updateManifestOnWrite(storage, path, result.sizeBytes, existing);
       }
 
-      const fileId = existing ? (existing.id as string) : randomUUID();
-      const sizeBytes = Buffer.byteLength(content, 'utf8');
-      const now = new Date().toISOString();
-
-      // Note: completeFrom computes output but cannot issue puts.
-      // We use a different approach below with branch + put.
       return {
-        written: true,
-        path,
-        contentHash: hash,
-        file: fileId,
-        hash,
-        _fileId: fileId,
-        _sizeBytes: sizeBytes,
-        _now: now,
-        _isNew: !existing,
+        variant: 'ok',
+        written: result.written,
+        path: result.path,
+        contentHash: result.contentHash,
+        file: result.fileId,
+        hash: result.contentHash,
       };
-    });
-
-    // Rewrite using branch to handle the write path
-    p = createProgram();
-    p = get(p, FILES_RELATION, key, 'existing');
-    p = branch(p, 'existing',
-      // then: existing record found
-      (tp) => {
-        return mapBindings(tp, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          if (existing.hash === hash) {
-            return {
-              _skip: true,
-              _fileId: existing.id as string,
-            };
-          }
-          return {
-            _skip: false,
-            _fileId: existing.id as string,
-          };
-        }, '_writeInfo');
-      },
-      // else: no existing record
-      (ep) => {
-        const fileId = randomUUID();
-        return mapBindings(ep, () => ({
-          _skip: false,
-          _fileId: fileId,
-        }), '_writeInfo');
-      },
-    );
-    p = completeFrom(p, 'ok', (bindings) => {
-      const writeInfo = bindings._writeInfo as { _skip: boolean; _fileId: string };
-      return {
-        written: !writeInfo._skip,
-        path,
-        contentHash: hash,
-        file: writeInfo._fileId,
-        hash,
-      };
-    });
-
-    // Simplified approach: use get + branch for conditional write
-    let q = createProgram();
-    q = get(q, FILES_RELATION, key, 'existing');
-    q = branch(q, 'existing',
-      // existing record found
-      (tp) => {
-        return completeFrom(tp, 'ok', (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          if (existing.hash === hash) {
-            return {
-              written: false,
-              path,
-              contentHash: hash,
-              file: existing.id as string,
-              hash,
-            };
-          }
-          // Hash differs — need to update (but completeFrom can't put)
-          // Return written: true with existing fileId
-          return {
-            written: true,
-            path,
-            contentHash: hash,
-            file: existing.id as string,
-            hash,
-          };
-        });
-      },
-      // no existing record — write new
-      (ep) => {
-        const fileId = randomUUID();
-        const sizeBytes = Buffer.byteLength(content, 'utf8');
-        const now = new Date().toISOString();
-        let r = put(ep, FILES_RELATION, key, {
-          id: fileId,
-          path,
-          hash,
-          target: target || '',
-          concept: concept || '',
-          content,
-          sizeBytes,
-          generatedAt: now,
-          formatted: false,
-        });
-        if (sources && sources.length > 0) {
-          r = put(r, SOURCE_MAP_RELATION, key, { path, sources });
-        }
-        return complete(r, 'ok', {
-          written: true,
-          path,
-          contentHash: hash,
-          file: fileId,
-          hash,
-        });
-      },
-    );
-    return q;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { variant: 'error', message, path };
+    }
   },
 
   /**
    * Write multiple files atomically. If any file fails,
    * none are written. Returns per-file results.
    */
-  writeBatch(input: Record<string, unknown>) {
+  async writeBatch(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const files = input.files as Array<{
       path: string;
       content: string;
@@ -269,47 +232,40 @@ const _handler: FunctionalConceptHandler = {
     }>;
 
     if (!files || !Array.isArray(files) || files.length === 0) {
-      let p = createProgram();
-      p = complete(p, 'ok', { results: [] });
-      return p;
+      return { variant: 'ok', results: [] };
     }
 
-    // For batch writes, write all files and collect results
-    let p = createProgram();
-    const results: Array<{ path: string; written: boolean; contentHash: string }> = [];
+    try {
+      const results: Array<{ path: string; written: boolean; contentHash: string }> = [];
 
-    for (const file of files) {
-      const hash = sha256(file.content);
-      const key = fileKey(file.path);
-      const fileId = randomUUID();
-      const sizeBytes = Buffer.byteLength(file.content, 'utf8');
-      const now = new Date().toISOString();
+      for (const file of files) {
+        const result = await writeFileInternal(
+          storage,
+          file.path,
+          file.content,
+          file.sources,
+          file.target,
+          file.concept,
+        );
 
-      p = put(p, FILES_RELATION, key, {
-        id: fileId,
-        path: file.path,
-        hash,
-        target: file.target || '',
-        concept: file.concept || '',
-        content: file.content,
-        sizeBytes,
-        generatedAt: now,
-        formatted: false,
-      });
+        if (result.written) {
+          const existing = result.isNew ? null : { sizeBytes: result.sizeBytes };
+          await updateManifestOnWrite(storage, file.path, result.sizeBytes, existing);
+        }
 
-      if (file.sources && file.sources.length > 0) {
-        p = put(p, SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
+        results.push({
+          path: result.path,
+          written: result.written,
+          contentHash: result.contentHash,
+        });
       }
 
-      results.push({
-        path: file.path,
-        written: true,
-        contentHash: hash,
-      });
+      return { variant: 'ok', results };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const failedPath = files[0]?.path || '';
+      return { variant: 'error', message, failedPath };
     }
-
-    p = complete(p, 'ok', { results });
-    return p;
   },
 
   /**
@@ -321,60 +277,67 @@ const _handler: FunctionalConceptHandler = {
    * out to prettier / black / gofmt / rustfmt based on the
    * formatter name and file extension.
    */
-  format(input: Record<string, unknown>) {
+  async format(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
+    // Support both path-based (generation suite) and file-ID-based (legacy) signatures
     const pathInput = input.path as string | undefined;
     const fileId = input.file as string | undefined;
     const explicitFormatter = input.formatter as string | undefined;
 
-    if (!pathInput && !fileId) {
-      let p = createProgram();
-      p = complete(p, 'error', { message: 'path or file ID is required' });
-      return p;
-    }
+    let fileRecord: Record<string, unknown> | null = null;
+    let key: string;
 
     if (pathInput) {
-      // Path-based lookup
-      const key = fileKey(pathInput);
-      let p = createProgram();
-      p = get(p, FILES_RELATION, key, 'fileRecord');
-      p = branch(p, 'fileRecord',
-        // found
-        (tp) => {
-          return completeFrom(tp, 'ok', (bindings) => {
-            const fileRecord = bindings.fileRecord as Record<string, unknown>;
-            const filePath = fileRecord.path as string;
-            const ext = getExtension(filePath);
-            const formatter = explicitFormatter || EXTENSION_FORMATTERS[ext];
-            if (!formatter || !KNOWN_FORMATTERS.has(formatter)) {
-              return { changed: false };
-            }
-            return { changed: true, file: fileRecord.id };
-          });
-        },
-        // not found
-        (ep) => complete(ep, 'error', { message: `file not found at ${pathInput}` }),
-      );
-      return p;
-    }
-
-    // File ID-based lookup (legacy)
-    let p = createProgram();
-    p = find(p, FILES_RELATION, { id: fileId }, 'allFiles');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allFiles = bindings.allFiles as Record<string, unknown>[];
+      // Path-based lookup (generation suite pattern)
+      key = fileKey(pathInput);
+      fileRecord = await storage.get(FILES_RELATION, key);
+    } else if (fileId) {
+      // File ID-based lookup (legacy Clef Bind pattern)
+      const allFiles = await storage.find(FILES_RELATION, { id: fileId });
       if (allFiles.length === 0) {
         return { variant: 'error', message: `file ${fileId} not found in storage` };
       }
-      const fileRecord = allFiles[0];
-      const filePath = fileRecord.path as string;
-      const ext = getExtension(filePath);
-      const formatter = explicitFormatter || EXTENSION_FORMATTERS[ext];
-      if (!formatter || !KNOWN_FORMATTERS.has(formatter)) {
-        return { changed: false };
-      }
-      return { changed: true, file: fileRecord.id };
-    });
-    return p;
+      fileRecord = allFiles[0];
+      key = fileKey(fileRecord.path as string);
+    } else {
+      return { variant: 'error', message: 'path or file ID is required' };
+    }
+
+    if (!fileRecord) {
+      return { variant: 'error', message: `file not found at ${pathInput}` };
+    }
+
+    // Determine formatter: explicit > extension-based
+    const filePath = fileRecord.path as string;
+    const ext = getExtension(filePath);
+    const formatter = explicitFormatter || EXTENSION_FORMATTERS[ext];
+
+    if (!formatter) {
+      // No formatter for this extension — no-op
+      return { variant: 'ok', changed: false };
+    }
+
+    if (!KNOWN_FORMATTERS.has(formatter)) {
+      return { variant: 'ok', changed: false };
+    }
+
+    try {
+      // Stub: mark the file as formatted.
+      // Real implementation would invoke the formatter binary and
+      // recompute the content hash afterwards.
+      await storage.put(FILES_RELATION, key!, {
+        ...fileRecord,
+        formatted: true,
+      });
+
+      return { variant: 'ok', changed: true, file: fileRecord.id };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+    }
   },
 
   /**
@@ -384,8 +347,12 @@ const _handler: FunctionalConceptHandler = {
    * `currentManifest` (or `currentFiles` for legacy compat) list.
    * Any stored file whose path is NOT in the current set is deleted.
    */
-  clean(input: Record<string, unknown>) {
+  async clean(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const outputDir = input.outputDir as string;
+    // Support both new (currentManifest) and legacy (currentFiles) parameter names
     const currentList = (input.currentManifest || input.currentFiles) as string[];
 
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
@@ -393,110 +360,101 @@ const _handler: FunctionalConceptHandler = {
       (currentList || []).map((f) => fileKey(f)),
     );
 
-    let p = createProgram();
-    p = find(p, FILES_RELATION, {}, 'allFiles');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allFiles = bindings.allFiles as Record<string, unknown>[];
-      const removed: string[] = [];
+    const allFiles = await storage.find(FILES_RELATION);
+    const removed: string[] = [];
 
-      for (const file of allFiles) {
-        const filePath = fileKey(file.path as string);
-        if (!filePath.startsWith(normalizedDir + '/')) continue;
-        if (!currentSet.has(filePath)) {
-          removed.push(file.path as string);
-        }
+    for (const file of allFiles) {
+      const filePath = fileKey(file.path as string);
+
+      if (!filePath.startsWith(normalizedDir + '/')) {
+        continue;
       }
 
-      // Note: deletions are tracked for output but actual del() calls
-      // need to happen outside completeFrom. For now we report what
-      // would be removed.
-      return { removed };
-    });
-    return p;
+      if (!currentSet.has(filePath)) {
+        await storage.del(FILES_RELATION, filePath);
+        await storage.del(SOURCE_MAP_RELATION, filePath);
+        removed.push(file.path as string);
+      }
+    }
+
+    return { variant: 'ok', removed };
   },
 
   /**
    * Return the manifest of all generated files for an output directory.
    */
-  manifest(input: Record<string, unknown>) {
+  async manifest(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
-    let p = createProgram();
-    p = find(p, FILES_RELATION, {}, 'allFiles');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allFiles = bindings.allFiles as Record<string, unknown>[];
-      const files: Array<{ path: string; hash: string; lastWritten: string }> = [];
-      let totalBytes = 0;
+    const allFiles = await storage.find(FILES_RELATION);
+    const files: Array<{ path: string; hash: string; lastWritten: string }> = [];
+    let totalBytes = 0;
 
-      for (const file of allFiles) {
-        const filePath = fileKey(file.path as string);
-        if (filePath.startsWith(normalizedDir + '/')) {
-          files.push({
-            path: file.path as string,
-            hash: file.hash as string,
-            lastWritten: file.generatedAt as string,
-          });
-          totalBytes += (file.sizeBytes as number) || 0;
-        }
+    for (const file of allFiles) {
+      const filePath = fileKey(file.path as string);
+
+      if (filePath.startsWith(normalizedDir + '/')) {
+        files.push({
+          path: file.path as string,
+          hash: file.hash as string,
+          lastWritten: file.generatedAt as string,
+        });
+        totalBytes += (file.sizeBytes as number) || 0;
       }
+    }
 
-      return { files, totalBytes };
-    });
-    return p;
+    return { variant: 'ok', files, totalBytes };
   },
 
   /**
    * Return all source elements that contributed to an output file.
    * Enables "which spec produced this generated code?" queries.
    */
-  trace(input: Record<string, unknown>) {
+  async trace(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const outputPath = input.outputPath as string;
     const key = fileKey(outputPath);
 
-    let p = createProgram();
-    p = get(p, FILES_RELATION, key, 'fileRecord');
-    p = branch(p, 'fileRecord',
-      // found
-      (tp) => {
-        let q = get(tp, SOURCE_MAP_RELATION, key, 'sourceMapRecord');
-        return completeFrom(q, 'ok', (bindings) => {
-          const sourceMapRecord = bindings.sourceMapRecord as Record<string, unknown> | null;
-          const sources = sourceMapRecord
-            ? (sourceMapRecord.sources as SourceEntry[])
-            : [];
-          return { sources };
-        });
-      },
-      // not found
-      (ep) => complete(ep, 'notFound', { path: outputPath }),
-    );
-    return p;
+    const fileRecord = await storage.get(FILES_RELATION, key);
+    if (!fileRecord) {
+      return { variant: 'notFound', path: outputPath };
+    }
+
+    const sourceMapRecord = await storage.get(SOURCE_MAP_RELATION, key);
+    const sources = sourceMapRecord
+      ? (sourceMapRecord.sources as SourceEntry[])
+      : [];
+
+    return { variant: 'ok', sources };
   },
 
   /**
    * Return all output files whose sourceMap includes a given source path.
    * Enables "what regenerates if I change this spec?" queries.
    */
-  affected(input: Record<string, unknown>) {
+  async affected(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const sourcePath = input.sourcePath as string;
 
-    let p = createProgram();
-    p = find(p, SOURCE_MAP_RELATION, {}, 'allSourceMaps');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allSourceMaps = bindings.allSourceMaps as Record<string, unknown>[];
-      const outputs: string[] = [];
+    const allSourceMaps = await storage.find(SOURCE_MAP_RELATION);
+    const outputs: string[] = [];
 
-      for (const record of allSourceMaps) {
-        const sources = record.sources as SourceEntry[];
-        if (sources && sources.some(s => s.sourcePath === sourcePath)) {
-          outputs.push(record.path as string);
-        }
+    for (const record of allSourceMaps) {
+      const sources = record.sources as SourceEntry[];
+      if (sources && sources.some(s => s.sourcePath === sourcePath)) {
+        outputs.push(record.path as string);
       }
+    }
 
-      return { outputs };
-    });
-    return p;
+    return { variant: 'ok', outputs };
   },
 
   /**
@@ -507,60 +465,97 @@ const _handler: FunctionalConceptHandler = {
    * production implementation, this would compare against the
    * actual filesystem.
    */
-  audit(input: Record<string, unknown>) {
+  async audit(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const outputDir = input.outputDir as string;
     const normalizedDir = outputDir.replace(/\\/g, '/').replace(/\/$/, '');
 
-    let p = createProgram();
-    p = find(p, FILES_RELATION, {}, 'allFiles');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const allFiles = bindings.allFiles as Record<string, unknown>[];
-      const status: Array<{
-        path: string;
-        state: string;
-        expectedHash: string | null;
-        actualHash: string | null;
-      }> = [];
+    const allFiles = await storage.find(FILES_RELATION);
+    const status: Array<{
+      path: string;
+      state: string;
+      expectedHash: string | null;
+      actualHash: string | null;
+    }> = [];
 
-      for (const file of allFiles) {
-        const filePath = fileKey(file.path as string);
-        if (!filePath.startsWith(normalizedDir + '/')) continue;
+    for (const file of allFiles) {
+      const filePath = fileKey(file.path as string);
 
-        const storedHash = file.hash as string;
-        const content = file.content as string | undefined;
-
-        if (!content) {
-          status.push({
-            path: file.path as string,
-            state: 'missing',
-            expectedHash: storedHash,
-            actualHash: null,
-          });
-          continue;
-        }
-
-        const actualHash = sha256(content);
-        if (actualHash === storedHash) {
-          status.push({
-            path: file.path as string,
-            state: 'current',
-            expectedHash: storedHash,
-            actualHash,
-          });
-        } else {
-          status.push({
-            path: file.path as string,
-            state: 'drifted',
-            expectedHash: storedHash,
-            actualHash,
-          });
-        }
+      if (!filePath.startsWith(normalizedDir + '/')) {
+        continue;
       }
 
-      return { status };
-    });
-    return p;
+      const storedHash = file.hash as string;
+      const content = file.content as string | undefined;
+
+      if (!content) {
+        // File is in manifest but content not available — treat as missing
+        status.push({
+          path: file.path as string,
+          state: 'missing',
+          expectedHash: storedHash,
+          actualHash: null,
+        });
+        continue;
+      }
+
+      const actualHash = sha256(content);
+      if (actualHash === storedHash) {
+        status.push({
+          path: file.path as string,
+          state: 'current',
+          expectedHash: storedHash,
+          actualHash,
+        });
+      } else {
+        status.push({
+          path: file.path as string,
+          state: 'drifted',
+          expectedHash: storedHash,
+          actualHash,
+        });
+      }
+    }
+
+    return { variant: 'ok', status };
   },
 };
 
-export const emitterHandler = autoInterpret(_handler);
+// ---- Internal helpers ----
+
+/**
+ * Update the aggregated manifest record for the output directory
+ * that a file belongs to. Adjusts file count and byte totals.
+ */
+async function updateManifestOnWrite(
+  storage: ConceptStorage,
+  filePath: string,
+  newSize: number,
+  existing: Record<string, unknown> | null,
+): Promise<void> {
+  const outputDir = deriveOutputDir(filePath);
+  const manifestRecord = await storage.get(MANIFEST_RELATION, outputDir);
+
+  let totalFiles = 1;
+  let totalBytes = newSize;
+
+  if (manifestRecord) {
+    totalFiles = (manifestRecord.totalFiles as number) || 0;
+    totalBytes = (manifestRecord.totalBytes as number) || 0;
+
+    if (existing) {
+      totalBytes = totalBytes - ((existing.sizeBytes as number) || 0) + newSize;
+    } else {
+      totalFiles += 1;
+      totalBytes += newSize;
+    }
+  }
+
+  await storage.put(MANIFEST_RELATION, outputDir, {
+    outputDir,
+    totalFiles,
+    totalBytes,
+  });
+}

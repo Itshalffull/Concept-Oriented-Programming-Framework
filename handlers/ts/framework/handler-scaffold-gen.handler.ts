@@ -3,12 +3,6 @@
 //
 // Generates TypeScript concept handler implementations from
 // provided inputs: concept name, actions, and their signatures.
-// Defaults to functional (StorageProgram) style; falls back to
-// imperative style only when explicitly requested.
-//
-// Test generation is delegated to TestGen (buildTestPlan) +
-// TypeScript renderer. This handler only generates the handler
-// implementation file and calls TestGen for test scaffolding.
 //
 // See architecture doc:
 //   - Section 6: Concept implementations
@@ -17,8 +11,6 @@
 // ============================================================
 
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
-import { buildTestPlan } from './test/test-gen.handler.js';
-import { renderTypeScriptTests } from './test/typescript-test-renderer.js';
 
 function toKebab(name: string): string {
   return name
@@ -57,71 +49,7 @@ function mapTsType(conceptType: string): string {
   }
 }
 
-// ── Handler Implementation Builders ───────────────────────────
-
-function buildFunctionalHandlerImpl(input: Record<string, unknown>): string {
-  const conceptName = (input.conceptName as string) || 'MyConcept';
-  const actions = (input.actions as ActionDef[]) || [
-    {
-      name: 'create',
-      params: [{ name: 'name', type: 'String' }],
-      variants: [
-        { name: 'ok', params: [{ name: 'item', type: 'String' }] },
-        { name: 'error', params: [{ name: 'message', type: 'String' }] },
-      ],
-    },
-  ];
-  const relation = (input.relation as string) || toCamel(conceptName) + 's';
-
-  const lines: string[] = [
-    '// ============================================================',
-    `// ${conceptName} Concept Implementation (Functional)`,
-    '//',
-    `// Functional handler for the ${conceptName} concept.`,
-    '// Returns StorageProgram descriptions instead of executing effects directly.',
-    '// ============================================================',
-    '',
-    "import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';",
-    "import { createProgram, get, find, put, merge, del, branch, complete, pure } from '../../../runtime/storage-program.js';",
-    '',
-    `export const ${toCamel(conceptName)}Handler: FunctionalConceptHandler = {`,
-  ];
-
-  for (const action of actions) {
-    const paramExtractions = action.params.map(p => {
-      const tsType = mapTsType(p.type);
-      return `    const ${p.name} = input.${p.name} as ${tsType};`;
-    });
-
-    lines.push(`  ${action.name}(input: Record<string, unknown>) {`);
-    lines.push(...paramExtractions);
-    lines.push('');
-    lines.push('    let p = createProgram();');
-    lines.push(`    // TODO: Implement ${action.name} logic using StorageProgram DSL`);
-    lines.push(`    // Example: p = get(p, '${relation}', id, 'existing');`);
-    lines.push('');
-
-    const okVariant = action.variants.find(v => v.name === 'ok');
-    if (okVariant) {
-      const okParams = okVariant.params
-        .map(p => `${p.name}: ${p.name === 'message' ? "'Success'" : 'undefined /* TODO */'}`)
-        .join(', ');
-      lines.push(`    return complete(p, 'ok', { ${okParams} });`);
-    } else {
-      lines.push("    return complete(p, 'ok', {});");
-    }
-
-    lines.push('  },');
-    lines.push('');
-  }
-
-  lines.push('};');
-  lines.push('');
-
-  return lines.join('\n');
-}
-
-function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
+function buildHandlerImpl(input: Record<string, unknown>): string {
   const conceptName = (input.conceptName as string) || 'MyConcept';
   const actions = (input.actions as ActionDef[]) || [
     {
@@ -140,11 +68,9 @@ function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
 
   const lines: string[] = [
     '// ============================================================',
-    `// ${conceptName} Concept Implementation (Imperative)`,
+    `// ${conceptName} Concept Implementation`,
     '//',
-    `// Imperative handler for the ${conceptName} concept.`,
-    '// Use functional style (StorageProgram) for new concepts unless',
-    '// the target language or concept constraints prevent it.',
+    `// Handler for the ${conceptName} concept.`,
     '// ============================================================',
     '',
     "import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';",
@@ -172,6 +98,7 @@ function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
     lines.push(...paramExtractions);
     lines.push('');
 
+    // Validation
     const requiredParams = action.params.filter(p => p.type === 'String' || p.type === 'string');
     if (requiredParams.length > 0) {
       for (const p of requiredParams) {
@@ -185,6 +112,7 @@ function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
     lines.push('    try {');
     lines.push(`      // TODO: Implement ${action.name} logic`);
 
+    // Find ok variant for return type
     const okVariant = action.variants.find(v => v.name === 'ok');
     if (okVariant) {
       const okParams = okVariant.params
@@ -209,37 +137,11 @@ function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-// ── Conformance Test Builder (delegates to TestGen) ───────────
-
 function buildConformanceTest(input: Record<string, unknown>): string {
   const conceptName = (input.conceptName as string) || 'MyConcept';
   const actions = (input.actions as ActionDef[]) || [];
-  const invariants = (input.invariants as Array<Record<string, unknown>>) || [];
-  const style = (input.style as string) || 'functional';
   const kebab = toKebab(conceptName);
 
-  if (style === 'imperative') {
-    return buildImperativeConformanceTest(conceptName, actions, kebab);
-  }
-
-  // Build a concept data structure for TestGen
-  const conceptData = {
-    name: conceptName,
-    actions: actions.map(a => ({
-      name: a.name,
-      params: a.params,
-      variants: a.variants.map(v => ({ name: v.name, params: v.params })),
-    })),
-    invariants,
-  };
-
-  // Delegate to TestGen pipeline: build test plan → render TypeScript
-  const plan = buildTestPlan(`clef/concept/${conceptName}`, conceptData);
-  plan.handlerPath = `handlers/ts/${kebab}.handler.js`;
-  return renderTypeScriptTests(plan);
-}
-
-function buildImperativeConformanceTest(conceptName: string, actions: ActionDef[], kebab: string): string {
   const lines: string[] = [
     "import { describe, it, expect } from 'vitest';",
     `import { ${toCamel(conceptName)}Handler } from '../handlers/ts/${kebab}.handler.js';`,
@@ -276,8 +178,6 @@ function buildImperativeConformanceTest(conceptName: string, actions: ActionDef[
   return lines.join('\n');
 }
 
-// ── Handler Export ────────────────────────────────────────────
-
 export const handlerScaffoldGenHandler: ConceptHandler = {
   async register() {
     return {
@@ -291,7 +191,6 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
 
   async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
     const conceptName = (input.conceptName as string) || 'MyConcept';
-    const style = (input.style as string) || 'functional';
 
     if (!conceptName || typeof conceptName !== 'string') {
       return { variant: 'error', message: 'Concept name is required' };
@@ -299,9 +198,7 @@ export const handlerScaffoldGenHandler: ConceptHandler = {
 
     try {
       const kebab = toKebab(conceptName);
-      const handlerCode = style === 'imperative'
-        ? buildImperativeHandlerImpl(input)
-        : buildFunctionalHandlerImpl(input);
+      const handlerCode = buildHandlerImpl(input);
 
       const files: { path: string; content: string }[] = [
         {

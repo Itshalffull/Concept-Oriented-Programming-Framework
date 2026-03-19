@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SchemaYamlParser — Provider on SpecParser concept
 //
@@ -6,18 +5,12 @@
 // ContentNode Schema Properties. Validates field types against
 // TypeSystem, validates primary_set references, manifest values,
 // and produces structured intermediate representations consumed
-// by ConceptBrowser and the shared pool provider.
+// by ConceptBrowser (Step 4) and the shared pool provider.
 //
 // See Architecture doc Sections 2.1.1, 3.1.1
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, put, complete, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 /** Valid TypeSystem field types (Section 2.4.2) */
 const VALID_FIELD_TYPES = new Set([
@@ -42,9 +35,9 @@ const VALID_HOOKS = new Set(['on_save', 'on_apply', 'on_remove', 'on_delete']);
 
 export interface SchemaFieldDef {
   name: string;
-  from?: string;
-  type?: string;
-  mutability?: string;
+  from?: string;       // concept state field mapping
+  type?: string;       // TypeSystem type (for unmapped fields)
+  mutability?: string; // editable | readonly | system
   required?: boolean;
   cardinality?: number | 'unlimited';
   default?: string;
@@ -63,11 +56,11 @@ export interface SchemaHooks {
 
 export interface SchemaDef {
   name: string;
-  concept?: string;
-  primary_set?: string;
-  manifest: string;
-  extends?: string;
-  includes?: string[];
+  concept?: string;       // associated concept name (null for pure schemas)
+  primary_set?: string;   // which concept set maps to this schema
+  manifest: string;       // 'content' or 'config'
+  extends?: string;       // parent schema name (inheritance)
+  includes?: string[];    // schemas auto-applied with this one
   fields: Record<string, SchemaFieldDef>;
   hooks?: SchemaHooks;
   constraints?: {
@@ -115,6 +108,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
     const def = schemaDef as Record<string, unknown>;
     const path = `schemas.${schemaName}`;
 
+    // Validate manifest
     const manifest = def.manifest as string | undefined;
     if (!manifest) {
       errors.push({ message: `Schema "${schemaName}" must declare a "manifest" (content or config)`, path });
@@ -124,6 +118,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
       errors.push({ message: `Schema "${schemaName}" has invalid manifest "${manifest}". Must be "content" or "config"`, path: `${path}.manifest` });
     }
 
+    // Validate fields
     const fieldsRaw = def.fields as Record<string, unknown> | undefined;
     const parsedFields: Record<string, SchemaFieldDef> = {};
 
@@ -141,6 +136,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
         }
         if (fd.type !== undefined) {
           const fieldType = fd.type as string;
+          // Allow compound types like "list Reference"
           if (!VALID_FIELD_TYPES.has(fieldType) && !fieldType.startsWith('list ') && !fieldType.startsWith('option ')) {
             errors.push({ message: `Field "${fieldName}" has unknown type "${fieldType}"`, path: `${path}.fields.${fieldName}.type` });
           }
@@ -153,6 +149,8 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
           parsed.mutability = fd.mutability as string;
         }
 
+        // A mapped field (has `from`) must not also have `type` — type comes from concept spec
+        // An unmapped field (no `from`, no concept) must have `type`
         if (!parsed.from && !parsed.type && def.concept) {
           errors.push({ message: `Field "${fieldName}" on concept-mapped schema must have "from" or "type"`, path: `${path}.fields.${fieldName}` });
         }
@@ -169,6 +167,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
       }
     }
 
+    // Validate hooks (Section 2.1.3)
     const hooksRaw = def.hooks as Record<string, unknown> | undefined;
     let parsedHooks: SchemaHooks | undefined;
     if (hooksRaw && typeof hooksRaw === 'object') {
@@ -189,11 +188,13 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
       }
     }
 
+    // Validate includes
     const includes = def.includes as string[] | undefined;
     if (includes && !Array.isArray(includes)) {
       errors.push({ message: `Schema "${schemaName}" includes must be an array`, path: `${path}.includes` });
     }
 
+    // Validate constraints
     const constraintsRaw = def.constraints as Record<string, unknown> | undefined;
     let parsedConstraints: SchemaDef['constraints'] | undefined;
     if (constraintsRaw && typeof constraintsRaw === 'object') {
@@ -205,6 +206,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
       if (constraintsRaw.max_per_user !== undefined) parsedConstraints.max_per_user = constraintsRaw.max_per_user as number | null;
     }
 
+    // Validate removal policy
     const removalRaw = def.removal as Record<string, unknown> | undefined;
     let parsedRemoval: SchemaDef['removal'] | undefined;
     if (removalRaw && typeof removalRaw === 'object') {
@@ -232,6 +234,7 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
     });
   }
 
+  // Cross-validate: check includes references
   const schemaNames = new Set(schemas.map(s => s.name));
   for (const schema of schemas) {
     if (schema.includes) {
@@ -244,6 +247,9 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
         }
       }
     }
+    if (schema.extends && !schemaNames.has(schema.extends)) {
+      // extends can reference schemas from other files — warn, don't error
+    }
   }
 
   return { schemas, errors };
@@ -252,62 +258,60 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
 let counter = 0;
 export function resetSchemaYamlParserCounter(): void { counter = 0; }
 
-const _handler: FunctionalConceptHandler = {
-  parse(input: Record<string, unknown>) {
+export const schemaYamlParserHandler: ConceptHandler = {
+  async parse(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'source must be a parsed YAML object', errors: [] }) as StorageProgram<Result>;
+      return { variant: 'error', message: 'source must be a parsed YAML object', errors: [] };
     }
 
     const result = parseSchemaYaml(source);
 
     if (result.errors.length > 0) {
-      const p = createProgram();
-      return complete(p, 'error', {
+      return {
+        variant: 'error',
         message: `schema.yaml has ${result.errors.length} validation error(s)`,
         errors: result.errors,
-      }) as StorageProgram<Result>;
+      };
     }
 
     const id = `schema-yaml-${++counter}`;
-    let p = createProgram();
-    p = put(p, 'parsed_schemas', id, {
+    await storage.put('parsed_schemas', id, {
       id,
       schemas: result.schemas,
     });
 
-    return complete(p, 'ok', { id, schemas: result.schemas }) as StorageProgram<Result>;
+    return { variant: 'ok', id, schemas: result.schemas };
   },
 
-  validate(input: Record<string, unknown>) {
+  async validate(input: Record<string, unknown>, _storage: ConceptStorage) {
     const source = input.source as Record<string, unknown> | undefined;
     if (!source || typeof source !== 'object') {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'source must be a parsed YAML object', errors: [] }) as StorageProgram<Result>;
+      return { variant: 'error', message: 'source must be a parsed YAML object', errors: [] };
     }
 
     const result = parseSchemaYaml(source);
 
     if (result.errors.length > 0) {
-      const p = createProgram();
-      return complete(p, 'invalid', { errors: result.errors }) as StorageProgram<Result>;
+      return {
+        variant: 'invalid',
+        errors: result.errors,
+      };
     }
 
-    const p = createProgram();
-    return complete(p, 'ok', { schema_count: result.schemas.length }) as StorageProgram<Result>;
+    return { variant: 'ok', schema_count: result.schemas.length };
   },
 
-  scaffold(input: Record<string, unknown>) {
+  async scaffold(input: Record<string, unknown>, _storage: ConceptStorage) {
     const conceptName = input.concept_name as string | undefined;
     const fields = input.fields as string[] | undefined;
     const manifest = (input.manifest as string) || 'content';
 
     if (!conceptName) {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'concept_name is required' }) as StorageProgram<Result>;
+      return { variant: 'error', message: 'concept_name is required' };
     }
 
+    // Generate a starter schema.yaml
     const schemaName = conceptName;
     const fieldEntries: Record<string, { from: string }> = {};
     if (fields && Array.isArray(fields)) {
@@ -323,13 +327,12 @@ const _handler: FunctionalConceptHandler = {
           primary_set: 'items',
           manifest,
           fields: fieldEntries,
+          // TODO: review mutability for each field
+          // TODO: add hooks if the concept has lifecycle behavior
         },
       },
     };
 
-    const p = createProgram();
-    return complete(p, 'ok', { scaffold }) as StorageProgram<Result>;
+    return { variant: 'ok', scaffold };
   },
 };
-
-export const schemaYamlParserHandler = autoInterpret(_handler);

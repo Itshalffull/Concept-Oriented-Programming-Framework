@@ -1,17 +1,22 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SuiteScaffoldGen — Suite manifest (suite.yaml) scaffold generator
-// See architecture doc Section 7, Section 10.1
+//
+// Generates a suite.yaml manifest and directory structure for a
+// new Clef suite from provided inputs: name, description, concept
+// list, sync tiers, and optional infrastructure declarations.
+//
+// See architecture doc:
+//   - Section 7: Suite structure and manifests
+//   - Section 10.1: ConceptManifest as language-neutral IR
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 
 function toKebab(name: string): string {
-  return name.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase();
+  return name
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase();
 }
 
 function buildSuiteYaml(input: Record<string, unknown>): string {
@@ -22,36 +27,155 @@ function buildSuiteYaml(input: Record<string, unknown>): string {
   const syncs = (input.syncs as Array<{ name: string; tier: string }>) || [];
   const dependencies = (input.dependencies as string[]) || [];
   const isDomain = (input.isDomain as boolean) || false;
-  const lines: string[] = ['suite:', `  name: ${name}`, `  version: ${version}`, `  description: >`, `    ${description}`, ''];
-  if (concepts.length > 0) { lines.push('concepts:'); for (const c of concepts) { const kebab = toKebab(c); lines.push(`  ${c}:`, `    spec: ./${kebab}.concept`, `    params:`, `      T: { as: ${kebab}-ref, description: "Reference to a ${c}" }`); } lines.push(''); }
-  if (syncs.length > 0) { const grouped: Record<string, Array<{ name: string }>> = {}; for (const s of syncs) { const tier = s.tier || 'recommended'; if (!grouped[tier]) grouped[tier] = []; grouped[tier].push(s); } lines.push('syncs:'); for (const tier of ['required', 'recommended', 'integration']) { if (!grouped[tier]) continue; lines.push(`  ${tier}:`); for (const s of grouped[tier]) { const kebab = toKebab(s.name); lines.push(`    - path: ./syncs/${kebab}.sync`, `      name: ${s.name}`, `      description: >`, `        ${s.name} synchronization rule.`); } } lines.push(''); } else { lines.push('syncs:', '  required: []', '  recommended: []', ''); }
-  if (dependencies.length > 0) { lines.push('dependencies:'); for (const dep of dependencies) lines.push(`  - ${dep}: ">=0.1.0"`); } else { lines.push('dependencies: []'); }
-  if (isDomain) { lines.push('', 'infrastructure:', '  transports: []', '  storage: []', '  deployTemplates: []'); }
+
+  const lines: string[] = [
+    'suite:',
+    `  name: ${name}`,
+    `  version: ${version}`,
+    `  description: >`,
+    `    ${description}`,
+    '',
+  ];
+
+  // Concepts section
+  if (concepts.length > 0) {
+    lines.push('concepts:');
+    for (const c of concepts) {
+      const kebab = toKebab(c);
+      lines.push(`  ${c}:`);
+      lines.push(`    spec: ./${kebab}.concept`);
+      lines.push(`    params:`);
+      lines.push(`      T: { as: ${kebab}-ref, description: "Reference to a ${c}" }`);
+    }
+    lines.push('');
+  }
+
+  // Syncs section
+  if (syncs.length > 0) {
+    const grouped: Record<string, Array<{ name: string }>> = {};
+    for (const s of syncs) {
+      const tier = s.tier || 'recommended';
+      if (!grouped[tier]) grouped[tier] = [];
+      grouped[tier].push(s);
+    }
+
+    lines.push('syncs:');
+    for (const tier of ['required', 'recommended', 'integration']) {
+      if (!grouped[tier]) continue;
+      lines.push(`  ${tier}:`);
+      for (const s of grouped[tier]) {
+        const kebab = toKebab(s.name);
+        lines.push(`    - path: ./syncs/${kebab}.sync`);
+        lines.push(`      name: ${s.name}`);
+        lines.push(`      description: >`);
+        lines.push(`        ${s.name} synchronization rule.`);
+      }
+    }
+    lines.push('');
+  } else {
+    lines.push('syncs:');
+    lines.push('  required: []');
+    lines.push('  recommended: []');
+    lines.push('');
+  }
+
+  // Dependencies
+  if (dependencies.length > 0) {
+    lines.push('dependencies:');
+    for (const dep of dependencies) {
+      lines.push(`  - ${dep}: ">=0.1.0"`);
+    }
+  } else {
+    lines.push('dependencies: []');
+  }
+
+  // Infrastructure section for domain suites
+  if (isDomain) {
+    lines.push('');
+    lines.push('infrastructure:');
+    lines.push('  transports: []');
+    lines.push('  storage: []');
+    lines.push('  deployTemplates: []');
+  }
+
   lines.push('');
   return lines.join('\n');
 }
 
-const _handler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    const p = createProgram();
-    return complete(p, 'ok', { name: 'SuiteScaffoldGen', inputKind: 'SuiteConfig', outputKind: 'SuiteManifest', capabilities: JSON.stringify(['suite-yaml', 'directory-structure']) }) as StorageProgram<Result>;
+export const suiteScaffoldGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'SuiteScaffoldGen',
+      inputKind: 'SuiteConfig',
+      outputKind: 'SuiteManifest',
+      capabilities: JSON.stringify(['suite-yaml', 'directory-structure']),
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input: Record<string, unknown>, _storage: ConceptStorage) {
     const name = (input.name as string) || 'my-suite';
-    if (!name || typeof name !== 'string') { const p = createProgram(); return complete(p, 'error', { message: 'Suite name is required' }) as StorageProgram<Result>; }
+
+    if (!name || typeof name !== 'string') {
+      return { variant: 'error', message: 'Suite name is required' };
+    }
+
     try {
       const suiteYaml = buildSuiteYaml(input);
       const concepts = (input.concepts as string[]) || [];
-      const files: { path: string; content: string }[] = [{ path: `suites/${name}/suite.stub.yaml`, content: suiteYaml }];
-      for (const c of concepts) { const kebab = toKebab(c); files.push({ path: `suites/${name}/${kebab}.stub.concept`, content: `concept ${c} [T] {\n\n  purpose {\n    TODO: Describe the purpose of ${c}.\n  }\n\n  state {\n    items: set T\n  }\n\n  actions {\n    action create(name: String) {\n      -> ok(item: T) { Item created. }\n      -> error(message: String) { Creation failed. }\n    }\n  }\n}\n` }); }
+
+      const files: { path: string; content: string }[] = [
+        { path: `suites/${name}/suite.stub.yaml`, content: suiteYaml },
+      ];
+
+      // Generate stub concept files
+      for (const c of concepts) {
+        const kebab = toKebab(c);
+        files.push({
+          path: `suites/${name}/${kebab}.stub.concept`,
+          content: [
+            `concept ${c} [T] {`,
+            '',
+            '  purpose {',
+            `    TODO: Describe the purpose of ${c}.`,
+            '  }',
+            '',
+            '  state {',
+            `    items: set T`,
+            '  }',
+            '',
+            '  actions {',
+            `    action create(name: String) {`,
+            `      -> ok(item: T) { Item created. }`,
+            `      -> error(message: String) { Creation failed. }`,
+            '    }',
+            '  }',
+            '}',
+            '',
+          ].join('\n'),
+        });
+      }
+
+      // Create directory placeholders
       files.push({ path: `suites/${name}/syncs/.gitkeep`, content: '' });
-      const p = createProgram();
-      return complete(p, 'ok', { files, filesGenerated: files.length }) as StorageProgram<Result>;
-    } catch (err: unknown) { const message = err instanceof Error ? err.message : String(err); const p = createProgram(); return complete(p, 'error', { message }) as StorageProgram<Result>; }
+
+      return { variant: 'ok', files, filesGenerated: files.length };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const stack = err instanceof Error ? err.stack : undefined;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
+    }
   },
 
-  preview(input: Record<string, unknown>) { return _handler.generate(input); },
+  async preview(input: Record<string, unknown>, storage: ConceptStorage) {
+    const result = await suiteScaffoldGenHandler.generate!(input, storage);
+    if (result.variant === 'error') return result;
+    const files = result.files as Array<{ path: string; content: string }>;
+    return {
+      variant: 'ok',
+      files,
+      wouldWrite: files.length,
+      wouldSkip: 0,
+    };
+  },
 };
-
-export const suiteScaffoldGenHandler = autoInterpret(_handler);

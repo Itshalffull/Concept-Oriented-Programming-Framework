@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // OpenAI Function-Calling Target Provider Handler
 //
@@ -13,12 +12,7 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, complete, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptManifest, ActionSchema } from '../../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toSnakeCase, typeToJsonSchema, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -242,35 +236,44 @@ function generateOpenAiHelpMd(
 
 // --- Concept Handler ---
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    const p = createProgram();
-    return complete(p, 'ok', {
+export const openaiTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'OpenaiTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'OpenAiFunctions',
       capabilities: JSON.stringify(['function-calling', 'strict-mode', 'hierarchical']),
       targetKey: 'openai',
       providerType: 'target',
-    }) as StorageProgram<Result>;
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  /**
+   * Generate OpenAI function-calling definition files for one or more concepts.
+   *
+   * Each concept action becomes a function definition with typed JSON Schema
+   * parameters and a description optimized for LLM tool selection.
+   *
+   * Config options:
+   *   strict (boolean): Enable strict mode (additionalProperties: false). Default: true.
+   */
+  async generate(
+    input: Record<string, unknown>,
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const projectionRaw = input.projection as string;
+    const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      const p = createProgram();
-      return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
+      return { variant: 'ok', files: [] };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      const p = createProgram();
-      return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
+      return { variant: 'ok', files: [] };
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -281,8 +284,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        const p = createProgram();
-        return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
+        return { variant: 'ok', files: [] };
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -300,9 +302,9 @@ const _handler: FunctionalConceptHandler = {
 
     // Parse overrides
     let overrides: Record<string, Record<string, unknown>> = {};
-    if (input.overrides && typeof input.overrides === 'string') {
+    if (overridesRaw && typeof overridesRaw === 'string') {
       try {
-        overrides = JSON.parse(input.overrides as string) as Record<string, Record<string, unknown>>;
+        overrides = JSON.parse(overridesRaw) as Record<string, Record<string, unknown>>;
       } catch { /* ignore */ }
     }
 
@@ -333,9 +335,6 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    const p = createProgram();
-    return complete(p, 'ok', { files }) as StorageProgram<Result>;
+    return { variant: 'ok', files };
   },
 };
-
-export const openaiTargetHandler = autoInterpret(_handler);

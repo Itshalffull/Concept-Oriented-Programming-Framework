@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // InfrastructureEntity Concept Implementation
 //
 // Queryable representation of storage and transport adapter
@@ -7,19 +6,11 @@
 // runtimes. Enables infrastructure topology queries and shared
 // backend analysis.
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
+export const infrastructureEntityHandler: ConceptHandler = {
 
-const _handler: FunctionalConceptHandler = {
-
-  register(input: Record<string, unknown>) {
-    let p = createProgram();
+  async register(input, storage) {
     const name = input.name as string;
     const kind = input.kind as string;
     const sourceFile = input.sourceFile as string;
@@ -27,15 +18,15 @@ const _handler: FunctionalConceptHandler = {
     const config = input.config as string;
 
     const key = `adapter:${name}:${kind}`;
-    p = get(p, 'infrastructure', key, 'existing');
+    const existing = await storage.get('infrastructure', key);
     if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
+      return { variant: 'alreadyRegistered', existing: existing.id };
     }
 
     const id = crypto.randomUUID();
     const parsedConfig = config ? JSON.parse(config) : {};
 
-    p = put(p, 'infrastructure', key, {
+    await storage.put('infrastructure', key, {
       id,
       name,
       kind,
@@ -48,34 +39,31 @@ const _handler: FunctionalConceptHandler = {
       capabilities: JSON.stringify(parsedConfig.capabilities || []),
     });
 
-    return complete(p, 'ok', { adapter: id }) as StorageProgram<Result>;
+    return { variant: 'ok', adapter: id };
   },
 
-  get(input: Record<string, unknown>) {
-    let p = createProgram();
+  async get(input, storage) {
     const name = input.name as string;
     const kind = input.kind as string;
 
-    p = get(p, 'infrastructure', `adapter:${name}:${kind}`, 'entry');
+    const entry = await storage.get('infrastructure', `adapter:${name}:${kind}`);
     if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
+      return { variant: 'notfound' };
     }
 
-    return complete(p, 'ok', { adapter: entry.id }) as StorageProgram<Result>;
+    return { variant: 'ok', adapter: entry.id };
   },
 
-  findByBackend(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByBackend(input, storage) {
     const backend = input.backend as string;
-    p = find(p, 'infrastructure', { backend }, 'all');
+    const all = await storage.find('infrastructure', { backend });
 
-    return complete(p, 'ok', { adapters: JSON.stringify(all) }) as StorageProgram<Result>;
+    return { variant: 'ok', adapters: JSON.stringify(all) };
   },
 
-  findByConcept(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByConcept(input, storage) {
     const concept = input.concept as string;
-    p = find(p, 'infrastructure', 'all');
+    const all = await storage.find('infrastructure');
 
     const matched = all.filter(a => {
       const bound = JSON.parse(a.boundConcepts as string || '[]');
@@ -88,20 +76,18 @@ const _handler: FunctionalConceptHandler = {
       backend: a.backend,
     }));
 
-    return complete(p, 'ok', { adapters: JSON.stringify(result) }) as StorageProgram<Result>;
+    return { variant: 'ok', adapters: JSON.stringify(result) };
   },
 
-  findByRuntime(input: Record<string, unknown>) {
-    let p = createProgram();
+  async findByRuntime(input, storage) {
     const runtime = input.runtime as string;
-    p = find(p, 'infrastructure', { boundRuntime: runtime }, 'all');
+    const all = await storage.find('infrastructure', { boundRuntime: runtime });
 
-    return complete(p, 'ok', { adapters: JSON.stringify(all) }) as StorageProgram<Result>;
+    return { variant: 'ok', adapters: JSON.stringify(all) };
   },
 
-  sharedBackends(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'infrastructure', 'all');
+  async sharedBackends(_input, storage) {
+    const all = await storage.find('infrastructure');
 
     const backendMap = new Map<string, Array<{ adapter: string; kind: string; concepts: string[] }>>();
     for (const adapter of all) {
@@ -129,12 +115,11 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    return complete(p, 'ok', { groups: JSON.stringify(groups) }) as StorageProgram<Result>;
+    return { variant: 'ok', groups: JSON.stringify(groups) };
   },
 
-  networkTopology(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'infrastructure', { kind: 'transport' }, 'all');
+  async networkTopology(_input, storage) {
+    const all = await storage.find('infrastructure', { kind: 'transport' });
 
     const runtimes = new Set<string>();
     const edges: Array<{ from: string; to: string; protocol: string; adapter: string }> = [];
@@ -159,8 +144,6 @@ const _handler: FunctionalConceptHandler = {
 
     const nodes = Array.from(runtimes).map(r => ({ id: r, kind: 'runtime', label: r }));
 
-    return complete(p, 'ok', { graph: JSON.stringify({ nodes, edges }) }) as StorageProgram<Result>;
+    return { variant: 'ok', graph: JSON.stringify({ nodes, edges }) };
   },
 };
-
-export const infrastructureEntityHandler = autoInterpret(_handler);

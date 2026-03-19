@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SelectionPipelineDependenceProvider Handler
 //
@@ -8,40 +7,42 @@
 // matching -> widget resolution.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, find, put, complete, completeFrom,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
   return `selection-pipeline-dependence-provider-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  initialize(input: Record<string, unknown>) {
+export const selectionPipelineDependenceProviderHandler: ConceptHandler = {
+  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+    const id = nextId();
     const providerRef = `dependence-provider:selection-pipeline`;
 
-    let p = createProgram();
-    p = find(p, 'selection-pipeline-dependence-provider', { providerRef }, 'existing');
+    // Check if already registered
+    const existing = await storage.find('selection-pipeline-dependence-provider', { providerRef });
+    if (existing.length > 0) {
+      return { variant: 'ok', instance: existing[0].id as string };
+    }
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      if (existing.length > 0) {
-        return { instance: existing[0].id as string };
-      }
+    // Register this provider in storage
+    await storage.put('selection-pipeline-dependence-provider', id, {
+      id,
+      providerRef,
+    });
 
-      const id = nextId();
-      return { instance: id };
-    }) as StorageProgram<Result>;
+    // Register in the plugin registry for discovery by dependence graph computation
+    await storage.put('plugin-registry', `dependence-provider:${id}`, {
+      id: `dependence-provider:${id}`,
+      pluginKind: 'dependence-provider',
+      domain: 'selection-pipeline',
+      providerRef,
+      instanceId: id,
+    });
+
+    return { variant: 'ok', instance: id };
   },
 };
-
-export const selectionPipelineDependenceProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSelectionPipelineDependenceProviderCounter(): void {

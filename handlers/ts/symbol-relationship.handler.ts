@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SymbolRelationship Handler
 //
@@ -9,189 +8,149 @@
 // edge types.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, complete, completeFrom,
-  branch, mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
   return `symbol-relationship-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  add(input: Record<string, unknown>) {
+export const symbolRelationshipHandler: ConceptHandler = {
+  async add(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
     const target = input.target as string;
     const kind = input.kind as string;
 
-    let p = createProgram();
-    p = find(p, 'symbol-relationship', { source }, 'existing');
+    // Check for duplicate relationship (same source, target, kind)
+    const existing = await storage.find('symbol-relationship', { source });
+    const duplicate = existing.find(
+      (r) => r.target === target && r.kind === kind,
+    );
+    if (duplicate) {
+      return { variant: 'alreadyExists', existing: duplicate.id as string };
+    }
 
-    return branch(p,
-      (b) => {
-        const existing = b.existing as Record<string, unknown>[];
-        return existing.some(r => r.target === target && r.kind === kind);
-      },
-      (() => {
-        const t = createProgram();
-        return completeFrom(t, 'alreadyExists', (b) => {
-          const existing = b.existing as Record<string, unknown>[];
-          const duplicate = existing.find(r => r.target === target && r.kind === kind);
-          return { existing: duplicate!.id as string };
-        });
-      })(),
-      (() => {
-        const id = nextId();
-        let e = createProgram();
-        e = put(e, 'symbol-relationship', id, {
-          id,
-          source,
-          target,
-          kind,
-          metadata: '',
-        });
-        return complete(e, 'ok', { relationship: id }) as StorageProgram<Result>;
-      })(),
-    ) as StorageProgram<Result>;
+    const id = nextId();
+    await storage.put('symbol-relationship', id, {
+      id,
+      source,
+      target,
+      kind,
+      metadata: '',
+    });
+
+    return { variant: 'ok', relationship: id };
   },
 
-  findFrom(input: Record<string, unknown>) {
+  async findFrom(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
     const kind = input.kind as string;
 
     const criteria: Record<string, unknown> = { source };
     if (kind !== undefined && kind !== '') criteria.kind = kind;
 
-    let p = createProgram();
-    p = find(p, 'symbol-relationship', criteria, 'results');
+    const results = await storage.find('symbol-relationship', criteria);
 
-    return completeFrom(p, 'ok', (b) => {
-      const results = b.results as Record<string, unknown>[];
-      const relationships = results.map((r) => ({
-        id: r.id,
-        source: r.source,
-        target: r.target,
-        kind: r.kind,
-        metadata: r.metadata,
-      }));
-      return { relationships: JSON.stringify(relationships) };
-    }) as StorageProgram<Result>;
+    const relationships = results.map((r) => ({
+      id: r.id,
+      source: r.source,
+      target: r.target,
+      kind: r.kind,
+      metadata: r.metadata,
+    }));
+
+    return { variant: 'ok', relationships: JSON.stringify(relationships) };
   },
 
-  findTo(input: Record<string, unknown>) {
+  async findTo(input: Record<string, unknown>, storage: ConceptStorage) {
     const target = input.target as string;
     const kind = input.kind as string;
 
     const criteria: Record<string, unknown> = { target };
     if (kind !== undefined && kind !== '') criteria.kind = kind;
 
-    let p = createProgram();
-    p = find(p, 'symbol-relationship', criteria, 'results');
+    const results = await storage.find('symbol-relationship', criteria);
 
-    return completeFrom(p, 'ok', (b) => {
-      const results = b.results as Record<string, unknown>[];
-      const relationships = results.map((r) => ({
-        id: r.id,
-        source: r.source,
-        target: r.target,
-        kind: r.kind,
-        metadata: r.metadata,
-      }));
-      return { relationships: JSON.stringify(relationships) };
-    }) as StorageProgram<Result>;
+    const relationships = results.map((r) => ({
+      id: r.id,
+      source: r.source,
+      target: r.target,
+      kind: r.kind,
+      metadata: r.metadata,
+    }));
+
+    return { variant: 'ok', relationships: JSON.stringify(relationships) };
   },
 
-  transitiveClosure(input: Record<string, unknown>) {
+  async transitiveClosure(input: Record<string, unknown>, storage: ConceptStorage) {
     const start = input.start as string;
     const kind = input.kind as string;
     const direction = input.direction as string;
 
-    // Transitive closure requires iterative storage queries which can't be
-    // expressed as a static program. We fetch all relationships and compute
-    // the closure in a mapBindings/completeFrom.
-    let p = createProgram();
-    const criteria: Record<string, unknown> = {};
-    if (kind !== undefined && kind !== '') criteria.kind = kind;
-    p = find(p, 'symbol-relationship', criteria, 'allRels');
+    const visited = new Set<string>();
+    const paths: string[][] = [];
+    const queue: { symbol: string; path: string[] }[] = [
+      { symbol: start, path: [start] },
+    ];
 
-    return completeFrom(p, 'ok', (b) => {
-      const allRels = b.allRels as Record<string, unknown>[];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current.symbol)) continue;
+      visited.add(current.symbol);
 
-      const visited = new Set<string>();
-      const paths: string[][] = [];
-      const queue: { symbol: string; path: string[] }[] = [
-        { symbol: start, path: [start] },
-      ];
+      const criteria: Record<string, unknown> = {};
+      if (kind !== undefined && kind !== '') criteria.kind = kind;
 
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        if (visited.has(current.symbol)) continue;
-        visited.add(current.symbol);
-
-        let results: Record<string, unknown>[];
-        if (direction === 'backward') {
-          results = allRels.filter(r => r.target === current.symbol);
-        } else {
-          results = allRels.filter(r => r.source === current.symbol);
-        }
-
-        for (const rel of results) {
-          const nextSymbol = direction === 'backward'
-            ? (rel.source as string)
-            : (rel.target as string);
-          if (!visited.has(nextSymbol)) {
-            const newPath = [...current.path, nextSymbol];
-            paths.push(newPath);
-            queue.push({ symbol: nextSymbol, path: newPath });
-          }
-        }
+      let results: Record<string, unknown>[];
+      if (direction === 'backward') {
+        criteria.target = current.symbol;
+        results = await storage.find('symbol-relationship', criteria);
+      } else {
+        criteria.source = current.symbol;
+        results = await storage.find('symbol-relationship', criteria);
       }
 
-      visited.delete(start);
-      const reachable = Array.from(visited);
+      for (const rel of results) {
+        const nextSymbol = direction === 'backward'
+          ? (rel.source as string)
+          : (rel.target as string);
+        if (!visited.has(nextSymbol)) {
+          const newPath = [...current.path, nextSymbol];
+          paths.push(newPath);
+          queue.push({ symbol: nextSymbol, path: newPath });
+        }
+      }
+    }
 
-      return {
-        symbols: JSON.stringify(reachable),
-        paths: JSON.stringify(paths),
-      };
-    }) as StorageProgram<Result>;
+    // Remove the start symbol from visited set for the output
+    visited.delete(start);
+    const reachable = Array.from(visited);
+
+    return {
+      variant: 'ok',
+      symbols: JSON.stringify(reachable),
+      paths: JSON.stringify(paths),
+    };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage) {
     const relationship = input.relationship as string;
 
-    let p = createProgram();
-    p = get(p, 'symbol-relationship', relationship, 'record');
+    const record = await storage.get('symbol-relationship', relationship);
+    if (!record) {
+      return { variant: 'notfound' };
+    }
 
-    return branch(p,
-      (b) => !b.record,
-      (() => {
-        const t = createProgram();
-        return complete(t, 'notfound', {}) as StorageProgram<Result>;
-      })(),
-      (() => {
-        const e = createProgram();
-        return completeFrom(e, 'ok', (b) => {
-          const record = b.record as Record<string, unknown>;
-          return {
-            relationship: record.id as string,
-            source: record.source as string,
-            target: record.target as string,
-            kind: record.kind as string,
-            metadata: (record.metadata as string) || '',
-          };
-        });
-      })(),
-    ) as StorageProgram<Result>;
+    return {
+      variant: 'ok',
+      relationship: record.id as string,
+      source: record.source as string,
+      target: record.target as string,
+      kind: record.kind as string,
+      metadata: (record.metadata as string) || '',
+    };
   },
 };
-
-export const symbolRelationshipHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSymbolRelationshipCounter(): void {

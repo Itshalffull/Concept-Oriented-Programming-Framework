@@ -1,103 +1,343 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ApiSurface Concept Implementation (formerly Surface)
 //
 // Composes per-concept generated interfaces into cohesive,
-// unified API surfaces per target.
+// unified API surfaces per target. Merges routes, schemas,
+// commands, and tools across concepts.
 // Architecture doc: Clef Bind, Section 1.7
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.js';
 import { randomUUID } from 'crypto';
 import { toKebabCase, toCamelCase } from './providers/codegen-utils.js';
 
-type Result = { variant: string; [key: string]: unknown };
+// --- Internal Types ---
 
-interface RouteEntry { path: string; method: string; concept: string; action: string; }
+/** Route descriptor extracted from a concept's generated output. */
+interface RouteEntry {
+  path: string;
+  method: string;
+  concept: string;
+  action: string;
+}
 
-const TARGET_ENTRYPOINTS: Record<string, string> = { rest: 'router.ts', graphql: 'schema.ts', grpc: 'server.ts', cli: 'commands.ts', mcp: 'tools.ts' };
+/** Stored surface record persisted via ConceptStorage. */
+interface SurfaceRecord {
+  id: string;
+  suite: string;
+  target: string;
+  outputs: string[];
+  entrypoint: string;
+  entrypointContent: string;
+  conceptCount: number;
+  routes: RouteEntry[];
+}
 
-function capitalize(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
+// --- Target-to-Entrypoint Mapping ---
 
+const TARGET_ENTRYPOINTS: Record<string, string> = {
+  rest: 'router.ts',
+  graphql: 'schema.ts',
+  grpc: 'server.ts',
+  cli: 'commands.ts',
+  mcp: 'tools.ts',
+};
+
+// --- Route Extraction ---
+
+/**
+ * Extract route descriptors from a concept's output identifier.
+ *
+ * In a real system, each output string would reference generated code
+ * from which routes, schemas, services, or commands can be parsed.
+ * Here we derive a deterministic route entry per output so that
+ * conflict detection can operate across concepts.
+ */
 function extractRoutes(output: string, target: string): RouteEntry[] {
+  // Parse output identifier: expected format "conceptName-output"
   const conceptName = output.replace(/-output$/, '');
+
   switch (target) {
-    case 'rest': return [{ path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'list' }, { path: `/${conceptName}`, method: 'POST', concept: conceptName, action: 'create' }, { path: `/${conceptName}/:id`, method: 'GET', concept: conceptName, action: 'get' }];
-    case 'graphql': return [{ path: `Query.${conceptName}`, method: 'query', concept: conceptName, action: 'resolve' }, { path: `Mutation.${conceptName}`, method: 'mutation', concept: conceptName, action: 'mutate' }];
-    case 'grpc': return [{ path: `${capitalize(conceptName)}Service`, method: 'rpc', concept: conceptName, action: 'serve' }];
-    case 'cli': return [{ path: conceptName, method: 'command', concept: conceptName, action: 'execute' }];
-    case 'mcp': return [{ path: `${conceptName}_list`, method: 'tool', concept: conceptName, action: 'list' }, { path: `${conceptName}_get`, method: 'tool', concept: conceptName, action: 'get' }];
-    default: return [{ path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'default' }];
+    case 'rest':
+      return [
+        { path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'list' },
+        { path: `/${conceptName}`, method: 'POST', concept: conceptName, action: 'create' },
+        { path: `/${conceptName}/:id`, method: 'GET', concept: conceptName, action: 'get' },
+      ];
+    case 'graphql':
+      return [
+        { path: `Query.${conceptName}`, method: 'query', concept: conceptName, action: 'resolve' },
+        { path: `Mutation.${conceptName}`, method: 'mutation', concept: conceptName, action: 'mutate' },
+      ];
+    case 'grpc':
+      return [
+        { path: `${capitalize(conceptName)}Service`, method: 'rpc', concept: conceptName, action: 'serve' },
+      ];
+    case 'cli':
+      return [
+        { path: conceptName, method: 'command', concept: conceptName, action: 'execute' },
+      ];
+    case 'mcp':
+      return [
+        { path: `${conceptName}_list`, method: 'tool', concept: conceptName, action: 'list' },
+        { path: `${conceptName}_get`, method: 'tool', concept: conceptName, action: 'get' },
+      ];
+    default:
+      return [
+        { path: `/${conceptName}`, method: 'GET', concept: conceptName, action: 'default' },
+      ];
   }
 }
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// --- Conflict Detection ---
+
+/**
+ * Detect conflicting routes: same path+method across different concepts.
+ * Returns a list of human-readable conflict descriptions, empty if none.
+ */
 function detectConflicts(routes: RouteEntry[]): string[] {
   const seen = new Map<string, RouteEntry>();
   const conflicts: string[] = [];
+
   for (const route of routes) {
     const key = `${route.method}:${route.path}`;
     const existing = seen.get(key);
-    if (existing && existing.concept !== route.concept) conflicts.push(`${route.method} ${route.path} claimed by both "${existing.concept}" and "${route.concept}"`);
-    else seen.set(key, route);
+    if (existing && existing.concept !== route.concept) {
+      conflicts.push(
+        `${route.method} ${route.path} claimed by both "${existing.concept}" and "${route.concept}"`
+      );
+    } else {
+      seen.set(key, route);
+    }
   }
+
   return conflicts;
 }
 
-function generateEntrypointContent(suite: string, target: string, outputs: string[], routes: RouteEntry[]): string {
+// --- Entrypoint Content Generation ---
+
+/**
+ * Generate the composed entrypoint file content for a given target.
+ * Produces a representative source string that imports and wires
+ * together all concept outputs into a single surface.
+ */
+function generateEntrypointContent(
+  suite: string,
+  target: string,
+  outputs: string[],
+  routes: RouteEntry[],
+): string {
   const conceptNames = outputs.map(o => o.replace(/-output$/, ''));
   const header = `// Auto-generated entrypoint for suite "${suite}", target "${target}"\n`;
-  // Simplified entrypoint generation
-  const imports = conceptNames.map(c => `import { ${toCamelCase(c)}Module } from './${toKebabCase(c)}/${toKebabCase(c)}.module';`).join('\n');
-  const modules = conceptNames.map(c => `${toCamelCase(c)}Module`).join(', ');
-  return header + `${imports}\n\nexport const modules = [${modules}];\n`;
+
+  switch (target) {
+    case 'rest': {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Router } from './${kebab}/${kebab}.routes';`;
+        })
+        .join('\n');
+      const mounts = conceptNames
+        .map(c => `  router.use('/${toKebabCase(c)}', ${toCamelCase(c)}Router);`)
+        .join('\n');
+      return (
+        header +
+        `import { Router } from 'express';\n` +
+        `${imports}\n\n` +
+        `const router = Router();\n\n` +
+        `${mounts}\n\n` +
+        `export default router;\n`
+      );
+    }
+
+    case 'graphql': {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const pascal = capitalize(c);
+          return `import { ${pascal}TypeDefs, ${pascal}Resolvers } from './${kebab}/${kebab}.schema';`;
+        })
+        .join('\n');
+      const typeDefs = conceptNames.map(c => `${capitalize(c)}TypeDefs`).join(', ');
+      const resolvers = conceptNames.map(c => `${capitalize(c)}Resolvers`).join(', ');
+      return (
+        header +
+        `import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';\n` +
+        `${imports}\n\n` +
+        `export const typeDefs = mergeTypeDefs([${typeDefs}]);\n` +
+        `export const resolvers = mergeResolvers([${resolvers}]);\n`
+      );
+    }
+
+    case 'grpc': {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const pascal = capitalize(c);
+          return `import { ${pascal}Service } from './${kebab}/${kebab}.service';`;
+        })
+        .join('\n');
+      const services = conceptNames
+        .map(c => `  server.addService(${capitalize(c)}Service);`)
+        .join('\n');
+      return (
+        header +
+        `import { Server } from '@grpc/grpc-js';\n` +
+        `${imports}\n\n` +
+        `const server = new Server();\n\n` +
+        `${services}\n\n` +
+        `export default server;\n`
+      );
+    }
+
+    case 'cli': {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Command } from './${kebab}/${kebab}.command';`;
+        })
+        .join('\n');
+      const commands = conceptNames
+        .map(c => `  program.addCommand(${toCamelCase(c)}Command);`)
+        .join('\n');
+      return (
+        header +
+        `import { Command } from 'commander';\n` +
+        `${imports}\n\n` +
+        `const program = new Command();\n\n` +
+        `${commands}\n\n` +
+        `export default program;\n`
+      );
+    }
+
+    case 'mcp': {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Tools } from './${kebab}/${kebab}.tools';`;
+        })
+        .join('\n');
+      const tools = conceptNames.map(c => `...${toCamelCase(c)}Tools`).join(', ');
+      return (
+        header +
+        `${imports}\n\n` +
+        `export const tools = [${tools}];\n`
+      );
+    }
+
+    default: {
+      const imports = conceptNames
+        .map(c => {
+          const kebab = toKebabCase(c);
+          const camel = toCamelCase(c);
+          return `import { ${camel}Module } from './${kebab}/${kebab}.module';`;
+        })
+        .join('\n');
+      const modules = conceptNames.map(c => `${toCamelCase(c)}Module`).join(', ');
+      return (
+        header +
+        `${imports}\n\n` +
+        `export const modules = [${modules}];\n`
+      );
+    }
+  }
 }
 
-const _handler: FunctionalConceptHandler = {
-  compose(input: Record<string, unknown>) {
+// --- Concept Handler ---
+
+export const surfaceHandler: ConceptHandler = {
+  /**
+   * compose: Merge per-concept generated outputs into a unified surface.
+   *
+   * Creates an entrypoint file path based on target type, checks for
+   * conflicting routes across concepts, and stores the surface record.
+   */
+  async compose(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const suite = input.suite as string;
     const target = input.target as string;
     const outputs = input.outputs as string[];
 
-    if (!suite || typeof suite !== 'string') { const p = createProgram(); return complete(p, 'conflictingRoutes', { target: target ?? '', conflicts: ['suite is required'] }) as StorageProgram<Result>; }
-    if (!target || typeof target !== 'string') { const p = createProgram(); return complete(p, 'conflictingRoutes', { target: '', conflicts: ['target is required'] }) as StorageProgram<Result>; }
-    if (!Array.isArray(outputs) || outputs.length === 0) { const p = createProgram(); return complete(p, 'conflictingRoutes', { target, conflicts: ['outputs must be a non-empty list'] }) as StorageProgram<Result>; }
+    if (!suite || typeof suite !== 'string') {
+      return { variant: 'conflictingRoutes', target: target ?? '', conflicts: ['suite is required'] };
+    }
+    if (!target || typeof target !== 'string') {
+      return { variant: 'conflictingRoutes', target: '', conflicts: ['target is required'] };
+    }
+    if (!Array.isArray(outputs) || outputs.length === 0) {
+      return { variant: 'conflictingRoutes', target, conflicts: ['outputs must be a non-empty list'] };
+    }
 
+    // Collect all routes across concept outputs
     const allRoutes: RouteEntry[] = [];
-    for (const output of outputs) allRoutes.push(...extractRoutes(output, target));
+    for (const output of outputs) {
+      const routes = extractRoutes(output, target);
+      allRoutes.push(...routes);
+    }
 
+    // Detect conflicting routes (same path+method, different concepts)
     const conflicts = detectConflicts(allRoutes);
-    if (conflicts.length > 0) { const p = createProgram(); return complete(p, 'conflictingRoutes', { target, conflicts }) as StorageProgram<Result>; }
+    if (conflicts.length > 0) {
+      return { variant: 'conflictingRoutes', target, conflicts };
+    }
 
+    // Determine entrypoint filename from target type
     const entrypoint = TARGET_ENTRYPOINTS[target] ?? `${target}.ts`;
+
+    // Generate composed entrypoint content
     const entrypointContent = generateEntrypointContent(suite, target, outputs, allRoutes);
+
+    // Create and store the surface record
     const surfaceId = randomUUID();
+    const surfaceRecord: SurfaceRecord = {
+      id: surfaceId,
+      suite,
+      target,
+      outputs,
+      entrypoint,
+      entrypointContent,
+      conceptCount: outputs.length,
+      routes: allRoutes,
+    };
 
-    let p = createProgram();
-    p = put(p, 'surfaces', surfaceId, { id: surfaceId, suite, target, outputs, entrypoint, entrypointContent, conceptCount: outputs.length, routes: allRoutes } as unknown as Record<string, unknown>);
+    await storage.put('surfaces', surfaceId, surfaceRecord as unknown as Record<string, unknown>);
 
-    return complete(p, 'ok', { surface: surfaceId, entrypoint, conceptCount: outputs.length }) as StorageProgram<Result>;
+    return {
+      variant: 'ok',
+      surface: surfaceId,
+      entrypoint,
+      conceptCount: outputs.length,
+    };
   },
 
-  entrypoint(input: Record<string, unknown>) {
+  /**
+   * entrypoint: Load surface from storage and return composed entrypoint content.
+   */
+  async entrypoint(
+    input: Record<string, unknown>,
+    storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     const surfaceId = input.surface as string;
-    if (!surfaceId || typeof surfaceId !== 'string') { const p = createProgram(); return complete(p, 'ok', { content: '' }) as StorageProgram<Result>; }
 
-    let p = createProgram();
-    p = get(p, 'surfaces', surfaceId, 'record');
+    if (!surfaceId || typeof surfaceId !== 'string') {
+      return { variant: 'ok', content: '' };
+    }
 
-    return branch(p, 'record',
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const record = bindings.record as Record<string, unknown>;
-        return { content: record.entrypointContent as string };
-      }),
-      (elseP) => complete(elseP, 'ok', { content: '' }),
-    ) as StorageProgram<Result>;
+    const record = await storage.get('surfaces', surfaceId) as unknown as SurfaceRecord | null;
+    if (!record) {
+      return { variant: 'ok', content: '' };
+    }
+
+    return { variant: 'ok', content: record.entrypointContent };
   },
 };
-
-export const surfaceHandler = autoInterpret(_handler);

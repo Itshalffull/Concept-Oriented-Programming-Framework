@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DeploymentValidator Concept Implementation
 //
@@ -19,9 +18,7 @@
 // See Architecture doc Section 17.2.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '../../../runtime/types.js';
 import { generateId } from '../../../runtime/types.js';
 
 // --- Deployment Manifest Types ---
@@ -459,12 +456,11 @@ export function validateDeploymentManifest(
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  parse(input: Record<string, unknown>) {
-    let p = createProgram();
+export const deploymentValidatorHandler: ConceptHandler = {
+  async parse(input, storage) {
     const raw = input.raw as string;
     if (!raw || typeof raw !== 'string') {
-      p = complete(p, 'error', { message: 'raw is required and must be a string' }); return p;
+      return { variant: 'error', message: 'raw is required and must be a string' };
     }
 
     try {
@@ -472,35 +468,28 @@ const _handler: FunctionalConceptHandler = {
       const manifest = parseDeploymentManifest(parsed);
       const manifestId = generateId();
 
-      p = put(p, 'manifests', manifestId, { manifestId });
-      p = put(p, 'plan', manifestId, { manifestId, manifest });
+      await storage.put('manifests', manifestId, { manifestId });
+      await storage.put('plan', manifestId, { manifestId, manifest });
 
-      p = complete(p, 'ok', { manifest: manifestId }); return p;
+      return { variant: 'ok', manifest: manifestId };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      p = complete(p, 'error', { message, ...(stack ? { stack } : {}) }); return p;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 
-  validate(input: Record<string, unknown>) {
+  async validate(input, storage) {
     const manifestRef = input.manifest as string;
     if (!manifestRef) {
-      let p = createProgram();
-      p = complete(p, 'error', { issues: ['manifest reference is required'] });
-      return p;
+      return { variant: 'error', issues: ['manifest reference is required'] };
     }
 
-    let p = createProgram();
-    p = get(p, 'plan', manifestRef, 'stored');
-    p = branch(p, 'stored',
-      // then: manifest found
-      (tp) => complete(tp, 'error', { issues: ['full validation requires concept and sync registrations'] }),
-      // else: not found
-      (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
-    );
-    return p;
+    const stored = await storage.get('plan', manifestRef);
+    if (!stored || !stored.manifest) {
+      return { variant: 'error', issues: ['manifest not found'] };
+    }
+
+    return { variant: 'error', issues: ['full validation requires concept and sync registrations'] };
   },
 };
-
-export const deploymentValidatorHandler = autoInterpret(_handler);

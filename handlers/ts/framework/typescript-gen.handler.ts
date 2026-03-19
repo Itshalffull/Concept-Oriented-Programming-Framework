@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptGen Concept Implementation
 //
@@ -14,22 +13,22 @@
 //   - Type definitions file (types.ts)
 //   - Handler interface file (handler.ts)
 //   - Adapter file (adapter.ts)
-//   - Conformance test file (conformance.test.ts) -- when invariants exist
+//   - Conformance test file (conformance.test.ts) — when invariants exist
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type {
+  ConceptHandler,
+  ConceptStorage,
   ConceptManifest,
   ResolvedType,
+  ActionSchema,
+  VariantSchema,
+  InvariantSchema,
   InvariantStep,
   InvariantValue,
 } from '../../../runtime/types.js';
 
-type Result = { variant: string; [key: string]: unknown };
-
-// --- ResolvedType -> TypeScript mapping (Section 3.3) ---
+// --- ResolvedType → TypeScript mapping (Section 3.3) ---
 
 function resolvedTypeToTS(t: ResolvedType): string {
   switch (t.kind) {
@@ -69,7 +68,7 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// --- Type Definitions File (Section 7.3 -- <concept>.types.ts) ---
+// --- Type Definitions File (Section 7.3 — <concept>.types.ts) ---
 
 function generateTypesFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -109,7 +108,7 @@ function generateTypesFile(manifest: ConceptManifest): string {
   return lines.join('\n');
 }
 
-// --- Handler Interface File (Section 7.3 -- <concept>.handler.ts) ---
+// --- Handler Interface File (Section 7.3 — <concept>.handler.ts) ---
 
 function generateHandlerFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -133,7 +132,7 @@ function generateHandlerFile(manifest: ConceptManifest): string {
   return lines.join('\n');
 }
 
-// --- Adapter File (Section 7.3 -- <concept>.adapter.ts) ---
+// --- Adapter File (Section 7.3 — <concept>.adapter.ts) ---
 
 function generateAdapterFile(manifest: ConceptManifest): string {
   const conceptName = manifest.name;
@@ -208,7 +207,6 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `// generated: ${lowerName}.conformance.stub.test.ts`,
     `import { describe, it, expect } from "vitest";`,
     `import { createInMemoryStorage } from "@clef/runtime";`,
-    `import { interpret } from "../../../runtime/interpreter.ts";`,
     `import { ${handlerVar} } from "./${lowerName}.impl";`,
     '',
     `describe("${conceptName} conformance", () => {`,
@@ -221,11 +219,13 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push('');
 
     // Declare free variable bindings (Section 7.4 Rule 1)
+    // Use 'let' so setup steps can rebind output variables
     for (const fv of inv.freeVariables) {
       lines.push(`    let ${fv.name} = "${fv.testValue}";`);
     }
     if (inv.freeVariables.length > 0) lines.push('');
 
+    // Track which variables have been bound by setup step outputs
     const boundVars = new Set<string>();
 
     // After clause (Section 7.4 Rule 2)
@@ -278,33 +278,41 @@ function generateStepCode(
   const lines: string[] = [];
   const varName = `step${stepNum}`;
 
+  // Build the comment showing the original pattern
   const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
   const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
   lines.push(`    // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
 
+  // Build input object
   const inputFields = step.inputs.map(a => `${a.name}: ${invariantValueToTS(a.value)}`).join(', ');
 
-  lines.push(`    const ${varName}Program = ${handlerVar}.${step.action}(`);
+  lines.push(`    const ${varName} = await ${handlerVar}.${step.action}(`);
   lines.push(`      { ${inputFields} },`);
+  lines.push(`      storage,`);
   lines.push(`    );`);
-  lines.push(`    const ${varName} = await interpret(${varName}Program, storage);`);
 
+  // Assert variant
   lines.push(`    expect(${varName}.variant).toBe("${step.expectedVariant}");`);
 
+  // Assert output fields (Section 7.4 Rule 4)
   for (const out of step.expectedOutputs) {
     if (out.value.kind === 'literal') {
-      lines.push(`    expect(${varName}.output.${out.name}).toBe(${JSON.stringify(out.value.value)});`);
+      lines.push(`    expect((${varName} as any).${out.name}).toBe(${JSON.stringify(out.value.value)});`);
     } else if (out.value.kind === 'variable') {
       if (out.value.name === '_') {
-        lines.push(`    expect(${varName}.output.${out.name}).toBeDefined();`);
+        // Wildcard — just assert the field exists
+        lines.push(`    expect((${varName} as any).${out.name}).toBeDefined();`);
       } else if (boundVars && !boundVars.has(out.value.name)) {
+        // Setup step with unbound variable — capture the output value
         boundVars.add(out.value.name);
-        lines.push(`    ${out.value.name} = ${varName}.output.${out.name} as string;`);
+        lines.push(`    ${out.value.name} = (${varName} as any).${out.name};`);
       } else {
-        lines.push(`    expect(${varName}.output.${out.name}).toBe(${out.value.name});`);
+        // Assertion step or already-bound variable — assert consistency
+        lines.push(`    expect((${varName} as any).${out.name}).toBe(${out.value.name});`);
       }
     } else {
-      lines.push(`    expect(${varName}.output.${out.name}).toEqual(${invariantValueToTS(out.value)});`);
+      // Record or list — use deep equality
+      lines.push(`    expect((${varName} as any).${out.name}).toEqual(${invariantValueToTS(out.value)});`);
     }
   }
 
@@ -316,11 +324,11 @@ function generateStepCode(
 function generateDslRuntimeFile(): string {
   return `// generated: storage-program.dsl.stub.ts
 //
-// StorageProgram DSL -- Free Monad for Concept Handlers
+// StorageProgram DSL — Free Monad for Concept Handlers
 // Provides typed lenses/optics, effect tracking, algebraic effects,
 // transport effects, and functorial mapping for render programs.
 
-// -- Lens Types --
+// ── Lens Types ──────────────────────────────────────────────
 
 export type LensSegment =
   | { kind: 'relation'; name: string }
@@ -333,7 +341,7 @@ export interface StateLens {
   readonly focusType: string;
 }
 
-// -- Lens Builders --
+// ── Lens Builders ───────────────────────────────────────────
 
 export function relation(name: string): StateLens {
   return { segments: [{ kind: 'relation', name }], sourceType: 'store', focusType: \`relation<\${name}>\` };
@@ -351,7 +359,7 @@ export function composeLens(outer: StateLens, inner: StateLens): StateLens {
   return { segments: [...outer.segments, ...inner.segments], sourceType: outer.sourceType, focusType: inner.focusType };
 }
 
-// -- Effect Set --
+// ── Effect Set ──────────────────────────────────────────────
 
 export interface EffectSet {
   readonly reads: ReadonlySet<string>;
@@ -381,7 +389,7 @@ export function purityOf(effects: EffectSet): Purity {
   return 'pure';
 }
 
-// -- Instruction Types --
+// ── Instruction Types ───────────────────────────────────────
 
 export type Bindings = Record<string, unknown>;
 
@@ -400,7 +408,7 @@ export type Instruction =
   | { tag: 'pureFrom'; fn: (bindings: Bindings) => unknown }
   | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> };
 
-// -- StorageProgram --
+// ── StorageProgram ──────────────────────────────────────────
 
 export interface StorageProgram<A> {
   readonly instructions: Instruction[];
@@ -408,7 +416,7 @@ export interface StorageProgram<A> {
   readonly effects: EffectSet;
 }
 
-// -- Program Builders --
+// ── Program Builders ────────────────────────────────────────
 
 export function createProgram(): StorageProgram<void> {
   return { instructions: [], terminated: false, effects: emptyEffects() };
@@ -461,7 +469,7 @@ export function branch<A>(p: StorageProgram<unknown>, condition: (b: Bindings) =
   return { instructions: [...p.instructions, { tag: 'branch', condition, thenBranch: then_, elseBranch: else_ }], terminated: false, effects: mergeEffects(p.effects, mergeEffects(then_.effects, else_.effects)) };
 }
 
-// -- Analysis Helpers --
+// ── Analysis Helpers ────────────────────────────────────────
 
 export function extractCompletionVariants(p: StorageProgram<unknown>): Set<string> {
   const variants = new Set<string>();
@@ -492,7 +500,7 @@ export function validatePurity(p: StorageProgram<unknown>, declared: Purity): st
   return null;
 }
 
-// -- Render Program (Functorial Mapping) --
+// ── Render Program (Functorial Mapping) ─────────────────────
 
 export type RenderInstruction =
   | { tag: 'token'; path: string; value: unknown }
@@ -519,23 +527,25 @@ export function mapRenderProgram(
 
 // --- Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    const p = createProgram();
-    return complete(p, 'ok', {
+export const typescriptGenHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
       name: 'TypeScriptGen',
       inputKind: 'ConceptManifest',
       outputKind: 'TypeScriptSource',
       capabilities: JSON.stringify(['types', 'handler', 'adapter', 'conformance-tests', 'dsl-runtime']),
-    }) as StorageProgram<Result>;
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input, storage) {
+    const spec = input.spec as string;
     const manifest = input.manifest as ConceptManifest;
+
     if (!manifest || !manifest.name) {
-      const p = createProgram();
-      return complete(p, 'error', { message: 'Invalid manifest: missing concept name' }) as StorageProgram<Result>;
+      return { variant: 'error', message: 'Invalid manifest: missing concept name' };
     }
+
     try {
       const lowerName = manifest.name.toLowerCase();
       const files: { path: string; content: string }[] = [
@@ -544,19 +554,18 @@ const _handler: FunctionalConceptHandler = {
         { path: `${lowerName}.adapter.stub.ts`, content: generateAdapterFile(manifest) },
         { path: `storage-program.dsl.stub.ts`, content: generateDslRuntimeFile() },
       ];
+
+      // Add conformance tests if the manifest has invariants (Section 7.4)
       const conformanceTest = generateConformanceTestFile(manifest);
       if (conformanceTest) {
         files.push({ path: `${lowerName}.conformance.stub.test.ts`, content: conformanceTest });
       }
-      const p = createProgram();
-      return complete(p, 'ok', { files }) as StorageProgram<Result>;
+
+      return { variant: 'ok', files };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       const stack = err instanceof Error ? err.stack : undefined;
-      const p = createProgram();
-      return complete(p, 'error', { message, ...(stack ? { stack } : {}) }) as StorageProgram<Result>;
+      return { variant: 'error', message, ...(stack ? { stack } : {}) };
     }
   },
 };
-
-export const typescriptGenHandler = autoInterpret(_handler);

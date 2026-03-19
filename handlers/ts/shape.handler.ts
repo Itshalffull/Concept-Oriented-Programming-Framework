@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Shape Handler
 //
@@ -7,30 +6,22 @@
 // color, and optional text label.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, del, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
   return `shape-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  create(input: Record<string, unknown>) {
+export const shapeHandler: ConceptHandler = {
+  async create(input: Record<string, unknown>, storage: ConceptStorage) {
     const kind = input.kind as string;
     const fill = (input.fill as string) ?? null;
     const stroke = (input.stroke as string) ?? null;
     const text = (input.text as string) ?? null;
 
     const id = nextId();
-    let p = createProgram();
-    p = put(p, 'shape', id, {
+    await storage.put('shape', id, {
       id,
       kind,
       fill,
@@ -38,38 +29,40 @@ const _handler: FunctionalConceptHandler = {
       text,
     });
 
-    return complete(p, 'ok', { shape: id }) as StorageProgram<Result>;
+    return { variant: 'ok', shape: id };
   },
 
-  update(input: Record<string, unknown>) {
+  async update(input: Record<string, unknown>, storage: ConceptStorage) {
     const shape = input.shape as string;
 
-    let p = createProgram();
-    p = get(p, 'shape', shape, 'record');
+    const record = await storage.get('shape', shape);
+    if (!record) {
+      return { variant: 'notFound', message: `Shape '${shape}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => complete(elseP, 'notFound', { message: `Shape '${shape}' not found` }),
-    ) as StorageProgram<Result>;
+    const updated = { ...record };
+    if (input.kind !== undefined) updated.kind = input.kind;
+    if (input.fill !== undefined) updated.fill = input.fill;
+    if (input.stroke !== undefined) updated.stroke = input.stroke;
+    if (input.text !== undefined) updated.text = input.text;
+
+    await storage.put('shape', shape, updated);
+
+    return { variant: 'ok' };
   },
 
-  delete(input: Record<string, unknown>) {
+  async delete(input: Record<string, unknown>, storage: ConceptStorage) {
     const shape = input.shape as string;
 
-    let p = createProgram();
-    p = get(p, 'shape', shape, 'record');
+    const record = await storage.get('shape', shape);
+    if (!record) {
+      return { variant: 'notFound', message: `Shape '${shape}' not found` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        thenP = del(thenP, 'shape', shape);
-        return complete(thenP, 'ok', {});
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Shape '${shape}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.del('shape', shape);
+    return { variant: 'ok' };
   },
 };
-
-export const shapeHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetShapeCounter(): void {

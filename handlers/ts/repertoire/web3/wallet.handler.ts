@@ -1,134 +1,126 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Wallet Concept Implementation
 //
 // Verify wallet signatures and manage nonces for replay
 // protection. Wraps ecrecover for personal_sign and EIP-712
 // typed data verification.
-//
-// Note: Signature recovery (recoverAddress, recoverTypedDataSigner)
-// requires async dynamic imports. These are modeled as synchronous
-// stub fallbacks for the functional handler. In production, use
-// perform() transport effects once the interpreter supports them.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type {
+  ConceptHandler,
+  ConceptStorage,
+} from '../../../../runtime/types.js';
 
 /**
- * Synchronous stub for address recovery.
- * In environments without ethers, returns zero address.
- * Production deployments should use a perform() transport effect.
+ * Recover the signer address from a personal_sign signature.
+ * Uses ethers.js verifyMessage if available, falls back to stub.
  */
-function recoverAddressSync(_message: string, _signature: string): string {
-  return '0x0000000000000000000000000000000000000000';
+async function recoverAddress(message: string, signature: string): Promise<string> {
+  try {
+    const { verifyMessage } = await import('ethers');
+    return verifyMessage(message, signature);
+  } catch {
+    // Stub for environments without ethers — always returns zero address
+    return '0x0000000000000000000000000000000000000000';
+  }
 }
 
 /**
- * Synchronous stub for typed data signer recovery.
+ * Recover the signer from an EIP-712 typed data signature.
  */
-function recoverTypedDataSignerSync(
-  _domain: string,
-  _types: string,
-  _value: string,
-  _signature: string,
-): string {
-  return '0x0000000000000000000000000000000000000000';
+async function recoverTypedDataSigner(
+  domain: string,
+  types: string,
+  value: string,
+  signature: string,
+): Promise<string> {
+  try {
+    const { verifyTypedData } = await import('ethers');
+    return verifyTypedData(
+      JSON.parse(domain),
+      JSON.parse(types),
+      JSON.parse(value),
+      signature,
+    );
+  } catch {
+    return '0x0000000000000000000000000000000000000000';
+  }
 }
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _walletHandler: FunctionalConceptHandler = {
-  verify(input: Record<string, unknown>) {
+export const walletHandler: ConceptHandler = {
+  async verify(input, storage) {
     const address = (input.address as string).toLowerCase();
     const message = input.message as string;
     const signature = input.signature as string;
 
-    const recoveredAddress = recoverAddressSync(message, signature).toLowerCase();
+    try {
+      const recoveredAddress = (await recoverAddress(message, signature)).toLowerCase();
 
-    if (recoveredAddress !== address) {
-      return complete(createProgram(), 'invalid', {
-        address,
-        recoveredAddress,
-      }) as StorageProgram<Result>;
+      if (recoveredAddress === address) {
+        // Ensure address is registered
+        const existing = await storage.get('addresses', address);
+        if (!existing) {
+          await storage.put('addresses', address, {
+            address,
+            firstSeen: new Date().toISOString(),
+          });
+        }
+
+        return { variant: 'ok', address, recoveredAddress };
+      }
+
+      return { variant: 'invalid', address, recoveredAddress };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { variant: 'error', message };
     }
-
-    // Addresses match — ensure address is registered
-    let p = createProgram();
-    p = get(p, 'addresses', address, 'existing');
-
-    p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { address, recoveredAddress }),
-      (b) => {
-        let b2 = put(b, 'addresses', address, {
-          address,
-          firstSeen: new Date().toISOString(),
-        });
-        return complete(b2, 'ok', { address, recoveredAddress });
-      },
-    );
-
-    return p as StorageProgram<Result>;
   },
 
-  verifyTypedData(input: Record<string, unknown>) {
+  async verifyTypedData(input, storage) {
     const address = (input.address as string).toLowerCase();
     const domain = input.domain as string;
     const types = input.types as string;
     const value = input.value as string;
     const signature = input.signature as string;
 
-    const recovered = recoverTypedDataSignerSync(domain, types, value, signature).toLowerCase();
+    try {
+      const recovered = (await recoverTypedDataSigner(domain, types, value, signature)).toLowerCase();
 
-    if (recovered !== address) {
-      return complete(createProgram(), 'invalid', { address }) as StorageProgram<Result>;
+      if (recovered === address) {
+        return { variant: 'ok', address };
+      }
+
+      return { variant: 'invalid', address };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { variant: 'error', message: msg };
+    }
+  },
+
+  async getNonce(input, storage) {
+    const address = (input.address as string).toLowerCase();
+
+    const record = await storage.get('nonces', address);
+    if (!record) {
+      return { variant: 'notFound', address };
     }
 
-    return complete(createProgram(), 'ok', { address }) as StorageProgram<Result>;
+    return { variant: 'ok', address, nonce: record.nonce as number };
   },
 
-  getNonce(input: Record<string, unknown>) {
+  async incrementNonce(input, storage) {
     const address = (input.address as string).toLowerCase();
 
-    let p = createProgram();
-    p = get(p, 'nonces', address, 'record');
+    const record = await storage.get('nonces', address);
+    const currentNonce = record ? (record.nonce as number) : 0;
+    const newNonce = currentNonce + 1;
 
-    p = branch(p, 'record',
-      (b) => completeFrom(b, 'ok', (bindings) => {
-        const rec = bindings.record as Record<string, unknown>;
-        return { address, nonce: rec.nonce as number };
-      }),
-      (b) => complete(b, 'notFound', { address }),
-    );
-
-    return p as StorageProgram<Result>;
-  },
-
-  incrementNonce(input: Record<string, unknown>) {
-    const address = (input.address as string).toLowerCase();
-
-    let p = createProgram();
-    p = get(p, 'nonces', address, 'record');
-    p = mapBindings(p, (bindings) => {
-      const rec = bindings.record as Record<string, unknown> | null;
-      return rec ? (rec.nonce as number) : 0;
-    }, 'currentNonce');
-    p = mapBindings(p, (bindings) => (bindings.currentNonce as number) + 1, 'newNonce');
-    p = putFrom(p, 'nonces', address, (bindings) => ({
+    await storage.put('nonces', address, {
       address,
-      nonce: bindings.newNonce as number,
+      nonce: newNonce,
       updatedAt: new Date().toISOString(),
-    }));
+    });
 
-    return completeFrom(p, 'ok', (bindings) => ({
-      address,
-      nonce: bindings.newNonce as number,
-    })) as StorageProgram<Result>;
+    return { variant: 'ok', address, nonce: newNonce };
   },
 };
-
-export const walletHandler = autoInterpret(_walletHandler);

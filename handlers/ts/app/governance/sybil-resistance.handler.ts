@@ -1,71 +1,36 @@
-// @migrated dsl-constructs 2026-03-18
 // SybilResistance Concept Handler
 // Coordination concept ensuring each participant has at most one identity.
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, del, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-type Result = { variant: string; [key: string]: unknown };
-
-const _sybilResistanceHandler: FunctionalConceptHandler = {
-  verify(input: Record<string, unknown>) {
+export const sybilResistanceHandler: ConceptHandler = {
+  async verify(input, storage) {
     const { candidate, method, evidence } = input;
-    let p = createProgram();
-    p = get(p, 'verified', candidate as string, 'existing');
-
-    p = branch(p, 'existing',
-      (b) => complete(b, 'already_verified', { candidate }),
-      (b) => {
-        const id = `sybil-${Date.now()}`;
-        let b2 = put(b, 'verified', candidate as string, { id, candidate, method, evidence, verifiedAt: new Date().toISOString() });
-        return complete(b2, 'verified', { id });
-      },
-    );
-
-    return p as StorageProgram<Result>;
+    const existing = await storage.get('verified', candidate as string);
+    if (existing) return { variant: 'already_verified', candidate };
+    const id = `sybil-${Date.now()}`;
+    await storage.put('verified', candidate as string, { id, candidate, method, evidence, verifiedAt: new Date().toISOString() });
+    return { variant: 'verified', id };
   },
 
-  challenge(input: Record<string, unknown>) {
+  async challenge(input, storage) {
     const { targetId, challenger, evidence } = input;
-    let p = createProgram();
-    p = get(p, 'verified', targetId as string, 'target');
-
-    p = branch(p, 'target',
-      (b) => {
-        const challengeId = `challenge-${Date.now()}`;
-        let b2 = put(b, 'challenge', challengeId, { challengeId, targetId, challenger, evidence, status: 'Open' });
-        return complete(b2, 'challenge_opened', { challengeId });
-      },
-      (b) => complete(b, 'invalid_target', { targetId }),
-    );
-
-    return p as StorageProgram<Result>;
+    const target = await storage.get('verified', targetId as string);
+    if (!target) return { variant: 'invalid_target', targetId };
+    const challengeId = `challenge-${Date.now()}`;
+    await storage.put('challenge', challengeId, { challengeId, targetId, challenger, evidence, status: 'Open' });
+    return { variant: 'challenge_opened', challengeId };
   },
 
-  resolveChallenge(input: Record<string, unknown>) {
+  async resolveChallenge(input, storage) {
     const { challengeId, outcome } = input;
-    let p = createProgram();
-    p = get(p, 'challenge', challengeId as string, 'record');
-
-    p = branch(p, 'record',
-      (b) => {
-        if (outcome === 'upheld') {
-          return completeFrom(b, 'upheld', (bindings) => {
-            const record = bindings.record as Record<string, unknown>;
-            return { challengeId, removedId: record.targetId };
-          });
-        }
-        let b2 = put(b, 'challenge', challengeId as string, { status: 'Overturned' });
-        return complete(b2, 'overturned', { challengeId });
-      },
-      (b) => complete(b, 'not_found', { challengeId }),
-    );
-
-    return p as StorageProgram<Result>;
+    const record = await storage.get('challenge', challengeId as string);
+    if (!record) return { variant: 'not_found', challengeId };
+    if (outcome === 'upheld') {
+      await storage.del('verified', record.targetId as string);
+      await storage.put('challenge', challengeId as string, { ...record, status: 'Upheld' });
+      return { variant: 'upheld', challengeId, removedId: record.targetId };
+    }
+    await storage.put('challenge', challengeId as string, { ...record, status: 'Overturned' });
+    return { variant: 'overturned', challengeId };
   },
 };
-
-export const sybilResistanceHandler = autoInterpret(_sybilResistanceHandler);

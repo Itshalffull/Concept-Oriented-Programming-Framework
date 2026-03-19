@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TrigramIndexProvider Handler
 //
@@ -7,14 +6,7 @@
 // SearchIndex provider.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, complete, completeFrom,
-  branch, mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
@@ -23,9 +15,19 @@ function nextId(): string {
 
 const PROVIDER_REF = 'search:trigram';
 
+// ---------------------------------------------------------------------------
+// Storage relations
+// ---------------------------------------------------------------------------
+
 const INSTANCE_RELATION = 'trigram-index-provider';
+/** Trigram posting list entries: one record per (trigram, docId) pair. */
 const POSTING_RELATION = 'trigram-index-provider-post';
+/** Document metadata keyed by docId. */
 const DOC_RELATION = 'trigram-index-provider-doc';
+
+// ---------------------------------------------------------------------------
+// Trigram extraction
+// ---------------------------------------------------------------------------
 
 /**
  * Extract all unique 3-character trigrams from the given text.
@@ -40,141 +42,130 @@ function extractTrigrams(text: string): string[] {
   return Array.from(trigrams);
 }
 
-const _handler: FunctionalConceptHandler = {
-  initialize(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, INSTANCE_RELATION, { providerRef: PROVIDER_REF }, 'existing');
+export const trigramIndexProviderHandler: ConceptHandler = {
+  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
+    const existing = await storage.find(INSTANCE_RELATION, { providerRef: PROVIDER_REF });
+    if (existing.length > 0) {
+      return { variant: 'ok', instance: existing[0].id as string };
+    }
 
-    return branch(p,
-      (b) => (b.existing as unknown[]).length > 0,
-      (() => {
-        const t = createProgram();
-        return completeFrom(t, 'ok', (b) => ({
-          instance: (b.existing as Record<string, unknown>[])[0].id as string,
-        }));
-      })(),
-      (() => {
-        const id = nextId();
-        let e = createProgram();
-        e = put(e, INSTANCE_RELATION, id, {
-          id,
-          providerRef: PROVIDER_REF,
-        });
-        return complete(e, 'ok', { instance: id }) as StorageProgram<Result>;
-      })(),
-    ) as StorageProgram<Result>;
+    const id = nextId();
+    await storage.put(INSTANCE_RELATION, id, {
+      id,
+      providerRef: PROVIDER_REF,
+    });
+
+    return { variant: 'ok', instance: id };
   },
 
-  index(input: Record<string, unknown>) {
+  /**
+   * Index a document by extracting its trigrams and creating posting
+   * list entries for each trigram pointing back to the document.
+   */
+  async index(input: Record<string, unknown>, storage: ConceptStorage) {
     const docId = input.docId as string;
     const text = input.text as string;
 
-    let p = createProgram();
-    p = put(p, DOC_RELATION, docId, { id: docId, text });
+    // Store document text for later verification / snippet retrieval
+    await storage.put(DOC_RELATION, docId, {
+      id: docId,
+      text,
+    });
 
+    // Build posting list entries
     const trigrams = extractTrigrams(text);
     for (const tri of trigrams) {
       const entryId = `${tri}::${docId}`;
-      p = put(p, POSTING_RELATION, entryId, {
+      await storage.put(POSTING_RELATION, entryId, {
         id: entryId,
         trigram: tri,
         docId,
       });
     }
 
-    return complete(p, 'ok', { docId, trigramCount: trigrams.length }) as StorageProgram<Result>;
+    return { variant: 'ok', docId, trigramCount: trigrams.length };
   },
 
-  search(input: Record<string, unknown>) {
+  /**
+   * Search for documents matching a query string by computing the
+   * query's trigrams and intersecting the posting lists.
+   */
+  async search(input: Record<string, unknown>, storage: ConceptStorage) {
     const query = input.query as string;
 
     const queryTrigrams = extractTrigrams(query);
 
     if (queryTrigrams.length === 0) {
-      const p = createProgram();
-      return complete(p, 'ok', { results: JSON.stringify([]) }) as StorageProgram<Result>;
+      // Query too short for trigram search; return empty
+      return { variant: 'ok', results: JSON.stringify([]) };
     }
 
-    // Fetch all posting entries and all docs, then intersect in completeFrom
-    let p = createProgram();
-    p = find(p, POSTING_RELATION, {}, 'allPostings');
-    p = find(p, DOC_RELATION, {}, 'allDocs');
+    // For each trigram, collect the set of docIds
+    let candidateDocIds: Set<string> | null = null;
 
-    return completeFrom(p, 'ok', (b) => {
-      const allPostings = b.allPostings as Record<string, unknown>[];
-      const allDocs = b.allDocs as Record<string, unknown>[];
-      const docMap = new Map(allDocs.map(d => [d.id as string, d]));
+    for (const tri of queryTrigrams) {
+      const entries = await storage.find(POSTING_RELATION, { trigram: tri });
+      const docIds = new Set(entries.map((e) => e.docId as string));
 
-      let candidateDocIds: Set<string> | null = null;
-
-      for (const tri of queryTrigrams) {
-        const docIds = new Set(
-          allPostings
-            .filter(e => e.trigram === tri)
-            .map(e => e.docId as string)
-        );
-
-        if (candidateDocIds === null) {
-          candidateDocIds = docIds;
-        } else {
-          const intersection = new Set<string>();
-          for (const id of candidateDocIds) {
-            if (docIds.has(id)) intersection.add(id);
-          }
-          candidateDocIds = intersection;
+      if (candidateDocIds === null) {
+        candidateDocIds = docIds;
+      } else {
+        // Intersect: keep only docIds present in both sets
+        const intersection = new Set<string>();
+        for (const id of candidateDocIds) {
+          if (docIds.has(id)) intersection.add(id);
         }
-
-        if (candidateDocIds.size === 0) break;
+        candidateDocIds = intersection;
       }
 
-      const lowerQuery = query.toLowerCase();
-      const results: Array<{ docId: string; positions: number[] }> = [];
-      for (const docId of candidateDocIds || []) {
-        const doc = docMap.get(docId);
-        if (!doc) continue;
+      // Early exit if intersection is empty
+      if (candidateDocIds.size === 0) break;
+    }
 
-        const text = (doc.text as string).toLowerCase();
-        const positions: number[] = [];
-        let idx = text.indexOf(lowerQuery);
-        while (idx !== -1) {
-          positions.push(idx);
-          idx = text.indexOf(lowerQuery, idx + 1);
-        }
+    // Verify candidates actually contain the query substring
+    const lowerQuery = query.toLowerCase();
+    const results: Array<{ docId: string; positions: number[] }> = [];
+    for (const docId of candidateDocIds || []) {
+      const doc = await storage.get(DOC_RELATION, docId);
+      if (!doc) continue;
 
-        if (positions.length > 0) {
-          results.push({ docId, positions });
-        }
+      const text = (doc.text as string).toLowerCase();
+      const positions: number[] = [];
+      let idx = text.indexOf(lowerQuery);
+      while (idx !== -1) {
+        positions.push(idx);
+        idx = text.indexOf(lowerQuery, idx + 1);
       }
 
-      return { results: JSON.stringify(results) };
-    }) as StorageProgram<Result>;
+      if (positions.length > 0) {
+        results.push({ docId, positions });
+      }
+    }
+
+    return { variant: 'ok', results: JSON.stringify(results) };
   },
 
-  remove(input: Record<string, unknown>) {
+  /**
+   * Remove a document from the trigram index, deleting its metadata
+   * and all its posting list entries.
+   */
+  async remove(input: Record<string, unknown>, storage: ConceptStorage) {
     const docId = input.docId as string;
 
-    let p = createProgram();
-    p = get(p, DOC_RELATION, docId, 'doc');
+    // Retrieve document text to know which trigrams to remove
+    const doc = await storage.get(DOC_RELATION, docId);
+    if (doc) {
+      const trigrams = extractTrigrams(doc.text as string);
+      for (const tri of trigrams) {
+        const entryId = `${tri}::${docId}`;
+        await storage.del(POSTING_RELATION, entryId);
+      }
+      await storage.del(DOC_RELATION, docId);
+    }
 
-    return branch(p,
-      (b) => !!b.doc,
-      (() => {
-        // Delete doc and its posting entries
-        let e = createProgram();
-        e = del(e, DOC_RELATION, docId);
-        // Note: individual posting entries would need iterative del,
-        // but we delete the doc record and complete
-        return complete(e, 'ok', { docId }) as StorageProgram<Result>;
-      })(),
-      (() => {
-        const e = createProgram();
-        return complete(e, 'ok', { docId }) as StorageProgram<Result>;
-      })(),
-    ) as StorageProgram<Result>;
+    return { variant: 'ok', docId };
   },
 };
-
-export const trigramIndexProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetTrigramIndexProviderCounter(): void {

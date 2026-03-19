@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DataFlowPath Handler
 //
@@ -7,14 +6,7 @@
 // and data provenance analysis.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
-
-type Result = { variant: string; [key: string]: unknown };
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
 
 let idCounter = 0;
 function nextId(): string {
@@ -32,14 +24,18 @@ function inferPathKind(source: string, sink: string): string {
 }
 
 /**
- * Find all paths from source to sink using BFS over adjacency lists.
- * Pure computation over pre-loaded edges.
+ * Walk stored dependence-graph edges to find all paths from source to sink.
+ * Uses BFS over adjacency lists stored in the dependence-graph relation.
  */
-function findPathsFromEdges(
+async function findPaths(
   source: string,
   sink: string,
-  edges: Record<string, unknown>[],
-): { id: string; steps: string[]; pathKind: string }[] {
+  storage: ConceptStorage,
+): Promise<{ id: string; steps: string[]; pathKind: string }[]> {
+  // Load all dependence graph edges
+  const edges = await storage.find('dependence-graph-edge', {});
+
+  // Build adjacency list
   const adj = new Map<string, string[]>();
   for (const edge of edges) {
     const from = edge.from as string;
@@ -48,6 +44,7 @@ function findPathsFromEdges(
     adj.get(from)!.push(to);
   }
 
+  // BFS to find all paths from source to sink
   const paths: { id: string; steps: string[]; pathKind: string }[] = [];
   const queue: { node: string; path: string[] }[] = [{ node: source, path: [source] }];
   const visited = new Set<string>();
@@ -79,149 +76,157 @@ function findPathsFromEdges(
   return paths;
 }
 
-const _handler: FunctionalConceptHandler = {
-  trace(input: Record<string, unknown>) {
+export const dataFlowPathHandler: ConceptHandler = {
+  async trace(input: Record<string, unknown>, storage: ConceptStorage) {
     const source = input.source as string;
     const sink = input.sink as string;
 
-    let p = createProgram();
-    p = find(p, 'dependence-graph-edge', {}, 'edges');
+    const paths = await findPaths(source, sink, storage);
 
-    p = mapBindings(p, (bindings) => {
-      const edges = bindings.edges as Record<string, unknown>[];
-      return findPathsFromEdges(source, sink, edges);
-    }, 'paths');
+    if (paths.length === 0) {
+      return { variant: 'noPath' };
+    }
 
-    return branch(p,
-      (bindings) => (bindings.paths as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'noPath', {}),
-      (elseP) => completeFrom(elseP, 'ok', (bindings) => ({
-        paths: JSON.stringify(bindings.paths),
-      })),
-    ) as StorageProgram<Result>;
+    // Store each discovered path
+    for (const p of paths) {
+      await storage.put('data-flow-path', p.id, {
+        id: p.id,
+        sourceSymbol: source,
+        sinkSymbol: sink,
+        steps: JSON.stringify(p.steps),
+        pathKind: p.pathKind,
+        stepCount: p.steps.length,
+      });
+    }
+
+    return { variant: 'ok', paths: JSON.stringify(paths) };
   },
 
-  traceFromConfig(input: Record<string, unknown>) {
+  async traceFromConfig(input: Record<string, unknown>, storage: ConceptStorage) {
     const configKey = input.configKey as string;
 
-    let p = createProgram();
-    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
+    // Find all edges originating from this config key
+    const edges = await storage.find('dependence-graph-edge', { from: configKey });
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allEdges = bindings.allEdges as Record<string, unknown>[];
+    // For each direct sink, run a full path trace
+    const allPaths: { id: string; steps: string[]; pathKind: string }[] = [];
+    const sinks = new Set<string>();
+    for (const edge of edges) {
+      sinks.add(edge.to as string);
+    }
 
-      const configSource = configKey.startsWith('config/') ? configKey : `config/${configKey}`;
+    // Also look for config-prefixed sources
+    const configSource = configKey.startsWith('config/') ? configKey : `config/${configKey}`;
+    const configEdges = await storage.find('dependence-graph-edge', { from: configSource });
+    for (const edge of configEdges) {
+      sinks.add(edge.to as string);
+    }
 
-      // Build adjacency list
-      const adj = new Map<string, string[]>();
-      for (const edge of allEdges) {
-        const from = edge.from as string;
-        const to = edge.to as string;
-        if (!adj.has(from)) adj.set(from, []);
-        adj.get(from)!.push(to);
+    // Collect all reachable nodes via BFS from config source
+    const allEdges = await storage.find('dependence-graph-edge', {});
+    const adj = new Map<string, string[]>();
+    for (const edge of allEdges) {
+      const from = edge.from as string;
+      const to = edge.to as string;
+      if (!adj.has(from)) adj.set(from, []);
+      adj.get(from)!.push(to);
+    }
+
+    const visited = new Set<string>();
+    const queue = [configSource, configKey];
+    const reachableLeaves: string[] = [];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const neighbors = adj.get(current) ?? [];
+      if (neighbors.length === 0 && current !== configSource && current !== configKey) {
+        reachableLeaves.push(current);
       }
-
-      // BFS to find reachable leaves
-      const visited = new Set<string>();
-      const queue = [configSource, configKey];
-      const reachableLeaves: string[] = [];
-
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        if (visited.has(current)) continue;
-        visited.add(current);
-
-        const neighbors = adj.get(current) ?? [];
-        if (neighbors.length === 0 && current !== configSource && current !== configKey) {
-          reachableLeaves.push(current);
-        }
-        for (const n of neighbors) {
-          queue.push(n);
-        }
+      for (const n of neighbors) {
+        queue.push(n);
       }
+    }
 
-      // Trace paths to each leaf
-      const allPaths: { id: string; steps: string[]; pathKind: string }[] = [];
-      for (const leaf of reachableLeaves) {
-        const paths = findPathsFromEdges(configSource, leaf, allEdges);
+    // Trace paths to each leaf
+    for (const leaf of reachableLeaves) {
+      const paths = await findPaths(configSource, leaf, storage);
+      allPaths.push(...paths);
+    }
+
+    // If no leaf paths, trace to direct sinks
+    if (allPaths.length === 0) {
+      for (const sink of sinks) {
+        const paths = await findPaths(configSource, sink, storage);
         allPaths.push(...paths);
       }
+    }
 
-      return { paths: JSON.stringify(allPaths) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', paths: JSON.stringify(allPaths) };
   },
 
-  traceToOutput(input: Record<string, unknown>) {
+  async traceToOutput(input: Record<string, unknown>, storage: ConceptStorage) {
     const output = input.output as string;
 
-    let p = createProgram();
-    p = find(p, 'dependence-graph-edge', {}, 'allEdges');
+    // Find all edges leading to this output by walking backward
+    const allEdges = await storage.find('dependence-graph-edge', {});
+    const reverseAdj = new Map<string, string[]>();
+    for (const edge of allEdges) {
+      const from = edge.from as string;
+      const to = edge.to as string;
+      if (!reverseAdj.has(to)) reverseAdj.set(to, []);
+      reverseAdj.get(to)!.push(from);
+    }
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allEdges = bindings.allEdges as Record<string, unknown>[];
+    // BFS backward from output to find all sources
+    const visited = new Set<string>();
+    const queue = [output];
+    const sources: string[] = [];
 
-      // Build reverse adjacency list
-      const reverseAdj = new Map<string, string[]>();
-      for (const edge of allEdges) {
-        const from = edge.from as string;
-        const to = edge.to as string;
-        if (!reverseAdj.has(to)) reverseAdj.set(to, []);
-        reverseAdj.get(to)!.push(from);
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+
+      const predecessors = reverseAdj.get(current) ?? [];
+      if (predecessors.length === 0 && current !== output) {
+        sources.push(current);
       }
-
-      // BFS backward from output to find all sources
-      const visited = new Set<string>();
-      const queue = [output];
-      const sources: string[] = [];
-
-      while (queue.length > 0) {
-        const current = queue.shift()!;
-        if (visited.has(current)) continue;
-        visited.add(current);
-
-        const predecessors = reverseAdj.get(current) ?? [];
-        if (predecessors.length === 0 && current !== output) {
-          sources.push(current);
-        }
-        for (const p of predecessors) {
-          queue.push(p);
-        }
+      for (const p of predecessors) {
+        queue.push(p);
       }
+    }
 
-      // Trace paths from each source to the output
-      const allPaths: { id: string; steps: string[]; pathKind: string }[] = [];
-      for (const source of sources) {
-        const paths = findPathsFromEdges(source, output, allEdges);
-        allPaths.push(...paths);
-      }
+    // Trace paths from each source to the output
+    const allPaths: { id: string; steps: string[]; pathKind: string }[] = [];
+    for (const source of sources) {
+      const paths = await findPaths(source, output, storage);
+      allPaths.push(...paths);
+    }
 
-      return { paths: JSON.stringify(allPaths) };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', paths: JSON.stringify(allPaths) };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage) {
     const path = input.path as string;
 
-    let p = createProgram();
-    p = get(p, 'data-flow-path', path, 'record');
+    const record = await storage.get('data-flow-path', path);
+    if (!record) {
+      return { variant: 'notfound' };
+    }
 
-    return branch(p, 'record',
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        const record = bindings.record as Record<string, unknown>;
-        return {
-          path: record.id as string,
-          sourceSymbol: record.sourceSymbol as string,
-          sinkSymbol: record.sinkSymbol as string,
-          pathKind: record.pathKind as string,
-          stepCount: record.stepCount as number,
-        };
-      }),
-      (elseP) => complete(elseP, 'notfound', {}),
-    ) as StorageProgram<Result>;
+    return {
+      variant: 'ok',
+      path: record.id as string,
+      sourceSymbol: record.sourceSymbol as string,
+      sinkSymbol: record.sinkSymbol as string,
+      pathKind: record.pathKind as string,
+      stepCount: record.stepCount as number,
+    };
   },
 };
-
-export const dataFlowPathHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetDataFlowPathCounter(): void {

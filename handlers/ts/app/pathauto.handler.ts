@@ -1,11 +1,5 @@
-// @migrated dsl-constructs 2026-03-18
 // Pathauto Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
 function slugify(input: string): string {
   return input
@@ -17,63 +11,68 @@ function slugify(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-const _pathautoHandler: FunctionalConceptHandler = {
-  generateAlias(input: Record<string, unknown>) {
+export const pathautoHandler: ConceptHandler = {
+  async generateAlias(input, storage) {
     const pattern = input.pattern as string;
     const entity = input.entity as string;
 
-    let p = createProgram();
-    p = spGet(p, 'pattern', pattern, 'patternEntry');
+    const patternEntry = await storage.get('pattern', pattern);
 
-    // Simplified: generate alias from entity directly
-    const alias = slugify(entity);
+    let alias: string;
+    if (patternEntry) {
+      const template = patternEntry.template as string;
+      // Replace tokens in template with entity-derived values
+      alias = template.replace(/\[entity\]/g, entity);
+    } else {
+      // No pattern stored; derive alias directly from the entity
+      alias = entity;
+    }
+    alias = slugify(alias);
 
-    p = put(p, 'alias', `${pattern}:${entity}`, {
+    // Store the generated alias
+    await storage.put('alias', `${pattern}:${entity}`, {
       pattern,
       entity,
       alias,
     });
 
-    return complete(p, 'ok', { alias }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', alias };
   },
 
-  bulkGenerate(input: Record<string, unknown>) {
+  async bulkGenerate(input, storage) {
     const pattern = input.pattern as string;
     const entities = input.entities as string;
 
-    let p = createProgram();
-    p = spGet(p, 'pattern', pattern, 'patternEntry');
-    p = branch(p, 'patternEntry',
-      (b) => {
-        const entityList = JSON.parse(entities) as string[];
-        const aliases: Record<string, string> = {};
+    const patternEntry = await storage.get('pattern', pattern);
+    if (!patternEntry) {
+      return { variant: 'notfound' };
+    }
 
-        for (const entity of entityList) {
-          const alias = slugify(entity);
-          b = put(b, 'alias', `${pattern}:${entity}`, {
-            pattern,
-            entity,
-            alias,
-          });
-          aliases[entity] = alias;
-        }
+    const template = patternEntry.template as string;
+    const entityList = JSON.parse(entities) as string[];
+    const aliases: Record<string, string> = {};
 
-        return complete(b, 'ok', { aliases: JSON.stringify(aliases) });
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
+    for (const entity of entityList) {
+      let alias = template.replace(/\[entity\]/g, entity);
+      alias = slugify(alias);
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      await storage.put('alias', `${pattern}:${entity}`, {
+        pattern,
+        entity,
+        alias,
+      });
+
+      aliases[entity] = alias;
+    }
+
+    return { variant: 'ok', aliases: JSON.stringify(aliases) };
   },
 
-  cleanString(input: Record<string, unknown>) {
+  async cleanString(input) {
     const rawInput = input.input as string;
+
     const cleaned = slugify(rawInput);
 
-    let p = createProgram();
-    return complete(p, 'ok', { cleaned }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', cleaned };
   },
 };
-
-export const pathautoHandler = autoInterpret(_pathautoHandler);
-

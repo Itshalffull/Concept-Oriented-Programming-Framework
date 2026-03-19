@@ -1,4 +1,3 @@
-// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Claude Skills Target Provider Handler
 //
@@ -16,10 +15,7 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
+import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ResolvedType } from '../../../../runtime/types.js';
 import {
   toKebabCase,
   toCamelCase,
@@ -197,20 +193,10 @@ function generateSkillMd(
     }
   }
 
-  // Tool permissions from annotation, with sensible defaults
+  // Tool permissions from annotation
   const toolPerms = contentKey<string[]>(annot?.concept, 'tool-permissions');
   if (toolPerms && toolPerms.length > 0) {
     lines.push(`allowed-tools: ${toolPerms.join(', ')}`);
-  } else {
-    // Default: read-only tools for query/entity concepts,
-    // read+write for scaffold-gen/create concepts
-    const groupKebab = toKebabCase(group.name);
-    const isWriteSkill = groupKebab.includes('scaffold') || groupKebab.startsWith('create')
-      || groupKebab.includes('deploy') || groupKebab.includes('project-scaffold');
-    const defaultTools = isWriteSkill
-      ? 'Read, Grep, Glob, Edit, Write, Bash'
-      : 'Read, Grep, Glob, Bash';
-    lines.push(`allowed-tools: ${defaultTools}`);
   }
 
   lines.push('---');
@@ -584,14 +570,17 @@ function generateCommandRunner(
 
 // --- Concept Handler ---
 
-const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeSkillsTarget',
+export const claudeSkillsTargetHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'ClaudeSkillsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeSkills',
       capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
       targetKey: 'claude-skills',
-      providerType: 'target' }); return p; }
+      providerType: 'target',
+    };
   },
 
   /**
@@ -602,9 +591,10 @@ const _handler: FunctionalConceptHandler = {
    *
    * Returns files: SKILL.md + .commands.ts per concept in the group.
    */
-  generate(
+  async generate(
     input: Record<string, unknown>,
-  ) {
+    _storage: ConceptStorage,
+  ): Promise<{ variant: string; [key: string]: unknown }> {
     // --- Parse config ---
     let config: Record<string, unknown> = {};
     if (input.config && typeof input.config === 'string') {
@@ -618,14 +608,14 @@ const _handler: FunctionalConceptHandler = {
     // --- Single concept path (per-concept mode or called per-concept by generator) ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      return { variant: 'ok', files: [] };
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -636,7 +626,7 @@ const _handler: FunctionalConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+        return { variant: 'ok', files: [] };
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -763,8 +753,6 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    return { variant: 'ok', files };
   },
 };
-
-export const claudeSkillsTargetHandler = autoInterpret(_handler);

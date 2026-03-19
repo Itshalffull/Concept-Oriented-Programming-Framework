@@ -1,56 +1,60 @@
-// @migrated dsl-constructs 2026-03-18
 // PluginRegistry Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _pluginRegistryHandler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    const category = (input.category ?? input.type ?? '') as string;
-    const providerId = (input.provider_id ?? input.name ?? '') as string;
-    const handler = (input.handler ?? input.metadata ?? '') as string;
+export const pluginRegistryHandler: ConceptHandler = {
+  async register(input, storage) {
+    const type = input.type as string;
+    const name = input.name as string;
+    const metadata = input.metadata as string;
 
-    const key = `${category}:${providerId}`;
+    // Check if plugin already registered (idempotent)
+    const existing = await storage.get('pluginDefinition', name);
+    if (existing && existing.type === type) {
+      return { variant: 'exists', plugin: existing.id || name };
+    }
 
-    let p = createProgram();
-    p = spGet(p, 'pluginregistry', key, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { plugin: key }),
-      (b) => {
-        let b2 = put(b, 'pluginregistry', key, {
-          id: key,
-          category,
-          provider_id: providerId,
-          handler,
-          type: category,
-          name: providerId,
-          registeredAt: new Date().toISOString(),
-        });
-        return complete(b2, 'ok', { plugin: key });
-      },
-    );
+    const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('pluginDefinition', name, {
+      id: name,
+      type,
+      name,
+      metadata: parsedMetadata,
+      registeredAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok', plugin: name };
   },
 
-  discover(input: Record<string, unknown>) {
+  async discover(input, storage) {
     const type = input.type as string;
 
-    let p = createProgram();
-    p = find(p, 'pluginregistry', { type }, 'allDefinitions');
+    const allDefinitions = await storage.find('pluginDefinition', { type });
+    const plugins = allDefinitions.map(def => ({
+      id: def.id,
+      type: def.type,
+      metadata: def.metadata,
+    }));
 
-    return complete(p, 'ok', { plugins: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', plugins: JSON.stringify(plugins) };
   },
 
-  createInstance(input: Record<string, unknown>) {
+  async createInstance(input, storage) {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
-    let p = createProgram();
-    p = spGet(p, 'pluginregistry', plugin, 'definition');
+    let definition = await storage.get('pluginDefinition', plugin);
+    if (!definition) {
+      // Auto-create a minimal plugin definition
+      definition = {
+        id: plugin,
+        type: 'unknown',
+        name: plugin,
+        metadata: {},
+        registeredAt: new Date().toISOString(),
+      };
+      await storage.put('pluginDefinition', plugin, definition);
+    }
 
     const instanceId = `${plugin}:${Date.now()}`;
     const parsedConfig = JSON.parse(config) as Record<string, unknown>;
@@ -58,64 +62,72 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
     const instance = {
       instanceId,
       plugin,
-      type: 'unknown',
+      type: definition.type,
       config: parsedConfig,
-      metadata: {},
+      metadata: definition.metadata,
       createdAt: Date.now(),
     };
 
-    p = put(p, 'pluginInstance', instanceId, instance);
+    await storage.put('pluginInstance', instanceId, instance);
 
-    return complete(p, 'ok', { instance: JSON.stringify(instance) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', instance: JSON.stringify(instance) };
   },
 
-  getDefinitions(input: Record<string, unknown>) {
+  async getDefinitions(input, storage) {
     const type = input.type as string;
 
-    let p = createProgram();
-    p = find(p, 'pluginregistry', { type }, 'allDefinitions');
+    const allDefinitions = await storage.find('pluginDefinition', { type });
+    const definitions = allDefinitions.map(def => ({
+      id: def.id,
+      type: def.type,
+      metadata: def.metadata,
+      config: def.config,
+    }));
 
-    return complete(p, 'ok', { definitions: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return { variant: 'ok', definitions: JSON.stringify(definitions) };
   },
 
-  alterDefinitions(input: Record<string, unknown>) {
+  async alterDefinitions(input, storage) {
     const type = input.type as string;
     const alterations = input.alterations as string;
 
-    let p = createProgram();
-    p = find(p, 'pluginregistry', { type }, 'allDefinitions');
+    const parsedAlterations = JSON.parse(alterations) as Record<string, unknown>;
+    const allDefinitions = await storage.find('pluginDefinition', { type });
 
-    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    for (const def of allDefinitions) {
+      const id = def.id as string;
+      const updated = { ...def, ...parsedAlterations };
+      await storage.put('pluginDefinition', id, updated);
+    }
+
+    return { variant: 'ok' };
   },
 
-  derivePlugins(input: Record<string, unknown>) {
+  async derivePlugins(input, storage) {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
-    let p = createProgram();
-    p = spGet(p, 'pluginregistry', plugin, 'baseDefinition');
-    p = branch(p, 'baseDefinition',
-      (b) => {
-        const parsedConfig = JSON.parse(config) as Record<string, unknown>;
-        const derivedId = `${plugin}:derived:${Date.now()}`;
+    const baseDefinition = await storage.get('pluginDefinition', plugin);
+    if (!baseDefinition) {
+      return { variant: 'notfound' };
+    }
 
-        const derived = {
-          id: derivedId,
-          type: 'unknown',
-          metadata: {},
-          config: parsedConfig,
-          derivedFrom: plugin,
-        };
+    const parsedConfig = JSON.parse(config) as Record<string, unknown>;
+    const derivedId = `${plugin}:derived:${Date.now()}`;
 
-        let b2 = put(b, 'pluginregistry', derivedId, derived);
-        return complete(b2, 'ok', { derived: JSON.stringify(derived) });
-      },
-      (b) => complete(b, 'notfound', {}),
-    );
+    const baseConfig = (baseDefinition.config ?? {}) as Record<string, unknown>;
+    const mergedConfig = { ...baseConfig, ...parsedConfig };
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const derived = {
+      id: derivedId,
+      type: baseDefinition.type,
+      metadata: baseDefinition.metadata,
+      config: mergedConfig,
+      derivedFrom: plugin,
+    };
+
+    await storage.put('pluginDefinition', derivedId, derived);
+
+    return { variant: 'ok', derived: JSON.stringify(derived) };
   },
 };
-
-export const pluginRegistryHandler = autoInterpret(_pluginRegistryHandler);
-

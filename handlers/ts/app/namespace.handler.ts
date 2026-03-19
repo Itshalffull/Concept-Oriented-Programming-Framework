@@ -1,98 +1,101 @@
-// @migrated dsl-constructs 2026-03-18
 // Namespace Concept Implementation
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptHandler } from '@clef/runtime';
 
-const _namespaceHandler: FunctionalConceptHandler = {
-  createNamespacedPage(input: Record<string, unknown>) {
+export const namespaceHandler: ConceptHandler = {
+  async createNamespacedPage(input, storage) {
     const node = input.node as string;
     const path = input.path as string;
 
-    let p = createProgram();
-    p = spGet(p, 'namespace', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'A node already exists at this path' }),
-      (b) => {
-        const segments = path.split('/');
-        const parentPath = segments.length > 1
-          ? segments.slice(0, -1).join('/')
-          : '';
+    const existing = await storage.get('namespace', node);
+    if (existing) {
+      return { variant: 'exists', message: 'A node already exists at this path' };
+    }
 
-        let b2 = put(b, 'namespace', node, {
-          node,
-          path,
-          separator: '/',
-          parent: parentPath,
-          createdAt: new Date().toISOString(),
-        });
-        return complete(b2, 'ok', {});
-      },
-    );
+    const segments = path.split('/');
+    const parentPath = segments.length > 1
+      ? segments.slice(0, -1).join('/')
+      : '';
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('namespace', node, {
+      node,
+      path,
+      separator: '/',
+      parent: parentPath,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { variant: 'ok' };
   },
 
-  getChildren(input: Record<string, unknown>) {
+  async getChildren(input, storage) {
     const node = input.node as string;
 
-    let p = createProgram();
-    p = spGet(p, 'namespace', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = find(b, 'namespace', {}, 'allNodes');
-        return complete(b2, 'ok', { children: '' });
-      },
-      (b) => complete(b, 'notfound', { message: 'Node does not exist' }),
-    );
+    const existing = await storage.get('namespace', node);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Node does not exist' };
+    }
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const nodePath = existing.path as string;
+    const allNodes = await storage.find('namespace');
+    const children: string[] = [];
+
+    for (const record of allNodes) {
+      if (record.parent === nodePath && record.node !== node) {
+        children.push(record.node as string);
+      }
+    }
+
+    // Return children as plain string: single child directly, empty string when none
+    const childrenValue = children.length === 0 ? '' : (children.length === 1 ? children[0] : children.join(','));
+    return { variant: 'ok', children: childrenValue };
   },
 
-  getHierarchy(input: Record<string, unknown>) {
+  async getHierarchy(input, storage) {
     const node = input.node as string;
 
-    let p = createProgram();
-    p = spGet(p, 'namespace', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = find(b, 'namespace', {}, 'allNodes');
-        return complete(b2, 'ok', { hierarchy: JSON.stringify([node]) });
-      },
-      (b) => complete(b, 'notfound', { message: 'Node does not exist' }),
-    );
+    const existing = await storage.get('namespace', node);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Node does not exist' };
+    }
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const nodePath = existing.path as string;
+    const allNodes = await storage.find('namespace');
+    const hierarchy: string[] = [node];
+
+    const collectDescendants = (parentPath: string) => {
+      for (const record of allNodes) {
+        if (record.parent === parentPath && !hierarchy.includes(record.node as string)) {
+          hierarchy.push(record.node as string);
+          collectDescendants(record.path as string);
+        }
+      }
+    };
+
+    collectDescendants(nodePath);
+
+    return { variant: 'ok', hierarchy: JSON.stringify(hierarchy) };
   },
 
-  move(input: Record<string, unknown>) {
+  async move(input, storage) {
     const node = input.node as string;
     const newPath = input.newPath as string;
 
-    let p = createProgram();
-    p = spGet(p, 'namespace', node, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        const segments = newPath.split('/');
-        const parentPath = segments.length > 1
-          ? segments.slice(0, -1).join('/')
-          : '';
+    const existing = await storage.get('namespace', node);
+    if (!existing) {
+      return { variant: 'notfound', message: 'Node does not exist' };
+    }
 
-        let b2 = put(b, 'namespace', node, {
-          path: newPath,
-          parent: parentPath,
-        });
-        return complete(b2, 'ok', {});
-      },
-      (b) => complete(b, 'notfound', { message: 'Node does not exist' }),
-    );
+    const segments = newPath.split('/');
+    const parentPath = segments.length > 1
+      ? segments.slice(0, -1).join('/')
+      : '';
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    await storage.put('namespace', node, {
+      ...existing,
+      path: newPath,
+      parent: parentPath,
+    });
+
+    return { variant: 'ok' };
   },
 };
-
-export const namespaceHandler = autoInterpret(_namespaceHandler);
-

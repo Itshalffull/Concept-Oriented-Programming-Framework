@@ -1,85 +1,141 @@
-// @migrated dsl-constructs 2026-03-18
 // TerraformProvider Concept Implementation
-// Generate and apply Terraform HCL modules from Clef deploy plans.
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, put, del, putFrom, branch, complete, mapBindings,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+// Generate and apply Terraform HCL modules from Clef deploy plans. Owns
+// Terraform state file management, lock handling, and workspace configuration.
+import type { ConceptHandler } from '@clef/runtime';
 
-const _terraformProviderHandler: FunctionalConceptHandler = {
-  register(_input: Record<string, unknown>) {
-    let p = createProgram();
-    return complete(p, 'ok', {
-      name: 'TerraformProvider', inputKind: 'DeployPlan', outputKind: 'TerraformHCL',
-      capabilities: JSON.stringify(['hcl', 'workspace', 'state']), providerKey: 'terraform', providerType: 'iac',
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+export const terraformProviderHandler: ConceptHandler = {
+  async register() {
+    return {
+      variant: 'ok',
+      name: 'TerraformProvider',
+      inputKind: 'DeployPlan',
+      outputKind: 'TerraformHCL',
+      capabilities: JSON.stringify(['hcl', 'workspace', 'state']),
+      providerKey: 'terraform',
+      providerType: 'iac',
+    };
   },
 
-  generate(input: Record<string, unknown>) {
+  async generate(input, storage) {
     const plan = input.plan as string;
+
     const workspaceId = `tf-workspace-${plan}-${Date.now()}`;
-    const files = [`terraform/${plan}/main.tf`, `terraform/${plan}/variables.tf`, `terraform/${plan}/outputs.tf`, `terraform/${plan}/providers.tf`];
-    let p = createProgram();
-    p = put(p, 'workspace', workspaceId, { stateBackend: 's3://terraform-state', lockTable: 'terraform-locks', workspace: `ws-${plan}`, lockId: null, serial: 0, lastAppliedAt: null, createdAt: new Date().toISOString() });
-    return complete(p, 'ok', { workspace: workspaceId, files }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const files = [
+      `terraform/${plan}/main.tf`,
+      `terraform/${plan}/variables.tf`,
+      `terraform/${plan}/outputs.tf`,
+      `terraform/${plan}/providers.tf`,
+    ];
+
+    await storage.put('workspace', workspaceId, {
+      stateBackend: 's3://terraform-state',
+      lockTable: 'terraform-locks',
+      workspace: `ws-${plan}`,
+      lockId: null,
+      serial: 0,
+      lastAppliedAt: null,
+      createdAt: new Date().toISOString(),
+    });
+
+    return {
+      variant: 'ok',
+      workspace: workspaceId,
+      files,
+    };
   },
 
-  preview(input: Record<string, unknown>) {
+  async preview(input, storage) {
     const workspace = input.workspace as string;
-    let p = createProgram();
-    p = spGet(p, 'workspace', workspace, 'record');
-    p = branch(p, 'record',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return record.lockId as string | null;
-        }, 'lockId');
-        b2 = branch(b2, (bindings) => !(bindings.lockId as string | null),
-          (() => { let t = createProgram(); return complete(t, 'ok', { workspace, toCreate: 4, toUpdate: 1, toDelete: 0 }); })(),
-          (() => { let e = createProgram(); return complete(e, 'stateLocked', { workspace, lockId: '', lockedBy: 'another-process' }); })(),
-        );
-        return b2;
-      },
-      (b) => complete(b, 'backendInitRequired', { workspace }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const record = await storage.get('workspace', workspace);
+    if (!record) {
+      return {
+        variant: 'backendInitRequired',
+        workspace,
+      };
+    }
+
+    const lockId = record.lockId as string | null;
+    if (lockId) {
+      return {
+        variant: 'stateLocked',
+        workspace,
+        lockId,
+        lockedBy: 'another-process',
+      };
+    }
+
+    return {
+      variant: 'ok',
+      workspace,
+      toCreate: 4,
+      toUpdate: 1,
+      toDelete: 0,
+    };
   },
 
-  apply(input: Record<string, unknown>) {
+  async apply(input, storage) {
     const workspace = input.workspace as string;
-    let p = createProgram();
-    p = spGet(p, 'workspace', workspace, 'record');
-    p = branch(p, 'record',
-      (b) => {
-        let b2 = mapBindings(b, (bindings) => !((bindings.record as Record<string, unknown>).lockId as string | null), 'notLocked');
-        b2 = branch(b2, (bindings) => bindings.notLocked as boolean,
-          (() => {
-            let t = createProgram();
-            t = putFrom(t, 'workspace', workspace, (bindings) => {
-              const record = bindings.record as Record<string, unknown>;
-              return { ...record, serial: (record.serial as number) + 1, lastAppliedAt: new Date().toISOString() };
-            });
-            return complete(t, 'ok', { workspace, created: ['aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app', 'aws_security_group.web'], updated: ['aws_iam_role.exec'] });
-          })(),
-          (() => { let e = createProgram(); return complete(e, 'stateLocked', { workspace, lockId: '' }); })(),
-        );
-        return b2;
-      },
-      (b) => complete(b, 'stateLocked', { workspace, lockId: 'unknown' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const record = await storage.get('workspace', workspace);
+    if (!record) {
+      return {
+        variant: 'stateLocked',
+        workspace,
+        lockId: 'unknown',
+      };
+    }
+
+    const lockId = record.lockId as string | null;
+    if (lockId) {
+      return {
+        variant: 'stateLocked',
+        workspace,
+        lockId,
+      };
+    }
+
+    const serial = (record.serial as number) + 1;
+    const created = ['aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app', 'aws_security_group.web'];
+    const updated = ['aws_iam_role.exec'];
+
+    await storage.put('workspace', workspace, {
+      ...record,
+      serial,
+      lastAppliedAt: new Date().toISOString(),
+    });
+
+    return {
+      variant: 'ok',
+      workspace,
+      created,
+      updated,
+    };
   },
 
-  teardown(input: Record<string, unknown>) {
+  async teardown(input, storage) {
     const workspace = input.workspace as string;
-    const destroyed = ['aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app', 'aws_security_group.web', 'aws_iam_role.exec'];
-    let p = createProgram();
-    p = del(p, 'workspace', workspace);
-    return complete(p, 'ok', { workspace, destroyed }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    const record = await storage.get('workspace', workspace);
+    const destroyed = [
+      'aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app',
+      'aws_security_group.web', 'aws_iam_role.exec',
+    ];
+
+    if (record) {
+      await storage.put('workspace', workspace, {
+        ...record,
+        serial: (record.serial as number) + 1,
+        lastAppliedAt: new Date().toISOString(),
+      });
+    }
+
+    await storage.delete('workspace', workspace);
+
+    return {
+      variant: 'ok',
+      workspace,
+      destroyed,
+    };
   },
 };
-
-export const terraformProviderHandler = autoInterpret(_terraformProviderHandler);
-
