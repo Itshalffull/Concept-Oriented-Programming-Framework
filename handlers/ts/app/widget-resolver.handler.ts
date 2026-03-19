@@ -93,7 +93,13 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
         const specificity = (aff.specificity as number) || 0;
         score += (specificity / 100) * (weights.specificity || 0.4);
         score += (weights.conditionMatch || 0.3);
-        candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: `specificity=${specificity}`, bindingMap });
+
+        // Build reason string with motif and density metadata
+        const reasonParts: string[] = [`specificity=${specificity}`];
+        if (aff.motifOptimized) reasonParts.push(`motifBonus=${aff.motifOptimized}`);
+        if (aff.densityExempt) reasonParts.push(`densityExempt=${aff.densityExempt}`);
+
+        candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: reasonParts.join(','), bindingMap });
       }
       candidates.sort((a, b) => b.score - a.score);
       if (candidates.length === 0) return { variant: 'none', message: `No widgets found for element "${element}"` };
@@ -164,5 +170,86 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
   },
 };
 
-export const widgetResolverHandler = autoInterpret(_widgetResolverHandler);
+const _base = autoInterpret(_widgetResolverHandler);
+
+// resolve() requires storing diagnostics and complex scoring with contract validation.
+// Override with imperative implementation.
+async function _resolve(input: Record<string, unknown>, storage: any) {
+  const resolver = input.resolver as string;
+  const element = input.element as string;
+  const context = input.context as string;
+
+  const resolverRecord = await storage.get('resolver', resolver);
+  const overrides = resolverRecord ? JSON.parse((resolverRecord.overrides as string) || '{}') : {};
+  if (overrides[element]) {
+    return { variant: 'ok', widget: overrides[element], score: 1.0, reason: 'Manual override applied', bindingMap: null };
+  }
+
+  const allAffordances = await storage.find('affordance', {});
+  const affordances = allAffordances.filter((aff: any) => aff.interactor === element && !aff.__deleted);
+  if (affordances.length === 0) {
+    return { variant: 'none', message: `No widgets found for element "${element}"` };
+  }
+
+  const weights = resolverRecord ? JSON.parse((resolverRecord.scoringWeights as string) || '{}') : { specificity: 0.4, conditionMatch: 0.3, popularity: 0.2, recency: 0.1 };
+  const parsedContext = JSON.parse(context || '{}');
+  const contextFields: Array<{ name: string; type: string }> = parsedContext.fields || [];
+  const contextActions: string[] = parsedContext.actions || [];
+
+  const allWidgets = await storage.find('widget', {});
+  const widgetByName: Record<string, Record<string, unknown>> = {};
+  for (const w of allWidgets) {
+    if (w.widget) widgetByName[w.widget as string] = w as Record<string, unknown>;
+  }
+
+  const candidates: Array<{ widget: string; score: number; reason: string; bindingMap: Record<string, string> | null }> = [];
+  for (const aff of affordances) {
+    const widgetRecord = widgetByName[aff.widget as string] ?? null;
+    let bindingMap: Record<string, string> | null = null;
+
+    if (widgetRecord && widgetRecord.requires) {
+      const requires: ContractRequires = JSON.parse(widgetRecord.requires as string);
+      const affBind = aff.bind ? JSON.parse(aff.bind as string) : {};
+      const validation = validateContract(requires, contextFields, contextActions, affBind);
+      if (validation.status === 'error') {
+        // Store diagnostic for contract failure
+        await storage.put('diagnostics', `diag:${element}`, {
+          element,
+          widget: aff.widget,
+          unresolvedSlots: validation.unresolvedSlots,
+          typeMismatches: validation.typeMismatches,
+          missingActions: validation.missingActions,
+        });
+        continue;
+      }
+      bindingMap = validation.bindingMap;
+    }
+
+    let score = 0;
+    const specificity = (aff.specificity as number) || 0;
+    score += (specificity / 100) * (weights.specificity || 0.4);
+    score += (weights.conditionMatch || 0.3);
+
+    const reasonParts: string[] = [`specificity=${specificity}`];
+    if (aff.motifOptimized) reasonParts.push(`motifBonus=${aff.motifOptimized}`);
+    if (aff.densityExempt) reasonParts.push(`densityExempt=${aff.densityExempt}`);
+
+    candidates.push({ widget: aff.widget as string, score: Math.round(score * 1000) / 1000, reason: reasonParts.join(','), bindingMap });
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  if (candidates.length === 0) {
+    return { variant: 'none', message: `No widgets found for element "${element}"` };
+  }
+  if (candidates.length === 1 || candidates[0].score > candidates[1].score) {
+    return { variant: 'ok', widget: candidates[0].widget, score: candidates[0].score, reason: candidates[0].reason, bindingMap: candidates[0].bindingMap ? JSON.stringify(candidates[0].bindingMap) : null };
+  }
+  return { variant: 'ambiguous', candidates: JSON.stringify(candidates) };
+}
+
+export const widgetResolverHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'resolve') return _resolve;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 

@@ -1,10 +1,8 @@
 // @migrated dsl-constructs 2026-03-18
-import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import {
-  createProgram, get as spGet, find, put, del, branch, complete,
-  type StorageProgram,
-} from '../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../runtime/functional-compat.ts';
+//
+// Uses imperative style because index/remove/get/searchSimilar require
+// conditional logic with dynamic storage keys from find results.
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 let idCounter = 0;
 
@@ -63,27 +61,34 @@ function buildExcerpt(text: string): string {
   return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
 }
 
-const _contentEmbeddingHandler: FunctionalConceptHandler = {
-  index(input: Record<string, unknown>) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _contentEmbeddingHandler: ConceptHandler = {
+  async index(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
     const sourceType = input.source_type as string;
     const text = input.text as string;
     const model = input.model as string;
 
     if (!KNOWN_MODELS.has(model)) {
-      let p = createProgram();
-      return complete(p, 'modelUnavailable', { model }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return { variant: 'modelUnavailable', model };
     }
 
     const vector = generateMockVector(text, model, DEFAULT_DIMENSIONS);
     const digest = hashString(text).toString(16);
     const updatedAt = new Date().toISOString();
-    const embedding = nextId();
 
-    let p = createProgram();
-    p = find(p, 'content-embedding', { entity_id: entityId }, 'existingRecords');
-    // Idempotent upsert — existing ID resolved at runtime from bindings
-    p = put(p, 'content-embedding', embedding, {
+    // Check for existing embedding for this entity (idempotent upsert)
+    const existing = await storage.find('content-embedding', { entity_id: entityId });
+
+    let embedding: string;
+    if (existing.length > 0) {
+      embedding = existing[0].id as string;
+    } else {
+      embedding = nextId();
+    }
+
+    await storage.put('content-embedding', embedding, {
       id: embedding,
       entity_id: entityId,
       source_type: sourceType,
@@ -93,44 +98,78 @@ const _contentEmbeddingHandler: FunctionalConceptHandler = {
       vector: JSON.stringify(vector),
       updated_at: updatedAt,
     });
-    return complete(p, 'ok', { embedding }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+
+    return { variant: 'ok', embedding };
   },
 
-  remove(input: Record<string, unknown>) {
+  async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
 
-    let p = createProgram();
-    p = find(p, 'content-embedding', { entity_id: entityId }, 'existing');
-    // Deletion of found record resolved at runtime from bindings
-    return complete(p, 'ok', { entity_id: entityId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.find('content-embedding', { entity_id: entityId });
+    for (const record of existing) {
+      await storage.del('content-embedding', record.id as string);
+    }
+
+    return { variant: 'ok', entity_id: entityId };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
 
-    let p = createProgram();
-    p = find(p, 'content-embedding', { entity_id: entityId }, 'existing');
-    // Record fields resolved at runtime from bindings
-    return complete(p, 'ok', {
-      embedding: '', entity_id: entityId,
-      source_type: '', model: '', updated_at: '', excerpt: '',
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    const existing = await storage.find('content-embedding', { entity_id: entityId });
+    if (existing.length === 0) {
+      return { variant: 'notfound', entity_id: entityId };
+    }
+
+    const rec = existing[0];
+    return {
+      variant: 'ok',
+      embedding: rec.id as string,
+      entity_id: entityId,
+      source_type: rec.source_type as string,
+      model: rec.model as string,
+      updated_at: rec.updated_at as string,
+      excerpt: rec.excerpt as string,
+    };
   },
 
-  searchSimilar(input: Record<string, unknown>) {
+  async searchSimilar(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const entityId = input.entity_id as string;
     const topK = input.topK as number;
     const sourceType = input.source_type as string;
 
-    let p = createProgram();
-    p = find(p, 'content-embedding', { entity_id: entityId }, 'current');
-    p = find(p, 'content-embedding', {}, 'records');
-    // Cosine similarity computation and ranking resolved at runtime
-    return complete(p, 'ok', { results: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Get current entity's embedding
+    const current = await storage.find('content-embedding', { entity_id: entityId });
+    if (current.length === 0) {
+      return { variant: 'notfound', entity_id: entityId };
+    }
+
+    const currentVector = JSON.parse(current[0].vector as string) as number[];
+
+    // Get all embeddings
+    const allRecords = await storage.find('content-embedding', {});
+
+    // Compute similarities
+    const scored: Array<{ entity_id: string; similarity: number }> = [];
+    for (const rec of allRecords) {
+      const recEntityId = rec.entity_id as string;
+      if (recEntityId === entityId) continue;
+      if (sourceType && rec.source_type !== sourceType) continue;
+
+      const vector = JSON.parse(rec.vector as string) as number[];
+      const similarity = cosineSimilarity(currentVector, vector);
+      scored.push({ entity_id: recEntityId, similarity });
+    }
+
+    // Sort by similarity descending and take top K
+    scored.sort((a, b) => b.similarity - a.similarity);
+    const results = scored.slice(0, topK);
+
+    return { variant: 'ok', results: JSON.stringify(results) };
   },
 };
 
-export const contentEmbeddingHandler = autoInterpret(_contentEmbeddingHandler);
+export const contentEmbeddingHandler = _contentEmbeddingHandler;
 
 
 export function resetContentEmbeddingCounter(): void {

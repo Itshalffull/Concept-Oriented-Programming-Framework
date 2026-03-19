@@ -2,7 +2,7 @@
 // View Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -16,7 +16,10 @@ const _viewHandler: FunctionalConceptHandler = {
   get(input: Record<string, unknown>) {
     const view = input.view as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'record');
-    p = branch(p, 'record', (b) => complete(b, 'ok', { view, dataSource: '', layout: '', filters: '', sorts: '', groups: '', visibleFields: '', formatting: '', controls: '', title: '', description: '' }),
+    p = branch(p, 'record', (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return { view, dataSource: rec.dataSource ?? '', layout: rec.layout ?? '', filters: rec.filters ?? '', sorts: rec.sorts ?? '', groups: rec.groups ?? '', visibleFields: rec.visibleFields ?? '', formatting: rec.formatting ?? '', controls: rec.controls ?? '', title: rec.title ?? '', description: rec.description ?? '' };
+      }),
       (b) => complete(b, 'notfound', { message: 'View not found' }));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, branch, complete, completeFrom,
+  createProgram, get, put, del, merge, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -43,12 +43,20 @@ const _handler: FunctionalConceptHandler = {
 
   update(input: Record<string, unknown>) {
     const shape = input.shape as string;
+    const updates: Record<string, unknown> = {};
+    if (input.kind !== undefined) updates.kind = input.kind;
+    if (input.fill !== undefined) updates.fill = input.fill;
+    if (input.stroke !== undefined) updates.stroke = input.stroke;
+    if (input.text !== undefined) updates.text = input.text;
 
     let p = createProgram();
     p = get(p, 'shape', shape, 'record');
 
     return branch(p, 'record',
-      (thenP) => complete(thenP, 'ok', {}),
+      (thenP) => {
+        thenP = merge(thenP, 'shape', shape, updates);
+        return complete(thenP, 'ok', {});
+      },
       (elseP) => complete(elseP, 'notFound', { message: `Shape '${shape}' not found` }),
     ) as StorageProgram<Result>;
   },

@@ -5,14 +5,12 @@
 // Per-user version space stack tracking. All storage operations
 // resolve through the correct overlay chain based on the user's
 // active version context.
+//
+// Uses imperative style because push/pop need to read-modify-write
+// the context stack with dynamic storage keys.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -21,103 +19,106 @@ function nextId(): string {
   return `vctx-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  push(input: Record<string, unknown>) {
+const _handler: ConceptHandler = {
+  async push(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const user = input.user as string;
     const space_id = input.space_id as string;
 
-    let p = createProgram();
-    p = find(p, 'contexts', { context_user: user }, 'existing');
+    const existing = await storage.find('contexts', { context_user: user });
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          // Note: in functional style, the stack mutation must happen via put
-          // We return the context id; the actual put happens below via mapBindings
-          const ctx = (bindings.existing as Record<string, unknown>[])[0];
-          return { context: ctx.id as string };
-        });
-        // For full fidelity, we'd do a put here, but completeFrom terminates.
-        // We use mapBindings + putFrom pattern instead:
-      },
-      (elseP) => {
-        const id = nextId();
-        const now = new Date().toISOString();
-        elseP = put(elseP, 'contexts', id, {
-          id,
-          context_user: user,
-          context_stack: [space_id],
-          context_updated_at: now,
-        });
-        return complete(elseP, 'ok', { context: id });
-      },
-    ) as StorageProgram<Result>;
+    if (existing.length > 0) {
+      const ctx = existing[0];
+      const stack = [...((ctx.context_stack as string[]) || []), space_id];
+      await storage.put('contexts', ctx.id as string, {
+        ...ctx,
+        context_stack: stack,
+        context_updated_at: new Date().toISOString(),
+      });
+      return { variant: 'ok', context: ctx.id as string };
+    }
+
+    const id = nextId();
+    const now = new Date().toISOString();
+    await storage.put('contexts', id, {
+      id,
+      context_user: user,
+      context_stack: [space_id],
+      context_updated_at: now,
+    });
+    return { variant: 'ok', context: id };
   },
 
-  pop(input: Record<string, unknown>) {
+  async pop(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const user = input.user as string;
     const space_id = input.space_id as string;
 
-    let p = createProgram();
-    p = find(p, 'contexts', { context_user: user }, 'existing');
+    const existing = await storage.find('contexts', { context_user: user });
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length === 0,
-      (thenP) => {
-        const id = nextId();
-        return complete(thenP, 'ok', { context: id });
-      },
-      (elseP) => {
-        return completeFrom(elseP, 'ok', (bindings) => {
-          const ctx = (bindings.existing as Record<string, unknown>[])[0];
-          return { context: ctx.id as string };
-        });
-      },
-    ) as StorageProgram<Result>;
+    if (existing.length === 0) {
+      const id = nextId();
+      return { variant: 'ok', context: id };
+    }
+
+    const ctx = existing[0];
+    const stack = (ctx.context_stack as string[]) || [];
+
+    // Find the index of the space_id to pop
+    const idx = stack.indexOf(space_id);
+    if (idx === -1) {
+      return { variant: 'ok', context: ctx.id as string };
+    }
+
+    // Remove the space and all children (everything from idx onward)
+    const newStack = stack.slice(0, idx);
+
+    if (newStack.length === 0) {
+      // Delete the context entirely
+      await storage.del('contexts', ctx.id as string);
+    } else {
+      await storage.put('contexts', ctx.id as string, {
+        ...ctx,
+        context_stack: newStack,
+        context_updated_at: new Date().toISOString(),
+      });
+    }
+
+    return { variant: 'ok', context: ctx.id as string };
   },
 
-  get(input: Record<string, unknown>) {
+  async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const user = input.user as string;
 
-    let p = createProgram();
-    p = find(p, 'contexts', { context_user: user }, 'existing');
+    const existing = await storage.find('contexts', { context_user: user });
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'no_context', { user }),
-      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
-        const ctx = (bindings.existing as Record<string, unknown>[])[0];
-        return { stack: ctx.context_stack as string[] };
-      }),
-    ) as StorageProgram<Result>;
+    if (existing.length === 0) {
+      return { variant: 'no_context', user };
+    }
+
+    const ctx = existing[0];
+    return { variant: 'ok', stack: ctx.context_stack as string[] };
   },
 
-  resolve_for(input: Record<string, unknown>) {
+  async resolve_for(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const user = input.user as string;
-    const entity_id = input.entity_id as string;
 
-    let p = createProgram();
-    p = find(p, 'contexts', { context_user: user }, 'existing');
+    const existing = await storage.find('contexts', { context_user: user });
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'ok', { fields: '{}', source_space: 'base' }),
-      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
-        const ctx = (bindings.existing as Record<string, unknown>[])[0];
-        const stack = (ctx.context_stack as string[]) || [];
+    if (existing.length === 0) {
+      return { variant: 'ok', fields: '{}', source_space: 'base' };
+    }
 
-        if (stack.length === 0) {
-          return { fields: '{}', source_space: 'base' };
-        }
+    const ctx = existing[0];
+    const stack = (ctx.context_stack as string[]) || [];
 
-        const innermostSpace = stack[stack.length - 1];
-        return { fields: '{}', source_space: innermostSpace };
-      }),
-    ) as StorageProgram<Result>;
+    if (stack.length === 0) {
+      return { variant: 'ok', fields: '{}', source_space: 'base' };
+    }
+
+    const innermostSpace = stack[stack.length - 1];
+    return { variant: 'ok', fields: '{}', source_space: innermostSpace };
   },
 };
 
-export const versionContextHandler = autoInterpret(_handler);
+export const versionContextHandler = _handler;
 
 export default versionContextHandler;

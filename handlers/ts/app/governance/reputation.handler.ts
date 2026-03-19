@@ -1,91 +1,83 @@
 // @migrated dsl-constructs 2026-03-18
 // Reputation Concept Handler
 // Coordination concept routing to pluggable reputation algorithm providers.
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+//
+// Uses imperative style because earn/burn/decay need to read current score,
+// compute new score, and write back — requiring dynamic storage values.
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-const _reputationHandler: FunctionalConceptHandler = {
-  earn(input: Record<string, unknown>) {
+const _reputationHandler: ConceptHandler = {
+  async earn(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { participant, amount, reason } = input;
     const id = `rep-${participant}`;
-    let p = createProgram();
-    p = get(p, 'reputation', id, 'record');
 
-    p = mapBindings(p, (bindings) => {
-      const record = (bindings.record as Record<string, unknown>) ?? { score: 0, history: [] };
-      const newScore = (record.score as number) + (amount as number);
-      const history = (record.history as unknown[]) ?? [];
-      history.push({ amount, reason, earnedAt: new Date().toISOString() });
-      return { newScore, history };
-    }, 'computed');
+    const record = await storage.get('reputation', id) as Record<string, unknown> | null;
+    const currentScore = record ? (record.score as number) : 0;
+    const history = record ? ((record.history as unknown[]) ?? []) : [];
+    const newScore = currentScore + (amount as number);
 
-    p = put(p, 'reputation', id, { id, participant, score: 0, history: [] });
+    history.push({ amount, reason, earnedAt: new Date().toISOString() });
 
-    return completeFrom(p, 'earned', (bindings) => {
-      const computed = bindings.computed as Record<string, unknown>;
-      return { entry: id, newScore: computed.newScore };
-    }) as StorageProgram<Result>;
+    await storage.put('reputation', id, {
+      id,
+      participant,
+      score: newScore,
+      history,
+    });
+
+    return { variant: 'earned', entry: id, newScore };
   },
 
-  burn(input: Record<string, unknown>) {
+  async burn(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { participant, amount } = input;
     const id = `rep-${participant}`;
-    let p = createProgram();
-    p = get(p, 'reputation', id, 'record');
 
-    p = mapBindings(p, (bindings) => {
-      const record = (bindings.record as Record<string, unknown>) ?? { score: 0, history: [] };
-      return Math.max(0, (record.score as number) - (amount as number));
-    }, 'newScore');
+    const record = await storage.get('reputation', id) as Record<string, unknown> | null;
+    const currentScore = record ? (record.score as number) : 0;
+    const newScore = Math.max(0, currentScore - (amount as number));
 
-    p = put(p, 'reputation', id, { score: 0 });
+    await storage.put('reputation', id, {
+      ...(record || {}),
+      id,
+      participant,
+      score: newScore,
+    });
 
-    return completeFrom(p, 'burned', (bindings) => {
-      return { entry: id, newScore: bindings.newScore };
-    }) as StorageProgram<Result>;
+    return { variant: 'burned', entry: id, newScore };
   },
 
-  decay(input: Record<string, unknown>) {
+  async decay(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { participant, decayFactor } = input;
     const id = `rep-${participant}`;
-    let p = createProgram();
-    p = get(p, 'reputation', id, 'record');
 
-    p = mapBindings(p, (bindings) => {
-      const record = (bindings.record as Record<string, unknown>) ?? { score: 0 };
-      return (record.score as number) * (1 - (decayFactor as number));
-    }, 'newScore');
+    const record = await storage.get('reputation', id) as Record<string, unknown> | null;
+    const currentScore = record ? (record.score as number) : 0;
+    const newScore = currentScore * (1 - (decayFactor as number));
 
-    p = put(p, 'reputation', id, { score: 0 });
+    await storage.put('reputation', id, {
+      ...(record || {}),
+      id,
+      participant,
+      score: newScore,
+    });
 
-    return completeFrom(p, 'decayed', (bindings) => {
-      return { entry: id, newScore: bindings.newScore };
-    }) as StorageProgram<Result>;
+    return { variant: 'decayed', entry: id, newScore };
   },
 
-  getScore(input: Record<string, unknown>) {
+  async getScore(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { participant } = input;
-    let p = createProgram();
-    p = get(p, 'reputation', `rep-${participant}`, 'record');
+    const record = await storage.get('reputation', `rep-${participant}`) as Record<string, unknown> | null;
 
-    return completeFrom(p, 'score', (bindings) => {
-      const record = bindings.record as Record<string, unknown> | null;
-      if (!record) return { participant, score: 0.0 };
-      return { participant, score: record.score };
-    }) as StorageProgram<Result>;
+    if (!record) return { variant: 'score', participant, score: 0.0 };
+    return { variant: 'score', participant, score: record.score };
   },
 
-  recalculate(input: Record<string, unknown>) {
+  async recalculate(input: Record<string, unknown>, _storage: ConceptStorage): Promise<Result> {
     const { participant } = input;
-    let p = createProgram();
-    return complete(p, 'recalculated', { participant, newScore: 0.0 }) as StorageProgram<Result>;
+    return { variant: 'recalculated', participant, newScore: 0.0 };
   },
 };
 
-export const reputationHandler = autoInterpret(_reputationHandler);
+export const reputationHandler = _reputationHandler;

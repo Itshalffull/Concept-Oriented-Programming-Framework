@@ -7,6 +7,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 import {
   createProgram, get, find, put, del, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
@@ -77,4 +78,31 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const registryHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// deregister requires deleting records found via find() with dynamic keys.
+async function _deregister(input: Record<string, unknown>, storage: ConceptStorage) {
+  const uri = input.uri as string;
+
+  const matches = await storage.find('concepts', { uri });
+  if (!matches || matches.length === 0) {
+    return { variant: 'ok' };
+  }
+
+  for (const match of matches) {
+    const key = match._key as string || match.conceptId as string;
+    await storage.del('concepts', key);
+    await storage.del('uri', key);
+    await storage.del('transport', key);
+    await storage.del('available', key);
+  }
+
+  return { variant: 'ok' };
+}
+
+export const registryHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'deregister') return _deregister;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;

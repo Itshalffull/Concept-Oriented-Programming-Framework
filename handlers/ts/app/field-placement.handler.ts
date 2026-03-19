@@ -6,6 +6,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, find, put, del, branch, complete,
+  completeFrom, mapBindings, mergeFrom, putFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -14,7 +15,10 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'fieldPlacement', {}, 'items');
-    return complete(p, 'ok', { items: '[]' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = bindings.items as Record<string, unknown>[];
+      return { items: JSON.stringify(items || []) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   create(input: Record<string, unknown>) {
@@ -46,7 +50,17 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     p = spGet(p, 'fieldPlacement', placement, 'record');
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'fieldPlacement', placement, {});
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, (bindings) => {
+          const updates: Record<string, unknown> = {};
+          if (input.formatter !== undefined) updates.formatter = input.formatter;
+          if (input.formatter_options !== undefined) updates.formatter_options = input.formatter_options;
+          if (input.label_display !== undefined) updates.label_display = input.label_display;
+          if (input.label_override !== undefined) updates.label_override = input.label_override;
+          if (input.visible !== undefined) updates.visible = input.visible;
+          if (input.role_visibility !== undefined) updates.role_visibility = input.role_visibility;
+          if (input.field_mapping !== undefined) updates.field_mapping = input.field_mapping;
+          return updates;
+        });
         return complete(b2, 'ok', { placement });
       },
       (b) => complete(b, 'not_found', { placement }),
@@ -61,10 +75,10 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     p = spGet(p, 'fieldPlacement', placement, 'record');
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'fieldPlacement', placement, {
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({
           visible: input.visible ?? true,
           role_visibility: input.role_visibility ?? null,
-        });
+        }));
         return complete(b2, 'ok', { placement });
       },
       (b) => complete(b, 'ok', { placement }),
@@ -80,7 +94,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     p = spGet(p, 'fieldPlacement', placement, 'record');
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'fieldPlacement', placement, { field_mapping: mapping });
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: mapping }));
         return complete(b2, 'ok', { placement });
       },
       (b) => complete(b, 'ok', { placement }),
@@ -95,7 +109,7 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     p = spGet(p, 'fieldPlacement', placement, 'record');
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'fieldPlacement', placement, { field_mapping: null });
+        let b2 = mergeFrom(b, 'fieldPlacement', placement, () => ({ field_mapping: null }));
         return complete(b2, 'ok', { placement });
       },
       (b) => complete(b, 'ok', { placement }),
@@ -109,16 +123,19 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'fieldPlacement', placement, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', {
-        placement,
-        source_field: '',
-        formatter: '',
-        formatter_options: null,
-        label_display: '',
-        label_override: null,
-        visible: true,
-        role_visibility: null,
-        field_mapping: null,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.record as Record<string, unknown>;
+        return {
+          placement,
+          source_field: rec.source_field ?? '',
+          formatter: rec.formatter ?? '',
+          formatter_options: rec.formatter_options ?? null,
+          label_display: rec.label_display ?? '',
+          label_override: rec.label_override ?? null,
+          visible: rec.visible ?? true,
+          role_visibility: rec.role_visibility ?? null,
+          field_mapping: rec.field_mapping ?? null,
+        };
       }),
       (b) => complete(b, 'not_found', { placement }),
     );
@@ -148,7 +165,10 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
     const newPlacement = `${placement}-copy-${Date.now()}`;
     p = branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'fieldPlacement', newPlacement, { placement: newPlacement });
+        let b2 = putFrom(b, 'fieldPlacement', newPlacement, (bindings) => {
+          const rec = bindings.record as Record<string, unknown>;
+          return { ...rec, placement: newPlacement };
+        });
         return complete(b2, 'ok', { new_placement: newPlacement });
       },
       (b) => complete(b, 'ok', { new_placement: placement }),
@@ -158,4 +178,3 @@ const _fieldPlacementHandler: FunctionalConceptHandler = {
 };
 
 export const fieldPlacementHandler = autoInterpret(_fieldPlacementHandler);
-

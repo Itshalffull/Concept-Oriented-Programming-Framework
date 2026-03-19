@@ -7,6 +7,7 @@ import {
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -34,7 +35,10 @@ const _themeHandler: FunctionalConceptHandler = {
           const themes = (bindings.allThemes as Array<Record<string, unknown>>) || [];
           return !themes.some((item) => item.active === true || item.status === 'active');
         }, 'shouldActivate');
-        b2 = put(b2, 'theme', id, { id, name, base: '', overrides: overrides || JSON.stringify({}), active: false, priority: 0 });
+        b2 = putFrom(b2, 'theme', id, (bindings) => {
+          const shouldActivate = bindings.shouldActivate as boolean;
+          return { id, name, base: '', overrides: overrides || JSON.stringify({}), active: shouldActivate, priority: 0 };
+        });
         return complete(b2, 'ok', { theme: id });
       },
     );
@@ -117,5 +121,55 @@ const _themeHandler: FunctionalConceptHandler = {
   },
 };
 
-export const themeHandler = autoInterpret(_themeHandler);
+const _base = autoInterpret(_themeHandler);
+
+// activate() needs to deactivate other themes, use imperative style.
+async function _activate(input: Record<string, unknown>, storage: ConceptStorage) {
+  const theme = input.theme as string;
+  const priority = input.priority as number;
+  const existing = await storage.get('theme', theme);
+  if (!existing) {
+    return { variant: 'notfound', message: `Theme "${theme}" not found` };
+  }
+  // Deactivate all other themes
+  const allThemes = await storage.find('theme', {});
+  for (const t of allThemes) {
+    if ((t.id as string) !== theme && t.active) {
+      await storage.put('theme', t.id as string, { ...t, active: false });
+    }
+  }
+  await storage.put('theme', theme, { ...existing, active: true, priority: priority ?? Number(existing.priority ?? 0) });
+  return { variant: 'ok', theme };
+}
+
+// deactivate() needs fallback activation which requires dynamic iteration, use imperative style.
+async function _deactivate(input: Record<string, unknown>, storage: ConceptStorage) {
+  const theme = input.theme as string;
+  const existing = await storage.get('theme', theme);
+  if (!existing) {
+    return { variant: 'notfound', message: `Theme "${theme}" not found` };
+  }
+  await storage.put('theme', theme, { ...existing, active: false });
+
+  // Find another theme to activate as fallback (pick the first one that isn't us)
+  const allThemes = await storage.find('theme', {});
+  // Re-read the updated list and find first inactive theme that isn't the one we deactivated
+  const fallback = allThemes.find((t: any) => (t.id as string) !== theme);
+  if (fallback) {
+    const freshFallback = await storage.get('theme', fallback.id as string);
+    if (freshFallback && !freshFallback.active) {
+      await storage.put('theme', fallback.id as string, { ...freshFallback, active: true });
+      return { variant: 'ok', theme: fallback.id as string };
+    }
+  }
+  return { variant: 'ok', theme };
+}
+
+export const themeHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'activate') return _activate;
+    if (prop === 'deactivate') return _deactivate;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 

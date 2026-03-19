@@ -2,12 +2,14 @@
 // Authentication Concept Implementation
 // Verify user identity via pluggable providers, token-based session auth, and credential reset flows.
 import { createHash } from 'crypto';
+
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 
 const _authenticationHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
@@ -18,7 +20,7 @@ const _authenticationHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'account', user, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: '' }),
+      (b) => complete(b, 'exists', { message: nextAuthId() }),
       (b) => {
         const salt = createHash('sha256').update(user).digest('hex');
         const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
@@ -100,5 +102,67 @@ const _authenticationHandler: FunctionalConceptHandler = {
   },
 };
 
-export const authenticationHandler = autoInterpret(_authenticationHandler);
+const _base = autoInterpret(_authenticationHandler);
+
+// login() needs hash comparison and token generation, use imperative style.
+async function _login(input: Record<string, unknown>, storage: ConceptStorage) {
+  const user = input.user as string;
+  const credentials = input.credentials as string;
+
+  const account = await storage.get('account', user);
+  if (!account) return { variant: 'invalid', message: `User ${user} not found` };
+
+  const salt = account.salt as string;
+  const expectedHash = account.hash as string;
+  const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
+
+  if (hash !== expectedHash) return { variant: 'invalid', message: `Invalid credentials for ${user}` };
+
+  // Generate a deterministic token from the user + current token count
+  const existingTokens: string[] = JSON.parse((account.tokens as string) || '[]');
+  const token = `${user}-token-${existingTokens.length}`;
+  const tokens: string[] = JSON.parse((account.tokens as string) || '[]');
+  tokens.push(token);
+  await storage.put('account', user, { ...account, tokens: JSON.stringify(tokens) });
+  await storage.put('token', token, { token, user });
+  return { variant: 'ok', token };
+}
+
+// authenticate() needs token lookup, use imperative style.
+async function _authenticate(input: Record<string, unknown>, storage: ConceptStorage) {
+  const token = input.token as string;
+  const tokenRecord = await storage.get('token', token);
+  if (!tokenRecord) return { variant: 'invalid', message: 'Token is expired, malformed, or has been revoked' };
+  return { variant: 'ok', user: tokenRecord.user as string };
+}
+
+// resetPassword() needs to update hash and invalidate tokens, use imperative style.
+async function _resetPassword(input: Record<string, unknown>, storage: ConceptStorage) {
+  const user = input.user as string;
+  const newCredentials = input.newCredentials as string;
+
+  const account = await storage.get('account', user);
+  if (!account) return { variant: 'notfound', message: 'No account exists for this user' };
+
+  const salt = createHash('sha256').update(user).digest('hex');
+  const hash = createHash('sha256').update(newCredentials).update(salt).digest('hex');
+
+  // Invalidate existing tokens
+  const oldTokens: string[] = JSON.parse((account.tokens as string) || '[]');
+  for (const t of oldTokens) {
+    await storage.del('token', t);
+  }
+
+  await storage.put('account', user, { ...account, hash, salt, tokens: JSON.stringify([]) });
+  return { variant: 'ok', user };
+}
+
+export const authenticationHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'login') return _login;
+    if (prop === 'authenticate') return _authenticate;
+    if (prop === 'resetPassword') return _resetPassword;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 

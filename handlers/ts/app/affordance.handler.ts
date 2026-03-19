@@ -4,7 +4,7 @@
 // Supports field-level and entity-level matching, including density and motif metadata.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings, pureFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -92,6 +92,8 @@ const _affordanceHandler: FunctionalConceptHandler = {
         specificity: aff.specificity,
         conditions: aff.conditions,
         bind: aff.bind,
+        densityExempt: aff.densityExempt ?? undefined,
+        motifOptimized: aff.motifOptimized ?? undefined,
       })));
     }, 'matchedJson');
     return completeFrom(p, 'ok', (bindings) => ({
@@ -105,10 +107,15 @@ const _affordanceHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'affordance', affordance, 'existing');
     p = branch(p, 'existing',
-      (b) => {
-        // Explanation built at runtime from binding data
-        return complete(b, 'ok', { affordance, reason: '' });
-      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        const parts: string[] = [];
+        if (existing.contractVersion != null) parts.push(`contract: @${existing.contractVersion}`);
+        if (existing.densityExempt != null) parts.push(`densityExempt: ${existing.densityExempt}`);
+        if (existing.motifOptimized != null) parts.push(`motifOptimized: ${existing.motifOptimized}`);
+        if (existing.bind) parts.push(`bind: ${existing.bind}`);
+        return { affordance, reason: parts.join(', ') };
+      }),
       (b) => complete(b, 'notfound', { message: 'Affordance not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

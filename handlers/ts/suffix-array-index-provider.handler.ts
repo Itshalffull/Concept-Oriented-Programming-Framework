@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, del, complete, completeFrom,
+  createProgram, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -98,15 +98,21 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, DOC_RELATION, { providerRef: PROVIDER_REF }, 'existing');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      if (existing.length > 0) {
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>[];
         return { instance: existing[0].id as string };
-      }
-
-      const id = nextId();
-      return { instance: id };
-    }) as StorageProgram<Result>;
+      }),
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, DOC_RELATION, id, {
+          id,
+          providerRef: PROVIDER_REF,
+        });
+        return complete(elseP, 'ok', { instance: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
   index(input: Record<string, unknown>) {

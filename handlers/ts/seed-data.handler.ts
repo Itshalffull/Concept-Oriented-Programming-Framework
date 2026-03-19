@@ -145,24 +145,10 @@ const _handler: FunctionalConceptHandler = {
     return complete(p, 'ok', { found: [] }) as StorageProgram<Result>;
   },
 
-  register(input: Record<string, unknown>) {
-    const sourcePath = input.source_path as string;
-    const conceptUri = normalizeConceptUri(input.concept_uri as string);
-    const actionName = input.action_name as string;
-    const entries = input.entries as string[];
-
+  register(_input: Record<string, unknown>) {
+    // register() requires dynamic key writes, delegated to imperative override
     let p = createProgram();
-    p = find(p, 'seed-data', { source_path: sourcePath }, 'existing');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      if (existing.some((entry) => entry.source_path === sourcePath)) {
-        return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
-      }
-
-      const id = nextId();
-      return { seed: id };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   apply(input: Record<string, unknown>) {
@@ -260,11 +246,38 @@ async function _discover(input: Record<string, unknown>, storage: ConceptStorage
     return { variant: 'ok', found: [] };
   }
 
-  const files = readdirSync(basePath).filter((f) => f.endsWith('.seeds.yaml'));
+  // Recursively find .seeds.yaml files
+  function findSeedFiles(dir: string): string[] {
+    const results: string[] = [];
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        results.push(...findSeedFiles(resolve(dir, entry.name)));
+      } else if (entry.name.endsWith('.seeds.yaml')) {
+        results.push(entry.name);
+      }
+    }
+    return results.map(f => f); // flatten
+  }
+
+  // Collect files from base and subdirectories
+  const allFiles: Array<{file: string, dir: string}> = [];
+  for (const entry of readdirSync(basePath, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const subdir = resolve(basePath, entry.name);
+      for (const subEntry of readdirSync(subdir)) {
+        if (subEntry.endsWith('.seeds.yaml')) {
+          allFiles.push({ file: subEntry, dir: subdir });
+        }
+      }
+    } else if (entry.name.endsWith('.seeds.yaml')) {
+      allFiles.push({ file: entry.name, dir: basePath });
+    }
+  }
+  const files = allFiles;
   const found: string[] = [];
 
-  for (const file of files) {
-    const filePath = resolve(basePath, file);
+  for (const { file, dir } of files) {
+    const filePath = resolve(dir, file);
     const content = readFileSync(filePath, 'utf8');
     const parsed = parseSeedsYaml(content);
 
@@ -315,10 +328,64 @@ async function _apply(input: Record<string, unknown>, storage: ConceptStorage) {
   return { variant: 'ok', seed: seedId, applied_count: appliedCount };
 }
 
+// register() needs to store seed data with a generated key.
+async function _register(input: Record<string, unknown>, storage: ConceptStorage) {
+  const sourcePath = input.source_path as string;
+  const conceptUri = normalizeConceptUri(input.concept_uri as string);
+  const actionName = input.action_name as string;
+  const entries = input.entries as string[];
+
+  const existing = await storage.find('seed-data', { source_path: sourcePath });
+  if (existing.some((entry) => entry.source_path === sourcePath)) {
+    return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
+  }
+
+  const id = nextId();
+  await storage.put('seed-data', id, {
+    id,
+    source_path: sourcePath,
+    concept_uri: conceptUri,
+    action_name: actionName,
+    entries: JSON.stringify(entries),
+    entry_count: entries.length,
+    applied: false,
+    applied_at: null,
+    error_log: '[]',
+  });
+
+  return { variant: 'ok', seed: id };
+}
+
+// applyAll() needs to iterate seeds and mark them applied.
+async function _applyAll(_input: Record<string, unknown>, storage: ConceptStorage) {
+  const seeds = await storage.find('seed-data', {});
+  let appliedCount = 0;
+  let skippedCount = 0;
+  const errorCount = 0;
+
+  for (const seed of seeds) {
+    if (seed.applied) {
+      skippedCount++;
+      continue;
+    }
+    const entryCount = parseStoredEntries(seed.entries).length;
+    appliedCount += entryCount;
+    await storage.put('seed-data', seed.id as string, {
+      ...seed,
+      applied: true,
+      applied_at: new Date().toISOString(),
+    });
+  }
+
+  return { variant: 'ok', applied_count: appliedCount, skipped_count: skippedCount, error_count: errorCount };
+}
+
 export const seedDataHandler = new Proxy(_base, {
   get(target, prop: string) {
     if (prop === 'discover') return _discover;
     if (prop === 'apply') return _apply;
+    if (prop === 'register') return _register;
+    if (prop === 'applyAll') return _applyAll;
     return (target as Record<string, unknown>)[prop];
   },
 }) as typeof _base;

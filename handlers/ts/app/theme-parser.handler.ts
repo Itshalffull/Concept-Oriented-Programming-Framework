@@ -3,7 +3,7 @@
 // Parses expressive theme definitions into a normalized AST with derived tokens.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete, mapBindings,
+  createProgram, get as spGet, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -122,7 +122,7 @@ const _themeParserHandler: FunctionalConceptHandler = {
           return failures;
         }, 'failures');
         b2 = branch(b2, (bindings) => ((bindings.failures as string[]).length > 0),
-          (() => { let t = createProgram(); return complete(t, 'violations', { failures: '' }); })(),
+          (() => { let t = createProgram(); return completeFrom(t, 'violations', (bindings) => ({ failures: JSON.stringify(bindings.failures as string[]) })); })(),
           (() => { let e = createProgram(); return complete(e, 'ok', {}); })(),
         );
         return b2;

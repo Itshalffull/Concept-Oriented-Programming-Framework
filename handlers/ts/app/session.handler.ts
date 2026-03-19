@@ -5,10 +5,11 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { randomUUID } from 'crypto';
 import {
-  createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, del, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let idCounter = 1;
@@ -49,7 +50,7 @@ const _sessionHandler: FunctionalConceptHandler = {
           const expiresAt = new Date(record.expiresAt as string);
           return record.isValid === true && expiresAt.getTime() > Date.now();
         }, 'valid');
-        return complete(b2, 'ok', { valid: false });
+        return completeFrom(b2, 'ok', (bindings) => ({ valid: bindings.valid as boolean }));
       },
       (b) => complete(b, 'notfound', { message: nextGeneratedId() }),
     );
@@ -120,12 +121,36 @@ const _sessionHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'session', session, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', { userId: '', device: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return { userId: record.userId as string, device: record.device as string };
+      }),
       (b) => complete(b, 'notfound', { message: 'No session exists with this identifier' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
-export const sessionHandler = autoInterpret(_sessionHandler);
+const _base = autoInterpret(_sessionHandler);
+
+// destroyAll() requires dynamic key deletion (iterating session IDs), use imperative style.
+async function _destroyAll(input: Record<string, unknown>, storage: ConceptStorage) {
+  const userId = input.userId as string;
+  const userSessions = await storage.get('userSessions', userId);
+  if (userSessions) {
+    const sessionIds: string[] = JSON.parse(userSessions.sessionIds as string);
+    for (const sid of sessionIds) {
+      await storage.del('session', sid);
+    }
+  }
+  await storage.put('userSessions', userId, { userId, sessionIds: JSON.stringify([]) });
+  return { variant: 'ok', userId };
+}
+
+export const sessionHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'destroyAll') return _destroyAll;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 

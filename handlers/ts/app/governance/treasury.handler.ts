@@ -3,7 +3,7 @@
 // Collective asset management with authorization gates.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -22,7 +22,9 @@ const _treasuryHandler: FunctionalConceptHandler = {
       return (record.balance as number) + (amount as number);
     }, 'newBalance');
 
-    p = put(p, 'vault', key, { vault, token, balance: 0, updatedAt: new Date().toISOString() });
+    p = putFrom(p, 'vault', key, (bindings) => ({
+      vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
+    }));
 
     return completeFrom(p, 'deposited', (bindings) => {
       return { vault, newBalance: bindings.newBalance };
@@ -50,7 +52,9 @@ const _treasuryHandler: FunctionalConceptHandler = {
           return (bindings.balance as number) - (amount as number);
         }, 'newBalance');
 
-        let b2 = put(b, 'vault', key, { balance: 0, updatedAt: new Date().toISOString() });
+        let b2 = putFrom(b, 'vault', key, (bindings) => ({
+          vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
+        }));
         return completeFrom(b2, 'withdrawn', (bindings) => {
           return { vault, newBalance: bindings.newBalance };
         });

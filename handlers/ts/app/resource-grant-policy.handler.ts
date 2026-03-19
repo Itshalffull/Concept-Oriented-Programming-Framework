@@ -1,7 +1,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -71,11 +71,17 @@ const _resourceGrantPolicyHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'grant', grantKey(scope, resource, actionName), 'exact');
     p = branch(p, 'exact',
-      (b) => complete(b, 'ok', { grant: grantKey(scope, resource, actionName), matchedPattern: resource }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const exact = bindings.exact as Record<string, unknown>;
+        return { grant: grantKey(scope, resource, actionName), matchedPattern: resource, roles: normalizeRoles(exact.roles) };
+      }),
       (b) => {
         let b2 = spGet(b, 'grant', grantKey(scope, '*', actionName), 'wildcard');
         b2 = branch(b2, 'wildcard',
-          (c) => complete(c, 'ok', { grant: grantKey(scope, '*', actionName), matchedPattern: '*' }),
+          (c) => completeFrom(c, 'ok', (bindings) => {
+            const wildcard = bindings.wildcard as Record<string, unknown>;
+            return { grant: grantKey(scope, '*', actionName), matchedPattern: '*', roles: normalizeRoles(wildcard.roles) };
+          }),
           (c) => complete(c, 'notfound', { message: `No grant matches ${scope}:${resource}:${actionName}` }),
         );
         return b2;

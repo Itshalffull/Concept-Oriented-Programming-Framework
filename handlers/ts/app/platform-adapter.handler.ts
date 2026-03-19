@@ -7,10 +7,11 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 
 const VALID_PLATFORMS = ['browser', 'mobile', 'desktop', 'watch', 'terminal'];
 
@@ -176,5 +177,49 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
   },
 };
 
-export const platformAdapterHandler = autoInterpret(_platformAdapterHandler);
+const _base = autoInterpret(_platformAdapterHandler);
+
+// mapNavigation, mapZone, handlePlatformEvent need access to stored platform, use imperative style.
+async function _mapNavigation(input: Record<string, unknown>, storage: ConceptStorage) {
+  const adapter = input.adapter as string;
+  const transition = input.transition as string;
+  const record = await storage.get('platformAdapter', adapter);
+  if (!record) return { variant: 'unsupported', message: `Adapter "${adapter}" not registered` };
+  const parsed = parseJsonObject(transition, 'transition');
+  if (!parsed) return { variant: 'unsupported', message: 'Transition must be valid JSON' };
+  const result = mapNavigationForPlatform(record.platform as string, parsed);
+  if (!result) return { variant: 'unsupported', message: `Platform "${record.platform}" does not support this navigation` };
+  return { variant: 'ok', adapter, platformAction: JSON.stringify(result) };
+}
+
+async function _mapZone(input: Record<string, unknown>, storage: ConceptStorage) {
+  const adapter = input.adapter as string;
+  const role = String(input.role ?? '');
+  const record = await storage.get('platformAdapter', adapter);
+  if (!record) return { variant: 'unmapped', message: `Adapter "${adapter}" not registered` };
+  const result = mapZoneForPlatform(record.platform as string, role);
+  if (!result) return { variant: 'unmapped', message: `Platform "${record.platform}" does not support role "${role}"` };
+  return { variant: 'ok', adapter, platformConfig: JSON.stringify(result) };
+}
+
+async function _handlePlatformEvent(input: Record<string, unknown>, storage: ConceptStorage) {
+  const adapter = input.adapter as string;
+  const event = input.event as string;
+  const record = await storage.get('platformAdapter', adapter);
+  if (!record) return { variant: 'ignored', message: `Adapter "${adapter}" not registered` };
+  const parsed = parseJsonObject(event, 'event');
+  if (!parsed) return { variant: 'ignored', message: 'Event must be valid JSON' };
+  const result = handleEventForPlatform(record.platform as string, parsed);
+  if (!result) return { variant: 'ignored', message: `Platform "${record.platform}" does not handle this event` };
+  return { variant: 'ok', adapter, action: JSON.stringify(result) };
+}
+
+export const platformAdapterHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'mapNavigation') return _mapNavigation;
+    if (prop === 'mapZone') return _mapZone;
+    if (prop === 'handlePlatformEvent') return _handlePlatformEvent;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 

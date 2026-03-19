@@ -15,6 +15,7 @@ import {
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../../runtime/types.ts';
 import { randomUUID } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -374,4 +375,76 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const kindSystemHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// connect() needs cycle detection via DFS which requires iterating edges dynamically.
+async function _connect(input: Record<string, unknown>, storage: ConceptStorage) {
+  const from = input.from as string;
+  const to = input.to as string;
+  const relation = input.relation as string;
+  const transformName = input.transformName as string | undefined;
+
+  // Self-loop check
+  if (from === to) {
+    return { variant: 'invalid', message: `Self-loop: '${from}' cannot connect to itself` };
+  }
+
+  // Resolve from/to kinds
+  const fromKind = await storage.get(KINDS_RELATION, from);
+  const toKind = await storage.get(KINDS_RELATION, to);
+
+  let fromRecord = fromKind;
+  let toRecord = toKind;
+
+  if (!fromRecord) {
+    const fromById = await storage.find(KINDS_RELATION, { id: from });
+    if (fromById.length > 0) fromRecord = fromById[0];
+  }
+  if (!toRecord) {
+    const toById = await storage.find(KINDS_RELATION, { id: to });
+    if (toById.length > 0) toRecord = toById[0];
+  }
+
+  if (!fromRecord) return { variant: 'invalid', message: `Kind '${from}' does not exist` };
+  if (!toRecord) return { variant: 'invalid', message: `Kind '${to}' does not exist` };
+
+  const fromName = fromRecord.name as string;
+  const toName = toRecord.name as string;
+
+  // Cycle detection: check if adding from->to would create a cycle
+  // A cycle exists if there's already a path from toName to fromName
+  const allEdges = await storage.find(EDGES_RELATION, {});
+
+  const visited = new Set<string>();
+  const stack = [toName];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    if (current === fromName) {
+      return { variant: 'invalid', message: `Adding edge ${fromName}->${toName} would create a cycle` };
+    }
+    if (visited.has(current)) continue;
+    visited.add(current);
+    for (const edge of allEdges) {
+      if ((edge.fromName as string) === current) {
+        stack.push(edge.toName as string);
+      }
+    }
+  }
+
+  // Store edge
+  await storage.put(EDGES_RELATION, edgeKey(from, to), {
+    fromName,
+    toName,
+    relation,
+    transformName: transformName || null,
+  });
+
+  return { variant: 'ok' };
+}
+
+export const kindSystemHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'connect') return _connect;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
