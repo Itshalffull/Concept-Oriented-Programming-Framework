@@ -5,7 +5,7 @@
 // organizational policies for license compliance and namespace restrictions.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -81,18 +81,15 @@ const _handler: FunctionalConceptHandler = {
     }, 'advisories');
 
     const auditAt = new Date().toISOString();
-    p = put(p, 'audit', id, {
-      id,
-      lockfile_hash: lockfileHash,
-      advisories: '[]',
-      policy_violations: JSON.stringify([]),
-      audit_at: auditAt,
+    p = putFrom(p, 'audit', id, (bindings) => {
+      return {
+        id,
+        lockfile_hash: lockfileHash,
+        advisories: JSON.stringify(bindings.advisories),
+        policy_violations: JSON.stringify([]),
+        audit_at: auditAt,
+      };
     });
-
-    // We need to store the computed advisories, so use putFrom to update
-    p = mapBindings(p, (bindings) => {
-      return JSON.stringify(bindings.advisories);
-    }, 'advisoriesJson');
 
     return complete(p, 'ok', { audit: id }) as StorageProgram<Result>;
   },
@@ -169,12 +166,14 @@ const _handler: FunctionalConceptHandler = {
     }, 'violations');
 
     const auditAt = new Date().toISOString();
-    p = put(p, 'audit', id, {
-      id,
-      lockfile_hash: lockfileHash,
-      advisories: JSON.stringify([]),
-      policy_violations: JSON.stringify([]),
-      audit_at: auditAt,
+    p = putFrom(p, 'audit', id, (bindings) => {
+      return {
+        id,
+        lockfile_hash: lockfileHash,
+        advisories: JSON.stringify([]),
+        policy_violations: JSON.stringify(bindings.violations),
+        audit_at: auditAt,
+      };
     });
 
     return branch(p,

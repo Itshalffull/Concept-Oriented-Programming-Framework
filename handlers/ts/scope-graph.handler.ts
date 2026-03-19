@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -316,6 +316,34 @@ const _handler: FunctionalConceptHandler = {
     return branch(p, 'record',
       (thenP) => {
         thenP = find(thenP, 'scope-graph', {}, 'allGraphs');
+
+        // Persist the updated graph record with resolved references
+        thenP = putFrom(thenP, 'scope-graph', graph, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const references: Reference[] = JSON.parse(record.references as string);
+          const allGraphs = bindings.allGraphs as Record<string, unknown>[];
+
+          for (const ref of references) {
+            if (ref.resolved) continue;
+            for (const otherGraph of allGraphs) {
+              if (otherGraph.id === graph) continue;
+              const otherDecls: Declaration[] = JSON.parse(otherGraph.declarations as string);
+              const match = otherDecls.find((d) => d.name === ref.name);
+              if (match) {
+                ref.resolved = match.symbolString;
+                break;
+              }
+            }
+          }
+
+          const newUnresolved = references.filter((r) => !r.resolved).length;
+          return {
+            ...record,
+            references: JSON.stringify(references),
+            unresolvedCount: newUnresolved,
+          };
+        });
+
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const references: Reference[] = JSON.parse(record.references as string);

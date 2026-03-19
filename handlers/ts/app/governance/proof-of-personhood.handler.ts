@@ -3,7 +3,7 @@
 // Verification lifecycle with status tracking, expiry, and revocation.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -42,11 +42,25 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'verified', (bindings) => {
+        b = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (record.status === 'Verified') return { variant: 'already_verified', verification };
-          return { variant: 'verified', verification, candidate: record.candidate };
-        });
+          return record.status === 'Verified';
+        }, 'isAlreadyVerified');
+
+        return branch(b,
+          (bindings) => bindings.isAlreadyVerified as boolean,
+          (t2) => complete(t2, 'already_verified', { verification }),
+          (e2) => {
+            e2 = putFrom(e2, 'pop', verification as string, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, status: 'Verified', verifiedAt: new Date().toISOString() };
+            });
+            return completeFrom(e2, 'verified', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { verification, candidate: record.candidate };
+            });
+          },
+        );
       },
       (b) => complete(b, 'not_found', { verification }),
     );

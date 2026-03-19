@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -54,14 +54,27 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'retention-policy', { recordType }, 'existing');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const existing = bindings.existing as Record<string, unknown>[];
-      if (existing.length > 0) {
-        return { variant: 'alreadyExists', message: `A policy already exists for record type '${recordType}'` };
-      }
-      const policyId = nextId('retention-policy');
-      return { policyId };
-    }) as StorageProgram<Result>;
+      return existing.length > 0;
+    }, 'alreadyExists');
+
+    return branch(p,
+      (b) => b.alreadyExists as boolean,
+      (thenP) => complete(thenP, 'alreadyExists', { message: `A policy already exists for record type '${recordType}'` }),
+      (elseP) => {
+        const policyId = nextId('retention-policy');
+        elseP = put(elseP, 'retention-policy', policyId, {
+          id: policyId,
+          recordType,
+          retentionPeriod: period,
+          unit,
+          dispositionAction,
+          created: new Date().toISOString(),
+        });
+        return complete(elseP, 'ok', { policyId });
+      },
+    ) as StorageProgram<Result>;
   },
 
   applyHold(input: Record<string, unknown>) {
@@ -97,13 +110,22 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'hold',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
+        thenP = mapBindings(thenP, (bindings) => {
           const hold = bindings.hold as Record<string, unknown>;
-          if (hold.released !== null && hold.released !== undefined) {
-            return { variant: 'alreadyReleased', message: `Hold '${holdId}' was already released` };
-          }
-          return {};
-        });
+          return hold.released !== null && hold.released !== undefined;
+        }, 'isAlreadyReleased');
+
+        return branch(thenP,
+          (b) => b.isAlreadyReleased as boolean,
+          (t2) => complete(t2, 'alreadyReleased', { message: `Hold '${holdId}' was already released` }),
+          (e2) => {
+            e2 = putFrom(e2, 'retention-hold', holdId, (bindings) => {
+              const hold = bindings.hold as Record<string, unknown>;
+              return { ...hold, released: new Date().toISOString(), releasedBy, releaseReason: reason };
+            });
+            return complete(e2, 'ok', {});
+          },
+        );
       },
       (elseP) => complete(elseP, 'notFound', { message: `Hold '${holdId}' not found` }),
     ) as StorageProgram<Result>;
@@ -174,7 +196,7 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'retention-hold', {}, 'allHolds');
     p = find(p, 'retention-policy', {}, 'allPolicies');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const allHolds = bindings.allHolds as Record<string, unknown>[];
       const activeHoldNames: string[] = [];
       for (const hold of allHolds) {
@@ -184,14 +206,15 @@ const _handler: FunctionalConceptHandler = {
           }
         }
       }
+      return activeHoldNames;
+    }, 'activeHoldNames');
 
-      if (activeHoldNames.length > 0) {
-        return { variant: 'held', holdNames: activeHoldNames };
-      }
+    p = mapBindings(p, (bindings) => {
+      const activeHoldNames = bindings.activeHoldNames as string[];
+      if (activeHoldNames.length > 0) return 'held';
 
       const allPolicies = bindings.allPolicies as Record<string, unknown>[];
       let matchingPolicy: Record<string, unknown> | null = null;
-
       for (const policy of allPolicies) {
         const recordType = policy.recordType as string;
         if (record.startsWith(recordType)) {
@@ -199,7 +222,6 @@ const _handler: FunctionalConceptHandler = {
           break;
         }
       }
-
       if (matchingPolicy) {
         const periodMs = periodToMs(
           matchingPolicy.retentionPeriod as number,
@@ -207,17 +229,30 @@ const _handler: FunctionalConceptHandler = {
         );
         const created = new Date(matchingPolicy.created as string).getTime();
         const now = Date.now();
-
-        if (now - created < periodMs) {
-          return {
-            variant: 'retained',
-            reason: `Retention period not yet elapsed for '${matchingPolicy.recordType}'`,
-          };
-        }
+        if (now - created < periodMs) return 'retained';
       }
+      return 'disposable';
+    }, 'disposeDecision');
 
-      return {};
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => (b.disposeDecision as string) === 'held',
+      (thenP) => completeFrom(thenP, 'held', (b) => ({ holdNames: b.activeHoldNames })),
+      (elseP) => branch(elseP,
+        (b) => (b.disposeDecision as string) === 'retained',
+        (t2) => complete(t2, 'retained', { reason: `Retention period not yet elapsed` }),
+        (e2) => {
+          const logId = nextId('disposition-log');
+          e2 = put(e2, 'retention-disposition-log', logId, {
+            id: logId,
+            record,
+            policy: '',
+            disposedAt: new Date().toISOString(),
+            disposedBy,
+          });
+          return complete(e2, 'ok', {});
+        },
+      ),
+    ) as StorageProgram<Result>;
   },
 
   auditLog(input: Record<string, unknown>) {

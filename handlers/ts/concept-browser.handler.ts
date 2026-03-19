@@ -7,12 +7,7 @@
 // extensibility at runtime.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -41,17 +36,6 @@ type PackageRecord = Record<string, unknown> & {
   error?: string | null;
 };
 
-const DEFAULT_PACKAGES: Array<Omit<PackageRecord, 'id' | 'installed_at' | 'error'>> = [
-  { name: 'app-shell', version: '0.1.0', registry: 'local', status: 'installed', content_hash: 'sha256:app-shell-0.1.0', manifest: 'Root shell, navigation, and destination orchestration.', dependencies: [], description: 'Root app shell and navigation chrome.', concepts: 3, syncs: 0 },
-  { name: 'component-mapping', version: '0.1.0', registry: 'local', status: 'installed', content_hash: 'sha256:component-mapping-0.1.0', manifest: 'Widget-to-schema mapping and slot source dispatch.', dependencies: ['app-shell'], description: 'Display composition and slot binding infrastructure.', concepts: 10, syncs: 10 },
-  { name: 'concept-browser', version: '0.1.0', registry: 'local', status: 'installed', content_hash: 'sha256:concept-browser-0.1.0', manifest: 'Runtime package discovery, preview, install, update, and remove.', dependencies: ['component-mapping'], description: 'Package discovery and installation workflow.', concepts: 1, syncs: 10 },
-  { name: 'surface-integration', version: '0.1.0', registry: 'local', status: 'installed', content_hash: 'sha256:surface-integration-0.1.0', manifest: 'UI composition syncs for layout, graph, and shell chrome.', dependencies: ['component-mapping'], description: 'Surface syncs for composed application pages.', concepts: 0, syncs: 6 },
-  { name: 'version-space-integration', version: '0.1.0', registry: 'local', status: 'installed', content_hash: 'sha256:version-space-integration-0.1.0', manifest: 'Version-aware save/load, alias namespace, and overlay indexing.', dependencies: ['surface-integration'], description: 'Version-space sync wiring and scoped indexing.', concepts: 0, syncs: 11 },
-  { name: 'offline-first', version: '0.1.0', registry: 'hub', status: 'available', content_hash: 'sha256:offline-first-0.1.0', manifest: 'Replica coordination and conflict resolution syncs.', dependencies: ['component-mapping'], description: 'Offline-first replication and sync behavior.', concepts: 0, syncs: 5 },
-  { name: 'web3-oracle-bridge', version: '0.1.0', registry: 'hub', status: 'available', content_hash: 'sha256:web3-oracle-bridge-0.1.0', manifest: 'Oracle event ingestion and writeback bridge.', dependencies: ['surface-integration'], description: 'Bridges chain state into ContentNodes.', concepts: 0, syncs: 10 },
-  { name: 'editorial-theme', version: '0.1.0', registry: 'hub', status: 'available', content_hash: 'sha256:editorial-theme-0.1.0', manifest: 'Long-form reading theme with serif typography and calm surfaces.', dependencies: [], description: 'Editorial reading theme package.', concepts: 0, syncs: 0 },
-];
-
 function toPackageSummary(pkg: PackageRecord): Record<string, unknown> {
   return {
     id: pkg.id,
@@ -70,205 +54,139 @@ function toPackageSummary(pkg: PackageRecord): Record<string, unknown> {
   };
 }
 
-const _handler: FunctionalConceptHandler = {
-  search(input: Record<string, unknown>) {
+export const conceptBrowserHandler: ConceptHandler = {
+  async search(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const query = input.query as string;
     const registry = input.registry as string;
 
-    let p = createProgram();
-    p = find(p, 'registry', {}, 'registries');
-    p = find(p, 'package', {}, 'allPackages');
+    const registries = await storage.find('registry', {});
+    const allPackages = await storage.find('package', {}) as PackageRecord[];
 
-    return completeFrom(p, 'dynamic', (bindings) => {
-      const registries = bindings.registries as Record<string, unknown>[];
-      let allPackages = bindings.allPackages as PackageRecord[];
-
-      // Check registry reachability
-      if (registry && registry !== 'all') {
-        const reg = registries.find(r => r.url === registry || r.name === registry);
-        if (reg && !reg.enabled) {
-          return { variant: 'registry_unreachable', registry };
-        }
+    if (registry && registry !== 'all') {
+      const reg = registries.find(r => r.url === registry || r.name === registry);
+      if (reg && !reg.enabled) {
+        return { variant: 'registry_unreachable', registry };
       }
+    }
 
-      const queryLower = (query || '').toLowerCase();
-      const results = allPackages.filter(pkg => {
-        const name = ((pkg.name as string) || '').toLowerCase();
-        const manifest = ((pkg.manifest as string) || '').toLowerCase();
-        const description = ((pkg.description as string) || '').toLowerCase();
-        const registryMatch = !registry || registry === 'all' || pkg.registry === registry;
-        return registryMatch && (name.includes(queryLower) || manifest.includes(queryLower) || description.includes(queryLower));
-      });
+    const queryLower = (query || '').toLowerCase();
+    const results = allPackages.filter(pkg => {
+      const name = ((pkg.name as string) || '').toLowerCase();
+      const manifest = ((pkg.manifest as string) || '').toLowerCase();
+      const description = ((pkg.description as string) || '').toLowerCase();
+      const registryMatch = !registry || registry === 'all' || pkg.registry === registry;
+      return registryMatch && (name.includes(queryLower) || manifest.includes(queryLower) || description.includes(queryLower));
+    });
 
-      return {
-        variant: 'ok',
-        results: results.map(pkg => pkg.id),
-        details: results.map(pkg => toPackageSummary(pkg)),
-      };
-    }) as StorageProgram<Result>;
+    return {
+      variant: 'ok',
+      results: results.map(pkg => pkg.id),
+      details: results.map(pkg => toPackageSummary(pkg)),
+    };
   },
 
-  preview(input: Record<string, unknown>) {
+  async preview(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const packageName = input.package_name as string;
     const version = input.version as string;
 
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
+    const allPackages = await storage.find('package', {}) as PackageRecord[];
+    const pkg = allPackages.find(p => p.name === packageName);
+    if (!pkg) return { variant: 'not_found', package_name: packageName };
 
-    return branch(p,
-      (bindings) => {
-        const allPackages = bindings.allPackages as PackageRecord[];
-        return !allPackages.find(pkg => pkg.name === packageName);
+    const dependencies = pkg.dependencies ?? [];
+    return {
+      variant: 'ok',
+      preview: `preview-${packageName}`,
+      details: {
+        package_name: packageName,
+        version,
+        new_schemas: [`${packageName}-schema`],
+        new_syncs: Array.from({ length: Math.max(Number(pkg.syncs ?? 0), 1) }, (_, i) => `${packageName}-sync-${i + 1}`),
+        dependency_tree: JSON.stringify({ name: packageName, dependencies }),
       },
-      (thenP) => complete(thenP, 'not_found', { package_name: packageName }),
-      (elseP) => {
-        return completeFrom(elseP, 'ok', (bindings) => {
-          const allPackages = bindings.allPackages as PackageRecord[];
-          const pkg = allPackages.find(p => p.name === packageName)!;
-          const dependencies = pkg.dependencies ?? [];
-
-          return {
-            preview: `preview-${packageName}`,
-            details: {
-              package_name: packageName,
-              version,
-              new_schemas: [`${packageName}-schema`],
-              new_syncs: Array.from({ length: Math.max(Number(pkg.syncs ?? 0), 1) }, (_, i) => `${packageName}-sync-${i + 1}`),
-              dependency_tree: JSON.stringify({ name: packageName, dependencies }),
-            },
-            package: toPackageSummary(pkg),
-          };
-        });
-      },
-    ) as StorageProgram<Result>;
+      package: toPackageSummary(pkg),
+    };
   },
 
-  install(input: Record<string, unknown>) {
+  async install(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const packageName = (input.package_name ?? input.name) as string;
     const version = (input.version as string | undefined) ?? '0.1.0';
 
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
+    const allPackages = await storage.find('package', {}) as PackageRecord[];
+    if (allPackages.find(p => p.name === packageName && p.version === version && p.status === 'installed')) {
+      return { variant: 'already_installed', package_name: packageName, version };
+    }
 
-    return branch(p,
-      (bindings) => {
-        const allPackages = bindings.allPackages as PackageRecord[];
-        return !!allPackages.find(p => p.name === packageName && p.version === version && p.status === 'installed');
-      },
-      (thenP) => complete(thenP, 'already_installed', { package_name: packageName, version }),
-      (elseP) => {
-        const pkgId = nextId('pkg');
-        const now = new Date().toISOString();
-        elseP = put(elseP, 'package', pkgId, {
-          id: pkgId,
-          name: packageName,
-          version,
-          registry: 'default',
-          status: 'installed',
-          content_hash: `sha256:${packageName}-${version}`,
-          manifest: '',
-          dependencies: [],
-          installed_at: now,
-          error: null,
-        });
-        return complete(elseP, 'ok', {
-          installed: pkgId,
-          details: toPackageSummary({
-            id: pkgId, name: packageName, version, registry: 'default',
-            status: 'installed', content_hash: `sha256:${packageName}-${version}`,
-            manifest: '', dependencies: [], installed_at: now, error: null,
-          }),
-        });
-      },
-    ) as StorageProgram<Result>;
+    const pkgId = nextId('pkg');
+    const now = new Date().toISOString();
+    const record: PackageRecord = {
+      id: pkgId, name: packageName, version, registry: 'default',
+      status: 'installed', content_hash: `sha256:${packageName}-${version}`,
+      manifest: '', dependencies: [], installed_at: now, error: null,
+    };
+    await storage.put('package', pkgId, record);
+
+    return {
+      variant: 'ok',
+      installed: pkgId,
+      details: toPackageSummary(record),
+    };
   },
 
-  update(input: Record<string, unknown>) {
+  async update(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const packageName = input.package_name as string;
     const targetVersion = input.target_version as string;
 
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
+    const allPackages = await storage.find('package', {}) as PackageRecord[];
+    const pkg = allPackages.find(p => p.name === packageName && p.status === 'installed');
+    if (!pkg) return { variant: 'not_installed', package_name: packageName };
 
-    return branch(p,
-      (bindings) => {
-        const allPackages = bindings.allPackages as PackageRecord[];
-        return !allPackages.find(p => p.name === packageName && p.status === 'installed');
-      },
-      (thenP) => complete(thenP, 'not_installed', { package_name: packageName }),
-      (elseP) => {
-        return completeFrom(elseP, 'ok', (bindings) => {
-          const allPackages = bindings.allPackages as PackageRecord[];
-          const pkg = allPackages.find(p => p.name === packageName && p.status === 'installed')!;
-          return {
-            updated: pkg.id,
-            details: toPackageSummary({ ...pkg, version: targetVersion }),
-          };
-        });
-      },
-    ) as StorageProgram<Result>;
+    // Write the updated version back to storage
+    const updated = { ...pkg, version: targetVersion };
+    await storage.put('package', pkg.id, updated);
+
+    return {
+      variant: 'ok',
+      updated: pkg.id,
+      details: toPackageSummary(updated as PackageRecord),
+    };
   },
 
-  remove(input: Record<string, unknown>) {
+  async remove(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const packageName = input.package_name as string;
 
-    let p = createProgram();
-    p = find(p, 'package', {}, 'allPackages');
+    const allPackages = await storage.find('package', {}) as PackageRecord[];
+    const pkg = allPackages.find(p => p.name === packageName && p.status === 'installed');
+    if (!pkg) return { variant: 'ok' };
 
-    return branch(p,
-      (bindings) => {
-        const allPackages = bindings.allPackages as PackageRecord[];
-        return !allPackages.find(p => p.name === packageName && p.status === 'installed');
-      },
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => {
-        return branch(elseP,
-          (bindings) => {
-            const allPackages = bindings.allPackages as PackageRecord[];
-            const dependents = allPackages.filter(p => {
-              if (p.status !== 'installed') return false;
-              const deps = p.dependencies || [];
-              return deps.includes(packageName);
-            });
-            return dependents.length > 0;
-          },
-          (depP) => completeFrom(depP, 'depended_upon', (bindings) => {
-            const allPackages = bindings.allPackages as PackageRecord[];
-            const dependents = allPackages
-              .filter(p => p.status === 'installed' && (p.dependencies || []).includes(packageName))
-              .map(d => d.name);
-            return { dependents };
-          }),
-          (okP) => complete(okP, 'ok', {}),
-        );
-      },
-    ) as StorageProgram<Result>;
+    // Check for dependents
+    const dependents = allPackages.filter(p => {
+      if (p.status !== 'installed') return false;
+      const deps = p.dependencies || [];
+      return deps.includes(packageName);
+    });
+    if (dependents.length > 0) {
+      return { variant: 'depended_upon', dependents: dependents.map(d => d.name) };
+    }
+
+    // Write removed status back to storage
+    await storage.put('package', pkg.id, { ...pkg, status: 'removed' });
+    return { variant: 'ok' };
   },
 
-  sync_registries(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'registry', {}, 'registries');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const registries = bindings.registries as Record<string, unknown>[];
-      const enabled = registries.filter(r => r.enabled === true);
-      return { updated_count: enabled.length };
-    }) as StorageProgram<Result>;
+  async sync_registries(_input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const registries = await storage.find('registry', {});
+    const enabled = registries.filter(r => r.enabled === true);
+    return { variant: 'ok', updated_count: enabled.length };
   },
 
-  listInstalled(_input: Record<string, unknown>) {
-    let p = createProgram();
-    p = find(p, 'package', {}, 'packages');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const packages = bindings.packages as PackageRecord[];
-      return {
-        packages: packages
-          .filter(pkg => pkg.status !== 'available' && pkg.status !== 'removed')
-          .map(pkg => toPackageSummary(pkg)),
-      };
-    }) as StorageProgram<Result>;
+  async listInstalled(_input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+    const packages = await storage.find('package', {}) as PackageRecord[];
+    return {
+      variant: 'ok',
+      packages: packages
+        .filter(pkg => pkg.status !== 'available' && pkg.status !== 'removed')
+        .map(pkg => toPackageSummary(pkg)),
+    };
   },
 };
-
-export const conceptBrowserHandler = autoInterpret(_handler);

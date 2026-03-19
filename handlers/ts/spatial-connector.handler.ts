@@ -9,12 +9,7 @@
 // be hidden (deleted).
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, del, branch, complete, completeFrom,
-  type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -23,8 +18,8 @@ function nextId(): string {
   return `connector-${++idCounter}`;
 }
 
-const _handler: FunctionalConceptHandler = {
-  draw(input: Record<string, unknown>) {
+export const spatialConnectorHandler: ConceptHandler = {
+  async draw(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = (input.canvas as string) ?? 'canvas';
     const source = (input.source as string) ?? (input.from as string);
     const target = (input.target as string) ?? (input.to as string);
@@ -33,66 +28,49 @@ const _handler: FunctionalConceptHandler = {
 
     const id = nextId();
     const record = {
-      id,
-      connector: id,
-      connector_canvas: canvas,
-      connector_source: source,
-      connector_target: target,
-      connector_type: type,
+      id, connector: id,
+      connector_canvas: canvas, connector_source: source,
+      connector_target: target, connector_type: type,
       connector_label: label ?? null,
-      from: source,
-      to: target,
-      type,
+      from: source, to: target, type,
     };
 
-    let p = createProgram();
-    p = put(p, 'spatial-connector', id, record);
-    p = put(p, 'connector', id, record);
-
-    return complete(p, 'ok', { connector: id }) as StorageProgram<Result>;
+    await storage.put('spatial-connector', id, record);
+    await storage.put('connector', id, record);
+    return { variant: 'ok', connector: id };
   },
 
-  promote(input: Record<string, unknown>) {
+  async promote(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const connector = input.connector as string;
+    const record = await storage.get('spatial-connector', connector);
+    if (!record) return { variant: 'notFound', message: `Connector '${connector}' not found` };
 
-    let p = createProgram();
-    p = get(p, 'spatial-connector', connector, 'record');
+    if (record.connector_type === 'semantic' || record.type === 'semantic') {
+      return { variant: 'already_semantic', message: `Connector '${connector}' is already semantic` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          if (record.connector_type === 'semantic' || record.type === 'semantic') {
-            return { variant: 'already_semantic', message: `Connector '${connector}' is already semantic` };
-          }
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Connector '${connector}' not found` }),
-    ) as StorageProgram<Result>;
+    const updated = { ...record, type: 'semantic', connector_type: 'semantic' };
+    await storage.put('spatial-connector', connector, updated);
+    await storage.put('connector', connector, updated);
+    return { variant: 'ok' };
   },
 
-  demote(input: Record<string, unknown>) {
+  async demote(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const connector = input.connector as string;
+    const record = await storage.get('spatial-connector', connector);
+    if (!record) return { variant: 'notFound', message: `Connector '${connector}' not found` };
 
-    let p = createProgram();
-    p = get(p, 'spatial-connector', connector, 'record');
+    if (record.connector_type === 'visual' || record.type === 'visual') {
+      return { variant: 'not_semantic', message: `Connector '${connector}' is not semantic` };
+    }
 
-    return branch(p, 'record',
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          if (record.connector_type === 'visual' || record.type === 'visual') {
-            return { variant: 'not_semantic', message: `Connector '${connector}' is not semantic` };
-          }
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Connector '${connector}' not found` }),
-    ) as StorageProgram<Result>;
+    const updated = { ...record, type: 'visual', connector_type: 'visual' };
+    await storage.put('spatial-connector', connector, updated);
+    await storage.put('connector', connector, updated);
+    return { variant: 'ok' };
   },
 
-  surface(input: Record<string, unknown>) {
+  async surface(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const canvas = (input.canvas as string) ?? 'canvas';
     const source = (input.source as string) ?? (input.from as string);
     const target = (input.target as string) ?? (input.to as string);
@@ -100,44 +78,28 @@ const _handler: FunctionalConceptHandler = {
 
     const id = nextId();
     const record = {
-      id,
-      connector: id,
-      connector_canvas: canvas,
-      connector_source: source,
-      connector_target: target,
-      connector_type: 'surfaced',
+      id, connector: id,
+      connector_canvas: canvas, connector_source: source,
+      connector_target: target, connector_type: 'surfaced',
       connector_label: ref ?? null,
-      from: source,
-      to: target,
-      ref,
-      type: 'semantic',
+      from: source, to: target, ref, type: 'semantic',
     };
 
-    let p = createProgram();
-    p = put(p, 'spatial-connector', id, record);
-    p = put(p, 'connector', id, record);
-
-    return complete(p, 'ok', { connector: id }) as StorageProgram<Result>;
+    await storage.put('spatial-connector', id, record);
+    await storage.put('connector', id, record);
+    return { variant: 'ok', connector: id };
   },
 
-  hide(input: Record<string, unknown>) {
+  async hide(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const connector = input.connector as string;
+    const record = await storage.get('spatial-connector', connector);
+    if (!record) return { variant: 'notFound', message: `Connector '${connector}' not found` };
 
-    let p = createProgram();
-    p = get(p, 'spatial-connector', connector, 'record');
-
-    return branch(p, 'record',
-      (thenP) => {
-        thenP = del(thenP, 'spatial-connector', connector);
-        thenP = del(thenP, 'connector', connector);
-        return complete(thenP, 'ok', {});
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Connector '${connector}' not found` }),
-    ) as StorageProgram<Result>;
+    await storage.del('spatial-connector', connector);
+    await storage.del('connector', connector);
+    return { variant: 'ok' };
   },
 };
-
-export const spatialConnectorHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSpatialConnectorCounter(): void {

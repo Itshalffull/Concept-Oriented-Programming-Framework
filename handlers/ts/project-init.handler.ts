@@ -4,7 +4,7 @@
 // manifests, emit derived concept files, then advance through install and generate stages.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -93,6 +93,12 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'init',
       (thenP) => {
+        // Persist the manifest in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          return { ...init, manifests: JSON.stringify(['clef.yaml']) };
+        });
+
         return completeFrom(thenP, 'ok', (bindings) => {
           const init = bindings.init as Record<string, unknown>;
           const projectName = init.projectName as string;
@@ -134,6 +140,31 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'init',
       (thenP) => {
+        // Persist the interface manifests in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const apiInterfaces = (profile.api_interfaces as string[]) || [];
+          const moduleList = JSON.parse(init.moduleList as string) as string[];
+
+          const concepts = moduleList.filter(m => !m.startsWith('derived:') && !m.endsWith('Adapter')
+            && !m.endsWith('Runtime') && !m.endsWith('Target') && !m.endsWith('Transport')
+            && !m.endsWith('Provider') && !m.endsWith('Spec'));
+
+          const interfaceManifests: Array<{ path: string; format: string }> = [];
+
+          for (const iface of apiInterfaces) {
+            const mapping = INTERFACE_MANIFEST_MAP[iface];
+            if (!mapping) continue;
+            interfaceManifests.push({
+              path: `interfaces/${mapping.filename}`,
+              format: mapping.format,
+            });
+          }
+
+          return { ...init, interfaceManifests: JSON.stringify(interfaceManifests) };
+        });
+
         return completeFrom(thenP, 'ok', (bindings) => {
           const init = bindings.init as Record<string, unknown>;
           const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
@@ -182,6 +213,22 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'init',
       (thenP) => {
+        // Persist deploy manifests in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
+          const deployTargets = (profile.deploy_targets as string[]) || [];
+
+          const deployManifests: Array<{ path: string; format: string }> = [];
+          for (const target of deployTargets) {
+            const mapping = DEPLOY_MANIFEST_MAP[target];
+            if (!mapping) continue;
+            deployManifests.push({ path: `deploy/${mapping.filename}`, format: mapping.format });
+          }
+
+          return { ...init, deployManifests: JSON.stringify(deployManifests) };
+        });
+
         return completeFrom(thenP, 'ok', (bindings) => {
           const init = bindings.init as Record<string, unknown>;
           const profile = JSON.parse(init.profile as string) as Record<string, unknown>;
@@ -226,6 +273,18 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'init',
       (thenP) => {
+        // Persist derived concept files in the init record
+        thenP = putFrom(thenP, 'projectInit', initId, (bindings) => {
+          const init = bindings.init as Record<string, unknown>;
+          const derivedConcepts = JSON.parse(init.derivedConcepts as string) as Array<{
+            name: string;
+            composes: string[];
+          }>;
+
+          const derivedFiles = derivedConcepts.map(d => `concepts/derived/${d.name}.derived.yaml`);
+          return { ...init, derivedFiles: JSON.stringify(derivedFiles) };
+        });
+
         return completeFrom(thenP, 'ok', (bindings) => {
           const init = bindings.init as Record<string, unknown>;
           const derivedConcepts = JSON.parse(init.derivedConcepts as string) as Array<{

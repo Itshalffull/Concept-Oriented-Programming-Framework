@@ -67,12 +67,13 @@ export function setStoredVersionProgram(version: number): StorageProgram<Record<
  */
 export function createMigrationGatedTransport(
   inner: ConceptTransport,
-  _storageUnused: unknown,
+  storageRef: unknown,
   currentVersion: number,
   requiredVersion: number,
 ): ConceptTransport & { isMigrationRequired(): boolean; getVersionInfo(): { current: number; required: number } } {
   let migrationRequired = true;
   let current = currentVersion;
+  const storage = storageRef as ConceptStorage | null;
 
   return {
     queryMode: inner.queryMode,
@@ -96,11 +97,16 @@ export function createMigrationGatedTransport(
 
       const resultPromise = inner.invoke(invocation);
 
-      // If migration succeeded, lift the gate
-      return resultPromise.then((result) => {
+      // If migration succeeded, lift the gate and update stored version
+      return resultPromise.then(async (result) => {
         if (invocation.action === 'migrate' && result.variant === 'ok') {
           current = requiredVersion;
           migrationRequired = false;
+          // Persist the new version to storage
+          if (storage) {
+            const program = setStoredVersionProgram(requiredVersion);
+            await interpret(program, storage);
+          }
         }
         return result;
       });
@@ -152,14 +158,14 @@ const _handler: FunctionalConceptHandler = {
 
           if (storedVersion === undefined) {
             // Fresh storage with meta record but no version — treat as fresh
-            return { variant: 'ok' };
+            return { migrationNeeded: false };
           }
 
           if (storedVersion >= specVersion) {
-            return {}; // no migration needed
+            return { migrationNeeded: false }; // no migration needed
           }
 
-          return { variant: 'needsMigration', from: storedVersion, to: specVersion };
+          return { migrationNeeded: true, currentVersion: storedVersion, requiredVersion: specVersion };
         });
       },
       // no meta record — fresh storage, set version
@@ -219,7 +225,7 @@ export async function setStoredVersion(storage: ConceptStorage, version: number)
 export async function checkMigrationNeeded(
   specVersion: number | undefined,
   storage: ConceptStorage,
-): Promise<{ from: number; to: number } | null> {
+): Promise<{ currentVersion: number; requiredVersion: number } | null> {
   if (specVersion === undefined || specVersion === null) {
     return null;
   }
@@ -229,8 +235,11 @@ export async function checkMigrationNeeded(
 
   if (result.variant === 'ok') {
     const output = result.output as Record<string, unknown>;
-    if (output.variant === 'needsMigration') {
-      return { from: output.from as number, to: output.to as number };
+    if (output.migrationNeeded) {
+      return {
+        currentVersion: output.currentVersion as number,
+        requiredVersion: output.requiredVersion as number,
+      };
     }
     return null;
   }

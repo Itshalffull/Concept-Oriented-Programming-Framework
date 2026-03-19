@@ -316,7 +316,7 @@ export interface ActionPattern {
  */
 export interface InvariantAssertion {
   left: AssertionExpr;
-  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in';
+  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'in' | 'not in';
   right: AssertionExpr;
 }
 

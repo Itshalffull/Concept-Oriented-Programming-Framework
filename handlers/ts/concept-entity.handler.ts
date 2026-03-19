@@ -156,9 +156,13 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
+        thenP = find(thenP, 'provenance', {}, 'allProvenance');
         return completeFrom(thenP, 'ok', (bindings) => {
-          // Would need to find provenance records, returning empty for non-iterative
-          return { artifacts: '[]' };
+          const record = bindings.record as Record<string, unknown>;
+          const symbol = record.symbol as string;
+          const allProvenance = bindings.allProvenance as Record<string, unknown>[];
+          const matching = allProvenance.filter((p) => p.sourceSymbol === symbol);
+          return { artifacts: JSON.stringify(matching) };
         });
       },
       (elseP) => complete(elseP, 'ok', { artifacts: '[]' }),

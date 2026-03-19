@@ -10,6 +10,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 import {
   createProgram, get, find, put, del, merge, branch, complete, completeFrom,
   mapBindings, putFrom, mergeFrom, type StorageProgram,
@@ -61,20 +62,9 @@ const _handler: FunctionalConceptHandler = {
   },
 
   updateKind(input: Record<string, unknown>) {
-    const connectorId = input.connector_id as string;
-    const kind = input.kind as string;
-
-    let p = createProgram();
-    p = find(p, 'canvas-connector-entity', { connector_id: connectorId }, 'entities');
-
-    return branch(p,
-      (bindings) => (bindings.entities as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'notfound', { message: `Connector entity for '${connectorId}' not found` }),
-      (elseP) => completeFrom(elseP, 'ok', (_bindings) => ({
-        connector_id: connectorId,
-        kind,
-      })),
-    ) as StorageProgram<Result>;
+    // Placeholder — overridden by imperative implementation below
+    const p = createProgram();
+    return complete(p, 'notfound', {}) as StorageProgram<Result>;
   },
 
   listByCanvas(input: Record<string, unknown>) {
@@ -153,7 +143,39 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const connectorEntityHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// updateKind requires a dynamic storage key (the entity's id from a find result),
+// which the StorageProgram DSL does not support. Override with imperative impl.
+async function _updateKind(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
+  const connectorId = input.connector_id as string;
+  const kind = input.kind as string;
+  const referenceId = input.reference_id as string | undefined;
+
+  const entities = await storage.find('canvas-connector-entity', { connector_id: connectorId });
+  if (!entities || entities.length === 0) {
+    return { variant: 'notfound', message: `Connector entity for '${connectorId}' not found` };
+  }
+
+  const entity = entities[0];
+  const entityId = entity.id as string;
+  const updated: Record<string, unknown> = { ...entity, kind };
+  if (referenceId !== undefined) {
+    updated.reference_id = referenceId;
+  }
+  // Remove _key from find results before writing back
+  delete updated._key;
+  await storage.put('canvas-connector-entity', entityId, updated);
+
+  return { variant: 'ok', connector_id: connectorId, kind };
+}
+
+export const connectorEntityHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'updateKind') return _updateKind;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetConnectorEntityCounter(): void {

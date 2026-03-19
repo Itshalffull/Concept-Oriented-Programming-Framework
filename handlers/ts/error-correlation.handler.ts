@@ -266,24 +266,48 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        thenP = find(thenP, 'runtime-flow', {}, 'allFlows');
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const flowId = record.flowId as string;
+          const allFlows = bindings.allFlows as Record<string, unknown>[];
 
-          // We need flow records but cannot do another storage call inside completeFrom.
-          // Return partial data for sync-chain resolution.
-          let source = record.sourceLocation as string;
-          if (!source || source === '{}') {
-            const stackSource = parseSourceFromStack(record.stackTrace as string);
-            source = stackSource
-              ? JSON.stringify(stackSource)
-              : JSON.stringify({ file: '', line: 0, col: 0 });
+          const flowRecord = allFlows.find((f) => f.flowId === flowId);
+          if (!flowRecord) {
+            return {
+              variant: 'inconclusive',
+              partialChain: '[]',
+              source: record.sourceLocation as string || '{}',
+            };
           }
 
+          let steps: Array<Record<string, unknown>> = [];
+          try {
+            steps = JSON.parse(flowRecord.steps as string || '[]');
+          } catch {
+            steps = [];
+          }
+
+          const chain = steps.map((s) => ({
+            entity: s.entity,
+            status: s.status,
+            error: s.error || null,
+          }));
+
+          const errorStep = steps.find((s) => s.status === 'error');
+          if (!errorStep) {
+            return {
+              variant: 'inconclusive',
+              partialChain: JSON.stringify(chain),
+              source: record.sourceLocation as string || '{}',
+            };
+          }
+
+          const likelyCause = { entity: errorStep.entity, reason: errorStep.error || 'unknown' };
+
           return {
-            variant: 'inconclusive',
-            partialChain: '[]',
-            source,
+            chain: JSON.stringify(chain),
+            likelyCause: JSON.stringify(likelyCause),
           };
         });
       },

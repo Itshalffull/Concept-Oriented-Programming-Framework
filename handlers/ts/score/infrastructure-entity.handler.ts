@@ -90,7 +90,7 @@ const _handler: FunctionalConceptHandler = {
   findByConcept(input: Record<string, unknown>) {
     let p = createProgram();
     const concept = input.concept as string;
-    p = find(p, 'infrastructure', 'all');
+    p = find(p, 'infrastructure', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
@@ -122,7 +122,7 @@ const _handler: FunctionalConceptHandler = {
 
   sharedBackends(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'infrastructure', 'all');
+    p = find(p, 'infrastructure', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;

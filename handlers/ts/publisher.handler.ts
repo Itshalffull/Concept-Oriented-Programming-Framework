@@ -4,6 +4,7 @@
 // lifecycle: artifact packaging, cryptographic signing, provenance
 // attestation, SBOM generation, and registry upload.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
@@ -66,82 +67,126 @@ const _handler: FunctionalConceptHandler = {
 
     return complete(p, 'ok', { publication: id }) as StorageProgram<Result>;
   },
+};
 
-  sign(input: Record<string, unknown>) {
+const baseHandler = autoInterpret(_handler);
+
+// sign, attest, generateSbom, upload need imperative style to merge publication records
+const handler: ConceptHandler = {
+  ...baseHandler,
+
+  async sign(input: Record<string, unknown>, storage: ConceptStorage) {
     const publication = input.publication as string;
 
-    let p = createProgram();
-    p = get(p, 'publication', publication, 'pub');
+    const pub = await storage.get('publication', publication);
+    if (!pub) {
+      return { variant: 'error', message: `Publication "${publication}" not found` };
+    }
 
-    return branch(p, 'pub',
-      (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const pub = bindings.pub as Record<string, unknown>;
-          const artifactHash = pub.artifact_hash as string;
-          const signature = createHash('sha256')
-            .update(`sig:${artifactHash}`)
-            .digest('hex');
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'error', { message: `Publication "${publication}" not found` }),
-    ) as StorageProgram<Result>;
+    const artifactHash = pub.artifact_hash as string;
+    const signature = createHash('sha256')
+      .update(`sig:${artifactHash}`)
+      .digest('hex');
+
+    await storage.put('publication', publication, {
+      ...pub,
+      signature,
+      status: 'signed',
+    });
+
+    return { variant: 'ok' };
   },
 
-  attest(input: Record<string, unknown>) {
+  async attest(input: Record<string, unknown>, storage: ConceptStorage) {
     const publication = input.publication as string;
     const builder = input.builder as string;
     const sourceRepo = input.source_repo as string;
     const sourceCommit = input.source_commit as string;
 
-    let p = createProgram();
-    p = get(p, 'publication', publication, 'pub');
+    const pub = await storage.get('publication', publication);
+    if (!pub) {
+      return { variant: 'error', message: `Publication "${publication}" not found` };
+    }
 
-    return branch(p, 'pub',
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => complete(elseP, 'error', { message: `Publication "${publication}" not found` }),
-    ) as StorageProgram<Result>;
+    const provenance = JSON.stringify({
+      builder,
+      source_repo: sourceRepo,
+      source_commit: sourceCommit,
+      slsa_level: 2,
+      timestamp: new Date().toISOString(),
+    });
+
+    await storage.put('publication', publication, {
+      ...pub,
+      provenance,
+    });
+
+    return { variant: 'ok' };
   },
 
-  generateSbom(input: Record<string, unknown>) {
+  async generateSbom(input: Record<string, unknown>, storage: ConceptStorage) {
     const publication = input.publication as string;
 
-    let p = createProgram();
-    p = get(p, 'publication', publication, 'pub');
+    const pub = await storage.get('publication', publication);
+    if (!pub) {
+      return { variant: 'error', message: `Publication "${publication}" not found` };
+    }
 
-    return branch(p, 'pub',
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => complete(elseP, 'error', { message: `Publication "${publication}" not found` }),
-    ) as StorageProgram<Result>;
+    const dependencies = JSON.parse(pub.dependencies as string || '[]');
+    const sbom = JSON.stringify({
+      spdxVersion: 'SPDX-2.3',
+      dataLicense: 'CC0-1.0',
+      name: pub.module_id as string,
+      packages: [
+        {
+          name: pub.module_id as string,
+          version: pub.version as string,
+          downloadLocation: pub.source_path as string,
+        },
+        ...dependencies.map((dep: string) => ({
+          name: dep,
+          version: '*',
+          downloadLocation: 'NOASSERTION',
+        })),
+      ],
+    });
+
+    await storage.put('publication', publication, {
+      ...pub,
+      sbom,
+    });
+
+    return { variant: 'ok' };
   },
 
-  upload(input: Record<string, unknown>) {
+  async upload(input: Record<string, unknown>, storage: ConceptStorage) {
     const publication = input.publication as string;
     const registryUrl = input.registry_url as string;
 
-    let p = createProgram();
-    p = get(p, 'publication', publication, 'pub');
+    const pub = await storage.get('publication', publication);
+    if (!pub) {
+      return { variant: 'error', message: `Publication "${publication}" not found` };
+    }
 
-    return branch(p, 'pub',
-      (thenP) => {
-        thenP = find(thenP, 'publication', {}, 'allPubs');
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const pub = bindings.pub as Record<string, unknown>;
-          const allPubs = bindings.allPubs as Record<string, unknown>[];
-          for (const existing of allPubs) {
-            if (existing.id !== publication &&
-                existing.module_id === pub.module_id &&
-                existing.version === pub.version &&
-                existing.status === 'published') {
-              return { variant: 'duplicate', existing_version: existing.version as string };
-            }
-          }
-          return {};
-        });
-      },
-      (elseP) => complete(elseP, 'error', { message: `Publication "${publication}" not found` }),
-    ) as StorageProgram<Result>;
+    // Check for duplicate published version
+    const allPubs = await storage.find('publication', {});
+    for (const existing of allPubs) {
+      if (existing._key !== publication &&
+          existing.module_id === pub.module_id &&
+          existing.version === pub.version &&
+          existing.status === 'published') {
+        return { variant: 'duplicate', existing_version: existing.version as string };
+      }
+    }
+
+    await storage.put('publication', publication, {
+      ...pub,
+      status: 'published',
+      registry_url: registryUrl,
+    });
+
+    return { variant: 'ok' };
   },
 };
 
-export const publisherHandler = autoInterpret(_handler);
+export const publisherHandler = handler as FunctionalConceptHandler & ConceptHandler;

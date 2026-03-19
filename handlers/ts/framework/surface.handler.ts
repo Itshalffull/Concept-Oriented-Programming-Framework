@@ -48,10 +48,23 @@ function detectConflicts(routes: RouteEntry[]): string[] {
   return conflicts;
 }
 
-function generateEntrypointContent(suite: string, target: string, outputs: string[], routes: RouteEntry[]): string {
+function generateEntrypointContent(suite: string, target: string, outputs: string[], _routes: RouteEntry[]): string {
   const conceptNames = outputs.map(o => o.replace(/-output$/, ''));
   const header = `// Auto-generated entrypoint for suite "${suite}", target "${target}"\n`;
-  // Simplified entrypoint generation
+
+  // MCP target: generate a boot script that starts the MCP server
+  if (target === 'mcp') {
+    return header +
+      `import { bootMcpServer } from '../../handlers/ts/framework/mcp-server.handler';\n\n` +
+      `const manifestPath = process.argv[2];\n` +
+      `if (!manifestPath) {\n` +
+      `  console.error('Usage: tsx <entrypoint> <manifest-path>');\n` +
+      `  process.exit(1);\n` +
+      `}\n\n` +
+      `await bootMcpServer(manifestPath);\n`;
+  }
+
+  // Default: simplified module-based entrypoint
   const imports = conceptNames.map(c => `import { ${toCamelCase(c)}Module } from './${toKebabCase(c)}/${toKebabCase(c)}.module';`).join('\n');
   const modules = conceptNames.map(c => `${toCamelCase(c)}Module`).join(', ');
   return header + `${imports}\n\nexport const modules = [${modules}];\n`;

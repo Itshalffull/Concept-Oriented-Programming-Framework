@@ -352,7 +352,12 @@ export const testGenHandler: FunctionalConceptHandler = {
     const slug = concept_ref.replace(/\//g, language === 'typescript' ? '-' : '_');
     const filesByLang: Record<string, string[]> = {
       typescript: [
-        `generated/tests/${slug}.conformance.test.ts`,
+        `generated/tests/${slug}.example.test.ts`,
+        `generated/tests/${slug}.property.test.ts`,
+        `generated/tests/${slug}.stateful.test.ts`,
+        `generated/tests/${slug}.safety.test.ts`,
+        `generated/tests/${slug}.liveness.test.ts`,
+        `generated/tests/${slug}.contract.test.ts`,
       ],
       rust: [
         `generated/tests/${slug}_conformance_test.rs`,

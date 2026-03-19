@@ -78,7 +78,7 @@ const _handler: FunctionalConceptHandler = {
     const interfaceId = input.interface as string;
     const target = input.target as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
@@ -99,7 +99,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
@@ -115,7 +115,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
@@ -131,7 +131,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
@@ -149,7 +149,7 @@ const _handler: FunctionalConceptHandler = {
   findByConcept(input: Record<string, unknown>) {
     let p = createProgram();
     const concept = input.concept as string;
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
@@ -202,7 +202,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const concept = input.concept as string;
     const action = input.action as string;
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
@@ -257,7 +257,7 @@ const _handler: FunctionalConceptHandler = {
     const path = input.path as string;
     const method = input.method as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
@@ -277,7 +277,7 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      return { _variant: 'notfound' };
+      return { variant: 'notfound' };
     }) as StorageProgram<Result>;
   },
 
@@ -285,7 +285,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const toolName = input.toolName as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
 
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
@@ -302,7 +302,7 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      return { _variant: 'notfound' };
+      return { variant: 'notfound' };
     }) as StorageProgram<Result>;
   },
 
@@ -310,7 +310,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);
@@ -326,7 +326,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const interfaceId = input.interface as string;
 
-    p = find(p, 'interfaces', 'all');
+    p = find(p, 'interfaces', {}, 'all');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.all || []) as Array<Record<string, unknown>>;
       const entry = all.find(i => i.id === interfaceId);

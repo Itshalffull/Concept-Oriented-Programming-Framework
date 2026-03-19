@@ -1,113 +1,83 @@
 // @migrated dsl-constructs 2026-03-18
 // StakeThreshold Sybil Resistance Provider
 // Requires participants to stake a minimum amount; supports balance tracking and slashing.
-import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
-} from '../../../../runtime/storage-program.ts';
-import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-const _stakeThresholdHandler: FunctionalConceptHandler = {
-  configure(input: Record<string, unknown>) {
+export const stakeThresholdHandler: ConceptHandler = {
+  async configure(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const id = `stake-cfg-${Date.now()}`;
-    let p = createProgram();
-    p = put(p, 'stake_cfg', id, {
+    await storage.put('stake_cfg', id, {
       id,
       minimumStake: input.minimumStake as number,
       token: input.token,
       lockPeriodDays: input.lockPeriodDays ?? 0,
     });
-    p = put(p, 'plugin-registry', `sybil-method:${id}`, {
+    await storage.put('plugin-registry', `sybil-method:${id}`, {
       id: `sybil-method:${id}`,
       pluginKind: 'sybil-method',
       provider: 'StakeThreshold',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return { variant: 'configured', config: id };
   },
 
-  deposit(input: Record<string, unknown>) {
+  async deposit(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { config, candidate, amount } = input;
     const key = `${config}:${candidate}`;
-    let p = createProgram();
-    p = get(p, 'stake_balance', key, 'existing');
 
-    p = mapBindings(p, (bindings) => {
-      const existing = bindings.existing as Record<string, unknown> | null;
-      const currentBalance = existing ? (existing.balance as number) : 0;
-      return currentBalance + (amount as number);
-    }, 'newBalance');
+    const existing = await storage.get('stake_balance', key);
+    const currentBalance = existing ? (existing.balance as number) : 0;
+    const newBalance = currentBalance + (amount as number);
 
-    p = put(p, 'stake_balance', key, {
+    await storage.put('stake_balance', key, {
       config,
       candidate,
-      balance: 0,
+      balance: newBalance,
       lastDepositAt: new Date().toISOString(),
     });
 
-    return completeFrom(p, 'deposited', (bindings) => {
-      return { candidate, balance: bindings.newBalance };
-    }) as StorageProgram<Result>;
+    return { variant: 'deposited', candidate, balance: newBalance };
   },
 
-  check(input: Record<string, unknown>) {
+  async check(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { config, candidate } = input;
-    let p = createProgram();
-    p = get(p, 'stake_cfg', config as string, 'cfg');
 
-    p = branch(p, 'cfg',
-      (b) => {
-        const key = `${config}:${candidate}`;
-        b = get(b, 'stake_balance', key, 'balanceRecord');
+    const cfg = await storage.get('stake_cfg', config as string);
+    if (!cfg) {
+      return { variant: 'not_found', config };
+    }
 
-        return completeFrom(b, 'qualified', (bindings) => {
-          const cfg = bindings.cfg as Record<string, unknown>;
-          const minimumStake = cfg.minimumStake as number;
-          const balanceRecord = bindings.balanceRecord as Record<string, unknown> | null;
-          const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+    const key = `${config}:${candidate}`;
+    const balanceRecord = await storage.get('stake_balance', key);
+    const balance = balanceRecord ? (balanceRecord.balance as number) : 0;
+    const minimumStake = cfg.minimumStake as number;
 
-          if (balance >= minimumStake) {
-            return { variant: 'qualified', candidate, balance, minimumStake };
-          }
-          return { variant: 'insufficient', candidate, balance, minimumStake, shortfall: minimumStake - balance };
-        });
-      },
-      (b) => complete(b, 'not_found', { config }),
-    );
-
-    return p as StorageProgram<Result>;
+    if (balance >= minimumStake) {
+      return { variant: 'qualified', candidate, balance, minimumStake };
+    }
+    return { variant: 'insufficient', candidate, balance, minimumStake, shortfall: minimumStake - balance };
   },
 
-  slash(input: Record<string, unknown>) {
+  async slash(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const { config, candidate, amount } = input;
     const key = `${config}:${candidate}`;
-    let p = createProgram();
-    p = get(p, 'stake_balance', key, 'existing');
 
-    p = branch(p, 'existing',
-      (b) => {
-        b = mapBindings(b, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          const currentBalance = existing.balance as number;
-          const slashAmount = Math.min(amount as number, currentBalance);
-          const newBalance = currentBalance - slashAmount;
-          return { slashedAmount: slashAmount, remainingBalance: newBalance };
-        }, 'slashResult');
+    const existing = await storage.get('stake_balance', key);
+    if (!existing) {
+      return { variant: 'no_balance', candidate };
+    }
 
-        let b2 = put(b, 'stake_balance', key, { balance: 0 });
-        return completeFrom(b2, 'slashed', (bindings) => {
-          const result = bindings.slashResult as Record<string, unknown>;
-          return { candidate, slashedAmount: result.slashedAmount, remainingBalance: result.remainingBalance };
-        });
-      },
-      (b) => complete(b, 'no_balance', { candidate }),
-    );
+    const currentBalance = existing.balance as number;
+    const slashAmount = Math.min(amount as number, currentBalance);
+    const newBalance = currentBalance - slashAmount;
 
-    return p as StorageProgram<Result>;
+    await storage.put('stake_balance', key, {
+      ...existing,
+      balance: newBalance,
+    });
+
+    return { variant: 'slashed', candidate, slashedAmount: slashAmount, remainingBalance: newBalance };
   },
 };
-
-export const stakeThresholdHandler = autoInterpret(_stakeThresholdHandler);

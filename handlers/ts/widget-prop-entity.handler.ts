@@ -65,10 +65,19 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
+        thenP = find(thenP, 'binding', {}, 'allBindings');
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          // Note: binding lookup would need find; simplified to noBinding
-          return { variant: 'noBinding' };
+          const symbol = record.symbol as string;
+          const allBindings = bindings.allBindings as Record<string, unknown>[];
+          const binding = allBindings.find((b) => b.propSymbol === symbol);
+          if (!binding) {
+            return { variant: 'noBinding' };
+          }
+          return {
+            field: binding.fieldSymbol as string,
+            concept: binding.concept as string,
+          };
         });
       },
       (elseP) => complete(elseP, 'noBinding', {}),

@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, complete, completeFrom,
+  createProgram, get, put, putFrom, complete, completeFrom,
   branch, mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -124,6 +124,10 @@ const _handler: FunctionalConceptHandler = {
             lastTestType: testType,
           };
         }, 'updatedRecord');
+
+        e = putFrom(e, 'type-script-builder', build, (b) => {
+          return b.updatedRecord as Record<string, unknown>;
+        });
 
         return complete(e, 'ok', {
           passed: 0,

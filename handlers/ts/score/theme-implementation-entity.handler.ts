@@ -75,7 +75,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    p = find(p, 'theme-implementations', {}, 'all');
     p = mapBindings(p, (bindings) => {
       const items = bindings.all as Record<string, unknown>[];
       const found = items.find(i => i.sourceFile === sourceFile);
@@ -116,7 +116,7 @@ const _handler: FunctionalConceptHandler = {
     const implId = input.impl as string;
     const tokenPath = input.tokenPath as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    p = find(p, 'theme-implementations', {}, 'all');
     p = mapBindings(p, (bindings) => {
       const items = bindings.all as Record<string, unknown>[];
       const found = items.find(i => i.id === implId);
@@ -154,7 +154,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const implId = input.impl as string;
 
-    p = find(p, 'theme-implementations', 'all');
+    p = find(p, 'theme-implementations', {}, 'all');
     p = mapBindings(p, (bindings) => {
       const items = bindings.all as Record<string, unknown>[];
       const found = items.find(i => i.id === implId);

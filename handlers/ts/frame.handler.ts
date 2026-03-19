@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, branch, complete, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -80,16 +80,23 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        thenP = mapBindings(thenP, (bindings) => {
           const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
           const items = (itemsRecord?.items as string[]) ?? [];
+          return !items.includes(item);
+        }, 'isNew');
 
-          if (items.includes(item)) {
-            return { variant: 'already_present', message: `Item '${item}' is already in frame '${frame}'` };
-          }
-
-          return { variant: 'ok', _needsPut: true };
-        });
+        return branch(thenP, 'isNew',
+          (addP) => {
+            addP = putFrom(addP, 'frame_items', frame, (bindings) => {
+              const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
+              const items = (itemsRecord?.items as string[]) ?? [];
+              return { id: frame, items: [...items, item] };
+            });
+            return complete(addP, 'ok', {});
+          },
+          (dupP) => complete(dupP, 'already_present', { message: `Item '${item}' is already in frame '${frame}'` }),
+        );
       },
       (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
     ) as StorageProgram<Result>;
@@ -105,16 +112,23 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
+        thenP = mapBindings(thenP, (bindings) => {
           const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
           const items = (itemsRecord?.items as string[]) ?? [];
+          return items.includes(item);
+        }, 'hasItem');
 
-          if (!items.includes(item)) {
-            return { variant: 'not_present', message: `Item '${item}' is not in frame '${frame}'` };
-          }
-
-          return { variant: 'ok' };
-        });
+        return branch(thenP, 'hasItem',
+          (removeP) => {
+            removeP = putFrom(removeP, 'frame_items', frame, (bindings) => {
+              const itemsRecord = bindings.itemsRecord as Record<string, unknown> | null;
+              const items = (itemsRecord?.items as string[]) ?? [];
+              return { id: frame, items: items.filter(i => i !== item) };
+            });
+            return complete(removeP, 'ok', {});
+          },
+          (notP) => complete(notP, 'not_present', { message: `Item '${item}' is not in frame '${frame}'` }),
+        );
       },
       (elseP) => complete(elseP, 'notFound', { message: `Frame '${frame}' not found` }),
     ) as StorageProgram<Result>;

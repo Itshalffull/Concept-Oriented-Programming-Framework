@@ -194,7 +194,7 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (differences.length === 0) {
-        return { _variant: 'same' };
+        return { variant: 'same' };
       }
 
       return { differences: JSON.stringify(differences) };

@@ -214,12 +214,10 @@ const _handler: FunctionalConceptHandler = {
         const record = bindings.record as Record<string, unknown>;
         try {
           const composed = JSON.parse(record.composedWidgets as string || '[]');
-          const childNames = composed.map((c: Record<string, unknown> | string) =>
-            typeof c === 'string' ? c : (c.name as string),
+          const children = composed.map((c: Record<string, unknown> | string) =>
+            typeof c === 'string' ? { name: c } : c,
           );
-          // Note: in functional style, we can't do sequential finds per child name.
-          // Return the child names for the caller to resolve.
-          return { children: JSON.stringify(childNames) };
+          return { children: JSON.stringify(children) };
         } catch {
           return { children: '[]' };
         }
@@ -236,10 +234,13 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
+        thenP = find(thenP, 'provenance', {}, 'allProvenance');
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          // Note: provenance lookup would need another find; simplified
-          return { components: '[]' };
+          const symbol = record.symbol as string;
+          const allProvenance = bindings.allProvenance as Record<string, unknown>[];
+          const matching = allProvenance.filter(p => p.sourceSymbol === symbol);
+          return { components: JSON.stringify(matching) };
         });
       },
       (elseP) => complete(elseP, 'ok', { components: '[]' }),

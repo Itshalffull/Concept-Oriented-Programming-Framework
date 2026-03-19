@@ -881,8 +881,21 @@ class Parser {
   /**
    * Parse a bare invariant body (after/then/and) — the existing syntax.
    * Called when 'invariant {' is followed directly by 'when' or 'after'.
+   * Falls back to prose when structured parsing fails.
    */
   private parseBareInvariantBody(): InvariantDecl {
+    const savedPos = this.pos;
+    try {
+      return this.parseBareInvariantBodyStructured();
+    } catch {
+      // Structured parse failed — fall back to consuming as prose
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return { kind: 'example', afterPatterns: [], thenPatterns: [] };
+    }
+  }
+
+  private parseBareInvariantBodyStructured(): InvariantDecl {
     // Parse optional "when" guard clause (before after)
     this.skipSeps();
     let whenClause: InvariantWhenClause | undefined;
@@ -1007,8 +1020,20 @@ class Parser {
 
   /**
    * Parse forall body: `given x in {set} after ... then ...`
+   * Falls back to prose when structured parsing fails.
    */
   private parseForallBody(name?: string): InvariantDecl {
+    const savedPos = this.pos;
+    try {
+      return this.parseForallBodyStructured(name);
+    } catch {
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return { kind: 'forall', name, afterPatterns: [], thenPatterns: [] };
+    }
+  }
+
+  private parseForallBodyStructured(name?: string): InvariantDecl {
     const quantifiers: QuantifierBinding[] = [];
 
     // Parse given bindings
@@ -1061,8 +1086,21 @@ class Parser {
 
   /**
    * Parse always body: `forall p in state_field: predicate`
+   * Falls back to prose when structured parsing fails.
    */
   private parseAlwaysBody(name?: string): InvariantDecl {
+    const savedPos = this.pos;
+    try {
+      return this.parseAlwaysBodyStructured(name);
+    } catch {
+      // Structured parse failed — fall back to consuming as prose
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return { kind: 'always', name, afterPatterns: [], thenPatterns: [] };
+    }
+  }
+
+  private parseAlwaysBodyStructured(name?: string): InvariantDecl {
     const quantifiers: QuantifierBinding[] = [];
     const thenSteps: InvariantASTStep[] = [];
 
@@ -1096,13 +1134,26 @@ class Parser {
 
   /**
    * Parse never body: `exists p in state_field: bad_predicate`
+   * Falls back to prose when structured parsing fails.
    */
   private parseNeverBody(name?: string): InvariantDecl {
+    const savedPos = this.pos;
+    try {
+      return this.parseNeverBodyStructured(name);
+    } catch {
+      // Structured parse failed — fall back to consuming as prose
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return { kind: 'never', name, afterPatterns: [], thenPatterns: [] };
+    }
+  }
+
+  private parseNeverBodyStructured(name?: string): InvariantDecl {
     const quantifiers: QuantifierBinding[] = [];
     const thenSteps: InvariantASTStep[] = [];
 
     this.skipSeps();
-    if (this.peek().type === 'KEYWORD' && this.peek().value === 'exists') {
+    if (this.peek().type === 'KEYWORD' && (this.peek().value === 'exists' || this.peek().value === 'forall')) {
       this.advance();
       quantifiers.push(this.parseQuantifierBinding());
     }
@@ -1128,8 +1179,20 @@ class Parser {
 
   /**
    * Parse eventually body: `forall r where cond: outcome`
+   * Falls back to prose when structured parsing fails.
    */
   private parseEventuallyBody(name?: string): InvariantDecl {
+    const savedPos = this.pos;
+    try {
+      return this.parseEventuallyBodyStructured(name);
+    } catch {
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return { kind: 'eventually', name, afterPatterns: [], thenPatterns: [] };
+    }
+  }
+
+  private parseEventuallyBodyStructured(name?: string): InvariantDecl {
     const quantifiers: QuantifierBinding[] = [];
     const thenSteps: InvariantASTStep[] = [];
 
@@ -1161,12 +1224,79 @@ class Parser {
   /**
    * Parse action requires/ensures contract block:
    * `action X { requires: P  ensures ok: Q }`
+   * Also handles prose-style: `action X requires { prose } ensures { prose }`
+   * Falls back to prose when structured parsing fails.
    */
   private parseActionContract(): InvariantDecl {
     this.advance(); // consume 'action'
     const targetAction = this.expectIdent().value;
+
+    // Check for prose-style: `action X requires { ... } ensures { ... }`
+    // (no LBRACE immediately after action name — instead 'requires' or 'ensures' keyword)
+    if (this.peek().type === 'KEYWORD' && (this.peek().value === 'requires' || this.peek().value === 'ensures')) {
+      // Prose-style contract — consume all brace blocks until we're done
+      while (this.peek().type === 'KEYWORD' && (this.peek().value === 'requires' || this.peek().value === 'ensures')) {
+        this.advance(); // consume requires/ensures
+        if (this.peek().type === 'LBRACE') {
+          this.advance(); // consume LBRACE
+          this.skipToClosingBrace();
+        }
+        this.skipSeps();
+      }
+      return {
+        kind: 'requires_ensures',
+        targetAction,
+        afterPatterns: [],
+        thenPatterns: [],
+        contracts: [],
+      };
+    }
+
+    // Stray action declaration: `action X(params) { variants }`
+    // This is a misplaced action decl at concept body level — consume it.
+    if (this.peek().type === 'LPAREN') {
+      // Skip params
+      this.advance(); // consume LPAREN
+      let parenDepth = 1;
+      while (parenDepth > 0 && this.peek().type !== 'EOF') {
+        const t = this.advance();
+        if (t.type === 'LPAREN') parenDepth++;
+        else if (t.type === 'RPAREN') parenDepth--;
+      }
+      // Skip the brace-delimited body if present
+      if (this.peek().type === 'LBRACE') {
+        this.advance();
+        this.skipToClosingBrace();
+      }
+      return {
+        kind: 'requires_ensures',
+        targetAction,
+        afterPatterns: [],
+        thenPatterns: [],
+        contracts: [],
+      };
+    }
+
     this.expect('LBRACE');
 
+    const savedPos = this.pos;
+    try {
+      return this.parseActionContractStructured(targetAction);
+    } catch {
+      // Structured parse failed — fall back to consuming as prose
+      this.pos = savedPos;
+      this.skipToClosingBrace();
+      return {
+        kind: 'requires_ensures',
+        targetAction,
+        afterPatterns: [],
+        thenPatterns: [],
+        contracts: [],
+      };
+    }
+  }
+
+  private parseActionContractStructured(targetAction: string): InvariantDecl {
     const contracts: ActionContract[] = [];
     this.skipSeps();
 
@@ -1305,14 +1435,15 @@ class Parser {
       return { kind: 'assertion', ...this.parseAssertion() };
     }
 
-    // Comparison assertion: var op value (where op is =, !=, >, <, >=, <=, in)
+    // Comparison assertion: var op value (where op is =, !=, >, <, >=, <=, in, not in)
     if (
       (tok.type === 'IDENT' || tok.type === 'KEYWORD') &&
       next && (
         next.type === 'EQUALS' || next.type === 'NOT_EQUALS' ||
         next.type === 'GT' || next.type === 'GTE' ||
         next.type === 'LT' || next.type === 'LTE' ||
-        (next.type === 'KEYWORD' && next.value === 'in')
+        (next.type === 'KEYWORD' && next.value === 'in') ||
+        (next.type === 'KEYWORD' && next.value === 'not')
       )
     ) {
       return { kind: 'assertion', ...this.parseAssertion() };
@@ -1405,6 +1536,15 @@ class Parser {
       case 'LTE': this.advance(); return '<=';
       case 'KEYWORD':
         if (tok.value === 'in') { this.advance(); return 'in'; }
+        // `not in` operator
+        if (tok.value === 'not') {
+          const next = this.tokens[this.pos + 1];
+          if (next && next.type === 'KEYWORD' && next.value === 'in') {
+            this.advance(); // consume 'not'
+            this.advance(); // consume 'in'
+            return 'not in' as InvariantAssertion['operator'];
+          }
+        }
         break;
     }
     throw new Error(
@@ -1435,9 +1575,13 @@ class Parser {
   private parseActionPattern(): ActionPattern {
     this.skipSeps(); // Skip newlines before action name (e.g. after 'and' keyword)
     const actionName = this.expectIdent().value;
-    this.expect('LPAREN');
-    const inputArgs = this.parseArgPatterns();
-    this.expect('RPAREN');
+    // Input params are optional: `action(args) -> variant` or `action -> variant`
+    let inputArgs: ArgPattern[] = [];
+    if (this.peek().type === 'LPAREN') {
+      this.advance();
+      inputArgs = this.parseArgPatterns();
+      this.expect('RPAREN');
+    }
     this.skipSeps(); // Skip newlines before -> in multi-line invariant steps
     this.expect('ARROW');
     const variantName = this.expectIdent().value;

@@ -259,56 +259,9 @@ const _handler: FunctionalConceptHandler = {
    * none are written. Returns per-file results.
    */
   writeBatch(input: Record<string, unknown>) {
-    const files = input.files as Array<{
-      path: string;
-      content: string;
-      formatHint?: string;
-      sources?: SourceEntry[];
-      target?: string;
-      concept?: string;
-    }>;
-
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      let p = createProgram();
-      p = complete(p, 'ok', { results: [] });
-      return p;
-    }
-
-    // For batch writes, write all files and collect results
+    // Placeholder — overridden by imperative implementation below
     let p = createProgram();
-    const results: Array<{ path: string; written: boolean; contentHash: string }> = [];
-
-    for (const file of files) {
-      const hash = sha256(file.content);
-      const key = fileKey(file.path);
-      const fileId = randomUUID();
-      const sizeBytes = Buffer.byteLength(file.content, 'utf8');
-      const now = new Date().toISOString();
-
-      p = put(p, FILES_RELATION, key, {
-        id: fileId,
-        path: file.path,
-        hash,
-        target: file.target || '',
-        concept: file.concept || '',
-        content: file.content,
-        sizeBytes,
-        generatedAt: now,
-        formatted: false,
-      });
-
-      if (file.sources && file.sources.length > 0) {
-        p = put(p, SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
-      }
-
-      results.push({
-        path: file.path,
-        written: true,
-        contentHash: hash,
-      });
-    }
-
-    p = complete(p, 'ok', { results });
+    p = complete(p, 'ok', { results: [] });
     return p;
   },
 
@@ -563,4 +516,68 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const emitterHandler = autoInterpret(_handler);
+import type { ConceptStorage } from '../../../runtime/types.ts';
+
+const _base = autoInterpret(_handler);
+
+// writeBatch needs content-addressed deduplication which requires reading existing
+// records per-file (dynamic keys from input array). Override with imperative impl.
+async function _writeBatch(input: Record<string, unknown>, storage: ConceptStorage) {
+  const files = input.files as Array<{
+    path: string;
+    content: string;
+    formatHint?: string;
+    sources?: SourceEntry[];
+    target?: string;
+    concept?: string;
+  }>;
+
+  if (!files || !Array.isArray(files) || files.length === 0) {
+    return { variant: 'ok', results: [] };
+  }
+
+  const results: Array<{ path: string; written: boolean; contentHash: string }> = [];
+
+  for (const file of files) {
+    const hash = sha256(file.content);
+    const key = fileKey(file.path);
+
+    const existing = await storage.get(FILES_RELATION, key);
+
+    if (existing && existing.hash === hash) {
+      results.push({ path: file.path, written: false, contentHash: hash });
+      continue;
+    }
+
+    const fileId = existing ? (existing.id as string) : randomUUID();
+    const sizeBytes = Buffer.byteLength(file.content, 'utf8');
+    const now = new Date().toISOString();
+
+    await storage.put(FILES_RELATION, key, {
+      id: fileId,
+      path: file.path,
+      hash,
+      target: file.target || '',
+      concept: file.concept || '',
+      content: file.content,
+      sizeBytes,
+      generatedAt: now,
+      formatted: false,
+    });
+
+    if (file.sources && file.sources.length > 0) {
+      await storage.put(SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
+    }
+
+    results.push({ path: file.path, written: true, contentHash: hash });
+  }
+
+  return { variant: 'ok', results };
+}
+
+export const emitterHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'writeBatch') return _writeBatch;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;

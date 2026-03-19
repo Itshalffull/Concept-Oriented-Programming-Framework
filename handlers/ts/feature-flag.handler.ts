@@ -7,12 +7,7 @@
 // graph using set union with mutual-exclusion constraint enforcement.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -33,129 +28,130 @@ interface FeatureFlagRecord {
   enabled: boolean;
 }
 
-const _handler: FunctionalConceptHandler = {
-  enable(input: Record<string, unknown>) {
+export const featureFlagHandler: ConceptHandler = {
+  async enable(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagId = input.flag as string;
 
-    let p = createProgram();
-    p = get(p, 'featureFlag', flagId, 'flag');
+    const flag = await storage.get('featureFlag', flagId) as FeatureFlagRecord | null;
+    if (!flag) {
+      return { variant: 'notfound' };
+    }
 
-    return branch(p, 'flag',
-      (thenP) => {
-        return completeFrom(thenP, 'dynamic', (bindings) => {
-          const flag = bindings.flag as unknown as FeatureFlagRecord;
+    if (flag.enabled) {
+      return { variant: 'ok' };
+    }
 
-          if (flag.enabled) {
-            return { variant: 'ok' };
-          }
+    // Check mutual exclusion against all flags in the same module
+    const allFlags = await storage.find('featureFlag', {}) as unknown[] as FeatureFlagRecord[];
+    const sameModuleEnabled = allFlags.filter(
+      f => f.module_id === flag.module_id && f.enabled && f.flagId !== flagId,
+    );
 
-          // Need to check mutual exclusion but we need allFlags
-          // This requires a second storage call, handled via the program chain
-          return { variant: '_needsMutualCheck', flagId };
-        });
-      },
-      (elseP) => complete(elseP, 'notfound', {}),
-    ) as StorageProgram<Result>;
+    for (const existing of sameModuleEnabled) {
+      if (
+        existing.mutually_exclusive_with.includes(flag.name) ||
+        flag.mutually_exclusive_with.includes(existing.name)
+      ) {
+        return { variant: 'conflict', conflicting_flag: existing.name, module_id: flag.module_id };
+      }
+    }
+
+    await storage.put('featureFlag', flagId, { ...flag, enabled: true });
+    return { variant: 'ok' };
   },
 
-  disable(input: Record<string, unknown>) {
+  async disable(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagId = input.flag as string;
 
-    let p = createProgram();
-    p = get(p, 'featureFlag', flagId, 'flag');
+    const flag = await storage.get('featureFlag', flagId);
+    if (!flag) {
+      return { variant: 'notfound' };
+    }
 
-    return branch(p, 'flag',
-      (thenP) => {
-        thenP = putFrom(thenP, 'featureFlag', flagId, (bindings) => {
-          const flag = bindings.flag as Record<string, unknown>;
-          return { ...flag, enabled: false };
-        });
-        return complete(thenP, 'ok', {});
-      },
-      (elseP) => complete(elseP, 'notfound', {}),
-    ) as StorageProgram<Result>;
+    await storage.put('featureFlag', flagId, { ...flag, enabled: false });
+    return { variant: 'ok' };
   },
 
-  unify(input: Record<string, unknown>) {
+  async unify(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const flagIds = input.flags as string[];
 
-    // Fetch all flags to do mutual exclusion checking
-    let p = createProgram();
-    p = find(p, 'featureFlag', {}, 'allFlags');
+    const allFlags = await storage.find('featureFlag', {}) as unknown[] as FeatureFlagRecord[];
 
-    return completeFrom(p, 'dynamic', (bindings) => {
-      const allFlags = bindings.allFlags as unknown[] as FeatureFlagRecord[];
+    // Collect referenced flags
+    const flags: FeatureFlagRecord[] = [];
+    for (const flagId of flagIds) {
+      const flag = allFlags.find(f => f.flagId === flagId);
+      if (flag) flags.push(flag);
+    }
 
-      // Collect referenced flags
-      const flags: FeatureFlagRecord[] = [];
-      for (const flagId of flagIds) {
-        const flag = allFlags.find(f => f.flagId === flagId);
-        if (flag) flags.push(flag);
-      }
+    // Group by module_id
+    const byModule = new Map<string, FeatureFlagRecord[]>();
+    for (const flag of flags) {
+      const existing = byModule.get(flag.module_id) || [];
+      existing.push(flag);
+      byModule.set(flag.module_id, existing);
+    }
 
-      // Group by module_id
-      const byModule = new Map<string, FeatureFlagRecord[]>();
-      for (const flag of flags) {
-        const existing = byModule.get(flag.module_id) || [];
-        existing.push(flag);
-        byModule.set(flag.module_id, existing);
-      }
+    const unified: string[] = [];
 
-      const unified: string[] = [];
+    for (const [moduleId, moduleFlags] of byModule) {
+      // Check mutual exclusion within unification set
+      for (let i = 0; i < moduleFlags.length; i++) {
+        for (let j = i + 1; j < moduleFlags.length; j++) {
+          const flagA = moduleFlags[i];
+          const flagB = moduleFlags[j];
 
-      for (const [moduleId, moduleFlags] of byModule) {
-        // Check mutual exclusion within unification set
-        for (let i = 0; i < moduleFlags.length; i++) {
-          for (let j = i + 1; j < moduleFlags.length; j++) {
-            const flagA = moduleFlags[i];
-            const flagB = moduleFlags[j];
-
-            if (
-              flagA.mutually_exclusive_with.includes(flagB.name) ||
-              flagB.mutually_exclusive_with.includes(flagA.name)
-            ) {
-              return {
-                variant: 'conflict',
-                module_id: moduleId,
-                flag_a: flagA.name,
-                flag_b: flagB.name,
-              };
-            }
+          if (
+            flagA.mutually_exclusive_with.includes(flagB.name) ||
+            flagB.mutually_exclusive_with.includes(flagA.name)
+          ) {
+            return {
+              variant: 'conflict',
+              module_id: moduleId,
+              flag_a: flagA.name,
+              flag_b: flagB.name,
+            };
           }
         }
+      }
 
-        // Check against already-enabled flags not in the unification set
-        const existingEnabled = allFlags.filter(
-          (f) =>
-            f.module_id === moduleId &&
-            f.enabled &&
-            !flagIds.includes(f.flagId),
-        );
+      // Check against already-enabled flags not in the unification set
+      const existingEnabled = allFlags.filter(
+        (f) =>
+          f.module_id === moduleId &&
+          f.enabled &&
+          !flagIds.includes(f.flagId),
+      );
 
-        for (const existing of existingEnabled) {
-          for (const newFlag of moduleFlags) {
-            if (
-              existing.mutually_exclusive_with.includes(newFlag.name) ||
-              newFlag.mutually_exclusive_with.includes(existing.name)
-            ) {
-              return {
-                variant: 'conflict',
-                module_id: moduleId,
-                flag_a: existing.name,
-                flag_b: newFlag.name,
-              };
-            }
+      for (const existing of existingEnabled) {
+        for (const newFlag of moduleFlags) {
+          if (
+            existing.mutually_exclusive_with.includes(newFlag.name) ||
+            newFlag.mutually_exclusive_with.includes(existing.name)
+          ) {
+            return {
+              variant: 'conflict',
+              module_id: moduleId,
+              flag_a: existing.name,
+              flag_b: newFlag.name,
+            };
           }
-        }
-
-        for (const flag of moduleFlags) {
-          unified.push(flag.flagId);
         }
       }
 
-      return { variant: 'ok', unified };
-    }) as StorageProgram<Result>;
+      for (const flag of moduleFlags) {
+        unified.push(flag.flagId);
+      }
+    }
+
+    // Enable all unified flags
+    for (const flagId of unified) {
+      const flag = allFlags.find(f => f.flagId === flagId);
+      if (flag) {
+        await storage.put('featureFlag', flagId, { ...flag, enabled: true });
+      }
+    }
+
+    return { variant: 'ok', unified };
   },
 };
-
-export const featureFlagHandler = autoInterpret(_handler);

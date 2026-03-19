@@ -8,6 +8,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, find, get, put, complete, completeFrom,
   branch, mapBindings, type StorageProgram,
@@ -156,7 +157,45 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const suiteManagerHandler = autoInterpret(_handler);
+const _base = autoInterpret(_handler);
+
+// validate needs to update the status of an existing suite record found via find(),
+// which requires a dynamic storage key not supported by the StorageProgram DSL.
+async function _validate(input: Record<string, unknown>, storage: ConceptStorage) {
+  const path = input.path as string;
+
+  const existing = await storage.find('suite-manager', { path });
+  if (existing && existing.length > 0) {
+    const entity = existing[0];
+    const entityId = entity.id as string;
+    const updated = { ...entity, status: 'validated' };
+    delete updated._key;
+    await storage.put('suite-manager', entityId, updated);
+
+    const concepts = (typeof entity.conceptCount === 'number') ? entity.conceptCount : 0;
+    const syncs = (typeof entity.syncCount === 'number') ? entity.syncCount : 0;
+    return { variant: 'ok', suite: entityId, concepts, syncs };
+  }
+
+  // No existing suite — create a new entry
+  const suiteId = nextId();
+  const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
+  await storage.put('suite-manager', suiteId, {
+    id: suiteId,
+    name: suiteName,
+    path,
+    status: 'validated',
+    createdAt: new Date().toISOString(),
+  });
+  return { variant: 'ok', suite: suiteId, concepts: 0, syncs: 0 };
+}
+
+export const suiteManagerHandler = new Proxy(_base, {
+  get(target, prop: string) {
+    if (prop === 'validate') return _validate;
+    return (target as Record<string, unknown>)[prop];
+  },
+}) as typeof _base;
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSuiteManagerCounter(): void {

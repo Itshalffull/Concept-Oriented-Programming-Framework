@@ -182,11 +182,15 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
+        thenP = find(thenP, 'widget-state-entity', {}, 'allStatesRaw');
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const widget = record.widget as string;
-          // Note: full BFS requires all states; simplified for single-step
-          return { reachable: '[]', via: '[]' };
+          const startName = record.name as string;
+          const allStatesRaw = bindings.allStatesRaw as Record<string, unknown>[];
+          const widgetStates = allStatesRaw.filter((s) => s.widget === widget);
+          const { reachable, via } = computeReachable(startName, widgetStates);
+          return { reachable: JSON.stringify(reachable), via: JSON.stringify(via) };
         });
       },
       (elseP) => complete(elseP, 'ok', { reachable: '[]', via: '[]' }),

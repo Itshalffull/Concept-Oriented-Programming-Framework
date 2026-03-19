@@ -3,6 +3,7 @@
 // Index of available module metadata with versioned artifacts, dependency edges,
 // capability declarations, and compile-time feature definitions.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
@@ -60,65 +61,6 @@ function matchesSemverRange(version: string, range: string): boolean {
 }
 
 const _handler: FunctionalConceptHandler = {
-  publish(input: Record<string, unknown>) {
-    const name = input.name as string;
-    const namespace = input.namespace as string;
-    const version = input.version as string;
-    const kind = input.kind as string;
-    const artifactHash = input.artifact_hash as string;
-    const dependencies = input.dependencies as Array<{
-      module_id: string;
-      version_range: string;
-      edge_type: string;
-      environment: string;
-    }>;
-    const metadata = input.metadata as {
-      description: string;
-      license: string;
-      repository: string;
-      authors: string[];
-      keywords: string[];
-    };
-
-    // Validate artifact hash format
-    if (!artifactHash || !artifactHash.includes(':')) {
-      const p = createProgram();
-      return complete(p, 'invalid', { message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' }) as StorageProgram<Result>;
-    }
-
-    // Validate required metadata fields
-    if (!metadata || !metadata.description || !metadata.license) {
-      const p = createProgram();
-      return complete(p, 'invalid', { message: 'Metadata must include description and license fields' }) as StorageProgram<Result>;
-    }
-
-    let p = createProgram();
-    p = find(p, 'registryModule', {}, 'existing');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      for (const mod of existing) {
-        if (mod.name === name && mod.namespace === namespace && mod.version === version) {
-          return { variant: 'duplicate' };
-        }
-      }
-      const moduleId = `mod-${nextId++}`;
-      return { module: moduleId };
-    }) as StorageProgram<Result>;
-  },
-
-  yank(input: Record<string, unknown>) {
-    const moduleId = input.module as string;
-
-    let p = createProgram();
-    p = get(p, 'registryModule', moduleId, 'mod');
-
-    return branch(p, 'mod',
-      (thenP) => complete(thenP, 'ok', {}),
-      (elseP) => complete(elseP, 'notfound', {}),
-    ) as StorageProgram<Result>;
-  },
-
   lookup(input: Record<string, unknown>) {
     const name = input.name as string;
     const namespace = input.namespace as string;
@@ -244,4 +186,83 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const registryHandler = autoInterpret(_handler);
+const baseHandler = autoInterpret(_handler);
+
+// publish and yank need imperative style for dynamic storage keys
+const handler: ConceptHandler = {
+  ...baseHandler,
+
+  async publish(input: Record<string, unknown>, storage: ConceptStorage) {
+    const name = input.name as string;
+    const namespace = input.namespace as string;
+    const version = input.version as string;
+    const kind = input.kind as string;
+    const artifactHash = input.artifact_hash as string;
+    const dependencies = input.dependencies as Array<{
+      module_id: string;
+      version_range: string;
+      edge_type: string;
+      environment: string;
+    }>;
+    const metadata = input.metadata as {
+      description: string;
+      license: string;
+      repository: string;
+      authors: string[];
+      keywords: string[];
+    };
+    const capabilitiesProvided = input.capabilities_provided as string[] | undefined;
+
+    // Validate artifact hash format
+    if (!artifactHash || !artifactHash.includes(':')) {
+      return { variant: 'invalid', message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' };
+    }
+
+    // Validate required metadata fields
+    if (!metadata || !metadata.description || !metadata.license) {
+      return { variant: 'invalid', message: 'Metadata must include description and license fields' };
+    }
+
+    // Check for duplicate
+    const existing = await storage.find('registryModule', {});
+    for (const mod of existing) {
+      if (mod.name === name && mod.namespace === namespace && mod.version === version) {
+        return { variant: 'duplicate' };
+      }
+    }
+
+    const moduleId = `mod-${nextId++}`;
+    await storage.put('registryModule', moduleId, {
+      moduleId,
+      name,
+      namespace,
+      version,
+      kind,
+      artifactHash,
+      dependencies: JSON.stringify(dependencies || []),
+      metadata,
+      capabilitiesProvided: capabilitiesProvided || [],
+      yanked: false,
+    });
+
+    return { variant: 'ok', module: moduleId };
+  },
+
+  async yank(input: Record<string, unknown>, storage: ConceptStorage) {
+    const moduleId = input.module as string;
+
+    const mod = await storage.get('registryModule', moduleId);
+    if (!mod) {
+      return { variant: 'notfound' };
+    }
+
+    await storage.put('registryModule', moduleId, {
+      ...mod,
+      yanked: true,
+    });
+
+    return { variant: 'ok' };
+  },
+};
+
+export const registryHandler = handler as FunctionalConceptHandler & ConceptHandler;

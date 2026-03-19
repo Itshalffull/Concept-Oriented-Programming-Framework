@@ -157,8 +157,7 @@ const _handler: FunctionalConceptHandler = {
       (thenP) => {
         return branchDsl(thenP, 'branch2',
           (bothP) => {
-            // Divergence point computation requires iterative DAG traversal
-            // which can't be expressed as static DSL. Return heads for comparison.
+            bothP = find(bothP, 'dag-history', {}, 'allNodes');
             return completeFrom(bothP, 'ok', (bindings) => {
               const branch1 = bindings.branch1 as Record<string, unknown>;
               const branch2 = bindings.branch2 as Record<string, unknown>;
@@ -169,8 +168,48 @@ const _handler: FunctionalConceptHandler = {
                 return { variant: 'noDivergence', message: 'Both branches point to the same node' };
               }
 
-              // Without iterative storage access, return a placeholder
-              return { variant: 'ok', nodeId: head1 };
+              const allNodes = bindings.allNodes as Record<string, unknown>[];
+              const nodeMap = new Map<string, Record<string, unknown>>();
+              for (const n of allNodes) {
+                nodeMap.set(n.id as string, n);
+              }
+
+              // Walk ancestors of both heads and find common ancestor
+              const ancestors1 = new Set<string>();
+              const queue1 = [head1];
+              while (queue1.length > 0) {
+                const current = queue1.shift()!;
+                if (ancestors1.has(current)) continue;
+                ancestors1.add(current);
+                const node = nodeMap.get(current);
+                if (node) {
+                  const parents = node.parents as string[] || [];
+                  for (const parent of parents) {
+                    queue1.push(parent);
+                  }
+                }
+              }
+
+              // Walk ancestors of head2 and find first common
+              const queue2 = [head2];
+              const visited2 = new Set<string>();
+              while (queue2.length > 0) {
+                const current = queue2.shift()!;
+                if (visited2.has(current)) continue;
+                visited2.add(current);
+                if (ancestors1.has(current)) {
+                  return { nodeId: current };
+                }
+                const node = nodeMap.get(current);
+                if (node) {
+                  const parents = node.parents as string[] || [];
+                  for (const parent of parents) {
+                    queue2.push(parent);
+                  }
+                }
+              }
+
+              return { nodeId: head1 };
             });
           },
           (noB2P) => complete(noB2P, 'notFound', { message: `Branch '${b2}' not found` }),

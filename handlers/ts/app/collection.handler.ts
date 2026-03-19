@@ -2,8 +2,9 @@
 // Collection Concept Implementation
 // Organize content into queryable sets: concrete (manually curated) or virtual (computed from a query).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import type { ConceptStorage } from '../../../runtime/types.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -44,9 +45,14 @@ const _collectionHandler: FunctionalConceptHandler = {
     p = spGet(p, 'collection', collection, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        // Append member to existing list — resolved at runtime
-        let b2 = put(b, 'collection', collection, {
-          updatedAt: new Date().toISOString(),
+        let b2 = putFrom(b, 'collection', collection, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          let members: string[] = [];
+          try {
+            members = JSON.parse(existing.members as string || '[]');
+          } catch { /* empty */ }
+          members.push(member);
+          return { ...existing, members: JSON.stringify(members), updatedAt: new Date().toISOString() };
         });
         return complete(b2, 'ok', {});
       },
@@ -80,7 +86,14 @@ const _collectionHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'collection', collection, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { members: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        let members: string[] = [];
+        try {
+          members = JSON.parse(existing.members as string || '[]');
+        } catch { /* empty */ }
+        return { members: members.join(',') };
+      }),
       (b) => complete(b, 'notfound', {}),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

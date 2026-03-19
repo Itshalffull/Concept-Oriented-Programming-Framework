@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -105,7 +105,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'schema-evolution', { subject }, 'existingSchemas');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const existingSchemas = bindings.existingSchemas as Record<string, unknown>[];
 
       let nextVersion = 1;
@@ -125,13 +125,37 @@ const _handler: FunctionalConceptHandler = {
         const mode = latestCompatibility || compatibility;
         const { compatible, reasons } = checkCompatibility(latestSchema, schema, mode);
         if (!compatible) {
-          return { variant: 'incompatible', reasons };
+          return { decision: 'incompatible', reasons };
         }
       }
 
-      const schemaId = nextId();
-      return { version: nextVersion, schemaId };
-    }) as StorageProgram<Result>;
+      return { decision: 'ok', nextVersion };
+    }, 'registerResult');
+
+    return branch(p,
+      (b) => (b.registerResult as Record<string, unknown>).decision === 'incompatible',
+      (thenP) => completeFrom(thenP, 'incompatible', (b) => {
+        const res = b.registerResult as Record<string, unknown>;
+        return { reasons: res.reasons };
+      }),
+      (elseP) => {
+        const schemaId = nextId();
+        elseP = putFrom(elseP, 'schema-evolution', schemaId, (bindings) => {
+          const res = bindings.registerResult as Record<string, unknown>;
+          return {
+            id: schemaId,
+            subject,
+            schema,
+            compatibility,
+            version: res.nextVersion,
+          };
+        });
+        return completeFrom(elseP, 'ok', (b) => {
+          const res = b.registerResult as Record<string, unknown>;
+          return { version: res.nextVersion, schemaId };
+        });
+      },
+    ) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {

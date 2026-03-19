@@ -8,6 +8,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, find, put, complete, completeFrom,
   type StorageProgram,
@@ -26,27 +27,6 @@ export function resetSlotSourceCounter(): void {
 }
 
 const _handler: FunctionalConceptHandler = {
-  register(input: Record<string, unknown>) {
-    const sourceType = input.source_type as string;
-    const provider = input.provider as string;
-
-    let p = createProgram();
-    p = find(p, 'provider', {}, 'existing');
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown>[];
-      const alreadyRegistered = existing.find(
-        (pr: Record<string, unknown>) => pr.source_type === sourceType,
-      );
-
-      if (alreadyRegistered) {
-        return { variant: 'already_registered', source_type: sourceType };
-      }
-
-      return {};
-    }) as StorageProgram<Result>;
-  },
-
   resolve(input: Record<string, unknown>) {
     const sourceType = input.source_type as string;
     const config = input.config as string;
@@ -199,4 +179,29 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const slotSourceHandler = autoInterpret(_handler);
+const baseHandler = autoInterpret(_handler);
+
+// register needs imperative style for dynamic storage keys
+const handler: ConceptHandler = {
+  ...baseHandler,
+
+  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+    const sourceType = input.source_type as string;
+    const provider = input.provider as string;
+
+    const existing = await storage.find('provider', {});
+    const alreadyRegistered = existing.find(
+      (pr: Record<string, unknown>) => pr.source_type === sourceType,
+    );
+
+    if (alreadyRegistered) {
+      return { variant: 'already_registered', source_type: sourceType };
+    }
+
+    const id = nextId();
+    await storage.put('provider', id, { id, source_type: sourceType, provider });
+    return { variant: 'ok' };
+  },
+};
+
+export const slotSourceHandler = handler as FunctionalConceptHandler & ConceptHandler;

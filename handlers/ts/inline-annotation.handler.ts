@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, find, put, putFrom, del, delMany, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -117,6 +117,8 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'inline-annotation', { contentRef, status: 'pending' }, 'pending');
+    // Remove pending annotations after accepting
+    p = delMany(p, 'inline-annotation', { contentRef, status: 'pending' }, 'deleted');
 
     return completeFrom(p, 'ok', (bindings) => {
       const pending = bindings.pending as Record<string, unknown>[];

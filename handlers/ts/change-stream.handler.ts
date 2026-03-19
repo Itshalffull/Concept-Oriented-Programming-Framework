@@ -8,12 +8,7 @@
 // replay and exactly-once processing.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -29,135 +24,137 @@ function nextSubscriptionId(): string {
 
 const VALID_EVENT_TYPES = ['insert', 'update', 'delete', 'replace', 'drop', 'rename', 'invalidate'];
 
-const _handler: FunctionalConceptHandler = {
-  append(input: Record<string, unknown>) {
+export const changeStreamHandler: ConceptHandler = {
+  async append(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const type = input.type as string;
     const before = input.before as string | null | undefined;
     const after = input.after as string | null | undefined;
     const source = input.source as string;
 
     if (!VALID_EVENT_TYPES.includes(type)) {
-      const p = createProgram();
-      return complete(p, 'invalidType', { message: `Event type '${type}' not recognized. Valid types: ${VALID_EVENT_TYPES.join(', ')}` }) as StorageProgram<Result>;
+      return { variant: 'invalidType', message: `Event type '${type}' not recognized. Valid types: ${VALID_EVENT_TYPES.join(', ')}` };
     }
 
-    let p = createProgram();
-    p = get(p, 'change-stream', '__offset_counter', 'meta');
+    const meta = await storage.get('change-stream', '__offset_counter');
+    const currentOffset = meta ? (meta.value as number) : 0;
+    const newOffset = currentOffset + 1;
 
-    p = mapBindings(p, (bindings) => {
-      const meta = bindings.meta as Record<string, unknown> | null;
-      const currentOffset = meta ? (meta.value as number) : 0;
-      return currentOffset + 1;
-    }, 'newOffset');
-
-    p = putFrom(p, 'change-stream', '__offset_counter', (bindings) => {
-      return { value: bindings.newOffset };
-    });
+    await storage.put('change-stream', '__offset_counter', { value: newOffset });
 
     const eventId = nextId();
     const now = new Date().toISOString();
-    p = putFrom(p, 'change-stream-event', eventId, (bindings) => ({
+    await storage.put('change-stream-event', eventId, {
       id: eventId,
       type,
       before: before ?? null,
       after: after ?? null,
       source,
       timestamp: now,
-      offset: bindings.newOffset,
-    }));
+      offset: newOffset,
+    });
 
-    p = putFrom(p, 'change-stream-by-offset', '', (bindings) => ({
+    // Index by offset for efficient lookup
+    await storage.put('change-stream-by-offset', `offset-${newOffset}`, {
       eventId,
-      offset: bindings.newOffset,
-    }));
+      offset: newOffset,
+    });
 
-    return completeFrom(p, 'ok', (bindings) => ({
-      offset: bindings.newOffset,
-      eventId,
-    })) as StorageProgram<Result>;
+    return { variant: 'ok', offset: newOffset, eventId };
   },
 
-  subscribe(input: Record<string, unknown>) {
+  async subscribe(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const fromOffset = input.fromOffset as number | null | undefined;
 
     const subscriptionId = nextSubscriptionId();
     const startOffset = fromOffset ?? 0;
 
-    let p = createProgram();
-    p = put(p, 'change-stream-subscription', subscriptionId, {
+    await storage.put('change-stream-subscription', subscriptionId, {
       id: subscriptionId,
       currentOffset: startOffset,
     });
 
-    return complete(p, 'ok', { subscriptionId }) as StorageProgram<Result>;
+    return { variant: 'ok', subscriptionId };
   },
 
-  read(input: Record<string, unknown>) {
+  async read(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const subscriptionId = input.subscriptionId as string;
     const maxCount = input.maxCount as number;
 
-    let p = createProgram();
-    p = get(p, 'change-stream-subscription', subscriptionId, 'sub');
+    const sub = await storage.get('change-stream-subscription', subscriptionId);
+    if (!sub) {
+      return { variant: 'notFound', message: `Subscription '${subscriptionId}' not found` };
+    }
 
-    return branch(p, 'sub',
-      (thenP) => {
-        thenP = get(thenP, 'change-stream', '__offset_counter', 'meta');
+    const meta = await storage.get('change-stream', '__offset_counter');
+    const currentOffset = sub.currentOffset as number;
+    const maxOffset = meta ? (meta.value as number) : 0;
 
-        return completeFrom(thenP, 'dynamic', (bindings) => {
-          const sub = bindings.sub as Record<string, unknown>;
-          const meta = bindings.meta as Record<string, unknown> | null;
-          const currentOffset = sub.currentOffset as number;
-          const maxOffset = meta ? (meta.value as number) : 0;
+    if (currentOffset >= maxOffset) {
+      return { variant: 'endOfStream' };
+    }
 
-          if (currentOffset >= maxOffset) {
-            return { variant: 'endOfStream' };
-          }
+    // Fetch events from currentOffset+1 up to min(currentOffset+maxCount, maxOffset)
+    const endOffset = Math.min(currentOffset + maxCount, maxOffset);
+    const events: Record<string, unknown>[] = [];
 
-          // Note: reading individual events by offset requires iterative storage access
-          // which can't be expressed in the DSL. Return available range info.
-          return { variant: 'ok', events: [], currentOffset, maxOffset };
-        });
-      },
-      (elseP) => complete(elseP, 'notFound', { message: `Subscription '${subscriptionId}' not found` }),
-    ) as StorageProgram<Result>;
+    for (let offset = currentOffset + 1; offset <= endOffset; offset++) {
+      const idx = await storage.get('change-stream-by-offset', `offset-${offset}`);
+      if (idx) {
+        const event = await storage.get('change-stream-event', idx.eventId as string);
+        if (event) {
+          events.push(event);
+        }
+      }
+    }
+
+    // Update subscription position
+    await storage.put('change-stream-subscription', subscriptionId, {
+      ...sub,
+      currentOffset: endOffset,
+    });
+
+    return { variant: 'ok', events, currentOffset: endOffset, maxOffset };
   },
 
-  acknowledge(input: Record<string, unknown>) {
+  async acknowledge(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const consumer = input.consumer as string;
     const offset = input.offset as number;
 
-    let p = createProgram();
-    p = put(p, 'change-stream-consumer', consumer, {
+    await storage.put('change-stream-consumer', consumer, {
       consumer,
       acknowledgedOffset: offset,
     });
 
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    return { variant: 'ok' };
   },
 
-  replay(input: Record<string, unknown>) {
+  async replay(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const from = input.from as number;
     const to = input.to as number | null | undefined;
 
-    let p = createProgram();
-    p = get(p, 'change-stream', '__offset_counter', 'meta');
+    const meta = await storage.get('change-stream', '__offset_counter');
+    const maxOffset = meta ? (meta.value as number) : 0;
 
-    return completeFrom(p, 'dynamic', (bindings) => {
-      const meta = bindings.meta as Record<string, unknown> | null;
-      const maxOffset = meta ? (meta.value as number) : 0;
+    if (from > maxOffset || from < 1) {
+      return { variant: 'invalidRange', message: `Offset ${from} exceeds available range [1, ${maxOffset}]` };
+    }
 
-      if (from > maxOffset || from < 1) {
-        return { variant: 'invalidRange', message: `Offset ${from} exceeds available range [1, ${maxOffset}]` };
+    const endOffset = to != null ? Math.min(to, maxOffset) : maxOffset;
+    const events: Record<string, unknown>[] = [];
+
+    for (let offset = from; offset <= endOffset; offset++) {
+      const idx = await storage.get('change-stream-by-offset', `offset-${offset}`);
+      if (idx) {
+        const event = await storage.get('change-stream-event', idx.eventId as string);
+        if (event) {
+          events.push(event);
+        }
       }
+    }
 
-      const endOffset = to != null ? Math.min(to, maxOffset) : maxOffset;
-      // Iterative event reading not expressible in DSL; return range info
-      return { variant: 'ok', events: [], fromOffset: from, endOffset };
-    }) as StorageProgram<Result>;
+    return { variant: 'ok', events, fromOffset: from, endOffset };
   },
 };
-
-export const changeStreamHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetChangeStreamCounter(): void {
