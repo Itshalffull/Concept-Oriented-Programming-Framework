@@ -59,16 +59,21 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     `final class ${conceptName}ConformanceTests: XCTestCase {`, '',
   ];
 
+  let invNum = 0;
   for (let invIdx = 0; invIdx < manifest.invariants.length; invIdx++) {
     const inv = manifest.invariants[invIdx];
+    // Skip invariants with no operational steps (e.g., 'always' universal properties)
+    if (inv.setup.length === 0 && inv.assertions.length === 0) continue;
+    invNum++;
+
     lines.push(`    /// ${inv.description}`);
-    lines.push(`    func testInvariant${invIdx + 1}() async throws {`);
+    lines.push(`    func testInvariant${invNum}() async throws {`);
     lines.push(`        let storage = InMemoryStorage()`);
     lines.push(`        let handler = create${conceptName}Handler()`);
     lines.push('');
 
     for (const fv of inv.freeVariables) {
-      lines.push(`        let ${camelCase(fv.name)} = "${fv.testValue}"`);
+      lines.push(`        var ${camelCase(fv.name)} = "${fv.testValue}"`);
     }
     if (inv.freeVariables.length > 0) lines.push('');
 
@@ -90,6 +95,7 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push('');
   }
 
+  if (invNum === 0) return null;
   lines.push(`}`);
   return lines.join('\n');
 }

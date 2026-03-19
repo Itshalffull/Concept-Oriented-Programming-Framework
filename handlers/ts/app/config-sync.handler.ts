@@ -61,7 +61,7 @@ const _configSyncHandler: FunctionalConceptHandler = {
     }
 
     p = putFrom(p, 'config', config, (bindings) => {
-      const entry = (bindings.entry as Record<string, unknown>) || { config, data: config, overrides: '{}' };
+      const entry = (bindings.entry as Record<string, unknown>) || { config, data: values, overrides: '{}' };
       const overrides = JSON.parse((entry.overrides as string) || '{}') as Record<string, unknown>;
       overrides[layer] = layerValues;
       return { ...entry, config, overrides: JSON.stringify(overrides) };

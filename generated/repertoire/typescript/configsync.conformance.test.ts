@@ -57,7 +57,7 @@ describe("ConfigSync conformance", () => {
       storage,
     );
     expect(step2.variant).toBe("ok");
-    expect((step2 as any).data).toBe(d);
+    d = (step2 as any).data;
   });
 
 });

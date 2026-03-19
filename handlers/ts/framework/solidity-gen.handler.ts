@@ -143,13 +143,17 @@ function generateFoundryTestFile(manifest: ConceptManifest): string | null {
   const conceptName = manifest.name;
   const lines: string[] = [
     `// SPDX-License-Identifier: MIT`, `pragma solidity ^0.8.20;`, '',
-    `import "forge-std/Test.sol";`, `import "../src/${conceptName}.sol";`, '',
-    `contract ${conceptName}Test is Test {`, `    ${conceptName} public target;`, `    address owner = address(this);`, '',
+    `import "forge-std/Test.sol";`, `import {${conceptName}} from "../src/${conceptName}.sol";`, '',
+    `contract ${conceptName}Test is Test {`, `    ${conceptName} public target;`, '',
     `    function setUp() public {`, `        target = new ${conceptName}();`, `    }`, '',
   ];
+  let invNum = 0;
   for (let invIdx = 0; invIdx < manifest.invariants.length; invIdx++) {
     const inv = manifest.invariants[invIdx];
-    lines.push(`    /// @notice ${inv.description}`, `    function test_invariant_${invIdx + 1}() public {`);
+    // Skip invariants with no operational steps (e.g., 'always' universal properties)
+    if (inv.setup.length === 0 && inv.assertions.length === 0) continue;
+    invNum++;
+    lines.push(`    /// @notice ${inv.description}`, `    function test_invariant_${invNum}() public {`);
     for (const fv of inv.freeVariables) lines.push(`        bytes32 ${camelCase(fv.name)} = keccak256(abi.encodePacked("${fv.testValue}"));`);
     if (inv.freeVariables.length > 0) lines.push('');
     lines.push(`        // --- Setup ---`);
@@ -158,6 +162,7 @@ function generateFoundryTestFile(manifest: ConceptManifest): string | null {
     for (const step of inv.assertions) lines.push(...generateSolidityStepCode(step));
     lines.push(`    }`, '');
   }
+  if (invNum === 0) return null;
   lines.push(`}`);
   return lines.join('\n');
 }
@@ -183,9 +188,29 @@ function invariantValueToComment(v: InvariantValue): string {
 function generateSolidityStepCode(step: InvariantStep): string[] {
   const lines: string[] = [];
   const inputStr = step.inputs.map(a => `${a.name}: ${invariantValueToComment(a.value)}`).join(', ');
-  lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}`);
+  const outputStr = step.expectedOutputs.map(a => `${a.name}: ${invariantValueToComment(a.value)}`).join(', ');
+  lines.push(`        // ${step.action}(${inputStr}) -> ${step.expectedVariant}(${outputStr})`);
   const args = step.inputs.map(a => invariantValueToSolidity(a.value)).join(', ');
-  lines.push(`        // target.${camelCase(step.action)}(${args});`, `        // TODO: Assert ${step.expectedVariant} variant`);
+
+  if (step.expectedOutputs.length > 0) {
+    // Generate return value capture and assertions
+    const returnVars = step.expectedOutputs.map(o => `${camelCase(o.name)}`).join(', ');
+    lines.push(`        (${returnVars}) = target.${camelCase(step.action)}(${args});`);
+    for (const out of step.expectedOutputs) {
+      if (out.value.kind === 'literal') {
+        const expected = invariantValueToSolidity(out.value);
+        lines.push(`        assertEq(${camelCase(out.name)}, ${expected});`);
+      } else if (out.value.kind === 'variable') {
+        if (out.value.name !== '_') {
+          lines.push(`        assertEq(${camelCase(out.name)}, ${camelCase(out.value.name)});`);
+        }
+      }
+    }
+  } else {
+    // No outputs — just call and expect no revert (success = ok variant)
+    lines.push(`        target.${camelCase(step.action)}(${args});`);
+  }
+
   return lines;
 }
 

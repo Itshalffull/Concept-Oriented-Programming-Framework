@@ -320,11 +320,18 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     '',
   ];
 
+  let invNum = 0;
   for (let invIdx = 0; invIdx < manifest.invariants.length; invIdx++) {
     const inv = manifest.invariants[invIdx];
 
+    // Skip invariants with no operational steps (e.g., 'always' universal properties)
+    if (inv.setup.length === 0 && inv.assertions.length === 0) {
+      continue;
+    }
+    invNum++;
+
     lines.push(`    #[tokio::test]`);
-    lines.push(`    async fn ${modName}_invariant_${invIdx + 1}() {`);
+    lines.push(`    async fn ${modName}_invariant_${invNum}() {`);
     lines.push(`        // ${inv.description}`);
     lines.push(`        let storage = create_in_memory_storage();`);
     lines.push(`        let handler = create_test_handler(); // provided by implementor`);
@@ -353,6 +360,11 @@ function generateConformanceTestFile(manifest: ConceptManifest): string | null {
     lines.push('');
   }
 
+  // If all invariants were skipped, return null
+  if (invNum === 0) {
+    return null;
+  }
+
   lines.push(`}`);
   return lines.join('\n');
 }
@@ -369,15 +381,15 @@ function invariantValueToRust(v: InvariantValue): string {
       return `${snakeCase(v.name)}.clone()`;
     case 'record': {
       const fieldStrs = v.fields.map(
-        f => `"${f.name}": ${invariantValueToRust(f.value)}`
+        f => `${f.name}: ${invariantValueToRust(f.value)}`
       ).join(', ');
-      return `todo!(/* record: { ${fieldStrs} } */)`;
+      return `todo!("record: {{ ${fieldStrs.replace(/"/g, '\\"')} }}")`;
     }
     case 'list': {
       const itemStrs = v.items.map(
         item => invariantValueToRust(item)
       ).join(', ');
-      return `todo!(/* list: [${itemStrs}] */)`;
+      return `todo!("list: [${itemStrs.replace(/"/g, '\\"')}]")`;
     }
   }
 }

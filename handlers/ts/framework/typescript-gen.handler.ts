@@ -229,8 +229,16 @@ function generateConformanceTestFile(
     '',
   );
 
+  let invNum = 0;
   for (const inv of manifest.invariants) {
-    lines.push(`  it("${inv.description}", async () => {`);
+    // Skip invariants with no operational steps (e.g., 'always' universal properties)
+    // — these can't be tested via action calls
+    if (inv.setup.length === 0 && inv.assertions.length === 0) {
+      continue;
+    }
+
+    invNum++;
+    lines.push(`  it("invariant ${invNum}: ${inv.description}", async () => {`);
     lines.push(`    const storage = createInMemoryStorage();`);
     lines.push('');
 
@@ -260,6 +268,11 @@ function generateConformanceTestFile(
 
     lines.push(`  });`);
     lines.push('');
+  }
+
+  // If all invariants were skipped (e.g., only 'always' properties), return null
+  if (invNum === 0) {
+    return null;
   }
 
   lines.push(`});`);
