@@ -94,9 +94,72 @@ action register() {
 
 ## Invariants
 
+Six invariant constructs are supported (see docs/plans/clef-fv.md Section 1):
+
+### `example` — Named conformance test (Tier 1)
 ```
-invariant {
+example "happy path": {
   after create(name: "alice") -> ok(user: u)
-  then create(name: "alice") -> duplicate(email: _)
+  then get(user: u) -> ok(user: u, name: "alice")
 }
 ```
+Bare `invariant { ... }` blocks default to kind=example with no name.
+
+### `forall` — Universally quantified property (Tier 2-3)
+```
+forall "valid kinds accepted": {
+  given kind in {"invariant", "precondition", "postcondition"}
+  after define(kind: kind) -> ok(property: _)
+}
+```
+
+### `always` — State predicate (Tier 2-3)
+```
+always "status consistency": {
+  forall p in items:
+    p.status in ["active", "inactive", "archived"]
+}
+```
+
+### `never` — Safety property (Tier 2-3)
+```
+never "orphaned items": {
+  exists p in items:
+    p.status = "deleted"
+}
+```
+
+### `eventually` — Liveness property (Tier 3)
+```
+eventually "runs terminate": {
+  forall r in runs where r.status = "running":
+    r.status in ["completed", "timeout", "cancelled"]
+}
+```
+
+### `action requires/ensures` — Pre/postcondition contracts (Tier 2-3)
+```
+invariant {
+  action define {
+    requires: kind in ["invariant", "precondition"]
+    requires: propertyText.length > 0
+    ensures ok: result.kind = kind
+    ensures invalid: kind != "invariant"
+  }
+}
+```
+
+### Property assertions in then-chains
+```
+invariant {
+  after configure(endpoint: "api", threshold: 5) -> ok(breaker: b)
+  then b.failureCount = 0
+  and  b.status != "open"
+}
+```
+Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `in`
+
+### Comprehensive coverage
+Invariants should cover: core purpose, state correctness, error paths,
+constraint enforcement, idempotency, boundary conditions, state transitions,
+and composition readiness. Aim for 2-5 invariants per concept.

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "retention_policy_set_retention",
+    "briefDescription": "Retention policy created for the given record type .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "setRetention",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "retention_policy_apply_hold",
+    "briefDescription": "Legal hold applied .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "applyHold",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "retention_policy_release_hold",
+    "briefDescription": "Hold released .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "releaseHold",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "retention_policy_check_disposition",
+    "briefDescription": "Record has passed its retention period and has no active holds .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "checkDisposition",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "retention_policy_dispose",
+    "briefDescription": "Record disposed per its policy .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "dispose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "retention_policy_audit_log",
+    "briefDescription": "Returns disposition log , filtered to specific record if provided .",
+    "category": "RetentionPolicy",
+    "concept": "RetentionPolicy",
+    "action": "auditLog",
+    "alwaysLoaded": false
+  }
+]

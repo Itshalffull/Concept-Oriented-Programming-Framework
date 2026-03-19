@@ -1,0 +1,26 @@
+[
+  {
+    "name": "analysis_rule_create",
+    "briefDescription": "Create a new analysis rule .",
+    "category": "AnalysisRule",
+    "concept": "AnalysisRule",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "analysis_rule_evaluate",
+    "briefDescription": "Evaluate a single rule against the current program state .",
+    "category": "AnalysisRule",
+    "concept": "AnalysisRule",
+    "action": "evaluate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "analysis_rule_evaluate_all",
+    "briefDescription": "Evaluate all rules matching the optional category filter .",
+    "category": "AnalysisRule",
+    "concept": "AnalysisRule",
+    "action": "evaluateAll",
+    "alwaysLoaded": false
+  }
+]

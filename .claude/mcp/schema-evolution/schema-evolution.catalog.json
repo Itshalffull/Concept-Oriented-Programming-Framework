@@ -1,0 +1,34 @@
+[
+  {
+    "name": "schema_evolution_register",
+    "briefDescription": "Schema registered for subject .",
+    "category": "SchemaEvolution",
+    "concept": "SchemaEvolution",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "schema_evolution_check",
+    "briefDescription": "newSchema is compatible with oldSchema under the given mode .",
+    "category": "SchemaEvolution",
+    "concept": "SchemaEvolution",
+    "action": "check",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "schema_evolution_upcast",
+    "briefDescription": "Data transformed from fromVersion schema to toVersion schema .",
+    "category": "SchemaEvolution",
+    "concept": "SchemaEvolution",
+    "action": "upcast",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "schema_evolution_resolve",
+    "briefDescription": "Merged schema allowing reader to consume writer serialized data .",
+    "category": "SchemaEvolution",
+    "concept": "SchemaEvolution",
+    "action": "resolve",
+    "alwaysLoaded": false
+  }
+]

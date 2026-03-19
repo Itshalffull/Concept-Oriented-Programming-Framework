@@ -1,0 +1,10 @@
+[
+  {
+    "name": "sync_compiler_compile",
+    "briefDescription": "Transform the parsed sync AST into a CompiledSync \n object that the engine ca...",
+    "category": "SyncCompiler",
+    "concept": "SyncCompiler",
+    "action": "compile",
+    "alwaysLoaded": false
+  }
+]

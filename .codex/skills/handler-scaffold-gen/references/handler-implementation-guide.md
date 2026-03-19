@@ -5,7 +5,87 @@
 
 How to implement CLEF concept handlers in TypeScript.
 
-## ConceptHandler Interface
+## FunctionalConceptHandler (Default — Preferred)
+
+```typescript
+import type { FunctionalConceptHandler } from 'runtime/functional-handler.ts';
+import {
+  createProgram, get, put, putFrom, find, del, pure, perform,
+  branch, complete, completeFrom, mapBindings,
+  type StorageProgram,
+} from 'runtime/storage-program.ts';
+import { autoInterpret } from 'runtime/functional-compat.ts';
+
+// Simple action — value known at construction (use put/complete)
+const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    const name = input.name as string;
+    let p = createProgram();
+    p = put(p, 'items', name, { name, status: 'active' });
+    return complete(p, 'ok', { item: name });
+  },
+
+  // Action using storage reads — use putFrom/completeFrom
+  update(input: Record<string, unknown>) {
+    const id = input.id as string;
+    const newName = input.name as string;
+    let p = createProgram();
+    p = get(p, 'items', id, 'existing');
+    return branch(p,
+      (bindings) => !bindings.existing,
+      (b) => complete(b, 'not_found', {}),
+      (b) => {
+        let b2 = putFrom(b, 'items', id, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, name: newName };
+        });
+        return complete(b2, 'ok', { item: id });
+      },
+    );
+  },
+};
+export const myHandler = autoInterpret(_handler);
+```
+
+## External API Calls (Execution Layer)
+
+NEVER use direct fetch(). Use perform() which routes through the
+three-tier execution layer with full observability:
+
+```typescript
+// HTTP API call (e.g. OpenAI, Vercel, GitHub)
+p = perform(p, 'http', 'POST', {
+  endpoint: 'openai-embeddings',  // Tier 3 instance provider name
+  path: '/embeddings',
+  body: JSON.stringify({ model: 'text-embedding-3-small', input: text }),
+}, 'apiResponse');
+
+// Local ML inference (e.g. CodeBERT via ONNX)
+p = perform(p, 'onnx', 'infer', {
+  session: 'codebert-base',  // Tier 3 instance provider name
+  inputs: JSON.stringify(tokenized),
+}, 'inferResult');
+
+// Shell command
+p = perform(p, 'shell', 'exec', {
+  command: 'echo', args: 'hello',
+}, 'shellResult');
+```
+
+Resolution chain: perform() → EffectHandler → ExternalCall/LocalProcess
+→ HttpProvider/OnnxProvider/etc → Instance endpoint concept.
+
+Each call automatically gets: ConnectorCall tracking, RetryPolicy,
+CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation,
+RuntimeCoverage — via sync wiring.
+
+For each new API endpoint, create a Tier 3 instance provider concept
+(like OpenAiEndpoint, VercelApiEndpoint, GitHubApiEndpoint) that stores
+credentials and registers with HttpProvider via sync.
+
+## Imperative ConceptHandler (Fallback Only)
+
+Use ONLY when functional style cannot work (direct filesystem, FFI):
 
 ```typescript
 interface ConceptHandler {
@@ -16,45 +96,40 @@ interface ConceptHandler {
 }
 ```
 
-## Standard Pattern
+## Storage Patterns (Functional DSL)
+
+| Operation | DSL Function | When to Use |
+|-----------|-------------|-------------|
+| Create/Update (static) | `put(p, rel, key, value)` | Value known at construction — input params, constants |
+| Create/Update (deferred) | `putFrom(p, rel, key, (bindings) => value)` | Value depends on prior get/find results |
+| Merge (static) | `merge(p, rel, key, fields)` | Partial update with static fields |
+| Merge (deferred) | `mergeFrom(p, rel, key, (bindings) => fields)` | Partial update using prior get/find results |
+| Read | `get(p, rel, key, bindAs)` | Bind result to name for later access |
+| Query | `find(p, rel, criteria, bindAs)` | Bind query results to name |
+| Delete | `del(p, rel, key)` | Remove a record |
+| Branch | `branch(p, cond, thenP, elseP)` | Conditional logic |
+| Complete (static) | `complete(p, variant, output)` | Output known at construction |
+| Complete (deferred) | `completeFrom(p, variant, (bindings) => output)` | Output depends on prior get/find results |
+| Derive value | `mapBindings(p, (bindings) => val, bindAs)` | Compute derived value from accumulated bindings |
+| Transport | `perform(p, proto, op, payload, bindAs)` | External/internal calls |
+
+### CRITICAL: put vs putFrom
 
 ```typescript
-export const myConceptHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'MyConcept',
-      inputKind: 'MyInput',
-      outputKind: 'MyOutput',
-      capabilities: JSON.stringify(['cap1', 'cap2']),
-    };
-  },
+// WRONG — 'existing' is a bindAs name, NOT a variable
+p = get(p, 'items', id, 'existing');
+p = put(p, 'items', id, { ...existing, updated: true }); // ERROR: existing is not defined
 
-  async create(input, storage) {
-    const name = input.name as string;
-    if (!name) return { variant: 'error', message: 'name required' };
-
-    try {
-      const id = crypto.randomUUID();
-      await storage.put('items', id, { id, name });
-      return { variant: 'ok', item: id };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', message: msg };
-    }
-  },
-};
+// CORRECT — access bindings through putFrom callback
+p = get(p, 'items', id, 'existing');
+p = putFrom(p, 'items', id, (bindings) => {
+  const existing = bindings.existing as Record<string, unknown>;
+  return { ...existing, updated: true };
+});
 ```
 
-## Storage Patterns
-
-| Operation | Method | Example |
-|-----------|--------|---------|
-| Create/Update | `storage.put(rel, key, value)` | `put('items', id, data)` |
-| Read | `storage.get(rel, key)` | `get('items', id)` |
-| Query | `storage.find(rel, criteria)` | `find('items', { status: 'active' })` |
-| Delete | `storage.del(rel, key)` | `del('items', id)` |
-| Bulk delete | `storage.delMany(rel, criteria)` | `delMany('items', { expired: true })` |
+Use `put`/`merge`/`complete` when the value is fully static (only uses input params).
+Use `putFrom`/`mergeFrom`/`completeFrom` when the value depends on storage reads.
 
 ## Type Mapping
 

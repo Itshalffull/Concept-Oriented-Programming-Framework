@@ -1,0 +1,42 @@
+[
+  {
+    "name": "attribution_attribute",
+    "briefDescription": "Attribution record created binding agent to content region .",
+    "category": "Attribution",
+    "concept": "Attribution",
+    "action": "attribute",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "attribution_blame",
+    "briefDescription": "Returns full blame map each region mapped to its most recent author .",
+    "category": "Attribution",
+    "concept": "Attribution",
+    "action": "blame",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "attribution_history",
+    "briefDescription": "Full attribution chain for a specific region in chronological order .",
+    "category": "Attribution",
+    "concept": "Attribution",
+    "action": "history",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "attribution_set_ownership",
+    "briefDescription": "CODEOWNERS style ownership rule set for path pattern .",
+    "category": "Attribution",
+    "concept": "Attribution",
+    "action": "setOwnership",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "attribution_query_owners",
+    "briefDescription": "Returns owners matching the path against ownership patterns .",
+    "category": "Attribution",
+    "concept": "Attribution",
+    "action": "queryOwners",
+    "alwaysLoaded": false
+  }
+]

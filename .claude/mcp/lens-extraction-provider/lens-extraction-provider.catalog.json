@@ -1,0 +1,10 @@
+[
+  {
+    "name": "lens_extraction_provider_analyze",
+    "briefDescription": "Walk the instruction tree and convert each get put del merge \n instruction in...",
+    "category": "LensExtractionProvider",
+    "concept": "LensExtractionProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

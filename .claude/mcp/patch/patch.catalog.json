@@ -1,0 +1,42 @@
+[
+  {
+    "name": "patch_create",
+    "briefDescription": "Patch object created from base and target content hashes \n with the given edi...",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "patch_apply",
+    "briefDescription": "Edit script applied to content .",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "apply",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "patch_invert",
+    "briefDescription": "Returns a new patch that undoes this patch .",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "invert",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "patch_compose",
+    "briefDescription": "Returns a new patch equivalent to applying first then second .",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "compose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "patch_commute",
+    "briefDescription": "Returns reordered patches such that applying p2Prime then \n p1Prime produces ...",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "commute",
+    "alwaysLoaded": false
+  }
+]

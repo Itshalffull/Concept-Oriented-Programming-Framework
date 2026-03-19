@@ -16,6 +16,8 @@ Scaffold a TypeScript handler for concept **<source>** with typed actions, stora
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path — no missing branches.
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
 - **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
+- **Functional First:** Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable.
+- **No Direct I/O:** Never use fetch(), execSync(), or other direct I/O in handlers. Use perform() to declare transport effects — the execution layer (ExternalCall/LocalProcess → protocol providers → instance providers) handles resolution with full observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage).
 **generate:**
 - [ ] Handler export name follows convention (camelCase + 'Handler')?
 - [ ] register() returns correct name, inputKind, outputKind?
@@ -30,6 +32,7 @@ Scaffold a TypeScript handler for concept **<source>** with typed actions, stora
 ## References
 
 - [Handler implementation patterns](references/handler-implementation-guide.md)
+- [undefined](undefined)
 ## Supporting Materials
 
 - [Handler implementation scaffolding walkthrough](examples/scaffold-handler.md)
@@ -82,6 +85,10 @@ npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update
 *Run generated conformance test:*
 ```bash
 npx vitest run tests/user.conformance.test.ts
+```
+*Generate tests from invariants:*
+```bash
+npx tsx cli/src/index.ts test-gen --concept User --language typescript
 ```
 *Run scaffold generator tests:*
 ```bash

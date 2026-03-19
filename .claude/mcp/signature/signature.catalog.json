@@ -1,0 +1,34 @@
+[
+  {
+    "name": "signature_sign",
+    "briefDescription": "Signature created with certificate and timestamp attached .",
+    "category": "Signature",
+    "concept": "Signature",
+    "action": "sign",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "signature_verify",
+    "briefDescription": "Signature is cryptographically valid .",
+    "category": "Signature",
+    "concept": "Signature",
+    "action": "verify",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "signature_timestamp",
+    "briefDescription": "RFC 3161 timestamp token from a trusted timestamp authority .",
+    "category": "Signature",
+    "concept": "Signature",
+    "action": "timestamp",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "signature_add_trusted_signer",
+    "briefDescription": "Identity added to trusted signer set .",
+    "category": "Signature",
+    "concept": "Signature",
+    "action": "addTrustedSigner",
+    "alwaysLoaded": false
+  }
+]

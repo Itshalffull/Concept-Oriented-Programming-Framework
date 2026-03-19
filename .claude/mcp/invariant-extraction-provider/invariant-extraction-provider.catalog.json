@@ -1,0 +1,10 @@
+[
+  {
+    "name": "invariant_extraction_provider_extract",
+    "briefDescription": "Analyze the program s instruction sequence against the concept s \n declared i...",
+    "category": "InvariantExtractionProvider",
+    "concept": "InvariantExtractionProvider",
+    "action": "extract",
+    "alwaysLoaded": false
+  }
+]

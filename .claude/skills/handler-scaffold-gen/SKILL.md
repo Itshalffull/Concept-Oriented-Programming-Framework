@@ -23,6 +23,8 @@ Scaffold a TypeScript handler for concept **$ARGUMENTS** with typed actions, sto
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path — no missing branches.
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
 - **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
+- **Functional First:** Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable.
+- **No Direct I/O:** Never use fetch(), execSync(), or other direct I/O in handlers. Use perform() to declare transport effects — the execution layer (ExternalCall/LocalProcess → protocol providers → instance providers) handles resolution with full observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage).
 
 ## Step-by-Step Process
 
@@ -75,11 +77,13 @@ clef scaffold handler --concept Article
 
 ### Step 4: Edit the Handler Implementation
 
-Refine the generated handler: implement each action method with domain logic, extract inputs from the request with proper type casts, interact with storage using the correct relation names, and return the correct variant with all fields declared in the concept spec.
+Refine the generated handler. Default style is FUNCTIONAL (StorageProgram): 1. Each action returns a StorageProgram<A> built with DSL functions: createProgram(), get(), find(), put(), merge(), del(), branch(), complete(), pure(). 2. CRITICAL — put() vs putFrom(): Use put(p, rel, key, value) ONLY when value is fully known at construction time (static data, input parameters). Use putFrom(p, rel, key, (bindings) => value) when value depends on data read from storage via get()/find(). Same applies to merge() vs mergeFrom(), and complete() vs completeFrom(). The bindings parameter is a Record<string,unknown> containing all values bound by prior get()/find()/mapBindings() calls. Never reference a bindAs name as a direct variable — always access it through the bindings object. 3. Use mapBindings(p, (bindings) => derivedValue, 'bindAs') to derive new values from accumulated bindings (e.g. computing a count, filtering, sorting). 4. For external API calls (HTTP, gRPC, GraphQL, WebSocket): use perform(p, 'http', 'POST', { endpoint: 'name', path, body }, 'bindAs'). This routes through the execution layer: EffectHandler → ExternalCall → HttpProvider → instance endpoint. Create a Tier 3 instance provider concept (like OpenAiEndpoint, VercelApiEndpoint) for each specific API. 5. For local computation (ONNX, WASM, shell): use perform(p, 'onnx', 'infer', { session: 'name', inputs }, 'bindAs'). Routes through: EffectHandler → LocalProcess → OnnxProvider/WasmProvider → instance. Create a LocalModelInstance for each model. 6. NEVER use direct fetch(), execSync(), or other I/O. All external/internal calls go through perform() so they get: ConnectorCall tracking, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage — automatically via sync wiring. 7. Use branch() for conditionals (not if/else), complete() for terminal values. 8. Lens-based access with getLens(), putLens(), modifyLens() where possible. Imperative style (ConceptHandler with async methods) is ONLY for handlers requiring direct filesystem access (e.g. EmbeddingCache).
+
 
 ## References
 
 - [Handler implementation patterns](references/handler-implementation-guide.md)
+- [undefined](undefined)
 ## Supporting Materials
 
 - [Handler implementation scaffolding walkthrough](examples/scaffold-handler.md)
@@ -132,6 +136,10 @@ npx tsx cli/src/index.ts scaffold handler --concept User --actions create,update
 *Run generated conformance test:*
 ```bash
 npx vitest run tests/user.conformance.test.ts
+```
+*Generate tests from invariants:*
+```bash
+npx tsx cli/src/index.ts test-gen --concept User --language typescript
 ```
 *Run scaffold generator tests:*
 ```bash

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "dead_branch_provider_analyze",
+    "briefDescription": "Walk the program s branch tree and check each condition against \n the constra...",
+    "category": "DeadBranchProvider",
+    "concept": "DeadBranchProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

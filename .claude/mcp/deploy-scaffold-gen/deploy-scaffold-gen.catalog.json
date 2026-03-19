@@ -1,0 +1,26 @@
+[
+  {
+    "name": "deploy_scaffold_gen_generate",
+    "briefDescription": "Deploy manifest generated .",
+    "category": "DeployScaffoldGen",
+    "concept": "DeployScaffoldGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_scaffold_gen_preview",
+    "briefDescription": "Dry run : compute output files without writing .",
+    "category": "DeployScaffoldGen",
+    "concept": "DeployScaffoldGen",
+    "action": "preview",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "deploy_scaffold_gen_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "DeployScaffoldGen",
+    "concept": "DeployScaffoldGen",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

@@ -22,7 +22,7 @@ Scaffold a concept spec for **$ARGUMENTS** with annotations, state declarations 
 - **Singularity:** Each concept serves exactly one purpose — if the purpose has 'and', it's two concepts.
 - **Independence:** A concept never references another concept's types or calls another concept's actions. Use type parameters and syncs.
 - **Sufficiency & Necessity:** Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state.
-- **Invariant Completeness:** Key properties are captured as formal invariants documenting what must be true after each action.
+- **Invariant Completeness:** Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept.
 - **Description Quality:** Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true.
 
 ## Step-by-Step Process
@@ -84,7 +84,19 @@ clef scaffold concept --name Approval --version 2 --gate --capabilities search,e
 
 ### Step 4: Edit the Concept Spec
 
-Refine the generated .concept file: 1. Add annotations: @version(N) for versioning, @gate for async gates, @category("domain") for grouping, @visibility("public"|"internal"). 2. Write a purpose block explaining why the concept exists (not how it works). 3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields. 4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID. 5. Write invariants with after/then/and chains. 6. Add capabilities block if the concept is a generator or plugin.
+Refine the generated .concept file: 1. Add annotations: @version(N) for versioning, @gate for async gates, @category("domain") for grouping, @visibility("public"|"internal"). 2. Write a purpose block explaining why the concept exists (not how it works). 3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields. 4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID. 5. Write invariants comprehensively using all six constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions. 6. Add capabilities block if the concept is a generator or plugin.
+
+
+### Step 5: Generate Tests from Invariants
+
+After writing invariants, generate comprehensive tests using TestGen. Invoke `/create-implementation --concept <Name>` first to create the handler, then generate tests from invariants: 1. Run `TestGen/generate` (MCP: `test_gen_generate`) with concept_ref and language to compile all six invariant construct types into tests:
+   - example blocks → conformance test vectors (1:1 after/then mapping)
+   - forall blocks → property-based tests with generated domains
+   - always blocks → stateful sequence tests checking state predicates
+   - never blocks → violation-attempt tests trying to reach bad states
+   - eventually blocks → bounded liveness tests
+   - requires/ensures → contract-constrained PBT with pre/postconditions
+2. Review generated test files — they should NOT need manual editing for example/forall/always/never constructs. Contract tests (requires/ensures) may need manual generator tuning for complex domain types. 3. Run `TestGen/coverage` (MCP: `test_gen_coverage`) to verify all invariant constructs have generated tests. Check the construct_coverage breakdown — each kind should show covered > 0. 4. Run `npx vitest run generated/tests/<concept>.*` to verify generated tests pass. 5. If coverage gaps exist, add more invariants to the concept spec (go back to the edit step) and re-run `TestGen/regenerate`.
 
 
 ## References
@@ -182,6 +194,18 @@ npx tsx cli/src/index.ts scaffold concept --name User --actions create,update,de
 ```bash
 npx tsx cli/src/index.ts check specs/app/user.concept
 ```
+*Generate tests from invariants:*
+```bash
+npx tsx cli/src/index.ts test-gen --concept User --language typescript
+```
+*Run generated invariant tests:*
+```bash
+npx vitest run generated/tests/User.*
+```
+*Check invariant coverage:*
+```bash
+npx tsx cli/src/index.ts test-gen --coverage --concept User
+```
 *Run scaffold generator tests:*
 ```bash
 npx vitest run tests/scaffold-generators.test.ts
@@ -193,3 +217,4 @@ npx vitest run tests/scaffold-generators.test.ts
 | `/concept-designer` | Design concepts using Jackson's methodology before generating |
 | `/create-handler` | Generate handler implementations for the concept |
 | `/create-sync` | Generate sync rules connecting the concept |
+| `/test-gen` | Generate tests from invariants (TestGen/generate, TestGen/coverage) |

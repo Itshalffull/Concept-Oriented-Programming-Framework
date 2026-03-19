@@ -1,0 +1,18 @@
+[
+  {
+    "name": "flow_trace_build",
+    "briefDescription": "Walk the ActionLog s provenance edges from the flow s root .",
+    "category": "FlowTrace",
+    "concept": "FlowTrace",
+    "action": "build",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "flow_trace_render",
+    "briefDescription": "Render the FlowTree as a human readable annotated tree .",
+    "category": "FlowTrace",
+    "concept": "FlowTrace",
+    "action": "render",
+    "alwaysLoaded": false
+  }
+]
