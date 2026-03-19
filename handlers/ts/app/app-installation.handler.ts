@@ -11,6 +11,7 @@ const _appInstallationHandler: FunctionalConceptHandler = {
     const installation = String(input.installation ?? '');
     let p = createProgram();
     p = put(p, 'installation', installation, {
+      id: installation,
       installation,
       name: String(input.name ?? ''),
       version: String(input.version ?? ''),
