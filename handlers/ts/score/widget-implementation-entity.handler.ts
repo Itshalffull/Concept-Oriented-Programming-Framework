@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // WidgetImplementationEntity Concept Implementation
 //
 // Queryable representation of generated widget implementation files.
@@ -6,26 +7,34 @@
 // of generated code and enables stack trace correlation for widget
 // rendering errors.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const widgetImplementationEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
+    let p = createProgram();
     const widget = input.widget as string;
     const framework = input.framework as string;
     const sourceFile = input.sourceFile as string;
     const ast = input.ast as string;
 
     const key = `widget-impl:${widget}:${framework}`;
-    const existing = await storage.get('widget-implementations', key);
+    p = get(p, 'widget-implementations', key, 'existing');
     if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
+      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
     }
 
     const id = crypto.randomUUID();
     const parsedAst = ast ? JSON.parse(ast) : {};
 
-    await storage.put('widget-implementations', key, {
+    p = put(p, 'widget-implementations', key, {
       id,
       widget,
       framework,
@@ -42,54 +51,59 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
       lastModified: new Date().toISOString(),
     });
 
-    return { variant: 'ok', impl: id };
+    return complete(p, 'ok', { impl: id }) as StorageProgram<Result>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
+    let p = createProgram();
     const widget = input.widget as string;
     const framework = input.framework as string;
 
-    const entry = await storage.get('widget-implementations', `widget-impl:${widget}:${framework}`);
+    p = get(p, 'widget-implementations', `widget-impl:${widget}:${framework}`, 'entry');
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', impl: entry.id };
+    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
+    let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
-    const all = await storage.find('widget-implementations');
+    p = find(p, 'widget-implementations', 'all');
     const entry = all.find(i => i.sourceFile === sourceFile);
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', impl: entry.id };
+    return complete(p, 'ok', { impl: entry.id }) as StorageProgram<Result>;
   },
 
-  async findByWidget(input, storage) {
+  findByWidget(input: Record<string, unknown>) {
+    let p = createProgram();
     const widget = input.widget as string;
-    const all = await storage.find('widget-implementations', { widget });
+    p = find(p, 'widget-implementations', { widget }, 'all');
 
-    return { variant: 'ok', implementations: JSON.stringify(all) };
+    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
-  async findByFramework(input, storage) {
+  findByFramework(input: Record<string, unknown>) {
+    let p = createProgram();
     const framework = input.framework as string;
-    const all = await storage.find('widget-implementations', { framework });
+    p = find(p, 'widget-implementations', { framework }, 'all');
 
-    return { variant: 'ok', implementations: JSON.stringify(all) };
+    return complete(p, 'ok', { implementations: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
-  async anatomyMapping(input, storage) {
+  anatomyMapping(input: Record<string, unknown>) {
+    let p = createProgram();
     const implId = input.impl as string;
 
-    const all = await storage.find('widget-implementations');
+    p = find(p, 'widget-implementations', 'all');
     const entry = all.find(i => i.id === implId);
     if (!entry) {
-      return { variant: 'ok', mapping: '[]' };
+      return complete(p, 'ok', { mapping: '[]' }) as StorageProgram<Result>;
     }
 
     // TODO: Map anatomy parts from widget spec to rendered DOM elements
@@ -100,31 +114,33 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
       selector: `[data-part="${part.name || part}"]`,
     }));
 
-    return { variant: 'ok', mapping: JSON.stringify(mapping) };
+    return complete(p, 'ok', { mapping: JSON.stringify(mapping) }) as StorageProgram<Result>;
   },
 
-  async diffFromSpec(input, storage) {
+  diffFromSpec(input: Record<string, unknown>) {
+    let p = createProgram();
     const implId = input.impl as string;
 
-    const all = await storage.find('widget-implementations');
+    p = find(p, 'widget-implementations', 'all');
     const entry = all.find(i => i.id === implId);
     if (!entry) {
-      return { variant: 'inSync' };
+      return complete(p, 'inSync', {}) as StorageProgram<Result>;
     }
 
     // TODO: Compare generated implementation against widget spec
-    return { variant: 'inSync' };
+    return complete(p, 'inSync', {}) as StorageProgram<Result>;
   },
 
-  async resolveRenderFrame(input, storage) {
+  resolveRenderFrame(input: Record<string, unknown>) {
+    let p = createProgram();
     const file = input.file as string;
     const line = input.line as number;
     const col = input.col as number;
 
-    const all = await storage.find('widget-implementations');
+    p = find(p, 'widget-implementations', 'all');
     const entry = all.find(i => i.sourceFile === file);
     if (!entry) {
-      return { variant: 'notInWidgetImpl' };
+      return complete(p, 'notInWidgetImpl', {}) as StorageProgram<Result>;
     }
 
     // TODO: Walk AST to find exact node and anatomy part at line:col
@@ -137,26 +153,26 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
       endCol: col,
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       impl: entry.id as string,
       widget: entry.widget as string,
       part: '',
       astNode,
       astAncestors: '[]',
       sourceSpan: `${file}:${line}:${col}`,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolveToAstNode(input, storage) {
+  resolveToAstNode(input: Record<string, unknown>) {
+    let p = createProgram();
     const implId = input.impl as string;
     const line = input.line as number;
     const col = input.col as number;
 
-    const all = await storage.find('widget-implementations');
+    p = find(p, 'widget-implementations', 'all');
     const entry = all.find(i => i.id === implId);
     if (!entry) {
-      return { variant: 'outOfRange', line, maxLine: 0 };
+      return complete(p, 'outOfRange', { line, maxLine: 0 }) as StorageProgram<Result>;
     }
 
     // TODO: Walk AST to find innermost node at line:col
@@ -169,11 +185,12 @@ export const widgetImplementationEntityHandler: ConceptHandler = {
       text: '',
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       node,
       ancestors: '[]',
       part: '',
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const widgetImplementationEntityHandler = autoInterpret(_handler);

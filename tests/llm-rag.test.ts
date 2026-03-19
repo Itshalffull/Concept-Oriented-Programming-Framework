@@ -146,7 +146,7 @@ describe('VectorIndex concept', () => {
   });
 
   it('has 1 invariant', () => {
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('is not a gate concept', () => {
@@ -257,7 +257,7 @@ describe('Retriever concept', () => {
   });
 
   it('has 1 invariant', () => {
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('is not a gate concept', () => {
@@ -346,7 +346,7 @@ describe('DocumentChunk concept', () => {
   });
 
   it('has 1 invariant', () => {
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('is not a gate concept', () => {

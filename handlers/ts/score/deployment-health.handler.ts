@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // DeploymentHealth Concept Implementation
 //
 // Live deployment monitoring — runtime health, transport connectivity,
@@ -6,11 +7,19 @@
 // static deployment topology and concept structure for operational
 // insight queries.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const deploymentHealthHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async record(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  record(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
     const snapshot = input.snapshot as string;
 
@@ -18,7 +27,7 @@ export const deploymentHealthHandler: ConceptHandler = {
     const parsed = snapshot ? JSON.parse(snapshot) : {};
     const timestamp = new Date().toISOString();
 
-    await storage.put('deployment-health', `health:${deployment}:${id}`, {
+    p = put(p, 'deployment-health', `health:${deployment}:${id}`, {
       id,
       deployment,
       timestamp,
@@ -31,15 +40,16 @@ export const deploymentHealthHandler: ConceptHandler = {
       alerts: JSON.stringify(parsed.alerts || []),
     });
 
-    return { variant: 'ok', check: id };
+    return complete(p, 'ok', { check: id }) as StorageProgram<Result>;
   },
 
-  async runtimeHealth(input, storage) {
+  runtimeHealth(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', runtimes: '[]' };
+      return complete(p, 'ok', { runtimes: '[]' }) as StorageProgram<Result>;
     }
 
     // Return the most recent snapshot
@@ -47,101 +57,107 @@ export const deploymentHealthHandler: ConceptHandler = {
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', runtimes: latest.runtimeStatuses as string || '[]' };
+    return complete(p, 'ok', { runtimes: latest.runtimeStatuses as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async transportHealth(input, storage) {
+  transportHealth(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', transports: '[]' };
+      return complete(p, 'ok', { transports: '[]' }) as StorageProgram<Result>;
     }
 
     const latest = all.sort((a, b) =>
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', transports: latest.transportStatuses as string || '[]' };
+    return complete(p, 'ok', { transports: latest.transportStatuses as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async storageHealth(input, storage) {
+  storageHealth(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', adapters: '[]' };
+      return complete(p, 'ok', { adapters: '[]' }) as StorageProgram<Result>;
     }
 
     const latest = all.sort((a, b) =>
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', adapters: latest.storageStatuses as string || '[]' };
+    return complete(p, 'ok', { adapters: latest.storageStatuses as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async syncDelivery(input, storage) {
+  syncDelivery(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     const filtered = since
       ? all.filter(h => (h.timestamp as string) >= since)
       : all;
 
     if (filtered.length === 0) {
-      return { variant: 'ok', syncs: '[]' };
+      return complete(p, 'ok', { syncs: '[]' }) as StorageProgram<Result>;
     }
 
     const latest = filtered.sort((a, b) =>
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', syncs: latest.syncDeliveryRates as string || '[]' };
+    return complete(p, 'ok', { syncs: latest.syncDeliveryRates as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async conceptInstances(input, storage) {
+  conceptInstances(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', instances: '[]' };
+      return complete(p, 'ok', { instances: '[]' }) as StorageProgram<Result>;
     }
 
     const latest = all.sort((a, b) =>
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', instances: latest.conceptInstanceCounts as string || '[]' };
+    return complete(p, 'ok', { instances: latest.conceptInstanceCounts as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async crossRuntimeLatency(input, storage) {
+  crossRuntimeLatency(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', matrix: '[]' };
+      return complete(p, 'ok', { matrix: '[]' }) as StorageProgram<Result>;
     }
 
     const latest = all.sort((a, b) =>
       (b.timestamp as string).localeCompare(a.timestamp as string)
     )[0];
 
-    return { variant: 'ok', matrix: latest.crossRuntimeLatency as string || '[]' };
+    return complete(p, 'ok', { matrix: latest.crossRuntimeLatency as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async hotspots(input, storage) {
+  hotspots(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
     const topN = (input.topN as number) || 10;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     const filtered = since
       ? all.filter(h => (h.timestamp as string) >= since)
       : all;
 
     if (filtered.length === 0) {
-      return { variant: 'ok', hotspots: '[]' };
+      return complete(p, 'ok', { hotspots: '[]' }) as StorageProgram<Result>;
     }
 
     // Aggregate metrics across snapshots — count alert occurrences,
@@ -186,15 +202,16 @@ export const deploymentHealthHandler: ConceptHandler = {
       .sort((a, b) => (b.errorCount + b.alertCount) - (a.errorCount + a.alertCount))
       .slice(0, topN);
 
-    return { variant: 'ok', hotspots: JSON.stringify(hotspots) };
+    return complete(p, 'ok', { hotspots: JSON.stringify(hotspots) }) as StorageProgram<Result>;
   },
 
-  async correlateWithErrors(input, storage) {
+  correlateWithErrors(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
     const since = input.since as string;
 
     // Query error-correlation records that reference this deployment
-    const allErrors = await storage.find('error-correlation');
+    p = find(p, 'error-correlation', 'allErrors');
     const matching = allErrors.filter(e => {
       const matchesDeploy =
         (e.conceptEntity as string || '').includes(deployment) ||
@@ -220,15 +237,16 @@ export const deploymentHealthHandler: ConceptHandler = {
     }
 
     const correlations = [...grouped.values()].sort((a, b) => b.count - a.count);
-    return { variant: 'ok', correlations: JSON.stringify(correlations) };
+    return complete(p, 'ok', { correlations: JSON.stringify(correlations) }) as StorageProgram<Result>;
   },
 
-  async compareWindows(input, storage) {
+  compareWindows(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
     const windowA = input.windowA as string;
     const windowB = input.windowB as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
 
     // Split snapshots into the two time windows (ISO timestamp ranges: "start/end")
     const [aStart, aEnd] = windowA.split('/');
@@ -284,18 +302,20 @@ export const deploymentHealthHandler: ConceptHandler = {
       windowA: { snapshots: inA.length, errorRate: errorRateA, avgAlerts: alertRateA },
       windowB: { snapshots: inB.length, errorRate: errorRateB, avgAlerts: alertRateB },
       regressions,
+      runtimeChanges: [] as string[],
     };
 
-    return { variant: 'ok', comparison: JSON.stringify(comparison) };
+    return complete(p, 'ok', { comparison: JSON.stringify(comparison) }) as StorageProgram<Result>;
   },
 
-  async deployDiagnostics(input, storage) {
+  deployDiagnostics(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
     // Collect all health records for this deployment
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', diagnostics: '[]', summary: 'No deployment records found.' };
+      return complete(p, 'ok', { diagnostics: '[]', summary: 'No deployment records found.' }) as StorageProgram<Result>;
     }
 
     // Build diagnostics from snapshots
@@ -322,22 +342,22 @@ export const deploymentHealthHandler: ConceptHandler = {
 
     const summary = `${successes} successful, ${failures} failed, ${allAlerts.length} alerts across ${all.length} records.`;
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       diagnostics: JSON.stringify(diagnostics),
       summary,
       failures,
       successes,
       alerts: JSON.stringify(allAlerts),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async sloStatus(input, storage) {
+  sloStatus(input: Record<string, unknown>) {
+    let p = createProgram();
     const deployment = input.deployment as string;
 
-    const all = await storage.find('deployment-health', { deployment });
+    p = find(p, 'deployment-health', { deployment }, 'all');
     if (all.length === 0) {
-      return { variant: 'ok', slos: '[]' };
+      return complete(p, 'ok', { slos: '[]' }) as StorageProgram<Result>;
     }
 
     // Compute SLO compliance from health snapshots.
@@ -395,6 +415,8 @@ export const deploymentHealthHandler: ConceptHandler = {
       },
     ];
 
-    return { variant: 'ok', slos: JSON.stringify(slos) };
+    return complete(p, 'ok', { slos: JSON.stringify(slos) }) as StorageProgram<Result>;
   },
 };
+
+export const deploymentHealthHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GraphQL Target Provider Implementation
 //
@@ -8,15 +9,14 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
   RelationSchema,
-  FieldSchema,
-} from '../../../../runtime/types.js';
+  FieldSchema } from '../../../../runtime/types.js';
 
 import {
   typeToGraphQL,
@@ -327,17 +327,14 @@ function generateSchemaFile(
 
 // --- Concept Handler ---
 
-export const graphqlTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'GraphqlTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'GraphqlTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GraphQLSchema',
       capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical']),
       targetKey: 'graphql',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -354,20 +351,16 @@ export const graphqlTargetHandler: ConceptHandler = {
    *   variant 'ok' with files array and types summary, or
    *   variant 'error' with reason string.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const configRaw = input.config as string | undefined;
     const overridesRaw = input.overrides as string | undefined;
 
     // --- Validate and parse projection ---
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'projection is required and must be a JSON string',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
     let manifest: ConceptManifest;
@@ -375,19 +368,16 @@ export const graphqlTargetHandler: ConceptHandler = {
       const projection = JSON.parse(projectionRaw) as Record<string, unknown>;
       const manifestJson = projection.conceptManifest as string;
       if (!manifestJson || typeof manifestJson !== 'string') {
-        return {
-          variant: 'error',
-          reason: 'projection must contain a conceptManifest JSON string',
-        };
+        { let p = createProgram(); p = complete(p, 'error', { reason: 'projection must contain a conceptManifest JSON string' }); return p; }
       }
       manifest = JSON.parse(manifestJson) as ConceptManifest;
     } catch (err: unknown) {
       const reason = err instanceof Error ? err.message : String(err);
-      return { variant: 'error', reason: `failed to parse projection: ${reason}` };
+      { let p = createProgram(); p = complete(p, 'error', { reason: `failed to parse projection: ${reason}` }); return p; }
     }
 
     if (!manifest.name || typeof manifest.name !== 'string') {
-      return { variant: 'error', reason: 'conceptManifest must contain a name field' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest must contain a name field' }); return p; }
     }
 
     // --- Parse optional config ---
@@ -435,10 +425,9 @@ export const graphqlTargetHandler: ConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
-      files,
-      types,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files,
+      types }); return p; }
   },
 };
+
+export const graphqlTargetHandler = autoInterpret(_handler);

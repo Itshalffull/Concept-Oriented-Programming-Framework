@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // HandlerEntity Concept Implementation
 //
 // Queryable representation of concept handler implementation files.
@@ -5,20 +6,28 @@
 // dependencies, and runtime behavior. Enables stack trace correlation,
 // error root-cause analysis, and implementation coverage tracking.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const handlerEntityHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async register(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  register(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const sourceFile = input.sourceFile as string;
     const language = input.language as string;
     const ast = input.ast as string;
 
     const key = `handler:${concept}:${language}`;
-    const existing = await storage.get('handlers', key);
+    p = get(p, 'handlers', key, 'existing');
     if (existing) {
-      return { variant: 'alreadyRegistered', existing: existing.id };
+      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
     }
 
     const id = crypto.randomUUID();
@@ -29,7 +38,7 @@ export const handlerEntityHandler: ConceptHandler = {
     const exports = JSON.stringify(parsedAst.exports || []);
     const storageCollections = JSON.stringify(parsedAst.storageCollections || []);
 
-    await storage.put('handlers', key, {
+    p = put(p, 'handlers', key, {
       id,
       concept,
       sourceFile,
@@ -44,72 +53,78 @@ export const handlerEntityHandler: ConceptHandler = {
       lastModified: new Date().toISOString(),
     });
 
-    return { variant: 'ok', handler: id };
+    return complete(p, 'ok', { handler: id }) as StorageProgram<Result>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const language = input.language as string;
 
-    const entry = await storage.get('handlers', `handler:${concept}:${language}`);
+    p = get(p, 'handlers', `handler:${concept}:${language}`, 'entry');
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', handler: entry.id };
+    return complete(p, 'ok', { handler: entry.id }) as StorageProgram<Result>;
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
+    let p = createProgram();
     const sourceFile = input.sourceFile as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.sourceFile === sourceFile);
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', handler: entry.id };
+    return complete(p, 'ok', { handler: entry.id }) as StorageProgram<Result>;
   },
 
-  async findByConcept(input, storage) {
+  findByConcept(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
-    const all = await storage.find('handlers', { concept });
+    p = find(p, 'handlers', { concept }, 'all');
 
-    return { variant: 'ok', handlers: JSON.stringify(all) };
+    return complete(p, 'ok', { handlers: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
-  async findByLanguage(input, storage) {
+  findByLanguage(input: Record<string, unknown>) {
+    let p = createProgram();
     const language = input.language as string;
-    const all = await storage.find('handlers', { language });
+    p = find(p, 'handlers', { language }, 'all');
 
-    return { variant: 'ok', handlers: JSON.stringify(all) };
+    return complete(p, 'ok', { handlers: JSON.stringify(all) }) as StorageProgram<Result>;
   },
 
-  async getActionMethod(input, storage) {
+  getActionMethod(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
     const methods = JSON.parse(entry.actionMethods as string || '[]');
     const method = methods.find((m: { name: string }) => m.name === actionName);
     if (!method) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', method: JSON.stringify(method) };
+    return complete(p, 'ok', { method: JSON.stringify(method) }) as StorageProgram<Result>;
   },
 
-  async implementationGaps(input, storage) {
+  implementationGaps(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
 
-    const handlers = await storage.find('handlers', { concept });
+    p = find(p, 'handlers', { concept }, 'handlers');
     if (handlers.length === 0) {
-      return { variant: 'noHandler' };
+      return complete(p, 'noHandler', {}) as StorageProgram<Result>;
     }
 
     // TODO: Compare declared actions from ConceptEntity against implemented methods
@@ -117,51 +132,53 @@ export const handlerEntityHandler: ConceptHandler = {
     const handler = handlers[0];
     const methods = JSON.parse(handler.actionMethods as string || '[]');
 
-    return { variant: 'fullyImplemented', actionCount: methods.length };
+    return complete(p, 'fullyImplemented', { actionCount: methods.length }) as StorageProgram<Result>;
   },
 
-  async getDependencies(input, storage) {
+  getDependencies(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'ok', imports: '[]', externalPackages: '[]', internalModules: '[]' };
+      return complete(p, 'ok', { imports: '[]', externalPackages: '[]', internalModules: '[]' }) as StorageProgram<Result>;
     }
 
     const deps = JSON.parse(entry.dependencies as string || '[]');
     const externalPackages = deps.filter((d: { external?: boolean }) => d.external);
     const internalModules = deps.filter((d: { external?: boolean }) => !d.external);
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       imports: JSON.stringify(deps),
       externalPackages: JSON.stringify(externalPackages),
       internalModules: JSON.stringify(internalModules),
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async getStorageUsage(input, storage) {
+  getStorageUsage(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'ok', collections: '[]' };
+      return complete(p, 'ok', { collections: '[]' }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', collections: entry.storageCollections as string || '[]' };
+    return complete(p, 'ok', { collections: entry.storageCollections as string || '[]' }) as StorageProgram<Result>;
   },
 
-  async resolveStackFrame(input, storage) {
+  resolveStackFrame(input: Record<string, unknown>) {
+    let p = createProgram();
     const file = input.file as string;
     const line = input.line as number;
     const col = input.col as number;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.sourceFile === file);
     if (!entry) {
-      return { variant: 'notInHandler' };
+      return complete(p, 'notInHandler', {}) as StorageProgram<Result>;
     }
 
     // TODO: Walk AST to find exact node at line:col
@@ -176,30 +193,30 @@ export const handlerEntityHandler: ConceptHandler = {
       children: [],
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       handler: entry.id as string,
       concept: entry.concept as string,
       actionMethod: '',
       astNode,
       sourceSpan: `${file}:${line}:${col}`,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolveToAstNode(input, storage) {
+  resolveToAstNode(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
     const line = input.line as number;
     const col = input.col as number;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'outOfRange', line, maxLine: 0 };
+      return complete(p, 'outOfRange', { line, maxLine: 0 }) as StorageProgram<Result>;
     }
 
     const maxLine = entry.lineCount as number || 0;
     if (maxLine > 0 && line > maxLine) {
-      return { variant: 'outOfRange', line, maxLine };
+      return complete(p, 'outOfRange', { line, maxLine }) as StorageProgram<Result>;
     }
 
     // TODO: Walk AST to find innermost node at line:col
@@ -212,15 +229,15 @@ export const handlerEntityHandler: ConceptHandler = {
       text: '',
     });
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       node,
       ancestors: '[]',
       actionMethod: '',
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async resolveStackTrace(input, storage) {
+  resolveStackTrace(input: Record<string, unknown>) {
+    let p = createProgram();
     const stackTrace = input.stackTrace as string;
 
     // Parse stack trace lines to extract file:line:col
@@ -228,7 +245,7 @@ export const handlerEntityHandler: ConceptHandler = {
     const frames: Array<Record<string, unknown>> = [];
     let match: RegExpExecArray | null;
 
-    const allHandlers = await storage.find('handlers');
+    p = find(p, 'handlers', 'allHandlers');
 
     while ((match = frameRegex.exec(stackTrace)) !== null) {
       const file = match[1];
@@ -249,69 +266,74 @@ export const handlerEntityHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', frames: JSON.stringify(frames) };
+    return complete(p, 'ok', { frames: JSON.stringify(frames) }) as StorageProgram<Result>;
   },
 
-  async traceToVariantReturn(input, storage) {
+  traceToVariantReturn(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
     // TODO: Parse AST to find all `return { variant: '...' }` statements
-    return { variant: 'ok', returns: '[]' };
+    return complete(p, 'ok', { returns: '[]' }) as StorageProgram<Result>;
   },
 
-  async traceToStorageCalls(input, storage) {
+  traceToStorageCalls(input: Record<string, unknown>) {
+    let p = createProgram();
     const handlerId = input.handler as string;
     const actionName = input.actionName as string;
 
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
     const entry = all.find(h => h.id === handlerId);
     if (!entry) {
-      return { variant: 'notfound' };
+      return complete(p, 'notfound', {}) as StorageProgram<Result>;
     }
 
     // TODO: Parse AST to find all storage.put/get/find/del calls
-    return { variant: 'ok', calls: '[]' };
+    return complete(p, 'ok', { calls: '[]' }) as StorageProgram<Result>;
   },
 
-  async findByError(input, storage) {
+  findByError(input: Record<string, unknown>) {
+    let p = createProgram();
     const errorSymbol = input.errorSymbol as string;
     const since = input.since as string;
 
     // TODO: Cross-reference with ErrorCorrelation entities
-    const all = await storage.find('handlers');
+    p = find(p, 'handlers', 'all');
 
-    return { variant: 'ok', handlers: JSON.stringify([]) };
+    return complete(p, 'ok', { handlers: JSON.stringify([]) }) as StorageProgram<Result>;
   },
 
-  async sourceForAction(input, storage) {
+  sourceForAction(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const actionName = input.actionName as string;
 
-    const handlers = await storage.find('handlers', { concept });
+    p = find(p, 'handlers', { concept }, 'handlers');
     if (handlers.length === 0) {
-      return { variant: 'noHandler' };
+      return complete(p, 'noHandler', {}) as StorageProgram<Result>;
     }
 
     const handler = handlers[0];
     const methods = JSON.parse(handler.actionMethods as string || '[]');
     const method = methods.find((m: { name: string }) => m.name === actionName);
     if (!method) {
-      return { variant: 'actionNotImplemented' };
+      return complete(p, 'actionNotImplemented', {}) as StorageProgram<Result>;
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       source: method.body || '',
       file: handler.sourceFile as string,
       startLine: method.startLine || 0,
       endLine: method.endLine || 0,
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const handlerEntityHandler = autoInterpret(_handler);

@@ -1,166 +1,229 @@
+// @migrated dsl-constructs 2026-03-18
 // Schema Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+// Per spec §2.1, §2.4: Schema is a composable mixin applied to ContentNodes.
+// A ContentNode's identity is the set of Schemas currently applied to it.
+// Schema manages: definitions (fields, constraints, inheritance) and
+// entity↔schema membership (applyTo, removeFrom, getSchemasFor).
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const schemaHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('schema', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+const _schemaHandler: FunctionalConceptHandler = {
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'schema', {}, 'items');
+    p = mapBindings(p, (bindings) => {
+      return JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []);
+    }, 'itemsJson');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async defineSchema(input, storage) {
+  get(input: Record<string, unknown>) {
+    const schema = input.schema as string;
+
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {}),
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  defineSchema(input: Record<string, unknown>) {
     const schema = input.schema as string;
     const fields = input.fields as string;
+    const label = (input.label as string | undefined) ?? schema;
+    const category = (input.category as string | undefined) ?? '';
+    const icon = (input.icon as string | undefined) ?? '';
 
-    const existing = await storage.get('schema', schema);
-    if (existing) {
-      return { variant: 'exists', message: 'Schema already exists' };
-    }
-
-    await storage.put('schema', schema, {
-      schema,
-      fields: JSON.stringify(fields.split(',')),
-      extends: '',
-      associations: JSON.stringify([]),
-      createdAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'Schema already exists' }),
+      (b) => {
+        let b2 = put(b, 'schema', schema, {
+          schema,
+          label,
+          category,
+          icon,
+          fields: JSON.stringify(fields.split(',')),
+          extends: '',
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async addField(input, storage) {
+  addField(input: Record<string, unknown>) {
     const schema = input.schema as string;
     const field = input.field as string;
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
-
-    const fields: string[] = JSON.parse(existing.fields as string);
-
-    if (!fields.includes(field)) {
-      fields.push(field);
-    }
-
-    await storage.put('schema', schema, {
-      ...existing,
-      fields: JSON.stringify(fields),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'schema', schema, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const fields: string[] = JSON.parse(existing.fields as string);
+          if (!fields.includes(field)) {
+            fields.push(field);
+          }
+          return { ...existing, fields: JSON.stringify(fields) };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async extendSchema(input, storage) {
+  extendSchema(input: Record<string, unknown>) {
     const schema = input.schema as string;
     const parent = input.parent as string;
 
-    const schemaRecord = await storage.get('schema', schema);
-    if (!schemaRecord) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
-
-    const parentRecord = await storage.get('schema', parent);
-    if (!parentRecord) {
-      return { variant: 'notfound', message: 'Parent schema does not exist' };
-    }
-
-    await storage.put('schema', schema, {
-      ...schemaRecord,
-      extends: parent,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'schemaRecord');
+    p = branch(p, 'schemaRecord',
+      (b) => {
+        let b2 = spGet(b, 'schema', parent, 'parentRecord');
+        b2 = branch(b2, 'parentRecord',
+          (b3) => {
+            let b4 = putFrom(b3, 'schema', schema, (bindings) => ({
+              ...(bindings.schemaRecord as Record<string, unknown>),
+              extends: parent,
+            }));
+            return complete(b4, 'ok', {});
+          },
+          (b3) => complete(b3, 'notfound', { message: 'Parent schema does not exist' }),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async applyTo(input, storage) {
-    const entity = input.entity as string;
+  applyTo(input: Record<string, unknown>) {
+    const entity_id = input.entity_id as string;
     const schema = input.schema as string;
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
-
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    if (!associations.includes(entity)) {
-      associations.push(entity);
-    }
-
-    await storage.put('schema', schema, {
-      ...existing,
-      associations: JSON.stringify(associations),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const membershipKey = `${entity_id}::${schema}`;
+        let b2 = spGet(b, 'membership', membershipKey, 'alreadyApplied');
+        b2 = branch(b2, 'alreadyApplied',
+          (b3) => complete(b3, 'ok', { message: 'Already applied' }),
+          (b3) => {
+            let b4 = put(b3, 'membership', membershipKey, {
+              entity_id,
+              schema,
+              appliedAt: new Date().toISOString(),
+            });
+            return complete(b4, 'ok', {});
+          },
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeFrom(input, storage) {
-    const entity = input.entity as string;
+  removeFrom(input: Record<string, unknown>) {
+    const entity_id = input.entity_id as string;
     const schema = input.schema as string;
+    const membershipKey = `${entity_id}::${schema}`;
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
-
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    if (!associations.includes(entity)) {
-      return { variant: 'notfound', message: 'Entity is not associated with this schema' };
-    }
-
-    const updated = associations.filter(a => a !== entity);
-
-    await storage.put('schema', schema, {
-      ...existing,
-      associations: JSON.stringify(updated),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'membership', membershipKey, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'membership', membershipKey);
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Entity does not have this schema applied' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getAssociations(input, storage) {
-    const schema = input.schema as string;
+  getSchemasFor(input: Record<string, unknown>) {
+    const entity_id = input.entity_id as string;
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
-
-    const associations: string[] = JSON.parse(existing.associations as string);
-
-    return { variant: 'ok', associations: JSON.stringify(associations) };
+    let p = createProgram();
+    p = find(p, 'membership', {}, 'allMemberships');
+    p = mapBindings(p, (bindings) => {
+      const memberships = Array.isArray(bindings.allMemberships) ? bindings.allMemberships : [];
+      const schemas = memberships
+        .filter((m: Record<string, unknown>) => m.entity_id === entity_id)
+        .map((m: Record<string, unknown>) => m.schema as string);
+      return JSON.stringify(schemas);
+    }, 'schemasJson');
+    return complete(p, 'ok', { schemas: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async export(input, storage) {
+  getEntitiesFor(input: Record<string, unknown>) {
     const schema = input.schema as string;
 
-    const existing = await storage.get('schema', schema);
-    if (!existing) {
-      return { variant: 'notfound', message: 'Schema does not exist' };
-    }
+    let p = createProgram();
+    p = find(p, 'membership', {}, 'allMemberships');
+    p = mapBindings(p, (bindings) => {
+      const memberships = Array.isArray(bindings.allMemberships) ? bindings.allMemberships : [];
+      const entities = memberships
+        .filter((m: Record<string, unknown>) => m.schema === schema)
+        .map((m: Record<string, unknown>) => m.entity_id as string);
+      return JSON.stringify(entities);
+    }, 'entitiesJson');
+    return complete(p, 'ok', { entities: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    const fields: string[] = JSON.parse(existing.fields as string);
-    const parentSchema = existing.extends as string;
+  listMemberships(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'membership', {}, 'items');
+    p = mapBindings(p, (bindings) => {
+      return JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []);
+    }, 'itemsJson');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 
-    // If extending a parent, collect inherited fields
-    let allFields = [...fields];
-    if (parentSchema) {
-      const parentRecord = await storage.get('schema', parentSchema);
-      if (parentRecord) {
-        const parentFields: string[] = JSON.parse(parentRecord.fields as string);
-        allFields = [...new Set([...parentFields, ...fields])];
-      }
-    }
+  export(input: Record<string, unknown>) {
+    const schema = input.schema as string;
 
-    const data = {
-      schema,
-      fields: allFields,
-      extends: parentSchema || null,
-      associations: JSON.parse(existing.associations as string),
-    };
-
-    return { variant: 'ok', data: JSON.stringify(data) };
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = find(b, 'membership', {}, 'allMemberships');
+        b2 = mapBindings(b2, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const fields: string[] = JSON.parse(existing.fields as string);
+          const parentSchema = existing.extends as string;
+          const memberships = Array.isArray(bindings.allMemberships) ? bindings.allMemberships : [];
+          const entities = memberships
+            .filter((m: Record<string, unknown>) => m.schema === schema)
+            .map((m: Record<string, unknown>) => m.entity_id as string);
+          const data = {
+            schema,
+            fields,
+            extends: parentSchema || null,
+            entities,
+          };
+          return JSON.stringify(data);
+        }, 'dataJson');
+        return complete(b2, 'ok', { data: '' });
+      },
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const schemaHandler = autoInterpret(_schemaHandler);
+

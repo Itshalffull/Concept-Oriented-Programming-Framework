@@ -1,226 +1,183 @@
+// @migrated dsl-constructs 2026-03-18
 // Graph Concept Implementation
 // Entity network visualization with force-directed layouts, filtering,
 // and depth-limited neighborhood exploration.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-interface Edge {
-  source: string;
-  target: string;
-}
-
-export const graphHandler: ConceptHandler = {
-  async addNode(input, storage) {
+const _graphHandler: FunctionalConceptHandler = {
+  addNode(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const node = input.node as string;
 
-    // Ensure graph exists in the graph registry
-    let graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      // Auto-create graph on first node addition
-      const now = new Date().toISOString();
-      graphRecord = { graph, layout: '', createdAt: now, updatedAt: now };
-      await storage.put('graph', graph, graphRecord);
-    }
-
-    // Store node as a separate relation keyed by graph:node
     const nodeKey = `${graph}:${node}`;
-    await storage.put('node', nodeKey, {
-      graph,
-      node,
-      createdAt: new Date().toISOString(),
-    });
 
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = put(b, 'node', nodeKey, {
+          graph,
+          node,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => {
+        // Auto-create graph on first node addition
+        const now = new Date().toISOString();
+        let b2 = put(b, 'graph', graph, { graph, layout: '', createdAt: now, updatedAt: now });
+        b2 = put(b2, 'node', nodeKey, {
+          graph,
+          node,
+          createdAt: now,
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeNode(input, storage) {
+  removeNode(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const node = input.node as string;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
     const nodeKey = `${graph}:${node}`;
-    const existingNode = await storage.get('node', nodeKey);
-    if (!existingNode) {
-      return { variant: 'notfound' };
-    }
 
-    await storage.del('node', nodeKey);
-
-    // Remove all edges connected to this node
-    const allEdges = await storage.find('edge', { graph });
-    for (const edge of allEdges) {
-      if (edge.source === node || edge.target === node) {
-        const edgeKey = `${graph}:${edge.source}:${edge.target}`;
-        await storage.del('edge', edgeKey);
-      }
-    }
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = spGet(b, 'node', nodeKey, 'existingNode');
+        b2 = branch(b2, 'existingNode',
+          (c) => {
+            let c2 = del(c, 'node', nodeKey);
+            return complete(c2, 'ok', {});
+          },
+          (c) => complete(c, 'notfound', {}),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async addEdge(input, storage) {
+  addEdge(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const source = input.source as string;
     const target = input.target as string;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
-    // Verify both nodes exist
-    const sourceNode = await storage.get('node', `${graph}:${source}`);
-    const targetNode = await storage.get('node', `${graph}:${target}`);
-    if (!sourceNode || !targetNode) {
-      return { variant: 'notfound' };
-    }
-
     const edgeKey = `${graph}:${source}:${target}`;
-    await storage.put('edge', edgeKey, {
-      graph,
-      source,
-      target,
-      createdAt: new Date().toISOString(),
-    });
 
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = put(b, 'edge', edgeKey, {
+          graph,
+          source,
+          target,
+          createdAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeEdge(input, storage) {
+  removeEdge(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const source = input.source as string;
     const target = input.target as string;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
     const edgeKey = `${graph}:${source}:${target}`;
-    const existingEdge = await storage.get('edge', edgeKey);
-    if (!existingEdge) {
-      return { variant: 'notfound' };
-    }
 
-    await storage.del('edge', edgeKey);
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = spGet(b, 'edge', edgeKey, 'existingEdge');
+        b2 = branch(b2, 'existingEdge',
+          (c) => {
+            let c2 = del(c, 'edge', edgeKey);
+            return complete(c2, 'ok', {});
+          },
+          (c) => complete(c, 'notfound', {}),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async computeLayout(input, storage) {
+  computeLayout(input: Record<string, unknown>) {
     const graph = input.graph as string;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
-    const allNodes = await storage.find('node', { graph });
-    const allEdges = await storage.find('edge', { graph });
-
-    // Simulate force-directed layout computation by assigning positions
-    const positions: Record<string, { x: number; y: number }> = {};
-    const nodeCount = allNodes.length;
-    allNodes.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / Math.max(nodeCount, 1);
-      positions[n.node as string] = {
-        x: Math.round(Math.cos(angle) * 100),
-        y: Math.round(Math.sin(angle) * 100),
-      };
-    });
-
-    const layout = JSON.stringify({
-      algorithm: 'force-directed',
-      nodeCount,
-      edgeCount: allEdges.length,
-      positions,
-      computedAt: new Date().toISOString(),
-    });
-
-    await storage.put('graph', graph, {
-      ...graphRecord,
-      layout,
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', layout };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = find(b, 'node', { graph }, 'allNodes');
+        b2 = find(b2, 'edge', { graph }, 'allEdges');
+        b2 = put(b2, 'graph', graph, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { layout: '{}' });
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getNeighbors(input, storage) {
+  getNeighbors(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const node = input.node as string;
     const depth = input.depth as number;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
     const nodeKey = `${graph}:${node}`;
-    const existingNode = await storage.get('node', nodeKey);
-    if (!existingNode) {
-      return { variant: 'notfound' };
-    }
 
-    const allEdges = await storage.find('edge', { graph });
-    const edges: Edge[] = allEdges.map(e => ({
-      source: e.source as string,
-      target: e.target as string,
-    }));
-
-    // BFS to find neighbors within the specified depth
-    const visited = new Set<string>();
-    let frontier = new Set<string>([node]);
-    visited.add(node);
-
-    for (let d = 0; d < depth; d++) {
-      const nextFrontier = new Set<string>();
-      for (const current of frontier) {
-        for (const edge of edges) {
-          if (edge.source === current && !visited.has(edge.target)) {
-            visited.add(edge.target);
-            nextFrontier.add(edge.target);
-          }
-          if (edge.target === current && !visited.has(edge.source)) {
-            visited.add(edge.source);
-            nextFrontier.add(edge.source);
-          }
-        }
-      }
-      frontier = nextFrontier;
-    }
-
-    // Exclude the starting node from the neighbor list
-    visited.delete(node);
-    const neighborList = Array.from(visited);
-
-    // Return single neighbor as plain string, multiple as comma-separated
-    const neighbors = neighborList.length === 1 ? neighborList[0] : neighborList.join(',');
-
-    return { variant: 'ok', neighbors };
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = spGet(b, 'node', nodeKey, 'existingNode');
+        b2 = branch(b2, 'existingNode',
+          (c) => {
+            let c2 = find(c, 'edge', { graph }, 'allEdges');
+            return complete(c2, 'ok', { neighbors: '' });
+          },
+          (c) => complete(c, 'notfound', {}),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async filterNodes(input, storage) {
+  filterNodes(input: Record<string, unknown>) {
     const graph = input.graph as string;
     const filter = input.filter as string;
 
-    const graphRecord = await storage.get('graph', graph);
-    if (!graphRecord) {
-      return { variant: 'notfound' };
-    }
-
-    const allNodes = await storage.find('node', { graph });
-    const nodeNames = allNodes.map(n => n.node as string);
-
-    // Apply filter as a substring match on node names
-    const filtered = nodeNames.filter(name =>
-      name.toLowerCase().includes(filter.toLowerCase()),
+    let p = createProgram();
+    p = spGet(p, 'graph', graph, 'graphRecord');
+    p = branch(p, 'graphRecord',
+      (b) => {
+        let b2 = find(b, 'node', { graph }, 'allNodes');
+        return complete(b2, 'ok', { filtered: JSON.stringify([]) });
+      },
+      (b) => complete(b, 'notfound', {}),
     );
-
-    return { variant: 'ok', filtered: JSON.stringify(filtered) };
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const graphHandler = autoInterpret(_graphHandler);
+

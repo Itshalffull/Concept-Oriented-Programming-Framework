@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // MCP Target Provider Handler
 //
@@ -8,7 +9,10 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage, ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../../runtime/types.js';
 import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
@@ -168,6 +172,77 @@ function buildHierarchicalEntries(conceptName: string): McpEntry[] {
   ];
 }
 
+// --- Tool Catalog Entry (for lazy loading) ---
+
+interface ToolCatalogEntry {
+  name: string;
+  briefDescription: string;
+  category: string;
+  concept: string;
+  action: string;
+  alwaysLoaded: boolean;
+}
+
+// alwaysLoaded is now declared per-action in the interface manifest
+// (mcp.alwaysLoaded: true) and read from overrides at generation time.
+// No hardcoded tool names — the manifest is the single source of truth.
+
+/**
+ * Generate a brief one-line description for tool catalog.
+ * Strips multi-line prose to first sentence, max 80 chars.
+ */
+function toBriefDescription(fullDesc: string): string {
+  // Remove the "Action concept —" prefix pattern
+  const stripped = fullDesc.replace(/^[A-Z][a-z]+ [a-z]+ —\s*/, '');
+  // Take first sentence
+  const firstSentence = stripped.split(/\.\s/)[0];
+  if (firstSentence.length <= 80) return firstSentence.endsWith('.') ? firstSentence : firstSentence + '.';
+  return firstSentence.slice(0, 77) + '...';
+}
+
+function generateToolCatalog(
+  manifest: ConceptManifest,
+  conceptName: string,
+  overrides: Record<string, Record<string, unknown>>,
+  hierConfig?: HierarchicalConfig,
+): ToolCatalogEntry[] {
+  const catalog: ToolCatalogEntry[] = [];
+  const snake = toSnakeCase(conceptName);
+
+  for (const action of manifest.actions) {
+    const actionOverride = overrides[action.name] || {};
+    const overrideType = actionOverride.type as string | undefined;
+    const mcpType = overrideType || inferMcpType(action.name);
+
+    // Resources/templates skip the catalog unless explicitly marked alwaysLoaded
+    const isAlwaysLoaded = (actionOverride.alwaysLoaded as boolean) === true;
+    if (mcpType !== 'tool' && !isAlwaysLoaded) continue;
+
+    const toolName = `${snake}_${toSnakeCase(action.name)}`;
+    const desc = (actionOverride.description as string)
+      || action.variants[0]?.prose
+      || `Execute ${action.name}`;
+
+    catalog.push({
+      name: toolName,
+      briefDescription: toBriefDescription(desc),
+      category: conceptName,
+      concept: conceptName,
+      action: action.name,
+      alwaysLoaded: (actionOverride.alwaysLoaded as boolean) === true,
+    });
+  }
+
+  if (hierConfig) {
+    catalog.push(
+      { name: `${snake}_list_children`, briefDescription: `List children of a ${conceptName} node.`, category: conceptName, concept: conceptName, action: 'listChildren', alwaysLoaded: false },
+      { name: `${snake}_get_ancestors`, briefDescription: `Get ancestor chain for a ${conceptName} node.`, category: conceptName, concept: conceptName, action: 'getAncestors', alwaysLoaded: false },
+    );
+  }
+
+  return catalog;
+}
+
 // --- Generate Tools File ---
 
 function generateToolsFile(
@@ -262,17 +337,14 @@ function generateMcpHelpMd(
 
 // --- Concept Handler ---
 
-export const mcpTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'McpTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'McpTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'McpTools',
       capabilities: JSON.stringify(['tools', 'resources', 'resource-templates', 'hierarchical']),
       targetKey: 'mcp',
-      providerType: 'target',
-    };
+      providerType: 'target' }); return p; }
   },
 
   /**
@@ -282,22 +354,21 @@ export const mcpTargetHandler: ConceptHandler = {
    * with ID parameter), or resource-template (read-only list). Override
    * classification via the overrides input.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     const projectionRaw = input.projection as string;
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      return { variant: 'ok', files: [] };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -308,7 +379,7 @@ export const mcpTargetHandler: ConceptHandler = {
       try {
         manifest = JSON.parse(manifestRaw) as ConceptManifest;
       } catch {
-        return { variant: 'ok', files: [] };
+        { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
       }
     } else {
       manifest = manifestRaw as ConceptManifest;
@@ -342,6 +413,15 @@ export const mcpTargetHandler: ConceptHandler = {
       },
     ];
 
+    // Emit tool catalog for lazy loading (brief descriptions, no schemas)
+    const catalog = generateToolCatalog(manifest, name, overrides, hierConfig);
+    if (catalog.length > 0) {
+      files.push({
+        path: `${kebab}/${kebab}.catalog.json`,
+        content: JSON.stringify(catalog, null, 2) + '\n',
+      });
+    }
+
     // Emit enrichment-driven MCP help documentation if available
     const helpMd = generateMcpHelpMd(manifest, name, parsedManifestYaml);
     if (helpMd) {
@@ -351,6 +431,8 @@ export const mcpTargetHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', files };
+    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
   },
 };
+
+export const mcpTargetHandler = autoInterpret(_handler);

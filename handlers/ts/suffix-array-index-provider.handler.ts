@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SuffixArrayIndexProvider Handler
 //
@@ -6,7 +7,14 @@
 // Registers as a SearchIndex provider.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, del, complete, completeFrom,
+  type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
@@ -21,8 +29,6 @@ const PROVIDER_REF = 'search:suffix-array';
 
 /**
  * Build a suffix array for the given text.
- * Returns an array of starting indices sorted by the lexicographic order
- * of their corresponding suffixes.
  */
 function buildSuffixArray(text: string): number[] {
   const n = text.length;
@@ -48,7 +54,6 @@ function searchSuffixArray(text: string, sa: number[], pattern: string): number[
   const n = sa.length;
   if (n === 0 || pattern.length === 0) return [];
 
-  // Find left bound
   let lo = 0;
   let hi = n;
   while (lo < hi) {
@@ -62,7 +67,6 @@ function searchSuffixArray(text: string, sa: number[], pattern: string): number[
   }
   const left = lo;
 
-  // Find right bound
   hi = n;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
@@ -89,77 +93,75 @@ function searchSuffixArray(text: string, sa: number[], pattern: string): number[
 const DOC_RELATION = 'suffix-array-index-provider';
 const SA_RELATION = 'suffix-array-index-provider-sa';
 
-export const suffixArrayIndexProviderHandler: ConceptHandler = {
-  async initialize(input: Record<string, unknown>, storage: ConceptStorage) {
-    // Check if already initialised
-    const existing = await storage.find(DOC_RELATION, { providerRef: PROVIDER_REF });
-    if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
-    }
+const _handler: FunctionalConceptHandler = {
+  initialize(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, DOC_RELATION, { providerRef: PROVIDER_REF }, 'existing');
 
-    const id = nextId();
-    await storage.put(DOC_RELATION, id, {
-      id,
-      providerRef: PROVIDER_REF,
-    });
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = bindings.existing as Record<string, unknown>[];
+      if (existing.length > 0) {
+        return { instance: existing[0].id as string };
+      }
 
-    return { variant: 'ok', instance: id };
+      const id = nextId();
+      return { instance: id };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Index a document by building its suffix array and storing both
-   * the text and the sorted suffix indices.
-   */
-  async index(input: Record<string, unknown>, storage: ConceptStorage) {
+  index(input: Record<string, unknown>) {
     const docId = input.docId as string;
     const text = input.text as string;
 
     const lowerText = text.toLowerCase();
     const sa = buildSuffixArray(lowerText);
 
-    await storage.put(SA_RELATION, docId, {
+    let p = createProgram();
+    p = put(p, SA_RELATION, docId, {
       id: docId,
       text: lowerText,
       suffixArray: JSON.stringify(sa),
     });
 
-    return { variant: 'ok', docId };
+    return complete(p, 'ok', { docId }) as StorageProgram<Result>;
   },
 
-  /**
-   * Search all indexed documents for a substring pattern.
-   * Returns matching docIds with positions.
-   */
-  async search(input: Record<string, unknown>, storage: ConceptStorage) {
+  search(input: Record<string, unknown>) {
     const pattern = input.pattern as string;
 
     const lowerPattern = pattern.toLowerCase();
-    const allDocs = await storage.find(SA_RELATION);
 
-    const results: Array<{ docId: string; positions: number[] }> = [];
-    for (const doc of allDocs) {
-      const text = doc.text as string;
-      const sa: number[] = JSON.parse(doc.suffixArray as string);
-      const positions = searchSuffixArray(text, sa, lowerPattern);
-      if (positions.length > 0) {
-        results.push({ docId: doc.id as string, positions });
+    let p = createProgram();
+    p = find(p, SA_RELATION, {}, 'allDocs');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const allDocs = bindings.allDocs as Record<string, unknown>[];
+
+      const results: Array<{ docId: string; positions: number[] }> = [];
+      for (const doc of allDocs) {
+        const text = doc.text as string;
+        const sa: number[] = JSON.parse(doc.suffixArray as string);
+        const positions = searchSuffixArray(text, sa, lowerPattern);
+        if (positions.length > 0) {
+          results.push({ docId: doc.id as string, positions });
+        }
       }
-    }
 
-    return { variant: 'ok', results: JSON.stringify(results) };
+      return { results: JSON.stringify(results) };
+    }) as StorageProgram<Result>;
   },
 
-  /**
-   * Remove a document from the suffix array index.
-   */
-  async remove(input: Record<string, unknown>, storage: ConceptStorage) {
+  remove(input: Record<string, unknown>) {
     const docId = input.docId as string;
 
-    await storage.del(SA_RELATION, docId);
+    let p = createProgram();
+    p = del(p, SA_RELATION, docId);
 
-    return { variant: 'ok', docId };
+    return complete(p, 'ok', { docId }) as StorageProgram<Result>;
   },
 };
+
+export const suffixArrayIndexProviderHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSuffixArrayIndexProviderCounter(): void {

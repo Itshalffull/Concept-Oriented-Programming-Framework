@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SymbolOccurrence Handler
 //
@@ -6,15 +7,22 @@
 // rename-refactoring across the entire project.
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import {
+  createProgram, find, put, complete, completeFrom,
+  branch, mapBindings, type StorageProgram,
+} from '../../runtime/storage-program.ts';
+import { autoInterpret } from '../../runtime/functional-compat.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
   return `symbol-occurrence-${++idCounter}`;
 }
 
-export const symbolOccurrenceHandler: ConceptHandler = {
-  async record(input: Record<string, unknown>, storage: ConceptStorage) {
+const _handler: FunctionalConceptHandler = {
+  record(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const file = input.file as string;
     const startRow = input.startRow as number;
@@ -26,7 +34,8 @@ export const symbolOccurrenceHandler: ConceptHandler = {
     const role = input.role as string;
 
     const id = nextId();
-    await storage.put('symbol-occurrence', id, {
+    let p = createProgram();
+    p = put(p, 'symbol-occurrence', id, {
       id,
       symbol,
       file,
@@ -40,125 +49,143 @@ export const symbolOccurrenceHandler: ConceptHandler = {
       enclosingSymbol: '',
     });
 
-    return { variant: 'ok', occurrence: id };
+    return complete(p, 'ok', { occurrence: id }) as StorageProgram<Result>;
   },
 
-  async findDefinitions(input: Record<string, unknown>, storage: ConceptStorage) {
+  findDefinitions(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
 
-    const all = await storage.find('symbol-occurrence', { symbol });
-    const definitions = all.filter((occ) => {
-      const role = occ.role as string;
-      return role.split(',').map((r) => r.trim()).includes('definition');
-    });
+    let p = createProgram();
+    p = find(p, 'symbol-occurrence', { symbol }, 'all');
 
-    if (definitions.length === 0) {
-      return { variant: 'noDefinitions' };
-    }
+    return completeFrom(p, 'ok', (b) => {
+      const all = b.all as Record<string, unknown>[];
+      const definitions = all.filter((occ) => {
+        const role = occ.role as string;
+        return role.split(',').map((r) => r.trim()).includes('definition');
+      });
 
-    const occurrences = definitions.map((occ) => ({
-      id: occ.id,
-      symbol: occ.symbol,
-      file: occ.file,
-      startRow: occ.startRow,
-      startCol: occ.startCol,
-      endRow: occ.endRow,
-      endCol: occ.endCol,
-      startByte: occ.startByte,
-      endByte: occ.endByte,
-      role: occ.role,
-    }));
+      if (definitions.length === 0) {
+        return { variant: 'noDefinitions' };
+      }
 
-    return { variant: 'ok', occurrences: JSON.stringify(occurrences) };
+      const occurrences = definitions.map((occ) => ({
+        id: occ.id,
+        symbol: occ.symbol,
+        file: occ.file,
+        startRow: occ.startRow,
+        startCol: occ.startCol,
+        endRow: occ.endRow,
+        endCol: occ.endCol,
+        startByte: occ.startByte,
+        endByte: occ.endByte,
+        role: occ.role,
+      }));
+
+      return { occurrences: JSON.stringify(occurrences) };
+    }) as StorageProgram<Result>;
   },
 
-  async findReferences(input: Record<string, unknown>, storage: ConceptStorage) {
+  findReferences(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const roleFilter = input.roleFilter as string;
 
-    const all = await storage.find('symbol-occurrence', { symbol });
+    let p = createProgram();
+    p = find(p, 'symbol-occurrence', { symbol }, 'all');
 
-    let filtered = all;
-    if (roleFilter !== undefined && roleFilter !== '') {
-      filtered = all.filter((occ) => {
-        const roles = (occ.role as string).split(',').map((r) => r.trim());
-        return roles.includes(roleFilter);
-      });
-    }
+    return completeFrom(p, 'ok', (b) => {
+      const all = b.all as Record<string, unknown>[];
 
-    if (filtered.length === 0) {
-      return { variant: 'noReferences' };
-    }
+      let filtered = all;
+      if (roleFilter !== undefined && roleFilter !== '') {
+        filtered = all.filter((occ) => {
+          const roles = (occ.role as string).split(',').map((r) => r.trim());
+          return roles.includes(roleFilter);
+        });
+      }
 
-    const occurrences = filtered.map((occ) => ({
-      id: occ.id,
-      symbol: occ.symbol,
-      file: occ.file,
-      startRow: occ.startRow,
-      startCol: occ.startCol,
-      endRow: occ.endRow,
-      endCol: occ.endCol,
-      startByte: occ.startByte,
-      endByte: occ.endByte,
-      role: occ.role,
-    }));
+      if (filtered.length === 0) {
+        return { variant: 'noReferences' };
+      }
 
-    return { variant: 'ok', occurrences: JSON.stringify(occurrences) };
+      const occurrences = filtered.map((occ) => ({
+        id: occ.id,
+        symbol: occ.symbol,
+        file: occ.file,
+        startRow: occ.startRow,
+        startCol: occ.startCol,
+        endRow: occ.endRow,
+        endCol: occ.endCol,
+        startByte: occ.startByte,
+        endByte: occ.endByte,
+        role: occ.role,
+      }));
+
+      return { occurrences: JSON.stringify(occurrences) };
+    }) as StorageProgram<Result>;
   },
 
-  async findAtPosition(input: Record<string, unknown>, storage: ConceptStorage) {
+  findAtPosition(input: Record<string, unknown>) {
     const file = input.file as string;
     const row = input.row as number;
     const col = input.col as number;
 
-    const all = await storage.find('symbol-occurrence', { file });
+    let p = createProgram();
+    p = find(p, 'symbol-occurrence', { file }, 'all');
 
-    // Find an occurrence that spans the given position
-    const match = all.find((occ) => {
-      const startRow = occ.startRow as number;
-      const startCol = occ.startCol as number;
-      const endRow = occ.endRow as number;
-      const endCol = occ.endCol as number;
+    return completeFrom(p, 'ok', (b) => {
+      const all = b.all as Record<string, unknown>[];
 
-      // Position is within the occurrence span
-      if (row < startRow || row > endRow) return false;
-      if (row === startRow && col < startCol) return false;
-      if (row === endRow && col > endCol) return false;
-      return true;
-    });
+      const match = all.find((occ) => {
+        const startRow = occ.startRow as number;
+        const startCol = occ.startCol as number;
+        const endRow = occ.endRow as number;
+        const endCol = occ.endCol as number;
 
-    if (!match) {
-      return { variant: 'noSymbolAtPosition' };
-    }
+        if (row < startRow || row > endRow) return false;
+        if (row === startRow && col < startCol) return false;
+        if (row === endRow && col > endCol) return false;
+        return true;
+      });
 
-    return {
-      variant: 'ok',
-      occurrence: match.id as string,
-      symbol: match.symbol as string,
-    };
+      if (!match) {
+        return { variant: 'noSymbolAtPosition' };
+      }
+
+      return {
+        occurrence: match.id as string,
+        symbol: match.symbol as string,
+      };
+    }) as StorageProgram<Result>;
   },
 
-  async findInFile(input: Record<string, unknown>, storage: ConceptStorage) {
+  findInFile(input: Record<string, unknown>) {
     const file = input.file as string;
 
-    const results = await storage.find('symbol-occurrence', { file });
+    let p = createProgram();
+    p = find(p, 'symbol-occurrence', { file }, 'results');
 
-    const occurrences = results.map((occ) => ({
-      id: occ.id,
-      symbol: occ.symbol,
-      file: occ.file,
-      startRow: occ.startRow,
-      startCol: occ.startCol,
-      endRow: occ.endRow,
-      endCol: occ.endCol,
-      startByte: occ.startByte,
-      endByte: occ.endByte,
-      role: occ.role,
-    }));
+    return completeFrom(p, 'ok', (b) => {
+      const results = b.results as Record<string, unknown>[];
+      const occurrences = results.map((occ) => ({
+        id: occ.id,
+        symbol: occ.symbol,
+        file: occ.file,
+        startRow: occ.startRow,
+        startCol: occ.startCol,
+        endRow: occ.endRow,
+        endCol: occ.endCol,
+        startByte: occ.startByte,
+        endByte: occ.endByte,
+        role: occ.role,
+      }));
 
-    return { variant: 'ok', occurrences: JSON.stringify(occurrences) };
+      return { occurrences: JSON.stringify(occurrences) };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const symbolOccurrenceHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSymbolOccurrenceCounter(): void {

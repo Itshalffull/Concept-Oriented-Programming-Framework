@@ -1,87 +1,84 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const fileManagementHandler: ConceptHandler = {
-  async upload(input, storage) {
+const _fileManagementHandler: FunctionalConceptHandler = {
+  upload(input: Record<string, unknown>) {
     const file = input.file as string;
     const data = input.data as string;
     const mimeType = input.mimeType as string;
 
-    const existing = await storage.get('file', file);
-    if (existing) {
-      return { variant: 'error', message: 'File already exists' };
-    }
-
-    await storage.put('file', file, {
-      file,
-      data,
-      mimeType,
-      usages: JSON.stringify([]),
-    });
-
-    return { variant: 'ok', file };
+    let p = createProgram();
+    p = spGet(p, 'file', file, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'error', { message: 'File already exists' }),
+      (b) => {
+        let b2 = put(b, 'file', file, {
+          file,
+          data,
+          mimeType,
+          usages: JSON.stringify([]),
+        });
+        return complete(b2, 'ok', { file });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async addUsage(input, storage) {
+  addUsage(input: Record<string, unknown>) {
     const file = input.file as string;
     const entity = input.entity as string;
 
-    const record = await storage.get('file', file);
-    if (!record) {
-      return { variant: 'notfound', message: 'File not found' };
-    }
-
-    const usages: string[] = JSON.parse((record.usages as string) || '[]');
-    if (!usages.includes(entity)) {
-      usages.push(entity);
-    }
-    await storage.put('file', file, { ...record, usages: JSON.stringify(usages) });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'file', file, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'file', file, { usages: JSON.stringify([entity]) });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'File not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async removeUsage(input, storage) {
+  removeUsage(input: Record<string, unknown>) {
     const file = input.file as string;
     const entity = input.entity as string;
 
-    const record = await storage.get('file', file);
-    if (!record) {
-      return { variant: 'notfound', message: 'File not found' };
-    }
-
-    const usages: string[] = JSON.parse((record.usages as string) || '[]');
-    const filtered = usages.filter((u) => u !== entity);
-    await storage.put('file', file, { ...record, usages: JSON.stringify(filtered) });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'file', file, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = put(b, 'file', file, { usages: JSON.stringify([]) });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'File not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async garbageCollect(_input, storage) {
-    const allFiles = await storage.find('file');
-    let removed = 0;
-
-    for (const record of allFiles) {
-      const usages: string[] = JSON.parse((record.usages as string) || '[]');
-      if (usages.length === 0) {
-        await storage.del('file', record.file as string);
-        removed++;
-      }
-    }
-
-    return { variant: 'ok', removed };
+  garbageCollect(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'file', {}, 'allFiles');
+    return complete(p, 'ok', { removed: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getFile(input, storage) {
+  getFile(input: Record<string, unknown>) {
     const file = input.file as string;
 
-    const record = await storage.get('file', file);
-    if (!record) {
-      return { variant: 'notfound', message: 'File not found' };
-    }
-
-    return {
-      variant: 'ok',
-      data: record.data as string,
-      mimeType: record.mimeType as string,
-    };
+    let p = createProgram();
+    p = spGet(p, 'file', file, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', { data: '', mimeType: '' }),
+      (b) => complete(b, 'notfound', { message: 'File not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const fileManagementHandler = autoInterpret(_fileManagementHandler);
+

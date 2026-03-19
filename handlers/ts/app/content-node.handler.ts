@@ -1,4 +1,14 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @migrated dsl-constructs 2026-03-18
+// ContentNode Concept Implementation
+// Per spec §2.1: There is one entity — ContentNode. There are no entity types
+// and no bundles. Identity comes from which Schemas are applied (via Schema
+// concept), not from a "type" field. ContentNode is a universal entity pool.
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 function parseStructuredValue(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'string' || value.trim() === '') return null;
@@ -12,132 +22,108 @@ function parseStructuredValue(value: unknown): Record<string, unknown> | null {
   }
 }
 
-function expandNodeRecord(record: Record<string, unknown>): Record<string, unknown> {
-  const contentFields = parseStructuredValue(record.content);
-  const metadataFields = parseStructuredValue(record.metadata);
-
-  return {
-    ...record,
-    ...(contentFields ?? {}),
-    ...(metadataFields
-      ? Object.fromEntries(
-          Object.entries(metadataFields).filter(([key]) => !(key in record) && !(contentFields && key in contentFields)),
-        )
-      : {}),
-  };
-}
-
-export const contentNodeHandler: ConceptHandler = {
-  async create(input, storage) {
+const _contentNodeHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const node = input.node as string;
-    const type = input.type as string;
-    const content = input.content as string;
+    const type = (input.type as string | undefined) ?? '';
+    const content = (input.content as string | undefined) ?? '';
     const metadata = (input.metadata as string | undefined) ?? '';
-    const createdBy = input.createdBy as string;
-    const existing = await storage.get('node', node);
-    if (existing) return { variant: 'exists', message: 'already exists' };
-    const now = new Date().toISOString();
-    await storage.put('node', node, {
-      node,
-      type,
-      content,
-      metadata,
-      createdBy,
-      createdAt: now,
-      updatedAt: now,
-    });
-    return { variant: 'ok', node };
+    const createdBy = (input.createdBy as string | undefined) ?? 'system';
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'node', node, {
+          node, type, content, metadata, createdBy,
+          createdAt: now,
+          updatedAt: now,
+        });
+        return complete(b2, 'ok', { node });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async update(input, storage) {
+  update(input: Record<string, unknown>) {
     const node = input.node as string;
     const content = input.content as string;
-    const existing = await storage.get('node', node);
-    if (!existing) return { variant: 'notfound', message: 'Node not found' };
-    const now = new Date().toISOString();
-    await storage.put('node', node, {
-      ...existing,
-      content,
-      updatedAt: now,
-    });
-    return { variant: 'ok', node };
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'node', node, {
+          content,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async delete(input, storage) {
+  delete(input: Record<string, unknown>) {
     const node = input.node as string;
-    const existing = await storage.get('node', node);
-    if (!existing) return { variant: 'notfound', message: 'Node not found' };
-    await storage.del('node', node);
-    return { variant: 'ok', node };
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'node', node);
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async get(input, storage) {
+  get(input: Record<string, unknown>) {
     const node = input.node as string;
-    const record = await storage.get('node', node);
-    if (!record) return { variant: 'notfound', message: 'Node not found' };
-    return {
-      variant: 'ok',
-      ...expandNodeRecord(record as Record<string, unknown>),
-    };
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', {}),
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setMetadata(input, storage) {
+  setMetadata(input: Record<string, unknown>) {
     const node = input.node as string;
     const metadata = input.metadata as string;
-    const existing = await storage.get('node', node);
-    if (!existing) return { variant: 'notfound', message: 'Node not found' };
-    await storage.put('node', node, {
-      ...existing,
-      metadata,
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', node };
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'node', node, {
+          metadata,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async list(input, storage) {
-    const items = await storage.find('node', {});
-    const allItems = Array.isArray(items) ? items : [];
-    // Optional type filter
-    const typeFilter = input.type as string | undefined;
-    const filtered = typeFilter
-      ? allItems.filter((item: Record<string, unknown>) => item.type === typeFilter)
-      : allItems;
-    return {
-      variant: 'ok',
-      items: JSON.stringify(filtered.map((item) => expandNodeRecord(item as Record<string, unknown>))),
-    };
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'node', {}, 'items');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async stats(_input, storage) {
-    const items = await storage.find('node', {});
-    const allItems = Array.isArray(items) ? items : [];
-    // Count by type
-    const counts: Record<string, number> = {};
-    for (const item of allItems) {
-      const type = (item as Record<string, unknown>).type as string ?? 'unknown';
-      counts[type] = (counts[type] ?? 0) + 1;
-    }
-    const stats = [
-      { label: 'Content Nodes', value: String(allItems.length), description: 'Entities in the content pool' },
-      { label: 'Concepts', value: String(counts['concept'] ?? 0), description: 'Registered concept handlers' },
-      { label: 'Schemas', value: String(counts['schema'] ?? 0), description: 'Composable data shapes' },
-      { label: 'Syncs', value: String(counts['sync'] ?? 0), description: 'Sync rules across suites' },
-      { label: 'Suites', value: String(counts['suite'] ?? 0), description: 'Concept suite packages' },
-      { label: 'Themes', value: String(counts['theme'] ?? 0), description: 'Design system themes' },
-    ];
-    return { variant: 'ok', items: JSON.stringify(stats) };
-  },
-
-  async changeType(input, storage) {
-    const node = input.node as string;
-    const type = input.type as string;
-    const existing = await storage.get('node', node);
-    if (!existing) return { variant: 'notfound', message: 'Node not found' };
-    await storage.put('node', node, {
-      ...existing,
-      type,
-      updatedAt: new Date().toISOString(),
-    });
-    return { variant: 'ok', node };
+  stats(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'node', {}, 'items');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contentNodeHandler = autoInterpret(_contentNodeHandler);
+

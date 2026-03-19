@@ -1,135 +1,121 @@
+// @migrated dsl-constructs 2026-03-18
 // Theme Concept Implementation [H]
 // Named themes with inheritance, activation priority, and token resolution.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-export const themeHandler: ConceptHandler = {
-  async list(_input, storage) {
-    const items = await storage.find('theme', {});
-    return { variant: 'ok', items: JSON.stringify(items) };
+const _themeHandler: FunctionalConceptHandler = {
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'theme', {}, 'items');
+    p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
+    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async create(input, storage) {
+  create(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const name = input.name as string;
     const overrides = input.overrides as string;
-
     const id = theme || nextId('H');
-
-    const existing = await storage.get('theme', id);
-    if (existing) {
-      return { variant: 'duplicate', message: `Theme "${id}" already exists` };
-    }
-
-    await storage.put('theme', id, {
-      name,
-      base: '',
-      overrides: overrides || JSON.stringify({}),
-      active: false,
-      priority: 0,
-    });
-
-    return { variant: 'ok', theme: id };
+    let p = createProgram();
+    p = spGet(p, 'theme', id, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'duplicate', { message: `Theme "${id}" already exists` }),
+      (b) => {
+        let b2 = find(b, 'theme', {}, 'allThemes');
+        b2 = mapBindings(b2, (bindings) => {
+          const themes = (bindings.allThemes as Array<Record<string, unknown>>) || [];
+          return !themes.some((item) => item.active === true || item.status === 'active');
+        }, 'shouldActivate');
+        b2 = put(b2, 'theme', id, { id, name, base: '', overrides: overrides || JSON.stringify({}), active: false, priority: 0 });
+        return complete(b2, 'ok', { theme: id });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async extend(input, storage) {
+  extend(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const base = input.base as string;
     const overrides = input.overrides as string;
-
-    const baseTheme = await storage.get('theme', base);
-    if (!baseTheme) {
-      return { variant: 'notfound', message: `Base theme "${base}" not found` };
-    }
-
-    const id = theme || nextId('H');
-
-    // Merge base overrides with new overrides
-    const baseOverrides: Record<string, unknown> = JSON.parse((baseTheme.overrides as string) || '{}');
-    const newOverrides: Record<string, unknown> = overrides ? JSON.parse(overrides) : {};
-    const merged = { ...baseOverrides, ...newOverrides };
-
-    await storage.put('theme', id, {
-      name: `${baseTheme.name as string}-extended`,
-      base,
-      overrides: JSON.stringify(merged),
-      active: false,
-      priority: 0,
-    });
-
-    return { variant: 'ok', theme: id };
+    let p = createProgram();
+    p = spGet(p, 'theme', base, 'baseTheme');
+    p = branch(p, 'baseTheme',
+      (b) => {
+        const id = theme || nextId('H');
+        let b2 = putFrom(b, 'theme', id, (bindings) => {
+          const baseTheme = bindings.baseTheme as Record<string, unknown>;
+          const baseOverrides: Record<string, unknown> = JSON.parse((baseTheme.overrides as string) || '{}');
+          const newOverrides: Record<string, unknown> = overrides ? JSON.parse(overrides) : {};
+          return { id, name: `${baseTheme.name as string}-extended`, base, overrides: JSON.stringify({ ...baseOverrides, ...newOverrides }), active: false, priority: 0 };
+        });
+        return complete(b2, 'ok', { theme: id });
+      },
+      (b) => complete(b, 'notfound', { message: `Base theme "${base}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async activate(input, storage) {
+  activate(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const priority = input.priority as number;
-
-    const existing = await storage.get('theme', theme);
-    if (!existing) {
-      return { variant: 'notfound', message: `Theme "${theme}" not found` };
-    }
-
-    await storage.put('theme', theme, {
-      ...existing,
-      active: true,
-      priority: priority ?? 0,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'theme', theme, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'theme', theme, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, active: true, priority: priority ?? Number(existing.priority ?? 0) };
+        });
+        return complete(b2, 'ok', { theme });
+      },
+      (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async deactivate(input, storage) {
+  deactivate(input: Record<string, unknown>) {
     const theme = input.theme as string;
-
-    const existing = await storage.get('theme', theme);
-    if (!existing) {
-      return { variant: 'notfound', message: `Theme "${theme}" not found` };
-    }
-
-    await storage.put('theme', theme, {
-      ...existing,
-      active: false,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'theme', theme, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'theme', theme, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, active: false };
+        });
+        return complete(b2, 'ok', { theme });
+      },
+      (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async resolve(input, storage) {
+  resolve(input: Record<string, unknown>) {
     const theme = input.theme as string;
-
-    const existing = await storage.get('theme', theme);
-    if (!existing) {
-      return { variant: 'notfound', message: `Theme "${theme}" not found` };
-    }
-
-    // Collect tokens by walking the inheritance chain
-    const allTokens: Record<string, unknown> = {};
-    let current: string | null = theme;
-    const visited = new Set<string>();
-
-    while (current) {
-      if (visited.has(current)) break;
-      visited.add(current);
-
-      const themeRecord = await storage.get('theme', current);
-      if (!themeRecord) break;
-
-      const overrides: Record<string, unknown> = JSON.parse((themeRecord.overrides as string) || '{}');
-      // Base tokens are applied first, child overrides win
-      for (const [key, value] of Object.entries(overrides)) {
-        if (!(key in allTokens)) {
-          allTokens[key] = value;
-        }
-      }
-
-      current = (themeRecord.base as string) || null;
-    }
-
-    return {
-      variant: 'ok',
-      tokens: JSON.stringify(allTokens),
-    };
+    let p = createProgram();
+    p = spGet(p, 'theme', theme, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const overrides: Record<string, unknown> = JSON.parse((existing.overrides as string) || '{}');
+          return JSON.stringify(overrides);
+        }, 'tokensJson');
+        return complete(b2, 'ok', { tokens: '' });
+      },
+      (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const themeHandler = autoInterpret(_themeHandler);
+

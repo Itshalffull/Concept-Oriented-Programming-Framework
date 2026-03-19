@@ -1,7 +1,13 @@
+// @migrated dsl-constructs 2026-03-18
 // Formula Concept Implementation
 // Evaluate reactive computed values derived from properties and relations,
 // with dependency tracking and automatic invalidation.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 /**
  * Extract variable names from a formula expression.
@@ -34,20 +40,16 @@ function evaluateExpression(
   // Replace variable references with their numeric values
   let resolved = expression;
   for (const [name, value] of Object.entries(variables)) {
-    // Use word boundary matching to avoid partial replacements
     const regex = new RegExp(`\\b${name}\\b`, 'g');
     resolved = resolved.replace(regex, String(value));
   }
 
-  // Evaluate the arithmetic expression safely
-  // Only allow numbers, operators, parentheses, and whitespace
   const sanitized = resolved.replace(/[^0-9+\-*/().%\s]/g, '');
   if (sanitized.trim().length === 0) {
     return 'computed';
   }
 
   try {
-    // Use Function constructor for safe arithmetic evaluation
     const result = new Function(`return (${sanitized})`)();
     if (typeof result === 'number' && !isNaN(result)) {
       return String(result);
@@ -58,120 +60,102 @@ function evaluateExpression(
   }
 }
 
-export const formulaHandler: ConceptHandler = {
-  async create(input, storage) {
+const _formulaHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
     const formula = input.formula as string;
     const expression = input.expression as string;
 
-    const existing = await storage.get('formula', formula);
-    if (existing) {
-      return { variant: 'exists' };
-    }
-
-    const dependencies = extractDependencies(expression);
-    const now = new Date().toISOString();
-
-    await storage.put('formula', formula, {
-      formula,
-      expression,
-      dependencies: JSON.stringify(dependencies),
-      cachedResult: '',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'formula', formula, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'exists', {}),
+      (b) => {
+        const dependencies = extractDependencies(expression);
+        const now = new Date().toISOString();
+        let b2 = put(b, 'formula', formula, {
+          formula,
+          expression,
+          dependencies: JSON.stringify(dependencies),
+          cachedResult: '',
+          createdAt: now,
+          updatedAt: now,
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async evaluate(input, storage) {
+  evaluate(input: Record<string, unknown>) {
     const formula = input.formula as string;
 
-    const existing = await storage.get('formula', formula);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    const expression = existing.expression as string;
-    const cachedResult = existing.cachedResult as string;
-
-    // If there is a valid cached result, return it
-    if (cachedResult && cachedResult !== '') {
-      return { variant: 'ok', result: cachedResult };
-    }
-
-    // Evaluate the expression with an empty variable context
-    // In a real system, variables would be resolved from related entities
-    const variables: Record<string, number> = {};
-
-    // Extract variable context if provided in input
-    if (input.variables) {
-      const vars = typeof input.variables === 'string'
-        ? JSON.parse(input.variables as string)
-        : input.variables as Record<string, number>;
-      Object.assign(variables, vars);
-    }
-
-    const result = evaluateExpression(expression, variables);
-
-    // Cache the result
-    await storage.put('formula', formula, {
-      ...existing,
-      cachedResult: result,
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok', result };
+    let p = createProgram();
+    p = spGet(p, 'formula', formula, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        // At runtime the branch bindings contain the record for evaluation
+        let b2 = put(b, 'formula', formula, {
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { result: 'computed' });
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getDependencies(input, storage) {
+  getDependencies(input: Record<string, unknown>) {
     const formula = input.formula as string;
 
-    const existing = await storage.get('formula', formula);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    return { variant: 'ok', deps: existing.dependencies as string };
+    let p = createProgram();
+    p = spGet(p, 'formula', formula, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { deps: '[]' }),
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async invalidate(input, storage) {
+  invalidate(input: Record<string, unknown>) {
     const formula = input.formula as string;
 
-    const existing = await storage.get('formula', formula);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    // Clear the cached result so it will be recomputed on next evaluation
-    await storage.put('formula', formula, {
-      ...existing,
-      cachedResult: '',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'formula', formula, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'formula', formula, {
+          cachedResult: '',
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async setExpression(input, storage) {
+  setExpression(input: Record<string, unknown>) {
     const formula = input.formula as string;
     const expression = input.expression as string;
 
-    const existing = await storage.get('formula', formula);
-    if (!existing) {
-      return { variant: 'notfound' };
-    }
-
-    const dependencies = extractDependencies(expression);
-
-    // Update expression, recalculate dependencies, and invalidate cache
-    await storage.put('formula', formula, {
-      ...existing,
-      expression,
-      dependencies: JSON.stringify(dependencies),
-      cachedResult: '',
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { variant: 'ok' };
+    let p = createProgram();
+    p = spGet(p, 'formula', formula, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const dependencies = extractDependencies(expression);
+        let b2 = put(b, 'formula', formula, {
+          expression,
+          dependencies: JSON.stringify(dependencies),
+          cachedResult: '',
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', {}),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const formulaHandler = autoInterpret(_formulaHandler);
+

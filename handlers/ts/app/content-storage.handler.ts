@@ -1,47 +1,68 @@
-import type { ConceptHandler } from '@clef/runtime';
+// @migrated dsl-constructs 2026-03-18
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, find, put, del, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const contentStorageHandler: ConceptHandler = {
-  async save(input, storage) {
+const _contentStorageHandler: FunctionalConceptHandler = {
+  save(input: Record<string, unknown>) {
     const record = input.record as string;
     const data = input.data as string;
-    try {
-      await storage.put('record', record, { record, data });
-      return { variant: 'ok', record };
-    } catch {
-      return { variant: 'error', message: 'Backend write failed' };
-    }
+
+    let p = createProgram();
+    p = put(p, 'record', record, { record, data });
+    return complete(p, 'ok', { record }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async load(input, storage) {
+  load(input: Record<string, unknown>) {
     const record = input.record as string;
-    const existing = await storage.get('record', record);
-    if (!existing) return { variant: 'notfound', message: 'not found' };
-    return { variant: 'ok', record, data: existing.data as string };
+
+    let p = createProgram();
+    p = spGet(p, 'record', record, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { record, data: '' }),
+      (b) => complete(b, 'notfound', { message: 'not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async delete(input, storage) {
+  delete(input: Record<string, unknown>) {
     const record = input.record as string;
-    const existing = await storage.get('record', record);
-    if (!existing) return { variant: 'notfound', message: 'not found' };
-    await storage.del('record', record);
-    return { variant: 'ok', record };
+
+    let p = createProgram();
+    p = spGet(p, 'record', record, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'record', record);
+        return complete(b2, 'ok', { record });
+      },
+      (b) => complete(b, 'notfound', { message: 'not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async query(input, storage) {
+  query(input: Record<string, unknown>) {
     const filter = input.filter as string;
-    const results = await storage.find('record', filter);
-    return { variant: 'ok', results: JSON.stringify(results) };
+
+    let p = createProgram();
+    p = find(p, 'record', filter as unknown as Record<string, unknown>, 'results');
+    return complete(p, 'ok', { results: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async generateSchema(input, storage) {
+  generateSchema(input: Record<string, unknown>) {
     const record = input.record as string;
-    const existing = await storage.get('record', record);
-    if (!existing) return { variant: 'notfound', message: 'not found' };
-    const data = JSON.parse(existing.data as string);
-    const schema: Record<string, string> = {};
-    for (const key of Object.keys(data)) {
-      schema[key] = typeof data[key];
-    }
-    return { variant: 'ok', schema: JSON.stringify(schema) };
+
+    let p = createProgram();
+    p = spGet(p, 'record', record, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { schema: '' }),
+      (b) => complete(b, 'notfound', { message: 'not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const contentStorageHandler = autoInterpret(_contentStorageHandler);
+

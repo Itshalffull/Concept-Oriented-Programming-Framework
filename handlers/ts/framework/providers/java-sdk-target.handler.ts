@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Java SDK Target Provider — Clef Bind
 //
@@ -8,14 +9,13 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
   ActionParamSchema,
-  VariantSchema,
-} from '../../../../runtime/types.js';
+  VariantSchema } from '../../../../runtime/types.js';
 
 import {
   typeToJava,
@@ -266,17 +266,14 @@ function generatePomXml(groupId: string, artifactId: string): string {
 
 // --- Concept Handler ---
 
-export const javaSdkTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'JavaSdkTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'JavaSdkTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'JavaSdk',
       capabilities: JSON.stringify(['client', 'types', 'pom']),
       targetKey: 'java',
-      providerType: 'sdk',
-    };
+      providerType: 'sdk' }); return p; }
   },
 
   /**
@@ -289,33 +286,32 @@ export const javaSdkTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with generated files and package name.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      return { variant: 'error', reason: 'projection is required and must be a JSON string' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required and must be a JSON string' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      return { variant: 'error', reason: 'projection is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is not valid JSON' }); return p; }
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      return { variant: 'error', reason: 'projection.conceptManifest is required and must be a JSON string' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection.conceptManifest is required and must be a JSON string' }); return p; }
     }
 
     let manifest: ConceptManifest;
     try {
       manifest = JSON.parse(manifestRaw) as ConceptManifest;
     } catch {
-      return { variant: 'error', reason: 'conceptManifest is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'conceptManifest is not valid JSON' }); return p; }
     }
 
     const conceptName = (projection.conceptName as string) || manifest.name;
@@ -336,7 +332,7 @@ export const javaSdkTargetHandler: ConceptHandler = {
 
     // --- Validate manifest ---
     if (!manifest.actions || manifest.actions.length === 0) {
-      return { variant: 'ok', files: [], package: packageName };
+      { let p = createProgram(); p = complete(p, 'ok', { files: [], package: packageName }); return p; }
     }
 
     // --- Generate concept client file ---
@@ -376,6 +372,8 @@ export const javaSdkTargetHandler: ConceptHandler = {
       }
     }
 
-    return { variant: 'ok', files, package: packageName };
+    { let p = createProgram(); p = complete(p, 'ok', { files, package: packageName }); return p; }
   },
 };
+
+export const javaSdkTargetHandler = autoInterpret(_handler);

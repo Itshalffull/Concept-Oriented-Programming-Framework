@@ -12,7 +12,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -37,7 +37,6 @@ const _handler: FunctionalConceptHandler = {
   aggregate(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const window = input.window as string;
-    const id = nextId();
 
     let start = '';
     let end = '';
@@ -52,7 +51,7 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'runtime-coverage', { symbol }, 'entries');
 
-    p = mapBindings(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const entries = bindings.entries as Record<string, unknown>[];
       const filtered = entries.filter((e) => {
         if (!start && !end) return true;
@@ -63,8 +62,10 @@ const _handler: FunctionalConceptHandler = {
       });
 
       if (filtered.length < 2) {
-        return { insufficient: true, count: filtered.length };
+        return { variant: 'insufficientData', count: filtered.length };
       }
+
+      const id = nextId();
 
       let entityKind = 'unknown';
       if (symbol.includes('/action/')) entityKind = 'action';
@@ -93,37 +94,6 @@ const _handler: FunctionalConceptHandler = {
         ? (errorCount / filtered.length).toFixed(4)
         : '0';
 
-      return {
-        insufficient: false,
-        entityKind,
-        invocationCount: filtered.length,
-        timing,
-        errorRate,
-      };
-    }, 'aggResult');
-
-    p = putFrom(p, 'performance-profile', id, (bindings) => {
-      const res = bindings.aggResult as Record<string, unknown>;
-      if (res.insufficient) return {};
-      return {
-        id,
-        entitySymbol: symbol,
-        entityKind: res.entityKind,
-        sampleWindow: window,
-        invocationCount: res.invocationCount,
-        timing: res.timing,
-        errorRate: res.errorRate,
-        syncBreakdown: '{}',
-        selectionBreakdown: '{}',
-        renderBreakdown: '{}',
-      };
-    });
-
-    return completeFrom(p, 'ok', (bindings) => {
-      const res = bindings.aggResult as Record<string, unknown>;
-      if (res.insufficient) {
-        return { variant: 'insufficientData', count: res.count as number };
-      }
       return { profile: id };
     }) as StorageProgram<Result>;
   },

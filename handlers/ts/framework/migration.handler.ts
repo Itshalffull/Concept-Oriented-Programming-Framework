@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Migration Concept Implementation
 //
@@ -7,14 +8,14 @@
 // See Architecture doc Section 17.3.
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptTransport,
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import type { ConceptStorage } from '../../../runtime/types.js';
+import type { ConceptTransport,
   ConceptQuery,
-  ConceptStorage,
   ActionInvocation,
-  ActionCompletion,
-} from '../../../runtime/types.js';
+  ActionCompletion } from '../../../runtime/types.js';
 import { timestamp } from '../../../runtime/types.js';
 
 /**
@@ -58,11 +59,11 @@ export async function checkMigrationNeeded(
   // If the spec has no @version annotation, no migration tracking
   if (specVersion === undefined) return null;
 
-  const storedVersion = await getStoredVersion(storage);
+  const storedVersion = await getStoredVersion(storage /* TODO: convert helper to DSL */);
 
   // Fresh storage: set the version and allow normal operation
   if (storedVersion === undefined) {
-    await setStoredVersion(storage, specVersion);
+    await setStoredVersion(storage /* TODO: convert helper to DSL */, specVersion);
     return null;
   }
 
@@ -117,7 +118,7 @@ export function createMigrationGatedTransport(
       // If migration succeeded, update the stored version and lift the gate
       if (invocation.action === 'migrate' && result.variant === 'ok') {
         current = requiredVersion;
-        await setStoredVersion(storage, requiredVersion);
+        await setStoredVersion(storage /* TODO: convert helper to DSL */, requiredVersion);
         migrationRequired = false;
       }
 
@@ -149,31 +150,33 @@ export function createMigrationGatedTransport(
 
 // --- Concept Handler ---
 
-export const migrationHandler: ConceptHandler = {
-  async check(input, storage) {
+const _handler: FunctionalConceptHandler = {
+  check(input: Record<string, unknown>) {
     const specVersion = input.specVersion as number;
 
     if (specVersion === undefined || specVersion === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
     const result = await checkMigrationNeeded(specVersion, storage);
 
     if (result === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
-    return { variant: 'needsMigration', from: result.currentVersion, to: result.requiredVersion };
+    { let p = createProgram(); p = complete(p, 'needsMigration', { from: result.currentVersion, to: result.requiredVersion }); return p; }
   },
 
-  async complete(input, storage) {
+  complete(input: Record<string, unknown>) {
     const version = input.version as number;
 
     if (version === undefined || version === null) {
-      return { variant: 'ok' };
+      { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
     }
 
-    await setStoredVersion(storage, version);
-    return { variant: 'ok' };
+    await setStoredVersion(storage /* TODO: convert helper to DSL */, version);
+    { let p = createProgram(); p = complete(p, 'ok', {}); return p; }
   },
 };
+
+export const migrationHandler = autoInterpret(_handler);

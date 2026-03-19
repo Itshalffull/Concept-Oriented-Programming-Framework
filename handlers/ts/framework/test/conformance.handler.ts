@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Conformance Concept Implementation
 //
@@ -7,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SUITES = 'conformance-suites';
 const VECTORS = 'conformance-vectors';
@@ -24,17 +30,19 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const conformanceHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
     if (!concept || !specPath) {
-      return {
-        variant: 'specError',
+      return complete(p, 'specError', {
         concept: concept || '',
         message: 'concept and specPath are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const suiteId = `csuite-${simpleHash(concept + ':' + specPath)}`;
@@ -71,7 +79,7 @@ export const conformanceHandler: ConceptHandler = {
       category: i === 2 ? 'invariant' : 'action',
     }));
 
-    await storage.put(SUITES, suiteId, {
+    p = put(p, SUITES, suiteId, {
       id: suiteId,
       concept,
       specPath,
@@ -83,35 +91,35 @@ export const conformanceHandler: ConceptHandler = {
 
     // Store vectors individually for later verification
     for (const tv of testVectors) {
-      await storage.put(VECTORS, `${suiteId}:${tv.id}`, {
+      p = put(p, VECTORS, `${suiteId}:${tv.id}`, {
         suiteId,
         ...tv,
       });
     }
 
-    return { variant: 'ok', suite: suiteId, testVectors };
+    return complete(p, 'ok', { suite: suiteId, testVectors }) as StorageProgram<Result>;
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
+    let p = createProgram();
     const suite = input.suite as string;
     const language = input.language as string;
     const artifactLocation = input.artifactLocation as string;
 
-    const suiteRecord = await storage.get(SUITES, suite);
+    p = get(p, SUITES, suite, 'suiteRecord');
     if (!suiteRecord) {
-      return {
-        variant: 'failure',
+      return complete(p, 'failure', {
         passed: 0,
         failed: 0,
         failures: [{ testId: 'N/A', requirement: 'N/A', expected: 'suite exists', actual: 'suite not found' }],
-      };
+      }) as StorageProgram<Result>;
     }
 
     const concept = suiteRecord.concept as string;
     const vectorCount = suiteRecord.vectorCount as number;
 
     // Check for registered deviations
-    const deviations = await storage.find(DEVIATIONS, { concept, language });
+    p = find(p, DEVIATIONS, { concept, language }, 'deviations');
     const deviatedRequirements = new Set(deviations.map(d => d.requirement as string));
 
     // Simulate running test vectors against the artifact
@@ -129,7 +137,7 @@ export const conformanceHandler: ConceptHandler = {
     }
 
     const resultKey = `${suite}:${language}`;
-    await storage.put(RESULTS, resultKey, {
+    p = put(p, RESULTS, resultKey, {
       suite,
       concept,
       language,
@@ -142,17 +150,18 @@ export const conformanceHandler: ConceptHandler = {
       verifiedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', passed, total, coveredRequirements };
+    return complete(p, 'ok', { passed, total, coveredRequirements }) as StorageProgram<Result>;
   },
 
-  async registerDeviation(input, storage) {
+  registerDeviation(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const language = input.language as string;
     const requirement = input.requirement as string;
     const reason = input.reason as string;
 
     const deviationKey = `${concept}:${language}:${requirement}`;
-    await storage.put(DEVIATIONS, deviationKey, {
+    p = put(p, DEVIATIONS, deviationKey, {
       concept,
       language,
       requirement,
@@ -161,17 +170,18 @@ export const conformanceHandler: ConceptHandler = {
     });
 
     // Find the suite for this concept
-    const suites = await storage.find(SUITES, { concept });
+    p = find(p, SUITES, { concept }, 'suites');
     const suiteId = suites.length > 0 ? (suites[0].id as string) : concept;
 
-    return { variant: 'ok', suite: suiteId };
+    return complete(p, 'ok', { suite: suiteId }) as StorageProgram<Result>;
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
+    let p = createProgram();
     const concepts = input.concepts as string[] | undefined;
 
-    const allResults = await storage.find(RESULTS);
-    const allSuites = await storage.find(SUITES);
+    p = find(p, RESULTS, 'allResults');
+    p = find(p, SUITES, 'allSuites');
 
     // Group by concept
     const conceptMap = new Map<string, Map<string, Record<string, unknown>>>();
@@ -236,15 +246,16 @@ export const conformanceHandler: ConceptHandler = {
       matrix.push({ concept, targets });
     }
 
-    return { variant: 'ok', matrix };
+    return complete(p, 'ok', { matrix }) as StorageProgram<Result>;
   },
 
-  async traceability(input, storage) {
+  traceability(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
 
-    const suites = await storage.find(SUITES, { concept });
+    p = find(p, SUITES, { concept }, 'suites');
     if (suites.length === 0) {
-      return { variant: 'ok', requirements: [] };
+      return complete(p, 'ok', { requirements: [] }) as StorageProgram<Result>;
     }
 
     const suite = suites[0];
@@ -255,7 +266,7 @@ export const conformanceHandler: ConceptHandler = {
     }>;
 
     // Find all verification results for this suite
-    const results = await storage.find(RESULTS, { concept });
+    p = find(p, RESULTS, { concept }, 'results');
 
     const traceability = requirements.map(req => {
       const testedBy: Array<{ language: string; testId: string; status: string }> = [];
@@ -278,6 +289,8 @@ export const conformanceHandler: ConceptHandler = {
       };
     });
 
-    return { variant: 'ok', requirements: traceability };
+    return complete(p, 'ok', { requirements: traceability }) as StorageProgram<Result>;
   },
 };
+
+export const conformanceHandler = autoInterpret(_handler);

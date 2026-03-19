@@ -181,7 +181,7 @@ describe('Extensibility Validation', () => {
     expect(manifest.typeParams).toHaveLength(1);
     expect(manifest.relations).toHaveLength(1);
     expect(manifest.actions).toHaveLength(3);
-    expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(manifest.invariants).toHaveLength(1);
     expect(manifest.graphqlSchema).toBeDefined();
     expect(manifest.jsonSchemas).toBeDefined();
   });

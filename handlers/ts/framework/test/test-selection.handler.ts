@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TestSelection Concept Implementation
 //
@@ -7,28 +8,35 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const MAPPINGS = 'test-selection-mappings';
 const SELECTIONS = 'test-selection-history';
 const STATS = 'test-selection-stats';
 
-export const testSelectionHandler: ConceptHandler = {
-  async analyze(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  analyze(input: Record<string, unknown>) {
+    let p = createProgram();
     const changedSources = input.changedSources as string[];
 
     if (!changedSources || changedSources.length === 0) {
-      return { variant: 'noMappings', message: 'No changed sources provided' };
+      return complete(p, 'noMappings', { message: 'No changed sources provided' }) as StorageProgram<Result>;
     }
 
     // Look up all coverage mappings
-    const allMappings = await storage.find(MAPPINGS);
+    p = find(p, MAPPINGS, 'allMappings');
 
     if (allMappings.length === 0) {
-      return {
-        variant: 'noMappings',
+      return complete(p, 'noMappings', {
         message: 'No coverage mappings available — run tests with coverage first',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const testType = input.testType as string | undefined;
@@ -90,10 +98,11 @@ export const testSelectionHandler: ConceptHandler = {
       return true;
     });
 
-    return { variant: 'ok', affectedTests: deduplicated };
+    return complete(p, 'ok', { affectedTests: deduplicated }) as StorageProgram<Result>;
   },
 
-  async select(input, storage) {
+  select(input: Record<string, unknown>) {
+    let p = createProgram();
     const affectedTests = input.affectedTests as Array<{
       testId: string;
       language: string;
@@ -103,7 +112,7 @@ export const testSelectionHandler: ConceptHandler = {
     const budget = input.budget as { maxDuration?: number; maxTests?: number } | null | undefined;
 
     if (!affectedTests || affectedTests.length === 0) {
-      return { variant: 'ok', selected: [], estimatedDuration: 0, confidence: 1.0 };
+      return complete(p, 'ok', { selected: [], estimatedDuration: 0, confidence: 1.0 }) as StorageProgram<Result>;
     }
 
     // Sort by relevance descending (highest relevance first)
@@ -115,7 +124,7 @@ export const testSelectionHandler: ConceptHandler = {
 
     for (let i = 0; i < sorted.length; i++) {
       const test = sorted[i];
-      const mapping = await storage.get(MAPPINGS, `${test.testId}:${test.language}`);
+      p = get(p, MAPPINGS, `${test.testId}:${test.language}`, 'mapping');
       const avgDuration = mapping ? (mapping.avgDuration as number) : 100;
 
       // Check budget constraints
@@ -127,7 +136,7 @@ export const testSelectionHandler: ConceptHandler = {
           const confidence = selected.length / sorted.length;
 
           const selectionId = `sel-${Date.now()}`;
-          await storage.put(SELECTIONS, selectionId, {
+          p = put(p, SELECTIONS, selectionId, {
             id: selectionId,
             selectedCount: selected.length,
             totalAffected: sorted.length,
@@ -136,12 +145,11 @@ export const testSelectionHandler: ConceptHandler = {
             createdAt: new Date().toISOString(),
           });
 
-          return {
-            variant: 'budgetInsufficient',
+          return complete(p, 'budgetInsufficient', {
             selected: selected.map(s => ({ testId: s.testId })),
             missedTests,
             confidence,
-          };
+          }) as StorageProgram<Result>;
         }
       }
 
@@ -158,7 +166,7 @@ export const testSelectionHandler: ConceptHandler = {
     const confidence = 1.0;
 
     const selectionId = `sel-${Date.now()}`;
-    await storage.put(SELECTIONS, selectionId, {
+    p = put(p, SELECTIONS, selectionId, {
       id: selectionId,
       selectedCount: selected.length,
       totalAffected: sorted.length,
@@ -167,10 +175,11 @@ export const testSelectionHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', selected, estimatedDuration: totalEstimatedDuration, confidence };
+    return complete(p, 'ok', { selected, estimatedDuration: totalEstimatedDuration, confidence }) as StorageProgram<Result>;
   },
 
-  async record(input, storage) {
+  record(input: Record<string, unknown>) {
+    let p = createProgram();
     const testId = input.testId as string;
     const language = input.language as string;
     const testType = (input.testType as string) || 'unit';
@@ -179,7 +188,7 @@ export const testSelectionHandler: ConceptHandler = {
     const passed = input.passed as boolean;
 
     const mappingKey = `${testId}:${language}`;
-    const existing = await storage.get(MAPPINGS, mappingKey);
+    p = get(p, MAPPINGS, mappingKey, 'existing');
 
     let avgDuration = duration;
     let failureRate = passed ? 0 : 1;
@@ -196,7 +205,7 @@ export const testSelectionHandler: ConceptHandler = {
 
     const mappingId = existing ? (existing.id as string) : `map-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    await storage.put(MAPPINGS, mappingKey, {
+    p = put(p, MAPPINGS, mappingKey, {
       id: mappingId,
       testId,
       language,
@@ -208,12 +217,13 @@ export const testSelectionHandler: ConceptHandler = {
       lastExecuted: new Date().toISOString(),
     });
 
-    return { variant: 'ok', mapping: mappingId };
+    return complete(p, 'ok', { mapping: mappingId }) as StorageProgram<Result>;
   },
 
-  async statistics(input, storage) {
-    const allMappings = await storage.find(MAPPINGS);
-    const allSelections = await storage.find(SELECTIONS);
+  statistics(input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, MAPPINGS, 'allMappings');
+    p = find(p, SELECTIONS, 'allSelections');
 
     const totalMappings = allMappings.length;
 
@@ -245,14 +255,15 @@ export const testSelectionHandler: ConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       stats: {
         totalMappings,
         avgSelectionRatio: Math.round(avgSelectionRatio * 1000) / 1000,
         avgConfidence: Math.round(avgConfidence * 1000) / 1000,
         lastUpdated: lastUpdated || new Date().toISOString(),
       },
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const testSelectionHandler = autoInterpret(_handler);

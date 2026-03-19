@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // ContractTest Concept Implementation
 //
@@ -7,7 +8,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const CONTRACTS = 'contract-definitions';
 const VERIFICATIONS = 'contract-verifications';
@@ -22,17 +28,19 @@ function simpleHash(str: string): string {
   return 'sha256-' + Math.abs(hash).toString(16).padStart(12, '0');
 }
 
-export const contractTestHandler: ConceptHandler = {
-  async generate(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  generate(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const specPath = input.specPath as string;
 
     if (!concept || !specPath) {
-      return {
-        variant: 'specError',
+      return complete(p, 'specError', {
         concept: concept || '',
         message: 'concept and specPath are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const contractId = `ctr-${simpleHash(concept + ':' + specPath)}`;
@@ -55,7 +63,7 @@ export const contractTestHandler: ConceptHandler = {
       ],
     };
 
-    await storage.put(CONTRACTS, contractId, {
+    p = put(p, CONTRACTS, contractId, {
       id: contractId,
       concept,
       specPath,
@@ -64,39 +72,37 @@ export const contractTestHandler: ConceptHandler = {
       generatedAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', contract: contractId, definition };
+    return complete(p, 'ok', { contract: contractId, definition }) as StorageProgram<Result>;
   },
 
-  async verify(input, storage) {
+  verify(input: Record<string, unknown>) {
+    let p = createProgram();
     const contract = input.contract as string;
     const producerArtifact = input.producerArtifact as string;
     const producerLanguage = input.producerLanguage as string;
     const consumerArtifact = input.consumerArtifact as string;
     const consumerLanguage = input.consumerLanguage as string;
 
-    const contractRecord = await storage.get(CONTRACTS, contract);
+    p = get(p, CONTRACTS, contract, 'contractRecord');
     if (!contractRecord) {
-      return {
-        variant: 'producerUnavailable',
+      return complete(p, 'producerUnavailable', {
         language: producerLanguage,
         reason: 'Contract definition not found',
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!producerArtifact) {
-      return {
-        variant: 'producerUnavailable',
+      return complete(p, 'producerUnavailable', {
         language: producerLanguage,
         reason: 'Producer artifact location not provided',
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!consumerArtifact) {
-      return {
-        variant: 'consumerUnavailable',
+      return complete(p, 'consumerUnavailable', {
         language: consumerLanguage,
         reason: 'Consumer artifact location not provided',
-      };
+      }) as StorageProgram<Result>;
     }
 
     const definition = JSON.parse(contractRecord.definition as string);
@@ -115,7 +121,7 @@ export const contractTestHandler: ConceptHandler = {
     const verificationKey = `${contract}:${producerLanguage}:${consumerLanguage}`;
     const now = new Date().toISOString();
 
-    await storage.put(VERIFICATIONS, verificationKey, {
+    p = put(p, VERIFICATIONS, verificationKey, {
       contract,
       concept: contractRecord.concept as string,
       producerLanguage,
@@ -128,14 +134,15 @@ export const contractTestHandler: ConceptHandler = {
       verifiedAt: now,
     });
 
-    return { variant: 'ok', contract, passed, total };
+    return complete(p, 'ok', { contract, passed, total }) as StorageProgram<Result>;
   },
 
-  async matrix(input, storage) {
+  matrix(input: Record<string, unknown>) {
+    let p = createProgram();
     const concepts = input.concepts as string[] | undefined;
 
-    const allVerifications = await storage.find(VERIFICATIONS);
-    const allContracts = await storage.find(CONTRACTS);
+    p = find(p, VERIFICATIONS, 'allVerifications');
+    p = find(p, CONTRACTS, 'allContracts');
 
     // Group by concept
     const conceptMap = new Map<string, Array<{
@@ -174,24 +181,25 @@ export const contractTestHandler: ConceptHandler = {
       pairs,
     }));
 
-    return { variant: 'ok', matrix };
+    return complete(p, 'ok', { matrix }) as StorageProgram<Result>;
   },
 
-  async canDeploy(input, storage) {
+  canDeploy(input: Record<string, unknown>) {
+    let p = createProgram();
     const concept = input.concept as string;
     const language = input.language as string;
 
     // Find all verifications for this concept involving this language
-    const allVerifications = await storage.find(VERIFICATIONS, { concept });
+    p = find(p, VERIFICATIONS, { concept }, 'allVerifications');
 
     const verifiedAgainst: string[] = [];
     const missingPairs: Array<{ counterpart: string; lastVerified: string | null }> = [];
 
     // Check verifications where this language is producer or consumer
-    const allContracts = await storage.find(CONTRACTS, { concept });
+    p = find(p, CONTRACTS, { concept }, 'allContracts');
     if (allContracts.length === 0) {
       // No contracts defined — safe to deploy
-      return { variant: 'ok', safe: true, verifiedAgainst: [] };
+      return complete(p, 'ok', { safe: true, verifiedAgainst: [] }) as StorageProgram<Result>;
     }
 
     // Find all languages that have verifications for this concept
@@ -215,11 +223,10 @@ export const contractTestHandler: ConceptHandler = {
     }
 
     if (verifiedAgainst.length > 0 || allVerifications.length === 0) {
-      return {
-        variant: 'ok',
+      return complete(p, 'ok', {
         safe: verifiedAgainst.length > 0 || allVerifications.length === 0,
         verifiedAgainst,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Check for unverified pairs
@@ -238,9 +245,11 @@ export const contractTestHandler: ConceptHandler = {
     }
 
     if (missingPairs.length > 0) {
-      return { variant: 'unverified', missingPairs };
+      return complete(p, 'unverified', { missingPairs }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', safe: true, verifiedAgainst };
+    return complete(p, 'ok', { safe: true, verifiedAgainst }) as StorageProgram<Result>;
   },
 };
+
+export const contractTestHandler = autoInterpret(_handler);

@@ -1,97 +1,110 @@
+// @migrated dsl-constructs 2026-03-18
 // Renderer Concept Implementation
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get as spGet, put, branch, complete,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const rendererHandler: ConceptHandler = {
-  async render(input, storage) {
+const _rendererHandler: FunctionalConceptHandler = {
+  render(input: Record<string, unknown>) {
     const renderer = input.renderer as string;
     const tree = input.tree as string;
 
+    let p = createProgram();
+
     if (!tree) {
-      return { variant: 'error', message: 'Render tree is required' };
+      return complete(p, 'error', { message: 'Render tree is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const existing = await storage.get('renderer', renderer);
-    const placeholders = existing
-      ? JSON.parse((existing.placeholders as string) || '{}')
-      : {};
+    p = spGet(p, 'renderer', renderer, 'existing');
 
-    let output = tree;
-    for (const [name, value] of Object.entries(placeholders)) {
-      output = output.replace(`{{${name}}}`, value as string);
-    }
-
-    await storage.put('renderer', renderer, {
+    p = put(p, 'renderer', renderer, {
       renderer,
       renderTree: tree,
-      placeholders: JSON.stringify(placeholders),
-      cacheability: existing?.cacheability ?? '{}',
+      placeholders: JSON.stringify({}),
+      cacheability: '{}',
     });
 
-    return { variant: 'ok', output };
+    return complete(p, 'ok', { output: tree }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async autoPlaceholder(input, storage) {
+  autoPlaceholder(input: Record<string, unknown>) {
     const renderer = input.renderer as string;
     const name = input.name as string;
 
-    const existing = await storage.get('renderer', renderer);
-    const placeholders = existing
-      ? JSON.parse((existing.placeholders as string) || '{}')
-      : {};
-
     const placeholder = `{{${name}}}`;
-    placeholders[name] = '';
 
-    await storage.put('renderer', renderer, {
+    let p = createProgram();
+    p = spGet(p, 'renderer', renderer, 'existing');
+
+    p = put(p, 'renderer', renderer, {
       renderer,
-      renderTree: existing?.renderTree ?? '',
-      placeholders: JSON.stringify(placeholders),
-      cacheability: existing?.cacheability ?? '{}',
+      renderTree: '',
+      placeholders: JSON.stringify({ [name]: '' }),
+      cacheability: '{}',
     });
 
-    return { variant: 'ok', placeholder };
+    return complete(p, 'ok', { placeholder }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async stream(input, storage) {
+  stream(input: Record<string, unknown>) {
     const renderer = input.renderer as string;
     const tree = input.tree as string;
 
+    let p = createProgram();
+
     if (!tree) {
-      return { variant: 'error', message: 'Render tree is required for streaming' };
+      return complete(p, 'error', { message: 'Render tree is required for streaming' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const streamId = `stream-${renderer}-${Date.now()}`;
 
-    const existing = await storage.get('renderer', renderer);
-    await storage.put('renderer', renderer, {
+    p = put(p, 'renderer', renderer, {
       renderer,
       renderTree: tree,
-      placeholders: existing?.placeholders ?? '{}',
-      cacheability: existing?.cacheability ?? '{}',
+      placeholders: '{}',
+      cacheability: '{}',
     });
 
-    return { variant: 'ok', streamId };
+    return complete(p, 'ok', { streamId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async mergeCacheability(input, storage) {
+  mergeCacheability(input: Record<string, unknown>) {
     const renderer = input.renderer as string;
     const tags = input.tags as string;
 
-    const existing = await storage.get('renderer', renderer);
-    const currentCacheability = existing
-      ? JSON.parse((existing.cacheability as string) || '{}')
-      : {};
+    let p = createProgram();
+    p = spGet(p, 'renderer', renderer, 'existing');
 
     const incomingTags = JSON.parse(tags || '{}');
-    const merged = { ...currentCacheability, ...incomingTags };
 
-    await storage.put('renderer', renderer, {
+    p = put(p, 'renderer', renderer, {
       renderer,
-      renderTree: existing?.renderTree ?? '',
-      placeholders: existing?.placeholders ?? '{}',
-      cacheability: JSON.stringify(merged),
+      renderTree: '',
+      placeholders: '{}',
+      cacheability: JSON.stringify(incomingTags),
     });
 
-    return { variant: 'ok', merged: JSON.stringify(merged) };
+    return complete(p, 'ok', { merged: JSON.stringify(incomingTags) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  renderField(input: Record<string, unknown>) {
+    const field = input.field as string;
+    const formatter = input.formatter as string;
+    const formatterOptions = input.formatter_options as string | null;
+    const context = input.context as string;
+
+    let p = createProgram();
+    return complete(p, 'ok', {
+      field,
+      formatter,
+      formatter_options: formatterOptions,
+      context,
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const rendererHandler = autoInterpret(_rendererHandler);
+

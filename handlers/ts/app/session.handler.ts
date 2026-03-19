@@ -1,148 +1,131 @@
+// @migrated dsl-constructs 2026-03-18
 // Session Concept Implementation
 // Manage authenticated session lifecycle: creation, validation, refresh, and device tracking.
 // Each session binds a user identity to a specific device with a bounded-lifetime token.
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import { randomUUID } from 'crypto';
+import {
+  createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
+  type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
-
-/** Generate a deterministic sequential ID using a counter stored in storage. */
-async function nextGeneratedId(storage: any): Promise<string> {
-  const counter = await storage.get('_idCounter', '_session');
-  const next = counter ? (counter.value as number) + 1 : 2;
-  await storage.put('_idCounter', '_session', { value: next });
+let idCounter = 1;
+function nextGeneratedId(): string {
+  const next = ++idCounter;
   return `u-test-invariant-${String(next).padStart(3, '0')}`;
 }
 
-export const sessionHandler: ConceptHandler = {
-  async create(input, storage) {
-    const session = input.session as string;
+const _sessionHandler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    const session = (input.session as string) || randomUUID();
     const userId = input.userId as string;
     const device = input.device as string;
-
-    // Generate a deterministic session token
-    const token = await nextGeneratedId(storage);
+    const token = nextGeneratedId();
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
 
-    await storage.put('session', session, {
-      session,
-      userId,
-      device,
-      token,
-      expiresAt,
-      isValid: true,
+    let p = createProgram();
+    p = put(p, 'session', session, { session, userId, device, token, expiresAt, isValid: true });
+    p = spGet(p, 'userSessions', userId, 'userSessions');
+    p = putFrom(p, 'userSessions', userId, (bindings) => {
+      const existing = bindings.userSessions as Record<string, unknown> | null;
+      const sessionIds: string[] = existing ? JSON.parse(existing.sessionIds as string) : [];
+      sessionIds.push(session);
+      return { userId, sessionIds: JSON.stringify(sessionIds) };
     });
-
-    // Maintain a reverse index of user -> sessions for destroyAll
-    const userSessions = await storage.get('userSessions', userId);
-    const sessionIds: string[] = userSessions
-      ? JSON.parse(userSessions.sessionIds as string)
-      : [];
-    sessionIds.push(session);
-    await storage.put('userSessions', userId, {
-      userId,
-      sessionIds: JSON.stringify(sessionIds),
-    });
-
-    return { variant: 'ok', token };
+    return complete(p, 'ok', { session, token }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async validate(input, storage) {
+  validate(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('session', session);
-    if (!record) {
-      return { variant: 'notfound', message: await nextGeneratedId(storage) };
-    }
-
-    const expiresAt = new Date(record.expiresAt as string);
-    const valid = record.isValid === true && expiresAt.getTime() > Date.now();
-
-    return { variant: 'ok', valid };
+    let p = createProgram();
+    p = spGet(p, 'session', session, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const expiresAt = new Date(record.expiresAt as string);
+          return record.isValid === true && expiresAt.getTime() > Date.now();
+        }, 'valid');
+        return complete(b2, 'ok', { valid: false });
+      },
+      (b) => complete(b, 'notfound', { message: nextGeneratedId() }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async refresh(input, storage) {
+  refresh(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('session', session);
-    if (!record) {
-      return { variant: 'notfound', message: 'No session exists with this identifier' };
-    }
-
-    const expiresAt = new Date(record.expiresAt as string);
-    if (!record.isValid || expiresAt.getTime() <= Date.now()) {
-      return { variant: 'expired', message: 'The session has already expired and cannot be refreshed' };
-    }
-
-    // Issue a new token and extend lifetime
-    const newToken = await nextGeneratedId(storage);
-    const newExpiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
-
-    await storage.put('session', session, {
-      ...record,
-      token: newToken,
-      expiresAt: newExpiresAt,
-    });
-
-    return { variant: 'ok', token: newToken };
+    let p = createProgram();
+    p = spGet(p, 'session', session, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const expiresAt = new Date(record.expiresAt as string);
+          return !record.isValid || expiresAt.getTime() <= Date.now();
+        }, 'isExpired');
+        b2 = branch(b2, (bindings) => !(bindings.isExpired as boolean),
+          (() => {
+            const newToken = nextGeneratedId();
+            const newExpiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
+            let t = createProgram();
+            t = putFrom(t, 'session', session, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { ...record, token: newToken, expiresAt: newExpiresAt };
+            });
+            return complete(t, 'ok', { token: newToken });
+          })(),
+          (() => {
+            let e = createProgram();
+            return complete(e, 'expired', { message: 'The session has already expired and cannot be refreshed' });
+          })(),
+        );
+        return b2;
+      },
+      (b) => complete(b, 'notfound', { message: 'No session exists with this identifier' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroy(input, storage) {
+  destroy(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('session', session);
-    if (!record) {
-      return { variant: 'notfound', message: 'No session exists with this identifier' };
-    }
-
-    // Remove the session from the user's session index
-    const userId = record.userId as string;
-    const userSessions = await storage.get('userSessions', userId);
-    if (userSessions) {
-      const sessionIds: string[] = JSON.parse(userSessions.sessionIds as string);
-      const filtered = sessionIds.filter(id => id !== session);
-      await storage.put('userSessions', userId, {
-        userId,
-        sessionIds: JSON.stringify(filtered),
-      });
-    }
-
-    await storage.del('session', session);
-
-    return { variant: 'ok', session };
+    let p = createProgram();
+    p = spGet(p, 'session', session, 'record');
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = del(b, 'session', session);
+        return complete(b2, 'ok', { session });
+      },
+      (b) => complete(b, 'notfound', { message: 'No session exists with this identifier' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async destroyAll(input, storage) {
+  destroyAll(input: Record<string, unknown>) {
     const userId = input.userId as string;
 
-    const userSessions = await storage.get('userSessions', userId);
-    if (userSessions) {
-      const sessionIds: string[] = JSON.parse(userSessions.sessionIds as string);
-      for (const id of sessionIds) {
-        await storage.del('session', id);
-      }
-    }
-
-    // Clear the user's session index
-    await storage.put('userSessions', userId, {
-      userId,
-      sessionIds: JSON.stringify([]),
-    });
-
-    return { variant: 'ok', userId };
+    let p = createProgram();
+    p = put(p, 'userSessions', userId, { userId, sessionIds: JSON.stringify([]) });
+    return complete(p, 'ok', { userId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
-  async getContext(input, storage) {
+  getContext(input: Record<string, unknown>) {
     const session = input.session as string;
 
-    const record = await storage.get('session', session);
-    if (!record) {
-      return { variant: 'notfound', message: 'No session exists with this identifier' };
-    }
-
-    return {
-      variant: 'ok',
-      userId: record.userId as string,
-      device: record.device as string,
-    };
+    let p = createProgram();
+    p = spGet(p, 'session', session, 'record');
+    p = branch(p, 'record',
+      (b) => complete(b, 'ok', { userId: '', device: '' }),
+      (b) => complete(b, 'notfound', { message: 'No session exists with this identifier' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
+
+export const sessionHandler = autoInterpret(_sessionHandler);
+

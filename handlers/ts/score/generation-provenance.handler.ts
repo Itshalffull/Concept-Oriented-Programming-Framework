@@ -1,14 +1,23 @@
+// @migrated dsl-constructs 2026-03-18
 // GenerationProvenance Concept Implementation
 //
 // Tracks which generator produced which file, from what source spec,
 // with what configuration. Enables provenance queries, staleness
 // detection, and impact analysis for generator changes.
 
-import type { ConceptHandler, ConceptStorage } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const generationProvenanceHandler: ConceptHandler = {
+type Result = { variant: string; [key: string]: unknown };
 
-  async record(input, storage) {
+const _handler: FunctionalConceptHandler = {
+
+  record(input: Record<string, unknown>) {
+    let p = createProgram();
     const outputFile = input.outputFile as string;
     const generator = input.generator as string;
     const sourceSpec = input.sourceSpec as string;
@@ -16,12 +25,12 @@ export const generationProvenanceHandler: ConceptHandler = {
     const config = input.config as string;
 
     const key = `provenance:${outputFile}`;
-    const existing = await storage.get('generation-provenance', key);
+    p = get(p, 'generation-provenance', key, 'existing');
 
     const id = existing ? (existing.id as string) : crypto.randomUUID();
     const now = new Date().toISOString();
 
-    await storage.put('generation-provenance', key, {
+    p = put(p, 'generation-provenance', key, {
       id,
       outputFile,
       generator,
@@ -34,26 +43,28 @@ export const generationProvenanceHandler: ConceptHandler = {
     });
 
     if (existing) {
-      return { variant: 'updated', existing: id };
+      return complete(p, 'updated', { existing: id }) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', provenance: id };
+    return complete(p, 'ok', { provenance: id }) as StorageProgram<Result>;
   },
 
-  async getByFile(input, storage) {
+  getByFile(input: Record<string, unknown>) {
+    let p = createProgram();
     const outputFile = input.outputFile as string;
 
-    const entry = await storage.get('generation-provenance', `provenance:${outputFile}`);
+    p = get(p, 'generation-provenance', `provenance:${outputFile}`, 'entry');
     if (!entry) {
-      return { variant: 'notGenerated' };
+      return complete(p, 'notGenerated', {}) as StorageProgram<Result>;
     }
 
-    return { variant: 'ok', provenance: entry.id };
+    return complete(p, 'ok', { provenance: entry.id }) as StorageProgram<Result>;
   },
 
-  async findByGenerator(input, storage) {
+  findByGenerator(input: Record<string, unknown>) {
+    let p = createProgram();
     const generator = input.generator as string;
-    const all = await storage.find('generation-provenance', { generator });
+    p = find(p, 'generation-provenance', { generator }, 'all');
 
     const files = all.map(p => ({
       outputFile: p.outputFile,
@@ -61,12 +72,13 @@ export const generationProvenanceHandler: ConceptHandler = {
       generatedAt: p.generatedAt,
     }));
 
-    return { variant: 'ok', files: JSON.stringify(files) };
+    return complete(p, 'ok', { files: JSON.stringify(files) }) as StorageProgram<Result>;
   },
 
-  async findBySource(input, storage) {
+  findBySource(input: Record<string, unknown>) {
+    let p = createProgram();
     const sourceSpec = input.sourceSpec as string;
-    const all = await storage.find('generation-provenance', { sourceSpec });
+    p = find(p, 'generation-provenance', { sourceSpec }, 'all');
 
     const files = all.map(p => ({
       outputFile: p.outputFile,
@@ -74,15 +86,16 @@ export const generationProvenanceHandler: ConceptHandler = {
       generatedAt: p.generatedAt,
     }));
 
-    return { variant: 'ok', files: JSON.stringify(files) };
+    return complete(p, 'ok', { files: JSON.stringify(files) }) as StorageProgram<Result>;
   },
 
-  async generationChain(input, storage) {
+  generationChain(input: Record<string, unknown>) {
+    let p = createProgram();
     const outputFile = input.outputFile as string;
 
-    const entry = await storage.get('generation-provenance', `provenance:${outputFile}`);
+    p = get(p, 'generation-provenance', `provenance:${outputFile}`, 'entry');
     if (!entry) {
-      return { variant: 'notGenerated' };
+      return complete(p, 'notGenerated', {}) as StorageProgram<Result>;
     }
 
     // Walk backwards through the chain: output -> source -> source's source...
@@ -100,10 +113,10 @@ export const generationProvenanceHandler: ConceptHandler = {
       step++;
 
       // Check if the source spec is itself a generated file
-      const parentEntry = await storage.get(
+      p = get(p, 
         'generation-provenance',
         `provenance:${current.sourceSpec}`
-      );
+      , 'parentEntry');
       if (!parentEntry || parentEntry.outputFile === current.outputFile) break;
       current = parentEntry;
     }
@@ -111,16 +124,17 @@ export const generationProvenanceHandler: ConceptHandler = {
     // Re-number steps from source to output
     chain.forEach((c, i) => { c.step = i; });
 
-    return { variant: 'ok', chain: JSON.stringify(chain) };
+    return complete(p, 'ok', { chain: JSON.stringify(chain) }) as StorageProgram<Result>;
   },
 
-  async staleFiles(_input, storage) {
-    const all = await storage.find('generation-provenance');
+  staleFiles(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'generation-provenance', 'all');
 
     const stale = all.filter(p => p.isStale === 'true');
 
     if (stale.length === 0) {
-      return { variant: 'allFresh' };
+      return complete(p, 'allFresh', {}) as StorageProgram<Result>;
     }
 
     const files = stale.map(p => ({
@@ -131,33 +145,35 @@ export const generationProvenanceHandler: ConceptHandler = {
       sourceModified: '',
     }));
 
-    return { variant: 'ok', files: JSON.stringify(files) };
+    return complete(p, 'ok', { files: JSON.stringify(files) }) as StorageProgram<Result>;
   },
 
-  async impactOfGeneratorChange(input, storage) {
+  impactOfGeneratorChange(input: Record<string, unknown>) {
     const generator = input.generator as string;
-    const all = await storage.find('generation-provenance', { generator });
+    p = find(p, 'generation-provenance', { generator }, 'all');
 
     const affected = all.map(p => ({
       outputFile: p.outputFile,
       sourceSpec: p.sourceSpec,
     }));
 
-    return { variant: 'ok', affected: JSON.stringify(affected) };
+    return complete(p, 'ok', { affected: JSON.stringify(affected) }) as StorageProgram<Result>;
   },
 
-  async isGenerated(input, storage) {
+  isGenerated(input: Record<string, unknown>) {
+    let p = createProgram();
     const file = input.file as string;
 
-    const entry = await storage.get('generation-provenance', `provenance:${file}`);
+    p = get(p, 'generation-provenance', `provenance:${file}`, 'entry');
     if (!entry) {
-      return { variant: 'handWritten' };
+      return complete(p, 'handWritten', {}) as StorageProgram<Result>;
     }
 
-    return {
-      variant: 'generated',
+    return complete(p, 'generated', {
       generator: entry.generator as string,
       sourceSpec: entry.sourceSpec as string,
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const generationProvenanceHandler = autoInterpret(_handler);

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Snapshot Concept Implementation
 //
@@ -6,7 +7,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const BASELINES = 'snapshot-baselines';
 const COMPARISONS = 'snapshot-comparisons';
@@ -34,43 +40,46 @@ function computeDiff(
   };
 }
 
-export const snapshotHandler: ConceptHandler = {
-  async compare(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  compare(input: Record<string, unknown>) {
+    let p = createProgram();
     const outputPath = input.outputPath as string;
     const currentContent = input.currentContent as string;
     const currentHash = simpleHash(currentContent);
 
-    const baseline = await storage.get(BASELINES, outputPath);
+    p = get(p, BASELINES, outputPath, 'baseline');
 
     if (!baseline) {
       // New path — no baseline exists
-      await storage.put(COMPARISONS, outputPath, {
+      p = put(p, COMPARISONS, outputPath, {
         path: outputPath,
         currentHash,
         status: 'new',
         diffSummary: null,
         comparedAt: new Date().toISOString(),
       });
-      return { variant: 'new', path: outputPath, contentHash: currentHash };
+      return complete(p, 'new', { path: outputPath, contentHash: currentHash }) as StorageProgram<Result>;
     }
 
     const baselineHash = baseline.contentHash as string;
 
     if (baselineHash === currentHash) {
-      await storage.put(COMPARISONS, outputPath, {
+      p = put(p, COMPARISONS, outputPath, {
         path: outputPath,
         currentHash,
         status: 'current',
         diffSummary: null,
         comparedAt: new Date().toISOString(),
       });
-      return { variant: 'unchanged', snapshot: baseline.id as string };
+      return complete(p, 'unchanged', { snapshot: baseline.id as string }) as StorageProgram<Result>;
     }
 
     // Content changed
     const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
 
-    await storage.put(COMPARISONS, outputPath, {
+    p = put(p, COMPARISONS, outputPath, {
       path: outputPath,
       currentHash,
       status: 'changed',
@@ -80,33 +89,32 @@ export const snapshotHandler: ConceptHandler = {
       comparedAt: new Date().toISOString(),
     });
 
-    return {
-      variant: 'changed',
+    return complete(p, 'changed', {
       snapshot: baseline.id as string,
       diff,
       linesAdded,
       linesRemoved,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async approve(input, storage) {
+  approve(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     const approver = input.approver as string | undefined;
 
-    const comparison = await storage.get(COMPARISONS, path);
+    p = get(p, COMPARISONS, path, 'comparison');
     if (!comparison || comparison.status === 'current') {
-      const baseline = await storage.get(BASELINES, path);
-      return {
-        variant: 'noChange',
+      p = get(p, BASELINES, path, 'baseline');
+      return complete(p, 'noChange', {
         snapshot: baseline ? (baseline.id as string) : path,
-      };
+      }) as StorageProgram<Result>;
     }
 
     const currentHash = comparison.currentHash as string;
     const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date().toISOString();
 
-    await storage.put(BASELINES, path, {
+    p = put(p, BASELINES, path, {
       id: snapshotId,
       path,
       contentHash: currentHash,
@@ -114,19 +122,20 @@ export const snapshotHandler: ConceptHandler = {
       approvedBy: approver || null,
     });
 
-    await storage.put(COMPARISONS, path, {
+    p = put(p, COMPARISONS, path, {
       ...comparison,
       status: 'current',
       diffSummary: null,
     });
 
-    return { variant: 'ok', snapshot: snapshotId };
+    return complete(p, 'ok', { snapshot: snapshotId }) as StorageProgram<Result>;
   },
 
-  async approveAll(input, storage) {
+  approveAll(input: Record<string, unknown>) {
+    let p = createProgram();
     const paths = input.paths as string[] | undefined;
 
-    const allComparisons = await storage.find(COMPARISONS);
+    p = find(p, COMPARISONS, 'allComparisons');
     let approved = 0;
 
     for (const comp of allComparisons) {
@@ -143,7 +152,7 @@ export const snapshotHandler: ConceptHandler = {
       const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${approved}`;
       const now = new Date().toISOString();
 
-      await storage.put(BASELINES, compPath, {
+      p = put(p, BASELINES, compPath, {
         id: snapshotId,
         path: compPath,
         contentHash: currentHash,
@@ -151,7 +160,7 @@ export const snapshotHandler: ConceptHandler = {
         approvedBy: null,
       });
 
-      await storage.put(COMPARISONS, compPath, {
+      p = put(p, COMPARISONS, compPath, {
         ...comp,
         status: 'current',
         diffSummary: null,
@@ -160,37 +169,37 @@ export const snapshotHandler: ConceptHandler = {
       approved++;
     }
 
-    return { variant: 'ok', approved };
+    return complete(p, 'ok', { approved }) as StorageProgram<Result>;
   },
 
-  async reject(input, storage) {
+  reject(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
 
-    const comparison = await storage.get(COMPARISONS, path);
+    p = get(p, COMPARISONS, path, 'comparison');
     if (!comparison || comparison.status === 'current') {
-      const baseline = await storage.get(BASELINES, path);
-      return {
-        variant: 'noChange',
+      p = get(p, BASELINES, path, 'baseline');
+      return complete(p, 'noChange', {
         snapshot: baseline ? (baseline.id as string) : path,
-      };
+      }) as StorageProgram<Result>;
     }
 
-    await storage.put(COMPARISONS, path, {
+    p = put(p, COMPARISONS, path, {
       ...comparison,
       status: 'rejected',
     });
 
-    const baseline = await storage.get(BASELINES, path);
-    return {
-      variant: 'ok',
+    p = get(p, BASELINES, path, 'baseline');
+    return complete(p, 'ok', {
       snapshot: baseline ? (baseline.id as string) : path,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async status(input, storage) {
+  status(input: Record<string, unknown>) {
+    let p = createProgram();
     const paths = input.paths as string[] | undefined;
 
-    const allComparisons = await storage.find(COMPARISONS);
+    p = find(p, COMPARISONS, 'allComparisons');
     const results: Array<{
       path: string;
       status: string;
@@ -205,7 +214,7 @@ export const snapshotHandler: ConceptHandler = {
         if (!matches) continue;
       }
 
-      const baseline = await storage.get(BASELINES, compPath);
+      p = get(p, BASELINES, compPath, 'baseline');
       const linesAdded = (comp.linesAdded as number) || 0;
       const linesRemoved = (comp.linesRemoved as number) || 0;
 
@@ -217,45 +226,49 @@ export const snapshotHandler: ConceptHandler = {
       });
     }
 
-    return { variant: 'ok', results };
+    return complete(p, 'ok', { results }) as StorageProgram<Result>;
   },
 
-  async diff(input, storage) {
+  diff(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
 
-    const baseline = await storage.get(BASELINES, path);
+    p = get(p, BASELINES, path, 'baseline');
     if (!baseline) {
-      return { variant: 'noBaseline', path };
+      return complete(p, 'noBaseline', { path }) as StorageProgram<Result>;
     }
 
-    const comparison = await storage.get(COMPARISONS, path);
+    p = get(p, COMPARISONS, path, 'comparison');
     if (!comparison || comparison.status === 'current') {
-      return { variant: 'unchanged', path };
+      return complete(p, 'unchanged', { path }) as StorageProgram<Result>;
     }
 
     const baselineHash = baseline.contentHash as string;
     const currentHash = comparison.currentHash as string;
     const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
 
-    return { variant: 'ok', diff, linesAdded, linesRemoved };
+    return complete(p, 'ok', { diff, linesAdded, linesRemoved }) as StorageProgram<Result>;
   },
 
-  async clean(input, storage) {
+  clean(input: Record<string, unknown>) {
+    let p = createProgram();
     const _outputDir = input.outputDir as string;
 
     // Remove baselines that have no corresponding comparison (orphaned)
-    const allBaselines = await storage.find(BASELINES);
+    p = find(p, BASELINES, 'allBaselines');
     const removed: string[] = [];
 
     for (const baseline of allBaselines) {
       const path = baseline.path as string;
-      const comparison = await storage.get(COMPARISONS, path);
+      p = get(p, COMPARISONS, path, 'comparison');
       if (!comparison) {
-        await storage.del(BASELINES, path);
+        p = del(p, BASELINES, path);
         removed.push(path);
       }
     }
 
-    return { variant: 'ok', removed };
+    return complete(p, 'ok', { removed }) as StorageProgram<Result>;
   },
 };
+
+export const snapshotHandler = autoInterpret(_handler);

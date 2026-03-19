@@ -50,7 +50,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[1].variants).toHaveLength(3);
     // execute has 4 variants: ok, partial, rollbackTriggered, rollbackFailed
     expect(ast.actions[2].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
     expect(ast.state.length).toBeGreaterThan(0);
   });
 
@@ -63,7 +63,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['begin', 'advance', 'pause', 'resume', 'abort', 'status']);
     // advance has 3 variants: ok, complete, paused
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Migration', () => {
@@ -75,7 +75,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['plan', 'expand', 'migrate', 'contract', 'status']);
     // plan has 3 variants: ok, noMigrationNeeded, incompatible
     expect(ast.actions[0].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Health', () => {
@@ -89,7 +89,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(4);
     // checkSuite has 3 variants: ok, degraded, failed
     expect(ast.actions[2].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Env', () => {
@@ -101,7 +101,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['resolve', 'promote', 'diff']);
     // promote has 3 variants: ok, notValidated, versionMismatch
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Telemetry', () => {
@@ -113,7 +113,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['configure', 'deployMarker', 'analyze']);
     // analyze has 3 variants: ok, insufficientData, backendUnavailable
     expect(ast.actions[2].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Artifact', () => {
@@ -127,7 +127,7 @@ describe('Orchestration Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(2);
     // resolve has 2 variants: ok, notfound
     expect(ast.actions[2].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 });
 
@@ -151,7 +151,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions[0].variants).toHaveLength(3);
     // rollback has 3 variants: ok, noHistory, rollbackFailed
     expect(ast.actions[3].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses Secret', () => {
@@ -163,7 +163,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['resolve', 'exists', 'rotate', 'invalidateCache']);
     // resolve has 4 variants: ok, notFound, accessDenied, expired
     expect(ast.actions[0].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses IaC', () => {
@@ -175,7 +175,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['emit', 'preview', 'apply', 'detectDrift', 'teardown']);
     // apply has 3 variants: ok, partial, applyFailed
     expect(ast.actions[2].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses GitOps', () => {
@@ -187,7 +187,7 @@ describe('Coordination Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['emit', 'reconciliationStatus']);
     // reconciliationStatus has 3 variants: ok, pending, failed
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 });
 
@@ -206,7 +206,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual([
       'provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy',
     ]);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses EcsRuntime', () => {
@@ -218,7 +218,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual([
       'provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy',
     ]);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses VaultProvider', () => {
@@ -230,7 +230,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['fetch', 'renewLease', 'rotate']);
     // fetch has 4 variants: ok, sealed, tokenExpired, pathNotFound
     expect(ast.actions[0].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses AwsSmProvider', () => {
@@ -242,7 +242,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['fetch', 'rotate']);
     // fetch has 4 variants: ok, kmsKeyInaccessible, resourceNotFound, decryptionFailed
     expect(ast.actions[0].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses PulumiProvider', () => {
@@ -254,7 +254,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['generate', 'preview', 'apply', 'teardown']);
     // apply has 4 variants: ok, pluginMissing, conflictingUpdate, partial
     expect(ast.actions[2].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses TerraformProvider', () => {
@@ -266,7 +266,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions.map(a => a.name)).toEqual(['generate', 'preview', 'apply', 'teardown']);
     // preview has 3 variants: ok, stateLocked, backendInitRequired
     expect(ast.actions[1].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   // --- Additional Runtime Providers ---
@@ -278,7 +278,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions.map(a => a.name)).toEqual(['provision', 'deploy', 'setTrafficWeight', 'rollback', 'destroy']);
     expect(ast.actions[0].variants).toHaveLength(3);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses GcfRuntime', () => {
@@ -288,7 +288,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions[0].variants).toHaveLength(3);
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses CloudflareRuntime', () => {
@@ -298,7 +298,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions[0].variants).toHaveLength(2);
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses VercelRuntime', () => {
@@ -308,7 +308,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(6);
     expect(ast.actions[0].variants).toHaveLength(2);
     expect(ast.actions[1].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses K8sRuntime', () => {
@@ -318,7 +318,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions[0].variants).toHaveLength(3);
     expect(ast.actions[1].variants).toHaveLength(5);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses DockerComposeRuntime', () => {
@@ -327,7 +327,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['D']);
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions[0].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses LocalRuntime', () => {
@@ -336,7 +336,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['L']);
     expect(ast.actions).toHaveLength(5);
     expect(ast.actions[0].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   // --- Additional Secret Providers ---
@@ -347,7 +347,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['G']);
     expect(ast.actions).toHaveLength(2);
     expect(ast.actions[0].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses EnvProvider', () => {
@@ -356,7 +356,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['E']);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses DotenvProvider', () => {
@@ -365,7 +365,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['D']);
     expect(ast.actions).toHaveLength(1);
     expect(ast.actions[0].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   // --- Additional IaC Providers ---
@@ -377,7 +377,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(4);
     expect(ast.actions[1].variants).toHaveLength(2);
     expect(ast.actions[2].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses DockerComposeIacProvider', () => {
@@ -386,7 +386,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['I']);
     expect(ast.actions).toHaveLength(4);
     expect(ast.actions[2].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   // --- GitOps Providers ---
@@ -397,7 +397,7 @@ describe('Provider Concepts', () => {
     expect(ast.typeParams).toEqual(['A']);
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[1].variants).toHaveLength(4);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 
   it('parses FluxProvider', () => {
@@ -407,7 +407,7 @@ describe('Provider Concepts', () => {
     expect(ast.actions).toHaveLength(3);
     expect(ast.actions[1].variants).toHaveLength(3);
     expect(ast.actions[2].variants).toHaveLength(2);
-    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
+    expect(ast.invariants).toHaveLength(1);
   });
 });
 

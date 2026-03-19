@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AsyncAPI Target Provider — Clef Bind
 //
@@ -9,13 +10,12 @@
 // Architecture doc: Clef Bind
 // ============================================================
 
-import type {
-  ConceptHandler,
-  ConceptStorage,
-  ConceptManifest,
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
+import type { ConceptManifest,
   ActionSchema,
-  VariantSchema,
-} from '../../../../runtime/types.js';
+  VariantSchema } from '../../../../runtime/types.js';
 
 import {
   typeToJsonSchema,
@@ -533,17 +533,14 @@ function assembleAsyncApiDocument(
 
 // --- Concept Handler ---
 
-export const asyncapiTargetHandler: ConceptHandler = {
-  async register() {
-    return {
-      variant: 'ok',
-      name: 'AsyncapiTarget',
+const _handler: FunctionalConceptHandler = {
+  register(input: Record<string, unknown>) {
+    { let p = createProgram(); p = complete(p, 'ok', { name: 'AsyncapiTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'AsyncApiSpec',
       capabilities: JSON.stringify(['asyncapi-3.0', 'yaml', 'channels']),
       targetKey: 'asyncapi',
-      providerType: 'spec',
-    };
+      providerType: 'spec' }); return p; }
   },
 
   /**
@@ -557,32 +554,25 @@ export const asyncapiTargetHandler: ConceptHandler = {
    *
    * Returns variant 'ok' with a single asyncapi.yaml file and the document string.
    */
-  async generate(
+  generate(
     input: Record<string, unknown>,
-    _storage: ConceptStorage,
-  ): Promise<{ variant: string; [key: string]: unknown }> {
+  ) {
     // --- Parse allProjections ---
 
     const projectionsRaw = input.allProjections as string;
     if (!projectionsRaw || typeof projectionsRaw !== 'string') {
-      return {
-        variant: 'error',
-        reason: 'allProjections is required and must be a JSON string',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections is required and must be a JSON string' }); return p; }
     }
 
     let projections: Record<string, unknown>[];
     try {
       projections = JSON.parse(projectionsRaw) as Record<string, unknown>[];
     } catch {
-      return { variant: 'error', reason: 'allProjections is not valid JSON' };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections is not valid JSON' }); return p; }
     }
 
     if (!Array.isArray(projections) || projections.length === 0) {
-      return {
-        variant: 'error',
-        reason: 'allProjections must be a non-empty array',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'allProjections must be a non-empty array' }); return p; }
     }
 
     // --- Parse config ---
@@ -628,20 +618,16 @@ export const asyncapiTargetHandler: ConceptHandler = {
     }
 
     if (manifests.length === 0) {
-      return {
-        variant: 'error',
-        reason: 'No valid concept manifests found in projections',
-      };
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'No valid concept manifests found in projections' }); return p; }
     }
 
     // --- Generate AsyncAPI document ---
 
     const document = assembleAsyncApiDocument(manifests, manifestYaml, config);
 
-    return {
-      variant: 'ok',
-      files: [{ path: 'asyncapi.yaml', content: document }],
-      document,
-    };
+    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: 'asyncapi.yaml', content: document }],
+      document }); return p; }
   },
 };
+
+export const asyncapiTargetHandler = autoInterpret(_handler);

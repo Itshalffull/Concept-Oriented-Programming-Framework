@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ============================================================
 // QualitySignal Concept Implementation
 //
@@ -9,7 +10,12 @@
 // See Architecture doc Section 3.8
 // ============================================================
 
-import type { ConceptHandler, ConceptStorage } from '../../../../runtime/types.js';
+import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+import {
+  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
+} from '../../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 const SIGNALS = 'quality-signals';
 
@@ -47,8 +53,11 @@ function generateSignalId(): string {
   return `qs-${Date.now()}-${counter}`;
 }
 
-export const qualitySignalHandler: ConceptHandler = {
-  async record(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  record(input: Record<string, unknown>) {
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
     const status = input.status as string | undefined;
@@ -60,34 +69,30 @@ export const qualitySignalHandler: ConceptHandler = {
 
     // --- Validate required fields ---
     if (!targetSymbol || !dimension || !status || !severity) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol, dimension, status, and severity are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate dimension ---
     if (!VALID_DIMENSIONS.includes(dimension as Dimension)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate status ---
     if (!VALID_STATUSES.includes(status as Status)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `status must be one of: ${VALID_STATUSES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Validate severity ---
     if (!VALID_SEVERITIES.includes(severity as Severity)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `severity must be one of: ${VALID_SEVERITIES.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
     // --- Store signal ---
@@ -108,36 +113,35 @@ export const qualitySignalHandler: ConceptHandler = {
     if (artifactHash !== undefined) entry.artifact_hash = artifactHash;
     if (runRef !== undefined) entry.run_ref = runRef;
 
-    await storage.put(SIGNALS, signalId, entry);
+    p = put(p, SIGNALS, signalId, entry);
 
-    return { variant: 'ok', id: signalId, observed_at: observedAt };
+    return complete(p, 'ok', { id: signalId, observed_at: observedAt }) as StorageProgram<Result>;
   },
 
-  async latest(input, storage) {
+  latest(input: Record<string, unknown>) {
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimension = input.dimension as string | undefined;
 
     if (!targetSymbol || !dimension) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol and dimension are required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     if (!VALID_DIMENSIONS.includes(dimension as Dimension)) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-      };
+      }) as StorageProgram<Result>;
     }
 
-    const matches = await storage.find(SIGNALS, {
+    p = find(p, SIGNALS, {
       target_symbol: targetSymbol,
       dimension,
-    });
+    }, 'matches');
 
     if (matches.length === 0) {
-      return { variant: 'notFound', target_symbol: targetSymbol, dimension };
+      return complete(p, 'notFound', { target_symbol: targetSymbol, dimension }) as StorageProgram<Result>;
     }
 
     // Find the most recent by observed_at
@@ -148,31 +152,29 @@ export const qualitySignalHandler: ConceptHandler = {
       }
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       signal: latest,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async rollup(input, storage) {
+  rollup(input: Record<string, unknown>) {
+    let p = createProgram();
     const targetSymbols = input.target_symbols as string[] | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
     if (!targetSymbols || !Array.isArray(targetSymbols) || targetSymbols.length === 0) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbols must be a non-empty array',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate dimensions filter if provided
     if (dimensions) {
       for (const dim of dimensions) {
         if (!VALID_DIMENSIONS.includes(dim as Dimension)) {
-          return {
-            variant: 'validationError',
+          return complete(p, 'validationError', {
             message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-          };
+          }) as StorageProgram<Result>;
         }
       }
     }
@@ -190,7 +192,7 @@ export const qualitySignalHandler: ConceptHandler = {
     }> = [];
 
     for (const target of targetSymbols) {
-      const allSignals = await storage.find(SIGNALS, { target_symbol: target });
+      p = find(p, SIGNALS, { target_symbol: target }, 'allSignals');
 
       // Group by dimension, keeping only the latest per dimension
       const latestByDimension = new Map<string, Record<string, unknown>>();
@@ -253,37 +255,35 @@ export const qualitySignalHandler: ConceptHandler = {
       });
     }
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       blocking,
       targets: perTarget,
-    };
+    }) as StorageProgram<Result>;
   },
 
-  async explain(input, storage) {
+  explain(input: Record<string, unknown>) {
+    let p = createProgram();
     const targetSymbol = input.target_symbol as string | undefined;
     const dimensions = input.dimensions as string[] | undefined;
 
     if (!targetSymbol) {
-      return {
-        variant: 'validationError',
+      return complete(p, 'validationError', {
         message: 'target_symbol is required',
-      };
+      }) as StorageProgram<Result>;
     }
 
     // Validate dimensions filter if provided
     if (dimensions) {
       for (const dim of dimensions) {
         if (!VALID_DIMENSIONS.includes(dim as Dimension)) {
-          return {
-            variant: 'validationError',
+          return complete(p, 'validationError', {
             message: `dimension must be one of: ${VALID_DIMENSIONS.join(', ')}`,
-          };
+          }) as StorageProgram<Result>;
         }
       }
     }
 
-    const allSignals = await storage.find(SIGNALS, { target_symbol: targetSymbol });
+    p = find(p, SIGNALS, { target_symbol: targetSymbol }, 'allSignals');
 
     // Filter by dimensions if provided
     let filtered = allSignals;
@@ -296,10 +296,11 @@ export const qualitySignalHandler: ConceptHandler = {
       (b.observed_at as string).localeCompare(a.observed_at as string),
     );
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       target_symbol: targetSymbol,
       signals: filtered,
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const qualitySignalHandler = autoInterpret(_handler);

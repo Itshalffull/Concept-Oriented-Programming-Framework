@@ -9,16 +9,34 @@
 // This handler delegates to the ScoreIndex for materialized data
 // and to the underlying Score suite concepts for complex queries
 // (dependence graph traversal, data flow analysis, embeddings).
-//
-// External kernel dispatch is modeled via `perform` transport
-// effects. The interpreter handles the actual async calls.
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, perform, type StorageProgram,
+  mapBindings, putFrom, mergeFrom, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import { getScoreKernel } from './score-kernel.handler.js';
+
+// ─── Kernel Dispatch ────────────────────────────────────
+
+/**
+ * Dispatch an action to a sibling concept via the booted ScoreKernel.
+ * Returns null if the kernel isn't available (graceful degradation).
+ */
+async function dispatch(
+  uri: string,
+  action: string,
+  input: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const kernel = getScoreKernel();
+  if (!kernel) return null;
+  try {
+    return await kernel.invokeConcept(uri, action, input) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
 
 // ─── Helpers ─────────────────────────────────────────────
 
@@ -109,25 +127,22 @@ const _handler: FunctionalConceptHandler = {
   listFiles(input: Record<string, unknown>) {
     let p = createProgram();
     const pattern = (input.pattern as string) || '*';
-    p = find(p, 'files', {}, 'allFiles');
+    p = find(p, 'files', 'allFiles');
 
-    return completeFrom(p, '_deferred_listFiles', (bindings) => {
-      const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
-      const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
+    const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
 
-      if (matched.length === 0) {
-        return { variant: 'empty', pattern };
-      }
+    if (matched.length === 0) {
+      return complete(p, 'empty', { pattern }) as StorageProgram<Result>;
+    }
 
-      const files = matched.map(f => ({
-        path: f.filePath as string,
-        language: (f.language as string) || inferLanguage(f.filePath as string),
-        role: (f.role as string) || inferRole(f.filePath as string),
-        size: 0,
-      }));
+    const files = matched.map(f => ({
+      path: f.filePath as string,
+      language: (f.language as string) || inferLanguage(f.filePath as string),
+      role: (f.role as string) || inferRole(f.filePath as string),
+      size: 0,
+    }));
 
-      return { variant: 'ok', files };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { files }) as StorageProgram<Result>;
   },
 
   getFileTree(input: Record<string, unknown>) {
@@ -135,20 +150,16 @@ const _handler: FunctionalConceptHandler = {
     const path = (input.path as string) || '.';
     const depth = (input.depth as number) || 0;
 
-    p = find(p, 'files', {}, 'allFiles');
+    p = find(p, 'files', 'allFiles');
+    const paths = allFiles.map(f => f.filePath as string);
 
-    return completeFrom(p, '_deferred_getFileTree', (bindings) => {
-      const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
-      const paths = allFiles.map(f => f.filePath as string);
+    if (paths.length === 0) {
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
+    }
 
-      if (paths.length === 0) {
-        return { variant: 'notFound', path };
-      }
+    const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
 
-      const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
-
-      return { variant: 'ok', tree, fileCount, dirCount };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { tree, fileCount, dirCount }) as StorageProgram<Result>;
   },
 
   getFileContent(input: Record<string, unknown>) {
@@ -159,22 +170,19 @@ const _handler: FunctionalConceptHandler = {
     }
 
     p = get(p, 'files', `file:${path}`, 'fileEntry');
+    if (!fileEntry) {
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getFileContent', (bindings) => {
-      const fileEntry = bindings.fileEntry as Record<string, unknown> | null;
-      if (!fileEntry) {
-        return { variant: 'notFound', path };
-      }
+    // Content comes from the file system via the Score parse layer.
+    // The handler returns what's available in the index.
+    const language = (fileEntry.language as string) || inferLanguage(path);
+    const definitions = (fileEntry.definitions as string[]) || [];
 
-      const language = (fileEntry.language as string) || inferLanguage(path);
-      const definitions = (fileEntry.definitions as string[]) || [];
-
-      return {
-        variant: 'ok',
-        content: `[File: ${path}]`,
-        language,
-        definitions,
-      };
+    return complete(p, 'ok', {
+      content: `[File: ${path}]`,
+      language,
+      definitions,
     }) as StorageProgram<Result>;
   },
 
@@ -186,22 +194,18 @@ const _handler: FunctionalConceptHandler = {
     }
 
     p = find(p, 'symbols', { file: path }, 'symbols');
+    if (symbols.length === 0) {
+      return complete(p, 'notFound', { path }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getDefinitions', (bindings) => {
-      const symbols = bindings.symbols as Array<Record<string, unknown>>;
-      if (symbols.length === 0) {
-        return { variant: 'notFound', path };
-      }
+    const definitions = symbols.map(s => ({
+      name: s.symbolName as string,
+      kind: s.symbolKind as string,
+      line: s.line as number,
+      span: `${path}:${s.line}`,
+    }));
 
-      const definitions = symbols.map(s => ({
-        name: s.symbolName as string,
-        kind: s.symbolKind as string,
-        line: s.line as number,
-        span: `${path}:${s.line}`,
-      }));
-
-      return { variant: 'ok', definitions };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { definitions }) as StorageProgram<Result>;
   },
 
   matchPattern(input: Record<string, unknown>) {
@@ -213,15 +217,29 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'invalidPattern', { pattern: '', error: 'Pattern is required' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to SyntaxTree/query via transport effect for each parsed tree.
-    p = find(p, 'files', {}, 'allFiles');
-    p = perform(p, 'kernel', 'matchPattern', { pattern, language }, 'matchResult');
+    // Dispatch to SyntaxTree/query for each parsed tree matching the language.
+    // Trees are indexed in ScoreApi's files collection; tree IDs come from
+    // the parse layer. We iterate known files and query their trees.
+    p = find(p, 'files', 'allFiles');
+    const matches: Array<Record<string, unknown>> = [];
 
-    return completeFrom(p, '_deferred_matchPattern', (bindings) => {
-      const matchResult = bindings.matchResult as Record<string, unknown> | null;
-      const matches = matchResult?.matches as Array<Record<string, unknown>> ?? [];
-      return { variant: 'ok', matches };
-    }) as StorageProgram<Result>;
+    for (const f of allFiles) {
+      const filePath = f.filePath as string;
+      if (language && !filePath.endsWith(`.${language}`) && inferLanguage(filePath) !== language) {
+        continue;
+      }
+      const treeId = f.treeId as string;
+      if (!treeId) continue;
+
+      const result = await dispatch('urn:clef/SyntaxTree', 'query', { tree: treeId, pattern });
+      if (result?.variant === 'ok' && Array.isArray(result.matches)) {
+        for (const m of result.matches as Array<Record<string, unknown>>) {
+          matches.push({ ...m, file: filePath });
+        }
+      }
+    }
+
+    return complete(p, 'ok', { matches }) as StorageProgram<Result>;
   },
 
   // ─── Symbol Queries (Symbol Layer) ────────────────────
@@ -233,28 +251,24 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
-    p = find(p, 'symbols', {}, 'allSymbols');
+    p = find(p, 'symbols', 'allSymbols');
+    const matched = allSymbols.filter(s =>
+      (s.symbolName as string).toLowerCase().includes(name.toLowerCase())
+    );
 
-    return completeFrom(p, '_deferred_findSymbol', (bindings) => {
-      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
-      const matched = allSymbols.filter(s =>
-        (s.symbolName as string).toLowerCase().includes(name.toLowerCase())
-      );
+    if (matched.length === 0) {
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
+    }
 
-      if (matched.length === 0) {
-        return { variant: 'notFound', name };
-      }
+    const symbols = matched.map(s => ({
+      name: s.symbolName as string,
+      kind: s.symbolKind as string,
+      file: s.file as string,
+      line: s.line as number,
+      scope: s.scope as string,
+    }));
 
-      const symbols = matched.map(s => ({
-        name: s.symbolName as string,
-        kind: s.symbolKind as string,
-        file: s.file as string,
-        line: s.line as number,
-        scope: s.scope as string,
-      }));
-
-      return { variant: 'ok', symbols };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { symbols }) as StorageProgram<Result>;
   },
 
   getReferences(input: Record<string, unknown>) {
@@ -264,28 +278,28 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
+    // Find the definition
     p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
+    if (allSymbols.length === 0) {
+      return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getReferences', (bindings) => {
-      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
-      if (allSymbols.length === 0) {
-        return { variant: 'notFound', symbol };
-      }
+    const def = allSymbols[0];
+    const definition = {
+      file: def.file as string,
+      line: def.line as number,
+    };
 
-      const def = allSymbols[0];
-      const definition = {
-        file: def.file as string,
-        line: def.line as number,
-      };
+    // References come from the Symbol/SymbolOccurrence layer.
+    // This returns what's indexed; full cross-file resolution
+    // requires the symbol suite's scope graph.
+    const references = allSymbols.slice(1).map(s => ({
+      file: s.file as string,
+      line: s.line as number,
+      kind: 'reference',
+    }));
 
-      const references = allSymbols.slice(1).map(s => ({
-        file: s.file as string,
-        line: s.line as number,
-        kind: 'reference',
-      }));
-
-      return { variant: 'ok', definition, references };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { definition, references }) as StorageProgram<Result>;
   },
 
   getScope(input: Record<string, unknown>) {
@@ -298,31 +312,27 @@ const _handler: FunctionalConceptHandler = {
     }
 
     p = find(p, 'symbols', { file }, 'symbols');
+    if (symbols.length === 0) {
+      return complete(p, 'notFound', { file }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getScope', (bindings) => {
-      const symbols = bindings.symbols as Array<Record<string, unknown>>;
-      if (symbols.length === 0) {
-        return { variant: 'notFound', file };
-      }
+    // Find the closest enclosing scope
+    const nearestSymbols = symbols
+      .filter(s => (s.line as number) <= line)
+      .sort((a, b) => (b.line as number) - (a.line as number));
 
-      const nearestSymbols = symbols
-        .filter(s => (s.line as number) <= line)
-        .sort((a, b) => (b.line as number) - (a.line as number));
+    const scopeSymbol = nearestSymbols[0];
+    const scopeName = scopeSymbol ? (scopeSymbol.scope as string) || 'global' : 'global';
 
-      const scopeSymbol = nearestSymbols[0];
-      const scopeName = scopeSymbol ? (scopeSymbol.scope as string) || 'global' : 'global';
+    const visibleSymbols = symbols.map(s => ({
+      name: s.symbolName as string,
+      kind: s.symbolKind as string,
+    }));
 
-      const visibleSymbols = symbols.map(s => ({
-        name: s.symbolName as string,
-        kind: s.symbolKind as string,
-      }));
-
-      return {
-        variant: 'ok',
-        scope: scopeName,
-        symbols: visibleSymbols,
-        parent: undefined,
-      };
+    return complete(p, 'ok', {
+      scope: scopeName,
+      symbols: visibleSymbols,
+      parent: undefined,
     }) as StorageProgram<Result>;
   },
 
@@ -334,94 +344,79 @@ const _handler: FunctionalConceptHandler = {
     }
 
     p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
+    if (allSymbols.length === 0) {
+      return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
+    }
 
-    // Dispatch to SymbolRelationship concept via transport effects
-    p = perform(p, 'kernel', 'findRelationshipsFrom', { source: symbol, kind: '' }, 'outgoing');
-    p = perform(p, 'kernel', 'findRelationshipsTo', { target: symbol, kind: '' }, 'incoming');
+    // Dispatch to SymbolRelationship concept for both directions
+    const relationships: Array<Record<string, unknown>> = [];
 
-    return completeFrom(p, '_deferred_getRelationships', (bindings) => {
-      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
-      if (allSymbols.length === 0) {
-        return { variant: 'notFound', symbol };
-      }
+    const outgoing = await dispatch('urn:clef/SymbolRelationship', 'findFrom', { source: symbol, kind: '' });
+    if (outgoing?.variant === 'ok') {
+      const rels: unknown[] = (() => {
+        try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
+      })();
+      relationships.push(...(rels as Array<Record<string, unknown>>));
+    }
 
-      const relationships: Array<Record<string, unknown>> = [];
+    const incoming = await dispatch('urn:clef/SymbolRelationship', 'findTo', { target: symbol, kind: '' });
+    if (incoming?.variant === 'ok') {
+      const rels: unknown[] = (() => {
+        try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
+      })();
+      relationships.push(...(rels as Array<Record<string, unknown>>));
+    }
 
-      const outgoing = bindings.outgoing as Record<string, unknown> | null;
-      if (outgoing?.variant === 'ok') {
-        const rels: unknown[] = (() => {
-          try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
-        })();
-        relationships.push(...(rels as Array<Record<string, unknown>>));
-      }
-
-      const incoming = bindings.incoming as Record<string, unknown> | null;
-      if (incoming?.variant === 'ok') {
-        const rels: unknown[] = (() => {
-          try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
-        })();
-        relationships.push(...(rels as Array<Record<string, unknown>>));
-      }
-
-      return { variant: 'ok', relationships };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { relationships }) as StorageProgram<Result>;
   },
 
   // ─── Semantic Queries (Semantic Layer) ────────────────
 
   listConcepts(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', {}, 'allConcepts');
+    p = find(p, 'concepts', 'allConcepts');
 
-    return completeFrom(p, '_deferred_listConcepts', (bindings) => {
-      const allConcepts = bindings.allConcepts as Array<Record<string, unknown>>;
-      const concepts = allConcepts.map(c => ({
-        name: c.conceptName as string,
-        purpose: c.purpose as string,
-        actions: (c.actions as string[]) || [],
-        stateFields: (c.stateFields as string[]) || [],
-        file: c.file as string,
-      }));
+    const concepts = allConcepts.map(c => ({
+      name: c.conceptName as string,
+      purpose: c.purpose as string,
+      actions: (c.actions as string[]) || [],
+      stateFields: (c.stateFields as string[]) || [],
+      file: c.file as string,
+    }));
 
-      return { variant: 'ok', concepts };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { concepts }) as StorageProgram<Result>;
   },
 
   getConcept(input: Record<string, unknown>) {
-    let p = createProgram();
     const name = input.name as string;
     if (!name) {
       return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
     p = get(p, 'concepts', `concept:${name}`, 'entry');
+    if (!entry) {
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getConcept', (bindings) => {
-      const entry = bindings.entry as Record<string, unknown> | null;
-      if (!entry) {
-        return { variant: 'notFound', name };
-      }
+    const concept = {
+      name: entry.conceptName as string,
+      purpose: entry.purpose as string,
+      typeParams: [],
+      actions: ((entry.actions as string[]) || []).map(a => ({
+        name: a,
+        params: [],
+        variants: [],
+      })),
+      stateFields: ((entry.stateFields as string[]) || []).map(f => ({
+        name: f,
+        type: 'unknown',
+        relation: 'default',
+      })),
+      invariants: [],
+      file: entry.file as string,
+    };
 
-      const concept = {
-        name: entry.conceptName as string,
-        purpose: entry.purpose as string,
-        typeParams: [],
-        actions: ((entry.actions as string[]) || []).map(a => ({
-          name: a,
-          params: [],
-          variants: [],
-        })),
-        stateFields: ((entry.stateFields as string[]) || []).map(f => ({
-          name: f,
-          type: 'unknown',
-          relation: 'default',
-        })),
-        invariants: [],
-        file: entry.file as string,
-      };
-
-      return { variant: 'ok', concept };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { concept }) as StorageProgram<Result>;
   },
 
   getAction(input: Record<string, unknown>) {
@@ -434,82 +429,71 @@ const _handler: FunctionalConceptHandler = {
     }
 
     // Try ActionEntity via kernel dispatch for full semantic detail
-    p = perform(p, 'kernel', 'getAction', { name: actionName, concept: conceptName }, 'actionResult');
+    const result = await dispatch('urn:clef/ActionEntity', 'get', {
+      name: actionName,
+      concept: conceptName,
+    });
+    if (result?.variant === 'ok') {
+      return complete(p, 'ok', { action: result.action || result }) as StorageProgram<Result>;
+    }
 
     // Fallback: read from ScoreApi's own indexed data
     p = get(p, 'concepts', `concept:${conceptName}`, 'entry');
+    if (!entry) {
+      return complete(p, 'notFound', { concept: conceptName, action: actionName }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getAction', (bindings) => {
-      const actionResult = bindings.actionResult as Record<string, unknown> | null;
-      if (actionResult?.variant === 'ok') {
-        return { variant: 'ok', action: actionResult.action || actionResult };
-      }
+    const actions = (entry.actions as string[]) || [];
+    if (!actions.includes(actionName)) {
+      return complete(p, 'notFound', { concept: conceptName, action: actionName }) as StorageProgram<Result>;
+    }
 
-      const entry = bindings.entry as Record<string, unknown> | null;
-      if (!entry) {
-        return { variant: 'notFound', concept: conceptName, action: actionName };
-      }
+    const action = {
+      name: actionName,
+      params: [],
+      variants: [],
+      description: '',
+    };
 
-      const actions = (entry.actions as string[]) || [];
-      if (!actions.includes(actionName)) {
-        return { variant: 'notFound', concept: conceptName, action: actionName };
-      }
-
-      const action = {
-        name: actionName,
-        params: [],
-        variants: [],
-        description: '',
-      };
-
-      return { variant: 'ok', action };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { action }) as StorageProgram<Result>;
   },
 
   listSyncs(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'syncs', {}, 'allSyncs');
+    p = find(p, 'syncs', 'allSyncs');
 
-    return completeFrom(p, '_deferred_listSyncs', (bindings) => {
-      const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
-      const syncs = allSyncs.map(s => ({
-        name: s.syncName as string,
-        annotation: s.annotation as string,
-        triggers: (s.triggers as string[]) || [],
-        effects: (s.effects as string[]) || [],
-        file: s.file as string,
-      }));
+    const syncs = allSyncs.map(s => ({
+      name: s.syncName as string,
+      annotation: s.annotation as string,
+      triggers: (s.triggers as string[]) || [],
+      effects: (s.effects as string[]) || [],
+      file: s.file as string,
+    }));
 
-      return { variant: 'ok', syncs };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { syncs }) as StorageProgram<Result>;
   },
 
   getSync(input: Record<string, unknown>) {
-    let p = createProgram();
     const name = input.name as string;
     if (!name) {
       return complete(p, 'notFound', { name: '' }) as StorageProgram<Result>;
     }
 
     p = get(p, 'syncs', `sync:${name}`, 'entry');
+    if (!entry) {
+      return complete(p, 'notFound', { name }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getSync', (bindings) => {
-      const entry = bindings.entry as Record<string, unknown> | null;
-      if (!entry) {
-        return { variant: 'notFound', name };
-      }
+    const sync = {
+      name: entry.syncName as string,
+      annotation: entry.annotation as string,
+      when: [],
+      where: [],
+      then: [],
+      file: entry.file as string,
+    };
 
-      const sync = {
-        name: entry.syncName as string,
-        annotation: entry.annotation as string,
-        when: [],
-        where: [],
-        then: [],
-        file: entry.file as string,
-      };
-
-      return { variant: 'ok', sync };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { sync }) as StorageProgram<Result>;
   },
 
   getFlow(input: Record<string, unknown>) {
@@ -521,49 +505,47 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'notFound', { concept: startConcept || '', action: startAction || '' }) as StorageProgram<Result>;
     }
 
-    p = find(p, 'syncs', {}, 'allSyncs');
+    // Flow tracing uses the static flow graph from the analysis
+    // layer. Walk syncs that trigger on the starting action.
+    p = find(p, 'syncs', 'allSyncs');
+    const flow: Array<{ step: number; concept: string; action: string; sync: string; variant: string }> = [];
 
-    return completeFrom(p, '_deferred_getFlow', (bindings) => {
-      const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
-      const flow: Array<{ step: number; concept: string; action: string; sync: string; variant: string }> = [];
+    let step = 0;
+    const visited = new Set<string>();
+    const queue = [`${startConcept}/${startAction}`];
 
-      let step = 0;
-      const visited = new Set<string>();
-      const queue = [`${startConcept}/${startAction}`];
+    while (queue.length > 0 && step < 50) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
 
-      while (queue.length > 0 && step < 50) {
-        const current = queue.shift()!;
-        if (visited.has(current)) continue;
-        visited.add(current);
+      const [concept, action] = current.split('/');
+      flow.push({ step: step++, concept, action, sync: '', variant: 'ok' });
 
-        const [concept, action] = current.split('/');
-        flow.push({ step: step++, concept, action, sync: '', variant: 'ok' });
-
-        // Find syncs triggered by this action
-        for (const syncEntry of allSyncs) {
-          const triggers = (syncEntry.triggers as string[]) || [];
-          if (triggers.some(t => t.includes(concept) && t.includes(action))) {
-            const effects = (syncEntry.effects as string[]) || [];
-            for (const effect of effects) {
-              flow.push({
-                step: step++,
-                concept: effect.split('/')[0] || effect,
-                action: effect.split('/')[1] || effect,
-                sync: syncEntry.syncName as string,
-                variant: 'ok',
-              });
-              queue.push(effect);
-            }
+      // Find syncs triggered by this action
+      for (const syncEntry of allSyncs) {
+        const triggers = (syncEntry.triggers as string[]) || [];
+        if (triggers.some(t => t.includes(concept) && t.includes(action))) {
+          const effects = (syncEntry.effects as string[]) || [];
+          for (const effect of effects) {
+            flow.push({
+              step: step++,
+              concept: effect.split('/')[0] || effect,
+              action: effect.split('/')[1] || effect,
+              sync: syncEntry.syncName as string,
+              variant: 'ok',
+            });
+            queue.push(effect);
           }
         }
       }
+    }
 
-      if (flow.length === 0) {
-        return { variant: 'notFound', concept: startConcept, action: startAction };
-      }
+    if (flow.length === 0) {
+      return complete(p, 'notFound', { concept: startConcept, action: startAction }) as StorageProgram<Result>;
+    }
 
-      return { variant: 'ok', flow };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { flow }) as StorageProgram<Result>;
   },
 
   // ─── Analysis Queries (Analysis Layer) ────────────────
@@ -575,82 +557,72 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph concept via kernel transport effect
-    p = perform(p, 'kernel', 'queryDependencies', { source: symbol, edgeKinds: '' }, 'depResult');
+    // Dispatch to DependenceGraph concept via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependencies', {
+      source: symbol,
+      edgeKinds: '',
+    });
+    if (result?.variant === 'ok') {
+      const deps: unknown[] = (() => {
+        try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
+      })();
+      return complete(p, 'ok', {
+        directDeps: deps,
+        transitiveDeps: [],
+      }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getDependencies', (bindings) => {
-      const result = bindings.depResult as Record<string, unknown> | null;
-      if (result?.variant === 'ok') {
-        const deps: unknown[] = (() => {
-          try { return JSON.parse(result.dependencies as string || '[]'); } catch { return []; }
-        })();
-        return {
-          variant: 'ok',
-          directDeps: deps,
-          transitiveDeps: [],
-        };
-      }
-
-      return { variant: 'ok', directDeps: [], transitiveDeps: [] };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { directDeps: [], transitiveDeps: [] }) as StorageProgram<Result>;
   },
 
   getDependents(input: Record<string, unknown>) {
-    let p = createProgram();
     const symbol = input.symbol as string;
     if (!symbol) {
       return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph concept via kernel transport effect
-    p = perform(p, 'kernel', 'queryDependents', { target: symbol, edgeKinds: '' }, 'depResult');
+    // Dispatch to DependenceGraph concept via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'queryDependents', {
+      target: symbol,
+      edgeKinds: '',
+    });
+    if (result?.variant === 'ok') {
+      const deps: unknown[] = (() => {
+        try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
+      })();
+      return complete(p, 'ok', {
+        directDeps: deps,
+        transitiveDeps: [],
+      }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getDependents', (bindings) => {
-      const result = bindings.depResult as Record<string, unknown> | null;
-      if (result?.variant === 'ok') {
-        const deps: unknown[] = (() => {
-          try { return JSON.parse(result.dependents as string || '[]'); } catch { return []; }
-        })();
-        return {
-          variant: 'ok',
-          directDeps: deps,
-          transitiveDeps: [],
-        };
-      }
-
-      return { variant: 'ok', directDeps: [], transitiveDeps: [] };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { directDeps: [], transitiveDeps: [] }) as StorageProgram<Result>;
   },
 
   getImpact(input: Record<string, unknown>) {
-    let p = createProgram();
     const file = input.file as string;
     if (!file) {
       return complete(p, 'notFound', { file: '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DependenceGraph/impactAnalysis via kernel transport effect
-    p = perform(p, 'kernel', 'impactAnalysis', { changed: JSON.stringify([file]) }, 'impactResult');
+    // Dispatch to DependenceGraph/impactAnalysis via kernel
+    const result = await dispatch('urn:clef/DependenceGraph', 'impactAnalysis', {
+      changed: JSON.stringify([file]),
+    });
+    if (result?.variant === 'ok') {
+      const affected: unknown[] = (() => {
+        try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
+      })();
+      return complete(p, 'ok', {
+        directImpact: affected,
+        transitiveImpact: [],
+      }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getImpact', (bindings) => {
-      const result = bindings.impactResult as Record<string, unknown> | null;
-      if (result?.variant === 'ok') {
-        const affected: unknown[] = (() => {
-          try { return JSON.parse(result.affected as string || '[]'); } catch { return []; }
-        })();
-        return {
-          variant: 'ok',
-          directImpact: affected,
-          transitiveImpact: [],
-        };
-      }
-
-      return { variant: 'ok', directImpact: [], transitiveImpact: [] };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { directImpact: [], transitiveImpact: [] }) as StorageProgram<Result>;
   },
 
   getDataFlow(input: Record<string, unknown>) {
-    let p = createProgram();
     const from = input.from as string;
     const to = input.to as string;
 
@@ -658,26 +630,24 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'noPath', { from: from || '', to: to || '' }) as StorageProgram<Result>;
     }
 
-    // Dispatch to DataFlowPath/trace via kernel transport effect
-    p = perform(p, 'kernel', 'traceDataFlow', { source: from, sink: to }, 'flowResult');
+    // Dispatch to DataFlowPath/trace via kernel
+    const result = await dispatch('urn:clef/DataFlowPath', 'trace', {
+      source: from,
+      sink: to,
+    });
+    if (result?.variant === 'ok') {
+      const paths: unknown[] = (() => {
+        try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
+      })();
+      return complete(p, 'ok', { paths }) as StorageProgram<Result>;
+    }
 
-    return completeFrom(p, '_deferred_getDataFlow', (bindings) => {
-      const result = bindings.flowResult as Record<string, unknown> | null;
-      if (result?.variant === 'ok') {
-        const paths: unknown[] = (() => {
-          try { return JSON.parse(result.paths as string || '[]'); } catch { return []; }
-        })();
-        return { variant: 'ok', paths };
-      }
-
-      return { variant: 'ok', paths: [] };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { paths: [] }) as StorageProgram<Result>;
   },
 
   // ─── Discovery Queries (Discovery Layer) ──────────────
 
   search(input: Record<string, unknown>) {
-    let p = createProgram();
     const query = (input.query as string) || '';
     const limit = (input.limit as number) || 20;
 
@@ -685,71 +655,68 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'empty', { query: '' }) as StorageProgram<Result>;
     }
 
-    p = find(p, 'concepts', {}, 'concepts');
-    p = find(p, 'syncs', {}, 'syncs');
-    p = find(p, 'symbols', {}, 'symbols');
+    const queryLower = query.toLowerCase();
+    const results: Array<{ name: string; kind: string; file: string; line: number; score: number; snippet: string }> = [];
 
-    return completeFrom(p, '_deferred_search', (bindings) => {
-      const queryLower = query.toLowerCase();
-      const results: Array<{ name: string; kind: string; file: string; line: number; score: number; snippet: string }> = [];
-
-      const concepts = bindings.concepts as Array<Record<string, unknown>>;
-      for (const c of concepts) {
-        const name = c.conceptName as string;
-        const purpose = c.purpose as string;
-        const combined = `${name} ${purpose}`.toLowerCase();
-        if (combined.includes(queryLower)) {
-          results.push({
-            name,
-            kind: 'concept',
-            file: c.file as string,
-            line: 0,
-            score: name.toLowerCase().includes(queryLower) ? 1.0 : 0.7,
-            snippet: purpose,
-          });
-        }
+    // Search concepts
+    p = find(p, 'concepts', 'concepts');
+    for (const c of concepts) {
+      const name = c.conceptName as string;
+      const purpose = c.purpose as string;
+      const combined = `${name} ${purpose}`.toLowerCase();
+      if (combined.includes(queryLower)) {
+        results.push({
+          name,
+          kind: 'concept',
+          file: c.file as string,
+          line: 0,
+          score: name.toLowerCase().includes(queryLower) ? 1.0 : 0.7,
+          snippet: purpose,
+        });
       }
+    }
 
-      const syncs = bindings.syncs as Array<Record<string, unknown>>;
-      for (const s of syncs) {
-        const name = s.syncName as string;
-        if (name.toLowerCase().includes(queryLower)) {
-          results.push({
-            name,
-            kind: 'sync',
-            file: s.file as string,
-            line: 0,
-            score: 0.8,
-            snippet: `${(s.triggers as string[])?.join(', ')} → ${(s.effects as string[])?.join(', ')}`,
-          });
-        }
+    // Search syncs
+    p = find(p, 'syncs', 'syncs');
+    for (const s of syncs) {
+      const name = s.syncName as string;
+      if (name.toLowerCase().includes(queryLower)) {
+        results.push({
+          name,
+          kind: 'sync',
+          file: s.file as string,
+          line: 0,
+          score: 0.8,
+          snippet: `${(s.triggers as string[])?.join(', ')} → ${(s.effects as string[])?.join(', ')}`,
+        });
       }
+    }
 
-      const symbols = bindings.symbols as Array<Record<string, unknown>>;
-      for (const sym of symbols) {
-        const name = sym.symbolName as string;
-        if (name.toLowerCase().includes(queryLower)) {
-          results.push({
-            name,
-            kind: sym.symbolKind as string,
-            file: sym.file as string,
-            line: sym.line as number,
-            score: 0.6,
-            snippet: `${sym.symbolKind} in ${sym.file}:${sym.line}`,
-          });
-        }
+    // Search symbols
+    p = find(p, 'symbols', 'symbols');
+    for (const sym of symbols) {
+      const name = sym.symbolName as string;
+      if (name.toLowerCase().includes(queryLower)) {
+        results.push({
+          name,
+          kind: sym.symbolKind as string,
+          file: sym.file as string,
+          line: sym.line as number,
+          score: 0.6,
+          snippet: `${sym.symbolKind} in ${sym.file}:${sym.line}`,
+        });
       }
+    }
 
-      // Sort by score descending and limit
-      results.sort((a, b) => b.score - a.score);
-      const limited = results.slice(0, limit);
+    // Sort by score descending and limit
+    results.sort((a, b) => b.score - a.score);
+    const limited = results.slice(0, limit);
 
-      if (limited.length === 0) {
-        return { variant: 'empty', query };
-      }
+    if (limited.length === 0) {
+      return complete(p, 'empty', { query }) as StorageProgram<Result>;
+    }
 
-      return { variant: 'ok', results: limited };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { results: limited }) as StorageProgram<Result>;
   },
 
   explain(input: Record<string, unknown>) {
@@ -759,119 +726,114 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'notFound', { symbol: '' }) as StorageProgram<Result>;
     }
 
-    // Check concepts, syncs, and symbols
+    // Check concepts first
     p = get(p, 'concepts', `concept:${symbol}`, 'conceptEntry');
+    if (conceptEntry) {
+      const name = conceptEntry.conceptName as string;
+      const purpose = conceptEntry.purpose as string;
+      const actions = (conceptEntry.actions as string[]) || [];
+      const file = conceptEntry.file as string;
+
+      return complete(p, 'ok', {
+        summary: `${name} is a concept defined in ${file}. ${purpose} It has ${actions.length} actions: ${actions.join(', ')}.`,
+        kind: 'concept',
+        definedIn: file,
+        usedBy: [],
+        relationships: [],
+      }) as StorageProgram<Result>;
+    }
+
+    // Check syncs
     p = get(p, 'syncs', `sync:${symbol}`, 'syncEntry');
+    if (syncEntry) {
+      const name = syncEntry.syncName as string;
+      const annotation = syncEntry.annotation as string;
+      const triggers = (syncEntry.triggers as string[]) || [];
+      const effects = (syncEntry.effects as string[]) || [];
+      const file = syncEntry.file as string;
+
+      return complete(p, 'ok', {
+        summary: `${name} is an [${annotation}] sync rule defined in ${file}. It triggers on ${triggers.join(', ')} and invokes ${effects.join(', ')}.`,
+        kind: 'sync',
+        definedIn: file,
+        usedBy: [],
+        relationships: triggers.concat(effects),
+      }) as StorageProgram<Result>;
+    }
+
+    // Check symbols
     p = find(p, 'symbols', { symbolName: symbol }, 'allSymbols');
+    if (allSymbols.length > 0) {
+      const first = allSymbols[0];
+      const name = first.symbolName as string;
+      const kind = first.symbolKind as string;
+      const file = first.file as string;
+      const line = first.line as number;
 
-    return completeFrom(p, '_deferred_explain', (bindings) => {
-      const conceptEntry = bindings.conceptEntry as Record<string, unknown> | null;
-      if (conceptEntry) {
-        const name = conceptEntry.conceptName as string;
-        const purpose = conceptEntry.purpose as string;
-        const actions = (conceptEntry.actions as string[]) || [];
-        const file = conceptEntry.file as string;
+      return complete(p, 'ok', {
+        summary: `${name} is a ${kind} defined at ${file}:${line}. It appears in ${allSymbols.length} location(s).`,
+        kind,
+        definedIn: `${file}:${line}`,
+        usedBy: allSymbols.slice(1).map(s => `${s.file}:${s.line}`),
+        relationships: [],
+      }) as StorageProgram<Result>;
+    }
 
-        return {
-          variant: 'ok',
-          summary: `${name} is a concept defined in ${file}. ${purpose} It has ${actions.length} actions: ${actions.join(', ')}.`,
-          kind: 'concept',
-          definedIn: file,
-          usedBy: [],
-          relationships: [],
-        };
-      }
-
-      const syncEntry = bindings.syncEntry as Record<string, unknown> | null;
-      if (syncEntry) {
-        const name = syncEntry.syncName as string;
-        const annotation = syncEntry.annotation as string;
-        const triggers = (syncEntry.triggers as string[]) || [];
-        const effects = (syncEntry.effects as string[]) || [];
-        const file = syncEntry.file as string;
-
-        return {
-          variant: 'ok',
-          summary: `${name} is an [${annotation}] sync rule defined in ${file}. It triggers on ${triggers.join(', ')} and invokes ${effects.join(', ')}.`,
-          kind: 'sync',
-          definedIn: file,
-          usedBy: [],
-          relationships: triggers.concat(effects),
-        };
-      }
-
-      const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
-      if (allSymbols.length > 0) {
-        const first = allSymbols[0];
-        const name = first.symbolName as string;
-        const kind = first.symbolKind as string;
-        const file = first.file as string;
-        const line = first.line as number;
-
-        return {
-          variant: 'ok',
-          summary: `${name} is a ${kind} defined at ${file}:${line}. It appears in ${allSymbols.length} location(s).`,
-          kind,
-          definedIn: `${file}:${line}`,
-          usedBy: allSymbols.slice(1).map(s => `${s.file}:${s.line}`),
-          relationships: [],
-        };
-      }
-
-      return { variant: 'notFound', symbol };
-    }) as StorageProgram<Result>;
+    return complete(p, 'notFound', { symbol }) as StorageProgram<Result>;
   },
 
   // ─── Implementation Queries ─────────────────────────────
 
   implementationGaps(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', {}, 'allConcepts');
-    p = find(p, 'handlers', {}, 'allHandlers');
+    p = find(p, 'concepts', 'allConcepts');
+    p = find(p, 'handlers', 'allHandlers');
 
-    return completeFrom(p, '_deferred_implementationGaps', (bindings) => {
-      const allConcepts = bindings.allConcepts as Array<Record<string, unknown>>;
-      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
-      const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
+    const gaps: Array<{ concept: string; action: string; declaredIn: string }> = [];
 
-      for (const concept of allConcepts) {
-        const conceptName = concept.conceptName as string;
-        const actions = (concept.actions as string[]) || [];
-        const file = concept.file as string;
+    for (const concept of allConcepts) {
+      const conceptName = concept.conceptName as string;
+      const actions = (concept.actions as string[]) || [];
+      const file = concept.file as string;
 
-        // Find handler for this concept
-        const handler = allHandlers.find(h =>
-          typeof h.handlerConcept === 'string' &&
-          h.handlerConcept.toLowerCase() === conceptName.toLowerCase(),
-        );
+      // Find handler for this concept
+      const handler = allHandlers.find(h =>
+        typeof h.handlerConcept === 'string' &&
+        h.handlerConcept.toLowerCase() === conceptName.toLowerCase(),
+      );
 
-        if (!handler) {
-          for (const action of actions) {
-            gaps.push({ concept: conceptName, action, declaredIn: file });
-          }
-          continue;
-        }
-
-        const implementedActions: string[] = (() => {
-          try {
-            const parsed = JSON.parse(handler.actionMethods as string || '[]');
-            return parsed.map((m: { name: string }) => m.name);
-          } catch {
-            return (handler.handlerActions as string[]) || [];
-          }
-        })();
-
+      if (!handler) {
+        // No handler at all — every action is a gap
         for (const action of actions) {
-          if (!implementedActions.some(impl =>
-            impl.toLowerCase() === action.toLowerCase(),
-          )) {
-            gaps.push({ concept: conceptName, action, declaredIn: file });
-          }
+          gaps.push({ concept: conceptName, action, declaredIn: file });
         }
+        continue;
       }
 
-      return { variant: 'ok', gaps };
-    }) as StorageProgram<Result>;
+      // Compare declared actions against implemented ones
+      const implementedActions: string[] = (() => {
+        try {
+          const parsed = JSON.parse(handler.actionMethods as string || '[]');
+          return parsed.map((m: { name: string }) => m.name);
+        } catch {
+          return (handler.handlerActions as string[]) || [];
+        }
+      })();
+
+      for (const action of actions) {
+        if (!implementedActions.some(impl =>
+          impl.toLowerCase() === action.toLowerCase(),
+        )) {
+          gaps.push({ concept: conceptName, action, declaredIn: file });
+        }
+      }
+    }
+
+    if (gaps.length === 0) {
+      return complete(p, 'ok', { gaps: [] }) as StorageProgram<Result>;
+    }
+
+    return complete(p, 'ok', { gaps }) as StorageProgram<Result>;
   },
 
   resolveStackTrace(input: Record<string, unknown>) {
@@ -881,35 +843,31 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'ok', { frames: [] }) as StorageProgram<Result>;
     }
 
-    p = find(p, 'handlers', {}, 'allHandlers');
+    const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
+    const frames: Array<Record<string, unknown>> = [];
+    let match: RegExpExecArray | null;
+    p = find(p, 'handlers', 'allHandlers');
 
-    return completeFrom(p, '_deferred_resolveStackTrace', (bindings) => {
-      const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
-      const frameRegex = /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/g;
-      const frames: Array<Record<string, unknown>> = [];
-      let match: RegExpExecArray | null;
+    while ((match = frameRegex.exec(stackTrace)) !== null) {
+      const file = match[1];
+      const line = parseInt(match[2], 10);
+      const col = parseInt(match[3], 10);
 
-      while ((match = frameRegex.exec(stackTrace)) !== null) {
-        const file = match[1];
-        const line = parseInt(match[2], 10);
-        const col = parseInt(match[3], 10);
+      const handler = allHandlers.find(h => h.handlerFile === file || h.sourceFile === file);
 
-        const handler = allHandlers.find(h => h.handlerFile === file || h.sourceFile === file);
+      frames.push({
+        file,
+        line,
+        col,
+        handler: handler ? handler.id : null,
+        concept: handler ? (handler.handlerConcept || handler.concept) : null,
+        actionMethod: null,
+        astNode: null,
+        symbol: handler ? handler.symbol : file.split('/').pop(),
+      });
+    }
 
-        frames.push({
-          file,
-          line,
-          col,
-          handler: handler ? handler.id : null,
-          concept: handler ? (handler.handlerConcept || handler.concept) : null,
-          actionMethod: null,
-          astNode: null,
-          symbol: handler ? handler.symbol : file.split('/').pop(),
-        });
-      }
-
-      return { variant: 'ok', frames };
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { frames }) as StorageProgram<Result>;
   },
 
   traceEndpoint(input: Record<string, unknown>) {
@@ -918,45 +876,36 @@ const _handler: FunctionalConceptHandler = {
     const path = input.path as string;
     const method = input.method as string;
 
-    // Dispatch to InterfaceEntity via kernel transport effect
-    p = perform(p, 'kernel', 'traceEndpointToAction', { target, path, method }, 'traceResult');
+    // Dispatch to InterfaceEntity via kernel
+    const result = await dispatch('urn:clef/InterfaceEntity', 'traceEndpointToAction', {
+      target,
+      path,
+      method,
+    });
+    if (result?.variant === 'ok') {
+      return result;
+    }
 
-    return completeFrom(p, '_deferred_traceEndpoint', (bindings) => {
-      const result = bindings.traceResult as Record<string, unknown> | null;
-      if (result?.variant === 'ok') {
-        return result;
-      }
-
-      return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
-    }) as StorageProgram<Result>;
+    return complete(p, 'notFound', { target: target || '', path: path || '', method: method || '' }) as StorageProgram<Result>;
   },
 
   // ─── Index Management ─────────────────────────────────
 
   status(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', {}, 'concepts');
-    p = find(p, 'syncs', {}, 'syncs');
-    p = find(p, 'symbols', {}, 'symbols');
-    p = find(p, 'files', {}, 'files');
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
     p = get(p, 'meta', 'concepts', 'meta');
 
-    return completeFrom(p, '_deferred_status', (bindings) => {
-      const concepts = bindings.concepts as Array<Record<string, unknown>>;
-      const syncs = bindings.syncs as Array<Record<string, unknown>>;
-      const symbols = bindings.symbols as Array<Record<string, unknown>>;
-      const files = bindings.files as Array<Record<string, unknown>>;
-      const meta = bindings.meta as Record<string, unknown> | null;
-
-      return {
-        variant: 'ok',
-        indexed: concepts.length > 0 || files.length > 0,
-        conceptCount: concepts.length,
-        symbolCount: symbols.length,
-        fileCount: files.length,
-        syncCount: syncs.length,
-        lastIndexed: meta?.lastUpdated || new Date(0).toISOString(),
-      };
+    return complete(p, 'ok', {
+      indexed: concepts.length > 0 || files.length > 0,
+      conceptCount: concepts.length,
+      symbolCount: symbols.length,
+      fileCount: files.length,
+      syncCount: syncs.length,
+      lastIndexed: meta?.lastUpdated || new Date(0).toISOString(),
     }) as StorageProgram<Result>;
   },
 
@@ -964,35 +913,31 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const start = Date.now();
 
-    p = find(p, 'concepts', {}, 'concepts');
-    p = find(p, 'syncs', {}, 'syncs');
-    p = find(p, 'symbols', {}, 'symbols');
-    p = find(p, 'files', {}, 'files');
+    // Clear existing index
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
 
-    return completeFrom(p, '_deferred_reindex', (bindings) => {
-      const concepts = bindings.concepts as Array<Record<string, unknown>>;
-      const syncs = bindings.syncs as Array<Record<string, unknown>>;
-      const symbols = bindings.symbols as Array<Record<string, unknown>>;
-      const files = bindings.files as Array<Record<string, unknown>>;
+    for (const c of concepts) p = del(p, 'concepts', `concept:${c.conceptName}`);
+    for (const s of syncs) p = del(p, 'syncs', `sync:${s.syncName}`);
+    for (const sym of symbols) p = del(p, 'symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
+    for (const f of files) p = del(p, 'files', `file:${f.filePath}`);
 
-      // Build deletion instructions for the interpreter
-      const deletions: Array<{ rel: string; key: string }> = [];
-      for (const c of concepts) deletions.push({ rel: 'concepts', key: `concept:${c.conceptName}` });
-      for (const s of syncs) deletions.push({ rel: 'syncs', key: `sync:${s.syncName}` });
-      for (const sym of symbols) deletions.push({ rel: 'symbols', key: `symbol:${sym.symbolName}:${sym.file}:${sym.line}` });
-      for (const f of files) deletions.push({ rel: 'files', key: `file:${f.filePath}` });
+    // The actual reindex is triggered by syncs:
+    // reindex → completion fires ScoreOnDeploySync and other
+    // indexing syncs which repopulate the index.
+    // This action returns immediately; the sync engine handles
+    // the cascading reindex.
 
-      const duration = Date.now() - start;
+    const duration = Date.now() - start;
 
-      return {
-        variant: 'ok',
-        _deletions: deletions,
-        conceptCount: 0,
-        symbolCount: 0,
-        fileCount: 0,
-        syncCount: 0,
-        duration,
-      };
+    return complete(p, 'ok', {
+      conceptCount: 0,
+      symbolCount: 0,
+      fileCount: 0,
+      syncCount: 0,
+      duration,
     }) as StorageProgram<Result>;
   },
 };

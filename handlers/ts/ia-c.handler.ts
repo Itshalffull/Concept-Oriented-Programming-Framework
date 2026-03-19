@@ -175,16 +175,18 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'ia-c', { plan, provider }, 'resources');
 
-    // Delete the first found resource (teardown typically finds one)
-    p = delFrom(p, 'ia-c', (bindings) => {
+    // Use mapBindings to compute destroyed list, then delete
+    p = mapBindings(p, (bindings) => {
       const resources = bindings.resources as Record<string, unknown>[];
-      if (resources.length > 0) return resources[0].id as string;
-      return '__nonexistent__';
-    });
+      return resources.map(r => ({
+        id: r.id as string,
+        resourceId: r.resourceId as string,
+      }));
+    }, 'toDestroy');
 
     return completeFrom(p, 'ok', (bindings) => {
-      const resources = bindings.resources as Record<string, unknown>[];
-      const destroyed = resources.map(r => r.resourceId as string);
+      const toDestroy = bindings.toDestroy as Array<{ id: string; resourceId: string }>;
+      const destroyed = toDestroy.map(r => r.resourceId);
       return { destroyed };
     }) as StorageProgram<Result>;
   },

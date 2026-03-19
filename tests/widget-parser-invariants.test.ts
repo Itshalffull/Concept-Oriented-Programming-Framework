@@ -60,7 +60,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('example');
       expect(inv.name).toBe('clicking idle card selects it');
@@ -118,7 +118,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('always');
       expect(inv.name).toBe('FSM deterministic');
@@ -147,7 +147,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('never');
       expect(inv.name).toBe('unreachable state');
@@ -175,7 +175,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('forall');
       expect(inv.name).toBe('all events handled');
@@ -208,7 +208,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('eventually');
       expect(inv.name).toBe('loading completes');
@@ -238,7 +238,7 @@ describe('Widget Parser — Structured Invariants', () => {
         }
       `;
       const manifest = parseWidgetFile(source);
-      expect(manifest.invariants.length).toBeGreaterThanOrEqual(1);
+      expect(manifest.invariants).toHaveLength(1);
       const inv = manifest.invariants![0];
       expect(inv.kind).toBe('requires_ensures');
       expect(inv.targetAction).toBe('validate');

@@ -1,3 +1,4 @@
+// @migrated dsl-constructs 2026-03-18
 // ScoreIndex Concept Implementation
 //
 // Materialized index backing ScoreApi queries. Maintains
@@ -5,19 +6,26 @@
 // fast LLM-friendly lookups. Auto-registered as a built-in
 // concept in every Clef runtime.
 
-import type { ConceptHandler } from '@clef/runtime';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
+import {
+  createProgram, complete, type StorageProgram,
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
-export const scoreIndexHandler: ConceptHandler = {
-  async upsertConcept(input, storage) {
+type Result = { variant: string; [key: string]: unknown };
+
+const _handler: FunctionalConceptHandler = {
+  upsertConcept(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'error', message: 'name is required' };
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
 
     const id = `concept:${name}`;
     const now = new Date().toISOString();
 
-    await storage.put('concepts', id, {
+    p = put(p, 'concepts', id, {
       conceptName: name,
       purpose: (input.purpose as string) || '',
       actions: (input.actions as string[]) || [],
@@ -25,24 +33,25 @@ export const scoreIndexHandler: ConceptHandler = {
       file: (input.file as string) || '',
     });
 
-    await storage.put('meta', 'concepts', {
+    p = put(p, 'meta', 'concepts', {
       kind: 'concepts',
       lastUpdated: now,
     });
 
-    return { variant: 'ok', index: id };
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
   },
 
-  async upsertSync(input, storage) {
+  upsertSync(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     if (!name) {
-      return { variant: 'error', message: 'name is required' };
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
 
     const id = `sync:${name}`;
     const now = new Date().toISOString();
 
-    await storage.put('syncs', id, {
+    p = put(p, 'syncs', id, {
       syncName: name,
       annotation: (input.annotation as string) || 'eager',
       triggers: (input.triggers as string[]) || [],
@@ -50,26 +59,27 @@ export const scoreIndexHandler: ConceptHandler = {
       file: (input.file as string) || '',
     });
 
-    await storage.put('meta', 'syncs', {
+    p = put(p, 'meta', 'syncs', {
       kind: 'syncs',
       lastUpdated: now,
     });
 
-    return { variant: 'ok', index: id };
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
   },
 
-  async upsertSymbol(input, storage) {
+  upsertSymbol(input: Record<string, unknown>) {
+    let p = createProgram();
     const name = input.name as string;
     const file = input.file as string;
     const line = input.line as number;
     if (!name) {
-      return { variant: 'error', message: 'name is required' };
+      return complete(p, 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
 
     const id = `symbol:${name}:${file}:${line}`;
     const now = new Date().toISOString();
 
-    await storage.put('symbols', id, {
+    p = put(p, 'symbols', id, {
       symbolName: name,
       symbolKind: (input.kind as string) || 'unknown',
       file: file || '',
@@ -77,111 +87,116 @@ export const scoreIndexHandler: ConceptHandler = {
       scope: (input.scope as string) || '',
     });
 
-    await storage.put('meta', 'symbols', {
+    p = put(p, 'meta', 'symbols', {
       kind: 'symbols',
       lastUpdated: now,
     });
 
-    return { variant: 'ok', index: id };
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
   },
 
-  async upsertFile(input, storage) {
+  upsertFile(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'error', message: 'path is required' };
+      return complete(p, 'error', { message: 'path is required' }) as StorageProgram<Result>;
     }
 
     const id = `file:${path}`;
     const now = new Date().toISOString();
 
-    await storage.put('files', id, {
+    p = put(p, 'files', id, {
       filePath: path,
       language: (input.language as string) || 'unknown',
       role: (input.role as string) || 'source',
       definitions: (input.definitions as string[]) || [],
     });
 
-    await storage.put('meta', 'files', {
+    p = put(p, 'meta', 'files', {
       kind: 'files',
       lastUpdated: now,
     });
 
-    return { variant: 'ok', index: id };
+    return complete(p, 'ok', { index: id }) as StorageProgram<Result>;
   },
 
-  async removeByFile(input, storage) {
+  removeByFile(input: Record<string, unknown>) {
+    let p = createProgram();
     const path = input.path as string;
     if (!path) {
-      return { variant: 'ok', removed: 0 };
+      return complete(p, 'ok', { removed: 0 }) as StorageProgram<Result>;
     }
 
     let removed = 0;
 
     // Remove file entry
     const fileId = `file:${path}`;
-    const existing = await storage.get('files', fileId);
+    p = get(p, 'files', fileId, 'existing');
     if (existing) {
-      await storage.del('files', fileId);
+      p = del(p, 'files', fileId);
       removed++;
     }
 
     // Remove symbols from this file
-    const symbols = await storage.find('symbols', { file: path });
+    p = find(p, 'symbols', { file: path }, 'symbols');
     for (const sym of symbols) {
       const symId = `symbol:${sym.symbolName}:${sym.file}:${sym.line}`;
-      await storage.del('symbols', symId);
+      p = del(p, 'symbols', symId);
       removed++;
     }
 
     // Remove concepts from this file
-    const concepts = await storage.find('concepts', { file: path });
+    p = find(p, 'concepts', { file: path }, 'concepts');
     for (const c of concepts) {
       const cId = `concept:${c.conceptName}`;
-      await storage.del('concepts', cId);
+      p = del(p, 'concepts', cId);
       removed++;
     }
 
     // Remove syncs from this file
-    const syncs = await storage.find('syncs', { file: path });
+    p = find(p, 'syncs', { file: path }, 'syncs');
     for (const s of syncs) {
       const sId = `sync:${s.syncName}`;
-      await storage.del('syncs', sId);
+      p = del(p, 'syncs', sId);
       removed++;
     }
 
-    return { variant: 'ok', removed };
+    return complete(p, 'ok', { removed }) as StorageProgram<Result>;
   },
 
-  async clear(_input, storage) {
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
+  clear(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
 
     const total = concepts.length + syncs.length + symbols.length + files.length;
 
-    for (const c of concepts) await storage.del('concepts', `concept:${c.conceptName}`);
-    for (const s of syncs) await storage.del('syncs', `sync:${s.syncName}`);
-    for (const sym of symbols) await storage.del('symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
-    for (const f of files) await storage.del('files', `file:${f.filePath}`);
+    for (const c of concepts) p = del(p, 'concepts', `concept:${c.conceptName}`);
+    for (const s of syncs) p = del(p, 'syncs', `sync:${s.syncName}`);
+    for (const sym of symbols) p = del(p, 'symbols', `symbol:${sym.symbolName}:${sym.file}:${sym.line}`);
+    for (const f of files) p = del(p, 'files', `file:${f.filePath}`);
 
-    return { variant: 'ok', cleared: total };
+    return complete(p, 'ok', { cleared: total }) as StorageProgram<Result>;
   },
 
-  async stats(_input, storage) {
-    const concepts = await storage.find('concepts');
-    const syncs = await storage.find('syncs');
-    const symbols = await storage.find('symbols');
-    const files = await storage.find('files');
-    const meta = await storage.get('meta', 'concepts');
+  stats(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'concepts', 'concepts');
+    p = find(p, 'syncs', 'syncs');
+    p = find(p, 'symbols', 'symbols');
+    p = find(p, 'files', 'files');
+    p = get(p, 'meta', 'concepts', 'meta');
 
-    return {
-      variant: 'ok',
+    return complete(p, 'ok', {
       conceptCount: concepts.length,
       syncCount: syncs.length,
       symbolCount: symbols.length,
       fileCount: files.length,
       lastUpdated: meta?.lastUpdated || new Date().toISOString(),
-    };
+    }) as StorageProgram<Result>;
   },
 };
+
+export const scoreIndexHandler = autoInterpret(_handler);
