@@ -153,6 +153,67 @@ Refine the generated handler. Default style is FUNCTIONAL (StorageProgram):
 
 ## Anti-Patterns
 
+### _variant convention (DOES NOT WORK)
+Returning `{ _variant: 'notfound' }` from a `completeFrom` callback does NOT change the variant. The `completeFrom(p, 'ok', fn)` always emits variant `'ok'` — the `_variant` field in the callback return is just ignored data.
+
+**Bad:**
+```typescript
+return completeFrom(p, 'ok', (bindings) => {
+  const entry = all.find(...);
+  if (!entry) return { _variant: 'notfound' };  // BROKEN: variant is still 'ok'
+  return { handler: entry.id };
+});
+```
+
+**Good:**
+```typescript
+p = mapBindings(p, (bindings) => {
+  const all = (bindings.all || []) as Array<Record<string, unknown>>;
+  return all.find(...) || null;
+}, '_found');
+return branch(p,
+  (bindings) => !!bindings._found,
+  (b) => completeFrom(b, 'ok', (bindings) => ({
+    handler: (bindings._found as Record<string, unknown>).id as string,
+  })),
+  (b) => complete(b, 'notfound', {}),
+);
+```
+
+### _puts convention (DOES NOT WORK)
+Returning `{ _puts: [{ rel, key, value }] }` from a `completeFrom` callback does NOT write to storage. The interpreter treats `completeFrom` as a terminal pure value — it never inspects `_puts`.
+
+**Bad:**
+```typescript
+return completeFrom(p, 'ok', (bindings) => ({
+  variant: 'ok',
+  _puts: [{ rel: 'items', key: 'abc', value: record }],
+  item: id,
+}));
+```
+
+**Good (static key):**
+```typescript
+let p2 = putFrom(p, 'items', 'abc', (bindings) => record);
+return completeFrom(p2, 'ok', (bindings) => ({ item: id }));
+```
+
+**Good (dynamic key — use imperative style):**
+```typescript
+// In the imperative handler override:
+async myAction(input, storage) {
+  const id = generateId();
+  await storage.put('items', id, record);
+  return { variant: 'ok', item: id };
+}
+```
+
+### Dynamic storage keys in functional style
+`putFrom(p, rel, key, fn)` requires `key` to be a static string known at build time. If the key is computed at runtime (e.g., a generated UUID), you MUST use imperative style for that action.
+
+### Actions requiring stateful engine calls
+If an action needs to call methods on a stateful class (e.g., SyncEngine, Parser), it cannot be expressed as a pure StorageProgram. Use imperative style for those actions while keeping other actions functional.
+
 ### Missing error variant
 Handler doesn't return error variant on failure — caller gets an unstructured exception.
 

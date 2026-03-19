@@ -581,6 +581,56 @@ actionName(input) {
 | Compute from fetched data | `const count = items.length` | `mapBindings(p, (b) => (b.items as any[]).length, 'count')` |
 | Filter fetched results | `const filtered = items.filter(...)` | `mapBindings(p, (b) => (b.items as any[]).filter(...), 'filtered')` |
 
+### CRITICAL: Variant and Storage Anti-Patterns
+
+#### _variant convention (DOES NOT WORK)
+Returning `{ _variant: 'notfound' }` from a `completeFrom` callback does NOT change the variant. The variant is always the second argument to `completeFrom`. The `_variant` field is just ignored data.
+
+**Bad:**
+```typescript
+return completeFrom(p, 'ok', (bindings) => {
+  if (!entry) return { _variant: 'notfound' };  // BROKEN: variant is still 'ok'
+  return { handler: entry.id };
+});
+```
+
+**Good:** Use `mapBindings` + `branch` to select the correct variant:
+```typescript
+p = mapBindings(p, (b) => (b.all as any[]).find(...) || null, '_found');
+return branch(p,
+  (b) => !!b._found,
+  (b) => completeFrom(b, 'ok', (b) => ({ handler: (b._found as any).id })),
+  (b) => complete(b, 'notfound', {}),
+);
+```
+
+#### _puts convention (DOES NOT WORK)
+Returning `{ _puts: [...] }` from `completeFrom` does NOT write to storage. The interpreter treats `completeFrom` results as terminal pure values.
+
+**Good:** Use `putFrom` before `completeFrom`:
+```typescript
+let p2 = putFrom(p, 'items', key, (b) => record);
+return completeFrom(p2, 'ok', (b) => ({ item: id }));
+```
+
+#### Dynamic storage keys require imperative style
+`putFrom(p, rel, key, fn)` requires `key` to be a static string. If the key is computed at runtime (e.g., a generated UUID), use imperative style for that action:
+```typescript
+const baseHandler = autoInterpret(_handler);
+const handler = {
+  ...baseHandler,
+  async myAction(input, storage) {
+    const id = generateId();
+    await storage.put('items', id, record);
+    return { variant: 'ok', item: id };
+  },
+};
+export const myHandler = handler;
+```
+
+#### Actions requiring stateful engine calls
+If an action needs to call methods on a stateful class instance, it cannot be expressed as a pure StorageProgram. Use imperative style for those specific actions.
+
 ### Lens-Based State Access
 
 Use typed, composable lenses instead of raw string keys:
