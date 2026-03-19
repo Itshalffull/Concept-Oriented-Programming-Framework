@@ -24,14 +24,14 @@ const _handler: FunctionalConceptHandler = {
     const kind = input.kind as string;
     const targetEntity = input.targetEntity as string;
 
-    const key = `test:${name}`;
-    p = get(p, 'tests', key, 'existing');
+    p = find(p, 'tests', { name }, 'existingList');
 
     const id = crypto.randomUUID();
+    const key = `test:${id}`;
 
     let thenProg = createProgram();
     thenProg = completeFrom(thenProg, 'alreadyRegistered', (bindings) => ({
-      existing: (bindings.existing as any).id,
+      existing: ((bindings.existingList as any[])[0]).id,
     }));
 
     let elseProg = createProgram();
@@ -52,24 +52,24 @@ const _handler: FunctionalConceptHandler = {
     });
     elseProg = complete(elseProg, 'ok', { test: id });
 
-    return branch(p, (b) => b.existing != null, thenProg, elseProg) as StorageProgram<Result>;
+    return branch(p, (b) => (b.existingList as any[]).length > 0, thenProg, elseProg) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
     let p = createProgram();
     const name = input.name as string;
 
-    p = get(p, 'tests', `test:${name}`, 'entry');
+    p = find(p, 'tests', { name }, 'matches');
 
     let thenProg = createProgram();
     thenProg = completeFrom(thenProg, 'ok', (bindings) => ({
-      test: (bindings.entry as any).id,
+      test: ((bindings.matches as any[])[0]).id,
     }));
 
     let elseProg = createProgram();
     elseProg = complete(elseProg, 'notfound', {});
 
-    return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
+    return branch(p, (b) => (b.matches as any[]).length > 0, thenProg, elseProg) as StorageProgram<Result>;
   },
 
   findByEntity(input: Record<string, unknown>) {
@@ -193,11 +193,11 @@ const _handler: FunctionalConceptHandler = {
 
   recordResult(input: Record<string, unknown>) {
     let p = createProgram();
-    const testName = input.test as string;
+    const testId = input.test as string;
     const result = input.result as string;
     const duration = input.duration as number;
 
-    const key = `test:${testName}`;
+    const key = `test:${testId}`;
     p = get(p, 'tests', key, 'entry');
 
     let thenProg = createProgram();
@@ -206,12 +206,10 @@ const _handler: FunctionalConceptHandler = {
       lastResult: result,
       lastDuration: duration,
     }));
-    thenProg = completeFrom(thenProg, 'ok', (bindings) => ({
-      test: (bindings.entry as any).id,
-    }));
+    thenProg = complete(thenProg, 'ok', { test: testId });
 
     let elseProg = createProgram();
-    elseProg = complete(elseProg, 'ok', { test: testName });
+    elseProg = complete(elseProg, 'ok', { test: testId });
 
     return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
   },
