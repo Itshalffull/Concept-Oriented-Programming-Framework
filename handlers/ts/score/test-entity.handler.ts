@@ -8,8 +8,8 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, del, merge, branch, complete, completeFrom,
-  mapBindings, putFrom, mergeFrom, pure, type StorageProgram,
+  createProgram, get, find, put, branch, complete, completeFrom,
+  mapBindings, putFrom, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -122,7 +122,7 @@ const _handler: FunctionalConceptHandler = {
 
   findFailing(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'tests', 'all');
+    p = find(p, 'tests', {}, 'all');
 
     p = mapBindings(p, (bindings) => {
       const items = bindings.all as any[];
@@ -193,30 +193,25 @@ const _handler: FunctionalConceptHandler = {
 
   recordResult(input: Record<string, unknown>) {
     let p = createProgram();
-    const testId = input.test as string;
+    const testName = input.test as string;
     const result = input.result as string;
     const duration = input.duration as number;
 
-    p = find(p, 'tests', 'all');
-
-    p = mapBindings(p, (bindings) => {
-      const items = bindings.all as any[];
-      return items.find(t => t.id === testId) || null;
-    }, 'entry');
+    const key = `test:${testName}`;
+    p = get(p, 'tests', key, 'entry');
 
     let thenProg = createProgram();
-    thenProg = mapBindings(thenProg, (bindings) => {
-      return `test:${(bindings.entry as any).name}`;
-    }, 'entryKey');
-    thenProg = putFrom(thenProg, 'tests', (bindings) => bindings.entryKey as string, (bindings) => ({
+    thenProg = putFrom(thenProg, 'tests', key, (bindings) => ({
       ...(bindings.entry as any),
       lastResult: result,
       lastDuration: duration,
     }));
-    thenProg = complete(thenProg, 'ok', { test: testId });
+    thenProg = completeFrom(thenProg, 'ok', (bindings) => ({
+      test: (bindings.entry as any).id,
+    }));
 
     let elseProg = createProgram();
-    elseProg = complete(elseProg, 'ok', { test: testId });
+    elseProg = complete(elseProg, 'ok', { test: testName });
 
     return branch(p, (b) => b.entry != null, thenProg, elseProg) as StorageProgram<Result>;
   },

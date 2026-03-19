@@ -33,6 +33,8 @@ export type Instruction =
   | { tag: 'put'; relation: string; key: string; value: Record<string, unknown> }
   | { tag: 'merge'; relation: string; key: string; fields: Record<string, unknown> }
   | { tag: 'del'; relation: string; key: string }
+  | { tag: 'delMany'; relation: string; criteria: Record<string, unknown>; bindAs: string }
+  | { tag: 'delManyFrom'; relation: string; criteriaFn: (bindings: Bindings) => Record<string, unknown>; bindAs: string }
   | { tag: 'delFrom'; relation: string; keyFn: (bindings: Bindings) => string }
   | { tag: 'putFrom'; relation: string; key: string; valueFn: (bindings: Bindings) => Record<string, unknown> }
   | { tag: 'mergeFrom'; relation: string; key: string; fieldsFn: (bindings: Bindings) => Record<string, unknown> }
@@ -258,6 +260,36 @@ export function del(
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
   return {
     instructions: [...program.instructions, { tag: 'del', relation, key }],
+    terminated: false,
+    effects: addWrite(program.effects, relation),
+  };
+}
+
+/** Append a DelMany instruction — delete all records matching criteria. Adds relation to write effects. Binds the deletion count. */
+export function delMany(
+  program: StorageProgram<unknown>,
+  relation: string,
+  criteria: Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<number> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'delMany', relation, criteria, bindAs }],
+    terminated: false,
+    effects: addWrite(program.effects, relation),
+  };
+}
+
+/** Append a DelMany instruction with criteria derived from bindings at runtime. Adds relation to write effects. Binds the deletion count. */
+export function delManyFrom(
+  program: StorageProgram<unknown>,
+  relation: string,
+  criteriaFn: (bindings: Bindings) => Record<string, unknown>,
+  bindAs: string,
+): StorageProgram<number> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  return {
+    instructions: [...program.instructions, { tag: 'delManyFrom', relation, criteriaFn, bindAs }],
     terminated: false,
     effects: addWrite(program.effects, relation),
   };
@@ -540,7 +572,7 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
 export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
   const writes = new Set<string>();
   for (const instr of program.instructions) {
-    if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
+    if (instr.tag === 'put' || instr.tag === 'del' || instr.tag === 'merge' || instr.tag === 'delFrom' || instr.tag === 'delMany' || instr.tag === 'delManyFrom' || instr.tag === 'putFrom' || instr.tag === 'mergeFrom') writes.add(instr.relation);
     if (instr.tag === 'putLens' || instr.tag === 'modifyLens') writes.add(lensRelation(instr.lens));
     if (instr.tag === 'branch') {
       for (const w of extractWriteSet(instr.thenBranch)) writes.add(w);

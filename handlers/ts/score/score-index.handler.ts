@@ -8,7 +8,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, complete, completeFrom, get, find, put, del, branch, mapBindings, type StorageProgram,
+  createProgram, complete, completeFrom, get, find, put, del, delMany, branch, mapBindings, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -129,46 +129,31 @@ const _handler: FunctionalConceptHandler = {
 
     const fileId = `file:${path}`;
 
-    // Fetch file entry and related records
+    // Check if the file entry exists
     p = get(p, 'files', fileId, 'existing');
-    p = find(p, 'symbols', { file: path }, 'foundSymbols');
-    p = find(p, 'concepts', { file: path }, 'foundConcepts');
-    p = find(p, 'syncs', { file: path }, 'foundSyncs');
+
+    // Delete related records from all relations matching this file
+    p = delMany(p, 'symbols', { file: path }, 'deletedSymbols');
+    p = delMany(p, 'concepts', { file: path }, 'deletedConcepts');
+    p = delMany(p, 'syncs', { file: path }, 'deletedSyncs');
 
     // Remove file entry if it exists
     return branch(p, 'existing',
       (thenP) => {
         thenP = del(thenP, 'files', fileId);
-
-        // Compute keys to delete and total removed count from bindings
-        thenP = mapBindings(thenP, (bindings) => {
-          const syms = (bindings.foundSymbols as Record<string, unknown>[]) || [];
-          const concepts = (bindings.foundConcepts as Record<string, unknown>[]) || [];
-          const syncs = (bindings.foundSyncs as Record<string, unknown>[]) || [];
-          return {
-            symbolKeys: syms.map((s) => `symbol:${s.symbolName}:${s.file}:${s.line}`),
-            conceptKeys: concepts.map((c) => `concept:${c.conceptName}`),
-            syncKeys: syncs.map((s) => `sync:${s.syncName}`),
-            total: 1 + syms.length + concepts.length + syncs.length,
-          };
-        }, 'deleteInfo');
-
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const info = bindings.deleteInfo as { total: number };
-          return { removed: info.total };
-        });
+        return completeFrom(thenP, 'ok', (bindings) => ({
+          removed: 1 +
+            (bindings.deletedSymbols as number) +
+            (bindings.deletedConcepts as number) +
+            (bindings.deletedSyncs as number),
+        }));
       },
       (elseP) => {
-        // No file entry — still check for orphaned symbols/concepts/syncs
-        elseP = mapBindings(elseP, (bindings) => {
-          const syms = (bindings.foundSymbols as Record<string, unknown>[]) || [];
-          const concepts = (bindings.foundConcepts as Record<string, unknown>[]) || [];
-          const syncs = (bindings.foundSyncs as Record<string, unknown>[]) || [];
-          return syms.length + concepts.length + syncs.length;
-        }, 'orphanCount');
-
         return completeFrom(elseP, 'ok', (bindings) => ({
-          removed: bindings.orphanCount as number,
+          removed:
+            (bindings.deletedSymbols as number) +
+            (bindings.deletedConcepts as number) +
+            (bindings.deletedSyncs as number),
         }));
       },
     ) as StorageProgram<Result>;
@@ -176,22 +161,19 @@ const _handler: FunctionalConceptHandler = {
 
   clear(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'concepts', {}, 'allConcepts');
-    p = find(p, 'syncs', {}, 'allSyncs');
-    p = find(p, 'symbols', {}, 'allSymbols');
-    p = find(p, 'files', {}, 'allFiles');
 
-    // Compute total count from bindings
-    p = mapBindings(p, (bindings) => {
-      const concepts = (bindings.allConcepts as unknown[]) || [];
-      const syncs = (bindings.allSyncs as unknown[]) || [];
-      const symbols = (bindings.allSymbols as unknown[]) || [];
-      const files = (bindings.allFiles as unknown[]) || [];
-      return concepts.length + syncs.length + symbols.length + files.length;
-    }, 'total');
+    // Delete all records from each relation
+    p = delMany(p, 'concepts', {}, 'deletedConcepts');
+    p = delMany(p, 'syncs', {}, 'deletedSyncs');
+    p = delMany(p, 'symbols', {}, 'deletedSymbols');
+    p = delMany(p, 'files', {}, 'deletedFiles');
 
     return completeFrom(p, 'ok', (bindings) => ({
-      cleared: bindings.total as number,
+      cleared:
+        (bindings.deletedConcepts as number) +
+        (bindings.deletedSyncs as number) +
+        (bindings.deletedSymbols as number) +
+        (bindings.deletedFiles as number),
     })) as StorageProgram<Result>;
   },
 

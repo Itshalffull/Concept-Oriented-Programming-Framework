@@ -102,6 +102,19 @@ export async function interpret(
         steps.push({ index: i, instruction: 'del', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
         break;
       }
+      case 'delMany': {
+        const count = await storage.delMany(instr.relation, instr.criteria);
+        bindings[instr.bindAs] = count;
+        steps.push({ index: i, instruction: 'delMany', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+        break;
+      }
+      case 'delManyFrom': {
+        const criteria = instr.criteriaFn(bindings);
+        const count = await storage.delMany(instr.relation, criteria);
+        bindings[instr.bindAs] = count;
+        steps.push({ index: i, instruction: 'delManyFrom', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+        break;
+      }
       case 'delFrom': {
         const resolvedKey = instr.keyFn(bindings);
         const previousValue = await storage.get(instr.relation, resolvedKey);
@@ -265,6 +278,19 @@ async function executeInstruction(
       await storage.del(instr.relation, instr.key);
       mutations.push({ tag: 'del', relation: instr.relation, key: instr.key, previousValue });
       steps.push({ index, instruction: 'del', relation: instr.relation, key: instr.key, durationMs: Date.now() - stepStart });
+      break;
+    }
+    case 'delMany': {
+      const count = await storage.delMany(instr.relation, instr.criteria);
+      bindings[instr.bindAs] = count;
+      steps.push({ index, instruction: 'delMany', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
+      break;
+    }
+    case 'delManyFrom': {
+      const criteria = instr.criteriaFn(bindings);
+      const count = await storage.delMany(instr.relation, criteria);
+      bindings[instr.bindAs] = count;
+      steps.push({ index, instruction: 'delManyFrom', relation: instr.relation, result: count, durationMs: Date.now() - stepStart });
       break;
     }
     case 'delFrom': {

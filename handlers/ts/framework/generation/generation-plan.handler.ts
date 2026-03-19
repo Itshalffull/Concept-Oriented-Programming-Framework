@@ -55,18 +55,16 @@ const _handler: FunctionalConceptHandler = {
     const duration = input.duration as number | undefined;
     const cached = input.cached as boolean;
 
+    // Generate a unique step ID at construction time for the storage key.
+    // The runId (dynamic, from bindings) is included in the value for find() filtering.
+    const stepId = randomUUID();
+
     let p = createProgram();
     p = get(p, ACTIVE_RUN_RELATION, 'current', 'activeRun');
 
     p = branch(p, 'activeRun',
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const activeRun = bindings.activeRun as Record<string, unknown>;
-          const runId = activeRun.runId as string;
-          return `${runId}:${stepKey}`;
-        }, 'stepId');
-
-        b2 = putFrom(b2, STEPS_RELATION, '', (bindings) => {
+        let b2 = putFrom(b, STEPS_RELATION, stepId, (bindings) => {
           const activeRun = bindings.activeRun as Record<string, unknown>;
           const runId = activeRun.runId as string;
           return {
@@ -98,23 +96,18 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p, 'activeRun',
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const activeRun = bindings.activeRun as Record<string, unknown>;
-          return activeRun.runId as string;
-        }, 'runId');
+        // Extract runId from the activeRun binding for use in completedAt update.
+        // Use find() to retrieve the run record by its runId field, then
+        // mapBindings to merge completedAt into the record for downstream queries.
+        let b2 = find(b, RUNS_RELATION, {}, 'allRuns');
 
-        b2 = get(b2, RUNS_RELATION, '', 'runRecord');
-
-        // We need the runId to get the run record. Since get() needs a static key,
-        // we use the approach of putting the completed timestamp via putFrom.
-        b2 = putFrom(b2, RUNS_RELATION, '', (bindings) => {
+        b2 = mapBindings(b2, (bindings) => {
           const activeRun = bindings.activeRun as Record<string, unknown>;
           const runId = activeRun.runId as string;
-          return {
-            id: runId,
-            completedAt: new Date().toISOString(),
-          };
-        });
+          const allRuns = bindings.allRuns as Array<Record<string, unknown>>;
+          const run = allRuns.find(r => r.id === runId);
+          return run ? { ...run, completedAt: new Date().toISOString() } : null;
+        }, 'updatedRun');
 
         b2 = del(b2, ACTIVE_RUN_RELATION, 'current');
 
