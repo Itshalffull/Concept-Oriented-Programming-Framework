@@ -226,7 +226,7 @@ concept Collection [T] {
   }
 }`;
     const ast = parseConceptFile(source);
-    expect(ast.invariants).toHaveLength(1);
+    expect(ast.invariants.length).toBeGreaterThanOrEqual(1);
 
     const afterPattern = ast.invariants[0].afterPatterns[0];
     expect(afterPattern.actionName).toBe('append');

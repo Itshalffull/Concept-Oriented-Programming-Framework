@@ -114,7 +114,7 @@ async function discoverProviderMappings(
   for (const [name, handler] of Object.entries(providers)) {
     if (!handler.register) continue;
     try {
-      const meta = await handler.register({}, null as unknown as ConceptStorage);
+      const meta = await handler.register({}, createInMemoryStorage());
       if (meta.variant !== 'ok' || !meta.targetKey) continue;
       const key = meta.targetKey as string;
       const type = meta.providerType as string;
@@ -546,5 +546,5 @@ function getSdkConfig(
 ): Record<string, unknown> {
   const sdk = manifestYaml?.sdk as Record<string, Record<string, unknown>> | undefined;
   if (!sdk?.[lang]) return {};
-
-export const interfaceGeneratorHandler = autoInterpret(_handler);
+  return sdk[lang];
+}

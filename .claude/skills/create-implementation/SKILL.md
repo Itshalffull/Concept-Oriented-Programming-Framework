@@ -17,16 +17,41 @@ A concept implementation is a **handler object** that provides one function per 
 
 ```typescript
 import type { FunctionalConceptHandler } from '../runtime/functional-handler';
-import { createProgram, get, put, branch, complete } from '../runtime/storage-program';
+import {
+  createProgram, get, put, putFrom, find, branch, complete, completeFrom,
+  mapBindings, type StorageProgram,
+} from '../runtime/storage-program';
+import { autoInterpret } from '../runtime/functional-compat';
 
-export const myHandler: FunctionalConceptHandler = {
-  actionName(input) {
-    const field = input.field as string;
+const _handler: FunctionalConceptHandler = {
+  // Simple action — value known at construction (use put/complete)
+  create(input: Record<string, unknown>) {
+    const name = input.name as string;
     let p = createProgram();
-    p = put(p, 'item', field, { field });
-    return complete(p, 'ok', { field });
+    p = put(p, 'items', name, { name, status: 'active' });
+    return complete(p, 'ok', { item: name });
+  },
+
+  // Action using storage reads — use putFrom/completeFrom
+  update(input: Record<string, unknown>) {
+    const id = input.id as string;
+    const newName = input.name as string;
+    let p = createProgram();
+    p = get(p, 'items', id, 'existing');
+    return branch(p,
+      (bindings) => !bindings.existing,
+      (b) => complete(b, 'not_found', {}),
+      (b) => {
+        let b2 = putFrom(b, 'items', id, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, name: newName };
+        });
+        return complete(b2, 'ok', { item: id });
+      },
+    );
   },
 };
+export const myHandler = autoInterpret(_handler);
 ```
 
 For cases where functional style cannot be supported (language limitations, legacy concepts, direct FFI/system calls), use the **imperative fallback**:
