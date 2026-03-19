@@ -3,7 +3,7 @@
 // User-configurable event-condition-action rules that fire automatically when conditions are met.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -46,7 +46,10 @@ const _automationRuleHandler: FunctionalConceptHandler = {
     p = spGet(p, 'automationRule', rule, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'automationRule', rule, { enabled: true });
+        let b2 = putFrom(b, 'automationRule', rule, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, enabled: true };
+        });
         return complete(b2, 'ok', {});
       },
       (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
@@ -61,7 +64,10 @@ const _automationRuleHandler: FunctionalConceptHandler = {
     p = spGet(p, 'automationRule', rule, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'automationRule', rule, { enabled: false });
+        let b2 = putFrom(b, 'automationRule', rule, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return { ...existing, enabled: false };
+        });
         return complete(b2, 'ok', {});
       },
       (b) => complete(b, 'notfound', { message: 'The rule was not found' }),
