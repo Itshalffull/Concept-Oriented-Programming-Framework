@@ -28,27 +28,34 @@ const _handler: FunctionalConceptHandler = {
 
     const key = `adapter:${name}:${kind}`;
     p = get(p, 'infrastructure', key, 'existing');
-    if (existing) {
-      return complete(p, 'alreadyRegistered', { existing: existing.id }) as StorageProgram<Result>;
-    }
+    p = branch(p,
+      (bindings) => !!bindings.existing,
+      (b) => completeFrom(b, 'alreadyRegistered', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>;
+        return { existing: existing.id };
+      }),
+      (b) => {
+        const id = crypto.randomUUID();
+        const parsedConfig = config ? JSON.parse(config) : {};
 
-    const id = crypto.randomUUID();
-    const parsedConfig = config ? JSON.parse(config) : {};
+        let b2 = put(b, 'infrastructure', key, {
+          id,
+          name,
+          kind,
+          sourceFile,
+          backend,
+          config,
+          symbol: `${name}-${kind}`,
+          boundConcepts: JSON.stringify(parsedConfig.boundConcepts || []),
+          boundRuntime: parsedConfig.boundRuntime || '',
+          capabilities: JSON.stringify(parsedConfig.capabilities || []),
+        });
 
-    p = put(p, 'infrastructure', key, {
-      id,
-      name,
-      kind,
-      sourceFile,
-      backend,
-      config,
-      symbol: `${name}-${kind}`,
-      boundConcepts: JSON.stringify(parsedConfig.boundConcepts || []),
-      boundRuntime: parsedConfig.boundRuntime || '',
-      capabilities: JSON.stringify(parsedConfig.capabilities || []),
-    });
+        return complete(b2, 'ok', { adapter: id });
+      },
+    ) as StorageProgram<Result>;
 
-    return complete(p, 'ok', { adapter: id }) as StorageProgram<Result>;
+    return p;
   },
 
   get(input: Record<string, unknown>) {
@@ -57,11 +64,16 @@ const _handler: FunctionalConceptHandler = {
     const kind = input.kind as string;
 
     p = get(p, 'infrastructure', `adapter:${name}:${kind}`, 'entry');
-    if (!entry) {
-      return complete(p, 'notfound', {}) as StorageProgram<Result>;
-    }
+    p = branch(p,
+      (bindings) => !bindings.entry,
+      (b) => complete(b, 'notfound', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const entry = bindings.entry as Record<string, unknown>;
+        return { adapter: entry.id };
+      }),
+    ) as StorageProgram<Result>;
 
-    return complete(p, 'ok', { adapter: entry.id }) as StorageProgram<Result>;
+    return p;
   },
 
   findByBackend(input: Record<string, unknown>) {
@@ -69,7 +81,10 @@ const _handler: FunctionalConceptHandler = {
     const backend = input.backend as string;
     p = find(p, 'infrastructure', { backend }, 'all');
 
-    return complete(p, 'ok', { adapters: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      return { adapters: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
 
   findByConcept(input: Record<string, unknown>) {
@@ -77,18 +92,21 @@ const _handler: FunctionalConceptHandler = {
     const concept = input.concept as string;
     p = find(p, 'infrastructure', 'all');
 
-    const matched = all.filter(a => {
-      const bound = JSON.parse(a.boundConcepts as string || '[]');
-      return bound.includes(concept);
-    });
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const matched = all.filter(a => {
+        const bound = JSON.parse(a.boundConcepts as string || '[]');
+        return bound.includes(concept);
+      });
 
-    const result = matched.map(a => ({
-      name: a.name,
-      kind: a.kind,
-      backend: a.backend,
-    }));
+      const result = matched.map(a => ({
+        name: a.name,
+        kind: a.kind,
+        backend: a.backend,
+      }));
 
-    return complete(p, 'ok', { adapters: JSON.stringify(result) }) as StorageProgram<Result>;
+      return { adapters: JSON.stringify(result) };
+    }) as StorageProgram<Result>;
   },
 
   findByRuntime(input: Record<string, unknown>) {
@@ -96,70 +114,79 @@ const _handler: FunctionalConceptHandler = {
     const runtime = input.runtime as string;
     p = find(p, 'infrastructure', { boundRuntime: runtime }, 'all');
 
-    return complete(p, 'ok', { adapters: JSON.stringify(all) }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      return { adapters: JSON.stringify(all) };
+    }) as StorageProgram<Result>;
   },
 
   sharedBackends(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'infrastructure', 'all');
 
-    const backendMap = new Map<string, Array<{ adapter: string; kind: string; concepts: string[] }>>();
-    for (const adapter of all) {
-      const backendKey = `${adapter.backend}:${adapter.kind}`;
-      if (!backendMap.has(backendKey)) {
-        backendMap.set(backendKey, []);
-      }
-      backendMap.get(backendKey)!.push({
-        adapter: adapter.name as string,
-        kind: adapter.kind as string,
-        concepts: JSON.parse(adapter.boundConcepts as string || '[]'),
-      });
-    }
-
-    const groups: Array<{ backend: string; kind: string; adapter: string; concepts: string[] }> = [];
-    for (const [key, adapters] of backendMap) {
-      const [backend, kind] = key.split(':');
-      for (const adapter of adapters) {
-        groups.push({
-          backend,
-          kind,
-          adapter: adapter.adapter,
-          concepts: adapter.concepts,
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const backendMap = new Map<string, Array<{ adapter: string; kind: string; concepts: string[] }>>();
+      for (const adapter of all) {
+        const backendKey = `${adapter.backend}:${adapter.kind}`;
+        if (!backendMap.has(backendKey)) {
+          backendMap.set(backendKey, []);
+        }
+        backendMap.get(backendKey)!.push({
+          adapter: adapter.name as string,
+          kind: adapter.kind as string,
+          concepts: JSON.parse(adapter.boundConcepts as string || '[]'),
         });
       }
-    }
 
-    return complete(p, 'ok', { groups: JSON.stringify(groups) }) as StorageProgram<Result>;
+      const groups: Array<{ backend: string; kind: string; adapter: string; concepts: string[] }> = [];
+      for (const [key, adapters] of backendMap) {
+        const [backend, kind] = key.split(':');
+        for (const adapter of adapters) {
+          groups.push({
+            backend,
+            kind,
+            adapter: adapter.adapter,
+            concepts: adapter.concepts,
+          });
+        }
+      }
+
+      return { groups: JSON.stringify(groups) };
+    }) as StorageProgram<Result>;
   },
 
   networkTopology(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'infrastructure', { kind: 'transport' }, 'all');
 
-    const runtimes = new Set<string>();
-    const edges: Array<{ from: string; to: string; protocol: string; adapter: string }> = [];
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.all || []) as Array<Record<string, unknown>>;
+      const runtimes = new Set<string>();
+      const edges: Array<{ from: string; to: string; protocol: string; adapter: string }> = [];
 
-    for (const adapter of all) {
-      const config = adapter.config ? JSON.parse(adapter.config as string) : {};
-      const from = config.from || adapter.boundRuntime || '';
-      const to = config.to || '';
+      for (const adapter of all) {
+        const config = adapter.config ? JSON.parse(adapter.config as string) : {};
+        const from = config.from || adapter.boundRuntime || '';
+        const to = config.to || '';
 
-      if (from) runtimes.add(from);
-      if (to) runtimes.add(to);
+        if (from) runtimes.add(from);
+        if (to) runtimes.add(to);
 
-      if (from && to) {
-        edges.push({
-          from,
-          to,
-          protocol: adapter.backend as string,
-          adapter: adapter.name as string,
-        });
+        if (from && to) {
+          edges.push({
+            from,
+            to,
+            protocol: adapter.backend as string,
+            adapter: adapter.name as string,
+          });
+        }
       }
-    }
 
-    const nodes = Array.from(runtimes).map(r => ({ id: r, kind: 'runtime', label: r }));
+      const nodes = Array.from(runtimes).map(r => ({ id: r, kind: 'runtime', label: r }));
 
-    return complete(p, 'ok', { graph: JSON.stringify({ nodes, edges }) }) as StorageProgram<Result>;
+      return { graph: JSON.stringify({ nodes, edges }) };
+    }) as StorageProgram<Result>;
   },
 };
 
