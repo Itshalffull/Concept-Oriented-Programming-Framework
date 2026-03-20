@@ -143,6 +143,28 @@ action create(name: String, config: String, tags: list String) {
 
 See [references/concept-grammar.md](references/concept-grammar.md) for full fixture syntax.
 
+#### How to derive fixtures from an existing handler
+
+When adding fixtures to an existing concept (migration), read the handler implementation to determine correct fixture values:
+
+1. **Read the handler** (`handlers/ts/<concept-name>.handler.ts`) and for each action:
+   - Identify every `input.foo` access — these are the params that matter
+   - Check if any param is parsed: `JSON.parse(input.config)` → fixture must provide valid JSON string
+   - Check if any param is used as array: `input.items.map(...)` → fixture must provide an array, and the spec param type should be `list String` not `String`
+   - Check if any param has `.trim()`, `.split()`, `.includes()` — must be a real string, not an object
+   - Check what values make the handler return `ok` vs `error` — use those for positive/negative fixtures
+
+2. **Check invariant examples** in the spec — if an invariant already has `after create(name: "Alice") -> ok`, reuse `name: "Alice"` in the fixture
+
+3. **Check the conformance test** (`generated/tests/<concept>.conformance.test.ts`) — look at what's failing and why:
+   - `JSON.parse` error → param needs a JSON string fixture
+   - `items.map is not a function` → param needs array fixture AND spec type fix
+   - `notfound` when `ok` expected → the invariant example needs a setup step
+
+4. **Fix param types** if the spec declares `String` but the handler expects `list String`, `Bool`, or a record type — update the param type in the spec to match
+
+5. **Mark the file** with `# @fixtures-added` as the first line after migration
+
 ### Step 5: Write the Operational Principle (Invariants)
 
 Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
