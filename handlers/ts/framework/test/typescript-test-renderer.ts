@@ -64,37 +64,16 @@ function invokeExpr(handlerVar: string, action: string, inputStr: string, style:
 }
 
 /**
- * Build fast-check arbitraries for an action's params, seeded by fixture values.
- * If fixtures provide known-good values, mix them with random generation via fc.oneof
- * so the fuzzer explores valid paths instead of wasting runs on parse errors.
+ * Build fully random fast-check arbitraries for an action's params.
+ * PBT should use random inputs to find edge cases — fixtures are for deterministic tests only.
  */
-function buildInputArbs(action: TestPlanAction): string[] {
-  // Collect all fixture values per param name
-  const fixtureValues: Record<string, Set<string>> = {};
-  for (const fixture of (action.fixtures || [])) {
-    for (const [k, v] of Object.entries(fixture.input)) {
-      if (!fixtureValues[k]) fixtureValues[k] = new Set();
-      fixtureValues[k].add(JSON.stringify(v));
-    }
-  }
-
-  return action.params.map(p => {
+function randomArbs(params: Array<{ name: string; type: string }>): string[] {
+  return params.map(p => {
     const t = p.type.toLowerCase();
-    const seeds = fixtureValues[p.name];
-
-    // Type-appropriate random arbitrary
-    let randomArb: string;
-    if (t === 'string') randomArb = `fc.string({ minLength: 1, maxLength: 50 })`;
-    else if (t === 'int' || t === 'number') randomArb = `fc.integer({ min: 1, max: 1000 })`;
-    else if (t === 'bool' || t === 'boolean') randomArb = `fc.boolean()`;
-    else randomArb = `fc.string()`;
-
-    // If we have fixture seeds, mix them with random generation
-    if (seeds && seeds.size > 0) {
-      const constants = [...seeds].map(v => `fc.constant(${v})`).join(', ');
-      return `${p.name}: fc.oneof(${constants}, ${randomArb})`;
-    }
-    return `${p.name}: ${randomArb}`;
+    if (t === 'string') return `${p.name}: fc.string({ minLength: 1, maxLength: 50 })`;
+    if (t === 'int' || t === 'number') return `${p.name}: fc.integer({ min: 1, max: 1000 })`;
+    if (t === 'bool' || t === 'boolean') return `${p.name}: fc.boolean()`;
+    return `${p.name}: fc.string()`;
   });
 }
 
@@ -339,7 +318,7 @@ function renderStateInvariantTests(
     }
 
     const actionArbs = actions.map(a => {
-      const inputArb = buildInputArbs(a).join(', ');
+      const inputArb = randomArbs(a.params).join(', ');
       return `fc.record({ action: fc.constant('${a.name}'), input: fc.record({ ${inputArb} }) })`;
     });
 
@@ -469,7 +448,7 @@ function renderContractTests(
 
     // Postcondition: when action produces the target variant, output is well-formed
     if (action && contract.postconditions.length > 0) {
-      const inputArbs = buildInputArbs(action).join(', ');
+      const inputArbs = randomArbs(action.params).join(', ');
 
       for (const post of contract.postconditions) {
         lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);
