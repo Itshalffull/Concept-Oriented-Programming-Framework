@@ -27,16 +27,27 @@ concept ConnectorPort [P] {
         offset: 0.0-1.0 along the side.
       }
       -> error(message: String) { Invalid parameters. }
+
+      fixture add_data_output { owner: "node-1", side: "right", offset: 0.5, direction: "out", port_type: "data", label: "Output", max_connections: 3 }
+      fixture add_center_input { owner: "node-2", side: "center", offset: 0.0, direction: "in", port_type: "signal", label: "Trigger", max_connections: 1 }
+      fixture invalid_side { owner: "node-1", side: "diagonal", offset: 0.5, direction: "out", port_type: "data", label: "Bad", max_connections: 1 } -> error
+      fixture invalid_direction { owner: "node-1", side: "top", offset: 0.5, direction: "lateral", port_type: "data", label: "Bad", max_connections: 1 } -> error
     }
 
     action removePort(port: P) {
       -> ok(port: P) { Removes port. Attached connectors become floating. }
       -> notfound(message: String) { Port not found. }
+
+      fixture remove_existing { port: "port-1" }
+      fixture remove_missing { port: "port-999" } -> notfound
     }
 
     action movePort(port: P, side: String, offset: Float) {
       -> ok(port: P, side: String, offset: Float) { Repositions port. }
       -> notfound(message: String) { Port not found. }
+
+      fixture move_to_left { port: "port-1", side: "left", offset: 0.3 }
+      fixture move_missing { port: "port-999", side: "top", offset: 0.5 } -> notfound
     }
 
     action validateConnection(source_port: P, target_port: P) {

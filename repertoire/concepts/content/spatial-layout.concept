@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SpatialLayout [L] {
 
@@ -21,14 +22,17 @@ concept SpatialLayout [L] {
   }
 
   actions {
-    action apply(canvas: String, algorithm: String) {
-      -> ok(layout: L) {
+    action apply(algorithm: String) {
+      -> ok(provider: String) {
         Dispatches the layout algorithm to the registered provider,
         which computes and applies positions for all items on the canvas.
       }
       -> unknown_algorithm(message: String) {
         No provider is registered for the requested algorithm.
       }
+
+      fixture valid_apply { algorithm: "force-directed" }
+      fixture missing_algorithm { algorithm: "nonexistent" } -> unknown_algorithm
     }
 
     action register(algorithm: String, provider: String) {
@@ -38,6 +42,9 @@ concept SpatialLayout [L] {
       -> already_registered(message: String) {
         A provider is already registered for this algorithm.
       }
+
+      fixture valid_register { algorithm: "force-directed", provider: "ForceDirectedLayout" }
+      fixture empty_algorithm { algorithm: "", provider: "SomeProvider" } -> unknown_algorithm
     }
   }
 

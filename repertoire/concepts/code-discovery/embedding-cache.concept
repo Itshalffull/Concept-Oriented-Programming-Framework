@@ -41,6 +41,9 @@ concept EmbeddingCache [E] {
         The manifest file exists but is not valid JSON or has
         a schema the cache cannot interpret.
       }
+
+      fixture valid_path { path: "/var/cache/embeddings.json" }
+      fixture empty_path { path: "" } -> error
     }
 
     action lookup(digest: String) {
@@ -52,6 +55,9 @@ concept EmbeddingCache [E] {
         No entry exists for this digest. The caller should
         compute a fresh embedding and store it via put.
       }
+
+      fixture known_digest { digest: "sha256:abc123def456" }
+      fixture empty_digest { digest: "" } -> error
     }
 
     action put(digest: String, vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
@@ -62,6 +68,9 @@ concept EmbeddingCache [E] {
         An entry with this digest already exists. The existing
         entry is returned unchanged.
       }
+
+      fixture store_embedding { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" }
+      fixture missing_vector { digest: "sha256:abc123", vector: "", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" } -> error
     }
 
     action flush(path: String) {
@@ -74,6 +83,9 @@ concept EmbeddingCache [E] {
         The file could not be written, e.g. due to permission
         or disk space issues.
       }
+
+      fixture flush_to_disk { path: "/var/cache/embeddings.json" }
+      fixture empty_flush_path { path: "" } -> error
     }
 
     action evict(digest: String) {
